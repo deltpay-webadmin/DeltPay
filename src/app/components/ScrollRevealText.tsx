@@ -3,38 +3,30 @@ import { motion, useScroll, useTransform, MotionValue } from 'motion/react';
 
 const TEXT = "This is what running a business should feel like.";
 
-/* Each character snaps between muted → accent → dark */
-function Char({ char, progress, start, end }: {
-  char: string;
-  progress: MotionValue<number>;
-  start: number;
-  end: number;
-}) {
-  const mid = start + (end - start) * 0.35;
-  const color = useTransform(
-    progress,
-    [start, mid, end],
-    ['#B8B8E8', '#4945FF', '#041E42']
-  );
-  return <motion.span style={{ color, transition: 'none' }}>{char}</motion.span>;
-}
-
-function Word({ word, progress, charStart, totalChars }: {
+/* Each word tweens as a single unit between muted → accent → dark */
+function Word({ word, progress, charStart, charEnd, totalChars }: {
   word: string;
   progress: MotionValue<number>;
   charStart: number;
+  charEnd: number;
   totalChars: number;
 }) {
+  // Reveal all text within 0.05–0.55 of scroll so it finishes well before sticky unpins
+  const s = 0.05 + (charStart / totalChars) * 0.45;
+  const e = Math.min(0.05 + ((charEnd + 4) / totalChars) * 0.45, 0.55);
+  const mid = s + (e - s) * 0.35;
+  const color = useTransform(progress, [s, mid, e], ['#B8B8E8', '#4945FF', '#041E42']);
   return (
-    <span style={{ display: 'inline-block', marginRight: '0.3em', whiteSpace: 'nowrap' }}>
-      {word.split('').map((char, i) => {
-        const idx = charStart + i;
-        // Reveal all text within 0.05–0.55 of scroll so it finishes well before sticky unpins
-        const s = 0.05 + (idx / totalChars) * 0.45;
-        const e = s + (4 / totalChars) * 0.45;
-        return <Char key={i} char={char} progress={progress} start={s} end={Math.min(e, 0.55)} />;
-      })}
-    </span>
+    <motion.span
+      style={{
+        color,
+        display: 'inline-block',
+        marginRight: '0.3em',
+        whiteSpace: 'nowrap',
+      }}
+    >
+      {word}
+    </motion.span>
   );
 }
 
@@ -46,13 +38,13 @@ export function ScrollRevealText() {
     offset: ['start start', 'end end'],
   });
 
-  // Pre-compute word/char positions
+  // Pre-compute word positions (by character index, used for staggered reveal)
   const words = TEXT.split(' ');
   let ci = 0;
   const wordData = words.map((w) => {
     const start = ci;
     ci += w.length;
-    return { word: w, charStart: start };
+    return { word: w, charStart: start, charEnd: start + w.length - 1 };
   });
   const totalChars = ci;
 
@@ -69,6 +61,7 @@ export function ScrollRevealText() {
                   word={wd.word}
                   progress={scrollYProgress}
                   charStart={wd.charStart}
+                  charEnd={wd.charEnd}
                   totalChars={totalChars}
                 />
               ))}

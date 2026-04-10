@@ -9,93 +9,105 @@ const WHITE = '#FFFFFF';
 const JAKARTA = "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif";
 
 /* ─── Interactive Dot Grid Canvas ─── */
-function InteractiveDots({ mouseRef }: { mouseRef: React.RefObject<{ x: number; y: number }> }) {
+function InteractiveDots({
+  mouseRef,
+  drawFnRef,
+}: {
+  mouseRef: React.RefObject<{ x: number; y: number }>;
+  drawFnRef: React.MutableRefObject<(() => void) | null>;
+}) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const rafRef = useRef<number>(0);
 
-  const draw = useCallback(() => {
+  useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const dpr = window.devicePixelRatio || 1;
-    const w = canvas.clientWidth;
-    const h = canvas.clientHeight;
+    const draw = () => {
+      const dpr = window.devicePixelRatio || 1;
+      const w = canvas.clientWidth;
+      const h = canvas.clientHeight;
 
-    if (canvas.width !== w * dpr || canvas.height !== h * dpr) {
-      canvas.width = w * dpr;
-      canvas.height = h * dpr;
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    }
+      if (canvas.width !== w * dpr || canvas.height !== h * dpr) {
+        canvas.width = w * dpr;
+        canvas.height = h * dpr;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
 
-    ctx.clearRect(0, 0, w, h);
+      ctx.clearRect(0, 0, w, h);
 
-    const spacing = 32;
-    const cols = Math.ceil(w / spacing) + 1;
-    const rows = Math.ceil(h / spacing) + 1;
-    const mx = mouseRef.current!.x;
-    const my = mouseRef.current!.y;
-    const hoverRadius = 160;
+      const spacing = 32;
+      const cols = Math.ceil(w / spacing) + 1;
+      const rows = Math.ceil(h / spacing) + 1;
+      const mx = mouseRef.current!.x;
+      const my = mouseRef.current!.y;
+      const hoverRadius = 160;
 
-    for (let row = 0; row < rows; row++) {
-      for (let col = 0; col < cols; col++) {
-        const x = col * spacing;
-        const y = row * spacing;
-        const dx = mx - x;
-        const dy = my - y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        const influence = Math.max(0, 1 - dist / hoverRadius);
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+          const x = col * spacing;
+          const y = row * spacing;
+          const dx = mx - x;
+          const dy = my - y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          const influence = Math.max(0, 1 - dist / hoverRadius);
 
-        const baseAlpha = 0.15;
-        const alpha = baseAlpha + influence * 0.55;
-        const baseSize = 1.5;
-        const size = baseSize + influence * 3.5;
+          const baseAlpha = 0.15;
+          const alpha = baseAlpha + influence * 0.55;
+          const baseSize = 1.5;
+          const size = baseSize + influence * 3.5;
 
-        const r = Math.round(73 + influence * 150);
-        const g = Math.round(69 + influence * 150);
-        const b = 255;
+          const r = Math.round(73 + influence * 150);
+          const g = Math.round(69 + influence * 150);
+          const b = 255;
 
-        ctx.beginPath();
-        ctx.arc(x, y, size, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(${r},${g},${b},${alpha})`;
-        ctx.fill();
+          ctx.beginPath();
+          ctx.arc(x, y, size, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(${r},${g},${b},${alpha})`;
+          ctx.fill();
 
-        if (influence > 0.15) {
-          const neighbors: [number, number][] = [
-            [col + 1, row],
-            [col, row + 1],
-            [col + 1, row + 1],
-          ];
-          for (const [nc, nr] of neighbors) {
-            if (nc >= cols || nr >= rows) continue;
-            const nx = nc * spacing;
-            const ny = nr * spacing;
-            const ndx = mx - nx;
-            const ndy = my - ny;
-            const ndist = Math.sqrt(ndx * ndx + ndy * ndy);
-            const nInfluence = Math.max(0, 1 - ndist / hoverRadius);
-            if (nInfluence > 0.15) {
-              const lineAlpha = Math.min(influence, nInfluence) * 0.3;
-              ctx.beginPath();
-              ctx.moveTo(x, y);
-              ctx.lineTo(nx, ny);
-              ctx.strokeStyle = `rgba(73,69,255,${lineAlpha})`;
-              ctx.lineWidth = 0.8;
-              ctx.stroke();
+          if (influence > 0.15) {
+            const neighbors: [number, number][] = [
+              [col + 1, row],
+              [col, row + 1],
+              [col + 1, row + 1],
+            ];
+            for (const [nc, nr] of neighbors) {
+              if (nc >= cols || nr >= rows) continue;
+              const nx = nc * spacing;
+              const ny = nr * spacing;
+              const ndx = mx - nx;
+              const ndy = my - ny;
+              const ndist = Math.sqrt(ndx * ndx + ndy * ndy);
+              const nInfluence = Math.max(0, 1 - ndist / hoverRadius);
+              if (nInfluence > 0.15) {
+                const lineAlpha = Math.min(influence, nInfluence) * 0.3;
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                ctx.lineTo(nx, ny);
+                ctx.strokeStyle = `rgba(73,69,255,${lineAlpha})`;
+                ctx.lineWidth = 0.8;
+                ctx.stroke();
+              }
             }
           }
         }
       }
-    }
+    };
 
-    rafRef.current = requestAnimationFrame(draw);
-  }, [mouseRef]);
+    drawFnRef.current = draw;
 
-  useEffect(() => {
-    rafRef.current = requestAnimationFrame(draw);
-    return () => cancelAnimationFrame(rafRef.current);
-  }, [draw]);
+    // Initial static render + redraw on resize
+    draw();
+    const onResize = () => draw();
+    window.addEventListener('resize', onResize);
+
+    return () => {
+      window.removeEventListener('resize', onResize);
+      drawFnRef.current = null;
+    };
+  }, [mouseRef, drawFnRef]);
 
   return (
     <canvas
@@ -126,7 +138,18 @@ export function FinalCTA() {
   const ref = useRef<HTMLDivElement>(null);
   const sectionRef = useRef<HTMLElement>(null);
   const mouseRef = useRef({ x: -1000, y: -1000 });
+  const drawFnRef = useRef<(() => void) | null>(null);
+  const pendingFrame = useRef(false);
   const inView = useInView(ref, { once: true, amount: 0.3 });
+
+  const scheduleDraw = useCallback(() => {
+    if (pendingFrame.current) return;
+    pendingFrame.current = true;
+    requestAnimationFrame(() => {
+      pendingFrame.current = false;
+      drawFnRef.current?.();
+    });
+  }, []);
 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLElement>) => {
     const rect = sectionRef.current?.getBoundingClientRect();
@@ -137,11 +160,13 @@ export function FinalCTA() {
       x: (e.clientX / zoom) - rect.left,
       y: (e.clientY / zoom) - rect.top,
     };
-  }, []);
+    scheduleDraw();
+  }, [scheduleDraw]);
 
   const handleMouseLeave = useCallback(() => {
     mouseRef.current = { x: -1000, y: -1000 };
-  }, []);
+    scheduleDraw();
+  }, [scheduleDraw]);
 
   return (
     <section
@@ -152,7 +177,7 @@ export function FinalCTA() {
       onMouseLeave={handleMouseLeave}
     >
       {/* Interactive dot grid */}
-      <InteractiveDots mouseRef={mouseRef} />
+      <InteractiveDots mouseRef={mouseRef} drawFnRef={drawFnRef} />
 
       {/* Glow orbs matching reference corners */}
       <GlowOrb top={-60} left={-60} size={280} opacity={0.1} />

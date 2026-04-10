@@ -22,7 +22,7 @@ const Earth: React.FC<EarthProps> = ({
   dark = 1,
   scale = 1.1,
   diffuse = 1.2,
-  mapSamples = 40000,
+  mapSamples = 16000,
   mapBrightness = 6,
   baseColor = [0.4, 0.6509, 1],
   markerColor = [1, 0, 0],
@@ -39,7 +39,8 @@ const Earth: React.FC<EarthProps> = ({
     const canvas = canvasRef.current;
     let width = canvas.offsetWidth || 400;
     let phi = 0;
-    let animId: number;
+    let animId = 0;
+    let running = false;
 
     const globe = createGlobe(canvas, {
       devicePixelRatio: 2,
@@ -71,14 +72,33 @@ const Earth: React.FC<EarthProps> = ({
       const w = canvas.offsetWidth || width;
       if (w > 0) width = w;
       globe.update({ phi, width: width * 2, height: width * 2 });
-      animId = requestAnimationFrame(animate);
+      if (running) {
+        animId = requestAnimationFrame(animate);
+      }
     }
-    animId = requestAnimationFrame(animate);
+
+    const start = () => {
+      if (running) return;
+      running = true;
+      animId = requestAnimationFrame(animate);
+    };
+    const stop = () => {
+      running = false;
+      cancelAnimationFrame(animId);
+    };
+
+    // Only spin the globe while it is on screen
+    const io = new IntersectionObserver(
+      ([entry]) => (entry.isIntersecting ? start() : stop()),
+      { threshold: 0 }
+    );
+    io.observe(canvas);
 
     setReady(true);
 
     return () => {
-      cancelAnimationFrame(animId);
+      io.disconnect();
+      stop();
       globe.destroy();
     };
   }, [theta, dark, scale, diffuse, mapSamples, mapBrightness]);

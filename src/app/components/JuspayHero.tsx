@@ -69,6 +69,7 @@ function MeshGradientCanvas() {
     window.addEventListener('mousemove', handleMove);
 
     let t = 0;
+    let running = false;
     const draw = () => {
       t += 0.008; // 2x faster time progression
       mouse.current.x += (mouse.current.tx - mouse.current.x) * 0.03;
@@ -126,12 +127,31 @@ function MeshGradientCanvas() {
       ctx.fillStyle = botV;
       ctx.fillRect(0, h * 0.78, w, h * 0.22);
 
-      raf.current = requestAnimationFrame(draw);
+      if (running) {
+        raf.current = requestAnimationFrame(draw);
+      }
     };
 
-    raf.current = requestAnimationFrame(draw);
-    return () => {
+    const start = () => {
+      if (running) return;
+      running = true;
+      raf.current = requestAnimationFrame(draw);
+    };
+    const stop = () => {
+      running = false;
       cancelAnimationFrame(raf.current);
+    };
+
+    // Only animate while the hero canvas is in the viewport
+    const io = new IntersectionObserver(
+      ([entry]) => (entry.isIntersecting ? start() : stop()),
+      { threshold: 0 }
+    );
+    io.observe(canvas);
+
+    return () => {
+      io.disconnect();
+      stop();
       window.removeEventListener('resize', resize);
       window.removeEventListener('mousemove', handleMove);
     };

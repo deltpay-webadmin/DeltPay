@@ -91,6 +91,7 @@ export function Sparkles({
     window.addEventListener('resize', resize);
 
     const dt = 1 / 60;
+    let running = false;
     const draw = () => {
       ctx.clearRect(0, 0, w, h);
 
@@ -122,12 +123,31 @@ export function Sparkles({
         ctx.fill();
       }
 
-      raf.current = requestAnimationFrame(draw);
+      if (running) {
+        raf.current = requestAnimationFrame(draw);
+      }
     };
 
-    raf.current = requestAnimationFrame(draw);
-    return () => {
+    const start = () => {
+      if (running) return;
+      running = true;
+      raf.current = requestAnimationFrame(draw);
+    };
+    const stop = () => {
+      running = false;
       cancelAnimationFrame(raf.current);
+    };
+
+    // Only run the particle sim while the canvas is in the viewport
+    const io = new IntersectionObserver(
+      ([entry]) => (entry.isIntersecting ? start() : stop()),
+      { threshold: 0 }
+    );
+    io.observe(canvas);
+
+    return () => {
+      io.disconnect();
+      stop();
       window.removeEventListener('resize', resize);
     };
   }, [initParticles, rgb, opacitySpeed]);
