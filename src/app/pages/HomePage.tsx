@@ -1,0 +1,27 @@
+import { JuspayHero } from '@/app/components/JuspayHero';
+import { ByTheNumbers } from '@/app/components/ByTheNumbers';
+import { ResultsBento } from '@/app/components/ResultsBento';
+import { FeatureShowcase } from '@/app/components/FeatureShowcase';
+import { SeeItInAction } from '@/app/components/SeeItInAction';
+import { FinalCTA } from '@/app/components/FinalCTA';
+import { ScrollRevealText } from '@/app/components/ScrollRevealText';
+import { SpotlightTestimonial } from '@/app/components/SpotlightTestimonial';
+import DeltMarquee from '@/app/components/DeltMarquee';
+
+export function HomePage() {
+  return (
+    <div className="relative">
+      <JuspayHero />
+      <div style={{ height: '40px', background: '#041E42' }} />
+      <ByTheNumbers />
+      <div style={{ height: '160px', background: '#041E42' }} />
+      <SeeItInAction />
+      <ScrollRevealText />
+      <FeatureShowcase />
+      <ResultsBento />
+      <SpotlightTestimonial />
+      <FinalCTA />
+      <DeltMarquee />
+    </div>
+  );
+}

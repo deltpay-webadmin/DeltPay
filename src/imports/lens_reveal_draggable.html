@@ -1,0 +1,191 @@
+
+<style>
+  .lens-scene {
+    position: relative;
+    width: 100%;
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 80px 0;
+    user-select: none;
+    overflow: hidden;
+  }
+  .headline {
+    font-family: var(--font-sans);
+    font-size: clamp(36px, 6vw, 64px);
+    font-weight: 500;
+    text-align: center;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    position: relative;
+    color: var(--color-text-primary);
+  }
+  .word-wrap {
+    position: relative;
+    display: inline-block;
+  }
+  .blurred-layer {
+    color: var(--color-text-primary);
+    filter: blur(6px);
+    opacity: 0.35;
+    display: inline;
+    transition: none;
+  }
+  .clear-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    color: var(--color-text-primary);
+    display: inline;
+    clip-path: circle(0px at 50% 50%);
+    white-space: nowrap;
+  }
+  .lens-cursor {
+    position: absolute;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 2px solid var(--color-border-primary);
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    box-shadow: 0 0 0 0.5px var(--color-border-tertiary);
+    transition: transform 0.08s ease;
+  }
+  .lens-inner {
+    position: absolute;
+    inset: 8px;
+    border-radius: 50%;
+    border: 0.5px solid var(--color-border-secondary);
+  }
+  .lens-crosshair {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .lens-crosshair::before {
+    content: '';
+    position: absolute;
+    width: 10px;
+    height: 0.5px;
+    background: var(--color-border-primary);
+  }
+  .lens-crosshair::after {
+    content: '';
+    position: absolute;
+    width: 0.5px;
+    height: 10px;
+    background: var(--color-border-primary);
+  }
+  .hint {
+    text-align: center;
+    font-size: 12px;
+    color: var(--color-text-tertiary);
+    font-family: var(--font-mono);
+    letter-spacing: 0.05em;
+    margin-top: 48px;
+    text-transform: uppercase;
+  }
+  .hint-arrow {
+    display: inline-block;
+    margin: 0 6px;
+  }
+</style>
+
+<div class="lens-scene" id="scene">
+  <p class="headline">
+    A <span class="word-wrap" id="wordWrap">
+      <span class="blurred-layer" id="blurred">clearer</span>
+      <span class="clear-layer" id="clear">clearer</span>
+    </span> view into<br>every part of your business.
+  </p>
+  <div class="lens-cursor" id="lens">
+    <div class="lens-inner"></div>
+    <div class="lens-crosshair"></div>
+  </div>
+</div>
+<p class="hint"><span class="hint-arrow">←</span> drag the lens <span class="hint-arrow">→</span></p>
+
+<script>
+const scene = document.getElementById('scene');
+const lens = document.getElementById('lens');
+const clear = document.getElementById('clear');
+const wordWrap = document.getElementById('wordWrap');
+
+const R = 60;
+let lensX = 0, lensY = 0;
+let dragging = false;
+let initialized = false;
+
+function positionLens(x, y) {
+  const rect = scene.getBoundingClientRect();
+  const wx = rect.width;
+  const wy = rect.height;
+  lensX = Math.max(R, Math.min(wx - R, x));
+  lensY = Math.max(R, Math.min(wy - R, y));
+
+  lens.style.left = lensX + 'px';
+  lens.style.top = lensY + 'px';
+
+  const wordRect = wordWrap.getBoundingClientRect();
+  const sceneRect = scene.getBoundingClientRect();
+  const relX = lensX - (wordRect.left - sceneRect.left);
+  const relY = lensY - (wordRect.top - sceneRect.top);
+
+  clear.style.clipPath = `circle(${R}px at ${relX}px ${relY}px)`;
+}
+
+function initLens() {
+  if (initialized) return;
+  initialized = true;
+  const rect = scene.getBoundingClientRect();
+  positionLens(rect.width * 0.28, rect.height * 0.5);
+  lens.style.opacity = '1';
+}
+
+scene.addEventListener('mouseenter', () => {
+  lens.style.display = 'block';
+  initLens();
+});
+
+scene.addEventListener('mousemove', (e) => {
+  if (!initialized) initLens();
+  const rect = scene.getBoundingClientRect();
+  positionLens(e.clientX - rect.left, e.clientY - rect.top);
+});
+
+scene.addEventListener('mousedown', (e) => {
+  dragging = true;
+  scene.style.cursor = 'grabbing';
+});
+
+window.addEventListener('mouseup', () => {
+  dragging = false;
+  scene.style.cursor = '';
+});
+
+scene.addEventListener('touchstart', (e) => {
+  e.preventDefault();
+  const touch = e.touches[0];
+  const rect = scene.getBoundingClientRect();
+  if (!initialized) initLens();
+  positionLens(touch.clientX - rect.left, touch.clientY - rect.top);
+}, { passive: false });
+
+scene.addEventListener('touchmove', (e) => {
+  e.preventDefault();
+  const touch = e.touches[0];
+  const rect = scene.getBoundingClientRect();
+  positionLens(touch.clientX - rect.left, touch.clientY - rect.top);
+}, { passive: false });
+
+lens.style.opacity = '0';
+lens.style.transition = 'opacity 0.2s';
+
+setTimeout(() => {
+  const rect = scene.getBoundingClientRect();
+  positionLens(rect.width * 0.28, rect.height * 0.45);
+  lens.style.opacity = '1';
+  initialized = true;
+}, 300);
+</script>

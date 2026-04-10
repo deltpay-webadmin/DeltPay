@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Delt — Flywheel Section</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ═══════════════════════════════════════════
+     DELT FLYWHEEL SECTION — DROP-IN COMPONENT
+     Paste between panels and footer.
+     Inherits: #041e42 bg, DM Sans, JetBrains Mono
+     ═══════════════════════════════════════════ */
+
+  :root {
+    --bg: #041e42;
+    --bg-card: #071f3d;
+    --bg-card-inner: #052347;
+    --indigo: #4318FF;
+    --indigo-glow: rgba(67,24,255,0.25);
+    --indigo-soft: rgba(67,24,255,0.10);
+    --white: #f2f2f7;
+    --w80: rgba(242,242,247,0.80);
+    --w60: rgba(242,242,247,0.60);
+    --w45: rgba(242,242,247,0.45);
+    --w30: rgba(242,242,247,0.30);
+    --w15: rgba(242,242,247,0.15);
+    --w08: rgba(242,242,247,0.08);
+    --w04: rgba(242,242,247,0.04);
+    --green: #00E59B;
+    --amber: #FFB547;
+    --blue: #47ABFF;
+    --green-a: rgba(0,229,155,0.10);
+    --amber-a: rgba(255,181,71,0.10);
+    --blue-a: rgba(71,171,255,0.10);
+    --indigo-a: rgba(67,24,255,0.10);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--white);
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  /* ── SECTION WRAPPER ── */
+  .flywheel-section {
+    position: relative;
+    padding: 0 0 0;
+    /* Top border to separate from panels above */
+    border-top: 1px solid var(--w08);
+  }
+
+  /* ── STICKY HEADER ── */
+  .fw-header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    text-align: center;
+    padding: 80px 52px 40px;
+    background: linear-gradient(to bottom, var(--bg) 60%, rgba(4,30,66,0) 100%);
+    transition: padding 0.4s cubic-bezier(0.22,1,0.36,1), background 0.3s;
+  }
+
+  .fw-header.pinned {
+    padding: 20px 52px 16px;
+    background: rgba(4,30,66,0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--w08);
+  }
+
+  .fw-eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--indigo);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+    transition: margin 0.3s, font-size 0.3s, opacity 0.3s;
+  }
+
+  .fw-header.pinned .fw-eyebrow {
+    margin-bottom: 4px;
+    font-size: 9px;
+  }
+
+  .fw-title {
+    font-size: clamp(26px, 2.8vw, 38px);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.15;
+    margin-bottom: 14px;
+    transition: font-size 0.3s, margin 0.3s;
+  }
+
+  .fw-header.pinned .fw-title {
+    font-size: clamp(16px, 1.6vw, 22px);
+    margin-bottom: 0;
+  }
+
+  .fw-subtitle {
+    font-size: 16px;
+    color: var(--w45);
+    line-height: 1.6;
+    max-width: 540px;
+    margin: 0 auto;
+    transition: opacity 0.3s, max-height 0.3s;
+  }
+
+  .fw-header.pinned .fw-subtitle {
+    opacity: 0;
+    max-height: 0;
+    overflow: hidden;
+    margin: 0 auto;
+  }
+
+  /* ── SCROLL LAYOUT ── */
+  .fw-scroll-area {
+    display: flex;
+    padding: 0 52px;
+    gap: 48px;
+    max-width: 1320px;
+    margin: 0 auto;
+  }
+
+  /* LEFT — text steps */
+  .fw-steps {
+    flex: 1;
+    max-width: 500px;
+    padding: 24px 0 50vh;
+  }
+
+  .fw-step {
+    padding: 72px 0;
+    opacity: 0.15;
+    transition: opacity 0.5s ease;
+  }
+
+  .fw-step:first-child { padding-top: 16px; }
+
+  .fw-step.active { opacity: 1; }
+
+  /* Step badge */
+  .fw-step-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 14px;
+    border-radius: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+
+  .fw-step-num {
+    width: 20px; height: 20px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 700;
+  }
+
+  /* Color per step */
+  .fw-step--1 .fw-step-badge { background: var(--green-a); color: var(--green); }
+  .fw-step--1 .fw-step-num { background: rgba(0,229,155,0.22); }
+  .fw-step--2 .fw-step-badge { background: var(--amber-a); color: var(--amber); }
+  .fw-step--2 .fw-step-num { background: rgba(255,181,71,0.22); }
+  .fw-step--3 .fw-step-badge { background: var(--indigo-a); color: var(--indigo); }
+  .fw-step--3 .fw-step-num { background: rgba(67,24,255,0.22); }
+  .fw-step--4 .fw-step-badge { background: var(--blue-a); color: var(--blue); }
+  .fw-step--4 .fw-step-num { background: rgba(71,171,255,0.22); }
+
+  .fw-step-name {
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 12px;
+    line-height: 1.2;
+  }
+
+  .fw-step-desc {
+    font-size: 15.5px;
+    line-height: 1.7;
+    color: var(--w45);
+    margin-bottom: 20px;
+    max-width: 430px;
+  }
+
+  .fw-step-unlock {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.03em;
+  }
+
+  .fw-step-unlock-dot {
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+  }
+
+  .fw-step--1 .fw-step-unlock { color: var(--green); }
+  .fw-step--1 .fw-step-unlock-dot { background: var(--green-a); }
+  .fw-step--2 .fw-step-unlock { color: var(--amber); }
+  .fw-step--2 .fw-step-unlock-dot { background: var(--amber-a); }
+  .fw-step--3 .fw-step-unlock { color: var(--indigo); }
+  .fw-step--3 .fw-step-unlock-dot { background: var(--indigo-a); }
+  .fw-step--4 .fw-step-unlock { color: var(--blue); }
+  .fw-step--4 .fw-step-unlock-dot { background: var(--blue-a); }
+
+  /* RIGHT — sticky diagram */
+  .fw-diagram {
+    position: sticky;
+    top: calc(50vh - 220px);
+    flex: 1;
+    max-width: 520px;
+    height: 500px;
+    align-self: flex-start;
+  }
+
+  .fw-diagram-frame {
+    width: 100%;
+    height: 100%;
+    background: var(--bg-card);
+    border: 1px solid var(--w08);
+    border-radius: 20px;
+    padding: 36px 32px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Subtle top glow */
+  .fw-diagram-frame::before {
+    content: '';
+    position: absolute;
+    top: -40px; left: 50%;
+    transform: translateX(-50%);
+    width: 300px; height: 200px;
+    background: radial-gradient(ellipse, var(--indigo-soft) 0%, transparent 65%);
+    pointer-events: none;
+  }
+
+  /* ── LAYER NODES ── */
+  .fw-node {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 18px;
+    border-radius: 14px;
+    border: 1px solid var(--w08);
+    background: var(--bg-card-inner);
+    margin-bottom: 10px;
+    position: relative;
+    z-index: 2;
+    opacity: 0.12;
+    transform: translateX(-10px);
+    transition:
+      opacity 0.55s cubic-bezier(0.22,1,0.36,1),
+      transform 0.55s cubic-bezier(0.22,1,0.36,1),
+      border-color 0.4s,
+      box-shadow 0.4s;
+  }
+
+  .fw-node.lit {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  .fw-node.current {
+    border-color: var(--w15);
+  }
+
+  .fw-node--1.current { border-color: rgba(0,229,155,0.35); box-shadow: 0 0 28px -10px rgba(0,229,155,0.2); }
+  .fw-node--2.current { border-color: rgba(255,181,71,0.35); box-shadow: 0 0 28px -10px rgba(255,181,71,0.2); }
+  .fw-node--3.current { border-color: rgba(67,24,255,0.5); box-shadow: 0 0 28px -10px var(--indigo-glow); }
+  .fw-node--4.current { border-color: rgba(71,171,255,0.35); box-shadow: 0 0 28px -10px rgba(71,171,255,0.2); }
+
+  .fw-node-icon {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .fw-node--1 .fw-node-icon { background: var(--green-a); color: var(--green); }
+  .fw-node--2 .fw-node-icon { background: var(--amber-a); color: var(--amber); }
+  .fw-node--3 .fw-node-icon { background: var(--indigo-a); color: var(--indigo); }
+  .fw-node--4 .fw-node-icon { background: var(--blue-a); color: var(--blue); }
+
+  .fw-node-text { flex: 1; }
+
+  .fw-node-name {
+    font-size: 13.5px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin-bottom: 1px;
+  }
+
+  .fw-node-stat {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--w30);
+    letter-spacing: 0.02em;
+    opacity: 0;
+    transition: opacity 0.4s 0.15s;
+  }
+
+  .fw-node.lit .fw-node-stat { opacity: 1; }
+
+  .fw-node-check {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    border: 1.5px solid var(--w08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: transparent;
+    transition: all 0.35s;
+    flex-shrink: 0;
+  }
+
+  .fw-node.lit .fw-node-check {
+    border-color: var(--green);
+    color: var(--green);
+    background: var(--green-a);
+  }
+
+  .fw-node.current .fw-node-check {
+    border-color: var(--white);
+    color: var(--white);
+    background: var(--indigo);
+    animation: pop 0.35s ease;
+  }
+
+  @keyframes pop {
+    0% { transform: scale(0.5); }
+    60% { transform: scale(1.15); }
+    100% { transform: scale(1); }
+  }
+
+  /* ── CONNECTORS ── */
+  .fw-conn {
+    width: 2px;
+    height: 10px;
+    margin: 0 0 0 35px;
+    background: var(--w08);
+    position: relative;
+    z-index: 1;
+    transition: background 0.5s;
+  }
+
+  .fw-conn.lit {
+    background: linear-gradient(to bottom, var(--green), var(--indigo));
+  }
+
+  /* Glow */
+  .fw-conn.lit::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 8px; height: 100%;
+    border-radius: 4px;
+    background: inherit;
+    filter: blur(5px);
+    opacity: 0.5;
+  }
+
+  /* Flowing dot */
+  .fw-conn.lit::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 3px; height: 3px;
+    border-radius: 50%;
+    background: white;
+    animation: flow 1s ease-in-out infinite;
+  }
+
+  @keyframes flow {
+    0% { top: -1px; opacity: 0; }
+    25% { opacity: 1; }
+    100% { top: 12px; opacity: 0; }
+  }
+
+  .fw-conn--1.lit { background: linear-gradient(to bottom, var(--green), var(--amber)); }
+  .fw-conn--1.lit::after { background: var(--green); }
+  .fw-conn--2.lit { background: linear-gradient(to bottom, var(--amber), var(--indigo)); }
+  .fw-conn--2.lit::after { background: var(--amber); }
+  .fw-conn--3.lit { background: linear-gradient(to bottom, var(--indigo), var(--blue)); }
+  .fw-conn--3.lit::after { background: var(--indigo); }
+
+  /* ── PROGRESS BAR ── */
+  .fw-progress {
+    position: absolute;
+    bottom: 20px; left: 20px; right: 20px;
+    background: var(--w04);
+    border: 1px solid var(--w08);
+    border-radius: 12px;
+    padding: 12px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 3;
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 0.5s, transform 0.5s;
+  }
+
+  .fw-progress.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .fw-progress-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--w30);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .fw-progress-bar {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    flex: 1;
+    margin: 0 14px;
+  }
+
+  .fw-bar-seg {
+    height: 5px;
+    border-radius: 3px;
+    flex: 1;
+    background: var(--w08);
+    transition: background 0.5s, box-shadow 0.5s;
+  }
+
+  .fw-bar-seg.lit:nth-child(1) { background: var(--green); box-shadow: 0 0 6px rgba(0,229,155,0.25); }
+  .fw-bar-seg.lit:nth-child(2) { background: var(--amber); box-shadow: 0 0 6px rgba(255,181,71,0.25); }
+  .fw-bar-seg.lit:nth-child(3) { background: var(--indigo); box-shadow: 0 0 6px rgba(67,24,255,0.25); }
+  .fw-bar-seg.lit:nth-child(4) { background: var(--blue); box-shadow: 0 0 6px rgba(71,171,255,0.25); }
+
+  .fw-progress-pct {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--w30);
+    min-width: 38px;
+    text-align: right;
+    transition: color 0.5s;
+  }
+
+  .fw-progress-pct.full { color: var(--green); }
+
+  /* ── FINAL CTA ── */
+  .fw-cta {
+    text-align: center;
+    padding: 100px 52px 120px;
+    border-bottom: 1px solid var(--w08);
+  }
+
+  .fw-cta-heading {
+    font-size: clamp(24px, 2.5vw, 36px);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    margin-bottom: 14px;
+  }
+
+  .fw-cta-sub {
+    font-size: 16px;
+    color: var(--w45);
+    line-height: 1.6;
+    max-width: 460px;
+    margin: 0 auto 32px;
+  }
+
+  .fw-cta-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--indigo);
+    color: white;
+    padding: 16px 36px;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: box-shadow 0.3s, transform 0.2s;
+  }
+
+  .fw-cta-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px var(--indigo-glow);
+  }
+
+  .fw-cta-btn svg { transition: transform 0.2s; }
+  .fw-cta-btn:hover svg { transform: translateX(3px); }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════
+     FLYWHEEL SECTION — paste after panels
+     ═══════════════════════════════════════ -->
+<section class="flywheel-section">
+
+  <!-- Sticky header -->
+  <div class="fw-header" id="fwHeader">
+    <div class="fw-eyebrow">How Delt Works</div>
+    <h2 class="fw-title">Each layer makes the others stronger.</h2>
+    <p class="fw-subtitle">Most platforms bolt tools together. Delt is built so every product feeds the next — creating a flywheel that compounds over time.</p>
+  </div>
+
+  <!-- Scroll area: steps left, diagram right -->
+  <div class="fw-scroll-area">
+
+    <!-- LEFT: steps -->
+    <div class="fw-steps">
+      <div class="fw-step fw-step--1 active" data-stage="0">
+        <div class="fw-step-badge"><span class="fw-step-num">1</span> Storefront</div>
+        <div class="fw-step-name">Live in under 24 hours.</div>
+        <p class="fw-step-desc">We design, host, and manage your website so it's ready to convert from day one. Customers find you, browse your menu or catalog, and order online. This is where every Delt merchant begins.</p>
+        <div class="fw-step-unlock"><span class="fw-step-unlock-dot">→</span> Unlocks: online ordering &amp; customer traffic</div>
+      </div>
+
+      <div class="fw-step fw-step--2" data-stage="1">
+        <div class="fw-step-badge"><span class="fw-step-num">2</span> Commerce</div>
+        <div class="fw-step-name">Every transaction, in one system.</div>
+        <p class="fw-step-desc">Tap, chip, swipe — in store and online. Your checkout is already wired into your website. Hardware is included, pricing is interchange-plus, and every dollar in and out lives in one place.</p>
+        <div class="fw-step-unlock"><span class="fw-step-unlock-dot">→</span> Unlocks: real-time transaction data for Lens</div>
+      </div>
+
+      <div class="fw-step fw-step--3" data-stage="2">
+        <div class="fw-step-badge"><span class="fw-step-num">3</span> Intelligence</div>
+        <div class="fw-step-name">Lens turns transactions into insight.</div>
+        <p class="fw-step-desc">Because Delt processes your payments, Lens already knows your revenue patterns, busiest hours, and seasonal trends. No manual uploads. No new tools to learn. Just ask.</p>
+        <div class="fw-step-unlock"><span class="fw-step-unlock-dot">→</span> Unlocks: pre-qualified capital offers</div>
+      </div>
+
+      <div class="fw-step fw-step--4" data-stage="3">
+        <div class="fw-step-badge"><span class="fw-step-num">4</span> Capital</div>
+        <div class="fw-step-name">Capital, matched to your business.</div>
+        <p class="fw-step-desc">Because Lens understands your performance and Delt processes your payments, we can underwrite instantly. Revenue-based funding, no equity, average 48-hour disbursement.</p>
+        <div class="fw-step-unlock"><span class="fw-step-unlock-dot">✓</span> All four products connected</div>
+      </div>
+    </div>
+
+    <!-- RIGHT: sticky diagram -->
+    <div class="fw-diagram">
+      <div class="fw-diagram-frame">
+
+        <div class="fw-node fw-node--1" id="n0">
+          <div class="fw-node-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          </div>
+          <div class="fw-node-text">
+            <div class="fw-node-name">Storefront</div>
+            <div class="fw-node-stat">Live in under 24 hours</div>
+          </div>
+          <div class="fw-node-check">✓</div>
+        </div>
+
+        <div class="fw-conn fw-conn--1" id="c1"></div>
+
+        <div class="fw-node fw-node--2" id="n1">
+          <div class="fw-node-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+          </div>
+          <div class="fw-node-text">
+            <div class="fw-node-name">Commerce</div>
+            <div class="fw-node-stat">Every transaction, one system</div>
+          </div>
+          <div class="fw-node-check">✓</div>
+        </div>
+
+        <div class="fw-conn fw-conn--2" id="c2"></div>
+
+        <div class="fw-node fw-node--3" id="n2">
+          <div class="fw-node-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          </div>
+          <div class="fw-node-text">
+            <div class="fw-node-name">Lens Intelligence</div>
+            <div class="fw-node-stat">Transactions → Insight</div>
+          </div>
+          <div class="fw-node-check">✓</div>
+        </div>
+
+        <div class="fw-conn fw-conn--3" id="c3"></div>
+
+        <div class="fw-node fw-node--4" id="n3">
+          <div class="fw-node-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          </div>
+          <div class="fw-node-text">
+            <div class="fw-node-name">Capital</div>
+            <div class="fw-node-stat">Matched to your business</div>
+          </div>
+          <div class="fw-node-check">✓</div>
+        </div>
+
+        <!-- Progress bar -->
+        <div class="fw-progress" id="fwProgress">
+          <div class="fw-progress-label">Stack</div>
+          <div class="fw-progress-bar">
+            <div class="fw-bar-seg" id="b0"></div>
+            <div class="fw-bar-seg" id="b1"></div>
+            <div class="fw-bar-seg" id="b2"></div>
+            <div class="fw-bar-seg" id="b3"></div>
+          </div>
+          <div class="fw-progress-pct" id="fwPct">0%</div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- Final CTA -->
+<section class="fw-cta">
+  <div class="fw-cta-heading">All four products connected.</div>
+  <p class="fw-cta-sub">Every Delt merchant begins the same way — a site that goes live in under 24 hours. What happens next is what makes the difference.</p>
+  <a href="#" class="fw-cta-btn">
+    Get Started for Free
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+  </a>
+</section>
+
+<script>
+  // ── PINNED HEADER ──
+  const fwHeader = document.getElementById('fwHeader');
+  const fwSection = document.querySelector('.flywheel-section');
+
+  function checkPinned() {
+    const r = fwSection.getBoundingClientRect();
+    fwHeader.classList.toggle('pinned', r.top <= 0 && r.bottom > 200);
+  }
+
+  // ── STAGE LOGIC ──
+  const steps = document.querySelectorAll('[data-stage]');
+  const N = steps.length;
+  const nodes = Array.from({ length: N }, (_, i) => document.getElementById('n' + i));
+  const conns = Array.from({ length: N - 1 }, (_, i) => document.getElementById('c' + (i + 1)));
+  const bars = Array.from({ length: N }, (_, i) => document.getElementById('b' + i));
+  const progress = document.getElementById('fwProgress');
+  const pctEl = document.getElementById('fwPct');
+
+  let cur = -1;
+
+  function setStage(s) {
+    s = Math.max(0, Math.min(s, N - 1));
+    if (s === cur) return;
+    cur = s;
+
+    steps.forEach(el => {
+      el.classList.toggle('active', parseInt(el.dataset.stage) === s);
+    });
+
+    nodes.forEach((n, i) => {
+      if (!n) return;
+      n.classList.toggle('lit', i <= s);
+      n.classList.toggle('current', i === s);
+    });
+
+    conns.forEach((c, i) => {
+      if (!c) return;
+      c.classList.toggle('lit', s > i);
+    });
+
+    bars.forEach((b, i) => {
+      if (!b) return;
+      b.classList.toggle('lit', i <= s);
+    });
+
+    progress.classList.add('visible');
+    const pct = Math.round(((s + 1) / N) * 100);
+    pctEl.textContent = pct + '%';
+    pctEl.classList.toggle('full', s === N - 1);
+  }
+
+  function calcStage() {
+    const hotLine = window.innerHeight * 0.4;
+    let best = 0, bestDist = Infinity;
+
+    steps.forEach(el => {
+      const r = el.getBoundingClientRect();
+      const center = r.top + r.height / 2;
+      const dist = Math.abs(center - hotLine);
+      if (r.top < window.innerHeight * 0.75 && dist < bestDist) {
+        bestDist = dist;
+        best = parseInt(el.dataset.stage);
+      }
+    });
+
+    setStage(best);
+  }
+
+  // Scroll — rAF throttled
+  let ticking = false;
+  window.addEventListener('scroll', () => {
+    if (!ticking) {
+      requestAnimationFrame(() => {
+        calcStage();
+        checkPinned();
+        ticking = false;
+      });
+      ticking = true;
+    }
+  }, { passive: true });
+
+  // Belt-and-suspenders IO
+  const io = new IntersectionObserver(() => calcStage(), {
+    threshold: [0, 0.25, 0.5, 0.75, 1],
+    rootMargin: '-15% 0px -35% 0px'
+  });
+  steps.forEach(s => io.observe(s));
+
+  // Init
+  setStage(0);
+</script>
+
+</body>
+</html>

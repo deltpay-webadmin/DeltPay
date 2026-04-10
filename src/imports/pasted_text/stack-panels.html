@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Delt — Stack Panels</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #041e42;
+    --navy-90: rgba(4,30,66,0.90);
+    --navy-75: rgba(4,30,66,0.75);
+    --navy-60: rgba(4,30,66,0.60);
+    --indigo: #4318FF;
+    --white: #f2f2f7;
+    --w90: rgba(242,242,247,0.90);
+    --w75: rgba(242,242,247,0.75);
+    --w50: rgba(242,242,247,0.50);
+    --w30: rgba(242,242,247,0.30);
+    --w15: rgba(242,242,247,0.15);
+    --w08: rgba(242,242,247,0.08);
+    --w04: rgba(242,242,247,0.04);
+    --green: #34D399;
+    --amber: #FBBF24;
+    --violet: #A78BFA;
+    --blue: #60A5FA;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--navy);
+    color: var(--white);
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  /* ═══ SCROLL CONTAINER ═══ */
+  .stack-experience {
+    position: relative;
+    height: 450vh;
+  }
+
+  .stack-sticky {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding: 0 40px;
+    overflow: hidden;
+  }
+
+  /* ── TOP BAR ── */
+  .stack-top {
+    padding: 32px 0 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  .stack-label {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  .stack-counter {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--w30);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .pips { display: flex; gap: 4px; }
+
+  .pip {
+    width: 28px; height: 3px;
+    border-radius: 2px;
+    background: var(--w08);
+    overflow: hidden;
+    position: relative;
+  }
+
+  .pip::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    width: 0%;
+    border-radius: 2px;
+    transition: width 0.5s cubic-bezier(0.22,1,0.36,1);
+  }
+
+  .pip.filled::after { width: 100%; }
+  .pip:nth-child(1)::after { background: var(--green); }
+  .pip:nth-child(2)::after { background: var(--violet); }
+  .pip:nth-child(3)::after { background: var(--amber); }
+  .pip:nth-child(4)::after { background: var(--blue); }
+
+  /* ── PANELS ── */
+  .panels {
+    flex: 1;
+    display: flex;
+    gap: 12px;
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
+    align-items: stretch;
+    padding-bottom: 32px;
+  }
+
+  .panel {
+    flex: 1;
+    min-width: 0;
+    border-radius: 20px;
+    position: relative;
+    overflow: hidden;
+    transition:
+      flex 0.7s cubic-bezier(0.22,1,0.36,1),
+      opacity 0.5s ease,
+      transform 0.6s cubic-bezier(0.22,1,0.36,1),
+      border-color 0.5s;
+    border: 1px solid var(--w08);
+    cursor: default;
+  }
+
+  /* States */
+  .panel.compressed { flex: 0.55; opacity: 0.4; transform: scale(0.97); }
+  .panel.active { flex: 2.4; opacity: 1; transform: scale(1); }
+  .panel.done { flex: 0.65; opacity: 0.5; }
+
+  /* Active glow */
+  .panel.active.p0 { border-color: rgba(52,211,153,0.3); box-shadow: 0 0 60px -20px rgba(52,211,153,0.12); }
+  .panel.active.p1 { border-color: rgba(167,139,250,0.3); box-shadow: 0 0 60px -20px rgba(167,139,250,0.12); }
+  .panel.active.p2 { border-color: rgba(251,191,36,0.3); box-shadow: 0 0 60px -20px rgba(251,191,36,0.12); }
+  .panel.active.p3 { border-color: rgba(96,165,250,0.3); box-shadow: 0 0 60px -20px rgba(96,165,250,0.12); }
+
+  /* Top accent */
+  .panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    z-index: 10;
+    opacity: 0;
+    transition: opacity 0.4s;
+  }
+  .panel.active::before { opacity: 1; }
+  .p0::before { background: var(--green); }
+  .p1::before { background: var(--violet); }
+  .p2::before { background: var(--amber); }
+  .p3::before { background: var(--blue); }
+
+  /* ── BACKGROUND IMAGE ── */
+  .panel-bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    transition: opacity 0.5s;
+  }
+
+  .panel-bg-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.25;
+    transition: opacity 0.6s;
+  }
+
+  .panel.active .panel-bg-img { opacity: 0.4; }
+  .panel.compressed .panel-bg-img { opacity: 0.1; }
+
+  /* Placeholder image gradients */
+  .p0 .panel-bg { background: linear-gradient(160deg, #1a1400 0%, #3d2e00 40%, #2a1f00 100%); }
+  .p1 .panel-bg { background: linear-gradient(160deg, #0f0520 0%, #1a0a3d 40%, #12072a 100%); }
+  .p2 .panel-bg { background: linear-gradient(160deg, #001a1a 0%, #002a3d 40%, #001f2a 100%); }
+  .p3 .panel-bg { background: linear-gradient(160deg, #00101a 0%, #00203d 40%, #00182a 100%); }
+
+  /* ── FROSTED CONTENT PANEL ── */
+  .panel-content {
+    position: relative;
+    z-index: 5;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* The frosted glass container for text */
+  .frost {
+    background: var(--navy-75);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-bottom: 1px solid var(--w08);
+    padding: 32px 28px;
+    flex-shrink: 0;
+    transition: background 0.4s;
+  }
+
+  .panel.active .frost {
+    background: var(--navy-90);
+  }
+
+  /* Icon */
+  .panel-icon {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 18px;
+  }
+
+  .p0 .panel-icon { background: rgba(52,211,153,0.12); color: var(--green); }
+  .p1 .panel-icon { background: rgba(167,139,250,0.12); color: var(--violet); }
+  .p2 .panel-icon { background: rgba(251,191,36,0.12); color: var(--amber); }
+  .p3 .panel-icon { background: rgba(96,165,250,0.12); color: var(--blue); }
+
+  /* Step label */
+  .panel-step {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--w30);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    transition: color 0.4s;
+  }
+
+  .panel.active .panel-step { color: var(--w50); }
+
+  /* Panel name (always visible) */
+  .panel-name {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    color: var(--white);
+    transition: font-size 0.5s;
+  }
+
+  .panel.active .panel-name { font-size: 24px; }
+  .panel.compressed .panel-name {
+    font-size: 16px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Short desc (visible when not active) */
+  .panel-short {
+    font-size: 14px;
+    color: var(--w30);
+    line-height: 1.55;
+    margin-top: 10px;
+    transition: opacity 0.3s;
+  }
+
+  .panel.active .panel-short { opacity: 0; height: 0; overflow: hidden; margin: 0; }
+  .panel.compressed .panel-short { opacity: 0; height: 0; overflow: hidden; margin: 0; }
+
+  /* ── EXPANDED CONTENT (active only) ── */
+  .panel-expanded {
+    opacity: 0;
+    max-height: 0;
+    overflow: hidden;
+    transition: opacity 0.5s 0.1s, max-height 0.5s;
+  }
+
+  .panel.active .panel-expanded {
+    opacity: 1;
+    max-height: 600px;
+  }
+
+  .panel-headline {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--w90);
+    margin: 16px 0 14px;
+    line-height: 1.4;
+  }
+
+  .panel-body {
+    font-size: 16px;
+    line-height: 1.75;
+    color: var(--w75);
+  }
+
+  .panel-unlock {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--w08);
+  }
+
+  .p0 .panel-unlock { color: var(--green); border-color: rgba(52,211,153,0.15); }
+  .p1 .panel-unlock { color: var(--violet); border-color: rgba(167,139,250,0.15); }
+  .p2 .panel-unlock { color: var(--amber); border-color: rgba(251,191,36,0.15); }
+  .p3 .panel-unlock { color: var(--blue); border-color: rgba(96,165,250,0.15); }
+
+  .unlock-dot {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .p0 .unlock-dot { background: rgba(52,211,153,0.12); }
+  .p1 .unlock-dot { background: rgba(167,139,250,0.12); }
+  .p2 .unlock-dot { background: rgba(251,191,36,0.12); }
+  .p3 .unlock-dot { background: rgba(96,165,250,0.12); }
+
+  /* CTA button inside active panel */
+  .panel-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--indigo);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    margin-top: 20px;
+    transition: box-shadow 0.3s, transform 0.2s;
+    align-self: flex-start;
+  }
+
+  .panel-cta:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 20px rgba(67,24,255,0.3);
+  }
+
+  /* ── IMAGE AREA (bottom portion, visible through) ── */
+  .panel-image-area {
+    flex: 1;
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: flex-end;
+    padding: 16px;
+  }
+
+  /* Tag pill at bottom */
+  .panel-tag {
+    font-size: 12px;
+    font-weight: 500;
+    padding: 8px 16px;
+    border-radius: 10px;
+    background: var(--navy-75);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--w08);
+    color: var(--w75);
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 0.4s 0.2s, transform 0.4s 0.2s;
+  }
+
+  .panel.active .panel-tag {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .panel-tag strong {
+    font-weight: 700;
+    margin-right: 6px;
+  }
+
+  .p0 .panel-tag strong { color: var(--green); }
+  .p1 .panel-tag strong { color: var(--violet); }
+  .p2 .panel-tag strong { color: var(--amber); }
+  .p3 .panel-tag strong { color: var(--blue); }
+
+  /* ═══ CTA SECTION ═══ */
+  .cta {
+    text-align: center;
+    padding: 120px 48px 140px;
+  }
+
+  .cta h2 {
+    font-size: clamp(26px, 2.8vw, 40px);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    margin-bottom: 16px;
+  }
+
+  .cta p {
+    font-size: 18px;
+    color: var(--w50);
+    line-height: 1.65;
+    max-width: 480px;
+    margin: 0 auto 36px;
+  }
+
+  .cta-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--indigo);
+    color: white;
+    padding: 18px 40px;
+    border-radius: 14px;
+    font-size: 16px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: box-shadow 0.3s, transform 0.2s;
+  }
+
+  .cta-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(67,24,255,0.25);
+  }
+</style>
+</head>
+<body>
+
+<div class="stack-experience">
+  <div class="stack-sticky">
+
+    <div class="stack-top">
+      <div class="stack-label">How Delt Works</div>
+      <div class="stack-counter">
+        <div class="pips">
+          <div class="pip" id="pip0"></div>
+          <div class="pip" id="pip1"></div>
+          <div class="pip" id="pip2"></div>
+          <div class="pip" id="pip3"></div>
+        </div>
+        <span id="cLabel">1 / 4</span>
+      </div>
+    </div>
+
+    <div class="panels">
+
+      <!-- 01 Storefront -->
+      <div class="panel p0 active" data-idx="0">
+        <div class="panel-bg"></div>
+        <div class="panel-content">
+          <div class="frost">
+            <div class="panel-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            </div>
+            <div class="panel-step">01 · Digital Presence</div>
+            <div class="panel-name">Get Online and Stay Online</div>
+            <p class="panel-short">Your professional storefront, live and selling.</p>
+            <div class="panel-expanded">
+              <div class="panel-headline">First, we build your storefront.</div>
+              <p class="panel-body">Your website shouldn't be a headache. We design, host, and manage a professional shop built to turn visitors into customers. No waiting months for an agency — just a secure, mobile-ready site that's ready to take orders while you sleep.</p>
+              <div class="panel-unlock"><span class="unlock-dot">→</span> Unlocks: Online orders and new customer traffic.</div>
+              <a href="#" class="panel-cta">Learn more →</a>
+            </div>
+          </div>
+          <div class="panel-image-area">
+            <div class="panel-tag"><strong>We handle the tech</strong> Built to sell</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 02 Intelligence -->
+      <div class="panel p1 compressed" data-idx="1">
+        <div class="panel-bg"></div>
+        <div class="panel-content">
+          <div class="frost">
+            <div class="panel-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            </div>
+            <div class="panel-step">02 · Intelligence</div>
+            <div class="panel-name">Stop the Guesswork</div>
+            <p class="panel-short">AI-powered analytics with Lens.</p>
+            <div class="panel-expanded">
+              <div class="panel-headline">Next, we show you what's actually working.</div>
+              <p class="panel-body">Once you're live, we look at the numbers for you. Lens acts like a partner who's always watching the books, pointing out your busiest hours and your best-selling products. No messy spreadsheets — just clear, simple answers to your questions.</p>
+              <div class="panel-unlock"><span class="unlock-dot">→</span> Unlocks: Clearer decisions and a plan to grow.</div>
+              <a href="#" class="panel-cta">Learn more →</a>
+            </div>
+          </div>
+          <div class="panel-image-area">
+            <div class="panel-tag"><strong>No more spreadsheets</strong> Real answers in plain English</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 03 Commerce -->
+      <div class="panel p2 compressed" data-idx="2">
+        <div class="panel-bg"></div>
+        <div class="panel-content">
+          <div class="frost">
+            <div class="panel-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+            </div>
+            <div class="panel-step">03 · Commerce</div>
+            <div class="panel-name">Keep More of What You Make</div>
+            <p class="panel-short">Unified payments, better rates.</p>
+            <div class="panel-expanded">
+              <div class="panel-headline">Then, we fix your payment processing.</div>
+              <p class="panel-body">Most business owners are overpaying on every swipe and don't even know it. We set you up with transparent, interchange-plus pricing — in store and online. Hardware included. Every dollar tracked in one place.</p>
+              <div class="panel-unlock"><span class="unlock-dot">→</span> Unlocks: Lower fees and unified transaction data.</div>
+              <a href="#" class="panel-cta">Learn more →</a>
+            </div>
+          </div>
+          <div class="panel-image-area">
+            <div class="panel-tag"><strong>Tap, chip, swipe</strong> Hardware and checkout included</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 04 Capital -->
+      <div class="panel p3 compressed" data-idx="3">
+        <div class="panel-bg"></div>
+        <div class="panel-content">
+          <div class="frost">
+            <div class="panel-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            </div>
+            <div class="panel-step">04 · Capital</div>
+            <div class="panel-name">Grow on Your Terms</div>
+            <p class="panel-short">Revenue-based funding, no equity.</p>
+            <div class="panel-expanded">
+              <div class="panel-headline">Finally, we fund your next move.</div>
+              <p class="panel-body">Because we already know your revenue and process your payments, we can underwrite you in real time. No banks. No equity. Just revenue-based capital that matches your cash flow, with 48-hour average disbursement.</p>
+              <div class="panel-unlock"><span class="unlock-dot">✓</span> All four products connected.</div>
+              <a href="#" class="panel-cta">Learn more →</a>
+            </div>
+          </div>
+          <div class="panel-image-area">
+            <div class="panel-tag"><strong>Fast access to capital</strong> Built for growing businesses</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<section class="cta">
+  <h2>All four products connected.</h2>
+  <p>Every Delt merchant begins the same way — a site that goes live in under 24 hours. What happens next is what makes the difference.</p>
+  <a href="#" class="cta-btn">
+    Get Started for Free
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+  </a>
+</section>
+
+<script>
+  const container = document.querySelector('.stack-experience');
+  const panels = document.querySelectorAll('.panel');
+  const pips = Array.from({length:4}, (_,i) => document.getElementById('pip'+i));
+  const label = document.getElementById('cLabel');
+  const N = panels.length;
+  let cur = -1;
+
+  function setStage(stage) {
+    stage = Math.max(0, Math.min(stage, N-1));
+    if (stage === cur) return;
+    cur = stage;
+
+    panels.forEach((p, i) => {
+      p.classList.remove('active', 'compressed', 'done');
+      if (i < stage) p.classList.add('done');
+      else if (i === stage) p.classList.add('active');
+      else p.classList.add('compressed');
+    });
+
+    pips.forEach((p, i) => p.classList.toggle('filled', i <= stage));
+    label.textContent = (stage + 1) + ' / 4';
+  }
+
+  function calc() {
+    const rect = container.getBoundingClientRect();
+    const total = container.offsetHeight - window.innerHeight;
+    const scrolled = Math.max(0, -rect.top);
+    const progress = Math.min(scrolled / total, 0.999);
+    setStage(Math.floor(progress * N));
+  }
+
+  let ticking = false;
+  window.addEventListener('scroll', () => {
+    if (!ticking) {
+      requestAnimationFrame(() => { calc(); ticking = false; });
+      ticking = true;
+    }
+  }, { passive: true });
+
+  setStage(0);
+</script>
+</body>
+</html>

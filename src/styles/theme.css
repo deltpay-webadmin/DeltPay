@@ -1,0 +1,506 @@
+@custom-variant dark (&:is(.dark *));
+
+body {
+  position: relative;
+  zoom: 0.8;
+}
+
+html {
+  position: relative;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+:root {
+  --font-size: 16px;
+  
+  /* Fintech Color Palette */
+  --primary-blue: #4945FF;
+  --navy: #041E42;
+  --white: #FFFFFF;
+  --light-gray: #F6F7FB;
+  --gray-300: #E5E7EB;
+  --gray-600: #6B7280;
+  
+  /* Success / Growth accent */
+  --success: #16C784;
+  --soft-gray: #E9ECEF;
+
+  /* Theme mappings */
+  --background: #ffffff;
+  --foreground: #041E42;
+  --card: #ffffff;
+  --card-foreground: #041E42;
+  --popover: #ffffff;
+  --popover-foreground: #041E42;
+  --primary: #4945FF;
+  --primary-foreground: #ffffff;
+  --secondary: #041E42;
+  --secondary-foreground: #ffffff;
+  --muted: #F6F7FB;
+  --muted-foreground: #6B7280;
+  --accent: #E5E7EB;
+  --accent-foreground: #041E42;
+  --destructive: #d4183d;
+  --destructive-foreground: #ffffff;
+  --border: #E5E7EB;
+  --input: transparent;
+  --input-background: #ffffff;
+  --switch-background: #E5E7EB;
+  --font-weight-medium: 500;
+  --font-weight-normal: 400;
+  --ring: #4945FF;
+  --chart-1: #4945FF;
+  --chart-2: #041E42;
+  --chart-3: #6B7280;
+  --chart-4: #E5E7EB;
+  --chart-5: #F6F7FB;
+  --radius: 0.375rem;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #041E42;
+  --sidebar-primary: #4945FF;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #F6F7FB;
+  --sidebar-accent-foreground: #041E42;
+  --sidebar-border: #E5E7EB;
+  --sidebar-ring: #4945FF;
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.145 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.145 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.985 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.396 0.141 25.723);
+  --destructive-foreground: oklch(0.637 0.237 25.331);
+  --border: oklch(0.269 0 0);
+  --input: oklch(0.269 0 0);
+  --ring: oklch(0.439 0 0);
+  --font-weight-medium: 500;
+  --font-weight-normal: 400;
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(0.269 0 0);
+  --sidebar-ring: oklch(0.439 0 0);
+}
+
+@theme inline {
+  --spacing: 0.25rem;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-input-background: var(--input-background);
+  --color-switch-background: var(--switch-background);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@keyframes wave-gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes clock-tick {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  10% {
+    transform: rotate(15deg);
+  }
+  20% {
+    transform: rotate(-10deg);
+  }
+  30% {
+    transform: rotate(5deg);
+  }
+  40% {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes clock-rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes minute-hand-rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pin-bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes lightning-charge {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.1);
+  }
+}
+
+@keyframes scroll-fast {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes ticker {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-clock-tick {
+  animation: clock-tick 2s ease-in-out infinite;
+  transform-origin: center;
+}
+
+.animate-pin-bounce {
+  animation: pin-bounce 2.5s ease-in-out infinite;
+}
+
+.animate-lightning-charge {
+  animation: lightning-charge 2s ease-in-out infinite;
+}
+
+.animate-minute-hand {
+  transform-origin: 12px 12px;
+  animation: minute-hand-rotate 8s linear infinite;
+}
+
+.animate-scroll-fast {
+  animation: scroll-fast 15s linear infinite;
+}
+
+.animate-ticker {
+  animation: ticker 20s linear infinite;
+}
+
+/* ══════ Dashboard Dark Mode ══════ */
+.dashboard-dark {
+  --db-bg: #0B1929;
+  --db-surface: #111D2E;
+  --db-surface-hover: #162538;
+  --db-border: #1E3048;
+  --db-text-primary: #E8ECF1;
+  --db-text-secondary: #94A3B8;
+  --db-text-muted: #64748B;
+}
+
+.dashboard-dark,
+.dashboard-dark * {
+  border-color: var(--db-border) !important;
+}
+
+/* Backgrounds */
+.dashboard-dark .bg-white,
+.dashboard-dark .bg-\[\#F5F5F5\],
+.dashboard-dark .bg-\[\#FAFAFA\],
+.dashboard-dark .bg-\[\#F8F8F8\] {
+  background-color: var(--db-surface) !important;
+}
+
+.dashboard-dark {
+  background-color: var(--db-bg) !important;
+}
+
+.dashboard-dark .hover\:bg-\[\#F5F5F5\]:hover,
+.dashboard-dark .hover\:bg-\[\#EBEBEB\]:hover {
+  background-color: var(--db-surface-hover) !important;
+}
+
+/* Sticky bars and backdrops */
+.dashboard-dark .bg-white\/80 {
+  background-color: rgba(11, 25, 41, 0.85) !important;
+}
+
+/* Text colors */
+.dashboard-dark .text-\[\#111\],
+.dashboard-dark .text-\[\#222\],
+.dashboard-dark .text-\[\#333\] {
+  color: var(--db-text-primary) !important;
+}
+
+.dashboard-dark .text-\[\#555\],
+.dashboard-dark .text-\[\#666\] {
+  color: var(--db-text-secondary) !important;
+}
+
+.dashboard-dark .text-\[\#999\],
+.dashboard-dark .text-\[\#BBB\],
+.dashboard-dark .text-\[\#AAA\] {
+  color: var(--db-text-muted) !important;
+}
+
+/* Fix inline style colors via cascade - these need JS but CSS helps for class-based ones */
+.dashboard-dark input,
+.dashboard-dark textarea {
+  color: var(--db-text-primary) !important;
+  background-color: var(--db-surface) !important;
+}
+
+.dashboard-dark input::placeholder,
+.dashboard-dark textarea::placeholder {
+  color: var(--db-text-muted) !important;
+}
+
+/* SVG circle fill overrides for line-chart end dots */
+.dashboard-dark svg circle[fill="white"] {
+  fill: var(--db-surface) !important;
+}
+
+/* Modal/overlay full-screen panels */
+.dashboard-dark .fixed.bg-white {
+  background-color: var(--db-bg) !important;
+}
+
+.dashboard-dark .sticky.bg-white {
+  background-color: var(--db-bg) !important;
+}
+
+/* Ring focus states */
+.dashboard-dark .ring-\[\#4945FF\]\/30 {
+  --tw-ring-color: rgba(73, 69, 255, 0.3) !important;
+}
+
+/* Catch min-h-screen bg-white on child root divs */
+.dashboard-dark .min-h-screen.bg-white,
+.dashboard-dark > .bg-white,
+.dashboard-dark .overflow-auto > .min-h-screen {
+  background-color: var(--db-bg) !important;
+}
+
+/* Inline style color overrides — force via specificity on common elements */
+.dashboard-dark h1,
+.dashboard-dark h2,
+.dashboard-dark h3,
+.dashboard-dark h4,
+.dashboard-dark p,
+.dashboard-dark span,
+.dashboard-dark div,
+.dashboard-dark td,
+.dashboard-dark th,
+.dashboard-dark label {
+  color: inherit;
+}
+
+/* Specific inline style overrides — use [style] attribute selector */
+.dashboard-dark [style*="color: rgb(17"] ,
+.dashboard-dark [style*="color: rgb(34"] ,
+.dashboard-dark [style*="color: rgb(51"] ,
+.dashboard-dark [style*="color:#111"] ,
+.dashboard-dark [style*="color:#333"] ,
+.dashboard-dark [style*="color: #111"] ,
+.dashboard-dark [style*="color: #333"] {
+  color: var(--db-text-primary) !important;
+}
+
+.dashboard-dark [style*="color: rgb(85"] ,
+.dashboard-dark [style*="color: rgb(102"] ,
+.dashboard-dark [style*="color:#666"] ,
+.dashboard-dark [style*="color: #666"] {
+  color: var(--db-text-secondary) !important;
+}
+
+.dashboard-dark [style*="color: rgb(153"] ,
+.dashboard-dark [style*="color:#999"] ,
+.dashboard-dark [style*="color: #999"] {
+  color: var(--db-text-muted) !important;
+}
+
+/* Background overrides for inline styles */
+.dashboard-dark [style*="background-color: rgb(255, 255, 255)"],
+.dashboard-dark [style*="backgroundColor: rgb(255, 255, 255)"],
+.dashboard-dark [style*="background-color: white"],
+.dashboard-dark [style*="background: white"],
+.dashboard-dark [style*="background: rgb(255"] {
+  background-color: var(--db-surface) !important;
+}
+
+/* Notification dropdown shadow in dark mode */
+.dashboard-dark [style*="boxShadow"],
+.dashboard-dark [style*="box-shadow"] {
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* border-[#F0F0F0] and border-[#F8F8F8] */
+.dashboard-dark .border-\[\#F0F0F0\],
+.dashboard-dark .border-\[\#F8F8F8\],
+.dashboard-dark .border-\[\#E8E8E8\] {
+  border-color: var(--db-border) !important;
+}
+
+.get-started-btn:hover {
+  background: linear-gradient(270deg, #4945FF, #3730FF, #5B21B6, #4945FF) !important;
+  background-size: 300% 300% !important;
+  animation: wave-gradient 3s ease infinite !important;
+  -webkit-background-clip: padding-box !important;
+  background-clip: padding-box !important;
+  -webkit-text-fill-color: white !important;
+  color: white !important;
+  border-color: transparent !important;
+}
+
+.contact-gradient-wave {
+  background: linear-gradient(270deg, #FFFFFF, #4945FF, #000000, #6B66FF, #4945FF, #FFFFFF);
+  background-size: 400% 400%;
+  animation: wave-gradient 4s ease infinite;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Hide scrollbar but keep functionality */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari, Opera */
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  /**
+  * Default typography styles for HTML elements (h1-h4, p, label, button, input).
+  * These are in @layer base, so Tailwind utility classes (like text-sm, text-lg) automatically override them.
+  */
+
+  html {
+    font-size: var(--font-size);
+  }
+
+  h1 {
+    font-size: var(--text-2xl);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  h2 {
+    font-size: var(--text-xl);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  h3 {
+    font-size: var(--text-lg);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  h4 {
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  label {
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  button {
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  input {
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-normal);
+    line-height: 1.5;
+  }
+}

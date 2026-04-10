@@ -1,0 +1,314 @@
+<!-- Dashboard Preview Graphic -->
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap');
+
+.dash-frame {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  font-family: 'DM Sans', sans-serif;
+  color: #FFFFFF;
+}
+
+.dash-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.dash-topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.dash-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #4318FF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.dash-greeting {
+  font-size: 13px;
+  font-weight: 500;
+  color: #94A3B8;
+}
+
+.dash-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 500;
+  color: #6B4FFF;
+  background: rgba(67,24,255,0.1);
+  padding: 4px 10px;
+  border-radius: 100px;
+}
+
+.dash-body { padding: 20px; }
+
+.dash-balance { margin-bottom: 20px; }
+
+.dash-balance-label {
+  font-size: 11px;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-family: 'JetBrains Mono', monospace;
+  margin-bottom: 4px;
+}
+
+.dash-balance-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 32px;
+  font-weight: 800;
+}
+
+.dash-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.dash-action-btn {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+}
+
+.dash-action-btn.primary {
+  background: #4318FF;
+  color: #FFFFFF;
+}
+
+.dash-action-btn.secondary {
+  background: rgba(255,255,255,0.06);
+  color: #94A3B8;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+.dash-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.dash-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 10px;
+  padding: 14px;
+}
+
+.dash-card-label {
+  font-size: 10px;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-family: 'JetBrains Mono', monospace;
+  margin-bottom: 6px;
+}
+
+.dash-card-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.dash-card-trend {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  margin-top: 4px;
+  color: #22C55E;
+}
+
+.dash-chart {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 10px;
+  padding: 14px;
+}
+
+.dash-chart-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.dash-chart-title {
+  font-size: 10px;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.dash-chart-period {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: #475569;
+  background: rgba(255,255,255,0.04);
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+.chart-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 60px;
+}
+
+.chart-bar {
+  flex: 1;
+  background: #4318FF;
+  border-radius: 3px 3px 0 0;
+  opacity: 0.6;
+}
+
+/* Lens AI overlay */
+.dash-lens {
+  position: absolute;
+  bottom: -16px;
+  right: -16px;
+  background: #041e42;
+  border: 1px solid rgba(67,24,255,0.3);
+  border-radius: 14px;
+  padding: 14px 18px;
+  max-width: 260px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.4);
+}
+
+.lens-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.lens-icon {
+  width: 20px;
+  height: 20px;
+  background: #4318FF;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lens-icon svg { width: 12px; height: 12px; fill: #FFFFFF; }
+
+.lens-name {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  color: #6B4FFF;
+}
+
+.lens-context {
+  font-size: 9px;
+  color: #475569;
+  margin-left: auto;
+}
+
+.lens-message {
+  font-size: 12px;
+  line-height: 1.5;
+  color: #94A3B8;
+}
+
+.lens-message strong {
+  color: #FFFFFF;
+  font-weight: 600;
+}
+</style>
+
+<!-- The wrapper needs position:relative for the Lens overlay -->
+<div style="position: relative; display: inline-block;">
+  <div class="dash-frame">
+    <div class="dash-topbar">
+      <div class="dash-topbar-left">
+        <div class="dash-avatar">JM</div>
+        <span class="dash-greeting">Good morning, Jessica</span>
+      </div>
+      <div class="dash-badge">New York</div>
+    </div>
+
+    <div class="dash-body">
+      <div class="dash-balance">
+        <div class="dash-balance-label">Available balance</div>
+        <div class="dash-balance-value">$12,384.23</div>
+      </div>
+
+      <div class="dash-actions">
+        <button class="dash-action-btn primary">Transfer $2,324.12</button>
+        <button class="dash-action-btn secondary">Send invoice</button>
+        <button class="dash-action-btn secondary">Take payment</button>
+      </div>
+
+      <div class="dash-cards">
+        <div class="dash-card">
+          <div class="dash-card-label">Net sales today</div>
+          <div class="dash-card-value">$32,167</div>
+          <div class="dash-card-trend">+12.4%</div>
+        </div>
+        <div class="dash-card">
+          <div class="dash-card-label">Transactions</div>
+          <div class="dash-card-value">847</div>
+          <div class="dash-card-trend">+8.2%</div>
+        </div>
+      </div>
+
+      <div class="dash-chart">
+        <div class="dash-chart-header">
+          <span class="dash-chart-title">Weekly revenue</span>
+          <span class="dash-chart-period">Last 7 days</span>
+        </div>
+        <div class="chart-bars">
+          <div class="chart-bar" style="height: 65%;"></div>
+          <div class="chart-bar" style="height: 45%;"></div>
+          <div class="chart-bar" style="height: 78%;"></div>
+          <div class="chart-bar" style="height: 55%;"></div>
+          <div class="chart-bar" style="height: 90%;"></div>
+          <div class="chart-bar" style="height: 72%;"></div>
+          <div class="chart-bar" style="height: 85%;"></div>
+          <div class="chart-bar" style="height: 60%;"></div>
+          <div class="chart-bar" style="height: 95%;"></div>
+          <div class="chart-bar" style="height: 48%;"></div>
+          <div class="chart-bar" style="height: 82%;"></div>
+          <div class="chart-bar" style="height: 70%;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dash-lens">
+    <div class="lens-header">
+      <div class="lens-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+      </div>
+      <span class="lens-name">Lens AI</span>
+      <span class="lens-context">Dashboard</span>
+    </div>
+    <div class="lens-message">
+      Revenue is trending <strong>7.2% above last month</strong>. Wednesday afternoons are your weakest window — consider a promo.
+    </div>
+  </div>
+</div>

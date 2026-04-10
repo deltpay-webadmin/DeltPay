@@ -1,0 +1,154 @@
+
+<style>
+  .card-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 24px;
+    background: transparent;
+  }
+  .card {
+    position: relative;
+    width: 100%;
+    max-width: 540px;
+    aspect-ratio: 16/9;
+    background: #080e1a;
+    border-radius: 20px;
+    overflow: hidden;
+    cursor: crosshair;
+    border: 0.5px solid #1e2d48;
+  }
+  .card-letters {
+    position: absolute;
+    inset: 0;
+    padding: 24px;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    line-height: 1.6;
+    letter-spacing: 0.04em;
+    color: #1e2d48;
+    word-break: break-all;
+    overflow: hidden;
+    -webkit-mask-image: radial-gradient(circle 140px at var(--x, -999px) var(--y, -999px), transparent 0%, transparent 60%, black 100%);
+    mask-image: radial-gradient(circle 140px at var(--x, -999px) var(--y, -999px), transparent 0%, transparent 60%, black 100%);
+    user-select: none;
+    pointer-events: none;
+  }
+  .card-revealed {
+    position: absolute;
+    inset: 0;
+    padding: 24px;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    line-height: 1.6;
+    letter-spacing: 0.04em;
+    color: #4318FF;
+    word-break: break-all;
+    overflow: hidden;
+    -webkit-mask-image: radial-gradient(circle 140px at var(--x, -999px) var(--y, -999px), black 0%, black 55%, transparent 100%);
+    mask-image: radial-gradient(circle 140px at var(--x, -999px) var(--y, -999px), black 0%, black 55%, transparent 100%);
+    user-select: none;
+    pointer-events: none;
+  }
+  .card-edge-glow {
+    position: absolute;
+    inset: 0;
+    border-radius: 20px;
+    pointer-events: none;
+    -webkit-mask-image: radial-gradient(circle 160px at var(--x, -999px) var(--y, -999px), black 0%, transparent 100%);
+    mask-image: radial-gradient(circle 160px at var(--x, -999px) var(--y, -999px), black 0%, transparent 100%);
+    border: 1px solid #4318FF;
+    opacity: 0.4;
+  }
+  .card-logo {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    pointer-events: none;
+    z-index: 10;
+  }
+  .logo-sub {
+    font-family: 'Courier New', monospace;
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: #2a3a5c;
+  }
+</style>
+
+<div class="card-wrap">
+  <div class="card" id="card">
+    <div class="card-letters" id="letters"></div>
+    <div class="card-revealed" id="revealed"></div>
+    <div class="card-edge-glow" id="glow"></div>
+    <div class="card-logo">
+      <!-- Exact Delt SVG logo -->
+      <svg width="130" height="36" viewBox="0 0 130 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- dot -->
+        <circle cx="8" cy="26" r="7" fill="#4318FF"/>
+        <!-- bar -->
+        <rect x="19" y="2" width="11" height="32" rx="5.5" fill="#4318FF"/>
+        <!-- wordmark -->
+        <text x="36" y="30" font-family="'Arial Black','Helvetica Neue',Arial,sans-serif" font-size="30" font-weight="900" fill="white" letter-spacing="-0.5">Delt</text>
+      </svg>
+      <div class="logo-sub">Payment Processing</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const card = document.getElementById('card');
+const letters = document.getElementById('letters');
+const revealed = document.getElementById('revealed');
+const glow = document.getElementById('glow');
+
+const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
+const paymentData = [
+  "TXN#8821 $124.50 VISA *4821 APPROVED",
+  "TXN#8822 $38.00 MC *9034 APPROVED",
+  "TXN#8823 $512.75 AMEX *1122 APPROVED",
+  "TXN#8824 $19.99 VISA *3341 APPROVED",
+  "TXN#8825 $88.40 MC *7761 APPROVED",
+  "ENC:AES256 TOKEN:4f9a2b SSL:TLS1.3",
+  "PCI-DSS COMPLIANT GATEWAY ACTIVE",
+  "TXN#8826 $245.00 VISA *5590 APPROVED",
+  "SETTLE:$1,028.64 BATCH#441 COMPLETE",
+  "TXN#8827 $67.20 DISC *8823 APPROVED",
+];
+
+const randomChar = () => chars[Math.floor(Math.random() * chars.length)];
+const randomString = n => Array.from({length: n}, randomChar).join('');
+const buildPaymentBlock = () => Array.from({length: 60}, (_, i) => paymentData[i % paymentData.length]).join('  ');
+
+let noiseInterval = setInterval(() => { letters.innerText = randomString(3000); }, 80);
+
+function setPos(x, y) {
+  [letters, revealed, glow].forEach(el => {
+    el.style.setProperty('--x', `${x}px`);
+    el.style.setProperty('--y', `${y}px`);
+  });
+}
+
+function handleMove(e) {
+  const rect = card.getBoundingClientRect();
+  setPos(e.clientX - rect.left, e.clientY - rect.top);
+  revealed.innerText = buildPaymentBlock();
+}
+
+function handleLeave() {
+  // Push all masks offscreen so nothing is revealed
+  setPos(-999, -999);
+  revealed.innerText = '';
+}
+
+card.addEventListener('mousemove', handleMove);
+card.addEventListener('mouseleave', handleLeave);
+card.addEventListener('touchmove', e => { e.preventDefault(); handleMove(e.touches[0]); }, { passive: false });
+card.addEventListener('touchend', handleLeave);
+
+letters.innerText = randomString(3000);
+</script>

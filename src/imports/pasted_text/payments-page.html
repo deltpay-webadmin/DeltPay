@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Delt — Payments</title>
+<style>
+  @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700;900&display=swap");
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700;800&display=swap');
+
+  :root { --navy: #080e1a; --indigo: #4318FF; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: "Inter", sans-serif; background: var(--navy); color: #fff; overflow-x: hidden; }
+  body::after {
+    content: ""; position: fixed; inset: 0;
+    background-image: url("https://img.freepik.com/premium-photo/white-dust-scratches-black-background_279525-2.jpg?w=640");
+    background-repeat: repeat; opacity: 0.03; mix-blend-mode: overlay; pointer-events: none; z-index: 999;
+  }
+
+  .scroll-container { position: relative; height: 400vh; }
+  .sticky-wrap {
+    position: sticky; top: 0; height: 100vh;
+    display: flex; align-items: center; justify-content: center; overflow: hidden;
+  }
+
+  /* ── Card shell (scroll-expanding) ── */
+  .card {
+    position: absolute;
+    width: 480px;
+    height: 300px;
+    border-radius: 20px;
+    padding: 2px;
+  }
+
+  .card-border-base {
+    position: absolute; inset: 0; border-radius: 20px;
+    border: 1px solid #1e2d48; pointer-events: none; z-index: 3;
+  }
+
+  /* ── Border glow (cursor-proximity) ── */
+  .border-glow {
+    position: absolute; inset: -2px; border-radius: 22px;
+    opacity: 0; transition: opacity 0.4s ease;
+    z-index: 0; pointer-events: none;
+  }
+
+  /* ── Data box (inner container) ── */
+  .data-box {
+    position: absolute; inset: 0;
+    border-radius: 20px;
+    background: #080910;
+    overflow: hidden;
+    cursor: crosshair;
+    z-index: 1;
+  }
+
+  /* ── Grid of individual character cells ── */
+  .grid {
+    position: absolute; inset: 0;
+    display: grid; align-content: start;
+    overflow: hidden; padding: 6px 4px;
+  }
+  .row { display: flex; justify-content: center; white-space: nowrap; line-height: 1; }
+  .c {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; font-weight: 500;
+    color: rgba(255,255,255,0.25);
+    width: 6.5px; text-align: center;
+    line-height: 12px; height: 12px; overflow: hidden;
+  }
+  .c.hl { color: rgba(255,255,255,0.29); font-weight: 500; }
+  .c.nr { color: rgba(255,255,255,0.26); }
+  .c.far { color: rgba(255,255,255,0.25); }
+  .c.brand.hl { color: rgba(67,24,255,0.35); font-weight: 600; }
+
+  /* ── Vignette ── */
+  .vignette {
+    position: absolute; inset: 0; pointer-events: none; z-index: 5; border-radius: 20px;
+    box-shadow: inset 0 0 120px 60px rgba(8,9,16,0.9), inset 0 0 50px 20px rgba(8,9,16,0.5);
+  }
+
+  /* ── Logo overlay ── */
+  .logo-overlay {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10; display: flex; align-items: center; gap: 10px;
+    pointer-events: none;
+  }
+  .logo-icon { display: flex; align-items: flex-end; gap: 3px; }
+  .logo-bar-1 { width: 8px; height: 18px; background: #4318FF; border-radius: 4px; }
+  .logo-bar-2 { width: 8px; height: 28px; background: #4318FF; border-radius: 4px; }
+  .logo-bar-3 { width: 8px; height: 12px; background: #7c5cfc; border-radius: 50%; margin-bottom: 18px; }
+  .logo-text {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 32px; font-weight: 700; color: #fff; letter-spacing: -0.02em;
+  }
+
+  .pre-sub {
+    position: absolute; top: calc(50% + 30px); left: 50%;
+    transform: translateX(-50%);
+    font-family: "Courier New", monospace; font-size: 10px; letter-spacing: 0.18em;
+    text-transform: uppercase; color: #2a3a5c; z-index: 10; pointer-events: none;
+  }
+
+  .pause-indicator {
+    position: absolute; top: 16px; right: 16px; z-index: 20;
+    font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.1em;
+    text-transform: uppercase; color: rgba(167,139,250,0.9);
+    opacity: 0; transition: opacity 0.3s ease;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .pause-indicator::before {
+    content: ""; width: 6px; height: 6px; border-radius: 50%;
+    background: #a78bfa; display: block;
+    animation: blink 1.5s ease-in-out infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1;}50%{opacity:0.3;} }
+  .card.hovered .pause-indicator { opacity: 1; }
+
+  /* ── Overlay content (scroll-revealed) ── */
+  .overlay-content {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; z-index: 15; opacity: 0;
+    pointer-events: none; text-align: center; padding: 40px;
+  }
+  .overlay-eyebrow { font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--indigo); margin-bottom: 20px; opacity: 0; transform: translateY(16px); }
+  .overlay-headline { font-size: clamp(28px, 4vw, 56px); font-weight: 900; line-height: 1.1; letter-spacing: -0.03em; color: #fff; margin-bottom: 20px; opacity: 0; transform: translateY(20px); filter: blur(8px); }
+  .overlay-sub { font-size: 15px; font-weight: 400; line-height: 1.7; color: rgba(255,255,255,0.55); max-width: 42ch; opacity: 0; transform: translateY(16px); margin-bottom: 32px; }
+  .overlay-cta { display: flex; gap: 12px; opacity: 0; transform: translateY(12px); }
+  .btn-primary { background: var(--indigo); color: #fff; border: none; padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: "Inter", sans-serif; }
+  .btn-primary:hover { background: #3510d4; }
+  .btn-ghost { background: transparent; color: rgba(255,255,255,0.6); border: 0.5px solid rgba(255,255,255,0.2); padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; font-family: "Inter", sans-serif; }
+  .btn-ghost:hover { border-color: rgba(255,255,255,0.4); color: #fff; }
+
+  .scroll-hint { position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%); font-size: 11px; font-family: "Courier New", monospace; letter-spacing: 0.1em; text-transform: uppercase; color: #2a3a5c; z-index: 100; transition: opacity 0.4s; }
+
+  .tags { position: absolute; bottom: 32px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; z-index: 20; opacity: 0; white-space: nowrap; }
+  .tag { font-size: 11px; font-weight: 500; padding: 6px 14px; border-radius: 100px; border: 0.5px solid rgba(255,255,255,0.15); color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.04); }
+  .tag.active { background: var(--indigo); border-color: var(--indigo); color: #fff; }
+
+  /* ── Section Two ── */
+  .section-two { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--navy); padding: 80px 40px; border-top: 0.5px solid #1e2d48; }
+  .section-two-inner { max-width: 960px; width: 100%; display: flex; align-items: center; gap: 80px; }
+  .section-two-left { flex: 1; }
+  .s2-eyebrow { font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--indigo); margin-bottom: 20px; }
+  .s2-headline { font-size: clamp(32px, 4vw, 52px); font-weight: 900; line-height: 1.1; letter-spacing: -0.03em; color: #fff; margin-bottom: 20px; }
+  .s2-sub { font-size: 15px; line-height: 1.7; color: rgba(255,255,255,0.5); max-width: 38ch; margin-bottom: 32px; }
+  .section-two-right { flex: 1; }
+  .payment-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .payment-card { background: #0d1526; border: 0.5px solid #1e2d48; border-radius: 12px; padding: 20px; transition: border-color 0.3s, box-shadow 0.3s; }
+  .payment-card:hover { border-color: #4318FF; box-shadow: 0 0 20px rgba(67,24,255,0.15); }
+  .payment-card-icon { width: 36px; height: 36px; border-radius: 8px; background: rgba(67,24,255,0.12); display: flex; align-items: center; justify-content: center; margin-bottom: 12px; }
+  .payment-card-title { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+  .payment-card-desc { font-size: 11px; color: rgba(255,255,255,0.35); line-height: 1.5; }
+  .payment-card.highlight { background: rgba(67,24,255,0.08); border-color: rgba(67,24,255,0.3); grid-column: span 2; }
+  .payment-card.highlight .payment-card-title { color: #a78bfa; }
+</style>
+</head>
+<body>
+
+<div class="scroll-hint" id="scrollHint">↓ scroll</div>
+
+<div class="scroll-container">
+  <div class="sticky-wrap">
+    <div class="card" id="card">
+      <div class="card-border-base"></div>
+      <div class="border-glow" id="borderGlow"></div>
+      <div class="data-box" id="box">
+        <div class="grid" id="grid"></div>
+        <div class="vignette" id="vignette"></div>
+        <div class="logo-overlay" id="logoOverlay">
+          <div class="logo-icon">
+            <div class="logo-bar-3"></div>
+            <div class="logo-bar-1"></div>
+            <div class="logo-bar-2"></div>
+          </div>
+          <div class="logo-text">Delt</div>
+        </div>
+        <div class="pre-sub" id="preSub">Payment Processing</div>
+        <div class="pause-indicator">Encrypted</div>
+
+        <div class="overlay-content" id="overlayContent">
+          <div class="overlay-eyebrow" id="eyebrow">Payment Processing</div>
+          <div class="overlay-headline" id="headline">Every transaction,<br>protected.</div>
+          <div class="overlay-sub" id="subline">Bank-grade encryption on every payment. PCI-DSS compliant. TLS 1.3. AES-256. Zero exposure — built in, not bolted on.</div>
+          <div class="overlay-cta" id="cta">
+            <button class="btn-primary">Get Started — Free →</button>
+            <button class="btn-ghost">Talk to Sales</button>
+          </div>
+        </div>
+
+        <div class="tags" id="tags">
+          <span class="tag active">PCI-DSS</span>
+          <span class="tag">AES-256</span>
+          <span class="tag">TLS 1.3</span>
+          <span class="tag">Tokenization</span>
+          <span class="tag">Zero Liability</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section-two">
+  <div class="section-two-inner">
+    <div class="section-two-left">
+      <p class="s2-eyebrow">One Platform</p>
+      <h2 class="s2-headline">One platform.<br>Every payment.</h2>
+      <p class="s2-sub">Tap, chip, swipe, online, and Bitcoin. Same-day payouts. Zero hidden fees. Hardware included on every plan.</p>
+      <div style="display:flex;gap:12px;">
+        <button class="btn-primary">Get Started — Free →</button>
+        <button class="btn-ghost">Talk to Sales</button>
+      </div>
+    </div>
+    <div class="section-two-right">
+      <div class="payment-grid">
+        <div class="payment-card">
+          <div class="payment-card-icon"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#4318FF" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></div>
+          <div class="payment-card-title">Tap to Pay</div>
+          <div class="payment-card-desc">NFC contactless on any device</div>
+        </div>
+        <div class="payment-card">
+          <div class="payment-card-icon"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#4318FF" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1" fill="#4318FF"/></svg></div>
+          <div class="payment-card-title">Chip & PIN</div>
+          <div class="payment-card-desc">EMV chip with full PIN support</div>
+        </div>
+        <div class="payment-card">
+          <div class="payment-card-icon"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#4318FF" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg></div>
+          <div class="payment-card-title">Online</div>
+          <div class="payment-card-desc">Hosted checkout & payment links</div>
+        </div>
+        <div class="payment-card">
+          <div class="payment-card-icon"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#4318FF" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 6v6l4 2"/></svg></div>
+          <div class="payment-card-title">Same-Day Payouts</div>
+          <div class="payment-card-desc">Funds in your account by end of day</div>
+        </div>
+        <div class="payment-card highlight">
+          <div class="payment-card-title">₿ Bitcoin Accepted</div>
+          <div class="payment-card-desc">Accept crypto, settle in USD. No volatility risk.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════
+   ENCRYPTED DATA STREAM GRID
+   ═══════════════════════════════════════════════════ */
+
+const gridEl = document.getElementById('grid');
+const box = document.getElementById('box');
+const borderGlow = document.getElementById('borderGlow');
+const card = document.getElementById('card');
+const logoOverlay = document.getElementById('logoOverlay');
+const preSub = document.getElementById('preSub');
+const vignette = document.getElementById('vignette');
+const overlayContent = document.getElementById('overlayContent');
+const eyebrow = document.getElementById('eyebrow');
+const headline = document.getElementById('headline');
+const subline = document.getElementById('subline');
+const ctaEl = document.getElementById('cta');
+const tags = document.getElementById('tags');
+const scrollHint = document.getElementById('scrollHint');
+
+const CELL_W = 6.5, CELL_H = 12;
+let BOX_W = 480, BOX_H = 300;
+let COLS = Math.floor((BOX_W - 8) / CELL_W);
+let ROWS = Math.floor((BOX_H - 12) / CELL_H);
+
+const brands = ['VISA','MASTERCARD','AMEX','DISCOVER','UNIONPAY','JCB','DINERS','MAESTRO'];
+const kwords = ['PAYMENT','TOKENIZED','PCI-DSS','EMV','ENCRYPTED','AUTH','SETTLEMENT','BIN','CVV','AVS_MATCH','APPROVED','DECLINE','REFUND','3DS_SECURE','ACH','NFC','SWIPE','HSM','DEBIT','CREDIT','VOID','BATCH','ROUTING','CAPTURE','PREAUTH','REVERSAL','CHARGEBACK','INTERCHANGE','CLEARING','P2PE','ISO8583'];
+const txnStatus = ['APPROVED','DECLINED','PENDING','SETTLED','VOIDED','REFUNDED','DISPUTED','AUTHORIZED','CAPTURED','FAILED'];
+const merchants = ['AMAZON','WALMART','TARGET','COSTCO','STARBUCKS','UBER','NETFLIX','SPOTIFY','DOORDASH','AIRBNB','APPLE','SHOPIFY','STRIPE','SQUARE','PAYPAL'];
+const mcc = ['5411','5812','5912','7011','4121','5541','5691','5732','5999','4814','7230','5814','5311','5200'];
+const countries = ['US','GB','CA','DE','FR','JP','AU','BR','MX','IN','SG','AE','IT','ES','NL'];
+const noise = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=[]{}|;:,.<>?/~`';
+const hex = '0123456789abcdef';
+const digits = '0123456789';
+
+function rc() { return noise[Math.floor(Math.random()*noise.length)]; }
+function rDigits(n) { let s=''; for(let i=0;i<n;i++) s+=digits[Math.floor(Math.random()*10)]; return s; }
+
+function makeToken() {
+  const r = Math.random();
+  if (r < 0.07) return { chars: brands[Math.floor(Math.random()*brands.length)].split(''), type: 'brand' };
+  if (r < 0.15) { let s = rDigits(4)+' '+rDigits(4)+' '+rDigits(4)+' '+rDigits(4); return { chars: s.split(''), type: 'num' }; }
+  if (r < 0.20) return { chars: kwords[Math.floor(Math.random()*kwords.length)].split(''), type: 'kw' };
+  if (r < 0.25) { let s = ''; for (let i=0;i<Math.floor(Math.random()*8)+4;i++) s += hex[Math.floor(Math.random()*16)]; return { chars: s.split(''), type: 'hex' }; }
+  if (r < 0.29) return { chars: ('CVV:'+rDigits(3)).split(''), type: 'cvv' };
+  if (r < 0.34) { let s = '$'+(Math.random()*9999).toFixed(2); return { chars: s.split(''), type: 'amt' }; }
+  if (r < 0.38) { let m = String(Math.floor(Math.random()*12)+1).padStart(2,'0'); let y = String(Math.floor(Math.random()*6)+25); return { chars: ('EXP:'+m+'/'+y).split(''), type: 'exp' }; }
+  if (r < 0.42) return { chars: txnStatus[Math.floor(Math.random()*txnStatus.length)].split(''), type: 'kw' };
+  if (r < 0.46) return { chars: ('AUTH:'+rDigits(6)).split(''), type: 'cvv' };
+  if (r < 0.50) return { chars: merchants[Math.floor(Math.random()*merchants.length)].split(''), type: 'brand' };
+  if (r < 0.53) return { chars: ('MCC:'+mcc[Math.floor(Math.random()*mcc.length)]).split(''), type: 'cvv' };
+  if (r < 0.56) { let id = 'TXN:'; for(let i=0;i<8;i++) id+=hex[Math.floor(Math.random()*16)]; return { chars: id.split(''), type: 'hex' }; }
+  if (r < 0.59) return { chars: ('BIN:'+rDigits(6)).split(''), type: 'cvv' };
+  if (r < 0.62) return { chars: countries[Math.floor(Math.random()*countries.length)].split(''), type: 'kw' };
+  if (r < 0.65) { let ref = 'REF:'; for(let i=0;i<10;i++) ref+=hex[Math.floor(Math.random()*16)]; return { chars: ref.split(''), type: 'hex' }; }
+  if (r < 0.68) return { chars: ('BATCH:'+rDigits(4)).split(''), type: 'cvv' };
+  let l = Math.floor(Math.random()*6)+2, s='';
+  for (let i=0;i<l;i++) s+=rc();
+  return { chars: s.split(''), type: 'n' };
+}
+
+const allCells = [];
+
+function buildGrid() {
+  gridEl.innerHTML = '';
+  allCells.length = 0;
+  COLS = Math.floor((BOX_W - 8) / CELL_W);
+  ROWS = Math.floor((BOX_H - 12) / CELL_H);
+  
+  for (let r = 0; r < ROWS; r++) {
+    const rowEl = document.createElement('div');
+    rowEl.className = 'row';
+    let col = 0;
+    while (col < COLS) {
+      const tok = makeToken();
+      for (let k = 0; k < tok.chars.length && col < COLS; k++, col++) {
+        const el = document.createElement('span');
+        el.className = 'c' + (tok.type === 'brand' ? ' brand' : '');
+        el.textContent = tok.chars[k];
+        el.dataset.t = tok.type;
+        rowEl.appendChild(el);
+        allCells.push({ el, type: tok.type, row: r, col: col, frozen: false });
+      }
+    }
+    gridEl.appendChild(rowEl);
+  }
+}
+
+buildGrid();
+const totalCells = () => allCells.length;
+
+let mx = -9999, my = -9999, hov = false;
+const HL_R = 95, NR_R = 155, FAR_R = 210;
+
+box.addEventListener('mouseenter', () => {
+  hov = true;
+  card.classList.add('hovered');
+});
+box.addEventListener('mouseleave', () => {
+  hov = false; mx = -9999; my = -9999;
+  borderGlow.style.opacity = '0';
+  card.classList.remove('hovered');
+  const tc = totalCells();
+  for (let i = 0; i < tc; i++) {
+    allCells[i].el.classList.remove('hl','nr','far');
+    allCells[i].frozen = false;
+  }
+});
+box.addEventListener('mousemove', e => {
+  const b = box.getBoundingClientRect();
+  mx = e.clientX - b.left;
+  my = e.clientY - b.top;
+
+  const boxW = b.width, boxH = b.height;
+  const EDGE_THRESH = 120;
+  const minDist = Math.min(mx, boxW - mx, my, boxH - my);
+  if (minDist < EDGE_THRESH) {
+    const intensity = 1 - (minDist / EDGE_THRESH);
+    const xRatio = mx / boxW, yRatio = my / boxH;
+    const blend = (xRatio + yRatio) / 2;
+    const bR = Math.round(67 + 188 * blend);
+    const bG = Math.round(24 + 231 * blend);
+    const bB = 255;
+    borderGlow.style.opacity = intensity;
+    borderGlow.style.background = `radial-gradient(circle at ${mx}px ${my}px, rgba(${bR},${bG},${bB},1) 0%, rgba(${bR},${bG},${bB},0.4) 40%, transparent 70%)`;
+  } else {
+    borderGlow.style.opacity = '0';
+  }
+});
+
+function scramble() {
+  const tc = totalCells();
+  const batchSize = Math.floor(tc * 0.12);
+  for (let i = 0; i < batchSize; i++) {
+    const idx = Math.floor(Math.random() * tc);
+    const cell = allCells[idx];
+    if (cell.frozen) continue;
+    const t = cell.type;
+    if (t === 'n' || t === 'hex' || t === 'kw') cell.el.textContent = rc();
+    else if (t === 'num' || t === 'cvv') cell.el.textContent = digits[Math.floor(Math.random() * 10)];
+    else if (t === 'amt') { const c = cell.el.textContent; if (c !== '$' && c !== '.') cell.el.textContent = digits[Math.floor(Math.random() * 10)]; }
+  }
+}
+
+function updateHighlights() {
+  if (!hov) return;
+  const bRect = box.getBoundingClientRect();
+  const logoCX = bRect.width / 2, logoCY = bRect.height / 2;
+  const LOGO_HW = 70, LOGO_HH = 24, LOGO_FADE = 20;
+  const tc = totalCells();
+
+  for (let i = 0; i < tc; i++) {
+    const cell = allCells[i];
+    const el = cell.el;
+    const rect = el.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2 - bRect.left;
+    const cy = rect.top + rect.height / 2 - bRect.top;
+
+    // Logo fade
+    const dx2 = Math.max(0, Math.abs(cx - logoCX) - LOGO_HW);
+    const dy2 = Math.max(0, Math.abs(cy - logoCY) - LOGO_HH);
+    const logoDist = Math.sqrt(dx2 * dx2 + dy2 * dy2);
+    const fade = logoDist <= 0 ? 0 : logoDist >= LOGO_FADE ? 1 : logoDist / LOGO_FADE;
+
+    if (fade === 0) {
+      el.classList.remove('hl', 'nr', 'far');
+      cell.frozen = false;
+      continue;
+    }
+
+    const d = Math.sqrt((cx - mx) ** 2 + (cy - my) ** 2);
+    if (d < HL_R * fade) {
+      el.classList.add('hl'); el.classList.remove('nr', 'far');
+      cell.frozen = true;
+    } else if (d < NR_R * fade) {
+      el.classList.add('nr'); el.classList.remove('hl', 'far');
+      cell.frozen = false;
+    } else if (d < FAR_R * fade) {
+      el.classList.add('far'); el.classList.remove('hl', 'nr');
+      cell.frozen = false;
+    } else {
+      el.classList.remove('hl', 'nr', 'far');
+      cell.frozen = false;
+    }
+  }
+}
+
+let lastHL = 0;
+function loop(t) {
+  scramble();
+  if (t - lastHL > 32) { updateHighlights(); lastHL = t; }
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+/* ═══════════════════════════════════════════════════
+   SCROLL ANIMATION
+   ═══════════════════════════════════════════════════ */
+
+function lerp(a, b, t) { return a + (b - a) * Math.min(1, Math.max(0, t)); }
+function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
+
+let lastW = 0, lastH = 0;
+
+function onScroll() {
+  const total = document.querySelector('.scroll-container').offsetHeight - window.innerHeight;
+  const p = Math.min(1, Math.max(0, window.scrollY / total));
+  const ep = easeOut(Math.min(1, p / 0.35));
+  const sw = Math.min(480, window.innerWidth * 0.85);
+  const sh = Math.min(300, window.innerHeight * 0.5);
+  const w = lerp(sw, window.innerWidth, ep);
+  const h = lerp(sh, window.innerHeight, ep);
+  const bdr = lerp(20, 0, ep);
+
+  card.style.width = w + 'px';
+  card.style.height = h + 'px';
+  card.style.borderRadius = bdr + 'px';
+  box.style.borderRadius = bdr + 'px';
+  vignette.style.borderRadius = bdr + 'px';
+
+  // Rebuild grid if size changed significantly
+  const newW = Math.round(w), newH = Math.round(h);
+  if (Math.abs(newW - lastW) > 20 || Math.abs(newH - lastH) > 20) {
+    BOX_W = newW; BOX_H = newH;
+    buildGrid();
+    lastW = newW; lastH = newH;
+  }
+
+  // Fade logo + pre-sub + grid
+  const gridOp = Math.max(0, 1 - easeOut(Math.min(1, p / 0.25)));
+  gridEl.style.opacity = gridOp;
+  logoOverlay.style.opacity = Math.max(0, 1 - p / 0.15);
+  preSub.style.opacity = Math.max(0, 1 - p / 0.15);
+  scrollHint.style.opacity = Math.max(0, 1 - p / 0.1);
+  vignette.style.opacity = gridOp;
+
+  // Overlay content reveal
+  const rp = Math.min(1, Math.max(0, (p - 0.4) / 0.3));
+  if (rp > 0) {
+    overlayContent.style.opacity = 1; overlayContent.style.pointerEvents = 'auto';
+    const e1 = easeOut(Math.min(1, rp / 0.3));
+    eyebrow.style.opacity = e1; eyebrow.style.transform = `translateY(${16*(1-e1)}px)`;
+    const hp = easeOut(Math.min(1, Math.max(0, (rp-0.1)/0.4)));
+    headline.style.opacity = hp; headline.style.transform = `translateY(${20*(1-hp)}px)`; headline.style.filter = `blur(${8*(1-hp)}px)`;
+    const sp = easeOut(Math.min(1, Math.max(0, (rp-0.25)/0.4)));
+    subline.style.opacity = sp; subline.style.transform = `translateY(${16*(1-sp)}px)`;
+    const cp = easeOut(Math.min(1, Math.max(0, (rp-0.4)/0.4)));
+    ctaEl.style.opacity = cp; ctaEl.style.transform = `translateY(${12*(1-cp)}px)`;
+  } else {
+    overlayContent.style.opacity = 0; overlayContent.style.pointerEvents = 'none';
+    eyebrow.style.opacity = 0; headline.style.opacity = 0; subline.style.opacity = 0; ctaEl.style.opacity = 0;
+  }
+  tags.style.opacity = easeOut(Math.min(1, Math.max(0, (p - 0.75) / 0.25)));
+}
+
+window.addEventListener('scroll', onScroll, { passive: true });
+onScroll();
+</script>
+</body>
+</html>

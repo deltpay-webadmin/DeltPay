@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Delt Capital — Stats Section</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --navy: #041e42;
+  --indigo: #4318FF;
+  --white: #FFFFFF;
+  --gray-300: #94A3B8;
+  --gray-400: #64748B;
+  --gray-500: #475569;
+  --red-muted: #EF4444;
+  --green-bright: #22C55E;
+}
+
+body {
+  background: var(--navy);
+  color: var(--white);
+  font-family: 'DM Sans', sans-serif;
+  overflow-x: hidden;
+}
+
+.stats-section {
+  min-height: 100vh;
+  padding: 120px 0;
+}
+
+.container {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 40px;
+}
+
+.section-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--indigo);
+  margin-bottom: 24px;
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.section-headline {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: clamp(28px, 4vw, 44px);
+  font-weight: 700;
+  line-height: 1.15;
+  max-width: 680px;
+  margin-bottom: 80px;
+  opacity: 0;
+  transform: translateY(30px);
+}
+
+.section-headline span {
+  color: var(--indigo);
+}
+
+.stat-row {
+  display: grid;
+  grid-template-columns: 1fr 60px 1fr;
+  align-items: center;
+  gap: 0;
+  margin-bottom: 80px;
+  opacity: 0;
+  transform: translateY(40px);
+}
+
+.stat-card {
+  padding: 40px;
+  border-radius: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card.industry {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.stat-card.delt {
+  background: rgba(67, 24, 255, 0.08);
+  border: 1px solid rgba(67, 24, 255, 0.2);
+}
+
+.stat-card-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+}
+
+.stat-card.industry .stat-card-label {
+  color: var(--gray-400);
+}
+
+.stat-card.delt .stat-card-label {
+  color: var(--indigo);
+}
+
+.stat-number {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 800;
+  line-height: 1;
+  margin-bottom: 16px;
+}
+
+.stat-number.large {
+  font-size: clamp(56px, 8vw, 88px);
+}
+
+.stat-card.industry .stat-number {
+  color: rgba(255, 255, 255, 0.15);
+}
+
+.stat-card.delt .stat-number {
+  color: var(--indigo);
+}
+
+.stat-description {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--gray-300);
+  max-width: 320px;
+}
+
+.stat-card.delt .stat-description {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.vs-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 2;
+}
+
+.vs-text {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--gray-500);
+  background: var(--navy);
+  padding: 8px 0;
+}
+
+.bottom-cta {
+  text-align: center;
+  margin-top: 40px;
+  opacity: 0;
+  transform: translateY(30px);
+}
+
+.bottom-cta p {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: clamp(20px, 3vw, 32px);
+  font-weight: 700;
+  line-height: 1.3;
+  margin-bottom: 32px;
+}
+
+.bottom-cta p span {
+  color: var(--indigo);
+}
+
+.cta-button {
+  display: inline-block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--white);
+  background: var(--indigo);
+  padding: 16px 40px;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.cta-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(67, 24, 255, 0.35);
+}
+
+.stat-source {
+  font-size: 11px;
+  color: var(--gray-500);
+  margin-top: 8px;
+  font-style: italic;
+}
+
+.stat-row .connector-line {
+  width: 1px;
+  height: 80%;
+  background: rgba(255,255,255,0.06);
+  margin: 0 auto;
+  position: relative;
+}
+
+.animated { 
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1); 
+}
+
+.animated.visible { 
+  opacity: 1; 
+  transform: translateY(0); 
+}
+
+.count-up {
+  display: inline-block;
+}
+
+@media (max-width: 768px) {
+  .stat-row {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    margin-bottom: 60px;
+  }
+  .vs-divider {
+    padding: 8px 0;
+  }
+  .stat-card { padding: 28px; }
+  .stat-number.large { font-size: 56px; }
+  .container { padding: 0 24px; }
+  .stats-section { padding: 80px 0; }
+}
+</style>
+</head>
+<body>
+
+<section class="stats-section">
+  <div class="container">
+
+    <div class="section-label animated">The funding gap</div>
+    <h2 class="section-headline animated">
+      Small businesses deserve better than a <span>36% shot</span> at getting funded.
+    </h2>
+
+    <!-- Row 1: Approval Rate -->
+    <div class="stat-row animated">
+      <div class="stat-card industry">
+        <div class="stat-card-label">Industry average</div>
+        <div class="stat-number large"><span class="count-up" data-target="36" data-suffix="%">0%</span></div>
+        <div class="stat-description">
+          Only about a third of small business owners who apply for funding actually get approved.
+        </div>
+        <div class="stat-source">Source: Federal Reserve Banks, Small Business Credit Survey</div>
+      </div>
+      <div class="vs-divider"><span class="vs-text">vs</span></div>
+      <div class="stat-card delt">
+        <div class="stat-card-label">Delt Capital</div>
+        <div class="stat-number large"><span class="count-up" data-target="85" data-suffix="%">0%</span></div>
+        <div class="stat-description">
+          We underwrite based on your real sales data, not just a credit score. Most merchants who apply get funded.
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 2: Unmet Need -->
+    <div class="stat-row animated">
+      <div class="stat-card industry">
+        <div class="stat-card-label">Industry average</div>
+        <div class="stat-number large"><span class="count-up" data-target="52" data-suffix="%">0%</span></div>
+        <div class="stat-description">
+          More than half of small businesses either get no financing or only a portion of what they need.
+        </div>
+        <div class="stat-source">Source: U.S. Small Business Administration</div>
+      </div>
+      <div class="vs-divider"><span class="vs-text">vs</span></div>
+      <div class="stat-card delt">
+        <div class="stat-card-label">Delt Capital</div>
+        <div class="stat-number large"><span class="count-up" data-target="48" data-suffix="hr">0hr</span></div>
+        <div class="stat-description">
+          From application to funded. No waiting weeks for a decision. No back and forth with loan officers.
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 3: Affordability -->
+    <div class="stat-row animated">
+      <div class="stat-card industry">
+        <div class="stat-card-label">Industry average</div>
+        <div class="stat-number large"><span class="count-up" data-target="81" data-suffix="%">0%</span></div>
+        <div class="stat-description">
+          The vast majority of business owners who applied for a loan found it difficult to access affordable capital.
+        </div>
+        <div class="stat-source">Source: Goldman Sachs 10,000 Small Businesses Survey</div>
+      </div>
+      <div class="vs-divider"><span class="vs-text">vs</span></div>
+      <div class="stat-card delt">
+        <div class="stat-card-label">Delt Capital</div>
+        <div class="stat-number large" style="font-size: clamp(40px, 6vw, 64px);"><span class="count-up" data-target="0" data-prefix="$" data-suffix="" data-display="$0">$0</span></div>
+        <div class="stat-description">
+          No application fees. No origination fees. No hidden charges. You see the full cost upfront before you sign anything.
+        </div>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="bottom-cta animated">
+      <p>Stop being a statistic.<br><span>Get funded on your terms.</span></p>
+      <a href="#apply" class="cta-button">Check Your Rate</a>
+    </div>
+
+  </div>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const els = document.querySelectorAll('.animated');
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry, i) => {
+      if (entry.isIntersecting) {
+        setTimeout(() => {
+          entry.target.classList.add('visible');
+          const counters = entry.target.querySelectorAll('.count-up');
+          counters.forEach(c => animateCount(c));
+        }, i * 120);
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.15 });
+
+  els.forEach(el => observer.observe(el));
+
+  function animateCount(el) {
+    const target = parseInt(el.dataset.target);
+    const prefix = el.dataset.prefix || '';
+    const suffix = el.dataset.suffix || '';
+    const display = el.dataset.display;
+    
+    if (display) {
+      el.textContent = display;
+      return;
+    }
+
+    const duration = 1600;
+    const start = performance.now();
+
+    function update(now) {
+      const elapsed = now - start;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 4);
+      const current = Math.round(eased * target);
+      el.textContent = prefix + current + suffix;
+      if (progress < 1) requestAnimationFrame(update);
+    }
+    requestAnimationFrame(update);
+  }
+
+  // Trigger first elements immediately 
+  setTimeout(() => {
+    els.forEach((el, i) => {
+      if (i < 2) {
+        el.classList.add('visible');
+        const counters = el.querySelectorAll('.count-up');
+        counters.forEach(c => animateCount(c));
+      }
+    });
+  }, 300);
+});
+</script>
+</body>
+</html>

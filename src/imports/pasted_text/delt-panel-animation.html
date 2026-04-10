@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Delt Panel Animation</title>
+
+  <style>
+    :root {
+      --bg: #040b18;
+      --bg-2: #071225;
+      --text: #f5f7ff;
+      --muted: rgba(255, 255, 255, 0.7);
+      --muted-2: rgba(255, 255, 255, 0.45);
+      --indigo: #4b4dff;
+      --indigo-2: #6d6fff;
+      --cyan: #8cb4ff;
+      --glass: rgba(255, 255, 255, 0.06);
+      --border: rgba(255, 255, 255, 0.08);
+      --shadow: rgba(0, 0, 0, 0.35);
+      --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+      --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --h1: clamp(4.2rem, 10vw, 9.2rem);
+      --nav-h: 80px;
+      --ease: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      font-size: 62.5%;
+      background: var(--bg);
+    }
+
+    body {
+      min-height: 100vh;
+      font-family: var(--sans);
+      color: var(--text);
+      background:
+        radial-gradient(circle at 50% 10%, rgba(75, 77, 255, 0.16), transparent 30%),
+        linear-gradient(180deg, #04101f 0%, #030916 100%);
+      overflow: hidden;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    img {
+      display: block;
+      max-width: 100%;
+    }
+
+    nav {
+      height: var(--nav-h);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      position: relative;
+      z-index: 30;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      background: rgba(4, 11, 24, 0.72);
+      backdrop-filter: blur(14px);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+
+    .brand-mark {
+      display: flex;
+      align-items: flex-end;
+      gap: 3px;
+    }
+
+    .brand-mark span:nth-child(1) {
+      width: 8px;
+      height: 16px;
+      background: var(--indigo);
+      border-radius: 999px;
+    }
+
+    .brand-mark span:nth-child(2) {
+      width: 8px;
+      height: 24px;
+      background: var(--indigo);
+      border-radius: 999px;
+    }
+
+    .brand-mark span:nth-child(3) {
+      width: 8px;
+      height: 10px;
+      background: #8d7cff;
+      border-radius: 999px;
+      margin-bottom: 14px;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 22px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      font-size: 1.4rem;
+      color: rgba(255, 255, 255, 0.76);
+      transition: color 180ms ease;
+    }
+
+    .nav-links a:hover {
+      color: #fff;
+    }
+
+    .nav-cta {
+      padding: 12px 18px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, var(--indigo), var(--indigo-2));
+      color: #fff !important;
+      box-shadow: 0 10px 30px rgba(75, 77, 255, 0.35);
+      font-weight: 700;
+    }
+
+    section {
+      height: calc(100vh - var(--nav-h));
+      overflow: hidden;
+    }
+
+    article {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: grid;
+    }
+
+    article > * {
+      grid-area: 1 / 1;
+    }
+
+    .panels {
+      list-style: none;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      height: 100%;
+      position: relative;
+      z-index: 1;
+    }
+
+    .panel {
+      position: relative;
+      overflow: hidden;
+      border-right: 1px solid rgba(255, 255, 255, 0.06);
+      transform: scaleY(0);
+      transform-origin: center bottom;
+      opacity: 0;
+      animation: panelReveal 700ms var(--ease) forwards;
+      background: #061122;
+    }
+
+    .panel:last-child {
+      border-right: none;
+    }
+
+    .panel::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      background:
+        linear-gradient(180deg, rgba(3, 9, 22, 0.18) 0%, rgba(3, 9, 22, 0.48) 42%, rgba(3, 9, 22, 0.94) 100%);
+    }
+
+    .panel::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      background:
+        linear-gradient(180deg, rgba(75, 77, 255, 0.10), transparent 25%),
+        radial-gradient(circle at 50% 18%, rgba(140, 180, 255, 0.10), transparent 18%);
+      opacity: 0.7;
+      transition: opacity 240ms ease;
+    }
+
+    .panel:hover::after {
+      opacity: 1;
+    }
+
+    .panel-link {
+      position: absolute;
+      inset: 0;
+      z-index: 6;
+      display: flex;
+      align-items: flex-start;
+      justify-content: flex-start;
+    }
+
+    .panel-inner {
+      position: relative;
+      z-index: 7;
+      width: 100%;
+      padding: 34px 24px 28px;
+      transform: translateY(-56px);
+      opacity: 0;
+      animation: labelReveal 650ms var(--ease) forwards;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 1.05rem;
+      font-family: var(--mono);
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #a7b6ff;
+      margin-bottom: 22px;
+      opacity: 0.94;
+    }
+
+    .eyebrow-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #37d67a;
+      box-shadow: 0 0 0 5px rgba(55, 214, 122, 0.10);
+    }
+
+    .panel-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .panel-title {
+      font-size: clamp(2.6rem, 3vw, 4.2rem);
+      line-height: 0.95;
+      font-weight: 900;
+      letter-spacing: -0.05em;
+      color: #fff;
+      max-width: 88%;
+    }
+
+    .panel-icon {
+      flex: 0 0 auto;
+      width: 52px;
+      height: 52px;
+      display: grid;
+      place-items: center;
+      border-radius: 14px;
+      background: rgba(75, 77, 255, 0.14);
+      border: 1px solid rgba(117, 184, 255, 0.14);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    }
+
+    .panel-icon svg {
+      width: 24px;
+      height: 24px;
+      stroke: #90a2ff;
+      fill: none;
+      stroke-width: 1.9;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .panel-desc {
+      max-width: 24ch;
+      font-size: 1.55rem;
+      line-height: 1.55;
+      color: var(--muted);
+      margin-bottom: 26px;
+    }
+
+    .panel-meta {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      font-size: 1.2rem;
+      color: rgba(255, 255, 255, 0.74);
+      backdrop-filter: blur(12px);
+    }
+
+    .panel-meta strong {
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .panel-visual {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+    }
+
+    .panel-visual img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: saturate(1) contrast(1.02) brightness(0.88);
+      transform: scale(1.03);
+      transition: transform 450ms ease, filter 450ms ease;
+    }
+
+    .panel:hover .panel-visual img {
+      transform: scale(1.06);
+      filter: saturate(1.04) contrast(1.04) brightness(0.96);
+    }
+
+    .panel-glow {
+      position: absolute;
+      inset: auto 0 0 0;
+      height: 38%;
+      z-index: 3;
+      background: linear-gradient(180deg, transparent 0%, rgba(4, 11, 24, 0.15) 24%, rgba(4, 11, 24, 0.88) 100%);
+    }
+
+    .hero-copy {
+      pointer-events: none;
+      position: relative;
+      z-index: 12;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 24px;
+    }
+
+    .copy-inner {
+      max-width: 1100px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      margin-top: -5vh;
+    }
+
+    .top-kicker {
+      font-family: var(--mono);
+      font-size: 1.1rem;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      color: #90a2ff;
+      opacity: 0;
+      animation: fadeUp 600ms var(--ease) forwards;
+      animation-delay: 450ms;
+    }
+
+    h1 {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.02em;
+      font-size: var(--h1);
+      line-height: 0.82;
+      letter-spacing: -0.07em;
+      font-weight: 900;
+      text-transform: uppercase;
+      margin-top: 6px;
+    }
+
+    .letter {
+      display: inline-block;
+      opacity: 0;
+      transform: scale(0.2);
+      background: linear-gradient(180deg, #f3f6ff 0%, #93a6ff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: letterBounce 560ms var(--ease) forwards;
+    }
+
+    .hero-sub {
+      max-width: 52ch;
+      font-size: 1.8rem;
+      line-height: 1.7;
+      color: var(--muted);
+      opacity: 0;
+      animation: fadeUp 700ms var(--ease) forwards;
+      animation-delay: 2100ms;
+    }
+
+    .hero-actions {
+      pointer-events: auto;
+      display: flex;
+      gap: 14px;
+      opacity: 0;
+      animation: fadeUp 700ms var(--ease) forwards;
+      animation-delay: 2250ms;
+      margin-top: 4px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      min-width: 180px;
+      padding: 15px 22px;
+      border-radius: 999px;
+      font-size: 1.45rem;
+      font-weight: 700;
+      transition: transform 180ms ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .btn-primary {
+      color: white;
+      background: linear-gradient(135deg, var(--indigo), var(--indigo-2));
+      box-shadow: 0 16px 40px rgba(75, 77, 255, 0.32);
+    }
+
+    .btn-secondary {
+      color: #dbe4ff;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      backdrop-filter: blur(12px);
+    }
+
+    .panel-1 { animation-delay: 3500ms; }
+    .panel-2 { animation-delay: 3850ms; }
+    .panel-3 { animation-delay: 4200ms; }
+    .panel-4 { animation-delay: 4550ms; }
+
+    .panel-1 .panel-inner { animation-delay: 4050ms; }
+    .panel-2 .panel-inner { animation-delay: 4400ms; }
+    .panel-3 .panel-inner { animation-delay: 4750ms; }
+    .panel-4 .panel-inner { animation-delay: 5100ms; }
+
+    .letter:nth-child(1) { animation-delay: 850ms; }
+    .letter:nth-child(2) { animation-delay: 1100ms; }
+    .letter:nth-child(3) { animation-delay: 1350ms; }
+    .letter:nth-child(4) { animation-delay: 1600ms; }
+
+    @keyframes panelReveal {
+      0% {
+        transform: scaleY(0);
+        opacity: 0;
+      }
+      100% {
+        transform: scaleY(1);
+        opacity: 1;
+      }
+    }
+
+    @keyframes labelReveal {
+      0% {
+        transform: translateY(-56px);
+        opacity: 0;
+      }
+      100% {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    @keyframes letterBounce {
+      0% {
+        opacity: 0;
+        transform: scale(0.2);
+      }
+      38% {
+        opacity: 1;
+        transform: scale(1);
+      }
+      55% {
+        transform: scale(0.75);
+      }
+      72% {
+        transform: scale(1);
+      }
+      84% {
+        transform: scale(0.9);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    @keyframes fadeUp {
+      0% {
+        opacity: 0;
+        transform: translateY(18px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 1100px) {
+      .panel-title {
+        font-size: clamp(2.2rem, 4vw, 3.2rem);
+      }
+
+      .panel-desc {
+        font-size: 1.4rem;
+      }
+
+      .hero-sub {
+        font-size: 1.6rem;
+      }
+    }
+
+    @media (max-width: 900px) {
+      body {
+        overflow: auto;
+      }
+
+      nav {
+        padding: 0 18px;
+      }
+
+      .nav-links li:not(:last-child) {
+        display: none;
+      }
+
+      section {
+        height: auto;
+        min-height: calc(100vh - var(--nav-h));
+      }
+
+      article {
+        min-height: calc(100vh - var(--nav-h));
+      }
+
+      .panels {
+        grid-template-columns: 1fr;
+        grid-template-rows: repeat(4, minmax(280px, 1fr));
+        min-height: 1280px;
+      }
+
+      .panel {
+        min-height: 300px;
+        border-right: none;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      }
+
+      .hero-copy {
+        align-items: start;
+        padding-top: 42px;
+      }
+
+      .copy-inner {
+        margin-top: 0;
+      }
+
+      h1 {
+        font-size: clamp(4rem, 15vw, 7.5rem);
+      }
+
+      .hero-actions {
+        flex-direction: column;
+        width: 100%;
+      }
+
+      .btn {
+        min-width: 220px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation: none !important;
+        transition: none !important;
+      }
+
+      .panel,
+      .panel-inner,
+      .letter,
+      .top-kicker,
+      .hero-sub,
+      .hero-actions {
+        opacity: 1 !important;
+        transform: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="#" class="brand" aria-label="Delt home">
+      <span class="brand-mark" aria-hidden="true">
+        <span></span><span></span><span></span>
+      </span>
+      <span>Delt</span>
+    </a>
+
+    <ul class="nav-links">
+      <li><a href="#">Solutions</a></li>
+      <li><a href="#">Lens</a></li>
+      <li><a href="#">Pricing</a></li>
+      <li><a href="#">Contact Sales</a></li>
+      <li><a class="nav-cta" href="#">Get Started</a></li>
+    </ul>
+  </nav>
+
+  <section>
+    <article>
+      <ul class="panels">
+        <!-- 1. Website -->
+        <li class="panel panel-1">
+          <div class="panel-visual">
+            <img src="boutique_blue_hour.png" alt="Storefront website visual" />
+            <div class="panel-glow"></div>
+          </div>
+
+          <a href="#" class="panel-link" aria-label="Website">
+            <div class="panel-inner">
+              <div class="eyebrow">
+                <span class="eyebrow-dot"></span>
+                Built for launch
+              </div>
+
+              <div class="panel-title-row">
+                <h2 class="panel-title">Website</h2>
+                <div class="panel-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24">
+                    <rect x="3" y="4" width="18" height="14" rx="2"></rect>
+                    <path d="M8 20h8"></path>
+                    <path d="M12 18v2"></path>
+                  </svg>
+                </div>
+              </div>
+
+              <p class="panel-desc">
+                Professional websites built and managed for you.
+              </p>
+
+              <div class="panel-meta">
+                <strong>Designed to convert</strong>
+                <span>Hosted, secure, mobile-ready</span>
+              </div>
+            </div>
+          </a>
+        </li>
+
+        <!-- 2. Payments -->
+        <li class="panel panel-2">
+          <div class="panel-visual">
+            <img src="payment_terminal_cinematic.png" alt="Payment terminal" />
+            <div class="panel-glow"></div>
+          </div>
+
+          <a href="#" class="panel-link" aria-label="Payments">
+            <div class="panel-inner">
+              <div class="eyebrow">
+                <span class="eyebrow-dot"></span>
+                One platform
+              </div>
+
+              <div class="panel-title-row">
+                <h2 class="panel-title">Payments</h2>
+                <div class="panel-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24">
+                    <rect x="2" y="6" width="20" height="12" rx="2"></rect>
+                    <path d="M2 10h20"></path>
+                  </svg>
+                </div>
+              </div>
+
+              <p class="panel-desc">
+                In-store, online &amp; mobile payment processing.
+              </p>
+
+              <div class="panel-meta">
+                <strong>Tap, chip, swipe</strong>
+                <span>Hardware and checkout included</span>
+              </div>
+            </div>
+          </a>
+        </li>
+
+        <!-- 3. Business Capital -->
+        <li class="panel panel-3">
+          <div class="panel-visual">
+            <img src="merchant_coming_soon.png" alt="Coming soon for business capital" />
+            <div class="panel-glow"></div>
+          </div>
+
+          <a href="#" class="panel-link" aria-label="Business Capital">
+            <div class="panel-inner">
+              <div class="eyebrow">
+                <span class="eyebrow-dot"></span>
+                Coming soon
+              </div>
+
+              <div class="panel-title-row">
+                <h2 class="panel-title">Business Capital</h2>
+                <div class="panel-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24">
+                    <path d="M12 2v20"></path>
+                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7H14.5a3.5 3.5 0 0 1 0 7H6"></path>
+                  </svg>
+                </div>
+              </div>
+
+              <p class="panel-desc">
+                Revenue-based funding with fast approvals.
+              </p>
+
+              <div class="panel-meta">
+                <strong>Fast access to capital</strong>
+                <span>Built for growing businesses</span>
+              </div>
+            </div>
+          </a>
+        </li>
+
+        <!-- 4. Business Insights -->
+        <li class="panel panel-4">
+          <div class="panel-visual">
+            <img src="desk_flatlay_strategy.png" alt="Tablet showing AI business insights" />
+            <div class="panel-glow"></div>
+          </div>
+
+          <a href="#" class="panel-link" aria-label="Business Insights">
+            <div class="panel-inner">
+              <div class="eyebrow">
+                <span class="eyebrow-dot"></span>
+                AI-powered analytics
+              </div>
+
+              <div class="panel-title-row">
+                <h2 class="panel-title">Business Insights</h2>
+                <div class="panel-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24">
+                    <path d="M4 19h16"></path>
+                    <path d="M7 16V9"></path>
+                    <path d="M12 16V5"></path>
+                    <path d="M17 16v-4"></path>
+                  </svg>
+                </div>
+              </div>
+
+              <p class="panel-desc">
+                AI-powered analytics with Lens.
+              </p>
+
+              <div class="panel-meta">
+                <strong>Ask your business</strong>
+                <span>Get answers you can act on</span>
+              </div>
+            </div>
+          </a>
+        </li>
+      </ul>
+
+      <div class="hero-copy">
+        <div class="copy-inner">
+          <div class="top-kicker">Websites · Payments · Capital · AI</div>
+
+          <h1 aria-label="Delt">
+            <span class="letter">D</span>
+            <span class="letter">E</span>
+            <span class="letter">L</span>
+            <span class="letter">T</span>
+          </h1>
+
+          <p class="hero-sub">
+            Launch your site, accept payments, unlock capital, and understand
+            performance from one platform.
+          </p>
+
+          <div class="hero-actions">
+            <a href="#" class="btn btn-primary">Get Started</a>
+            <a href="#" class="btn btn-secondary">See the Platform</a>
+          </div>
+        </div>
+      </div>
+    </article>
+  </section>
+</body>
+</html>

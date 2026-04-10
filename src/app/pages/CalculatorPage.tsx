@@ -1,0 +1,215 @@
+import { useState } from 'react';
+import { motion } from 'motion/react';
+import { Calculator, CheckCircle } from 'lucide-react';
+
+export function CalculatorPage() {
+  const [processingRate, setProcessingRate] = useState('2.9');
+  const [perTransactionFee, setPerTransactionFee] = useState('0.30');
+  const [monthlyVolume, setMonthlyVolume] = useState('50000');
+  const [avgTransactionSize, setAvgTransactionSize] = useState('50');
+  const [calculated, setCalculated] = useState(false);
+
+  const DELT_RATE = 0.026;
+  const DELT_PER_TXN = 0.10;
+
+  const calcSavings = () => {
+    const volume = parseFloat(monthlyVolume.replace(/,/g, '')) || 0;
+    const avgSize = parseFloat(avgTransactionSize.replace(/,/g, '')) || 1;
+    const rate = parseFloat(processingRate) / 100 || 0;
+    const perTxn = parseFloat(perTransactionFee) || 0;
+    const numTransactions = volume / avgSize;
+
+    const currentCost = volume * rate + numTransactions * perTxn;
+    const deltCost = volume * DELT_RATE + numTransactions * DELT_PER_TXN;
+    const savings = currentCost - deltCost;
+
+    return { currentCost, deltCost, savings, numTransactions };
+  };
+
+  const { currentCost, deltCost, savings } = calcSavings();
+
+  const formatCurrency = (val: number) =>
+    val.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 });
+
+  const formatVolume = (val: string) => {
+    const num = val.replace(/[^0-9]/g, '');
+    return num ? parseInt(num).toLocaleString() : '';
+  };
+
+  return (
+    <div className="min-h-screen bg-[#F8F9FB]">
+      {/* Hero */}
+      <div className="pt-32 pb-16 text-center">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#16C784] text-white rounded-full text-sm mb-8" style={{ fontWeight: 600 }}>
+            <CheckCircle className="w-4 h-4" />
+            Free processing on first $5K in sales
+          </div>
+
+          <h1 className="text-5xl md:text-6xl text-[#041E42] mb-4" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 800 }}>
+            Calculate your{' '}
+            <span className="italic text-[#4945FF]" style={{ fontFamily: "'Playfair Display', serif" }}>
+              savings
+            </span>
+          </h1>
+          <p className="text-[#6B7280] text-lg">Calculate your savings with Delt</p>
+        </motion.div>
+      </div>
+
+      {/* Calculator Card */}
+      <div className="max-w-[960px] mx-auto px-6 pb-24">
+        <motion.div
+          className="bg-white rounded-2xl shadow-lg border border-[#E5E7EB]/60 overflow-hidden"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.15 }}
+        >
+          <div className="grid md:grid-cols-2 gap-0">
+            {/* Left - Form */}
+            <div className="p-8 md:p-10">
+              <h2 className="text-xl text-[#041E42] mb-6" style={{ fontWeight: 700, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                Your current payment fees
+              </h2>
+
+              <div className="space-y-5">
+                {/* Processing Rate */}
+                <div>
+                  <label className="block text-sm text-[#374151] mb-1.5" style={{ fontWeight: 500 }}>Processing rate (%)</label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={processingRate}
+                      onChange={(e) => setProcessingRate(e.target.value)}
+                      className="w-full px-4 py-3 border border-[#E5E7EB] rounded-lg text-[#041E42] focus:outline-none focus:ring-2 focus:ring-[#4945FF]/20 focus:border-[#4945FF] transition-all"
+                      placeholder="2.9"
+                    />
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[#9CA3AF]">%</span>
+                  </div>
+                </div>
+
+                {/* Per-transaction fee */}
+                <div>
+                  <label className="block text-sm text-[#374151] mb-1.5" style={{ fontWeight: 500 }}>Per-transaction fee ($)</label>
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#9CA3AF]">$</span>
+                    <input
+                      type="text"
+                      value={perTransactionFee}
+                      onChange={(e) => setPerTransactionFee(e.target.value)}
+                      className="w-full pl-8 pr-4 py-3 border border-[#E5E7EB] rounded-lg text-[#041E42] focus:outline-none focus:ring-2 focus:ring-[#4945FF]/20 focus:border-[#4945FF] transition-all"
+                      placeholder="0.30"
+                    />
+                  </div>
+                </div>
+
+                {/* Monthly Volume */}
+                <div>
+                  <label className="block text-sm text-[#374151] mb-1.5" style={{ fontWeight: 500 }}>Monthly processing volume ($)</label>
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#9CA3AF]">$</span>
+                    <input
+                      type="text"
+                      value={monthlyVolume}
+                      onChange={(e) => setMonthlyVolume(e.target.value.replace(/[^0-9]/g, ''))}
+                      onBlur={() => setMonthlyVolume(prev => prev.replace(/,/g, ''))}
+                      className="w-full pl-8 pr-4 py-3 border border-[#E5E7EB] rounded-lg text-[#041E42] focus:outline-none focus:ring-2 focus:ring-[#4945FF]/20 focus:border-[#4945FF] transition-all"
+                      placeholder="50,000"
+                    />
+                  </div>
+                </div>
+
+                {/* Average Transaction Size */}
+                <div>
+                  <label className="block text-sm text-[#374151] mb-1.5" style={{ fontWeight: 500 }}>Average transaction size ($)</label>
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#9CA3AF]">$</span>
+                    <input
+                      type="text"
+                      value={avgTransactionSize}
+                      onChange={(e) => setAvgTransactionSize(e.target.value.replace(/[^0-9.]/g, ''))}
+                      className="w-full pl-8 pr-4 py-3 border border-[#E5E7EB] rounded-lg text-[#041E42] focus:outline-none focus:ring-2 focus:ring-[#4945FF]/20 focus:border-[#4945FF] transition-all"
+                      placeholder="50"
+                    />
+                  </div>
+                </div>
+
+                {/* Calculate Button */}
+                <button
+                  onClick={() => setCalculated(true)}
+                  className="w-full py-3.5 bg-[#16C784] hover:bg-[#12B474] text-white rounded-lg transition-colors text-base"
+                  style={{ fontWeight: 600 }}
+                >
+                  Calculate my savings
+                </button>
+              </div>
+
+              {/* Delt Rates */}
+              <div className="mt-6 p-5 bg-[#F0EDFF] rounded-xl border border-[#E0DBFF]">
+                <div className="text-xs text-[#4945FF] mb-1 tracking-wider uppercase" style={{ fontWeight: 700 }}>Delt Rates</div>
+                <div className="text-2xl text-[#041E42]" style={{ fontWeight: 800 }}>2.6% + $0.10</div>
+                <div className="text-sm text-[#6B7280] mt-0.5">Per transaction · No hidden fees</div>
+              </div>
+            </div>
+
+            {/* Right - Results */}
+            <div className="p-8 md:p-10 bg-[#FAFBFC] border-l border-[#E5E7EB]/60 flex flex-col items-center justify-center">
+              {!calculated ? (
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-[#F0EDFF] rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <Calculator className="w-8 h-8 text-[#4945FF]" />
+                  </div>
+                  <p className="text-[#6B7280]">Fill out the form to see your savings</p>
+                </div>
+              ) : (
+                <motion.div
+                  className="w-full space-y-6"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4 }}
+                >
+                  <div>
+                    <p className="text-sm text-[#6B7280] mb-1">Your current monthly cost</p>
+                    <p className="text-2xl text-[#041E42]" style={{ fontWeight: 700 }}>{formatCurrency(currentCost)}</p>
+                  </div>
+
+                  <div>
+                    <p className="text-sm text-[#6B7280] mb-1">With Delt</p>
+                    <p className="text-2xl text-[#4945FF]" style={{ fontWeight: 700 }}>{formatCurrency(deltCost)}</p>
+                  </div>
+
+                  <div className="h-px bg-[#E5E7EB]" />
+
+                  <div>
+                    <p className="text-sm text-[#6B7280] mb-1">Monthly savings</p>
+                    <p className="text-3xl text-[#16C784]" style={{ fontWeight: 800 }}>
+                      {savings > 0 ? formatCurrency(savings) : '$0.00'}
+                    </p>
+                    {savings > 0 && (
+                      <p className="text-sm text-[#16C784] mt-1" style={{ fontWeight: 500 }}>
+                        {formatCurrency(savings * 12)} saved per year
+                      </p>
+                    )}
+                  </div>
+
+                  <motion.a
+                    href="#/apply"
+                    className="block w-full text-center py-3.5 bg-[#4945FF] hover:bg-[#3933CC] text-white rounded-lg transition-colors"
+                    style={{ fontWeight: 600 }}
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.99 }}
+                  >
+                    Get started with Delt
+                  </motion.a>
+                </motion.div>
+              )}
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </div>
+  );
+}
