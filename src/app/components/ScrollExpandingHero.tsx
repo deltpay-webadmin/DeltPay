@@ -14,7 +14,7 @@ const NOISE  = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@
 const HEX    = '0123456789abcdef';
 const DIGITS = '0123456789';
 const FONT_SIZE = 11;
-const COL_W     = 7;
+const COL_W     = 10; // wider columns → fewer draw calls per frame
 const HEADLINE  = "Your money,\nwithout the wait.";
 
 export function ScrollExpandingHero() {
@@ -110,10 +110,25 @@ export function ScrollExpandingHero() {
     window.addEventListener('resize', initCanvas);
 
     // ── draw loop ─────────────────────────────────────────────────────────────
-    let rafId = 0;
+    let rafId   = 0;
     let running = false;
+    let frameN  = 0;
+
+    // Pre-allocated glow-ring staging buffers — reused every frame, no GC.
+    const GLOW_MAX = 3000;
+    const glowX  = new Float32Array(GLOW_MAX);
+    const glowY  = new Float32Array(GLOW_MAX);
+    const glowCh = new Array<string>(GLOW_MAX);
+    let   glowN  = 0;
 
     const draw = () => {
+      // ── 30fps cap: skip every other rAF tick ─────────────────────────────
+      frameN++;
+      if (frameN % 2 !== 0) {
+        if (running) rafId = requestAnimationFrame(draw);
+        return;
+      }
+
       const { w, h } = sizeRef.current;
       if (!w || !h) { if (running) rafId = requestAnimationFrame(draw); return; }
 
@@ -132,8 +147,7 @@ export function ScrollExpandingHero() {
           ? (p / 0.3) * maxR * 0.6
           : maxR * 0.6 + ((p - 0.3) / 0.7) * maxR * 0.4;
 
-      // Mutate a fixed 20 random chars per frame instead of testing every
-      // character individually — same visual flicker, ~1000× fewer random calls.
+      // Mutate a fixed 20 random chars per frame — same visual flicker, minimal cost.
       const allChars = allCharsRef.current;
       if (allChars.length > 0) {
         for (let m = 0; m < 20; m++) {
@@ -141,9 +155,19 @@ export function ScrollExpandingHero() {
         }
       }
 
-      // Pre-compute squared skip threshold to avoid sqrt in the common skip path
       const skipEdge   = clearRadius - 30;
       const skipEdgeSq = skipEdge > 0 ? skipEdge * skipEdge : -1;
+      const glowEdgeSq = (clearRadius + 40) * (clearRadius + 40);
+      const fadeMul    = p > 0.7 ? Math.max(0, 1 - (p - 0.7) / 0.3) : 1;
+      const baseAlpha  = 0.12 * fadeMul;
+
+      // ── Pass 1: base characters ───────────────────────────────────────────
+      // Set fillStyle and globalAlpha ONCE for all base chars — zero per-char
+      // state changes.  Glow-ring chars are staged in the pre-allocated buffers
+      // and handled in pass 2.
+      glowN = 0;
+      ctx.fillStyle   = '#ffffff';
+      ctx.globalAlpha = baseAlpha;
 
       for (const col of columnsRef.current) {
         const colCX = col.x + COL_W / 2 - centerX;
@@ -154,21 +178,43 @@ export function ScrollExpandingHero() {
           const dy     = ch.y + FONT_SIZE / 2 - centerY;
           const distSq = colCX * colCX + dy * dy;
 
-          // Skip characters well inside the clear zone without a sqrt
+          // Skip chars deep inside the clear zone (no sqrt needed)
           if (skipEdgeSq > 0 && distSq < skipEdgeSq) continue;
 
-          const dist = Math.sqrt(distSq);
-
-          let alpha = 0.12;
-          if (dist < clearRadius + 40) {
-            alpha = 0.12 + (1 - Math.abs(dist - clearRadius) / 40) * 0.25;
+          if (distSq < glowEdgeSq) {
+            // Near the glow ring — defer to pass 2 (needs per-char alpha)
+            if (glowN < GLOW_MAX) {
+              glowX[glowN]  = col.x;
+              glowY[glowN]  = ch.y;
+              glowCh[glowN] = ch.char;
+              glowN++;
+            }
+            continue;
           }
-          if (p > 0.7) alpha *= Math.max(0, 1 - (p - 0.7) / 0.3);
 
-          ctx.fillStyle = `rgba(255,255,255,${alpha})`;
           ctx.fillText(ch.char, col.x, ch.y);
         }
       }
+
+      // ── Pass 2: glow-ring characters ──────────────────────────────────────
+      // Only ~200–500 chars at any scroll position, each needing its own alpha.
+      for (let i = 0; i < glowN; i++) {
+        const gx   = glowX[i];
+        const gy   = glowY[i];
+        const dx   = gx + COL_W / 2 - centerX;
+        const dy   = gy + FONT_SIZE / 2 - centerY;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        // Re-check skip threshold (chars between clearRadius-40 and clearRadius-30)
+        if (skipEdge > 0 && dist < skipEdge) continue;
+
+        let alpha = 0.12 + (1 - Math.abs(dist - clearRadius) / 40) * 0.25;
+        alpha *= fadeMul;
+        ctx.globalAlpha = alpha;
+        ctx.fillText(glowCh[i], gx, gy);
+      }
+
+      ctx.globalAlpha = 1;
 
       if (running) rafId = requestAnimationFrame(draw);
     };
