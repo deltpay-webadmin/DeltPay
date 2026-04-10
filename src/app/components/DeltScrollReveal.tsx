@@ -11,16 +11,16 @@ interface WordRevealProps {
 const WordReveal = ({ word, delay, variant, visible }: WordRevealProps) => {
   const variants = {
     blur: {
-      hidden: { filter: 'blur(12px)', opacity: 0, transform: 'translateY(24px)' },
-      visible: { filter: 'blur(0px)', opacity: 1, transform: 'translateY(0px)' },
+      hidden:  { opacity: 0, transform: 'translateY(24px)' },
+      visible: { opacity: 1, transform: 'translateY(0px)' },
     },
     letter: {
-      hidden: { filter: 'blur(5px)', opacity: 0, transform: 'translateY(20px)' },
-      visible: { filter: 'blur(0px)', opacity: 1, transform: 'translateY(0px)' },
+      hidden:  { opacity: 0, transform: 'translateY(20px)' },
+      visible: { opacity: 1, transform: 'translateY(0px)' },
     },
     right: {
-      hidden: { filter: 'blur(8px)', opacity: 0, transform: 'translateX(40px)' },
-      visible: { filter: 'blur(0px)', opacity: 1, transform: 'translateX(0px)' },
+      hidden:  { opacity: 0, transform: 'translateX(40px)' },
+      visible: { opacity: 1, transform: 'translateX(0px)' },
     },
   };
   const v = variants[variant];
@@ -31,8 +31,9 @@ const WordReveal = ({ word, delay, variant, visible }: WordRevealProps) => {
       style={{
         display: 'inline-block',
         ...style,
-        transition: `all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) ${delay}ms`,
-        willChange: 'transform, opacity, filter',
+        transition: `opacity 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) ${delay}ms,
+                     transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) ${delay}ms`,
+        willChange: 'transform, opacity',
       }}
     >
       {word}&nbsp;
@@ -134,10 +135,9 @@ const LogoScreen = () => {
           color: 'rgba(255,255,255,0.5)',
           letterSpacing: '-0.02em',
           opacity: visible ? 1 : 0,
-          filter: visible ? 'blur(0px)' : 'blur(8px)',
           transform: visible ? 'translateY(0)' : 'translateY(15px)',
-          transition: 'all 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-          willChange: 'transform, opacity, filter',
+          transition: 'opacity 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+          willChange: 'transform, opacity',
         }}
       >
         Meet
@@ -149,10 +149,9 @@ const LogoScreen = () => {
           height: 'clamp(140px, 20vw, 275px)',
           width: 'auto',
           opacity: visible ? 1 : 0,
-          filter: visible ? 'blur(0px)' : 'blur(16px)',
           transform: visible ? 'scale(1)' : 'scale(0.92)',
-          transition: 'all 0.9s cubic-bezier(0.25, 0.46, 0.45, 0.94) 200ms',
-          willChange: 'transform, opacity, filter',
+          transition: 'opacity 0.9s cubic-bezier(0.25, 0.46, 0.45, 0.94) 200ms, transform 0.9s cubic-bezier(0.25, 0.46, 0.45, 0.94) 200ms',
+          willChange: 'transform, opacity',
         }}
       />
     </div>

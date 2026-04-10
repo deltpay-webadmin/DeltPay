@@ -34,6 +34,7 @@ export function ScrollExpandingHero() {
   // Track rendered canvas dimensions so draw loop and logo share the same space
   const sizeRef           = useRef({ w: 0, h: 0 });
   const columnsRef        = useRef<{ chars: { char: string; y: number }[]; speed: number; x: number }[]>([]);
+  const allCharsRef       = useRef<{ char: string; y: number }[]>([]);
   const scrollProgressRef = useRef(0);
   const charElsRef        = useRef<HTMLSpanElement[]>([]);
   const lastTypedIdxRef   = useRef(-1);
@@ -100,17 +101,21 @@ export function ScrollExpandingHero() {
         }
         columnsRef.current.push({ chars, speed, x: i * COL_W });
       }
+
+      // Flat list of all char objects for O(1) random mutation below
+      allCharsRef.current = columnsRef.current.flatMap(c => c.chars);
     };
 
     initCanvas();
     window.addEventListener('resize', initCanvas);
 
     // ── draw loop ─────────────────────────────────────────────────────────────
-    let rafId: number;
+    let rafId = 0;
+    let running = false;
 
     const draw = () => {
       const { w, h } = sizeRef.current;
-      if (!w || !h) { rafId = requestAnimationFrame(draw); return; }
+      if (!w || !h) { if (running) rafId = requestAnimationFrame(draw); return; }
 
       const p = scrollProgressRef.current;
 
@@ -127,17 +132,32 @@ export function ScrollExpandingHero() {
           ? (p / 0.3) * maxR * 0.6
           : maxR * 0.6 + ((p - 0.3) / 0.7) * maxR * 0.4;
 
+      // Mutate a fixed 20 random chars per frame instead of testing every
+      // character individually — same visual flicker, ~1000× fewer random calls.
+      const allChars = allCharsRef.current;
+      if (allChars.length > 0) {
+        for (let m = 0; m < 20; m++) {
+          allChars[Math.floor(Math.random() * allChars.length)].char = rc();
+        }
+      }
+
+      // Pre-compute squared skip threshold to avoid sqrt in the common skip path
+      const skipEdge   = clearRadius - 30;
+      const skipEdgeSq = skipEdge > 0 ? skipEdge * skipEdge : -1;
+
       for (const col of columnsRef.current) {
+        const colCX = col.x + COL_W / 2 - centerX;
         for (const ch of col.chars) {
           ch.y += col.speed;
           if (ch.y > h + FONT_SIZE) { ch.y = -FONT_SIZE; ch.char = rc(); }
-          if (Math.random() < 0.008) ch.char = rc();
 
-          const dx   = col.x + COL_W / 2 - centerX;
-          const dy   = ch.y  + FONT_SIZE / 2 - centerY;
-          const dist = Math.sqrt(dx * dx + dy * dy);
+          const dy     = ch.y + FONT_SIZE / 2 - centerY;
+          const distSq = colCX * colCX + dy * dy;
 
-          if (dist < clearRadius - 30) continue;
+          // Skip characters well inside the clear zone without a sqrt
+          if (skipEdgeSq > 0 && distSq < skipEdgeSq) continue;
+
+          const dist = Math.sqrt(distSq);
 
           let alpha = 0.12;
           if (dist < clearRadius + 40) {
@@ -150,9 +170,25 @@ export function ScrollExpandingHero() {
         }
       }
 
+      if (running) rafId = requestAnimationFrame(draw);
+    };
+
+    const startDraw = () => {
+      if (running) return;
+      running = true;
       rafId = requestAnimationFrame(draw);
     };
-    rafId = requestAnimationFrame(draw);
+    const stopDraw = () => {
+      running = false;
+      cancelAnimationFrame(rafId);
+    };
+
+    // Only run the canvas while the hero is in the viewport
+    const heroIO = new IntersectionObserver(
+      ([entry]) => entry.isIntersecting ? startDraw() : stopDraw(),
+      { threshold: 0 }
+    );
+    heroIO.observe(containerRef.current!);
 
     // ── typewriter headline (no cursor) ───────────────────────────────────────
     const buildHeadline = () => {
@@ -189,17 +225,10 @@ export function ScrollExpandingHero() {
     const tickInterval = setInterval(tick, 800);
 
     // ── scroll handler ────────────────────────────────────────────────────────
-    const onScroll = () => {
-      if (!containerRef.current) return;
-      // getBoundingClientRect is zoom-aware (returns real viewport px).
-      // rect.top goes negative as the container scrolls past the top.
-      const rect  = containerRef.current.getBoundingClientRect();
-      const total = rect.height - window.innerHeight;
-      const p     = Math.min(1, Math.max(0, -rect.top / total));
-      scrollProgressRef.current = p;
-
+    // DOM writes are batched into a single rAF callback so rapid scroll events
+    // don't cause redundant style flushes within the same frame.
+    const applyScrollState = (p: number) => {
       if (logoRef.current) {
-        // Fade logo out after the clear zone has meaningfully opened (p 0.12 → 0.30)
         const logoOpacity = Math.max(0, 1 - Math.max(0, (p - 0.12) / 0.18));
         logoRef.current.style.opacity = String(logoOpacity);
       }
@@ -243,11 +272,29 @@ export function ScrollExpandingHero() {
       }
     };
 
+    let scrollRafPending = false;
+    const onScroll = () => {
+      if (!containerRef.current) return;
+      // Update the progress ref immediately (cheap number write, no DOM)
+      const rect  = containerRef.current.getBoundingClientRect();
+      const total = rect.height - window.innerHeight;
+      scrollProgressRef.current = Math.min(1, Math.max(0, -rect.top / total));
+
+      // Coalesce all DOM style writes into one rAF callback per frame
+      if (scrollRafPending) return;
+      scrollRafPending = true;
+      requestAnimationFrame(() => {
+        scrollRafPending = false;
+        applyScrollState(scrollProgressRef.current);
+      });
+    };
+
     window.addEventListener('scroll', onScroll, { passive: true });
     onScroll();
 
     return () => {
-      cancelAnimationFrame(rafId);
+      heroIO.disconnect();
+      stopDraw();
       clearInterval(tickInterval);
       window.removeEventListener('resize', initCanvas);
       window.removeEventListener('scroll', onScroll);
