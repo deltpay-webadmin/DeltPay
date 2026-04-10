@@ -123,7 +123,7 @@ export function ByTheNumbers() {
                 glowColor={[0.2745, 0.5765, 0.898]}
                 markerColor={[0.3, 0.5, 1]}
                 mapBrightness={6}
-                mapSamples={40000}
+                mapSamples={16000}
                 diffuse={1.2}
                 className="w-full h-full"
                 markerElevation={0}

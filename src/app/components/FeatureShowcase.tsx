@@ -150,6 +150,18 @@ export function FeatureShowcase() {
       </div>
 
       <style>{`
+        /* ── Scroll snap ──
+         * Apply proximity snap to the root while this component is mounted.
+         * Only .fs-text-section carries scroll-snap-align, so every other
+         * section on the page still scrolls freely — the snap only engages
+         * once the user is inside FeatureShowcase.
+         */
+        @media (min-width: 901px) {
+          html {
+            scroll-snap-type: y proximity;
+          }
+        }
+
         .fs-scroll-container {
           position: relative;
           display: grid;
@@ -164,10 +176,12 @@ export function FeatureShowcase() {
           order: 1;
         }
         .fs-text-section {
-          min-height: 100vh;
+          height: 100vh;
           display: flex;
           align-items: center;
           padding: 80px 60px 80px 60px;
+          scroll-snap-align: start;
+          scroll-snap-stop: always;
         }
         .fs-text-inner {
           opacity: 0.3;
@@ -369,8 +383,11 @@ export function FeatureShowcase() {
           }
           .fs-text-track { order: 2; }
           .fs-text-section {
+            height: auto;
             min-height: auto;
             padding: 40px 20px;
+            scroll-snap-align: none;
+            scroll-snap-stop: normal;
           }
           .fs-text-inner {
             opacity: 1;

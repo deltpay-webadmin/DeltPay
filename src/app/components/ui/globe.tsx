@@ -22,7 +22,7 @@ const Earth: React.FC<EarthProps> = ({
   dark = 1,
   scale = 1.1,
   diffuse = 1.2,
-  mapSamples = 40000,
+  mapSamples = 16000,
   mapBrightness = 6,
   baseColor = [0.4, 0.6509, 1],
   markerColor = [1, 0, 0],
@@ -39,12 +39,20 @@ const Earth: React.FC<EarthProps> = ({
     const canvas = canvasRef.current;
     let width = canvas.offsetWidth || 400;
     let phi = 0;
-    let animId: number;
+    let animId = 0;
+    let running = false;
+    let inView = false;
+    let scrolling = false;
+    let scrollTimer: ReturnType<typeof setTimeout> | null = null;
+
+    // Cap pixel ratio: 1.5 is plenty for a spinning globe and saves ~44% of
+    // the shader work vs. the previous hard-coded 2.
+    const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
 
     const globe = createGlobe(canvas, {
-      devicePixelRatio: 2,
-      width: width * 2,
-      height: width * 2,
+      devicePixelRatio: dpr,
+      width: width * dpr,
+      height: width * dpr,
       phi: 0,
       theta,
       dark,
@@ -70,15 +78,63 @@ const Earth: React.FC<EarthProps> = ({
       phi += 0.003;
       const w = canvas.offsetWidth || width;
       if (w > 0) width = w;
-      globe.update({ phi, width: width * 2, height: width * 2 });
-      animId = requestAnimationFrame(animate);
+      globe.update({ phi, width: width * dpr, height: width * dpr });
+      if (running) {
+        animId = requestAnimationFrame(animate);
+      }
     }
-    animId = requestAnimationFrame(animate);
+
+    const start = () => {
+      if (running) return;
+      running = true;
+      animId = requestAnimationFrame(animate);
+    };
+    const stop = () => {
+      running = false;
+      cancelAnimationFrame(animId);
+    };
+    // Only animate if the canvas is both on-screen AND the user isn't
+    // actively scrolling. The globe is the most expensive thing on the page,
+    // so yielding to the scroll compositor gives the smoothest feel.
+    const reconcile = () => {
+      if (inView && !scrolling) start();
+      else stop();
+    };
+
+    // Pause rotation while the user is scrolling; resume ~150ms after the
+    // last scroll event. The globe looks static during fast scrolls (which
+    // the user isn't focused on anyway) and smoothly resumes at rest.
+    const onScroll = () => {
+      if (!scrolling) {
+        scrolling = true;
+        stop();
+      }
+      if (scrollTimer) clearTimeout(scrollTimer);
+      scrollTimer = setTimeout(() => {
+        scrolling = false;
+        scrollTimer = null;
+        reconcile();
+      }, 150);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+
+    // Only spin the globe while it is on screen
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        inView = entry.isIntersecting;
+        reconcile();
+      },
+      { threshold: 0 }
+    );
+    io.observe(canvas);
 
     setReady(true);
 
     return () => {
-      cancelAnimationFrame(animId);
+      io.disconnect();
+      window.removeEventListener('scroll', onScroll);
+      if (scrollTimer) clearTimeout(scrollTimer);
+      stop();
       globe.destroy();
     };
   }, [theta, dark, scale, diffuse, mapSamples, mapBrightness]);
@@ -95,6 +151,10 @@ const Earth: React.FC<EarthProps> = ({
           height: '100%',
           maxWidth: '100%',
           aspectRatio: '1',
+          // Promote to its own compositor layer so globe paints don't
+          // invalidate surrounding scroll-composited content.
+          willChange: 'transform',
+          transform: 'translateZ(0)',
         }}
       />
     </div>
