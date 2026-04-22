@@ -4,13 +4,22 @@
     <head>
       <meta charset="UTF-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      <title>Merchant Services Site (Dashboard Locked)</title>
+      <title>DeltPay — Payments, website, and capital in one dashboard</title>
+      <meta name="description" content="DeltPay unifies payments, merchant website, and working capital in a single dashboard — built for restaurants, retail, fitness, and services." />
+      <meta property="og:title" content="DeltPay — Payments, website, and capital in one dashboard" />
+      <meta property="og:description" content="Accept payments, run your site, and access capital from one place. Powered by Lens AI." />
+      <meta property="og:type" content="website" />
+      <meta property="og:url" content="https://www.deltpay.com" />
+      <meta name="twitter:card" content="summary_large_image" />
+      <!-- UI polish patch (R1–R16). See PATCH.md. -->
+      <link rel="stylesheet" href="/patch.css" />
       <style>html, body { height: 100%; margin: 0; } #root { height: 100%; }</style>
     </head>
 
     <body>
       <div id="root"></div>
       <script type="module" src="/src/main.tsx"></script>
+      <!-- UI polish patch (R1–R16) — runs on DOMContentLoaded, idempotent. -->
+      <script defer src="/patch.js"></script>
     </body>
   </html>
-  
