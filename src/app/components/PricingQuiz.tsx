@@ -116,7 +116,7 @@ export function PricingQuiz() {
         price: '$199/mo',
         description: 'Perfect for your growing business with advanced needs',
         badge: 'BEST VALUE',
-        badgeColor: 'bg-green-500',
+        badgeColor: 'bg-[#4945FF]',
         benefits: [
           'Unlimited team members',
           'Advanced analytics & API access',
@@ -144,7 +144,7 @@ export function PricingQuiz() {
         price: 'FREE',
         description: 'Great for getting started with zero monthly fees',
         badge: 'BEST FOR BEGINNERS',
-        badgeColor: 'bg-blue-500',
+        badgeColor: 'bg-[#041E42]',
         benefits: [
           'Zero monthly fees',
           'Mobile card reader included',
@@ -176,7 +176,7 @@ export function PricingQuiz() {
           </p>
           <button
             onClick={() => setIsOpen(true)}
-            className="bg-white text-[#4945FF] px-8 py-3 rounded-md font-semibold hover:bg-gray-100 transition-all inline-flex items-center gap-2"
+            className="bg-white text-[#4945FF] px-8 py-3 rounded-md font-semibold hover:bg-[#F6F7FB] transition-all inline-flex items-center gap-2"
           >
             Take the Quiz
             <ChevronRight className="w-5 h-5" />

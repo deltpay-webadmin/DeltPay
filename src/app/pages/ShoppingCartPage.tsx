@@ -38,7 +38,7 @@ export function ShoppingCartPage() {
       id: '3',
       name: 'Growth Plan',
       category: 'Software',
-      price: 99,
+      price: 89,
       quantity: 1,
       image: '📊',
       specs: ['Monthly subscription', 'Advanced analytics', 'Priority support']
@@ -69,14 +69,14 @@ export function ShoppingCartPage() {
   };
 
   const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const discount = subtotal * 0.1; // Auto 10% discount
+  const discount = subtotal * 0.1; // Introductory discount (10%)
   const tax = (subtotal - discount) * 0.08;
   const total = subtotal - discount + tax;
 
   return (
     <>
       <Navigation />
-      <div className="min-h-screen bg-gradient-to-br from-[#F8F9FA] to-[#EBF3FF] pt-24 pb-16">
+      <div className="min-h-screen bg-[#F6F7FB] pt-24 pb-16">
         <div className="max-w-7xl mx-auto px-6">
           {/* Back Button */}
           <button 
@@ -95,7 +95,7 @@ export function ShoppingCartPage() {
               </div>
               <h1 className="text-4xl font-bold text-[#041E42]">Cart</h1>
             </div>
-            <p className="text-lg text-[#64748B]">
+            <p className="text-lg text-[#475569]">
               {cartItems.length} {cartItems.length === 1 ? 'item' : 'items'} in your cart
             </p>
           </div>
@@ -109,7 +109,7 @@ export function ShoppingCartPage() {
                     <ShoppingBag className="h-10 w-10 text-[#4945FF]" />
                   </div>
                   <h3 className="text-2xl font-bold text-[#041E42] mb-2">Your cart is empty</h3>
-                  <p className="text-[#64748B] mb-6">Add products to get started</p>
+                  <p className="text-[#475569] mb-6">Add products to get started</p>
                   <Link
                     to="/products"
                     className="inline-flex items-center gap-2 px-6 py-3 bg-[#4945FF] text-white rounded-lg font-semibold hover:bg-[#3730FF] transition-all"
@@ -157,7 +157,7 @@ export function ShoppingCartPage() {
                           <div className="flex items-center gap-3 bg-[#F8F9FA] rounded-lg p-1">
                             <button
                               onClick={() => updateQuantity(item.id, -1)}
-                              className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-white transition-colors text-[#64748B] hover:text-[#4945FF]"
+                              className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-white transition-colors text-[#475569] hover:text-[#4945FF]"
                             >
                               <Minus className="h-4 w-4" />
                             </button>
@@ -166,7 +166,7 @@ export function ShoppingCartPage() {
                             </span>
                             <button
                               onClick={() => updateQuantity(item.id, 1)}
-                              className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-white transition-colors text-[#64748B] hover:text-[#4945FF]"
+                              className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-white transition-colors text-[#475569] hover:text-[#4945FF]"
                             >
                               <Plus className="h-4 w-4" />
                             </button>
@@ -218,7 +218,7 @@ export function ShoppingCartPage() {
                           setAppliedPromo(null);
                           setPromoCode('');
                         }}
-                        className="text-[#64748B] hover:text-[#EF4444]"
+                        className="text-[#475569] hover:text-[#EF4444]"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -236,21 +236,21 @@ export function ShoppingCartPage() {
 
                   {/* Price Breakdown */}
                   <div className="space-y-4 mb-6 pb-6 border-b border-[#E2E8F0]">
-                    <div className="flex justify-between text-[#64748B]">
+                    <div className="flex justify-between text-[#475569]">
                       <span>Subtotal</span>
                       <span className="font-semibold">${subtotal.toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between text-[#10B981]">
-                      <span>Discount (10%)</span>
+                    <div className="flex justify-between text-[#4945FF]">
+                      <span title="Limited-time introductory offer. See terms for details.">Introductory discount (10%) ℹ</span>
                       <span className="font-semibold">-${discount.toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between text-[#64748B]">
+                    <div className="flex justify-between text-[#475569]">
                       <span>Estimated Tax</span>
                       <span className="font-semibold">${tax.toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between text-[#64748B]">
+                    <div className="flex justify-between text-[#475569]">
                       <span>Shipping</span>
-                      <span className="font-semibold text-[#10B981]">FREE</span>
+                      <span className="font-semibold text-[#4945FF]">FREE</span>
                     </div>
                   </div>
 
@@ -261,26 +261,30 @@ export function ShoppingCartPage() {
                   </div>
 
                   {/* Checkout Button */}
-                  <button className="w-full bg-[#4945FF] text-white py-4 rounded-lg font-bold hover:bg-[#3730FF] transition-all flex items-center justify-center gap-2 group mb-4">
+                  <button
+                    className="w-full bg-[#4945FF] text-white py-4 rounded-lg font-bold hover:bg-[#3730FF] transition-all flex items-center justify-center gap-2 group mb-2"
+                    onClick={() => navigate('/apply')}
+                  >
                     Proceed to Checkout
                     <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
                   </button>
+                  <p className="text-xs text-[#475569] mt-2">See our <Link to="/terms" className="underline">return and cancellation policy</Link>.</p>
 
                   {/* Security Badges */}
                   <div className="space-y-3">
-                    <div className="flex items-center gap-3 text-sm text-[#64748B]">
+                    <div className="flex items-center gap-3 text-sm text-[#475569]">
                       <div className="w-8 h-8 bg-[#EBF3FF] rounded-lg flex items-center justify-center flex-shrink-0">
                         <Lock className="h-4 w-4 text-[#4945FF]" />
                       </div>
                       <span>Secure SSL encryption</span>
                     </div>
-                    <div className="flex items-center gap-3 text-sm text-[#64748B]">
+                    <div className="flex items-center gap-3 text-sm text-[#475569]">
                       <div className="w-8 h-8 bg-[#EBF3FF] rounded-lg flex items-center justify-center flex-shrink-0">
                         <CreditCard className="h-4 w-4 text-[#4945FF]" />
                       </div>
                       <span>Multiple payment options</span>
                     </div>
-                    <div className="flex items-center gap-3 text-sm text-[#64748B]">
+                    <div className="flex items-center gap-3 text-sm text-[#475569]">
                       <div className="w-8 h-8 bg-[#EBF3FF] rounded-lg flex items-center justify-center flex-shrink-0">
                         <Package className="h-4 w-4 text-[#4945FF]" />
                       </div>

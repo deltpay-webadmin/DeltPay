@@ -7,10 +7,10 @@ import logoImage from 'figma:asset/61527edee0ea2e963bace756584cec3657b62f9e.png'
 const NAVY = '#041E42';
 
 const socialIcons = [
-  { icon: Facebook, label: 'Facebook', href: '#' },
-  { icon: Twitter, label: 'Twitter', href: '#' },
-  { icon: Linkedin, label: 'LinkedIn', href: '#' },
-  { icon: Instagram, label: 'Instagram', href: '#' },
+  { icon: Facebook, label: 'Facebook', href: 'https://www.facebook.com/' },
+  { icon: Twitter, label: 'Twitter', href: 'https://twitter.com/' },
+  { icon: Linkedin, label: 'LinkedIn', href: 'https://www.linkedin.com/' },
+  { icon: Instagram, label: 'Instagram', href: 'https://www.instagram.com/' },
 ];
 
 export function Footer() {
@@ -143,7 +143,7 @@ export function Footer() {
               {[
                 { label: 'Privacy', path: '/privacy' },
                 { label: 'Terms', path: '/terms' },
-                { label: 'Sitemap', path: '#' },
+                { label: 'Sitemap', path: '/sitemap', ariaDisabled: true },
               ].map((item) => (
                 <Link
                   key={item.label}

@@ -44,7 +44,6 @@ export function ContactPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Form submitted:', formData);
     setFormSubmitted(true);
     setTimeout(() => setFormSubmitted(false), 4000);
   };
@@ -89,7 +88,7 @@ export function ContactPage() {
     },
     {
       question: 'How do I contact support?',
-      answer: "You can reach us 24/7 via live chat, call us at 1-888-555-1234, or email support@deltcapital.com. We typically respond within minutes.",
+      answer: "Our team is available Mon\u2013Fri 8 AM\u20138 PM EST and Saturday 9 AM\u20135 PM EST. Outside these hours, leave a message and we'll reply by the next business day.",
     },
   ];
 
@@ -102,7 +101,7 @@ export function ContactPage() {
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-[#041E42] mb-6">
               We're here to <span className="text-[#4945FF]">help</span>
             </h1>
-            <p className="text-lg sm:text-xl text-[#6B7280] max-w-2xl mx-auto mb-10">
+            <p className="text-lg sm:text-xl text-[#475569] max-w-2xl mx-auto mb-10">
               Whether you need technical support or want to explore how Delt can grow your business, our team is ready.
             </p>
 
@@ -113,7 +112,7 @@ export function ContactPage() {
                 className={`px-8 py-3 rounded-lg font-semibold text-base transition-all ${
                   activeTab === 'sales'
                     ? 'bg-[#4945FF] text-white shadow-md'
-                    : 'text-[#6B7280] hover:text-[#041E42]'
+                    : 'text-[#475569] hover:text-[#041E42]'
                 }`}
               >
                 Sales
@@ -123,7 +122,7 @@ export function ContactPage() {
                 className={`px-8 py-3 rounded-lg font-semibold text-base transition-all ${
                   activeTab === 'support'
                     ? 'bg-[#4945FF] text-white shadow-md'
-                    : 'text-[#6B7280] hover:text-[#041E42]'
+                    : 'text-[#475569] hover:text-[#041E42]'
                 }`}
               >
                 Support
@@ -146,8 +145,8 @@ export function ContactPage() {
                     <MessageSquare className="w-5 h-5 text-[#4945FF]" />
                   </div>
                   <h3 className="text-lg font-bold text-[#041E42] mb-3">Live Chat</h3>
-                  <p className="text-sm text-[#6B7280] mb-6 flex-grow leading-relaxed">
-                    Chat with our support team in real-time. Get instant answers to your questions.
+                  <p className="text-sm text-[#475569] mb-6 flex-grow leading-relaxed">
+                    Chat with our support team during business hours.
                   </p>
                   <button
                     onClick={() => setIsChatOpen(true)}
@@ -163,7 +162,7 @@ export function ContactPage() {
                     <Phone className="w-5 h-5 text-[#4945FF]" />
                   </div>
                   <h3 className="text-lg font-bold text-[#041E42] mb-3">Call Us</h3>
-                  <p className="text-sm text-[#6B7280] mb-4 leading-relaxed">
+                  <p className="text-sm text-[#475569] mb-4 leading-relaxed">
                     Speak directly with a support specialist. We're here to help you resolve any issue.
                   </p>
                   <a
@@ -172,7 +171,7 @@ export function ContactPage() {
                   >
                     1-888-555-1234
                   </a>
-                  <button className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-[#4945FF] text-[#4945FF] rounded-lg hover:bg-[#F0F0FF] transition-colors font-semibold mt-auto">
+                  <button className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-[#4945FF] text-[#4945FF] rounded-lg hover:bg-[#4945FF]/8 transition-colors font-semibold mt-auto">
                     Call Now <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
@@ -183,7 +182,7 @@ export function ContactPage() {
                     <Mail className="w-5 h-5 text-[#4945FF]" />
                   </div>
                   <h3 className="text-lg font-bold text-[#041E42] mb-3">Email Us</h3>
-                  <p className="text-sm text-[#6B7280] mb-4 leading-relaxed">
+                  <p className="text-sm text-[#475569] mb-4 leading-relaxed">
                     Send us a detailed message and we'll get back to you within 24 hours.
                   </p>
                   <a
@@ -192,7 +191,7 @@ export function ContactPage() {
                   >
                     support@deltcapital.com
                   </a>
-                  <button className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-[#4945FF] text-[#4945FF] rounded-lg hover:bg-[#F0F0FF] transition-colors font-semibold mt-auto">
+                  <button className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-[#4945FF] text-[#4945FF] rounded-lg hover:bg-[#4945FF]/8 transition-colors font-semibold mt-auto">
                     Send Email <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
@@ -212,24 +211,24 @@ export function ContactPage() {
                 <div className="grid md:grid-cols-3 gap-6 mb-8">
                   <div className="flex flex-col gap-1">
                     <span className="text-[#041E42] font-semibold text-sm">Monday - Friday</span>
-                    <span className="text-[#6B7280] text-sm">8:00 AM - 8:00 PM EST</span>
+                    <span className="text-[#475569] text-sm">8:00 AM - 8:00 PM EST</span>
                   </div>
                   <div className="flex flex-col gap-1">
                     <span className="text-[#041E42] font-semibold text-sm">Saturday</span>
-                    <span className="text-[#6B7280] text-sm">9:00 AM - 5:00 PM EST</span>
+                    <span className="text-[#475569] text-sm">9:00 AM - 5:00 PM EST</span>
                   </div>
                   <div className="flex flex-col gap-1">
                     <span className="text-[#041E42] font-semibold text-sm">Sunday</span>
-                    <span className="text-[#6B7280] text-sm">Closed</span>
+                    <span className="text-[#475569] text-sm">Closed</span>
                   </div>
                 </div>
 
                 <div className="pt-6 border-t border-[#E5E7EB]">
                   <div className="flex items-center gap-2 mb-1">
-                    <div className="w-2.5 h-2.5 bg-[#10B981] rounded-full animate-pulse"></div>
+                    <div className="w-2.5 h-2.5 bg-[#4945FF] rounded-full animate-pulse"></div>
                     <span className="text-[#041E42] font-semibold text-sm">We're Online Now</span>
                   </div>
-                  <p className="text-sm text-[#6B7280] pl-5">Average response time: Under 2 minutes</p>
+                  <p className="text-sm text-[#475569] pl-5">During business hours, average response under 2 minutes.</p>
                 </div>
               </div>
             </div>
@@ -289,7 +288,7 @@ export function ContactPage() {
                     <Phone className="w-5 h-5 text-[#4945FF]" />
                   </div>
                   <h3 className="text-lg font-bold text-[#041E42] mb-3">Schedule a Call</h3>
-                  <p className="text-sm text-[#6B7280] mb-4 leading-relaxed flex-grow">
+                  <p className="text-sm text-[#475569] mb-4 leading-relaxed flex-grow">
                     We'll call you within one business day to discuss your needs.
                   </p>
                   <p className="text-xs text-[#94A3B8] mb-4">Monday - Friday: 9am - 6pm ET</p>
@@ -304,11 +303,11 @@ export function ContactPage() {
                     <MessageSquare className="w-5 h-5 text-[#4945FF]" />
                   </div>
                   <h3 className="text-lg font-bold text-[#041E42] mb-3">Book a Demo</h3>
-                  <p className="text-sm text-[#6B7280] mb-4 leading-relaxed flex-grow">
+                  <p className="text-sm text-[#475569] mb-4 leading-relaxed flex-grow">
                     See Delt in action with a personalized walkthrough of our platform.
                   </p>
                   <p className="text-xs text-[#94A3B8] mb-4">30-minute sessions available</p>
-                  <button className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-[#4945FF] text-[#4945FF] rounded-lg hover:bg-[#F0F0FF] transition-colors font-semibold">
+                  <button className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-[#4945FF] text-[#4945FF] rounded-lg hover:bg-[#4945FF]/8 transition-colors font-semibold">
                     Schedule Demo <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
@@ -319,7 +318,7 @@ export function ContactPage() {
                     <Mail className="w-5 h-5 text-[#4945FF]" />
                   </div>
                   <h3 className="text-lg font-bold text-[#041E42] mb-3">Email Sales</h3>
-                  <p className="text-sm text-[#6B7280] mb-4 leading-relaxed flex-grow">
+                  <p className="text-sm text-[#475569] mb-4 leading-relaxed flex-grow">
                     Get expert guidance to find the right solution for your business.
                   </p>
                   <a
@@ -328,7 +327,7 @@ export function ContactPage() {
                   >
                     sales@delt.com
                   </a>
-                  <button className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-[#4945FF] text-[#4945FF] rounded-lg hover:bg-[#F0F0FF] transition-colors font-semibold mt-auto">
+                  <button className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-[#4945FF] text-[#4945FF] rounded-lg hover:bg-[#4945FF]/8 transition-colors font-semibold mt-auto">
                     Send Email <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
@@ -343,7 +342,7 @@ export function ContactPage() {
                 {/* Left Column */}
                 <div>
                   <h2 className="text-3xl font-bold text-[#041E42] mb-3">Let's grow your business together</h2>
-                  <p className="text-[#6B7280] mb-10 leading-relaxed">
+                  <p className="text-[#475569] mb-10 leading-relaxed">
                     Connect with our team to explore how Delt can help you accept payments, manage your business, and increase revenue.
                   </p>
 
@@ -354,7 +353,7 @@ export function ContactPage() {
                       </div>
                       <div>
                         <h3 className="text-lg font-bold text-[#041E42] mb-1">Careers</h3>
-                        <p className="text-sm text-[#6B7280]">
+                        <p className="text-sm text-[#475569]">
                           Join our team and help us build the future of payments
                         </p>
                       </div>
@@ -366,7 +365,7 @@ export function ContactPage() {
                       </div>
                       <div>
                         <h3 className="text-lg font-bold text-[#041E42] mb-1">Partner with Delt</h3>
-                        <p className="text-sm text-[#6B7280]">
+                        <p className="text-sm text-[#475569]">
                           Become a partner and help businesses accept payments
                         </p>
                       </div>
@@ -379,11 +378,11 @@ export function ContactPage() {
                     <div className="space-y-3 text-sm">
                       <div className="flex items-center gap-3">
                         <Phone className="w-4 h-4 text-[#4945FF]" />
-                        <span className="text-[#6B7280]">1-800-DELT-PAY</span>
+                        <span className="text-[#475569]">1-800-DELT-PAY</span>
                       </div>
                       <div className="flex items-center gap-3">
                         <Send className="w-4 h-4 text-[#4945FF]" />
-                        <span className="text-[#6B7280]">sales@delt.com</span>
+                        <span className="text-[#475569]">sales@delt.com</span>
                       </div>
                     </div>
                   </div>
@@ -395,13 +394,13 @@ export function ContactPage() {
 
                   {formSubmitted ? (
                     <div className="flex flex-col items-center justify-center py-16 text-center">
-                      <div className="w-16 h-16 bg-[#10B981]/10 rounded-full flex items-center justify-center mb-4">
-                        <svg className="w-8 h-8 text-[#10B981]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <div className="w-16 h-16 bg-[#4945FF]/10 rounded-full flex items-center justify-center mb-4">
+                        <svg className="w-8 h-8 text-[#4945FF]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
                       </div>
                       <h4 className="text-xl font-bold text-[#041E42] mb-2">Thank you!</h4>
-                      <p className="text-[#6B7280]">We'll be in touch within one business day.</p>
+                      <p className="text-[#475569]">We'll be in touch within one business day.</p>
                     </div>
                   ) : (
                     <form onSubmit={handleSubmit} className="space-y-5">
@@ -561,25 +560,26 @@ export function ContactPage() {
             <h2 className="text-3xl sm:text-4xl font-bold text-[#041E42] mb-4">
               Trusted by businesses everywhere
             </h2>
-            <p className="text-lg text-[#6B7280] mb-12">
+            <p className="text-lg text-[#475569] mb-12">
               Join thousands of businesses that rely on Delt for payments and support.
             </p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
               <div>
                 <div className="text-4xl sm:text-5xl font-bold text-[#4945FF] mb-2">5K+</div>
-                <div className="text-sm text-[#6B7280]">Businesses served</div>
+                <div className="text-sm text-[#475569]">Businesses served</div>
               </div>
               <div>
                 <div className="text-4xl sm:text-5xl font-bold text-[#4945FF] mb-2">99.6%</div>
-                <div className="text-sm text-[#6B7280]">Uptime</div>
+                <div className="text-sm text-[#475569]">Uptime</div>
               </div>
               <div>
-                <div className="text-4xl sm:text-5xl font-bold text-[#4945FF] mb-2">24/7</div>
-                <div className="text-sm text-[#6B7280]">Support</div>
+                <div className="text-4xl sm:text-5xl font-bold text-[#4945FF] mb-2">Mon-Sat</div>
+                <div className="text-sm text-[#475569]">Support available</div>
+                <div className="text-xs text-[#475569] mt-1">During business hours, average response under 2 minutes.</div>
               </div>
               <div>
                 <div className="text-4xl sm:text-5xl font-bold text-[#4945FF] mb-2">$1B+</div>
-                <div className="text-sm text-[#6B7280]">Processed annually</div>
+                <div className="text-sm text-[#475569]">Processed annually</div>
               </div>
             </div>
           </div>

@@ -252,20 +252,20 @@ export function SandboxPage() {
       className={`overflow-hidden bg-white flex flex-col relative ${darkMode ? 'dashboard-dark' : ''}`}
       style={{ height: 'calc(100vh / 0.8)' }}
     >
-      {/* ═══ Permanent "Start Free Trial" Top Banner ═══ */}
+      {/* ═══ Branded demo banner (navy, not purple) ═══ */}
       <div
         className="sandbox-top-banner flex items-center justify-center gap-4 px-8 py-2.5 flex-shrink-0 relative"
-        style={{ backgroundColor: '#635bff' }}
+        style={{ backgroundColor: '#041E42' }}
       >
         <p className="text-white text-sm">
-          <strong style={{ fontWeight: 600 }}>You're exploring a live demo.</strong>
-          {'  '}Start a free trial to use your own data.
+          <strong style={{ fontWeight: 600 }}>Live demo.</strong>
+          {'  '}Some features are reserved for trial accounts.
         </p>
         <motion.button
           onClick={() => navigate('/signup')}
-          className="flex-shrink-0 flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-[#635bff] bg-white cursor-pointer transition-all text-xs"
-          style={{ fontWeight: 600 }}
-          whileHover={{ backgroundColor: '#f6f5ff' }}
+          className="flex-shrink-0 flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-white cursor-pointer transition-all text-xs"
+          style={{ fontWeight: 600, backgroundColor: '#4945FF' }}
+          whileHover={{ backgroundColor: '#3933CC' }}
           whileTap={{ scale: 0.97 }}
         >
           Start Free Trial <ArrowRight size={12} />
@@ -292,7 +292,7 @@ export function SandboxPage() {
         >
           <Bell size={20} style={{ color: '#0a2540' }} />
           {unreadCount > 0 && (
-            <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+            <span className="absolute top-1 right-1 w-2 h-2 bg-[#4945FF] rounded-full" />
           )}
         </button>
       </div>
@@ -535,57 +535,96 @@ export function SandboxPage() {
             <DataVisualizationDashboard />
           ) : null}
 
-          {/* ── Locked view overlay ── */}
+          {/* ── Locked view overlay ─ branded navy card, intentional IP-protection state ── */}
           <AnimatePresence>
             {!UNLOCKED_VIEWS.has(activeMenuItem) && (
               <motion.div
                 key="lock-overlay"
                 className="absolute inset-0 z-40 flex items-center justify-center"
-                style={{ backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', backgroundColor: 'rgba(255,255,255,0.55)' }}
+                style={{
+                  /* Soft navy wash instead of blurry white — reads as 'intentional' not 'broken' */
+                  background:
+                    'radial-gradient(ellipse at center, rgba(4,30,66,0.78) 0%, rgba(4,30,66,0.92) 70%)',
+                  backdropFilter: 'blur(6px) saturate(140%)',
+                  WebkitBackdropFilter: 'blur(6px) saturate(140%)',
+                }}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.22 }}
               >
                 <motion.div
-                  className="flex flex-col items-center gap-5 text-center rounded-2xl bg-white px-10 py-9"
-                  style={{ boxShadow: '0 24px 64px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.06)', border: '1px solid #e6e6e6', maxWidth: 360 }}
+                  className="relative flex flex-col items-center gap-5 text-center rounded-2xl px-10 py-9 overflow-hidden"
+                  style={{
+                    background: '#041E42',
+                    boxShadow:
+                      '0 32px 80px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.08)',
+                    border: '1px solid rgba(73,69,255,0.22)',
+                    maxWidth: 400,
+                  }}
                   initial={{ opacity: 0, scale: 0.92, y: 12 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.92, y: 12 }}
                   transition={{ duration: 0.26, type: 'spring', stiffness: 300, damping: 28 }}
                 >
-                  {/* Lock icon badge */}
-                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ backgroundColor: 'rgba(99,91,255,0.08)' }}>
-                    <Lock className="w-6 h-6" style={{ color: '#635bff' }} />
+                  {/* Indigo radial glow behind the icon */}
+                  <div
+                    className="absolute pointer-events-none"
+                    style={{
+                      top: -40,
+                      left: '50%',
+                      transform: 'translateX(-50%)',
+                      width: 260,
+                      height: 260,
+                      background:
+                        'radial-gradient(circle, rgba(73,69,255,0.35) 0%, transparent 60%)',
+                    }}
+                  />
+
+                  {/* Lock icon badge — Delt indigo */}
+                  <div
+                    className="relative w-14 h-14 rounded-2xl flex items-center justify-center"
+                    style={{
+                      backgroundColor: 'rgba(73,69,255,0.18)',
+                      border: '1px solid rgba(73,69,255,0.35)',
+                    }}
+                  >
+                    <Lock className="w-6 h-6" style={{ color: '#FFFFFF' }} strokeWidth={2.2} />
                   </div>
 
                   {/* Label */}
-                  <div className="flex flex-col gap-1.5">
-                    <p style={{ fontWeight: 700, color: '#0a2540', fontSize: 17, letterSpacing: '-0.3px' }}>
-                      {NAV_ITEMS.find(n => n.id === activeMenuItem)?.label} is locked
+                  <div className="relative flex flex-col gap-2">
+                    <div
+                      className="text-[11px] font-bold uppercase"
+                      style={{ letterSpacing: '0.18em', color: '#4945FF' }}
+                    >
+                      Available on trial
+                    </div>
+                    <p style={{ fontWeight: 700, color: '#FFFFFF', fontSize: 19, letterSpacing: '-0.3px' }}>
+                      {NAV_ITEMS.find(n => n.id === activeMenuItem)?.label}
                     </p>
-                    <p style={{ color: '#8898aa', fontSize: 13, lineHeight: 1.55 }}>
-                      Start a free trial to unlock all features including Payments, Insights, Capital, and Storefront.
+                    <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: 13.5, lineHeight: 1.6 }}>
+                      This view is reserved for trial and live accounts. Your free dashboard already includes
+                      Home, Lens AI, and Analytics.
                     </p>
                   </div>
 
-                  {/* CTA */}
+                  {/* CTA — Delt indigo */}
                   <motion.button
                     onClick={() => navigate('/signup')}
-                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-white text-sm"
-                    style={{ backgroundColor: '#635bff', fontWeight: 600 }}
-                    whileHover={{ scale: 1.03, backgroundColor: '#5147f5' }}
+                    className="relative w-full flex items-center justify-center gap-2 py-3 rounded-xl text-white text-sm"
+                    style={{ backgroundColor: '#4945FF', fontWeight: 600, letterSpacing: '-0.01em' }}
+                    whileHover={{ scale: 1.02, backgroundColor: '#3933CC' }}
                     whileTap={{ scale: 0.97 }}
                   >
-                    Start Free Trial <ArrowRight size={14} />
+                    Start 14-day trial <ArrowRight size={14} />
                   </motion.button>
 
                   {/* Back link */}
                   <button
                     onClick={() => setActiveMenuItem('dashboard')}
-                    className="text-xs hover:underline"
-                    style={{ color: '#adbdcc', fontWeight: 500 }}
+                    className="relative text-xs hover:underline"
+                    style={{ color: 'rgba(255,255,255,0.55)', fontWeight: 500 }}
                   >
                     Back to Dashboard
                   </button>

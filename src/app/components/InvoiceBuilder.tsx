@@ -429,7 +429,7 @@ function EditView({
       {/* Invoice header card */}
       <div className="bg-white rounded-2xl border border-[#E8E8E8] overflow-hidden" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
         {/* Top accent band */}
-        <div className="h-1.5 bg-gradient-to-r from-[#4945FF] to-[#6C69FF]" />
+        <div className="h-1.5 bg-[#4945FF]" />
 
         <div className="p-8">
           {/* Company + Invoice title */}
@@ -886,7 +886,7 @@ function PDFView({
           </div>
 
           {/* Accent bar */}
-          <div className="h-0.5 bg-gradient-to-r from-[#4945FF] to-[#6C69FF] mb-6 rounded-full" />
+          <div className="h-0.5 bg-[#4945FF] mb-6 rounded-full" />
 
           {/* Invoice details */}
           <div className="mb-6">

@@ -9,17 +9,24 @@ export function SignInPage() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle sign in logic here
-    console.log('Sign in:', { email, password, rememberMe });
+    setError('');
+    setLoading(true);
+    // Simulated auth - replace with real endpoint
+    setTimeout(() => {
+      setLoading(false);
+      setError('Invalid email or password. Try signing up instead.');
+    }, 1000);
   };
 
   return (
     <>
       <Navigation />
-      <div className="min-h-screen bg-gradient-to-br from-[#F8F9FA] to-[#E8E9FF] flex items-center justify-center px-6 py-12 pt-32">
+      <div className="min-h-screen bg-[#F6F7FB] flex items-center justify-center px-6 py-12 pt-32">
       <div className="w-full max-w-md">
         {/* Back Button */}
         <button 
@@ -36,7 +43,7 @@ export function SignInPage() {
             <Lock className="h-8 w-8 text-white" />
           </div>
           <h1 className="text-4xl font-bold text-[#041E42] mb-3">Welcome back</h1>
-          <p className="text-lg text-[#64748B]">
+          <p className="text-lg text-[#475569]">
             Sign in to your Delt account
           </p>
         </div>
@@ -98,20 +105,28 @@ export function SignInPage() {
                   onChange={(e) => setRememberMe(e.target.checked)}
                   className="w-4 h-4 border-2 border-[#E2E8F0] rounded text-[#4945FF] focus:ring-[#4945FF] focus:ring-offset-0 cursor-pointer"
                 />
-                <span className="ml-2 text-sm text-[#64748B]">Remember me</span>
+                <span className="ml-2 text-sm text-[#475569]">Remember me</span>
               </label>
-              <a href="#" className="text-sm font-medium text-[#4945FF] hover:text-[#3730FF] transition-colors">
+              <Link to="/contact" className="text-sm font-medium text-[#4945FF] hover:text-[#3730FF] transition-colors">
                 Forgot password?
-              </a>
+              </Link>
             </div>
+
+            {/* Error state */}
+            {error && (
+              <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+                {error}
+              </div>
+            )}
 
             {/* Sign In Button */}
             <button
               type="submit"
-              className="w-full bg-[#4945FF] text-white py-3 rounded-lg font-semibold hover:bg-[#3730FF] transition-all flex items-center justify-center gap-2 group"
+              disabled={loading}
+              className="w-full bg-[#4945FF] text-white py-3 rounded-lg font-semibold hover:bg-[#3730FF] transition-all flex items-center justify-center gap-2 group disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              Sign in
-              <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+              {loading ? 'Signing in…' : 'Sign in'}
+              {!loading && <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />}
             </button>
           </form>
 
@@ -146,20 +161,20 @@ export function SignInPage() {
         </div>
 
         {/* Sign Up Link */}
-        <p className="text-center text-[#64748B]">
+        <p className="text-center text-[#475569]">
           Don't have an account?{' '}
-          <a href="#" className="font-semibold text-[#4945FF] hover:text-[#3730FF] transition-colors">
+          <Link to="/signup" className="font-semibold text-[#4945FF] hover:text-[#3730FF] transition-colors">
             Sign up for free
-          </a>
+          </Link>
         </p>
 
         {/* Legal Links */}
         <div className="mt-8 text-center">
           <p className="text-xs text-[#94A3B8]">
             By signing in, you agree to our{' '}
-            <a href="#" className="text-[#4945FF] hover:underline">Terms of Service</a>
+            <Link to="/terms" className="text-[#4945FF] hover:underline">Terms of Service</Link>
             {' '}and{' '}
-            <a href="#" className="text-[#4945FF] hover:underline">Privacy Policy</a>
+            <Link to="/privacy" className="text-[#4945FF] hover:underline">Privacy Policy</Link>
           </p>
         </div>
       </div>

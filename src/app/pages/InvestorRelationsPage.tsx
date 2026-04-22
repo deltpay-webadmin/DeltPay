@@ -1,4 +1,5 @@
 import { TrendingUp, DollarSign, Users, BarChart3, Download, Calendar, FileText, Mail, Phone, ArrowUpRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export function InvestorRelationsPage() {
   const financialHighlights = [
@@ -84,27 +85,27 @@ export function InvestorRelationsPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             <div>
-              <div className="text-sm text-[#6B7280] mb-1">Stock Price</div>
+              <div className="text-sm text-[#475569] mb-1">Stock Price</div>
               <div className="text-3xl font-bold text-[#041E42]">$284.50</div>
-              <div className="flex items-center gap-1 text-sm text-[#10B981] font-semibold mt-1">
+              <div className="flex items-center gap-1 text-sm text-[#4945FF] font-semibold mt-1">
                 <ArrowUpRight className="w-4 h-4" />
                 +5.2% Today
               </div>
             </div>
             <div>
-              <div className="text-sm text-[#6B7280] mb-1">52-Week High</div>
+              <div className="text-sm text-[#475569] mb-1">52-Week High</div>
               <div className="text-3xl font-bold text-[#041E42]">$295.80</div>
             </div>
             <div>
-              <div className="text-sm text-[#6B7280] mb-1">52-Week Low</div>
+              <div className="text-sm text-[#475569] mb-1">52-Week Low</div>
               <div className="text-3xl font-bold text-[#041E42]">$182.40</div>
             </div>
             <div>
-              <div className="text-sm text-[#6B7280] mb-1">Volume</div>
+              <div className="text-sm text-[#475569] mb-1">Volume</div>
               <div className="text-3xl font-bold text-[#041E42]">12.4M</div>
             </div>
           </div>
-          <div className="mt-6 text-xs text-[#6B7280]">
+          <div className="mt-6 text-xs text-[#475569]">
             Market data as of February 9, 2026 4:00 PM EST. Data delayed by 15 minutes.
           </div>
         </div>
@@ -115,7 +116,8 @@ export function InvestorRelationsPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-4xl font-bold text-[#041E42] mb-4">Financial Highlights</h2>
-            <p className="text-xl text-[#6B7280]">
+            <p className="text-base text-[#475569] mt-2">All figures as of the period noted; unaudited unless otherwise indicated.</p>
+            <p className="text-xl text-[#475569]">
               Strong growth across all key metrics
             </p>
           </div>
@@ -123,9 +125,9 @@ export function InvestorRelationsPage() {
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {financialHighlights.map((item, index) => (
               <div key={index} className="bg-[#F6F7FB] p-8 rounded-2xl">
-                <div className="text-sm text-[#6B7280] mb-2">{item.label}</div>
+                <div className="text-sm text-[#475569] mb-2">{item.label}</div>
                 <div className="text-4xl font-bold text-[#041E42] mb-2">{item.value}</div>
-                <div className="inline-flex items-center gap-1 px-3 py-1 bg-[#D1FAE5] text-[#065F46] rounded-full text-sm font-semibold">
+                <div className="inline-flex items-center gap-1 px-3 py-1 bg-[#4945FF]/10 text-[#4945FF] rounded-full text-sm font-semibold">
                   <TrendingUp className="w-4 h-4" />
                   {item.change}
                 </div>
@@ -144,27 +146,27 @@ export function InvestorRelationsPage() {
               <div className="flex flex-col items-center gap-2">
                 <div className="w-full bg-[#4945FF] rounded-t-lg" style={{ height: '40%' }}></div>
                 <div className="text-sm font-semibold text-[#041E42]">2021</div>
-                <div className="text-xs text-[#6B7280]">$0.8B</div>
+                <div className="text-xs text-[#475569]">$0.8B</div>
               </div>
               <div className="flex flex-col items-center gap-2">
                 <div className="w-full bg-[#4945FF] rounded-t-lg" style={{ height: '55%' }}></div>
                 <div className="text-sm font-semibold text-[#041E42]">2022</div>
-                <div className="text-xs text-[#6B7280]">$1.2B</div>
+                <div className="text-xs text-[#475569]">$1.2B</div>
               </div>
               <div className="flex flex-col items-center gap-2">
                 <div className="w-full bg-[#4945FF] rounded-t-lg" style={{ height: '70%' }}></div>
                 <div className="text-sm font-semibold text-[#041E42]">2023</div>
-                <div className="text-xs text-[#6B7280]">$1.5B</div>
+                <div className="text-xs text-[#475569]">$1.5B</div>
               </div>
               <div className="flex flex-col items-center gap-2">
                 <div className="w-full bg-[#4945FF] rounded-t-lg" style={{ height: '85%' }}></div>
                 <div className="text-sm font-semibold text-[#041E42]">2024</div>
-                <div className="text-xs text-[#6B7280]">$1.7B</div>
+                <div className="text-xs text-[#475569]">$1.7B</div>
               </div>
               <div className="flex flex-col items-center gap-2">
                 <div className="w-full bg-[#4945FF] rounded-t-lg" style={{ height: '100%' }}></div>
                 <div className="text-sm font-semibold text-[#041E42]">2025</div>
-                <div className="text-xs text-[#6B7280]">$2.4B</div>
+                <div className="text-xs text-[#475569]">$2.4B</div>
               </div>
             </div>
           </div>
@@ -194,7 +196,7 @@ export function InvestorRelationsPage() {
                   >
                     <div>
                       <div className="font-semibold text-[#041E42] mb-1">{report.quarter}</div>
-                      <div className="text-sm text-[#6B7280]">{report.date}</div>
+                      <div className="text-sm text-[#475569]">{report.date}</div>
                     </div>
                     <Download className="w-5 h-5 text-[#4945FF] group-hover:translate-y-0.5 transition-transform" />
                   </a>
@@ -219,7 +221,7 @@ export function InvestorRelationsPage() {
                   >
                     <div>
                       <div className="font-semibold text-[#041E42] mb-1">{report.year} {report.title}</div>
-                      <div className="text-sm text-[#6B7280]">Published {report.date}</div>
+                      <div className="text-sm text-[#475569]">Published {report.date}</div>
                     </div>
                     <Download className="w-5 h-5 text-[#4945FF] group-hover:translate-y-0.5 transition-transform" />
                   </a>
@@ -233,7 +235,7 @@ export function InvestorRelationsPage() {
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
                 <h3 className="text-xl font-bold text-[#041E42] mb-2">SEC Filings</h3>
-                <p className="text-[#6B7280]">
+                <p className="text-[#475569]">
                   Access our complete filing history on the SEC's EDGAR database
                 </p>
               </div>
@@ -256,7 +258,7 @@ export function InvestorRelationsPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-4xl font-bold text-[#041E42] mb-4">Leadership Team</h2>
-            <p className="text-xl text-[#6B7280]">
+            <p className="text-xl text-[#475569]">
               Experienced executives driving our vision forward
             </p>
           </div>
@@ -266,7 +268,7 @@ export function InvestorRelationsPage() {
               <div key={index} className="bg-white p-6 rounded-2xl border border-[#E5E7EB] text-center">
                 <div className="text-6xl mb-4">{leader.image}</div>
                 <h3 className="text-lg font-bold text-[#041E42] mb-1">{leader.name}</h3>
-                <p className="text-sm text-[#6B7280]">{leader.title}</p>
+                <p className="text-sm text-[#475569]">{leader.title}</p>
               </div>
             ))}
           </div>
@@ -294,7 +296,7 @@ export function InvestorRelationsPage() {
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      <span className="text-sm text-[#6B7280]">{release.date}</span>
+                      <span className="text-sm text-[#475569]">{release.date}</span>
                       <span className="px-3 py-1 bg-[#EEF2FF] text-[#4945FF] text-xs font-semibold rounded-full">
                         {release.category}
                       </span>
@@ -347,6 +349,7 @@ export function InvestorRelationsPage() {
                   Subscribe
                 </button>
               </div>
+              <p className="text-xs text-white/60 mt-2">By subscribing you agree to receive investor updates. See our <Link to="/privacy" className="underline">Privacy Policy</Link>. Unsubscribe anytime.</p>
             </div>
           </div>
         </div>
@@ -355,9 +358,11 @@ export function InvestorRelationsPage() {
       {/* Disclaimer */}
       <section className="py-8 bg-[#F6F7FB] border-t border-[#E5E7EB]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <p className="text-xs text-[#6B7280] text-center leading-relaxed">
-            Forward-Looking Statements: This page contains forward-looking statements within the meaning of the federal securities laws. These statements are subject to risks and uncertainties that could cause actual results to differ materially from those projected. For more information, please refer to our SEC filings.
-          </p>
+          <div className="border border-[#94A3B8]/30 rounded-lg p-4 bg-[#F6F7FB] text-[#475569]">
+            <p className="text-sm text-[#475569] text-center leading-relaxed">
+              Forward-Looking Statements: This page contains forward-looking statements within the meaning of the federal securities laws. These statements are subject to risks and uncertainties that could cause actual results to differ materially from those projected. For more information, please refer to our SEC filings.
+            </p>
+          </div>
         </div>
       </section>
     </div>

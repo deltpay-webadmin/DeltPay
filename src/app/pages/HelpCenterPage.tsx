@@ -1,313 +1,369 @@
-import { useState, useRef } from 'react';
-import { Link } from 'react-router';
-import { Search, ArrowRight, MessageCircle } from 'lucide-react';
-import { motion } from 'motion/react';
-import { FAQ } from '@/app/components/FAQ';
-import { ImageWithFallback } from '../components/figma/ImageWithFallback';
+import { CreditCard, Wallet, DollarSign, Globe, Sparkles, ShieldCheck, Search, ArrowRight, MessageCircle, Activity } from 'lucide-react';
 
-const NAVY = '#041E42';
+/* ─── Palette ────────────────────────────────────────── */
+const NAVY   = '#041E42';
 const PURPLE = '#4945FF';
-const GREEN = '#16C784';
-const JAKARTA = "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif";
+const WHITE  = '#FFFFFF';
+const BG     = '#F6F7FB';
 
-/* ─── Browse by Topic Data ─── */
-const topics = [
+/* ─── Data ───────────────────────────────────────────── */
+const CATEGORIES = [
   {
-    title: 'Getting Started',
-    links: ['Creating your account', 'Setting up your storefront', 'Checklist for launching', 'Choosing the right plan'],
-  },
-  {
+    icon: CreditCard,
     title: 'Payments',
-    links: ['Delt Payments overview', 'Processing fees explained', 'Accepting online payments', 'Payment disputes & chargebacks'],
+    subtitle: 'Processing, fees, refunds',
+    count: 12,
   },
   {
-    title: 'Delt Capital',
-    links: ['How funding works', 'Eligibility requirements', 'Repayment terms', 'Managing your advance'],
+    icon: Wallet,
+    title: 'Payouts',
+    subtitle: 'Schedules, holds, bank accounts',
+    count: 9,
   },
   {
-    title: 'Your Account',
-    links: ['Logging in to Delt', 'Managing your billing', 'Two-factor authentication', 'Account permissions'],
+    icon: DollarSign,
+    title: 'Capital',
+    subtitle: 'Loans, repayment, eligibility',
+    count: 8,
   },
   {
-    title: 'Storefront & Website',
-    links: ['Customizing your site', 'Adding products & services', 'Domain setup', 'SEO & analytics'],
+    icon: Globe,
+    title: 'Websites',
+    subtitle: 'Builder, domains, SEO',
+    count: 14,
   },
   {
-    title: 'Delt Lens (AI)',
-    links: ['What is Lens?', 'Using Lens insights', 'Lens chat assistant', 'Data & privacy'],
+    icon: Sparkles,
+    title: 'Lens AI',
+    subtitle: 'Questions, actions, data sources',
+    count: 11,
   },
   {
-    title: 'Orders & Invoicing',
-    links: ['Managing orders', 'Creating invoices', 'Refunds & returns', 'Shipping & fulfillment'],
-  },
-  {
-    title: 'Integrations',
-    links: ['Connecting third-party apps', 'Accounting software sync', 'Marketing tools', 'API documentation'],
-  },
-  {
-    title: 'Security & Compliance',
-    links: ['Data protection', 'PCI compliance', 'Fraud prevention', 'Privacy policy'],
+    icon: ShieldCheck,
+    title: 'Account & security',
+    subtitle: 'Logins, users, permissions',
+    count: 10,
   },
 ];
 
-/* ─── Popular Articles ─── */
-const popularArticles = [
-  { title: 'How to set up Delt Payments', category: 'Payments', time: '3 min read' },
-  { title: 'Understanding your Delt dashboard', category: 'Getting Started', time: '5 min read' },
-  { title: 'How Delt Capital funding works', category: 'Capital', time: '4 min read' },
-  { title: 'Customizing your storefront design', category: 'Storefront', time: '6 min read' },
-  { title: 'Using Lens AI to grow your business', category: 'Lens', time: '4 min read' },
-  { title: 'Setting up online ordering', category: 'Orders', time: '3 min read' },
+const POPULAR_TAGS = ['Payouts', 'Refunds', 'Chargebacks', 'Tax', 'API keys'];
+
+const POPULAR_ARTICLES = [
+  {
+    title: 'How payouts are scheduled',
+    snippet: 'Learn how Delt calculates your payout date and what affects your settlement timeline.',
+  },
+  {
+    title: 'Disputing a chargeback',
+    snippet: 'Step-by-step guide to submitting evidence and managing chargeback disputes in your dashboard.',
+  },
+  {
+    title: 'Adding a team member',
+    snippet: 'Invite staff, set role permissions, and manage access levels for your Delt account.',
+  },
+  {
+    title: 'Connecting your Square data on migration',
+    snippet: 'How to import your historical Square transactions, customers, and catalog into Delt.',
+  },
+  {
+    title: 'Refunding a customer',
+    snippet: 'Issue full or partial refunds directly from a transaction record in seconds.',
+  },
+  {
+    title: 'Resetting your admin password',
+    snippet: "Recover account access via email, SMS, or a backup passkey if you're locked out.",
+  },
 ];
 
-export function HelpCenterPage() {
-  const [searchQuery, setSearchQuery] = useState('');
-  const inputRef = useRef<HTMLInputElement>(null);
-
+/* ─── Sub-components ─────────────────────────────────── */
+function CategoryCard({
+  icon: Icon,
+  title,
+  subtitle,
+  count,
+}: {
+  icon: React.ElementType;
+  title: string;
+  subtitle: string;
+  count: number;
+}) {
   return (
-    <div style={{ fontFamily: JAKARTA }}>
-      {/* ─── Hero Section ─── */}
+    <div
+      className="group rounded-2xl border p-6 flex flex-col gap-4 transition-all duration-200 cursor-pointer"
+      style={{ background: WHITE, borderColor: `${NAVY}1A` }}
+      onMouseEnter={e => {
+        (e.currentTarget as HTMLDivElement).style.borderColor = `${PURPLE}66`;
+        (e.currentTarget as HTMLDivElement).style.boxShadow = `0 0 0 3px ${PURPLE}14`;
+      }}
+      onMouseLeave={e => {
+        (e.currentTarget as HTMLDivElement).style.borderColor = `${NAVY}1A`;
+        (e.currentTarget as HTMLDivElement).style.boxShadow = 'none';
+      }}
+    >
+      <div
+        className="w-10 h-10 rounded-xl flex items-center justify-center"
+        style={{ background: `${PURPLE}15` }}
+      >
+        <Icon size={20} style={{ color: PURPLE }} />
+      </div>
+      <div className="flex-1">
+        <p className="font-semibold text-sm mb-0.5 tracking-tight" style={{ color: NAVY }}>
+          {title}
+        </p>
+        <p className="text-xs text-[#475569]">{subtitle}</p>
+      </div>
+      <p className="text-xs text-[#94A3B8]">{count} articles</p>
+    </div>
+  );
+}
+
+function ArticleRow({ title, snippet }: { title: string; snippet: string }) {
+  return (
+    <div
+      className="group rounded-2xl border p-5 flex flex-col gap-2 transition-all duration-200 cursor-pointer"
+      style={{ background: WHITE, borderColor: `${NAVY}1A` }}
+      onMouseEnter={e => {
+        (e.currentTarget as HTMLDivElement).style.borderColor = `${PURPLE}66`;
+        (e.currentTarget as HTMLDivElement).style.boxShadow = `0 0 0 3px ${PURPLE}14`;
+      }}
+      onMouseLeave={e => {
+        (e.currentTarget as HTMLDivElement).style.borderColor = `${NAVY}1A`;
+        (e.currentTarget as HTMLDivElement).style.boxShadow = 'none';
+      }}
+    >
+      <p className="text-sm font-semibold tracking-tight" style={{ color: NAVY }}>{title}</p>
+      <p className="text-xs text-[#475569] leading-relaxed flex-1">{snippet}</p>
+      <a
+        href="#"
+        className="inline-flex items-center gap-1 text-xs font-semibold transition-colors"
+        style={{ color: PURPLE }}
+      >
+        Read <ArrowRight size={11} />
+      </a>
+    </div>
+  );
+}
+
+/* ─── Page ───────────────────────────────────────────── */
+export function HelpCenterPage() {
+  return (
+    <div
+      style={{ background: WHITE, color: NAVY, fontFamily: 'system-ui, -apple-system, sans-serif' }}
+    >
+      {/* ══ HERO / SEARCH ══════════════════════════════════════ */}
       <section
-        className="relative overflow-hidden"
+        className="relative overflow-hidden pt-28 pb-20 px-6"
         style={{
-          background: `linear-gradient(135deg, ${NAVY} 0%, #071F3D 50%, #0A2A52 100%)`,
-          padding: '100px 24px 80px',
+          background: `radial-gradient(ellipse 80% 60% at 50% -5%, ${PURPLE}22 0%, transparent 68%), ${WHITE}`,
         }}
       >
-        {/* Subtle grid pattern */}
-        <div
-          className="absolute inset-0 opacity-[0.04]"
-          style={{
-            backgroundImage: `radial-gradient(circle, rgba(255,255,255,0.5) 1px, transparent 1px)`,
-            backgroundSize: '28px 28px',
-          }}
-        />
-
-        <div className="relative z-10 max-w-[720px] mx-auto text-center">
-          <motion.h1
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-            style={{
-              fontSize: 'clamp(2.2rem, 4.5vw, 3.2rem)',
-              fontWeight: 800,
-              color: '#FFFFFF',
-              letterSpacing: '-0.03em',
-              lineHeight: 1.15,
-              marginBottom: 16,
-            }}
+        <div className="max-w-3xl mx-auto text-center">
+          <p className="text-sm font-semibold tracking-widest uppercase mb-4" style={{ color: PURPLE }}>
+            Help Center
+          </p>
+          <h1
+            className="text-5xl md:text-6xl font-bold tracking-tight mb-8"
+            style={{ color: NAVY, lineHeight: 1.08 }}
           >
             How can we help?
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1, duration: 0.5 }}
-            style={{ fontSize: 17, color: 'rgba(255,255,255,0.55)', marginBottom: 36 }}
-          >
-            Search our knowledge base or browse by topic below
-          </motion.p>
+          </h1>
 
           {/* Search bar */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 0.5 }}
-            className="relative max-w-[580px] mx-auto"
+          <div
+            className="rounded-3xl border flex items-center gap-3 px-5 py-4 mb-6 transition-all focus-within:ring-2"
+            style={{ background: WHITE, borderColor: `${NAVY}1A`, boxShadow: '0 2px 12px rgba(4,30,66,.07)' }}
           >
-            <div
-              className="flex items-center gap-3 bg-white rounded-2xl px-5 py-4"
-              style={{
-                boxShadow: '0 16px 48px rgba(0,0,0,0.2), 0 0 0 1px rgba(255,255,255,0.1)',
-              }}
-            >
-              <Search size={20} color="#9CA3AF" />
-              <input
-                ref={inputRef}
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Ask anything..."
-                className="flex-1 text-[16px] text-[#1A1A2E] placeholder-[#B0B7C3] bg-transparent focus:outline-none"
-                style={{ fontFamily: JAKARTA }}
-              />
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="w-9 h-9 rounded-full flex items-center justify-center"
-                style={{ background: PURPLE }}
-              >
-                <ArrowRight size={16} color="#fff" />
-              </motion.button>
-            </div>
-          </motion.div>
+            <Search size={18} style={{ color: '#94A3B8', flexShrink: 0 }} />
+            <input
+              type="search"
+              placeholder="Search articles, guides, and docs…"
+              className="text-sm flex-1 outline-none bg-transparent"
+              style={{ color: NAVY, fontFamily: 'system-ui, -apple-system, sans-serif' }}
+            />
+          </div>
 
-          {/* Quick links */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4, duration: 0.5 }}
-            className="flex flex-wrap justify-center gap-2 mt-6"
-          >
-            {['Getting started', 'Payments', 'Capital', 'Pricing'].map((tag) => (
-              <span
+          {/* Popular pills */}
+          <div className="flex items-center justify-center flex-wrap gap-2">
+            <span className="text-xs text-[#94A3B8]">Popular:</span>
+            {POPULAR_TAGS.map(tag => (
+              <a
                 key={tag}
-                className="px-3 py-1.5 rounded-full text-[13px] cursor-pointer transition-colors"
+                href="#"
+                className="inline-flex items-center px-3 py-1 rounded-full border text-xs font-medium transition-all"
                 style={{
-                  color: 'rgba(255,255,255,0.6)',
-                  background: 'rgba(255,255,255,0.08)',
-                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderColor: `${NAVY}20`,
+                  color: '#475569',
+                  background: WHITE,
                 }}
-                onClick={() => setSearchQuery(tag)}
+                onMouseEnter={e => {
+                  (e.currentTarget as HTMLAnchorElement).style.borderColor = `${PURPLE}66`;
+                  (e.currentTarget as HTMLAnchorElement).style.color = PURPLE;
+                }}
+                onMouseLeave={e => {
+                  (e.currentTarget as HTMLAnchorElement).style.borderColor = `${NAVY}20`;
+                  (e.currentTarget as HTMLAnchorElement).style.color = '#475569';
+                }}
               >
                 {tag}
-              </span>
+              </a>
             ))}
-          </motion.div>
-        </div>
-      </section>
-
-      {/* ─── Featured Banner ─── */}
-      <section className="max-w-[960px] mx-auto px-6 -mt-6 relative z-20">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5, duration: 0.5 }}
-          className="relative overflow-hidden rounded-2xl"
-          style={{
-            background: `linear-gradient(135deg, #1a1145 0%, #2d1b69 50%, #1a1145 100%)`,
-            height: 200,
-          }}
-        >
-          <div className="absolute inset-0 flex items-center px-10">
-            <div>
-              <div
-                className="text-[12px] uppercase tracking-widest mb-2"
-                style={{ color: GREEN, fontWeight: 700 }}
-              >
-                What&apos;s New
-              </div>
-              <h3 style={{ fontSize: 26, fontWeight: 800, color: '#fff', lineHeight: 1.2, marginBottom: 8 }}>
-                Delt Platform Update — Spring &apos;26
-              </h3>
-              <Link
-                to="/whats-new"
-                className="inline-flex items-center gap-1.5 text-[14px] no-underline"
-                style={{ color: PURPLE, fontWeight: 600 }}
-              >
-                Explore 40+ updates <ArrowRight size={14} />
-              </Link>
-            </div>
           </div>
-          {/* Decorative gradient orb */}
-          <div
-            className="absolute -right-10 -top-10 w-[300px] h-[300px] rounded-full opacity-20"
-            style={{ background: `radial-gradient(circle, ${PURPLE}, transparent 70%)` }}
-          />
-          <ImageWithFallback
-            src="https://images.unsplash.com/photo-1698047682129-c3e217ac08b7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxidXNpbmVzcyUyMHRlYW0lMjB3b3JraW5nJTIwdG9nZXRoZXIlMjB0ZWNobm9sb2d5fGVufDF8fHx8MTc3NDQ1NjI0NHww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
-            alt="Featured"
-            className="absolute right-0 top-0 h-full w-[45%] object-cover opacity-40"
-            style={{ maskImage: 'linear-gradient(to right, transparent, black 40%)' }}
-          />
-        </motion.div>
-      </section>
-
-      {/* ─── Popular Articles ─── */}
-      <section className="max-w-[960px] mx-auto px-6 py-16">
-        <h2 style={{ fontSize: 22, fontWeight: 800, color: NAVY, marginBottom: 24, letterSpacing: '-0.02em' }}>
-          Popular articles
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {popularArticles.map((article) => (
-            <motion.a
-              key={article.title}
-              href="#"
-              className="block p-5 rounded-xl border border-[#E5E7EB] no-underline transition-all"
-              whileHover={{ y: -2, boxShadow: '0 8px 24px rgba(0,0,0,0.06)' }}
-              style={{ background: '#FAFBFC' }}
-            >
-              <div className="text-[11px] uppercase tracking-wider mb-2" style={{ color: PURPLE, fontWeight: 700 }}>
-                {article.category}
-              </div>
-              <div style={{ fontSize: 15, fontWeight: 650, color: NAVY, lineHeight: 1.4, marginBottom: 8 }}>
-                {article.title}
-              </div>
-              <div style={{ fontSize: 13, color: '#9CA3AF' }}>{article.time}</div>
-            </motion.a>
-          ))}
         </div>
       </section>
 
-      {/* ─── Browse by Topic ─── */}
-      <section style={{ background: '#F8F9FB' }} className="py-16">
-        <div className="max-w-[960px] mx-auto px-6">
-          <h2 style={{ fontSize: 22, fontWeight: 800, color: NAVY, marginBottom: 32, letterSpacing: '-0.02em' }}>
+      {/* ══ CATEGORY CARDS ═════════════════════════════════════ */}
+      <section className="py-20 px-6">
+        <div className="max-w-5xl mx-auto">
+          <p className="text-sm font-semibold tracking-widest uppercase mb-3" style={{ color: PURPLE }}>
             Browse by topic
+          </p>
+          <h2 className="text-2xl font-bold tracking-tight mb-10" style={{ color: NAVY }}>
+            What do you need help with?
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-16 gap-y-10">
-            {topics.map((topic) => (
-              <div key={topic.title}>
-                <h3 style={{ fontSize: 16, fontWeight: 700, color: NAVY, marginBottom: 12 }}>
-                  {topic.title}
-                </h3>
-                <ul className="space-y-2" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                  {topic.links.map((link) => (
-                    <li key={link}>
-                      <a
-                        href="#"
-                        className="text-[14px] no-underline transition-colors hover:underline"
-                        style={{ color: '#6B7280' }}
-                        onMouseEnter={(e) => (e.currentTarget.style.color = PURPLE)}
-                        onMouseLeave={(e) => (e.currentTarget.style.color = '#6B7280')}
-                      >
-                        {link}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {CATEGORIES.map(cat => (
+              <CategoryCard key={cat.title} {...cat} />
             ))}
           </div>
         </div>
       </section>
 
-      {/* ─── FAQ Section ─── */}
-      <FAQ />
-
-      {/* ─── Still Need Help CTA ─── */}
-      <section className="max-w-[960px] mx-auto px-6 pb-20">
-        <div
-          className="rounded-2xl p-10 text-center"
-          style={{ background: NAVY }}
-        >
-          <div
-            className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-5"
-            style={{ background: 'rgba(73,69,255,0.15)' }}
-          >
-            <MessageCircle size={24} color={PURPLE} />
-          </div>
-          <h3 style={{ fontSize: 22, fontWeight: 800, color: '#fff', marginBottom: 8 }}>
-            Still need help?
-          </h3>
-          <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.5)', marginBottom: 24, maxWidth: 400, marginLeft: 'auto', marginRight: 'auto' }}>
-            Our support team is available 24/7 to help you with anything
+      {/* ══ POPULAR ARTICLES ═══════════════════════════════════ */}
+      <section className="py-20 px-6" style={{ background: BG }}>
+        <div className="max-w-5xl mx-auto">
+          <p className="text-sm font-semibold tracking-widest uppercase mb-3" style={{ color: PURPLE }}>
+            Top reads
           </p>
-          <div className="flex justify-center gap-3">
-            <Link
-              to="/contact"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-[14px] no-underline transition-colors"
-              style={{ background: PURPLE, color: '#fff', fontWeight: 700 }}
+          <h2 className="text-2xl font-bold tracking-tight mb-10" style={{ color: NAVY }}>
+            Popular articles
+          </h2>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {POPULAR_ARTICLES.map(a => (
+              <ArticleRow key={a.title} {...a} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══ STILL NEED HELP ════════════════════════════════════ */}
+      <section className="py-20 px-6">
+        <div className="max-w-5xl mx-auto">
+          <p className="text-sm font-semibold tracking-widest uppercase mb-3" style={{ color: PURPLE }}>
+            Need more?
+          </p>
+          <h2 className="text-2xl font-bold tracking-tight mb-10" style={{ color: NAVY }}>
+            Still need help?
+          </h2>
+          <div className="grid md:grid-cols-3 gap-5">
+            {/* Talk to a human */}
+            <div
+              className="rounded-2xl border p-8 flex flex-col gap-4 transition-all duration-200"
+              style={{ background: WHITE, borderColor: `${NAVY}1A` }}
+              onMouseEnter={e => {
+                (e.currentTarget as HTMLDivElement).style.borderColor = `${PURPLE}66`;
+                (e.currentTarget as HTMLDivElement).style.boxShadow = `0 0 0 3px ${PURPLE}14`;
+              }}
+              onMouseLeave={e => {
+                (e.currentTarget as HTMLDivElement).style.borderColor = `${NAVY}1A`;
+                (e.currentTarget as HTMLDivElement).style.boxShadow = 'none';
+              }}
             >
-              <MessageCircle size={16} /> Chat with us
-            </Link>
-            <Link
-              to="/contact"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-[14px] no-underline transition-colors"
-              style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', fontWeight: 600, border: '1px solid rgba(255,255,255,0.15)' }}
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center"
+                style={{ background: `${PURPLE}15` }}
+              >
+                <MessageCircle size={20} style={{ color: PURPLE }} />
+              </div>
+              <div>
+                <p className="font-semibold mb-1" style={{ color: NAVY }}>Talk to a human</p>
+                <p className="text-sm text-[#475569] leading-relaxed">
+                  Our support team is available Monday–Friday, 9am–6pm ET. Average response time under 4 minutes during business hours. Outside these hours, leave a message and we'll reply by the next business day.
+                </p>
+              </div>
+              <button
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all self-start"
+                style={{ background: PURPLE, color: WHITE }}
+              >
+                Start a chat <ArrowRight size={14} />
+              </button>
+            </div>
+
+            {/* Email support */}
+            <div
+              className="rounded-2xl border p-8 flex flex-col gap-4 transition-all duration-200"
+              style={{ background: WHITE, borderColor: `${NAVY}1A` }}
+              onMouseEnter={e => {
+                (e.currentTarget as HTMLDivElement).style.borderColor = `${PURPLE}66`;
+                (e.currentTarget as HTMLDivElement).style.boxShadow = `0 0 0 3px ${PURPLE}14`;
+              }}
+              onMouseLeave={e => {
+                (e.currentTarget as HTMLDivElement).style.borderColor = `${NAVY}1A`;
+                (e.currentTarget as HTMLDivElement).style.boxShadow = 'none';
+              }}
             >
-              Contact support
-            </Link>
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center"
+                style={{ background: `${PURPLE}15` }}
+              >
+                <Activity size={20} style={{ color: PURPLE }} />
+              </div>
+              <div>
+                <p className="font-semibold mb-1" style={{ color: NAVY }}>Email support</p>
+                <p className="text-sm text-[#475569] leading-relaxed">
+                  For complex questions about Capital, disputes, or account setup, email us and a specialist will respond within one business day.
+                </p>
+              </div>
+              <a
+                href="mailto:support@delt.co"
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all self-start"
+                style={{ background: `${NAVY}0F`, color: NAVY }}
+              >
+                support@delt.co <ArrowRight size={14} />
+              </a>
+            </div>
+
+            {/* Status */}
+            <div
+              className="rounded-2xl border p-8 flex flex-col gap-4 transition-all duration-200"
+              style={{ background: WHITE, borderColor: `${NAVY}1A` }}
+              onMouseEnter={e => {
+                (e.currentTarget as HTMLDivElement).style.borderColor = `${PURPLE}66`;
+                (e.currentTarget as HTMLDivElement).style.boxShadow = `0 0 0 3px ${PURPLE}14`;
+              }}
+              onMouseLeave={e => {
+                (e.currentTarget as HTMLDivElement).style.borderColor = `${NAVY}1A`;
+                (e.currentTarget as HTMLDivElement).style.boxShadow = 'none';
+              }}
+            >
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center"
+                style={{ background: `${NAVY}0F` }}
+              >
+                <Activity size={20} style={{ color: NAVY }} />
+              </div>
+              <div>
+                <p className="font-semibold mb-1" style={{ color: NAVY }}>System status</p>
+                <div className="flex items-center gap-2 mb-2">
+                  <span
+                    className="w-2 h-2 rounded-full animate-pulse"
+                    style={{ background: '#16c784' }}
+                  />
+                  <span className="text-sm font-medium" style={{ color: '#0e7a49' }}>
+                    All systems operational
+                  </span>
+                </div>
+                <p className="text-sm text-[#475569] leading-relaxed">
+                  Payments, Payouts, Capital, Websites, and Lens AI are all running normally.
+                </p>
+              </div>
+              <a
+                href="#"
+                className="inline-flex items-center gap-1.5 text-sm font-semibold transition-colors self-start"
+                style={{ color: PURPLE }}
+              >
+                View status page <ArrowRight size={14} />
+              </a>
+            </div>
           </div>
         </div>
       </section>

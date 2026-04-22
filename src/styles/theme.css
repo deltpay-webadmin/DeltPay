@@ -2,7 +2,15 @@
 
 body {
   position: relative;
-  zoom: 0.8;
+}
+
+/* Legacy 0.8 zoom — only apply on desktop, where designs were calibrated.
+   Mobile/tablet viewports render at native scale to avoid truncation and
+   layout issues in components with fixed pixel widths (e.g. Sandbox). */
+@media (min-width: 1024px) {
+  body {
+    zoom: 0.8;
+  }
 }
 
 html {

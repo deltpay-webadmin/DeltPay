@@ -320,9 +320,9 @@ function AssemblingBrowser() {
         {/* Browser chrome */}
         <div className="flex items-center gap-2 px-4 py-3 bg-[#0a1f38] border-b border-white/5">
           <div className="flex gap-1.5">
-            <div className="w-2.5 h-2.5 rounded-full bg-red-400/60" />
-            <div className="w-2.5 h-2.5 rounded-full bg-yellow-400/60" />
-            <div className="w-2.5 h-2.5 rounded-full bg-green-400/60" />
+            <div className="w-2.5 h-2.5 rounded-full bg-[#041E42]/25" />
+            <div className="w-2.5 h-2.5 rounded-full bg-[#041E42]/25" />
+            <div className="w-2.5 h-2.5 rounded-full bg-[#041E42]/25" />
           </div>
           <div className="flex-1 mx-3">
             <div className="bg-white/5 rounded-md px-3 py-1 text-[10px] text-white/30 text-center">

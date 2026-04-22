@@ -1,5 +1,6 @@
 import { useRef, useCallback } from 'react';
 import { motion, useMotionValue, useTransform, useSpring } from 'motion/react';
+import { Link } from 'react-router';
 
 // --- Word-by-word cinematic text reveal ---
 function CinematicHeading() {
@@ -315,14 +316,17 @@ export function HeroSection() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 1.1, ease: [0.22, 1, 0.36, 1] }}
             >
-              <motion.a
-                href="#/apply"
-                className="get-started-btn inline-flex justify-center items-center px-8 py-4 rounded-xl font-medium transition-all text-lg bg-[#4945FF] text-white border-2 border-[#4945FF] hover:bg-[#3933CC] hover:border-[#3933CC] relative overflow-hidden"
+              <motion.div
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.98 }}
               >
-                Get Started for Free
-              </motion.a>
+                <Link
+                  to="/apply"
+                  className="get-started-btn inline-flex justify-center items-center px-8 py-4 rounded-xl font-medium transition-all text-lg bg-[#4945FF] text-white border-2 border-[#4945FF] hover:bg-[#3933CC] hover:border-[#3933CC] relative overflow-hidden"
+                >
+                  Get Started for Free
+                </Link>
+              </motion.div>
               <motion.a
                 href="#products"
                 className="inline-flex justify-center items-center border-2 border-white/30 text-white px-8 py-4 rounded-xl font-medium hover:bg-white/10 hover:border-white/50 transition-all text-lg"

@@ -19,6 +19,10 @@ import { ProductsPage } from '@/app/pages/ProductsPage';
 import { ShoppingCartPage } from '@/app/pages/ShoppingCartPage';
 import { BlogPage } from '@/app/pages/BlogPage';
 import { NewBlogPage } from '@/app/pages/NewBlogPage';
+import { WhatsNewPage } from '@/app/pages/WhatsNewPage';
+import { AboutUsPage } from '@/app/pages/AboutUsPage';
+import { ReviewsPage } from '@/app/pages/ReviewsPage';
+import { LensAIPage } from '@/app/pages/LensAIPage';
 import { WebsiteBuilderDemo } from '@/app/pages/WebsiteBuilderDemo';
 import { ApplicationPage } from '@/app/pages/ApplicationPage';
 import { AboutPage } from '@/app/pages/AboutPage';
@@ -34,6 +38,8 @@ import { CustomCursor } from '@/app/components/CustomCursor';
 import { CapitalPage } from '@/app/pages/CapitalPage';
 import { CalculatorPage } from '@/app/pages/CalculatorPage';
 import { GetAQuotePage } from '@/app/pages/GetAQuotePage';
+import { IndustryPage } from '@/app/pages/IndustryPage';
+import { LensDemoPage } from '@/app/pages/LensDemoPage';
 
 /* App root - v2 */
 export default function App() {
@@ -61,14 +67,17 @@ export default function App() {
                 <Route path="/pricing" element={<PricingPage />} />
                 <Route path="/payments" element={<PaymentsPage />} />
                 <Route path="/apply" element={<ApplicationPage />} />
-                <Route path="/whats-new" element={<BlogPage />} />
+                <Route path="/whats-new" element={<WhatsNewPage />} />
                 <Route path="/blog" element={<NewBlogPage />} />
                 <Route path="/contact" element={<ContactPage />} />
                 <Route path="/contact-sales" element={<ContactSalesPage />} />
                 <Route path="/support" element={<SupportPage />} />
                 <Route path="/business-types" element={<BusinessTypesPage />} />
                 <Route path="/products" element={<ProductsPage />} />
-                <Route path="/about" element={<AboutPage />} />
+                <Route path="/about" element={<AboutUsPage />} />
+                <Route path="/about-legacy" element={<AboutPage />} />
+                <Route path="/reviews" element={<ReviewsPage />} />
+                <Route path="/lens-ai" element={<LensAIPage />} />
                 <Route path="/careers" element={<CareersPage />} />
                 <Route path="/privacy" element={<PrivacyPolicyPage />} />
                 <Route path="/terms" element={<TermsPage />} />
@@ -80,6 +89,8 @@ export default function App() {
                 <Route path="/delt-ai" element={<DeltAiPage />} />
                 <Route path="/capital" element={<CapitalPage />} />
                 <Route path="/calculator" element={<CalculatorPage />} />
+                <Route path="/industries/:slug" element={<IndustryPage />} />
+                <Route path="/lens-demo" element={<LensDemoPage />} />
               </Routes>
               <Footer />
             </div>

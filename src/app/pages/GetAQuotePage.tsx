@@ -5,7 +5,7 @@ import logoWhite from 'figma:asset/419e83442bb1bf5965a966a8870b00dd4288dd57.png'
 
 const NAVY   = '#041E42';
 const INDIGO = '#4945FF';
-const GREEN  = '#16C784';
+const GREEN  = '#4945FF';
 const JAK    = "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif";
 
 /* ── Step data ── */
@@ -162,10 +162,10 @@ function ProgressBar({ step }: { step: number }) {
                     <path d="M4 10.5L8 14.5L16 6.5" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 ) : (
-                  <span style={{ fontFamily: JAK, fontSize: 15, fontWeight: 700, color: active ? '#fff' : '#9AA3B2' }}>{i + 1}</span>
+                  <span style={{ fontFamily: JAK, fontSize: 15, fontWeight: 700, color: active ? '#fff' : '#94A3B8' }}>{i + 1}</span>
                 )}
               </div>
-              <span style={{ fontFamily: JAK, fontSize: 13, fontWeight: active ? 700 : 500, color: active ? NAVY : '#9AA3B2', marginTop: 8, whiteSpace: 'nowrap' }}>
+              <span style={{ fontFamily: JAK, fontSize: 13, fontWeight: active ? 700 : 500, color: active ? NAVY : '#94A3B8', marginTop: 8, whiteSpace: 'nowrap' }}>
                 {['Features', 'Business', 'Volume', 'Contact'][i]}
               </span>
             </div>
@@ -195,10 +195,10 @@ function FeatureCard({ item, selected, onToggle }: { item: typeof FEATURES[0]; s
         position: 'relative', minHeight: 148,
       }}
     >
-      <div style={{ color: selected ? INDIGO : '#9AA3B2', transition: 'color 0.2s', transform: 'scale(1.15)' }}>{item.icon}</div>
+      <div style={{ color: selected ? INDIGO : '#94A3B8', transition: 'color 0.2s', transform: 'scale(1.15)' }}>{item.icon}</div>
       <div>
         <div style={{ fontFamily: JAK, fontSize: 15, fontWeight: 700, color: selected ? NAVY : '#374151', lineHeight: 1.3 }}>{item.label}</div>
-        <div style={{ fontFamily: JAK, fontSize: 13, color: '#9AA3B2', marginTop: 4, lineHeight: 1.4 }}>{item.sub}</div>
+        <div style={{ fontFamily: JAK, fontSize: 13, color: '#94A3B8', marginTop: 4, lineHeight: 1.4 }}>{item.sub}</div>
       </div>
       {/* Checkbox */}
       <div style={{
@@ -237,7 +237,7 @@ function RadioCard({ label, sub, selected, icon, onClick }: { label: string; sub
       {icon && <span style={{ fontSize: 28 }}>{icon}</span>}
       <div style={{ flex: 1 }}>
         <div style={{ fontFamily: JAK, fontSize: 16, fontWeight: 700, color: selected ? NAVY : '#374151' }}>{label}</div>
-        {sub && <div style={{ fontFamily: JAK, fontSize: 13.5, color: '#9AA3B2', marginTop: 3 }}>{sub}</div>}
+        {sub && <div style={{ fontFamily: JAK, fontSize: 13.5, color: '#94A3B8', marginTop: 3 }}>{sub}</div>}
       </div>
       <div style={{
         width: 22, height: 22, borderRadius: '50%',
@@ -288,7 +288,7 @@ export function GetAQuotePage() {
 
   if (submitted) {
     return (
-      <div style={{ minHeight: '100vh', background: '#F8F9FB', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 24px', fontFamily: JAK }}>
+      <div style={{ minHeight: '100vh', background: '#F6F7FB', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 24px', fontFamily: JAK }}>
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -323,7 +323,7 @@ export function GetAQuotePage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#F8F9FB', fontFamily: JAK }}>
+    <div style={{ minHeight: '100vh', background: '#F6F7FB', fontFamily: JAK }}>
       {/* Header */}
       <div style={{ background: NAVY, padding: '0 40px', height: 72, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <button onClick={() => navigate('/')} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
@@ -372,7 +372,7 @@ export function GetAQuotePage() {
                 >
                   Continue →
                 </button>
-                {!canNext1 && <p style={{ fontSize: 14, color: '#9AA3B2', marginTop: 12 }}>Select at least one feature</p>}
+                {!canNext1 && <p style={{ fontSize: 14, color: '#94A3B8', marginTop: 12 }}>Select at least one feature</p>}
               </div>
             </motion.div>
           )}
@@ -381,9 +381,9 @@ export function GetAQuotePage() {
           {step === 2 && (
             <motion.div key="step2" variants={variants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.28, ease: [0.4,0,0.2,1] }}>
               <div style={{ textAlign: 'center', marginBottom: 48 }}>
-                <h1 style={{ fontFamily: JAK, fontSize: 'clamp(30px,4vw,48px)', fontWeight: 800, color: NAVY, letterSpacing: '-1px', marginBottom: 14 }}>
+                <h2 style={{ fontFamily: JAK, fontSize: 'clamp(30px,4vw,48px)', fontWeight: 800, color: NAVY, letterSpacing: '-1px', marginBottom: 14 }}>
                   What kind of business do you run?
-                </h1>
+                </h2>
                 <p style={{ fontSize: 18, color: '#6B7280', lineHeight: 1.65, maxWidth: 520, margin: '0 auto' }}>
                   This helps us tailor your quote to your industry.
                 </p>
@@ -411,9 +411,9 @@ export function GetAQuotePage() {
           {step === 3 && (
             <motion.div key="step3" variants={variants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.28, ease: [0.4,0,0.2,1] }}>
               <div style={{ textAlign: 'center', marginBottom: 48 }}>
-                <h1 style={{ fontFamily: JAK, fontSize: 'clamp(30px,4vw,48px)', fontWeight: 800, color: NAVY, letterSpacing: '-1px', marginBottom: 14 }}>
+                <h2 style={{ fontFamily: JAK, fontSize: 'clamp(30px,4vw,48px)', fontWeight: 800, color: NAVY, letterSpacing: '-1px', marginBottom: 14 }}>
                   What's your monthly payment volume?
-                </h1>
+                </h2>
                 <p style={{ fontSize: 18, color: '#6B7280', lineHeight: 1.65, maxWidth: 520, margin: '0 auto' }}>
                   We use this to recommend the most cost-effective rates for your business.
                 </p>
@@ -441,11 +441,11 @@ export function GetAQuotePage() {
           {step === 4 && (
             <motion.div key="step4" variants={variants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.28, ease: [0.4,0,0.2,1] }}>
               <div style={{ textAlign: 'center', marginBottom: 48 }}>
-                <h1 style={{ fontFamily: JAK, fontSize: 'clamp(30px,4vw,48px)', fontWeight: 800, color: NAVY, letterSpacing: '-1px', marginBottom: 14 }}>
+                <h2 style={{ fontFamily: JAK, fontSize: 'clamp(30px,4vw,48px)', fontWeight: 800, color: NAVY, letterSpacing: '-1px', marginBottom: 14 }}>
                   Almost there — where should we send your quote?
-                </h1>
+                </h2>
                 <p style={{ fontSize: 18, color: '#6B7280', lineHeight: 1.65, maxWidth: 520, margin: '0 auto' }}>
-                  No spam, ever. Your quote is ready within 1 business day.
+                  We'll only use your contact info to send your quote and relevant product updates. Unsubscribe anytime.
                 </p>
               </div>
 
@@ -500,6 +500,8 @@ export function GetAQuotePage() {
                     />
                   </div>
 
+                  <p style={{ fontFamily: JAK, fontSize: 13, color: '#475569', marginTop: 4 }}>By submitting, you acknowledge our <a href="/privacy" style={{ color: INDIGO, textDecoration: 'underline' }}>Privacy Policy</a> and agree to our <a href="/terms" style={{ color: INDIGO, textDecoration: 'underline' }}>Terms of Service</a>.</p>
+
                   <div style={{ display: 'flex', gap: 12, marginTop: 4 }}>
                     <button type="button" onClick={() => setStep(3)} style={{ padding: '16px 28px', borderRadius: 12, border: '1.5px solid #D1D5DB', background: '#fff', color: NAVY, fontFamily: JAK, fontSize: 16, fontWeight: 700, cursor: 'pointer' }}>
                       ← Back
@@ -521,7 +523,7 @@ export function GetAQuotePage() {
 
                 {/* Summary card */}
                 <div style={{ background: '#fff', borderRadius: 20, padding: '32px', border: '1.5px solid #E2E6ED', boxShadow: '0 4px 24px rgba(4,30,66,0.07)' }}>
-                  <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#9AA3B2', marginBottom: 18 }}>Your summary</div>
+                  <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#94A3B8', marginBottom: 18 }}>Your summary</div>
 
                   {/* Recommended plan */}
                   <div style={{ padding: '16px 18px', borderRadius: 12, background: 'rgba(73,69,255,0.05)', border: '1.5px solid rgba(73,69,255,0.15)', marginBottom: 22 }}>
@@ -532,7 +534,7 @@ export function GetAQuotePage() {
 
                   {/* Selected features */}
                   <div style={{ marginBottom: 18 }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: '#9AA3B2', marginBottom: 10 }}>Features selected</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: '#94A3B8', marginBottom: 10 }}>Features selected</div>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
                       {features.map(id => {
                         const f = FEATURES.find(x => x.id === id);
@@ -548,7 +550,7 @@ export function GetAQuotePage() {
                   {/* Business & volume */}
                   {bizType && (
                     <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderTop: '1px solid #F0F2F5' }}>
-                      <span style={{ fontFamily: JAK, fontSize: 14, color: '#9AA3B2' }}>Business type</span>
+                      <span style={{ fontFamily: JAK, fontSize: 14, color: '#94A3B8' }}>Business type</span>
                       <span style={{ fontFamily: JAK, fontSize: 14, fontWeight: 600, color: NAVY }}>
                         {BIZ_TYPES.find(b => b.id === bizType)?.label}
                       </span>
@@ -556,7 +558,7 @@ export function GetAQuotePage() {
                   )}
                   {volume && (
                     <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderTop: '1px solid #F0F2F5' }}>
-                      <span style={{ fontFamily: JAK, fontSize: 14, color: '#9AA3B2' }}>Monthly volume</span>
+                      <span style={{ fontFamily: JAK, fontSize: 14, color: '#94A3B8' }}>Monthly volume</span>
                       <span style={{ fontFamily: JAK, fontSize: 14, fontWeight: 600, color: NAVY }}>
                         {VOLUMES.find(v => v.id === volume)?.label}
                       </span>

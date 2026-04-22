@@ -10,11 +10,11 @@ interface FAQItem {
 const faqData: FAQItem[] = [
   {
     question: "Why should I choose Delt?",
-    answer: "Delt offers transparent pricing with no hidden fees, industry-leading processing rates, and 24/7 customer support. We provide everything you need to accept payments and grow your business, from hardware to software."
+    answer: "Delt offers transparent pricing with a full fee schedule disclosed upfront, competitive processing rates, and dedicated customer support during business hours. We provide everything you need to accept payments and grow your business, from hardware to software."
   },
   {
     question: "Are there any contracts or hidden fees?",
-    answer: "No contracts, no hidden fees. You only pay the transparent processing rates shown on our pricing page. Cancel anytime with no penalties."
+    answer: "No long-term contracts, and a full fee schedule disclosed before you accept any offer. You only pay the transparent processing rates shown on our pricing page. Cancel anytime with no penalties."
   },
   {
     question: "Who is Delt for?",

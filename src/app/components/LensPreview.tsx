@@ -51,7 +51,7 @@ function ChatPreviewMockup() {
     <div ref={ref} className="bg-white rounded-xl overflow-hidden flex flex-col h-[520px] shadow-inner">
       {/* Header bar */}
       <div className="flex items-center gap-3 px-5 py-3.5 border-b border-[#E5E7EB] bg-[#FAFBFC]">
-        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#4945FF] to-[#6366F1] flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full bg-[#4945FF] flex items-center justify-center">
           <img src={aiIcon} alt="Lens" className="w-5 h-5" />
         </div>
         <div>
@@ -119,7 +119,7 @@ function ChatPreviewMockup() {
                               <td className="px-2.5 py-1.5 text-[#94A3B8]">{row.rank}</td>
                               <td className="px-2.5 py-1.5 text-[#041E42] font-medium">{row.name}</td>
                               <td className="px-2.5 py-1.5 text-right text-[#041E42]">{row.revenue}</td>
-                              <td className={`px-2.5 py-1.5 text-right font-medium ${row.trend.startsWith('+') ? 'text-emerald-500' : 'text-red-400'}`}>
+                              <td className={`px-2.5 py-1.5 text-right font-medium ${row.trend.startsWith('+') ? 'text-[#4945FF]' : 'text-[#475569]'}`}>
                                 {row.trend}
                               </td>
                             </motion.tr>
@@ -234,7 +234,7 @@ export function LensPreview() {
               <span className="text-[#4945FF] text-sm font-medium tracking-wide">AI-Powered Intelligence</span>
             </div>
             <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-5 tracking-tight">
-              Meet <span className="bg-gradient-to-r from-[#4945FF] to-[#7B8AFF] bg-clip-text text-transparent">Lens</span> by Delt
+              Meet <span className="bg-gradient-to-r from-[#4945FF] to-[#4945FF] bg-clip-text text-transparent">Lens</span> by Delt
             </h2>
             <p className="text-lg lg:text-xl text-white/50 max-w-2xl mx-auto leading-relaxed">
               Six AI layers that transform your transaction data into clear, actionable intelligence — included with every Delt account.

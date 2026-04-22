@@ -21,8 +21,8 @@ const solutionsStartGrow = [
   },
   {
     label: 'Lens AI',
-    description: 'AI-powered analytics with Lens',
-    href: '/delt-ai',
+    description: 'Ask your business questions in plain English',
+    href: '/lens-ai',
     icon: BarChart3,
   },
   {
@@ -46,11 +46,11 @@ const solutionsSecondary = [
 ];
 
 const solutionsBusinessTypes = [
-  { label: 'Restaurants & Food Service', description: 'POS, online ordering, table management', href: '#' },
-  { label: 'Retail & E-commerce', description: 'Inventory, checkout, multi-channel', href: '#' },
-  { label: 'Professional Services', description: 'Invoicing, scheduling, client management', href: '#' },
-  { label: 'Health & Wellness', description: 'Appointments, memberships, HIPAA-ready', href: '#' },
-  { label: 'Home Services', description: 'Estimates, mobile payments, dispatching', href: '#' },
+  { label: 'Restaurants & Food Service', description: 'POS, online ordering, table management', href: '/industries/restaurants' },
+  { label: 'Retail & E-commerce', description: 'Inventory, checkout, multi-channel', href: '/industries/retail' },
+  { label: 'Professional Services', description: 'Invoicing, scheduling, client management', href: '/industries/professional-services' },
+  { label: 'Salon & Barber', description: 'Appointments, memberships, tipping', href: '/industries/salon-barber' },
+  { label: 'Health & Wellness', description: 'Bookings, memberships, HIPAA-ready', href: '/industries/health-wellness' },
 ];
 
 /* ═══════════════════════════════════════════════════════
@@ -61,7 +61,7 @@ const resourcesLearn = [
   { label: "What's New", description: 'Product updates & releases', href: '/whats-new', icon: Star, badge: 'LATEST' },
   { label: 'About Us', description: 'Our story, team & mission', href: '/about', icon: User },
   { label: 'Blog', description: 'Insights for growing businesses', href: '/blog', icon: AlignLeft },
-  { label: 'Reviews', description: 'What merchants are saying', href: '/case-studies', icon: Star },
+  { label: 'Reviews', description: 'What merchants are saying', href: '/reviews', icon: Star },
 ];
 
 const resourcesSupport = [
@@ -80,7 +80,7 @@ const resourcesCTAs = [
 
 const SectionHeading = ({ children }: { children: React.ReactNode }) => (
   <div
-    className="text-[12px] font-bold uppercase text-[#9CA3AF] mb-4 pl-3"
+    className="text-[12px] font-bold uppercase text-[#94A3B8] mb-4 pl-3"
     style={{ letterSpacing: '1.4px' }}
   >
     {children}
@@ -98,6 +98,7 @@ export function Navigation() {
   const [searchQuery, setSearchQuery] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileExpandedSection, setMobileExpandedSection] = useState<string | null>(null);
+  const [isScrolled, setIsScrolled] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchBtnRef = useRef<HTMLButtonElement>(null);
   const navigate = useNavigate();
@@ -109,9 +110,26 @@ export function Navigation() {
   /* Only these pages have a dark hero — nav starts transparent with white text.
      Every other page gets a solid white nav immediately so text is always visible. */
   const darkHeroPages = ['/', '/payments', '/capital', '/delt-ai', '/how-it-works', '/products', '/website-examples'];
-  const isDarkHero = darkHeroPages.some((p) => location.pathname === p);
+  const isDarkHero =
+    darkHeroPages.some((p) => location.pathname === p) ||
+    location.pathname.startsWith('/industries/');
 
-  const isSolid = !isDarkHero || isHovered || !!activeDropdown;
+  /* Track scroll so header becomes solid once user moves past the hero.
+     This fixes the 'header vanishes on scroll' bug — it no longer disappears;
+     it transitions to a frosted white bar with navy text. */
+  useEffect(() => {
+    const onScroll = () => setIsScrolled(window.scrollY > 80);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  /* Reset scroll state when route changes so each page evaluates from the top */
+  useEffect(() => {
+    setIsScrolled(window.scrollY > 80);
+  }, [location.pathname]);
+
+  const isSolid = !isDarkHero || isHovered || !!activeDropdown || isScrolled;
 
   const openDropdown = (key: string) => {
     if (closeTimeoutRef.current) {
@@ -182,7 +200,7 @@ export function Navigation() {
   /* Column heading */
   const ColHeading = ({ children }: { children: React.ReactNode }) => (
     <div
-      className="text-[11px] font-bold uppercase text-[#9CA3AF] mb-4"
+      className="text-[11px] font-bold uppercase text-[#94A3B8] mb-4"
       style={{ letterSpacing: '1.4px' }}
     >
       {children}
@@ -208,7 +226,7 @@ export function Navigation() {
 
       <div
         id="delt-main-nav"
-        className="absolute top-0 left-0 right-0 z-50"
+        className="fixed top-0 left-0 right-0 z-50"
         onMouseLeave={() => { setIsHovered(false); closeDropdown(); }}
       >
         {/* Centered container — constant width like Stripe */}
@@ -255,7 +273,7 @@ export function Navigation() {
                   >
                     <button
                       className="flex items-center gap-1.5 px-4 py-2 text-[18px] font-medium transition-colors whitespace-nowrap"
-                      style={{ color: isSolid ? '#1A1A2E' : '#FFFFFF', transition: 'color 0.3s ease' }}
+                      style={{ color: isSolid ? '#041E42' : '#FFFFFF', transition: 'color 0.3s ease' }}
                     >
                       Solutions
                       <Chevron isOpen={activeDropdown === 'solutions'} />
@@ -266,7 +284,7 @@ export function Navigation() {
                   <Link
                     to="/pricing"
                     className="px-4 py-2 text-[18px] font-medium transition-colors whitespace-nowrap"
-                    style={{ color: isSolid ? '#1A1A2E' : '#FFFFFF', transition: 'color 0.3s ease' }}
+                    style={{ color: isSolid ? '#041E42' : '#FFFFFF', transition: 'color 0.3s ease' }}
                   >
                     Pricing
                   </Link>
@@ -279,7 +297,7 @@ export function Navigation() {
                   >
                     <button
                       className="flex items-center gap-1.5 px-4 py-2 text-[18px] font-medium transition-colors whitespace-nowrap"
-                      style={{ color: isSolid ? '#1A1A2E' : '#FFFFFF', transition: 'color 0.3s ease' }}
+                      style={{ color: isSolid ? '#041E42' : '#FFFFFF', transition: 'color 0.3s ease' }}
                     >
                       Resources
                       <Chevron isOpen={activeDropdown === 'resources'} />
@@ -303,7 +321,7 @@ export function Navigation() {
                       setSelectedIndex(0);
                     }}
                     className="hidden lg:flex p-2 transition-colors"
-                    style={{ color: isSolid ? '#1A1A2E' : '#FFFFFF', transition: 'color 0.3s ease' }}
+                    style={{ color: isSolid ? '#041E42' : '#FFFFFF', transition: 'color 0.3s ease' }}
                     aria-label="Search"
                   >
                     <motion.div
@@ -320,7 +338,7 @@ export function Navigation() {
                     to="/signin"
                     className="hidden md:flex items-center px-4 py-1.5 text-[17px] font-medium transition-all whitespace-nowrap"
                     style={{
-                      color: isSolid ? '#1A1A2E' : '#FFFFFF',
+                      color: isSolid ? '#041E42' : '#FFFFFF',
                       transition: 'color 0.3s ease',
                     }}
                   >
@@ -340,7 +358,7 @@ export function Navigation() {
                   <button
                     onClick={() => setMobileMenuOpen(true)}
                     className="lg:hidden flex p-2 transition-colors"
-                    style={{ color: isSolid ? '#1A1A2E' : '#FFFFFF' }}
+                    style={{ color: isSolid ? '#041E42' : '#FFFFFF' }}
                     aria-label="Menu"
                   >
                     <Menu size={24} />
@@ -399,7 +417,7 @@ export function Navigation() {
                           color: 'white',
                         }}
                         onMouseEnter={(e) => {
-                          e.currentTarget.style.background = '#3530e0';
+                          e.currentTarget.style.background = '#3933CC';
                           e.currentTarget.style.transform = 'translateY(-1px)';
                         }}
                         onMouseLeave={(e) => {
@@ -426,20 +444,20 @@ export function Navigation() {
                               <Link
                                 key={item.label}
                                 to={item.href}
-                                className="flex items-start gap-3.5 px-3 py-3 rounded-xl hover:bg-[#F9FAFB] transition-colors group"
+                                className="flex items-start gap-3.5 px-3 py-3 rounded-xl hover:bg-[#F6F7FB] transition-colors group"
                                 onClick={() => setActiveDropdown(null)}
                               >
                                 <div
-                                  className="w-[38px] h-[38px] rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 border border-[#EDE9FE]"
-                                  style={{ backgroundColor: '#F5F3FF' }}
+                                  className="w-[38px] h-[38px] rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 border border-[#4945FF]/15"
+                                  style={{ backgroundColor: 'rgba(73,69,255,0.08)' }}
                                 >
                                   <IconComp className="w-5 h-5" style={{ color: ICON_COLOR }} strokeWidth={1.4} />
                                 </div>
                                 <div>
-                                  <div className="text-[15px] text-[#1A1A2E] group-hover:text-[#4945FF] transition-colors leading-tight" style={{ fontWeight: 650 }}>
+                                  <div className="text-[15px] text-[#041E42] group-hover:text-[#4945FF] transition-colors leading-tight" style={{ fontWeight: 650 }}>
                                     {item.label}
                                   </div>
-                                  <div className="text-[13px] text-[#9CA3AF] leading-snug mt-0.5">
+                                  <div className="text-[13px] text-[#94A3B8] leading-snug mt-0.5">
                                     {item.description}
                                   </div>
                                 </div>
@@ -454,7 +472,7 @@ export function Navigation() {
                             <Link
                               key={link.label}
                               to={link.href}
-                              className="text-[13px] font-medium text-[#9CA3AF] hover:text-[#4945FF] transition-colors"
+                              className="text-[13px] font-medium text-[#94A3B8] hover:text-[#4945FF] transition-colors"
                               onClick={() => setActiveDropdown(null)}
                             >
                               {link.label}
@@ -471,13 +489,13 @@ export function Navigation() {
                             <Link
                               key={item.label}
                               to={item.href}
-                              className="block px-3 py-2.5 rounded-xl hover:bg-[#F9FAFB] transition-colors group"
+                              className="block px-3 py-2.5 rounded-xl hover:bg-[#F6F7FB] transition-colors group"
                               onClick={() => setActiveDropdown(null)}
                             >
-                              <div className="text-[15px] text-[#1A1A2E] group-hover:text-[#4945FF] transition-colors leading-tight" style={{ fontWeight: 600 }}>
+                              <div className="text-[15px] text-[#041E42] group-hover:text-[#4945FF] transition-colors leading-tight" style={{ fontWeight: 600 }}>
                                 {item.label}
                               </div>
-                              <div className="text-[13px] text-[#9CA3AF] leading-snug mt-0.5">
+                              <div className="text-[13px] text-[#94A3B8] leading-snug mt-0.5">
                                 {item.description}
                               </div>
                             </Link>
@@ -486,7 +504,7 @@ export function Navigation() {
                         <div className="mt-3 pt-3 border-t border-[#F3F4F6]">
                           <Link
                             to="/business-types"
-                            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-[14px] font-semibold text-[#4945FF] hover:bg-[#F5F3FF] transition-colors"
+                            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-[14px] font-semibold text-[#4945FF] hover:bg-[#4945FF]/8 transition-colors"
                             onClick={() => setActiveDropdown(null)}
                           >
                             See all industries
@@ -496,25 +514,25 @@ export function Navigation() {
                       </div>
 
                       {/* Col 3 — Featured */}
-                      <div className="flex-1 flex flex-col justify-between rounded-2xl ml-4" style={{ background: 'linear-gradient(180deg, #F8F7FF 0%, #F0EDFF 100%)', padding: '24px 28px' }}>
+                      <div className="flex-1 flex flex-col justify-between rounded-2xl ml-4" style={{ background: '#F6F7FB', padding: '24px 28px' }}>
                         <div>
-                          <div className="text-[11px] font-bold uppercase text-[#7B61FF] mb-4" style={{ letterSpacing: '1.4px' }}>
+                          <div className="text-[11px] font-bold uppercase text-[#4945FF] mb-4" style={{ letterSpacing: '1.4px' }}>
                             Featured
                           </div>
 
                           {/* Stat card */}
-                          <div className="bg-white rounded-xl p-5 border border-[#EDE9FE] mb-4">
+                          <div className="bg-white rounded-xl p-5 border border-[#4945FF]/15 mb-4">
                             <div className="text-[36px] font-extrabold text-[#4945FF] leading-none mb-1">$2.4B+</div>
-                            <div className="text-[14px] text-[#6B7280] leading-snug">processed by Delt merchants in the last 12 months</div>
+                            <div className="text-[14px] text-[#475569] leading-snug">processed by Delt merchants in the last 12 months</div>
                           </div>
 
                           {/* Testimonial */}
-                          <div className="bg-white rounded-xl p-5 border border-[#EDE9FE]">
-                            <div className="text-[14px] text-[#374151] leading-relaxed italic mb-3">
+                          <div className="bg-white rounded-xl p-5 border border-[#4945FF]/15">
+                            <div className="text-[14px] text-[#475569] leading-relaxed italic mb-3">
                               {`"Switched from Square — the done-for-you website alone was worth it. Then we got funded in 48 hours."`}
                             </div>
-                            <div className="text-[13px] font-semibold text-[#1A1A2E]">Marcus R.</div>
-                            <div className="text-[12px] text-[#9CA3AF]">Owner, Precision Auto Repair</div>
+                            <div className="text-[13px] font-semibold text-[#041E42]">Marcus R.</div>
+                            <div className="text-[12px] text-[#94A3B8]">Owner, Precision Auto Repair</div>
                           </div>
                         </div>
 
@@ -557,15 +575,15 @@ export function Navigation() {
                               <Link
                                 key={item.label}
                                 to={item.href}
-                                className="flex items-start gap-3 px-2 py-2.5 rounded-xl hover:bg-[#F9FAFB] transition-colors group"
+                                className="flex items-start gap-3 px-2 py-2.5 rounded-xl hover:bg-[#F6F7FB] transition-colors group"
                                 onClick={() => setActiveDropdown(null)}
                               >
-                                <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 bg-[#F5F3FF] border border-[#EDE9FE]">
+                                <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 bg-[#4945FF]/8 border border-[#4945FF]/15">
                                   <IconComp className="w-4 h-4 text-[#4945FF]" strokeWidth={1.5} />
                                 </div>
                                 <div>
                                   <div className="flex items-center gap-2">
-                                    <span className="text-[14px] text-[#1A1A2E] group-hover:text-[#4945FF] transition-colors leading-tight" style={{ fontWeight: 650 }}>
+                                    <span className="text-[14px] text-[#041E42] group-hover:text-[#4945FF] transition-colors leading-tight" style={{ fontWeight: 650 }}>
                                       {item.label}
                                     </span>
                                     {'badge' in item && item.badge && (
@@ -574,7 +592,7 @@ export function Navigation() {
                                       </span>
                                     )}
                                   </div>
-                                  <div className="text-[12px] text-[#9CA3AF] leading-snug mt-0.5">{item.description}</div>
+                                  <div className="text-[12px] text-[#94A3B8] leading-snug mt-0.5">{item.description}</div>
                                 </div>
                               </Link>
                             );
@@ -592,17 +610,17 @@ export function Navigation() {
                               <Link
                                 key={item.label}
                                 to={item.href}
-                                className="flex items-start gap-3 px-2 py-2.5 rounded-xl hover:bg-[#F9FAFB] transition-colors group"
+                                className="flex items-start gap-3 px-2 py-2.5 rounded-xl hover:bg-[#F6F7FB] transition-colors group"
                                 onClick={() => setActiveDropdown(null)}
                               >
-                                <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 bg-[#F5F3FF] border border-[#EDE9FE]">
+                                <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 bg-[#4945FF]/8 border border-[#4945FF]/15">
                                   <IconComp className="w-4 h-4 text-[#4945FF]" strokeWidth={1.5} />
                                 </div>
                                 <div>
-                                  <div className="text-[14px] text-[#1A1A2E] group-hover:text-[#4945FF] transition-colors leading-tight" style={{ fontWeight: 650 }}>
+                                  <div className="text-[14px] text-[#041E42] group-hover:text-[#4945FF] transition-colors leading-tight" style={{ fontWeight: 650 }}>
                                     {item.label}
                                   </div>
-                                  <div className="text-[12px] text-[#9CA3AF] leading-snug mt-0.5">{item.description}</div>
+                                  <div className="text-[12px] text-[#94A3B8] leading-snug mt-0.5">{item.description}</div>
                                 </div>
                               </Link>
                             );
@@ -620,17 +638,17 @@ export function Navigation() {
                         <Link
                           key={item.label}
                           to={item.href}
-                          className={`flex items-center gap-3 px-8 py-4 hover:bg-[#F9FAFB] transition-colors group ${i === 0 ? 'border-r border-[#F0F0F0]' : ''}`}
+                          className={`flex items-center gap-3 px-8 py-4 hover:bg-[#F6F7FB] transition-colors group ${i === 0 ? 'border-r border-[#F0F0F0]' : ''}`}
                           onClick={() => setActiveDropdown(null)}
                         >
                           <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-[#4945FF]">
                             <IconComp className="w-5 h-5 text-white" strokeWidth={1.5} />
                           </div>
                           <div className="flex-1">
-                            <div className="text-[14px] text-[#1A1A2E] group-hover:text-[#4945FF] transition-colors leading-tight" style={{ fontWeight: 650 }}>
+                            <div className="text-[14px] text-[#041E42] group-hover:text-[#4945FF] transition-colors leading-tight" style={{ fontWeight: 650 }}>
                               {item.label}
                             </div>
-                            <div className="text-[12px] text-[#9CA3AF] leading-snug mt-0.5">{item.description}</div>
+                            <div className="text-[12px] text-[#94A3B8] leading-snug mt-0.5">{item.description}</div>
                           </div>
                           <ChevronRight className="w-4 h-4 text-[#C4C4C4] group-hover:text-[#4945FF] transition-colors flex-shrink-0" />
                         </Link>
@@ -671,9 +689,9 @@ export function Navigation() {
                 <img src={logoDark} alt="Delt" className="h-[60px]" />
                 <button
                   onClick={() => setMobileMenuOpen(false)}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="p-2 hover:bg-[#F6F7FB] rounded-lg transition-colors"
                 >
-                  <X size={24} className="text-gray-600" />
+                  <X size={24} className="text-[#475569]" />
                 </button>
               </div>
 
@@ -683,7 +701,7 @@ export function Navigation() {
                 <div className="mb-4">
                   <button
                     onClick={() => setMobileExpandedSection(mobileExpandedSection === 'solutions' ? null : 'solutions')}
-                    className="w-full flex items-center justify-between py-3 text-lg font-semibold text-gray-900"
+                    className="w-full flex items-center justify-between py-3 text-lg font-semibold text-[#041E42]"
                   >
                     Solutions
                     <ChevronDown
@@ -708,12 +726,12 @@ export function Navigation() {
                                 key={item.href}
                                 to={item.href}
                                 onClick={() => setMobileMenuOpen(false)}
-                                className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors"
+                                className="flex items-start gap-3 p-3 rounded-lg hover:bg-[#F6F7FB] transition-colors"
                               >
                                 <Icon size={20} className="text-[#4945FF] mt-0.5 flex-shrink-0" />
                                 <div>
-                                  <div className="font-medium text-gray-900">{item.label}</div>
-                                  <div className="text-sm text-gray-600">{item.description}</div>
+                                  <div className="font-medium text-[#041E42]">{item.label}</div>
+                                  <div className="text-sm text-[#475569]">{item.description}</div>
                                 </div>
                               </Link>
                             );
@@ -724,7 +742,7 @@ export function Navigation() {
                                 key={item.href}
                                 to={item.href}
                                 onClick={() => setMobileMenuOpen(false)}
-                                className="block py-2 px-3 text-sm text-gray-700 hover:text-[#4945FF] transition-colors"
+                                className="block py-2 px-3 text-sm text-[#475569] hover:text-[#4945FF] transition-colors"
                               >
                                 {item.label}
                               </Link>
@@ -740,7 +758,7 @@ export function Navigation() {
                 <Link
                   to="/pricing"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="block py-3 text-lg font-semibold text-gray-900 hover:text-[#4945FF] transition-colors"
+                  className="block py-3 text-lg font-semibold text-[#041E42] hover:text-[#4945FF] transition-colors"
                 >
                   Pricing
                 </Link>
@@ -749,7 +767,7 @@ export function Navigation() {
                 <div className="mb-4">
                   <button
                     onClick={() => setMobileExpandedSection(mobileExpandedSection === 'resources' ? null : 'resources')}
-                    className="w-full flex items-center justify-between py-3 text-lg font-semibold text-gray-900"
+                    className="w-full flex items-center justify-between py-3 text-lg font-semibold text-[#041E42]"
                   >
                     Resources
                     <ChevronDown
@@ -774,12 +792,12 @@ export function Navigation() {
                                 key={item.href}
                                 to={item.href}
                                 onClick={() => setMobileMenuOpen(false)}
-                                className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors"
+                                className="flex items-start gap-3 p-3 rounded-lg hover:bg-[#F6F7FB] transition-colors"
                               >
                                 <Icon size={20} className="text-[#4945FF] mt-0.5 flex-shrink-0" />
                                 <div>
-                                  <div className="font-medium text-gray-900">{item.label}</div>
-                                  <div className="text-sm text-gray-600">{item.description}</div>
+                                  <div className="font-medium text-[#041E42]">{item.label}</div>
+                                  <div className="text-sm text-[#475569]">{item.description}</div>
                                 </div>
                               </Link>
                             );
@@ -792,12 +810,12 @@ export function Navigation() {
                                   key={item.href}
                                   to={item.href}
                                   onClick={() => setMobileMenuOpen(false)}
-                                  className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors"
+                                  className="flex items-start gap-3 p-3 rounded-lg hover:bg-[#F6F7FB] transition-colors"
                                 >
                                   <Icon size={20} className="text-[#4945FF] mt-0.5 flex-shrink-0" />
                                   <div>
-                                    <div className="font-medium text-gray-900">{item.label}</div>
-                                    <div className="text-sm text-gray-600">{item.description}</div>
+                                    <div className="font-medium text-[#041E42]">{item.label}</div>
+                                    <div className="text-sm text-[#475569]">{item.description}</div>
                                   </div>
                                 </Link>
                               );
@@ -814,7 +832,7 @@ export function Navigation() {
                   <Link
                     to="/signin"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="block w-full text-center py-3 px-5 text-base font-semibold text-gray-900 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"
+                    className="block w-full text-center py-3 px-5 text-base font-semibold text-[#041E42] bg-[#F6F7FB] rounded-full hover:bg-[#F6F7FB] transition-colors"
                   >
                     Sign in
                   </Link>
@@ -903,7 +921,7 @@ export function Navigation() {
                     animate={{ rotate: 0, scale: 1 }}
                     transition={{ type: 'spring', stiffness: 500, damping: 22, delay: 0.05 }}
                   >
-                    <Search className="h-5 w-5 text-[#9CA3AF] flex-shrink-0" />
+                    <Search className="h-5 w-5 text-[#94A3B8] flex-shrink-0" />
                   </motion.div>
                   <input
                     ref={searchInputRef}
@@ -925,7 +943,7 @@ export function Navigation() {
                         setSearchQuery('');
                       }
                     }}
-                    className="flex-1 text-[17px] text-[#1D1D1F] placeholder-[#9CA3AF] bg-transparent focus:outline-none"
+                    className="flex-1 text-[17px] text-[#1D1D1F] placeholder-[#94A3B8] bg-transparent focus:outline-none"
                     style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif' }}
                   />
                   {searchQuery && (
@@ -933,10 +951,10 @@ export function Navigation() {
                       onClick={() => setSearchQuery('')}
                       className="p-1 rounded-full hover:bg-black/[0.06] transition-colors"
                     >
-                      <X className="h-4 w-4 text-[#9CA3AF]" />
+                      <X className="h-4 w-4 text-[#94A3B8]" />
                     </button>
                   )}
-                  <kbd className="hidden sm:flex items-center gap-0.5 px-2 py-1 rounded-md bg-black/[0.06] text-[12px] text-[#9CA3AF]" style={{ fontFamily: 'monospace' }}>
+                  <kbd className="hidden sm:flex items-center gap-0.5 px-2 py-1 rounded-md bg-black/[0.06] text-[12px] text-[#94A3B8]" style={{ fontFamily: 'monospace' }}>
                     esc
                   </kbd>
                 </div>
@@ -944,7 +962,7 @@ export function Navigation() {
                 {/* Results */}
                 <div className="py-3 max-h-[380px] overflow-y-auto">
                   <div className="px-4 pb-2">
-                    <span className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-widest">
+                    <span className="text-[11px] font-semibold text-[#94A3B8] uppercase tracking-widest">
                       {searchQuery ? 'Results' : 'Frequent searches'}
                     </span>
                   </div>
@@ -969,7 +987,7 @@ export function Navigation() {
                       </motion.button>
                     ))
                   ) : (
-                    <div className="px-4 py-8 text-center text-[15px] text-[#9CA3AF]">
+                    <div className="px-4 py-8 text-center text-[15px] text-[#94A3B8]">
                       No results for "{searchQuery}"
                     </div>
                   )}

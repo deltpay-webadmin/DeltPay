@@ -16,6 +16,12 @@ interface SupportChatbotProps {
 export function SupportChatbot({ isOpen, onClose }: SupportChatbotProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
+      id: '0',
+      text: "This chat may be handled by an automated assistant. Conversations are stored to improve service. See our Privacy Policy.",
+      sender: 'bot',
+      timestamp: new Date(),
+    },
+    {
       id: '1',
       text: "Hi! I'm the Delt Support Assistant. How can I help you today?",
       sender: 'bot',
@@ -54,7 +60,7 @@ export function SupportChatbot({ isOpen, onClose }: SupportChatbotProps) {
 
     // Funding/Capital questions
     if (lowerMessage.includes('funding') || lowerMessage.includes('capital') || lowerMessage.includes('loan') || lowerMessage.includes('advance')) {
-      return "Delt Capital offers fast business funding with transparent terms:\n\n• Funding from $5,000 to $500,000\n• Simple factor rates (1.05-1.15)\n• Estimated terms: 3-9 months\n• Approval in as little as 24 hours\n• No hidden fees\n\nWould you like to start an application or learn more about our funding options?";
+      return "Delt Capital offers fast business funding with transparent terms:\n\n• Funding from $5,000 to $500,000\n• Simple factor rates (1.05-1.15)\n• Estimated terms: 3-9 months\n• Approval in as little as 24 hours\n• Full fee schedule disclosed before you accept any offer\n\nWould you like to start an application or learn more about our funding options?";
     }
 
     // Payout questions
@@ -64,7 +70,7 @@ export function SupportChatbot({ isOpen, onClose }: SupportChatbotProps) {
 
     // Support/Contact questions
     if (lowerMessage.includes('support') || lowerMessage.includes('help') || lowerMessage.includes('contact') || lowerMessage.includes('phone') || lowerMessage.includes('email')) {
-      return "We're here to help 24/7!\n\n📞 Phone: 1-888-555-1234\n✉️ Email: support@deltcapital.com\n💬 Live Chat: Right here!\n\nOur support hours:\n• Mon-Fri: 8:00 AM - 8:00 PM EST\n• Saturday: 9:00 AM - 5:00 PM EST\n• Sunday: Closed\n\nAverage response time: Under 2 minutes!";
+      return "Our support team is here to help!\n\n📞 Phone: 1-888-555-1234\n✉️ Email: support@deltcapital.com\n💬 Live Chat: Right here!\n\nOur support hours:\n• Mon-Fri: 8:00 AM - 8:00 PM EST\n• Saturday: 9:00 AM - 5:00 PM EST\n• Sunday: Closed\n\nDuring business hours, average response under 2 minutes.";
     }
 
     // Hardware questions
@@ -84,7 +90,7 @@ export function SupportChatbot({ isOpen, onClose }: SupportChatbotProps) {
 
     // Security questions
     if (lowerMessage.includes('security') || lowerMessage.includes('secure') || lowerMessage.includes('safe') || lowerMessage.includes('pci')) {
-      return "Security is our top priority:\n\n• PCI DSS Level 1 compliant\n• End-to-end encryption\n• Fraud detection and prevention\n• 99.6% uptime guarantee\n• Secure data storage\n\nYour business and customer data is always protected with industry-leading security measures.";
+      return "Security is our top priority:\n\n• PCI DSS Level 1 compliant\n• End-to-end encryption\n• Fraud detection and prevention\n• Delt maintains high service availability. See our status page for real-time uptime.\n• Secure data storage\n\nYour business and customer data is always protected with industry-leading security measures.";
     }
 
     // Account questions
@@ -209,9 +215,9 @@ export function SupportChatbot({ isOpen, onClose }: SupportChatbotProps) {
               </div>
               <div className="bg-white rounded-2xl px-4 py-3 shadow-sm border border-[#E5E7EB]">
                 <div className="flex gap-1">
-                  <div className="w-2 h-2 bg-[#6B7280] rounded-full animate-bounce"></div>
-                  <div className="w-2 h-2 bg-[#6B7280] rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                  <div className="w-2 h-2 bg-[#6B7280] rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+                  <div className="w-2 h-2 bg-[#475569] rounded-full animate-bounce"></div>
+                  <div className="w-2 h-2 bg-[#475569] rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                  <div className="w-2 h-2 bg-[#475569] rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
                 </div>
               </div>
             </div>

@@ -22,7 +22,8 @@ export function ProductsPage() {
         { value: '1-2 days', label: 'Deposit time' },
         { value: '99.9%', label: 'Uptime' }
       ],
-      color: 'from-[#4945FF] to-[#7C3AED]'
+      color: 'bg-[#4945FF]',
+      route: '/payments'
     },
     {
       icon: Wallet,
@@ -34,7 +35,7 @@ export function ProductsPage() {
         'Flexible repayment terms',
         'No collateral required',
         'Competitive rates',
-        'Same-day funding available',
+        'Funding as fast as the next business day after approval, subject to eligibility',
         'Based on actual sales'
       ],
       stats: [
@@ -42,7 +43,8 @@ export function ProductsPage() {
         { value: '24 hours', label: 'Approval time' },
         { value: '8%', label: 'Starting rate' }
       ],
-      color: 'from-[#10B981] to-[#059669]'
+      color: 'bg-[#041E42]',
+      route: '/capital'
     },
     {
       icon: Globe,
@@ -62,7 +64,8 @@ export function ProductsPage() {
         { value: '0', label: 'Coding needed' },
         { value: '24/7', label: 'Uptime monitoring' }
       ],
-      color: 'from-[#06B6D4] to-[#3B82F6]'
+      color: 'bg-[#4945FF]/90',
+      route: '/website-builder'
     },
     {
       icon: BarChart3,
@@ -80,9 +83,10 @@ export function ProductsPage() {
       stats: [
         { value: 'Real-time', label: 'Updates' },
         { value: 'AI-powered', label: 'Insights' },
-        { value: 'Unlimited', label: 'Reports' }
+        { value: 'No limits', label: 'Reports*' }
       ],
-      color: 'from-[#FF6B6B] to-[#FF8E53]'
+      color: 'bg-[#041E42]/80',
+      route: '/sandbox'
     }
   ];
 
@@ -165,7 +169,7 @@ export function ProductsPage() {
                   <div className={`flex flex-col ${isEven ? 'lg:flex-row' : 'lg:flex-row-reverse'} gap-12 items-center`}>
                     {/* Icon Section */}
                     <div className="w-full lg:w-2/5">
-                      <div className={`bg-gradient-to-br ${product.color} rounded-3xl p-12 text-white shadow-2xl`}>
+                      <div className={`${product.color} rounded-3xl p-12 text-white shadow-2xl`}>
                         <Icon className="h-20 w-20 mb-6" />
                         <h2 className="text-3xl font-bold mb-3">{product.title}</h2>
                         <p className="text-white/90 text-lg">{product.tagline}</p>
@@ -184,7 +188,7 @@ export function ProductsPage() {
 
                     {/* Content Section */}
                     <div className="w-full lg:w-3/5">
-                      <p className="text-xl text-[#64748B] mb-6">
+                      <p className="text-xl text-[#475569] mb-6">
                         {product.description}
                       </p>
 
@@ -197,13 +201,13 @@ export function ProductsPage() {
                         ))}
                       </div>
 
-                      <a 
-                        href="#"
+                      <Link 
+                        to={(product as any).route || '/products'}
                         className="inline-flex items-center gap-2 text-[#4945FF] font-semibold hover:gap-3 transition-all text-lg"
                       >
                         Learn more
                         <ArrowRight className="h-5 w-5" />
-                      </a>
+                      </Link>
                     </div>
                   </div>
                 </div>
@@ -213,13 +217,18 @@ export function ProductsPage() {
         </div>
       </section>
 
+      {/* Reports footnote */}
+      <div className="container mx-auto px-6 pb-4">
+        <p className="text-xs text-[#475569] max-w-6xl mx-auto">*Subject to fair-use policy.</p>
+      </div>
+
       {/* Hardware Section */}
       <section className="py-20 bg-[#F8F9FA]">
         <div className="container mx-auto px-6">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-12">
               <h2 className="text-4xl font-bold text-[#041E42] mb-4">Hardware</h2>
-              <p className="text-xl text-[#64748B]">
+              <p className="text-xl text-[#475569]">
                 Professional payment hardware designed for reliability and ease of use
               </p>
             </div>
@@ -232,12 +241,12 @@ export function ProductsPage() {
                     key={index}
                     className="bg-white rounded-2xl p-8 hover:shadow-xl transition-shadow border border-[#E2E8F0]"
                   >
-                    <div className="w-16 h-16 bg-[#F0F0FF] rounded-2xl flex items-center justify-center mb-6">
+                    <div className="w-16 h-16 bg-[#4945FF]/10 rounded-2xl flex items-center justify-center mb-6">
                       <Icon className="h-8 w-8 text-[#4945FF]" />
                     </div>
                     <h3 className="text-2xl font-bold text-[#041E42] mb-2">{device.name}</h3>
                     <div className="text-3xl font-bold text-[#4945FF] mb-4">{device.price}</div>
-                    <p className="text-[#64748B] mb-6">{device.description}</p>
+                    <p className="text-[#475569] mb-6">{device.description}</p>
                     
                     <div className="space-y-3 mb-6">
                       {device.features.map((feature, idx) => (
@@ -265,7 +274,7 @@ export function ProductsPage() {
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-12">
               <h2 className="text-4xl font-bold text-[#041E42] mb-4">Built for modern businesses</h2>
-              <p className="text-xl text-[#64748B]">
+              <p className="text-xl text-[#475569]">
                 Everything you need, integrated into one platform
               </p>
             </div>
@@ -282,11 +291,11 @@ export function ProductsPage() {
                 const Icon = feature.icon;
                 return (
                   <div key={index} className="text-center p-6">
-                    <div className="w-16 h-16 bg-[#F0F0FF] rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <div className="w-16 h-16 bg-[#4945FF]/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
                       <Icon className="h-8 w-8 text-[#4945FF]" />
                     </div>
                     <h3 className="font-bold text-[#041E42] text-lg mb-2">{feature.title}</h3>
-                    <p className="text-[#64748B]">{feature.description}</p>
+                    <p className="text-[#475569]">{feature.description}</p>
                   </div>
                 );
               })}
@@ -300,7 +309,7 @@ export function ProductsPage() {
         <div className="container mx-auto px-6">
           <div className="max-w-4xl mx-auto text-center">
             <h2 className="text-4xl font-bold text-[#041E42] mb-4">Works with your favorite tools</h2>
-            <p className="text-xl text-[#64748B] mb-12">
+            <p className="text-xl text-[#475569] mb-12">
               Seamlessly integrate with the software you already use
             </p>
             

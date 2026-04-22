@@ -1,15 +1,16 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
 import { ArrowRight, Building2, User, DollarSign, CheckCircle2, ChevronDown } from 'lucide-react';
 import logoWhite from 'figma:asset/419e83442bb1bf5965a966a8870b00dd4288dd57.png';
 import stripeImage from 'figma:asset/6fe13f3e665435400e65aa6b6be0f4302bd8aac1.png';
 
-const ACCENT = '#635BFF';
-const TEXT_DARK = '#0A2540';
-const TEXT_GRAY = '#425466';
+const ACCENT = '#4945FF';
+const TEXT_DARK = '#041E42';
+const TEXT_GRAY = '#475569';
 const BORDER = '#E3E8EE';
-const SUCCESS = '#00D924';
+const SUCCESS = '#4945FF';
 
 const BUSINESS_TYPES = [
   'Individual / Sole proprietor',
@@ -183,6 +184,7 @@ export function SignUpPage() {
                       <h1 className="text-3xl font-semibold mb-2" style={{ color: TEXT_DARK }}>
                         Get started with Delt
                       </h1>
+                    {/* Step 1 */}
                       <p className="text-base" style={{ color: TEXT_GRAY }}>
                         Complete this quick application to start processing payments
                       </p>
@@ -334,9 +336,9 @@ export function SignUpPage() {
                     transition={{ duration: 0.2 }}
                   >
                     <div className="mb-8">
-                      <h1 className="text-3xl font-semibold mb-2" style={{ color: TEXT_DARK }}>
+                      <h2 className="text-3xl font-semibold mb-2" style={{ color: TEXT_DARK }}>
                         Contact information
-                      </h1>
+                      </h2>
                       <p className="text-base" style={{ color: TEXT_GRAY }}>
                         Who should we contact about this account?
                       </p>
@@ -459,9 +461,9 @@ export function SignUpPage() {
                     transition={{ duration: 0.2 }}
                   >
                     <div className="mb-8">
-                      <h1 className="text-3xl font-semibold mb-2" style={{ color: TEXT_DARK }}>
+                      <h2 className="text-3xl font-semibold mb-2" style={{ color: TEXT_DARK }}>
                         Processing information
-                      </h1>
+                      </h2>
                       <p className="text-base" style={{ color: TEXT_GRAY }}>
                         Help us understand your payment needs
                       </p>
@@ -574,6 +576,9 @@ export function SignUpPage() {
               </AnimatePresence>
 
               {/* Navigation Buttons */}
+              {currentStep === 3 && (
+                <p className="text-xs text-[#475569] mb-4 mt-6">By submitting, you acknowledge our <Link to="/privacy" className="underline text-[#4945FF]">Privacy Policy</Link> and agree to our <Link to="/terms" className="underline text-[#4945FF]">Terms of Service</Link>.</p>
+              )}
               <div className="flex items-center justify-between mt-8 pt-6 border-t" style={{ borderColor: BORDER }}>
                 <button
                   onClick={handleBack}

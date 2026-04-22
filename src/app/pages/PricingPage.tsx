@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 
 const COLORS = {
   navy: "#041e42",
@@ -13,7 +13,7 @@ const COLORS = {
   gray400: "#ADB5BD",
   gray600: "#6C757D",
   gray800: "#343A40",
-  green: "#10B981",
+  green: "#4945FF",
 };
 
 const fonts = {
@@ -45,7 +45,7 @@ export function PricingPage() {
       originalPrice: 149,
       cta: "Get a Demo",
       ctaStyle: "primary",
-      ctaRoute: "/demo",
+      ctaRoute: "/contact-sales",
       belowCta: "The full platform — website, payments, and intelligence.",
       features: [
         { text: "Website and online store included", included: true },
@@ -122,11 +122,14 @@ export function PricingPage() {
             marginTop: 12,
             fontWeight: 400,
           }}>Every plan includes $0 processing with Delt Zero.</p>
+          <p style={{ fontSize: 13, color: COLORS.gray600, marginTop: 10 }}>
+            Questions? <Link to="/support" style={{ color: COLORS.indigo, textDecoration: 'underline' }}>Chat with us</Link>
+          </p>
         </div>
 
         {/* Bundle callout */}
         <div className="bundle-callout" style={{
-          background: `linear-gradient(135deg, ${COLORS.navy} 0%, #0a2d5c 50%, #0d3468 100%)`,
+          background: COLORS.navy,
           borderRadius: 16,
           padding: "20px 32px",
           display: "flex",
@@ -271,9 +274,9 @@ export function PricingPage() {
                 }}
                 onMouseEnter={(e) => {
                   if (tier.ctaStyle === "primary") {
-                    e.currentTarget.style.background = "#3530e0";
+                    e.currentTarget.style.background = "#3933CC";
                   } else {
-                    e.currentTarget.style.background = "#F8F9FA";
+                    e.currentTarget.style.background = "#F6F7FB";
                   }
                 }}
                 onMouseLeave={(e) => {
