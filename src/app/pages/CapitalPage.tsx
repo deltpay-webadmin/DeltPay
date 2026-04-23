@@ -322,19 +322,19 @@ export function CapitalPage() {
       </section>
 
       {/* ═══ 3. AUTOMATED DAILY REPAYMENT ══════════════════════════ */}
-      <section style={{ background: NAVY }}>
+      <section style={{ background: '#FFFFFF' }}>
         <div style={{ maxWidth: 1120, margin: '0 auto' }} className="px-6 py-24 md:py-32">
           {/* Section headline */}
           <div className="text-center mb-14">
             <h2
-              className="font-bold text-white mb-4 leading-[1.1]"
-              style={{ fontSize: 'clamp(28px, 3.5vw, 46px)', letterSpacing: '-0.025em' }}
+              className="font-bold mb-4 leading-[1.1]"
+              style={{ fontSize: 'clamp(28px, 3.5vw, 46px)', letterSpacing: '-0.025em', color: NAVY }}
             >
               Automated daily repayment
             </h2>
             <p
               className="mx-auto max-w-2xl leading-relaxed"
-              style={{ fontSize: 'clamp(15px, 1.3vw, 18px)', color: 'rgba(255,255,255,0.65)' }}
+              style={{ fontSize: 'clamp(15px, 1.3vw, 18px)', color: '#475569' }}
             >
               In small business, unpredictability is, well, predictable. That's why Delt
               Capital repayment flexes with your cash flow.
@@ -349,7 +349,7 @@ export function CapitalPage() {
           {/* Footnote */}
           <p
             className="text-center mt-8 text-xs"
-            style={{ color: 'rgba(255,255,255,0.4)', maxWidth: 560, margin: '2rem auto 0' }}
+            style={{ color: '#94A3B8', maxWidth: 560, margin: '2rem auto 0' }}
           >
             On days when your sales are higher, you'll pay more than on days your sales are lower.
           </p>
@@ -403,7 +403,7 @@ export function CapitalPage() {
       </section>
 
       {/* ═══ 6. PRODUCT CROSS-SELL ═════════════════════════════════ */}
-      <ProductCrossSell currentProduct="capital" />
+      <ProductCrossSell currentProduct="capital" variant="light" />
 
       {/* ═══ 7. FINAL CTA BANNER ═══════════════════════════════════ */}
       <section
