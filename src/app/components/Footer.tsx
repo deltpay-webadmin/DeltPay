@@ -23,38 +23,26 @@ export function Footer() {
       { label: 'Capital', path: '/apply' },
       { label: 'Website Builder', path: '/website-builder' },
       { label: 'Business Tools', path: '/delt-ai' },
-      { label: 'Point of Sale', path: '/products' },
-      { label: 'Online Checkout', path: '/products' },
     ],
     Solutions: [
       { label: 'Retail', path: '/business-types' },
       { label: 'Restaurants', path: '/business-types' },
       { label: 'Professional Services', path: '/business-types' },
       { label: 'E-commerce', path: '/business-types' },
-      { label: 'Healthcare', path: '/business-types' },
-      { label: 'Beauty & Wellness', path: '/business-types' },
     ],
     Resources: [
       { label: 'Help Center', path: '/support' },
-      { label: "What's new", path: '/whats-new' },
       { label: 'Blog', path: '/blog' },
-      { label: 'Developer API', path: '/products' },
-      { label: 'Partner Program', path: '/contact-sales' },
-      { label: 'Case Studies', path: '/case-studies' },
-      { label: 'Community', path: '/support' },
+      { label: 'Pricing', path: '/pricing' },
     ],
     Company: [
       { label: 'About Us', path: '/about' },
       { label: 'Careers', path: '/careers' },
-      { label: 'Press', path: '/about' },
-      { label: 'Investors', path: '/investors' },
       { label: 'Contact', path: '/contact-sales' },
     ],
     Legal: [
       { label: 'Privacy Policy', path: '/privacy' },
       { label: 'Terms of Service', path: '/terms' },
-      { label: 'Security', path: '/privacy' },
-      { label: 'Compliance', path: '/privacy' },
     ],
   };
 
@@ -62,6 +50,7 @@ export function Footer() {
     <footer ref={ref} className="relative overflow-hidden" style={{ background: '#FFFFFF', color: NAVY }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-20 relative z-10">
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8 lg:gap-12 mb-12">
+          {/* Note: grid-cols-6 = 1 logo col + 5 link columns */}
           {/* Logo column */}
           <motion.div
             className="col-span-2 md:col-span-3 lg:col-span-1"

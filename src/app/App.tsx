@@ -26,7 +26,6 @@ import { CareersPage } from '@/app/pages/CareersPage';
 import { PrivacyPolicyPage } from '@/app/pages/PrivacyPolicyPage';
 import { TermsPage } from '@/app/pages/TermsPage';
 import { CaseStudiesPage } from '@/app/pages/CaseStudiesPage';
-import { InvestorRelationsPage } from '@/app/pages/InvestorRelationsPage';
 import { HowItWorksPage } from '@/app/pages/HowItWorksPage';
 import { HelpCenterPage } from '@/app/pages/HelpCenterPage';
 import { WebsiteExamples } from '@/app/components/WebsiteExamples';
@@ -73,7 +72,6 @@ export default function App() {
                 <Route path="/privacy" element={<PrivacyPolicyPage />} />
                 <Route path="/terms" element={<TermsPage />} />
                 <Route path="/case-studies" element={<CaseStudiesPage />} />
-                <Route path="/investors" element={<InvestorRelationsPage />} />
                 <Route path="/how-it-works" element={<HowItWorksPage />} />
                 <Route path="/help-center" element={<HelpCenterPage />} />
                 <Route path="/website-examples" element={<WebsiteExamples />} />
