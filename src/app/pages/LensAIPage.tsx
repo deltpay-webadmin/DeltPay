@@ -84,7 +84,7 @@ export function LensAIPage() {
   const [input, setInput] = useState('');
 
   return (
-    <div style={{ fontFamily: FONT, color: C.navy, overflowX: 'hidden', background: C.white }}>
+    <div style={{ fontFamily: FONT, color: C.navy, background: C.white }}>
 
       {/* ══════════════════════════════════════════════════════════
           1. HERO — Base44-style prominent chat
@@ -144,126 +144,177 @@ export function LensAIPage() {
           answers in seconds. No dashboards to learn. No reports to build.
         </p>
 
-        {/* ───── PROMINENT CHAT CARD (Base44 style) ───── */}
+        {/* ───── PROMINENT CHAT CARD (Base44 liquid-glass style) ───── */}
         <div style={{
-          position: 'relative', maxWidth: 720, margin: '56px auto 0',
+          position: 'relative', maxWidth: 780, margin: '56px auto 0',
           padding: '0 20px',
         }}>
-          {/* Glow behind card */}
+          {/* Outer soft glow behind card */}
           <div aria-hidden style={{
             position: 'absolute', top: '50%', left: '50%',
             transform: 'translate(-50%, -50%)',
-            width: '90%', height: 260, borderRadius: '50%',
-            background: 'rgba(73,69,255,0.35)',
-            filter: 'blur(120px)',
+            width: '94%', height: 320, borderRadius: '50%',
+            background: 'rgba(73,69,255,0.28)',
+            filter: 'blur(140px)',
             pointerEvents: 'none', zIndex: 0,
           }} />
 
+          {/* Liquid-glass card — layered gradients + inner highlight */}
           <div style={{
             position: 'relative', zIndex: 1,
-            background: C.white, borderRadius: 28,
-            boxShadow: '0 16px 48px rgba(4,30,66,0.10), 0 2px 6px rgba(4,30,66,0.04)',
-            border: `1px solid ${C.line}`,
+            background: 'linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.80) 100%)',
+            backdropFilter: 'blur(20px) saturate(140%)',
+            WebkitBackdropFilter: 'blur(20px) saturate(140%)',
+            borderRadius: 28,
+            boxShadow: [
+              '0 1px 0 rgba(255,255,255,0.9) inset',            // top highlight
+              '0 -1px 0 rgba(255,255,255,0.5) inset',           // bottom highlight
+              '0 30px 80px -20px rgba(4,30,66,0.18)',           // soft drop
+              '0 12px 32px -8px rgba(4,30,66,0.10)',            // closer drop
+              '0 2px 6px rgba(4,30,66,0.05)',
+            ].join(', '),
+            border: '1px solid rgba(255,255,255,0.8)',
+            outline: '1px solid rgba(4,30,66,0.06)',
+            outlineOffset: '-1px',
             overflow: 'hidden',
+            minHeight: 180,
+            display: 'flex', flexDirection: 'column',
           }}>
-            {/* Input area (multi-line feel) */}
-            <div style={{ padding: '22px 24px 10px' }}>
-              <input
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder="Ask Lens anything about your business…"
-                style={{
-                  width: '100%', border: 'none', outline: 'none',
-                  fontSize: 17, color: C.navy, background: 'transparent',
-                  fontFamily: FONT, padding: '6px 0',
-                }}
-              />
+            {/* Input area — generous breathing room, animated typing placeholder */}
+            <div style={{
+              padding: '28px 32px 20px',
+              flex: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'flex-start',
+            }}>
+              <div style={{ position: 'relative', minHeight: 58 }}>
+                <input
+                  type="text"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  style={{
+                    width: '100%', border: 'none', outline: 'none',
+                    fontSize: 18, lineHeight: 1.5, color: C.navy,
+                    background: 'transparent',
+                    fontFamily: FONT, padding: '4px 0',
+                    position: 'relative', zIndex: 1,
+                  }}
+                />
+                {/* Typing placeholder — only visible when input is empty */}
+                {!input && (
+                  <div style={{
+                    position: 'absolute', top: 0, left: 0, right: 0,
+                    pointerEvents: 'none',
+                    fontSize: 18, lineHeight: 1.5, color: C.muted,
+                    fontFamily: FONT, padding: '4px 0',
+                    display: 'flex', alignItems: 'center',
+                  }}>
+                    <span className="lens-typing" />
+                    <span className="lens-caret" />
+                  </div>
+                )}
+              </div>
             </div>
 
-            {/* Controls row */}
+            {/* Controls row — quieter, bottom-aligned */}
             <div style={{
-              display: 'flex', alignItems: 'center', gap: 8,
-              padding: '10px 14px 14px',
+              display: 'flex', alignItems: 'center', gap: 10,
+              padding: '0 20px 18px',
             }}>
-              {/* Plus button */}
+              {/* Plus button — borderless, icon-only, like Base44 */}
               <button
                 type="button"
                 aria-label="Add context"
                 style={{
-                  width: 36, height: 36, borderRadius: 12,
-                  border: `1px solid ${C.line}`, background: C.white,
+                  width: 34, height: 34, borderRadius: 10,
+                  border: 'none', background: 'transparent',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  cursor: 'pointer', color: C.navy,
-                  transition: 'background 0.15s, border-color 0.15s',
+                  cursor: 'pointer', color: '#64748B',
+                  transition: 'background 0.15s, color 0.15s',
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = C.grayBg)}
-                onMouseLeave={(e) => (e.currentTarget.style.background = C.white)}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(4,30,66,0.05)';
+                  e.currentTarget.style.color = C.navy;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'transparent';
+                  e.currentTarget.style.color = '#64748B';
+                }}
               >
-                <Plus size={17} />
+                <Plus size={18} />
               </button>
 
-              {/* Plan toggle (pill-style with sliding knob) */}
-              <button
-                type="button"
-                onClick={() => setPlanMode(!planMode)}
-                style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 10,
-                  padding: '6px 10px 6px 6px', borderRadius: 999,
-                  border: `1px solid ${C.line}`,
-                  background: C.white, cursor: 'pointer', fontFamily: FONT,
-                }}
-              >
-                <span style={{
-                  position: 'relative',
-                  width: 36, height: 22, borderRadius: 999,
-                  background: planMode ? C.purple : '#CBD5E1',
-                  transition: 'background 0.2s',
-                }}>
+              {/* Plan toggle — borderless, inline label + subtle knob */}
+              <div style={{
+                display: 'inline-flex', alignItems: 'center', gap: 10,
+                padding: '6px 4px',
+              }}>
+                <button
+                  type="button"
+                  onClick={() => setPlanMode(!planMode)}
+                  aria-label="Toggle plan mode"
+                  style={{
+                    position: 'relative',
+                    width: 34, height: 20, borderRadius: 999,
+                    border: 'none', padding: 0,
+                    background: planMode ? C.purple : '#E2E8F0',
+                    transition: 'background 0.2s',
+                    cursor: 'pointer',
+                  }}
+                >
                   <span style={{
                     position: 'absolute', top: 2,
                     left: planMode ? 16 : 2,
-                    width: 18, height: 18, borderRadius: '50%',
+                    width: 16, height: 16, borderRadius: '50%',
                     background: C.white,
                     transition: 'left 0.2s',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.15)',
+                    boxShadow: '0 1px 2px rgba(0,0,0,0.15)',
                   }} />
-                </span>
-                <span style={{ fontSize: 13, fontWeight: 600, color: C.navy }}>Plan</span>
+                </button>
+                <span style={{ fontSize: 14, fontWeight: 600, color: C.navy, fontFamily: FONT }}>Plan</span>
                 <Info size={13} color={C.muted} />
-              </button>
+              </div>
 
               <div style={{ flex: 1 }} />
 
-              {/* Mic */}
+              {/* Mic — borderless, muted */}
               <button
                 type="button"
                 aria-label="Voice input"
                 style={{
-                  width: 36, height: 36, borderRadius: '50%',
+                  width: 34, height: 34, borderRadius: '50%',
                   border: 'none', background: 'transparent',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  cursor: 'pointer', color: C.muted,
+                  cursor: 'pointer', color: '#64748B',
+                  transition: 'background 0.15s, color 0.15s',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(4,30,66,0.05)';
+                  e.currentTarget.style.color = C.navy;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'transparent';
+                  e.currentTarget.style.color = '#64748B';
                 }}
               >
                 <Mic size={17} />
               </button>
 
-              {/* Send */}
+              {/* Send — flat dark circle when empty, indigo when typed */}
               <button
                 type="button"
                 aria-label="Ask Lens"
                 style={{
-                  width: 40, height: 40, borderRadius: '50%',
+                  width: 36, height: 36, borderRadius: '50%',
                   border: 'none',
-                  background: input.trim() ? C.purple : '#334155',
+                  background: input.trim() ? C.purple : '#475569',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   cursor: 'pointer', color: C.white,
-                  transition: 'background 0.15s, transform 0.1s',
-                  boxShadow: input.trim() ? '0 4px 14px rgba(73,69,255,0.4)' : 'none',
+                  transition: 'background 0.2s',
                 }}
               >
-                <ArrowUp size={17} strokeWidth={2.5} />
+                <ArrowUp size={16} strokeWidth={2.5} />
               </button>
             </div>
           </div>
@@ -509,11 +560,37 @@ export function LensAIPage() {
         </div>
       </section>
 
-      {/* Global keyframes */}
+      {/* Global keyframes + typing placeholder */}
       <style>{`
         @keyframes lensAIPulse {
           0%, 100% { opacity: 1; transform: scale(1); }
           50%       { opacity: 0.4; transform: scale(1.3); }
+        }
+
+        /* Typing placeholder animation — cycles through Lens prompts */
+        .lens-typing::before {
+          content: '';
+          white-space: pre;
+          animation: lensType 16s steps(1) infinite;
+        }
+        .lens-caret {
+          display: inline-block;
+          width: 1.5px;
+          height: 1.05em;
+          background: #94A3B8;
+          margin-left: 1px;
+          vertical-align: middle;
+          animation: lensBlink 1s step-end infinite;
+        }
+        @keyframes lensBlink {
+          50% { opacity: 0; }
+        }
+        @keyframes lensType {
+          0%   { content: 'Which products made me the most last month…'; }
+          25%  { content: 'Why was Tuesday slower than last week?'; }
+          50%  { content: 'Show me my top 10 customers by profit…'; }
+          75%  { content: 'When should I run my next promo?'; }
+          100% { content: 'Which products made me the most last month…'; }
         }
       `}</style>
     </div>

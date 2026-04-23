@@ -2,15 +2,16 @@ import { useRef } from 'react';
 import { motion, useScroll, useTransform, MotionValue } from 'motion/react';
 
 /* ─────────────────────────────────────────────────────────────
-   LENS-SPECIFIC SCROLL REVEAL TEXT
+   LENS HORIZON GRADIENT + SCROLL-REVEAL HEADLINE
    --------------------------------------------------------------
-   Mirrors the home page's "This is what running a business
-   should feel like." letter-by-letter lighting animation, but
-   plays over a soft indigo → white gradient band (Delt's answer
-   to Base44's orange sunrise transition).
+   A Delt-palette take on Base44's orange sunrise transition.
+   A crisp horizontal indigo band sits near the top of the sticky
+   frame and fades to white / light-lavender below (not a blurry
+   radial blob). The Lens-specific headline lights up word-by-word
+   as the section scrolls past.
    ───────────────────────────────────────────────────────────── */
 
-const TEXT = 'This is what running your business should feel like.';
+const TEXT = 'Answers, not dashboards. The clarity your business deserves.';
 
 function Word({
   word,
@@ -25,10 +26,14 @@ function Word({
   charEnd: number;
   totalChars: number;
 }) {
-  const s = 0.05 + (charStart / totalChars) * 0.45;
-  const e = Math.min(0.05 + ((charEnd + 4) / totalChars) * 0.45, 0.55);
+  // Letter animation happens in the 0.15–0.60 slice of scroll progress
+  const animStart = 0.15;
+  const animEnd = 0.60;
+  const span = animEnd - animStart;
+  const s = animStart + (charStart / totalChars) * span;
+  const e = Math.min(animStart + ((charEnd + 4) / totalChars) * span, animEnd);
   const mid = s + (e - s) * 0.35;
-  const color = useTransform(progress, [s, mid, e], ['#C5C3EE', '#4945FF', '#041E42']);
+  const color = useTransform(progress, [s, mid, e], ['#D7D5F3', '#4945FF', '#041E42']);
   return (
     <motion.span
       style={{
@@ -64,8 +69,14 @@ export function LensScrollRevealText() {
     <>
       <div ref={containerRef} className="lsrt-outer">
         <div className="lsrt-sticky">
-          {/* Indigo gradient sunrise — Delt's take on Base44's orange band */}
-          <div className="lsrt-gradient" aria-hidden />
+          {/* Painterly horizon — crisp indigo band up top, smooth fade down */}
+          <div className="lsrt-horizon" aria-hidden>
+            <div className="lsrt-band" />
+            <div className="lsrt-core" />
+            <div className="lsrt-fade" />
+          </div>
+
+          {/* Headline — sits in the lower half, well clear of nav */}
           <div className="lsrt-body">
             <p className="lsrt-text">
               {wordData.map((wd, i) => (
@@ -94,40 +105,86 @@ export function LensScrollRevealText() {
           top: 0;
           width: 100%;
           height: 100vh;
-          display: flex;
-          align-items: center;
-          justify-content: center;
           overflow: hidden;
+          display: grid;
+          grid-template-rows: 1fr 1fr;  /* horizon top half, text bottom half */
         }
-        /* The gradient runs across the top ~45vh of the sticky frame
-           and fades to white below, like the Base44 orange reference */
-        .lsrt-gradient {
+
+        /* ── Painterly horizon stack ──────────────────────────────── */
+        .lsrt-horizon {
           position: absolute;
-          left: 0; right: 0; top: 0;
-          height: 55vh;
-          background:
-            radial-gradient(ellipse 90% 55% at 50% 0%,
-              rgba(73,69,255,0.55) 0%,
-              rgba(73,69,255,0.38) 25%,
-              rgba(73,69,255,0.18) 50%,
-              rgba(255,255,255,0) 85%);
-          filter: blur(2px);
+          top: 0; left: 0; right: 0;
+          height: 60vh;
           pointer-events: none;
         }
+        /* Wide soft band — faint wash across the full width */
+        .lsrt-band {
+          position: absolute;
+          left: -5%; right: -5%;
+          top: 8vh;
+          height: 32vh;
+          background:
+            linear-gradient(180deg,
+              rgba(73,69,255,0.00) 0%,
+              rgba(73,69,255,0.18) 18%,
+              rgba(73,69,255,0.45) 42%,
+              rgba(73,69,255,0.26) 62%,
+              rgba(73,69,255,0.08) 82%,
+              rgba(73,69,255,0.00) 100%);
+          filter: blur(24px);
+        }
+        /* Crisp, saturated core — the "horizon line" — thin and bright */
+        .lsrt-core {
+          position: absolute;
+          left: 0; right: 0;
+          top: 22vh;
+          height: 4vh;
+          background:
+            linear-gradient(180deg,
+              rgba(73,69,255,0.00) 0%,
+              rgba(73,69,255,0.85) 50%,
+              rgba(73,69,255,0.00) 100%);
+          filter: blur(8px);
+          opacity: 0.9;
+        }
+        /* Long soft fade to white below */
+        .lsrt-fade {
+          position: absolute;
+          left: 0; right: 0;
+          top: 30vh;
+          height: 30vh;
+          background:
+            linear-gradient(180deg,
+              rgba(73,69,255,0.14) 0%,
+              rgba(73,69,255,0.04) 55%,
+              rgba(255,255,255,0) 100%);
+        }
+
+        /* ── Body / text ─────────────────────────────────────────── */
         .lsrt-body {
-          position: relative;
-          z-index: 1;
+          grid-row: 2 / 3;
+          align-self: center;
+          justify-self: center;
           max-width: 1100px;
           padding: 0 48px;
           text-align: center;
+          position: relative;
+          z-index: 1;
         }
         .lsrt-text {
           font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-          font-size: clamp(2.25rem, 6vw, 5rem);
+          font-size: clamp(2.25rem, 5.6vw, 4.5rem);
           font-weight: 700;
           line-height: 1.15;
           letter-spacing: -0.035em;
           margin: 0;
+        }
+
+        /* On shorter screens — collapse the stack a bit */
+        @media (max-height: 720px) {
+          .lsrt-horizon { height: 52vh; }
+          .lsrt-core { top: 18vh; }
+          .lsrt-fade { top: 26vh; height: 26vh; }
         }
       `}</style>
     </>
