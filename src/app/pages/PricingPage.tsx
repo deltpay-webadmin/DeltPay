@@ -93,6 +93,11 @@ export function PricingPage() {
             width: 100% !important;
           }
         }
+        @media (max-width: 768px) {
+          .processing-programs {
+            grid-template-columns: 1fr !important;
+          }
+        }
         @media (max-width: 480px) {
           .pricing-header {
             font-size: 32px !important;
@@ -121,7 +126,75 @@ export function PricingPage() {
             color: COLORS.gray600,
             marginTop: 12,
             fontWeight: 400,
-          }}>Every plan includes $0 processing with Delt Zero.</p>
+            maxWidth: 720,
+            marginLeft: "auto",
+            marginRight: "auto",
+          }}>Two ways to process: flat <strong style={{ color: COLORS.navy, fontWeight: 700 }}>2.6% + $0.10</strong> per transaction, or our <strong style={{ color: COLORS.navy, fontWeight: 700 }}>0% Cash Discount</strong> program that passes the processing fee to the customer. No setup fees, no monthly minimums.</p>
+        </div>
+
+        {/* Processing programs callout */}
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: 16,
+          marginBottom: 32,
+        }} className="processing-programs">
+          <div style={{
+            background: COLORS.white,
+            border: `1px solid ${COLORS.gray200}`,
+            borderRadius: 14,
+            padding: "24px 24px",
+          }}>
+            <div style={{
+              fontSize: 12,
+              fontWeight: 700,
+              color: COLORS.indigo,
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+              marginBottom: 10,
+            }}>Flat-rate processing</div>
+            <div style={{
+              fontSize: 28,
+              fontWeight: 800,
+              color: COLORS.navy,
+              letterSpacing: "-0.02em",
+              lineHeight: 1,
+            }}>2.6% <span style={{ fontSize: 18, fontWeight: 700 }}>+ $0.10</span></div>
+            <div style={{
+              fontSize: 13.5,
+              color: COLORS.gray600,
+              marginTop: 10,
+              lineHeight: 1.45,
+            }}>One simple rate for every card, tap, swipe, or keyed-in transaction. You absorb the fee, your customer sees one price.</div>
+          </div>
+          <div style={{
+            background: `linear-gradient(135deg, #F1F0FF 0%, ${COLORS.indigoPale} 100%)`,
+            border: `1px solid ${COLORS.indigoPale}`,
+            borderRadius: 14,
+            padding: "24px 24px",
+          }}>
+            <div style={{
+              fontSize: 12,
+              fontWeight: 700,
+              color: COLORS.indigo,
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+              marginBottom: 10,
+            }}>Cash Discount program</div>
+            <div style={{
+              fontSize: 28,
+              fontWeight: 800,
+              color: COLORS.navy,
+              letterSpacing: "-0.02em",
+              lineHeight: 1,
+            }}>0% <span style={{ fontSize: 18, fontWeight: 700 }}>processing</span></div>
+            <div style={{
+              fontSize: 13.5,
+              color: COLORS.gray600,
+              marginTop: 10,
+              lineHeight: 1.45,
+            }}>A small service fee is applied at checkout on card payments. Customers paying cash get a discount. You keep 100% of your sale.</div>
+          </div>
         </div>
 
         {/* Bundle callout */}
@@ -330,12 +403,15 @@ export function PricingPage() {
                   paddingTop: 16,
                   marginTop: 8,
                 }}>
-                  <span style={{
-                    fontSize: 13.5,
-                    color: COLORS.indigo,
-                    fontWeight: 600,
-                    cursor: "pointer",
-                  }}>View all features →</span>
+                  <span
+                    onClick={() => navigate('/products')}
+                    style={{
+                      fontSize: 13.5,
+                      color: COLORS.indigo,
+                      fontWeight: 600,
+                      cursor: "pointer",
+                    }}
+                  >View all features →</span>
                 </div>
               )}
             </div>

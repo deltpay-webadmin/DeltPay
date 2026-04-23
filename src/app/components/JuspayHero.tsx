@@ -1,9 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { Link } from 'react-router';
-import { motion, useScroll, useTransform, AnimatePresence } from 'motion/react';
+import { motion, useScroll, useTransform } from 'motion/react';
 import { DashboardPreview } from './DashboardPreview';
-
-const CYCLING_WORDS = ['always found.', 'instantly paid.', 'one step ahead.', 'running itself.'];
 
 /* ── Mesh Gradient Blob ── */
 interface Blob {
@@ -168,16 +166,8 @@ function MeshGradientCanvas() {
 
 export function JuspayHero() {
   const [loaded, setLoaded] = useState(false);
-  const [wordIndex, setWordIndex] = useState(0);
   const sectionRef = useRef<HTMLDivElement>(null);
   useEffect(() => { setTimeout(() => setLoaded(true), 100); }, []);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setWordIndex((prev) => (prev + 1) % CYCLING_WORDS.length);
-    }, 3000);
-    return () => clearInterval(interval);
-  }, []);
 
   const { scrollYProgress } = useScroll({
     target: sectionRef,
@@ -225,20 +215,7 @@ export function JuspayHero() {
                   animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
                   transition={{ duration: 0.7, delay: 0.35, ease: [0.16, 1, 0.3, 1] }}
                 >
-                  <span className="ih-cycling-wrapper">
-                    <AnimatePresence mode="wait">
-                      <motion.span
-                        key={CYCLING_WORDS[wordIndex]}
-                        className="ih-title-accent"
-                        initial={{ opacity: 0, y: 30, filter: 'blur(8px)' }}
-                        animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-                        exit={{ opacity: 0, y: -30, filter: 'blur(8px)' }}
-                        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                      >
-                        {CYCLING_WORDS[wordIndex]}
-                      </motion.span>
-                    </AnimatePresence>
-                  </span>
+                  instantly paid.
                 </motion.span>
               </motion.h1>
 

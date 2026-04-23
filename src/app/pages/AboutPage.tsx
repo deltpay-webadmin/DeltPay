@@ -105,7 +105,7 @@ export function AboutPage() {
               lineHeight: 1.7,
               color: COLORS.gray600
             }}>
-              We started in 2019 with a simple goal: build the operating system for modern commerce. Today, we're
+              We started with a simple goal: build the operating system for modern commerce. Today, we're
               helping thousands of businesses process payments, grow their revenue, and make smarter decisions — all
               from one platform.
             </p>
@@ -191,7 +191,7 @@ export function AboutPage() {
         <div className="max-w-5xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {[
-              { value: '2019', label: 'Founded' },
+              { value: '2026', label: 'Founded' },
               { value: '5,000+', label: 'Merchants' },
               { value: '$2.4B+', label: 'Processed' },
               { value: '150+', label: 'Team Members' }

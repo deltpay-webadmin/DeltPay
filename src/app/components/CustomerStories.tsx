@@ -142,7 +142,7 @@ export function CustomerStories() {
                   {/* Link */}
                   {story.hasLink && (
                     <a
-                      href="#"
+                      href="#/case-studies"
                       className={`${story.linkColor} font-semibold flex items-center gap-2 transition-all duration-300 group/link`}
                     >
                       Read the full story

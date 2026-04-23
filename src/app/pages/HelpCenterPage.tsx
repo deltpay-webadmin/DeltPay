@@ -222,7 +222,7 @@ export function HelpCenterPage() {
           {popularArticles.map((article) => (
             <motion.a
               key={article.title}
-              href="#"
+              href="#/support"
               className="block p-5 rounded-xl border border-[#E5E7EB] no-underline transition-all"
               whileHover={{ y: -2, boxShadow: '0 8px 24px rgba(0,0,0,0.06)' }}
               style={{ background: '#FAFBFC' }}
@@ -255,7 +255,7 @@ export function HelpCenterPage() {
                   {topic.links.map((link) => (
                     <li key={link}>
                       <a
-                        href="#"
+                        href="#/support"
                         className="text-[14px] no-underline transition-colors hover:underline"
                         style={{ color: '#6B7280' }}
                         onMouseEnter={(e) => (e.currentTarget.style.color = PURPLE)}

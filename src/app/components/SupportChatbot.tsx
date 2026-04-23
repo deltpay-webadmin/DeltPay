@@ -64,7 +64,7 @@ export function SupportChatbot({ isOpen, onClose }: SupportChatbotProps) {
 
     // Support/Contact questions
     if (lowerMessage.includes('support') || lowerMessage.includes('help') || lowerMessage.includes('contact') || lowerMessage.includes('phone') || lowerMessage.includes('email')) {
-      return "We're here to help 24/7!\n\n📞 Phone: 1-888-555-1234\n✉️ Email: support@deltcapital.com\n💬 Live Chat: Right here!\n\nOur support hours:\n• Mon-Fri: 8:00 AM - 8:00 PM EST\n• Saturday: 9:00 AM - 5:00 PM EST\n• Sunday: Closed\n\nAverage response time: Under 2 minutes!";
+      return "We're here to help 24/7!\n\n📞 Phone: (864) 729-3358\n✉️ Email: support@delt.com\n💬 Live Chat: Right here!\n\nOur support hours:\n• Mon-Fri: 8:00 AM - 8:00 PM EST\n• Saturday: 9:00 AM - 5:00 PM EST\n• Sunday: Closed\n\nAverage response time: Under 2 minutes!";
     }
 
     // Hardware questions
@@ -103,7 +103,7 @@ export function SupportChatbot({ isOpen, onClose }: SupportChatbotProps) {
     }
 
     // Default response
-    return "I'd be happy to help with that! Here are some topics I can assist with:\n\n• Pricing and fees\n• Payment methods\n• Getting started\n• Business funding options\n• Payout schedules\n• Hardware and equipment\n• Website building\n• API integrations\n• Account questions\n\nYou can also reach our support team at 1-888-555-1234 or support@deltcapital.com for personalized assistance.";
+    return "I'd be happy to help with that! Here are some topics I can assist with:\n\n• Pricing and fees\n• Payment methods\n• Getting started\n• Business funding options\n• Payout schedules\n• Hardware and equipment\n• Website building\n• API integrations\n• Account questions\n\nYou can also reach our support team at (864) 729-3358 or support@delt.com for personalized assistance.";
   };
 
   const handleSendMessage = () => {

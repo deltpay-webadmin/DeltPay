@@ -166,7 +166,7 @@ export function BusinessTypesPage() {
 
                     <div className="mt-6">
                       <a 
-                        href="#"
+                        href="#/products"
                         className="inline-flex items-center gap-2 text-[#4945FF] font-semibold hover:gap-3 transition-all"
                       >
                         Learn more

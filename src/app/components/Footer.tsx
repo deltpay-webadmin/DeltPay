@@ -23,38 +23,26 @@ export function Footer() {
       { label: 'Capital', path: '/apply' },
       { label: 'Website Builder', path: '/website-builder' },
       { label: 'Business Tools', path: '/delt-ai' },
-      { label: 'Point of Sale', path: '/products' },
-      { label: 'Online Checkout', path: '/products' },
     ],
     Solutions: [
       { label: 'Retail', path: '/business-types' },
       { label: 'Restaurants', path: '/business-types' },
       { label: 'Professional Services', path: '/business-types' },
       { label: 'E-commerce', path: '/business-types' },
-      { label: 'Healthcare', path: '/business-types' },
-      { label: 'Beauty & Wellness', path: '/business-types' },
     ],
     Resources: [
       { label: 'Help Center', path: '/support' },
-      { label: "What's new", path: '/whats-new' },
       { label: 'Blog', path: '/blog' },
-      { label: 'Developer API', path: '/products' },
-      { label: 'Partner Program', path: '/contact-sales' },
-      { label: 'Case Studies', path: '/case-studies' },
-      { label: 'Community', path: '/support' },
+      { label: 'Pricing', path: '/pricing' },
     ],
     Company: [
       { label: 'About Us', path: '/about' },
       { label: 'Careers', path: '/careers' },
-      { label: 'Press', path: '/about' },
-      { label: 'Investors', path: '/investors' },
       { label: 'Contact', path: '/contact-sales' },
     ],
     Legal: [
       { label: 'Privacy Policy', path: '/privacy' },
       { label: 'Terms of Service', path: '/terms' },
-      { label: 'Security', path: '/privacy' },
-      { label: 'Compliance', path: '/privacy' },
     ],
   };
 
@@ -62,6 +50,7 @@ export function Footer() {
     <footer ref={ref} className="relative overflow-hidden" style={{ background: '#FFFFFF', color: NAVY }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-20 relative z-10">
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8 lg:gap-12 mb-12">
+          {/* Note: grid-cols-6 = 1 logo col + 5 link columns */}
           {/* Logo column */}
           <motion.div
             className="col-span-2 md:col-span-3 lg:col-span-1"
@@ -72,9 +61,15 @@ export function Footer() {
             <div className="flex items-center mb-6">
               <img src={logoImage} alt="Delt" className="h-8 w-auto" />
             </div>
-            <p className="text-sm mb-6" style={{ color: 'rgba(4,30,66,0.6)' }}>
+            <p className="text-sm mb-4" style={{ color: 'rgba(4,30,66,0.6)' }}>
               Everything you need to run and grow your business.
             </p>
+            <address className="text-xs not-italic mb-6" style={{ color: 'rgba(4,30,66,0.55)', lineHeight: 1.6 }}>
+              Delt Pay LLC<br />
+              2726 NW 72nd Ave<br />
+              Miami, FL 33122<br />
+              <a href="tel:+18647293358" style={{ color: 'inherit' }} className="hover:underline">(864) 729-3358</a>
+            </address>
             <div className="flex gap-4">
               {socialIcons.map((social, i) => {
                 const Icon = social.icon;
@@ -137,7 +132,7 @@ export function Footer() {
         >
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="text-sm" style={{ color: 'rgba(4,30,66,0.5)' }}>
-              &copy; 2026 Delt. All rights reserved.
+              &copy; 2026 Delt Pay LLC. All rights reserved.
             </div>
             <div className="flex gap-6 text-sm">
               {[

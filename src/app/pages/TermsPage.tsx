@@ -27,7 +27,7 @@ export function TermsPage() {
             <div className="mb-12">
               <h2 className="text-3xl font-bold text-[#041E42] mb-4">Agreement to Terms</h2>
               <p className="text-[#6B7280] leading-relaxed">
-                These Terms of Service ("Terms") govern your access to and use of Delt's payment processing services, website, and related products (collectively, the "Services"). By accessing or using our Services, you agree to be bound by these Terms.
+                These Terms of Service ("Terms") govern your access to and use of the payment processing services, website, and related products (collectively, the "Services") provided by Delt Pay LLC ("Delt", "we", "us", or "our"), a Florida limited liability company with its principal place of business at 2726 NW 72nd Ave, Miami, FL 33122. By accessing or using our Services, you agree to be bound by these Terms.
               </p>
             </div>
 
@@ -155,7 +155,7 @@ export function TermsPage() {
             <div className="mb-12">
               <h2 className="text-3xl font-bold text-[#041E42] mb-4">Governing Law</h2>
               <p className="text-[#6B7280] leading-relaxed">
-                These Terms are governed by the laws of the State of California, without regard to conflict of law principles. Any disputes shall be resolved in the state or federal courts located in San Francisco County, California.
+                These Terms are governed by the laws of the State of Florida, without regard to conflict of law principles. Any disputes shall be resolved in the state or federal courts located in Miami-Dade County, Florida.
               </p>
             </div>
 
@@ -165,9 +165,9 @@ export function TermsPage() {
                 For questions about these Terms, please contact:
               </p>
               <div className="bg-[#F6F7FB] p-6 rounded-xl">
-                <p className="text-[#041E42] mb-2"><strong>Email:</strong> legal@deltcapital.com</p>
-                <p className="text-[#041E42] mb-2"><strong>Phone:</strong> 1-888-555-1234</p>
-                <p className="text-[#041E42]"><strong>Mail:</strong> Delt Legal Department, 123 Commerce Street, San Francisco, CA 94102</p>
+                <p className="text-[#041E42] mb-2"><strong>Email:</strong> legal@delt.com</p>
+                <p className="text-[#041E42] mb-2"><strong>Phone:</strong> (864) 729-3358</p>
+                <p className="text-[#041E42]"><strong>Mail:</strong> Delt Pay LLC, Attn: Legal, 2726 NW 72nd Ave, Miami, FL 33122</p>
               </div>
             </div>
           </div>

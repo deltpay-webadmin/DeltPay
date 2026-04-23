@@ -1,6 +1,8 @@
 import { Briefcase, MapPin, Clock, ArrowRight } from 'lucide-react';
+import { useNavigate } from 'react-router';
 
 export function CareersPage() {
+  const navigate = useNavigate();
   const openPositions = [
     {
       title: 'Senior Software Engineer',
@@ -154,7 +156,10 @@ export function CareersPage() {
                       </div>
                     </div>
                   </div>
-                  <button className="flex items-center gap-2 px-6 py-3 bg-[#4945FF] text-white rounded-lg hover:bg-[#3730FF] transition-colors font-semibold whitespace-nowrap">
+                  <button
+                    onClick={() => navigate('/contact-sales')}
+                    className="flex items-center gap-2 px-6 py-3 bg-[#4945FF] text-white rounded-lg hover:bg-[#3730FF] transition-colors font-semibold whitespace-nowrap"
+                  >
                     Apply Now <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
@@ -174,9 +179,12 @@ export function CareersPage() {
             <p className="text-xl text-[#6B7280] mb-8">
               We're always looking for talented people. Send us your resume and we'll keep you in mind for future opportunities.
             </p>
-            <button className="px-8 py-4 bg-[#4945FF] text-white rounded-lg hover:bg-[#3730FF] transition-colors font-semibold">
+            <a
+              href="mailto:careers@delt.com?subject=General%20application%20%E2%80%94%20resume"
+              className="inline-block px-8 py-4 bg-[#4945FF] text-white rounded-lg hover:bg-[#3730FF] transition-colors font-semibold"
+            >
               Send Us Your Resume
-            </button>
+            </a>
           </div>
         </div>
       </section>
