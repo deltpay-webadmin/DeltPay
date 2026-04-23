@@ -207,11 +207,11 @@ export function ContactSalesPage() {
                 <div className="space-y-3 text-sm">
                   <div className="flex items-center gap-3">
                     <Phone className="w-4 h-4 text-[#4945FF]" />
-                    <span className="text-[#6B7280]">1-800-DELT-PAY</span>
+                    <a href="tel:+18647293358" className="text-[#6B7280] hover:text-[#4945FF] transition-colors">(864) 729-3358</a>
                   </div>
                   <div className="flex items-center gap-3">
                     <Send className="w-4 h-4 text-[#4945FF]" />
-                    <span className="text-[#6B7280]">sales@delt.com</span>
+                    <a href="mailto:sales@delt.com" className="text-[#6B7280] hover:text-[#4945FF] transition-colors">sales@delt.com</a>
                   </div>
                 </div>
               </div>

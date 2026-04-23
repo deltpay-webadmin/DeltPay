@@ -121,7 +121,7 @@ export function PricingPage() {
             color: COLORS.gray600,
             marginTop: 12,
             fontWeight: 400,
-          }}>Every plan includes $0 processing with Delt Zero.</p>
+          }}>Transparent processing from 2.6% + $0.10. No setup fees, no monthly minimums.</p>
         </div>
 
         {/* Bundle callout */}

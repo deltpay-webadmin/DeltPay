@@ -29,7 +29,7 @@ export function SupportPage() {
     },
     {
       question: 'How do I contact support?',
-      answer: 'You can reach us 24/7 via live chat, call us at 1-888-555-1234, or email support@deltcapital.com. We typically respond within minutes.'
+      answer: 'You can reach us via live chat, call us at (864) 729-3358, or email support@delt.com. We typically respond within minutes.'
     }
   ];
 
@@ -80,14 +80,17 @@ export function SupportPage() {
                 Speak directly with a support specialist. We're here to help you resolve any issue.
               </p>
               <a
-                href="tel:1-888-555-1234"
+                href="tel:+18647293358"
                 className="block text-center w-full py-2 text-[#4945FF] font-bold text-base hover:underline transition-all mb-2"
               >
-                1-888-555-1234
+                (864) 729-3358
               </a>
-              <button className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-[#4945FF] text-[#4945FF] rounded-lg hover:bg-[#F0F0FF] transition-colors font-semibold mt-auto">
+              <a
+                href="tel:+18647293358"
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-[#4945FF] text-[#4945FF] rounded-lg hover:bg-[#F0F0FF] transition-colors font-semibold mt-auto"
+              >
                 Call Now <ArrowRight className="w-4 h-4" />
-              </button>
+              </a>
             </div>
 
             {/* Email Us */}
@@ -100,10 +103,10 @@ export function SupportPage() {
                 Send us a detailed message and we'll get back to you within 24 hours.
               </p>
               <a
-                href="mailto:support@deltcapital.com"
+                href="mailto:support@delt.com"
                 className="block text-center w-full py-2 text-[#4945FF] font-bold text-base hover:underline transition-all mb-2"
               >
-                support@deltcapital.com
+                support@delt.com
               </a>
               <button className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-[#4945FF] text-[#4945FF] rounded-lg hover:bg-[#F0F0FF] transition-colors font-semibold mt-auto">
                 Send Email <ArrowRight className="w-4 h-4" />

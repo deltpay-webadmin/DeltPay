@@ -27,7 +27,7 @@ export function PrivacyPolicyPage() {
             <div className="mb-12">
               <h2 className="text-3xl font-bold text-[#041E42] mb-4">Introduction</h2>
               <p className="text-[#6B7280] leading-relaxed">
-                At Delt, we take your privacy seriously. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our payment processing services, website, and related products.
+                Delt Pay LLC ("Delt", "we", "us", or "our"), a Florida limited liability company located at 2726 NW 72nd Ave, Miami, FL 33122, takes your privacy seriously. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our payment processing services, website, and related products.
               </p>
             </div>
 
@@ -177,9 +177,9 @@ export function PrivacyPolicyPage() {
                 If you have questions about this Privacy Policy or our data practices, please contact us:
               </p>
               <div className="bg-[#F6F7FB] p-6 rounded-xl">
-                <p className="text-[#041E42] mb-2"><strong>Email:</strong> privacy@deltcapital.com</p>
-                <p className="text-[#041E42] mb-2"><strong>Phone:</strong> 1-888-555-1234</p>
-                <p className="text-[#041E42]"><strong>Mail:</strong> Delt Privacy Team, 123 Commerce Street, San Francisco, CA 94102</p>
+                <p className="text-[#041E42] mb-2"><strong>Email:</strong> privacy@delt.com</p>
+                <p className="text-[#041E42] mb-2"><strong>Phone:</strong> (864) 729-3358</p>
+                <p className="text-[#041E42]"><strong>Mail:</strong> Delt Pay LLC, Attn: Privacy, 2726 NW 72nd Ave, Miami, FL 33122</p>
               </div>
             </div>
           </div>

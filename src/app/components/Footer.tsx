@@ -61,9 +61,15 @@ export function Footer() {
             <div className="flex items-center mb-6">
               <img src={logoImage} alt="Delt" className="h-8 w-auto" />
             </div>
-            <p className="text-sm mb-6" style={{ color: 'rgba(4,30,66,0.6)' }}>
+            <p className="text-sm mb-4" style={{ color: 'rgba(4,30,66,0.6)' }}>
               Everything you need to run and grow your business.
             </p>
+            <address className="text-xs not-italic mb-6" style={{ color: 'rgba(4,30,66,0.55)', lineHeight: 1.6 }}>
+              Delt Pay LLC<br />
+              2726 NW 72nd Ave<br />
+              Miami, FL 33122<br />
+              <a href="tel:+18647293358" style={{ color: 'inherit' }} className="hover:underline">(864) 729-3358</a>
+            </address>
             <div className="flex gap-4">
               {socialIcons.map((social, i) => {
                 const Icon = social.icon;
@@ -126,7 +132,7 @@ export function Footer() {
         >
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="text-sm" style={{ color: 'rgba(4,30,66,0.5)' }}>
-              &copy; 2026 Delt. All rights reserved.
+              &copy; 2026 Delt Pay LLC. All rights reserved.
             </div>
             <div className="flex gap-6 text-sm">
               {[
