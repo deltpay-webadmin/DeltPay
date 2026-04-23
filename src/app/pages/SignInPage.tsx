@@ -100,7 +100,7 @@ export function SignInPage() {
                 />
                 <span className="ml-2 text-sm text-[#64748B]">Remember me</span>
               </label>
-              <a href="#" className="text-sm font-medium text-[#4945FF] hover:text-[#3730FF] transition-colors">
+              <a href="mailto:support@delt.com?subject=Password%20reset%20request" className="text-sm font-medium text-[#4945FF] hover:text-[#3730FF] transition-colors">
                 Forgot password?
               </a>
             </div>
@@ -148,7 +148,7 @@ export function SignInPage() {
         {/* Sign Up Link */}
         <p className="text-center text-[#64748B]">
           Don't have an account?{' '}
-          <a href="#" className="font-semibold text-[#4945FF] hover:text-[#3730FF] transition-colors">
+          <a href="#/signup" className="font-semibold text-[#4945FF] hover:text-[#3730FF] transition-colors">
             Sign up for free
           </a>
         </p>
@@ -157,9 +157,9 @@ export function SignInPage() {
         <div className="mt-8 text-center">
           <p className="text-xs text-[#94A3B8]">
             By signing in, you agree to our{' '}
-            <a href="#" className="text-[#4945FF] hover:underline">Terms of Service</a>
+            <a href="#/terms" className="text-[#4945FF] hover:underline">Terms of Service</a>
             {' '}and{' '}
-            <a href="#" className="text-[#4945FF] hover:underline">Privacy Policy</a>
+            <a href="#/privacy" className="text-[#4945FF] hover:underline">Privacy Policy</a>
           </p>
         </div>
       </div>
