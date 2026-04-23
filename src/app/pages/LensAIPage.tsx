@@ -160,7 +160,7 @@ export function LensAIPage() {
           }} />
 
           {/* Liquid-glass card — layered gradients + inner highlight */}
-          <div style={{
+          <div className="lens-chat-card" style={{
             position: 'relative', zIndex: 1,
             background: 'linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.80) 100%)',
             backdropFilter: 'blur(20px) saturate(140%)',
@@ -180,6 +180,8 @@ export function LensAIPage() {
             minHeight: 180,
             display: 'flex', flexDirection: 'column',
           }}>
+            {/* Shimmer sweep on inner highlight — recurring polish pass */}
+            <div aria-hidden className="lens-chat-shimmer" />
             {/* Input area — generous breathing room, animated typing placeholder */}
             <div style={{
               padding: '28px 32px 20px',
@@ -565,6 +567,66 @@ export function LensAIPage() {
         @keyframes lensAIPulse {
           0%, 100% { opacity: 1; transform: scale(1); }
           50%       { opacity: 0.4; transform: scale(1.3); }
+        }
+
+        /* ── Chat card entrance ───────────────────────────────────
+           Subtle upward fade-in with a breath of scale.
+           Waits ~180ms so hero copy settles first. */
+        .lens-chat-card {
+          animation: lensChatEnter 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.18s both;
+          will-change: transform, opacity;
+        }
+        @keyframes lensChatEnter {
+          0%   { opacity: 0; transform: translateY(16px) scale(0.985); }
+          60%  { opacity: 1; }
+          100% { opacity: 1; transform: translateY(0)    scale(1); }
+        }
+
+        /* ── Shimmer pass on inner highlight ─────────────────────
+           A soft diagonal sheen travels across the top of the card
+           every 6.5s, hinting at the glass surface. */
+        .lens-chat-shimmer {
+          position: absolute;
+          inset: 0;
+          border-radius: inherit;
+          pointer-events: none;
+          z-index: 0;
+          overflow: hidden;
+        }
+        /* Lift the real content above the shimmer so it stays crisp */
+        .lens-chat-card > *:not(.lens-chat-shimmer) {
+          position: relative;
+          z-index: 1;
+        }
+        .lens-chat-shimmer::before {
+          content: '';
+          position: absolute;
+          top: -40%;
+          left: -60%;
+          width: 55%;
+          height: 180%;
+          background: linear-gradient(115deg,
+            rgba(255,255,255,0)    0%,
+            rgba(255,255,255,0)    38%,
+            rgba(255,255,255,0.55) 50%,
+            rgba(255,255,255,0)    62%,
+            rgba(255,255,255,0)    100%);
+          filter: blur(1px);
+          transform: translateX(0) rotate(0deg);
+          animation: lensChatShimmer 6.5s ease-in-out 1.2s infinite;
+          mix-blend-mode: screen;
+        }
+        @keyframes lensChatShimmer {
+          0%   { transform: translateX(0);     opacity: 0; }
+          8%   { opacity: 0.9; }
+          45%  { transform: translateX(380%);  opacity: 0.9; }
+          55%  { opacity: 0; }
+          100% { transform: translateX(380%);  opacity: 0; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .lens-chat-card { animation: none; }
+          .lens-chat-shimmer::before { animation: none; opacity: 0; }
         }
 
         /* Typing placeholder animation — cycles through Lens prompts */
