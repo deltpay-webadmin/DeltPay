@@ -7,6 +7,7 @@ export function ProductsPage() {
     {
       icon: CreditCard,
       title: 'Payment Processing',
+      href: '#/payments',
       tagline: 'Accept payments anywhere, anytime',
       description: 'Process payments online, in-person, or on-the-go with our comprehensive payment solutions. Accept all major credit cards, mobile wallets, and contactless payments.',
       features: [
@@ -27,6 +28,7 @@ export function ProductsPage() {
     {
       icon: Wallet,
       title: 'Business Capital',
+      href: '#/capital',
       tagline: 'Fast funding for your business',
       description: 'Get the capital you need to grow your business with flexible financing options. No lengthy applications or collateral required.',
       features: [
@@ -47,6 +49,7 @@ export function ProductsPage() {
     {
       icon: Globe,
       title: 'Website Builder',
+      href: '#/website-examples',
       tagline: 'Build your online presence',
       description: 'Create a beautiful, professional website in minutes with our drag-and-drop builder. Includes hosting, SSL, and seamless payment integration.',
       features: [
@@ -67,6 +70,7 @@ export function ProductsPage() {
     {
       icon: BarChart3,
       title: 'Business Analytics',
+      href: '#/delt-ai',
       tagline: 'AI-powered insights for growth',
       description: 'Make data-driven decisions with powerful analytics and reporting tools. Get real-time insights into sales, customers, and business performance.',
       features: [
@@ -198,7 +202,7 @@ export function ProductsPage() {
                       </div>
 
                       <a 
-                        href="#"
+                        href={product.href}
                         className="inline-flex items-center gap-2 text-[#4945FF] font-semibold hover:gap-3 transition-all text-lg"
                       >
                         Learn more
@@ -317,10 +321,10 @@ export function ProductsPage() {
 
             <div className="mt-8">
               <a 
-                href="#"
+                href="mailto:sales@delt.com?subject=Integrations%20question"
                 className="inline-flex items-center gap-2 text-[#4945FF] font-semibold hover:gap-3 transition-all"
               >
-                View all integrations
+                Ask about integrations
                 <ArrowRight className="h-5 w-5" />
               </a>
             </div>
