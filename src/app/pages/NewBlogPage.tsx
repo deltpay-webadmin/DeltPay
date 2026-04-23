@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ArrowRight, ArrowLeft } from 'lucide-react';
+import { BusinessScene } from '../components/BusinessScene';
 
 /* ─── Palette ────────────────────────────────────────── */
 const NAVY   = '#041E42';
@@ -138,20 +139,199 @@ const CATEGORY_COLOR: Record<Exclude<Category, 'All'>, string> = {
 };
 
 /* ─── Sub-components ─────────────────────────────────── */
-function GradientThumb({
-  from,
-  to,
-  className = '',
-}: {
-  from: string;
-  to: string;
-  className?: string;
-}) {
+
+/**
+ * CategoryCover — themed illustrated covers per editorial category.
+ * Each cover is a distinct visual language so the grid feels like a real magazine,
+ * not a wall of gradient blobs.
+ */
+function CategoryCover({ post, className = '' }: { post: Post; className?: string }) {
+  const { category, id } = post;
+
+  // Customers → use a real BusinessScene photo (tied to the merchant in the article)
+  if (category === 'Customers') {
+    const customerTheme =
+      post.title.includes('Roma') ? 'restaurant' :
+      post.title.includes('Bloom') ? 'salon' :
+      'cafe';
+    const initials = post.title.includes('Roma') ? 'RT' : post.title.includes('Bloom') ? 'BS' : 'BW';
+    const biz = post.title.includes('Roma') ? 'Roma Trattoria' : post.title.includes('Bloom') ? 'Bloom Salon' : 'Blue Wren Coffee';
+    return (
+      <div className={className} style={{ overflow: 'hidden' }}>
+        <BusinessScene
+          theme={customerTheme as any}
+          initials={initials}
+          businessName={biz}
+          location="Customer story"
+          aspect="landscape"
+          variant="navy"
+          className="w-full h-full !rounded-none"
+        />
+      </div>
+    );
+  }
+
+  // Product → stylised UI mockup (window chrome + metric cards)
+  if (category === 'Product') {
+    const accents = ['#4945FF', '#6D68FF', '#2a2680'];
+    const accent = accents[id % accents.length];
+    return (
+      <div
+        className={className}
+        style={{
+          background: `linear-gradient(135deg, ${NAVY} 0%, #0a1638 60%, ${accent} 140%)`,
+          position: 'relative',
+          overflow: 'hidden',
+        }}
+      >
+        {/* soft radial glow */}
+        <div
+          style={{
+            position: 'absolute', inset: 0,
+            background: `radial-gradient(circle at 80% 20%, ${accent}55 0%, transparent 55%)`,
+          }}
+        />
+        {/* browser window */}
+        <div
+          style={{
+            position: 'absolute', left: '10%', top: '18%', right: '10%', bottom: '18%',
+            background: WHITE, borderRadius: 10,
+            boxShadow: '0 20px 40px -10px rgba(0,0,0,0.4)',
+            overflow: 'hidden',
+          }}
+        >
+          {/* titlebar */}
+          <div style={{ height: 14, background: '#F6F7FB', display: 'flex', alignItems: 'center', gap: 4, paddingLeft: 6 }}>
+            <span style={{ width: 5, height: 5, borderRadius: 99, background: '#ff5f57' }} />
+            <span style={{ width: 5, height: 5, borderRadius: 99, background: '#febc2e' }} />
+            <span style={{ width: 5, height: 5, borderRadius: 99, background: '#28c840' }} />
+          </div>
+          {/* metric tiles */}
+          <div style={{ padding: 8, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+            <div style={{ background: `${PURPLE}14`, borderRadius: 5, padding: '6px 7px' }}>
+              <div style={{ width: 18, height: 3, background: `${PURPLE}80`, borderRadius: 2, marginBottom: 3 }} />
+              <div style={{ width: 34, height: 7, background: NAVY, borderRadius: 2 }} />
+            </div>
+            <div style={{ background: `${NAVY}10`, borderRadius: 5, padding: '6px 7px' }}>
+              <div style={{ width: 14, height: 3, background: `${NAVY}60`, borderRadius: 2, marginBottom: 3 }} />
+              <div style={{ width: 28, height: 7, background: PURPLE, borderRadius: 2 }} />
+            </div>
+            {/* sparkline */}
+            <div style={{ gridColumn: 'span 2', background: '#F6F7FB', borderRadius: 5, height: 26, position: 'relative', overflow: 'hidden' }}>
+              <svg viewBox="0 0 100 30" preserveAspectRatio="none" style={{ width: '100%', height: '100%' }}>
+                <path d="M0 22 L15 18 L30 20 L45 12 L60 14 L75 6 L100 10" stroke={PURPLE} strokeWidth="2" fill="none" strokeLinecap="round" />
+                <path d="M0 22 L15 18 L30 20 L45 12 L60 14 L75 6 L100 10 L100 30 L0 30 Z" fill={`${PURPLE}20`} />
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Engineering → terminal/code feel
+  if (category === 'Engineering') {
+    return (
+      <div
+        className={className}
+        style={{
+          background: 'linear-gradient(135deg, #060e22 0%, #0a1628 100%)',
+          position: 'relative', overflow: 'hidden',
+        }}
+      >
+        {/* grid paper */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          backgroundImage: `linear-gradient(${PURPLE}14 1px, transparent 1px), linear-gradient(90deg, ${PURPLE}14 1px, transparent 1px)`,
+          backgroundSize: '22px 22px',
+        }} />
+        {/* terminal card */}
+        <div style={{
+          position: 'absolute', left: '8%', right: '8%', top: '16%', bottom: '16%',
+          background: '#0b1026', borderRadius: 8,
+          border: `1px solid ${PURPLE}40`,
+          boxShadow: `0 0 0 1px ${PURPLE}20, 0 20px 40px -10px rgba(0,0,0,0.6)`,
+          padding: 10,
+          fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+          fontSize: 9,
+          lineHeight: 1.45,
+          color: '#94A3B8',
+          overflow: 'hidden',
+        }}>
+          <div style={{ color: '#6D68FF' }}>$ deploy --region us-east-1</div>
+          <div>✓ build succeeded <span style={{ color: '#28c840' }}>2.1s</span></div>
+          <div>✓ tests passed <span style={{ color: '#28c840' }}>128/128</span></div>
+          <div style={{ color: WHITE }}>→ rolling out <span style={{ color: PURPLE }}>v2026.04</span></div>
+          <div style={{ color: '#6D68FF' }}>█</div>
+        </div>
+      </div>
+    );
+  }
+
+  // Culture → handwritten / notebook feel with a big quote glyph
+  if (category === 'Culture') {
+    return (
+      <div
+        className={className}
+        style={{
+          background: `linear-gradient(160deg, #f3f1ff 0%, ${WHITE} 60%)`,
+          position: 'relative', overflow: 'hidden',
+        }}
+      >
+        {/* ruled lines */}
+        {[0, 1, 2, 3, 4].map(i => (
+          <div key={i} style={{
+            position: 'absolute', left: '10%', right: '10%',
+            top: `${22 + i * 14}%`, height: 1, background: `${NAVY}10`,
+          }} />
+        ))}
+        {/* giant quote mark */}
+        <div style={{
+          position: 'absolute', left: '8%', top: '-5%',
+          fontFamily: 'Georgia, serif', fontSize: 120, lineHeight: 1,
+          color: `${PURPLE}30`, fontWeight: 700,
+        }}>
+          &ldquo;
+        </div>
+        {/* pen stroke */}
+        <svg viewBox="0 0 200 80" style={{ position: 'absolute', right: '8%', bottom: '12%', width: '55%' }}>
+          <path d="M10 50 Q 40 10, 80 40 T 160 30" stroke={PURPLE} strokeWidth="3" fill="none" strokeLinecap="round" />
+          <circle cx="162" cy="29" r="4" fill={PURPLE} />
+        </svg>
+      </div>
+    );
+  }
+
+  // Policy → document + marble building silhouette
   return (
     <div
-      className={`rounded-2xl ${className}`}
-      style={{ background: `linear-gradient(135deg, ${from} 0%, ${to} 100%)` }}
-    />
+      className={className}
+      style={{
+        background: `linear-gradient(135deg, ${NAVY} 0%, #1a3060 100%)`,
+        position: 'relative', overflow: 'hidden',
+      }}
+    >
+      {/* document */}
+      <div style={{
+        position: 'absolute', left: '14%', top: '18%', width: '42%', bottom: '18%',
+        background: WHITE, borderRadius: 4,
+        boxShadow: '0 10px 30px -6px rgba(0,0,0,0.5)',
+        padding: 10,
+      }}>
+        <div style={{ width: '70%', height: 4, background: NAVY, borderRadius: 2, marginBottom: 6 }} />
+        {[0,1,2,3,4,5].map(i => (
+          <div key={i} style={{ width: `${60 + (i * 7) % 35}%`, height: 2, background: `${NAVY}40`, borderRadius: 1, marginBottom: 3 }} />
+        ))}
+        <div style={{ width: 22, height: 22, border: `2px solid ${PURPLE}`, borderRadius: 99, position: 'absolute', right: 8, bottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 700, color: PURPLE, transform: 'rotate(-12deg)' }}>SEAL</div>
+      </div>
+      {/* columns silhouette */}
+      <div style={{ position: 'absolute', right: '10%', bottom: 0, display: 'flex', alignItems: 'flex-end', gap: 4, opacity: 0.4 }}>
+        {[40, 50, 60, 50, 40].map((h, i) => (
+          <div key={i} style={{ width: 8, height: h, background: WHITE, borderRadius: '2px 2px 0 0' }} />
+        ))}
+        <div style={{ position: 'absolute', left: -4, right: -4, bottom: 60, height: 4, background: WHITE, borderRadius: 1 }} />
+      </div>
+    </div>
   );
 }
 
@@ -187,7 +367,7 @@ function ArticleCard({ post }: { post: Post }) {
         (e.currentTarget as HTMLDivElement).style.boxShadow = 'none';
       }}
     >
-      <GradientThumb from={post.gradientFrom} to={post.gradientTo} className="h-36 rounded-none" />
+      <CategoryCover post={post} className="h-36" />
       <div className="p-5 flex flex-col gap-3 flex-1">
         <CategoryPill category={post.category} small />
         <h3 className="text-sm font-semibold tracking-tight leading-snug" style={{ color: NAVY }}>
@@ -255,15 +435,40 @@ export function NewBlogPage() {
               (e.currentTarget as HTMLDivElement).style.boxShadow = 'none';
             }}
           >
-            {/* Gradient left panel */}
+            {/* Illustrated left panel */}
             <div
-              className="min-h-56 md:min-h-0 flex items-end p-8"
+              className="relative min-h-56 md:min-h-0 flex items-end p-8 overflow-hidden"
               style={{
-                background: `linear-gradient(135deg, ${NAVY} 0%, ${PURPLE} 100%)`,
+                background: `linear-gradient(135deg, ${NAVY} 0%, #0a1638 55%, ${PURPLE} 130%)`,
               }}
             >
+              {/* glow */}
+              <div
+                aria-hidden
+                className="absolute"
+                style={{
+                  inset: 0,
+                  background: `radial-gradient(circle at 85% 20%, ${PURPLE}55 0%, transparent 55%)`,
+                }}
+              />
+              {/* stacked capital stats */}
+              <div aria-hidden className="absolute right-6 top-6 flex flex-col gap-2" style={{ width: 180 }}>
+                <div className="rounded-xl" style={{ background: `${WHITE}F2`, padding: '10px 12px', boxShadow: '0 10px 30px -8px rgba(0,0,0,0.35)' }}>
+                  <div className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: PURPLE }}>Capital offer</div>
+                  <div className="text-lg font-bold mt-0.5" style={{ color: NAVY }}>$42,000</div>
+                  <div className="mt-2 h-1.5 rounded-full" style={{ background: `${NAVY}14` }}>
+                    <div className="h-1.5 rounded-full" style={{ width: '68%', background: PURPLE }} />
+                  </div>
+                </div>
+                <div className="rounded-xl flex items-center gap-2" style={{ background: `${WHITE}E6`, padding: '8px 12px' }}>
+                  <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: `${PURPLE}22` }}>
+                    <span className="text-xs" style={{ color: PURPLE }}>✓</span>
+                  </div>
+                  <div className="text-[11px] font-medium" style={{ color: NAVY }}>Funded in 24h</div>
+                </div>
+              </div>
               <p
-                className="text-2xl font-bold tracking-tight leading-snug max-w-xs"
+                className="relative text-2xl font-bold tracking-tight leading-snug max-w-xs"
                 style={{ color: WHITE }}
               >
                 {FEATURED.title}

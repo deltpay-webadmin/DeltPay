@@ -1,5 +1,6 @@
 import { Building2, ShoppingBag, Utensils, Briefcase, Heart, Sparkles } from 'lucide-react';
 import { Link } from 'react-router';
+import { BusinessScene } from '../components/BusinessScene';
 
 export function CaseStudiesPage() {
   const caseStudies = [
@@ -7,6 +8,9 @@ export function CaseStudiesPage() {
       icon: ShoppingBag,
       company: 'Urban Outfitters Boutique',
       industry: 'Retail',
+      location: 'Brooklyn, NY',
+      initials: 'UO',
+      theme: 'retail' as const,
       metric: '+180%',
       metricLabel: 'Sales Growth',
       description: 'How a small boutique transformed their business with integrated payment processing and e-commerce tools.',
@@ -21,6 +25,9 @@ export function CaseStudiesPage() {
       icon: Utensils,
       company: 'The Local Kitchen',
       industry: 'Restaurant',
+      location: 'Austin, TX',
+      initials: 'LK',
+      theme: 'restaurant' as const,
       metric: '3x',
       metricLabel: 'Order Volume',
       description: 'A farm-to-table restaurant leveraged Delt\'s POS system and online ordering to triple their business.',
@@ -35,6 +42,9 @@ export function CaseStudiesPage() {
       icon: Briefcase,
       company: 'Apex Consulting Group',
       industry: 'Professional Services',
+      location: 'Chicago, IL',
+      initials: 'AC',
+      theme: 'office' as const,
       metric: '99%',
       metricLabel: 'On-time Payments',
       description: 'Professional services firm automated invoicing and improved cash flow with Delt\'s business tools.',
@@ -49,6 +59,9 @@ export function CaseStudiesPage() {
       icon: Heart,
       company: 'Wellness Studio',
       industry: 'Beauty & Wellness',
+      location: 'Portland, OR',
+      initials: 'WS',
+      theme: 'wellness' as const,
       metric: '$50K',
       metricLabel: 'Capital Funded',
       description: 'Spa and wellness center used Delt Capital to expand services and grow their customer base.',
@@ -63,6 +76,9 @@ export function CaseStudiesPage() {
       icon: Sparkles,
       company: 'Luxe Beauty Co',
       industry: 'E-commerce',
+      location: 'Los Angeles, CA',
+      initials: 'LB',
+      theme: 'salon' as const,
       metric: '250K',
       metricLabel: 'Monthly Transactions',
       description: 'Online beauty brand scaled from startup to processing 250K monthly transactions with Delt.',
@@ -77,6 +93,9 @@ export function CaseStudiesPage() {
       icon: Building2,
       company: 'Metro Hardware Supply',
       industry: 'Retail',
+      location: 'Denver, CO',
+      initials: 'MH',
+      theme: 'hardware' as const,
       metric: '$2M',
       metricLabel: 'Annual Savings',
       description: 'Hardware supply chain switched to Delt and saved $2M annually in payment processing fees.',
@@ -114,8 +133,20 @@ export function CaseStudiesPage() {
               return (
                 <div
                   key={index}
-                  className="bg-white border border-[#E5E7EB] rounded-2xl p-8 hover:shadow-xl transition-shadow"
+                  className="bg-white border border-[#E5E7EB] rounded-2xl overflow-hidden hover:shadow-xl transition-shadow flex flex-col"
                 >
+                  {/* Photo header */}
+                  <BusinessScene
+                    theme={study.theme}
+                    initials={study.initials}
+                    businessName={study.company}
+                    location={study.location}
+                    metric={study.metric}
+                    aspect="landscape"
+                    variant={index % 2 === 0 ? 'navy' : 'purple'}
+                    className="!rounded-none w-full"
+                  />
+                  <div className="p-8 flex flex-col flex-1">
                   <div className="flex items-start gap-4 mb-6">
                     <div className="w-12 h-12 bg-[#4945FF]/10 rounded-full flex items-center justify-center flex-shrink-0">
                       <Icon className="w-6 h-6 text-[#4945FF]" />
@@ -159,6 +190,7 @@ export function CaseStudiesPage() {
                   <button className="w-full mt-6 px-6 py-3 border-2 border-[#4945FF] text-[#4945FF] rounded-lg hover:bg-[#4945FF]/8 transition-colors font-semibold">
                     Read Full Story
                   </button>
+                  </div>
                 </div>
               );
             })}

@@ -1,93 +1,107 @@
-import { CreditCard, DollarSign, Globe, BarChart3, Smartphone, Monitor, Printer, Wallet, Clock, Shield, Zap, CheckCircle, ArrowRight, ArrowLeft } from 'lucide-react';
-import { Link, useNavigate } from 'react-router';
+import {
+  CreditCard,
+  Globe,
+  BarChart3,
+  Smartphone,
+  Monitor,
+  Wallet,
+  Clock,
+  Shield,
+  Zap,
+  Check,
+  ArrowRight,
+  ChevronRight,
+} from 'lucide-react';
+import { Link } from 'react-router';
+import { ProductCrossSell } from '../components/ProductCrossSell';
+
+/* ─── Design tokens (Toast-inspired, Delt palette locked) ───── */
+const NAVY     = '#041E42';
+const PURPLE   = '#4945FF';
+const LAVENDER = '#EDEBFF';
+const IVORY    = '#F6F7FB';
+const MUTED    = '#475569';
+const MICRO    = '#94A3B8';
+const HAIRLINE = 'rgba(4,30,66,0.10)';
 
 export function ProductsPage() {
-  const navigate = useNavigate();
   const products = [
     {
       icon: CreditCard,
       title: 'Payment Processing',
       tagline: 'Accept payments anywhere, anytime',
-      description: 'Process payments online, in-person, or on-the-go with our comprehensive payment solutions. Accept all major credit cards, mobile wallets, and contactless payments.',
+      description:
+        'Process payments online, in-person, or on-the-go. Accept all major credit cards, mobile wallets, and contactless payments.',
       features: [
         'Accept all major payment methods',
         'Contactless & mobile wallets',
         'Online payment gateway',
         'Recurring billing',
-        'International payments',
-        'Real-time reporting'
       ],
       stats: [
         { value: '2.6%', label: 'Transaction fee' },
-        { value: '1-2 days', label: 'Deposit time' },
-        { value: '99.9%', label: 'Uptime' }
+        { value: '1–2 days', label: 'Deposit time' },
+        { value: '99.9%', label: 'Uptime' },
       ],
-      color: 'bg-[#4945FF]',
-      route: '/payments'
+      route: '/payments',
     },
     {
       icon: Wallet,
       title: 'Business Capital',
       tagline: 'Fast funding for your business',
-      description: 'Get the capital you need to grow your business with flexible financing options. No lengthy applications or collateral required.',
+      description:
+        'Get the capital you need to grow with flexible financing. No lengthy applications, no collateral required.',
       features: [
         'Fast approval process',
         'Flexible repayment terms',
         'No collateral required',
-        'Competitive rates',
-        'Funding as fast as the next business day after approval, subject to eligibility',
-        'Based on actual sales'
+        'Based on actual sales',
       ],
       stats: [
-        { value: '$500-$500K', label: 'Funding range' },
-        { value: '24 hours', label: 'Approval time' },
-        { value: '8%', label: 'Starting rate' }
+        { value: '$1K–$300K', label: 'Funding range' },
+        { value: 'Next day', label: 'After approval' },
+        { value: '8%', label: 'Starting rate' },
       ],
-      color: 'bg-[#041E42]',
-      route: '/capital'
+      route: '/capital',
     },
     {
       icon: Globe,
       title: 'Website Builder',
       tagline: 'Build your online presence',
-      description: 'Create a beautiful, professional website in minutes with our drag-and-drop builder. Includes hosting, SSL, and seamless payment integration.',
+      description:
+        'Launch a professional website in minutes with drag-and-drop. Includes hosting, SSL, and seamless payment integration.',
       features: [
         'Drag & drop builder',
         'Mobile-responsive designs',
         'Free hosting & SSL',
         'Built-in e-commerce',
-        'SEO optimization',
-        'Custom domain support'
       ],
       stats: [
         { value: '100+', label: 'Templates' },
-        { value: '0', label: 'Coding needed' },
-        { value: '24/7', label: 'Uptime monitoring' }
+        { value: '0', label: 'Code needed' },
+        { value: '24/7', label: 'Monitoring' },
       ],
-      color: 'bg-[#4945FF]/90',
-      route: '/website-builder'
+      route: '/website-builder',
     },
     {
       icon: BarChart3,
       title: 'Business Analytics',
       tagline: 'AI-powered insights for growth',
-      description: 'Make data-driven decisions with powerful analytics and reporting tools. Get real-time insights into sales, customers, and business performance.',
+      description:
+        'Make data-driven decisions with powerful analytics and reporting. Real-time insights into sales, customers, and performance.',
       features: [
         'Real-time dashboards',
         'Predictive analytics',
         'Customer insights',
         'Sales forecasting',
-        'Custom reports',
-        'Performance tracking'
       ],
       stats: [
         { value: 'Real-time', label: 'Updates' },
         { value: 'AI-powered', label: 'Insights' },
-        { value: 'No limits', label: 'Reports*' }
+        { value: 'Unlimited', label: 'Reports*' },
       ],
-      color: 'bg-[#041E42]/80',
-      route: '/sandbox'
-    }
+      route: '/sandbox',
+    },
   ];
 
   const hardware = [
@@ -95,121 +109,276 @@ export function ProductsPage() {
       icon: Smartphone,
       name: 'Delt Terminal',
       price: '$299',
-      description: 'All-in-one payment terminal with touchscreen',
-      features: ['5" touchscreen', 'WiFi & LTE', 'All-day battery', 'Built-in printer']
+      description: 'All-in-one terminal with touchscreen',
+      features: ['5" touchscreen', 'WiFi & LTE', 'All-day battery', 'Built-in printer'],
     },
     {
       icon: Monitor,
       name: 'Delt Register',
       price: '$799',
       description: 'Complete POS system for your counter',
-      features: ['13" display', 'Customer display', 'Cash drawer', 'Receipt printer']
+      features: ['13" display', 'Customer display', 'Cash drawer', 'Receipt printer'],
     },
     {
       icon: Smartphone,
       name: 'Delt Reader',
       price: '$49',
-      description: 'Mobile card reader for smartphones',
-      features: ['Connects via Bluetooth', 'Accepts chip & tap', 'Portable', 'Long battery life']
-    }
+      description: 'Mobile card reader for phones',
+      features: ['Bluetooth', 'Chip & tap', 'Portable', 'Long battery life'],
+    },
   ];
 
   const integrations = [
     'QuickBooks', 'Shopify', 'WooCommerce', 'WordPress', 'Mailchimp', 'Zapier',
-    'Slack', 'Xero', 'NetSuite', 'Salesforce', 'HubSpot', 'Square'
+    'Slack', 'Xero', 'NetSuite', 'Salesforce', 'HubSpot', 'Square',
   ];
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Hero Section */}
-      <section className="bg-gradient-to-br from-[#041E42] to-[#4945FF] text-white py-20">
-        <div className="container mx-auto px-6">
-          {/* Back Button */}
-          <button 
-            onClick={() => navigate(-1)}
-            className="mb-8 flex items-center gap-2 text-white/90 hover:text-white transition-colors group"
+    <div style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", background: '#FFFFFF' }}>
+
+      {/* ═══ 1. WHITE HERO (Toast editorial, centered) ═════════════ */}
+      <section className="px-6 pt-24 pb-16 md:pt-32 md:pb-20" style={{ background: '#FFFFFF' }}>
+        <div style={{ maxWidth: 900, margin: '0 auto' }} className="text-center">
+          {/* Breadcrumb chip */}
+          <div className="inline-flex items-center gap-2 mb-6">
+            <span className="inline-block rounded-full" style={{ width: 8, height: 8, background: PURPLE }} />
+            <span
+              className="text-[12px] font-semibold uppercase"
+              style={{ color: NAVY, letterSpacing: '0.14em' }}
+            >
+              Products
+            </span>
+          </div>
+          <h1
+            className="font-bold leading-[1.05] mb-6"
+            style={{
+              fontSize: 'clamp(40px, 5.5vw, 68px)',
+              letterSpacing: '-0.03em',
+              color: NAVY,
+            }}
           >
-            <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-            <span className="font-medium">Back</span>
-          </button>
-          
-          <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-5xl font-bold mb-6">Everything you need to run your business</h1>
-            <p className="text-xl text-white/80 mb-8">
-              From payment processing to business analytics, Delt provides all the tools you need to grow and succeed.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link 
-                to="/pricing"
-                className="bg-white text-[#4945FF] px-8 py-4 rounded-lg font-semibold hover:bg-white/90 transition-colors"
-              >
-                Get Started
-              </Link>
-              <Link 
-                to="/support"
-                className="bg-white/10 backdrop-blur-sm px-8 py-4 rounded-lg font-semibold hover:bg-white/20 transition-colors"
-              >
-                Contact Sales
-              </Link>
-            </div>
+            Everything you need to run your business.
+          </h1>
+          <p
+            className="mx-auto leading-relaxed mb-9"
+            style={{ fontSize: 'clamp(16px, 1.2vw, 18px)', color: MUTED, maxWidth: 620 }}
+          >
+            From payment processing to AI-powered analytics, Delt provides the tools you need
+            to grow — integrated into one platform.
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-4">
+            <Link
+              to="/pricing"
+              className="inline-flex items-center gap-2 rounded-full px-7 py-3.5 font-semibold text-white transition-all duration-200 hover:brightness-110"
+              style={{ background: PURPLE, fontSize: 15, boxShadow: `0 4px 18px ${PURPLE}40` }}
+            >
+              Get started
+              <ArrowRight size={16} />
+            </Link>
+            <Link
+              to="/contact-sales"
+              className="inline-flex items-center gap-2 font-semibold"
+              style={{ color: PURPLE, fontSize: 15 }}
+            >
+              Talk to sales
+              <ArrowRight size={14} />
+            </Link>
           </div>
         </div>
       </section>
 
-      {/* Products Section */}
-      <section className="py-20">
-        <div className="container mx-auto px-6">
-          <div className="max-w-6xl mx-auto space-y-24">
-            {products.map((product, index) => {
-              const Icon = product.icon;
-              const isEven = index % 2 === 0;
-              
-              return (
-                <div key={index} className="relative">
-                  <div className={`flex flex-col ${isEven ? 'lg:flex-row' : 'lg:flex-row-reverse'} gap-12 items-center`}>
-                    {/* Icon Section */}
-                    <div className="w-full lg:w-2/5">
-                      <div className={`${product.color} rounded-3xl p-12 text-white shadow-2xl`}>
-                        <Icon className="h-20 w-20 mb-6" />
-                        <h2 className="text-3xl font-bold mb-3">{product.title}</h2>
-                        <p className="text-white/90 text-lg">{product.tagline}</p>
-                        
-                        {/* Stats */}
-                        <div className="grid grid-cols-3 gap-4 mt-8 pt-8 border-t border-white/20">
-                          {product.stats.map((stat, idx) => (
-                            <div key={idx}>
-                              <div className="font-bold text-lg">{stat.value}</div>
-                              <div className="text-white/70 text-sm">{stat.label}</div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
+      {/* ═══ 2. ALTERNATING PRODUCT FEATURE BLOCKS (white) ═════════ */}
+      <section className="px-6 py-12 md:py-16" style={{ background: '#FFFFFF' }}>
+        <div style={{ maxWidth: 1120, margin: '0 auto' }} className="flex flex-col gap-20 md:gap-28">
+          {products.map((product, index) => {
+            const Icon = product.icon;
+            const reverse = index % 2 === 1;
+            return (
+              <div
+                key={product.title}
+                className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 items-center"
+              >
+                {/* Visual side — equal-weight card (all same neutral treatment) */}
+                <div className={reverse ? 'md:order-2' : ''}>
+                  <div
+                    className="rounded-2xl p-8 md:p-10"
+                    style={{
+                      background: IVORY,
+                      border: `1px solid ${HAIRLINE}`,
+                    }}
+                  >
+                    <div
+                      className="w-14 h-14 rounded-xl flex items-center justify-center mb-6"
+                      style={{ background: '#FFFFFF', boxShadow: '0 4px 12px rgba(4,30,66,0.06)' }}
+                    >
+                      <Icon size={24} color={PURPLE} />
                     </div>
-
-                    {/* Content Section */}
-                    <div className="w-full lg:w-3/5">
-                      <p className="text-xl text-[#475569] mb-6">
-                        {product.description}
-                      </p>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-                        {product.features.map((feature, idx) => (
-                          <div key={idx} className="flex items-start gap-2">
-                            <CheckCircle className="h-5 w-5 text-[#4945FF] mt-0.5 flex-shrink-0" />
-                            <span className="text-[#041E42]">{feature}</span>
+                    <div
+                      className="text-[11px] font-bold uppercase mb-2"
+                      style={{ color: PURPLE, letterSpacing: '0.16em' }}
+                    >
+                      {product.tagline}
+                    </div>
+                    <h3
+                      className="font-bold mb-6 leading-[1.15]"
+                      style={{
+                        fontSize: 'clamp(24px, 2.6vw, 32px)',
+                        color: NAVY,
+                        letterSpacing: '-0.02em',
+                      }}
+                    >
+                      {product.title}
+                    </h3>
+                    {/* Stats row */}
+                    <div
+                      className="grid grid-cols-3 gap-3 pt-6"
+                      style={{ borderTop: `1px solid ${HAIRLINE}` }}
+                    >
+                      {product.stats.map((s) => (
+                        <div key={s.label}>
+                          <div
+                            className="font-bold mb-1"
+                            style={{
+                              color: NAVY,
+                              fontSize: 'clamp(18px, 1.8vw, 22px)',
+                              letterSpacing: '-0.02em',
+                            }}
+                          >
+                            {s.value}
                           </div>
-                        ))}
-                      </div>
-
-                      <Link 
-                        to={(product as any).route || '/products'}
-                        className="inline-flex items-center gap-2 text-[#4945FF] font-semibold hover:gap-3 transition-all text-lg"
-                      >
-                        Learn more
-                        <ArrowRight className="h-5 w-5" />
-                      </Link>
+                          <div className="text-[11px]" style={{ color: MICRO }}>
+                            {s.label}
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
+                </div>
+
+                {/* Copy side */}
+                <div className={reverse ? 'md:order-1' : ''}>
+                  <p className="leading-relaxed mb-6" style={{ color: MUTED, fontSize: 17 }}>
+                    {product.description}
+                  </p>
+                  <ul className="flex flex-col gap-3 mb-7">
+                    {product.features.map((f) => (
+                      <li key={f} className="flex items-start gap-3">
+                        <span
+                          className="inline-flex items-center justify-center rounded-full flex-shrink-0"
+                          style={{
+                            width: 20,
+                            height: 20,
+                            background: `${PURPLE}15`,
+                            marginTop: 2,
+                          }}
+                        >
+                          <Check size={12} color={PURPLE} strokeWidth={3} />
+                        </span>
+                        <span style={{ color: NAVY, fontSize: 15, lineHeight: 1.5 }}>{f}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <Link
+                    to={product.route}
+                    className="inline-flex items-center gap-2 font-semibold"
+                    style={{ color: PURPLE, fontSize: 15 }}
+                  >
+                    Learn more about {product.title.split(' ')[0]}
+                    <ArrowRight size={14} />
+                  </Link>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <p
+          className="text-center mt-12 text-xs"
+          style={{ color: MICRO, maxWidth: 600, margin: '3rem auto 0' }}
+        >
+          *Subject to fair-use policy.
+        </p>
+      </section>
+
+      {/* ═══ 3. HARDWARE — LAVENDER BAND ═══════════════════════════ */}
+      <section className="px-6 py-20 md:py-28" style={{ background: LAVENDER }}>
+        <div style={{ maxWidth: 1120, margin: '0 auto' }}>
+          <div className="text-center mb-14">
+            <div
+              className="text-[12px] font-bold uppercase mb-3"
+              style={{ color: PURPLE, letterSpacing: '0.18em' }}
+            >
+              Delt hardware
+            </div>
+            <h2
+              className="font-bold leading-[1.1] mb-4"
+              style={{
+                fontSize: 'clamp(32px, 4vw, 48px)',
+                color: NAVY,
+                letterSpacing: '-0.025em',
+              }}
+            >
+              Hardware that works as hard as your team does.
+            </h2>
+            <p
+              className="mx-auto leading-relaxed"
+              style={{ fontSize: 'clamp(15px, 1.2vw, 17px)', color: MUTED, maxWidth: 620 }}
+            >
+              Professional payment hardware designed for reliability and ease of use.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {hardware.map((device) => {
+              const Icon = device.icon;
+              return (
+                <div
+                  key={device.name}
+                  className="rounded-2xl p-7 flex flex-col transition-transform"
+                  style={{
+                    background: '#FFFFFF',
+                    border: `1px solid ${HAIRLINE}`,
+                    boxShadow: '0 12px 28px rgba(4,30,66,0.05)',
+                  }}
+                >
+                  <div
+                    className="w-12 h-12 rounded-xl flex items-center justify-center mb-5"
+                    style={{ background: `${PURPLE}12` }}
+                  >
+                    <Icon size={22} color={PURPLE} />
+                  </div>
+                  <h3
+                    className="font-bold mb-1"
+                    style={{ color: NAVY, fontSize: 20, letterSpacing: '-0.015em' }}
+                  >
+                    {device.name}
+                  </h3>
+                  <div
+                    className="font-bold mb-4"
+                    style={{ color: PURPLE, fontSize: 22, letterSpacing: '-0.02em' }}
+                  >
+                    {device.price}
+                  </div>
+                  <p
+                    className="text-sm leading-relaxed mb-6"
+                    style={{ color: MUTED, minHeight: 40 }}
+                  >
+                    {device.description}
+                  </p>
+                  <ul className="flex flex-col gap-2.5 mb-6 flex-1">
+                    {device.features.map((f) => (
+                      <li key={f} className="flex items-center gap-2.5 text-sm">
+                        <Check size={14} color={PURPLE} strokeWidth={3} />
+                        <span style={{ color: NAVY }}>{f}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <Link
+                    to="/contact-sales"
+                    className="inline-flex items-center justify-center gap-2 w-full rounded-full py-3 font-semibold text-white transition-colors"
+                    style={{ background: PURPLE, fontSize: 14 }}
+                  >
+                    Order now
+                  </Link>
                 </div>
               );
             })}
@@ -217,144 +386,174 @@ export function ProductsPage() {
         </div>
       </section>
 
-      {/* Reports footnote */}
-      <div className="container mx-auto px-6 pb-4">
-        <p className="text-xs text-[#475569] max-w-6xl mx-auto">*Subject to fair-use policy.</p>
-      </div>
-
-      {/* Hardware Section */}
-      <section className="py-20 bg-[#F8F9FA]">
-        <div className="container mx-auto px-6">
-          <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-12">
-              <h2 className="text-4xl font-bold text-[#041E42] mb-4">Hardware</h2>
-              <p className="text-xl text-[#475569]">
-                Professional payment hardware designed for reliability and ease of use
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {hardware.map((device, index) => {
-                const Icon = device.icon;
-                return (
-                  <div 
-                    key={index}
-                    className="bg-white rounded-2xl p-8 hover:shadow-xl transition-shadow border border-[#E2E8F0]"
-                  >
-                    <div className="w-16 h-16 bg-[#4945FF]/10 rounded-2xl flex items-center justify-center mb-6">
-                      <Icon className="h-8 w-8 text-[#4945FF]" />
-                    </div>
-                    <h3 className="text-2xl font-bold text-[#041E42] mb-2">{device.name}</h3>
-                    <div className="text-3xl font-bold text-[#4945FF] mb-4">{device.price}</div>
-                    <p className="text-[#475569] mb-6">{device.description}</p>
-                    
-                    <div className="space-y-3 mb-6">
-                      {device.features.map((feature, idx) => (
-                        <div key={idx} className="flex items-center gap-2 text-sm">
-                          <CheckCircle className="h-4 w-4 text-[#4945FF] flex-shrink-0" />
-                          <span className="text-[#041E42]">{feature}</span>
-                        </div>
-                      ))}
-                    </div>
-
-                    <button className="w-full bg-[#4945FF] text-white py-3 rounded-lg font-semibold hover:bg-[#3730FF] transition-colors">
-                      Order Now
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Features Grid */}
-      <section className="py-20">
-        <div className="container mx-auto px-6">
-          <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-12">
-              <h2 className="text-4xl font-bold text-[#041E42] mb-4">Built for modern businesses</h2>
-              <p className="text-xl text-[#475569]">
-                Everything you need, integrated into one platform
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {[
-                { icon: Shield, title: 'Bank-level Security', description: 'PCI-DSS compliant with end-to-end encryption' },
-                { icon: Zap, title: 'Lightning Fast', description: 'Process payments in under 2 seconds' },
-                { icon: Clock, title: 'Quick Setup', description: 'Start accepting payments in minutes' },
-                { icon: Globe, title: 'Global Reach', description: 'Accept payments from 135+ countries' },
-                { icon: BarChart3, title: 'Real-time Analytics', description: 'Track your business performance live' },
-                { icon: CreditCard, title: 'All Payment Types', description: 'Cards, wallets, contactless, and more' }
-              ].map((feature, index) => {
-                const Icon = feature.icon;
-                return (
-                  <div key={index} className="text-center p-6">
-                    <div className="w-16 h-16 bg-[#4945FF]/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                      <Icon className="h-8 w-8 text-[#4945FF]" />
-                    </div>
-                    <h3 className="font-bold text-[#041E42] text-lg mb-2">{feature.title}</h3>
-                    <p className="text-[#475569]">{feature.description}</p>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Integrations */}
-      <section className="py-20 bg-[#F8F9FA]">
-        <div className="container mx-auto px-6">
-          <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-4xl font-bold text-[#041E42] mb-4">Works with your favorite tools</h2>
-            <p className="text-xl text-[#475569] mb-12">
-              Seamlessly integrate with the software you already use
-            </p>
-            
-            <div className="flex flex-wrap justify-center gap-4">
-              {integrations.map((integration, index) => (
-                <div 
-                  key={index}
-                  className="bg-white px-6 py-3 rounded-lg border border-[#E2E8F0] font-medium text-[#041E42] hover:border-[#4945FF] hover:text-[#4945FF] transition-colors"
-                >
-                  {integration}
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-8">
-              <a 
-                href="#"
-                className="inline-flex items-center gap-2 text-[#4945FF] font-semibold hover:gap-3 transition-all"
-              >
-                View all integrations
-                <ArrowRight className="h-5 w-5" />
-              </a>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-20 bg-[#041E42] text-white">
-        <div className="container mx-auto px-6">
-          <div className="max-w-3xl mx-auto text-center">
-            <h2 className="text-4xl font-bold mb-4">Ready to get started?</h2>
-            <p className="text-xl text-white/80 mb-8">
-              Join millions of businesses that trust Delt for their payment needs.
-            </p>
-            <Link 
-              to="/pricing"
-              className="inline-flex items-center gap-2 bg-[#4945FF] px-8 py-4 rounded-lg font-semibold hover:bg-[#3730FF] transition-colors"
+      {/* ═══ 4. "BUILT FOR MODERN BUSINESSES" — white ══════════════ */}
+      <section className="px-6 py-20 md:py-28" style={{ background: '#FFFFFF' }}>
+        <div style={{ maxWidth: 1120, margin: '0 auto' }}>
+          <div className="text-center mb-14">
+            <div
+              className="text-[12px] font-bold uppercase mb-3"
+              style={{ color: PURPLE, letterSpacing: '0.18em' }}
             >
-              View Pricing & Plans
-              <ArrowRight className="h-5 w-5" />
+              Built for modern business
+            </div>
+            <h2
+              className="font-bold leading-[1.1]"
+              style={{
+                fontSize: 'clamp(30px, 3.6vw, 44px)',
+                color: NAVY,
+                letterSpacing: '-0.025em',
+              }}
+            >
+              Everything you need, integrated into one platform.
+            </h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-x-10 gap-y-12 max-w-[960px] mx-auto">
+            {[
+              { icon: Shield, title: 'Bank-level security', description: 'PCI-DSS compliant with end-to-end encryption.' },
+              { icon: Zap, title: 'Lightning fast', description: 'Process payments in under 2 seconds.' },
+              { icon: Clock, title: 'Quick setup', description: 'Start accepting payments in minutes.' },
+              { icon: Globe, title: 'Global reach', description: 'Accept payments from 135+ countries.' },
+              { icon: BarChart3, title: 'Real-time analytics', description: 'Track business performance live.' },
+              { icon: CreditCard, title: 'All payment types', description: 'Cards, wallets, contactless, and more.' },
+            ].map((f) => {
+              const Icon = f.icon;
+              return (
+                <div key={f.title} className="text-center">
+                  <div
+                    className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4"
+                    style={{ background: `${PURPLE}12` }}
+                  >
+                    <Icon size={22} color={PURPLE} />
+                  </div>
+                  <h3
+                    className="font-bold mb-2"
+                    style={{ color: NAVY, fontSize: 17, letterSpacing: '-0.01em' }}
+                  >
+                    {f.title}
+                  </h3>
+                  <p className="text-sm leading-relaxed" style={{ color: MUTED }}>
+                    {f.description}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ 5. INTEGRATIONS — ivory ═══════════════════════════════ */}
+      <section className="px-6 py-20 md:py-24" style={{ background: IVORY }}>
+        <div style={{ maxWidth: 900, margin: '0 auto' }} className="text-center">
+          <div
+            className="text-[12px] font-bold uppercase mb-3"
+            style={{ color: PURPLE, letterSpacing: '0.18em' }}
+          >
+            Integrations
+          </div>
+          <h2
+            className="font-bold leading-[1.1] mb-4"
+            style={{
+              fontSize: 'clamp(28px, 3.4vw, 40px)',
+              color: NAVY,
+              letterSpacing: '-0.025em',
+            }}
+          >
+            Works with your favorite tools.
+          </h2>
+          <p
+            className="mx-auto leading-relaxed mb-10"
+            style={{ fontSize: 'clamp(15px, 1.2vw, 17px)', color: MUTED, maxWidth: 560 }}
+          >
+            Seamlessly integrate with the software you already use.
+          </p>
+          <div className="flex flex-wrap justify-center gap-3">
+            {integrations.map((i) => (
+              <div
+                key={i}
+                className="px-5 py-2.5 rounded-full font-medium transition-colors"
+                style={{
+                  background: '#FFFFFF',
+                  border: `1px solid ${HAIRLINE}`,
+                  color: NAVY,
+                  fontSize: 14,
+                }}
+              >
+                {i}
+              </div>
+            ))}
+          </div>
+          <div className="mt-8">
+            <Link
+              to="/contact-sales"
+              className="inline-flex items-center gap-2 font-semibold"
+              style={{ color: PURPLE, fontSize: 15 }}
+            >
+              View all integrations
+              <ArrowRight size={14} />
             </Link>
           </div>
         </div>
       </section>
+
+      {/* ═══ 6. PRODUCT CROSS-SELL (light) ═════════════════════════ */}
+      <ProductCrossSell variant="light" />
+
+      {/* ═══ 7. SMALL CENTERED FINAL CTA (white) ═══════════════════ */}
+      <section className="px-6 py-20 md:py-24 text-center" style={{ background: '#FFFFFF' }}>
+        <div style={{ maxWidth: 620, margin: '0 auto' }}>
+          <h2
+            className="font-bold mb-4 leading-[1.1]"
+            style={{
+              fontSize: 'clamp(28px, 3.4vw, 40px)',
+              color: NAVY,
+              letterSpacing: '-0.025em',
+            }}
+          >
+            Ready to get started?
+          </h2>
+          <p
+            className="mb-8 leading-relaxed mx-auto"
+            style={{ fontSize: 'clamp(15px, 1.2vw, 17px)', color: MUTED, maxWidth: 480 }}
+          >
+            Join thousands of businesses running on Delt. Free to start, no contracts.
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-4">
+            <Link
+              to="/pricing"
+              className="inline-flex items-center gap-2 rounded-full px-7 py-3.5 font-semibold text-white transition-all duration-200 hover:brightness-110"
+              style={{ background: PURPLE, fontSize: 15, boxShadow: `0 4px 18px ${PURPLE}40` }}
+            >
+              View pricing
+              <ArrowRight size={16} />
+            </Link>
+            <Link
+              to="/contact-sales"
+              className="inline-flex items-center gap-2 font-semibold"
+              style={{ color: PURPLE, fontSize: 15 }}
+            >
+              Talk to sales
+              <ArrowRight size={14} />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ 8. SMALL-PRINT LEGAL (ivory) ══════════════════════════ */}
+      <div className="px-6 py-8" style={{ background: IVORY, borderTop: `1px solid ${HAIRLINE}` }}>
+        <div
+          className="max-w-4xl mx-auto"
+          style={{ color: MICRO, fontSize: 11, lineHeight: 1.7 }}
+        >
+          <p>
+            Illustrative stats shown on this page are representative examples. Actual results
+            vary by business, volume, and plan. Hardware pricing subject to change. Some features
+            are add-ons and may require the Growth or Personalized plan.
+          </p>
+        </div>
+      </div>
+
     </div>
   );
 }
+
+export default ProductsPage;

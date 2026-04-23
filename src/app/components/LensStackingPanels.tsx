@@ -268,32 +268,33 @@ function Panel({
     >
       <div
         style={{
-          maxWidth: 1160, margin: '0 auto',
+          maxWidth: 1280, margin: '0 auto',
           background: C.white,
-          borderRadius: 28,
+          borderRadius: 32,
           overflow: 'hidden',
-          boxShadow: '0 20px 60px rgba(4,30,66,0.10), 0 1px 3px rgba(4,30,66,0.04)',
+          boxShadow: '0 30px 80px rgba(4,30,66,0.12), 0 2px 6px rgba(4,30,66,0.05)',
           border: `1px solid ${C.line}`,
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
+          minHeight: 560,
         }}
       >
         {/* Left — copy */}
-        <div style={{ padding: 'clamp(28px, 4vw, 56px)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 24 }}>
+        <div style={{ padding: 'clamp(36px, 5vw, 72px)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 32 }}>
           <div>
             <div style={{
-              fontFamily: FONT, fontSize: 14, color: C.muted, marginBottom: 32,
+              fontFamily: FONT, fontSize: 15, color: C.muted, marginBottom: 40,
               letterSpacing: '0.02em',
             }}>
               <span style={{ color: C.navy, fontWeight: 700 }}>{counter.split(' / ')[0]}</span>
               <span style={{ margin: '0 4px' }}>/</span>
               <span>{counter.split(' / ')[1]}</span>
-              <span style={{ marginLeft: 12, color: C.navy, fontWeight: 600 }}>{title}</span>
+              <span style={{ marginLeft: 14, color: C.navy, fontWeight: 600 }}>{title}</span>
             </div>
             <p style={{
-              fontFamily: FONT, fontSize: 'clamp(18px, 1.9vw, 22px)',
-              lineHeight: 1.55, color: C.navy, fontWeight: 500,
-              letterSpacing: '-0.01em',
+              fontFamily: FONT, fontSize: 'clamp(22px, 2.4vw, 30px)',
+              lineHeight: 1.4, color: C.navy, fontWeight: 500,
+              letterSpacing: '-0.015em',
               margin: 0,
             }}>
               {body}
@@ -303,23 +304,23 @@ function Panel({
             href="/sign-up"
             style={{
               alignSelf: 'flex-start',
-              display: 'inline-flex', alignItems: 'center', gap: 8,
+              display: 'inline-flex', alignItems: 'center', gap: 10,
               background: C.navy, color: C.white,
               textDecoration: 'none',
-              borderRadius: 999, padding: '12px 22px',
-              fontSize: 14, fontWeight: 600, fontFamily: FONT,
+              borderRadius: 999, padding: '16px 28px',
+              fontSize: 15, fontWeight: 600, fontFamily: FONT,
             }}
           >
-            {cta} <ArrowRight size={14} />
+            {cta} <ArrowRight size={16} />
           </a>
         </div>
         {/* Right — mockup with soft indigo wash */}
         <div style={{
-          padding: 'clamp(24px, 3vw, 40px)',
-          background: `linear-gradient(135deg, rgba(73,69,255,0.12) 0%, rgba(73,69,255,0.04) 55%, ${C.grayBg} 100%)`,
+          padding: 'clamp(32px, 4vw, 56px)',
+          background: `linear-gradient(135deg, rgba(73,69,255,0.14) 0%, rgba(73,69,255,0.05) 55%, ${C.grayBg} 100%)`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
-          <div style={{ width: '100%', maxWidth: 440 }}>
+          <div style={{ width: '100%', maxWidth: 520 }}>
             {mockup}
           </div>
         </div>
@@ -332,9 +333,18 @@ export function LensStackingPanels() {
   return (
     <section style={{
       position: 'relative',
-      background: C.grayBg,
-      padding: 'clamp(40px, 6vw, 96px) 0 clamp(120px, 16vw, 220px)',
+      /* Base44-style soft lavender wash backdrop behind the panels */
+      background:
+        'linear-gradient(180deg, #FFFFFF 0%, #F4F2FF 18%, #EDEBFF 50%, #F4F2FF 82%, #FFFFFF 100%)',
+      padding: 'clamp(60px, 8vw, 120px) 0 clamp(140px, 18vw, 240px)',
     }}>
+      {/* Soft radial accents for depth */}
+      <div aria-hidden style={{
+        position: 'absolute', inset: 0, pointerEvents: 'none',
+        background:
+          'radial-gradient(ellipse 60% 40% at 20% 30%, rgba(73,69,255,0.10) 0%, transparent 60%),' +
+          'radial-gradient(ellipse 50% 35% at 85% 75%, rgba(73,69,255,0.10) 0%, transparent 60%)',
+      }} />
       {PANELS.map((p, i) => (
         <Panel key={p.counter} index={i} {...p} />
       ))}

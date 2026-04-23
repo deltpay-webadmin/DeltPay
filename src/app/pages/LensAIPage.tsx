@@ -146,7 +146,7 @@ export function LensAIPage() {
 
         {/* ───── PROMINENT CHAT CARD (Base44 liquid-glass style) ───── */}
         <div style={{
-          position: 'relative', maxWidth: 780, margin: '56px auto 0',
+          position: 'relative', maxWidth: 880, margin: '64px auto 0',
           padding: '0 20px',
         }}>
           {/* Outer soft glow behind card */}
@@ -177,27 +177,27 @@ export function LensAIPage() {
             outline: '1px solid rgba(4,30,66,0.06)',
             outlineOffset: '-1px',
             overflow: 'hidden',
-            minHeight: 180,
+            minHeight: 240,
             display: 'flex', flexDirection: 'column',
           }}>
             {/* Shimmer sweep on inner highlight — recurring polish pass */}
             <div aria-hidden className="lens-chat-shimmer" />
             {/* Input area — generous breathing room, animated typing placeholder */}
             <div style={{
-              padding: '28px 32px 20px',
+              padding: '40px 40px 24px',
               flex: 1,
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'flex-start',
             }}>
-              <div style={{ position: 'relative', minHeight: 58 }}>
+              <div style={{ position: 'relative', minHeight: 76 }}>
                 <input
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   style={{
                     width: '100%', border: 'none', outline: 'none',
-                    fontSize: 18, lineHeight: 1.5, color: C.navy,
+                    fontSize: 22, lineHeight: 1.5, color: C.navy,
                     background: 'transparent',
                     fontFamily: FONT, padding: '4px 0',
                     position: 'relative', zIndex: 1,
@@ -208,7 +208,7 @@ export function LensAIPage() {
                   <div style={{
                     position: 'absolute', top: 0, left: 0, right: 0,
                     pointerEvents: 'none',
-                    fontSize: 18, lineHeight: 1.5, color: C.muted,
+                    fontSize: 22, lineHeight: 1.5, color: C.muted,
                     fontFamily: FONT, padding: '4px 0',
                     display: 'flex', alignItems: 'center',
                   }}>
@@ -222,7 +222,7 @@ export function LensAIPage() {
             {/* Controls row — quieter, bottom-aligned */}
             <div style={{
               display: 'flex', alignItems: 'center', gap: 10,
-              padding: '0 20px 18px',
+              padding: '0 28px 22px',
             }}>
               {/* Plus button — borderless, icon-only, like Base44 */}
               <button

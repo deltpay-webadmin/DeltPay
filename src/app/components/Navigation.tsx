@@ -109,7 +109,7 @@ export function Navigation() {
 
   /* Only these pages have a dark hero — nav starts transparent with white text.
      Every other page gets a solid white nav immediately so text is always visible. */
-  const darkHeroPages = ['/', '/payments', '/capital', '/delt-ai', '/how-it-works', '/products', '/website-examples'];
+  const darkHeroPages = ['/', '/payments', '/delt-ai', '/how-it-works', '/website-examples'];
   const isDarkHero =
     darkHeroPages.some((p) => location.pathname === p) ||
     location.pathname.startsWith('/industries/');
