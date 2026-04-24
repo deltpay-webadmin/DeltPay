@@ -200,18 +200,20 @@ function Hero() {
   const sectionRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: sectionRef, offset: ['start start', 'end end'] });
 
-  // Phase 1 (0–0.35): heading starts centered, snaps upward
-  // Phase 2 (0.35–0.6): carousel row 1 fades in from below
-  // Phase 3 (0.6–0.85): carousel row 2 fades in from below
-  const headingY = useTransform(scrollYProgress, [0, 0.35], [0, -60]);
+  // Phase 1 (0–0.35): heading starts centered in the viewport, slides upward as
+  //   the user scrolls to make room for the carousels.
+  // Phase 2 (0.1–0.35): carousel row 1 fades in from below.
+  // Phase 3 (0.2–0.5): carousel row 2 fades in from below.
+  // On initial page load (scrollYProgress === 0) only the heading is visible.
+  const headingY = useTransform(scrollYProgress, [0, 0.35], [180, -60]);
   const headingScale = useTransform(scrollYProgress, [0, 0.35], [1, 0.9]);
 
-  // Carousels are visible immediately on load with a subtle scroll-enhanced entrance.
-  const c1Opacity = useTransform(scrollYProgress, [0, 0.15], [0.85, 1]);
-  const c1Y = useTransform(scrollYProgress, [0, 0.2], [30, 0]);
+  // Carousels start fully hidden and are revealed as the user scrolls.
+  const c1Opacity = useTransform(scrollYProgress, [0.08, 0.3], [0, 1]);
+  const c1Y = useTransform(scrollYProgress, [0.08, 0.35], [60, 0]);
 
-  const c2Opacity = useTransform(scrollYProgress, [0, 0.25], [0.85, 1]);
-  const c2Y = useTransform(scrollYProgress, [0, 0.3], [50, 0]);
+  const c2Opacity = useTransform(scrollYProgress, [0.18, 0.45], [0, 1]);
+  const c2Y = useTransform(scrollYProgress, [0.18, 0.5], [80, 0]);
 
   // Scroll indicator fades out quickly as user starts scrolling
   const scrollHintOpacity = useTransform(scrollYProgress, [0, 0.08], [1, 0]);
