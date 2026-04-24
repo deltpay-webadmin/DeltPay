@@ -203,14 +203,15 @@ function Hero() {
   // Phase 1 (0–0.35): heading starts centered, snaps upward
   // Phase 2 (0.35–0.6): carousel row 1 fades in from below
   // Phase 3 (0.6–0.85): carousel row 2 fades in from below
-  const headingY = useTransform(scrollYProgress, [0, 0.35], [0, -180]);
-  const headingScale = useTransform(scrollYProgress, [0, 0.35], [1, 0.85]);
+  const headingY = useTransform(scrollYProgress, [0, 0.35], [0, -60]);
+  const headingScale = useTransform(scrollYProgress, [0, 0.35], [1, 0.9]);
 
-  const c1Opacity = useTransform(scrollYProgress, [0.25, 0.5], [0, 1]);
-  const c1Y = useTransform(scrollYProgress, [0.25, 0.5], [80, 0]);
+  // Carousels are visible immediately on load with a subtle scroll-enhanced entrance.
+  const c1Opacity = useTransform(scrollYProgress, [0, 0.15], [0.85, 1]);
+  const c1Y = useTransform(scrollYProgress, [0, 0.2], [30, 0]);
 
-  const c2Opacity = useTransform(scrollYProgress, [0.45, 0.7], [0, 1]);
-  const c2Y = useTransform(scrollYProgress, [0.45, 0.7], [80, 0]);
+  const c2Opacity = useTransform(scrollYProgress, [0, 0.25], [0.85, 1]);
+  const c2Y = useTransform(scrollYProgress, [0, 0.3], [50, 0]);
 
   // Scroll indicator fades out quickly as user starts scrolling
   const scrollHintOpacity = useTransform(scrollYProgress, [0, 0.08], [1, 0]);
@@ -225,12 +226,12 @@ function Hero() {
         position: 'sticky', top: 0,
         height: '100vh', overflow: 'hidden',
       }}>
-        {/* Heading — starts dead center, snaps up on scroll */}
+        {/* Heading — positioned in the top portion, leaves room for carousels below */}
         <motion.div
           style={{
             position: 'absolute', inset: 0,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            padding: '0 24px',
+            display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
+            padding: '56px 24px 0',
             y: headingY,
             scale: headingScale,
           }}
@@ -302,11 +303,11 @@ function Hero() {
           </div>
         </motion.div>
 
-        {/* Carousel row 1 — slides up into view */}
+        {/* Carousel row 1 — visible on load, subtle scroll entrance */}
         <motion.div
           style={{
             position: 'absolute',
-            bottom: 100, left: 0, right: 0,
+            bottom: 256, left: 0, right: 0,
             opacity: c1Opacity,
             y: c1Y,
           }}
@@ -314,11 +315,11 @@ function Hero() {
           <ScrollingGallery sites={CAROUSEL_ROW1} direction="left" speed={42} />
         </motion.div>
 
-        {/* Carousel row 2 — slides up into view after row 1 */}
+        {/* Carousel row 2 — visible on load, subtle scroll entrance */}
         <motion.div
           style={{
             position: 'absolute',
-            bottom: 20, left: 0, right: 0,
+            bottom: 16, left: 0, right: 0,
             opacity: c2Opacity,
             y: c2Y,
           }}
