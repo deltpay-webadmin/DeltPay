@@ -7,21 +7,18 @@ import { ScrollIndicator } from './ScrollIndicator';
 import { AgencyGraphic } from './AgencyGraphic';
 import { DomainGraphic } from './DomainGraphic';
 import { SpeedGraphic } from './SpeedGraphic';
+import { CAROUSEL_PREVIEWS, type CarouselSite } from './CarouselPreviews';
 
 /* Real site screenshots */
 import kuroImage from 'figma:asset/4b959f6beef35f5174284dac44f7eb4795f2294a.png';
 import foamyImage from 'figma:asset/088f3daea90ee98aec312e35a83b0dfee399850b.png';
 import tundraImage from 'figma:asset/a706f0e4f3a17abebbf6e8e3f419fc45771e6cea.png';
 import gringosImage from 'figma:asset/75c26bd891b1a9364a0c6ffff2c13f39ddaca199.png';
-import brightSmilesImage from 'figma:asset/5b60ca270d3f0aba22c37bd44b45b1894339e906.png';
 
-/* Premium business images - New Delt mockups */
-import clarityDentalImg from 'figma:asset/cd4719fdf9ecda05c463c809fefc3f09b5619964.png';
+/* Premium business images — still referenced by ShowcaseGrid / SITE_PREVIEWS */
 import roastRitualImg from 'figma:asset/6a31d85dee11b96111731564c371c6630c2e9eac.png';
-import apexFitnessImg from 'figma:asset/29b3a1a979e0d3b06347c1d940badfa136b0e30d.png';
 import bloomCoImg from 'figma:asset/aa784f0df7d8777f32149f8966d5cde90b88dfb8.png';
 import meridianRealtyImg from 'figma:asset/f6460e07e9cba0b217391661a8e5cd8c0669858d.png';
-import theGroveImg from 'figma:asset/408a42abed3cdd06ffc909dfc6f496224fbde3b7.png';
 import aurumSpaImg from 'figma:asset/abad088739ca83caf2766ca2ae2c5e8fdcd6c0cb.png';
 
 /* Feature walkthrough images */
@@ -84,36 +81,20 @@ function Label({ children }: { children: React.ReactNode }) {
 }
 
 /* ═══════════════════════════════════════════════════════════
-   CAROUSEL SITES DATA
+   CAROUSEL SITES DATA — 16 unique rendered mini-previews
+   split across two opposite-scrolling rows.
    ═══════════════════════════════════════════════════════════ */
-const CAROUSEL_ROW1 = [
-  { name: 'Clarity Dental', type: 'Dental Studio', image: clarityDentalImg, color: '#1E3A5F', accent: '#60A5FA' },
-  { name: 'Roast & Ritual', type: 'Specialty Coffee', image: roastRitualImg, color: '#2A1E14', accent: '#D4956B' },
-  { name: 'Apex Fitness', type: 'Training Studio', image: apexFitnessImg, color: '#0E1F2E', accent: '#67E8F9' },
-  { name: 'Bloom & Co', type: 'Florist', image: bloomCoImg, color: '#2A1A2A', accent: '#F4A5D9' },
-  { name: 'Kuro', type: 'Fine Dining', image: kuroImage, color: '#1A0F0A', accent: '#D4A574' },
-  { name: 'Foamy & Co.', type: 'Artisan Cafe', image: foamyImage, color: '#2A1E14', accent: '#D4956B' },
-  { name: 'Gringos', type: 'Barbershop', image: gringosImage, color: '#1A2E1A', accent: '#86EFAC' },
-  { name: 'Tundra', type: 'Fashion E-commerce', image: tundraImage, color: '#0E1F2E', accent: '#67E8F9' },
-];
-
-const CAROUSEL_ROW2 = [
-  { name: 'Meridian Realty', type: 'Real Estate', image: meridianRealtyImg, color: '#1A1A1A', accent: '#E0E0E0' },
-  { name: 'The Grove', type: 'Fine Dining', image: theGroveImg, color: '#1A0E0A', accent: '#C89968' },
-  { name: 'Aurum Spa', type: 'Wellness & Beauty', image: aurumSpaImg, color: '#1A2422', accent: '#7BC9B5' },
-  { name: 'Bright Smiles', type: 'Dental Practice', image: brightSmilesImage, color: '#1E3A5F', accent: '#60A5FA' },
-  { name: 'Apex Fitness', type: 'Training Studio', image: apexFitnessImg, color: '#0E1F2E', accent: '#67E8F9' },
-  { name: 'Roast & Ritual', type: 'Specialty Coffee', image: roastRitualImg, color: '#2A1E14', accent: '#D4956B' },
-  { name: 'Clarity Dental', type: 'Dental Studio', image: clarityDentalImg, color: '#1E3A5F', accent: '#60A5FA' },
-  { name: 'Bloom & Co', type: 'Florist', image: bloomCoImg, color: '#2A1A2A', accent: '#F4A5D9' },
-];
+const CAROUSEL_ROW1: CarouselSite[] = CAROUSEL_PREVIEWS.slice(0, 8);
+const CAROUSEL_ROW2: CarouselSite[] = CAROUSEL_PREVIEWS.slice(8, 16);
 
 /* ═══════════════════════════════════════════════════════════
-   SITE CARD (for carousel)
+   SITE CARD (for carousel) — renders a full mini-website
+   preview (same approach as ShowcaseGrid) with a minimal
+   label bar below so the designs stay fully visible.
    ═══════════════════════════════════════════════════════════ */
-function SiteCard({ site }: { site: typeof CAROUSEL_ROW1[0] }) {
+function SiteCard({ site }: { site: CarouselSite }) {
   const [hov, setHov] = useState(false);
-  const isRealImage = typeof site.image === 'string' ? site.image.startsWith('http') : true;
+  const Preview = site.preview;
 
   return (
     <div
@@ -122,47 +103,52 @@ function SiteCard({ site }: { site: typeof CAROUSEL_ROW1[0] }) {
       style={{
         width: 320, height: 220, borderRadius: 14, overflow: 'hidden',
         position: 'relative', flexShrink: 0,
-        border: `1px solid ${hov ? site.accent + '44' : T.border}`,
+        border: `1px solid ${hov ? site.accent + '66' : T.border}`,
+        background: T.card,
         transform: hov ? 'translateY(-4px) scale(1.02)' : 'none',
         transition: 'all 0.35s cubic-bezier(0.16,1,0.3,1)',
         cursor: 'pointer',
+        boxShadow: hov ? `0 18px 40px -20px ${site.accent}55, 0 4px 16px rgba(0,0,0,0.25)` : '0 2px 8px rgba(0,0,0,0.25)',
       }}
     >
-      <img
-        src={site.image}
-        alt={site.name}
-        style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }}
-        loading="lazy"
-      />
-      {/* Gradient overlay */}
-      <div style={{
-        position: 'absolute', inset: 0,
-        background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 40%, transparent 65%)',
-      }} />
-      {/* Info */}
-      <div style={{
-        position: 'absolute', bottom: 0, left: 0, right: 0,
-        padding: '12px 16px',
-      }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: '#fff', fontFamily: T.sans }}>{site.name}</div>
-        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', fontFamily: T.sans, marginTop: 2 }}>{site.type} · Built with Delt</div>
+      {/* Rendered mini website */}
+      <div style={{ width: '100%', height: '100%' }}>
+        <Preview />
       </div>
-      {/* Hover CTA */}
+
+      {/* Hover-only soft overlay + View Site chip */}
       <div style={{
         position: 'absolute', inset: 0,
-        background: `${T.bg}E6`,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        opacity: hov ? 1 : 0, transition: 'opacity 0.3s',
+        background: 'rgba(3,21,46,0.55)',
+        backdropFilter: 'blur(4px)',
+        WebkitBackdropFilter: 'blur(4px)',
+        opacity: hov ? 1 : 0,
+        transition: 'opacity 0.3s ease',
+        pointerEvents: 'none',
       }}>
         <div style={{
           display: 'flex', alignItems: 'center', gap: 8,
-          padding: '10px 20px', borderRadius: 50,
-          background: T.accent, color: '#fff',
-          fontSize: 13, fontWeight: 700, fontFamily: T.sans,
+          padding: '10px 22px', borderRadius: 50,
+          background: 'rgba(255,255,255,0.12)',
+          border: '1px solid rgba(255,255,255,0.2)',
+          backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
+          color: '#fff', fontSize: 12, fontWeight: 700, fontFamily: T.sans, letterSpacing: 0.3,
+          transform: hov ? 'translateY(0)' : 'translateY(8px)',
+          transition: 'transform 0.35s cubic-bezier(0.16,1,0.3,1)',
         }}>
-          View Site <ExternalLink size={14} />
+          View Site <ExternalLink size={13} />
         </div>
       </div>
+
+      {/* Accent line at bottom — brightens on hover */}
+      <div style={{
+        position: 'absolute', bottom: 0, left: 0, right: 0, height: 2,
+        background: site.accent,
+        transform: hov ? 'scaleX(1)' : 'scaleX(0)',
+        transformOrigin: 'left',
+        transition: 'transform 0.4s cubic-bezier(0.16,1,0.3,1)',
+      }} />
     </div>
   );
 }
@@ -170,7 +156,7 @@ function SiteCard({ site }: { site: typeof CAROUSEL_ROW1[0] }) {
 /* ═══════════════════════════════════════════════════════════
    SCROLLING GALLERY
    ═══════════════════════════════════════════════════════════ */
-function ScrollingGallery({ sites, direction = 'left', speed = 40 }: { sites: typeof CAROUSEL_ROW1; direction?: 'left' | 'right'; speed?: number }) {
+function ScrollingGallery({ sites, direction = 'left', speed = 40 }: { sites: CarouselSite[]; direction?: 'left' | 'right'; speed?: number }) {
   const doubled = [...sites, ...sites];
   const CARD_W = 320;
   const GAP = 16;
