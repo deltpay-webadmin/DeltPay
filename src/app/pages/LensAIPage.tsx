@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Sparkles, ChevronDown, Check, Plus, Mic, ArrowUp, Info } from 'lucide-react';
 import { LensScrollRevealText } from '../components/LensScrollRevealText';
 import { LensStackingPanels } from '../components/LensStackingPanels';
+import deltLogoImg from 'figma:asset/ba16007295b082bbfe774b1ba0c31a403b5502d6.png';
 
 /* ─────────────────────────────────────────────────────────────
    PALETTE — strictly #FFFFFF / #041E42 / #4945FF
@@ -198,7 +199,7 @@ export function LensAIPage() {
         }} />
 
         {/* Eyebrow pill */}
-        <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', marginBottom: 28 }}>
+        <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
           <span style={{
             display: 'inline-flex', alignItems: 'center', gap: 8,
             padding: '8px 16px', borderRadius: 999,
@@ -210,21 +211,69 @@ export function LensAIPage() {
               width: 7, height: 7, borderRadius: '50%', background: C.purple,
               animation: 'lensAIPulse 2s ease infinite',
             }} />
-            Say hello to Lens AI
+            Say hello to Lens
           </span>
         </div>
 
+        {/* ───── GRADIENT “Lens” WORDMARK + “by Delt” LOCKUP ─────
+           Matches the LensHero portal wordmark — Playfair Display serif,
+           char-by-char rise reveal, gradient that reads vibrant on a
+           light background (brand purple → deep navy). */}
+        <div
+          aria-label="Lens by Delt"
+          style={{
+            position: 'relative',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            marginBottom: 28,
+          }}
+        >
+          <h1
+            style={{
+              margin: 0,
+              fontFamily: "'Playfair Display', Georgia, serif",
+              fontSize: 'clamp(3.5rem, 8vw, 6.5rem)',
+              fontWeight: 400,
+              lineHeight: 0.95,
+              letterSpacing: '0.015em',
+            }}
+          >
+            {['L', 'e', 'n', 's'].map((ch, i) => (
+              <span key={i} className="lens-word-wrap">
+                <span className={`lens-word-char lens-word-char-${i} lens-word-gradient`}>{ch}</span>
+              </span>
+            ))}
+          </h1>
+          <div
+            className="lens-lockup-by"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
+              marginTop: 10,
+            }}
+          >
+            <span style={{ color: C.muted, fontSize: '0.95rem', fontWeight: 500 }}>by</span>
+            <img
+              src={deltLogoImg}
+              alt="Delt"
+              style={{ objectFit: 'contain', height: 26, width: 'auto' }}
+            />
+          </div>
+        </div>
+
         {/* Headline */}
-        <h1 style={{
+        <h2 style={{
           position: 'relative', margin: '0 auto', maxWidth: 820,
-          fontSize: 'clamp(2.5rem, 6.5vw, 5rem)',
-          lineHeight: 1.05, letterSpacing: '-0.045em',
+          fontSize: 'clamp(2.25rem, 5.5vw, 4.25rem)',
+          lineHeight: 1.05, letterSpacing: '-0.04em',
           fontWeight: 800, color: C.navy,
           padding: '0 20px',
         }}>
           Turn your sales data into{' '}
           <span style={{ color: C.purple }}>answers.</span>
-        </h1>
+        </h2>
 
         {/* Subhead */}
         <p style={{
@@ -232,7 +281,7 @@ export function LensAIPage() {
           fontSize: 'clamp(16px, 2vw, 20px)', lineHeight: 1.65,
           color: C.body, padding: '0 20px',
         }}>
-          Lens AI lets you ask plain-English questions about your business and get real
+          Lens lets you ask plain-English questions about your business and get real
           answers in seconds. No dashboards to learn. No reports to build.
         </p>
 
@@ -666,6 +715,57 @@ export function LensAIPage() {
         @keyframes lensAIPulse {
           0%, 100% { opacity: 1; transform: scale(1); }
           50%       { opacity: 0.4; transform: scale(1.3); }
+        }
+
+        /* ── “Lens” wordmark ──
+           Playfair Display serif with a top-to-bottom gradient tuned
+           for a light background. Mirrors LensHero's char-by-char rise. */
+        .lens-word-wrap {
+          display: inline-block;
+          overflow: hidden;
+          vertical-align: bottom;
+          line-height: 0.95;
+        }
+        .lens-word-char {
+          display: inline-block;
+          animation: lensWordUp 0.75s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+        .lens-word-char-0 { animation-delay: 0.05s; }
+        .lens-word-char-1 { animation-delay: 0.13s; }
+        .lens-word-char-2 { animation-delay: 0.21s; }
+        .lens-word-char-3 { animation-delay: 0.29s; }
+        @keyframes lensWordUp {
+          from { transform: translateY(110%); }
+          to   { transform: translateY(0); }
+        }
+        .lens-word-gradient {
+          background: linear-gradient(
+            180deg,
+            #7B73FF 0%,
+            #5A52FF 22%,
+            #4945FF 45%,
+            #2E2AC7 68%,
+            #1B2A6B 86%,
+            #041E42 100%
+          );
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          color: transparent;
+        }
+
+        /* “by Delt” lockup fades in after the wordmark finishes rising */
+        .lens-lockup-by {
+          opacity: 0;
+          animation: lensLockupIn 0.6s ease 0.65s forwards;
+        }
+        @keyframes lensLockupIn {
+          to { opacity: 1; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .lens-word-char { animation: none; transform: none; }
+          .lens-lockup-by { animation: none; opacity: 1; }
         }
 
         /* ── Chat card entrance ───────────────────────────────────
