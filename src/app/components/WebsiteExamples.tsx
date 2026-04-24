@@ -200,40 +200,44 @@ function Hero() {
   const sectionRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: sectionRef, offset: ['start start', 'end end'] });
 
-  // Phase 1 (0–0.35): heading starts centered in the viewport, slides upward as
-  //   the user scrolls to make room for the carousels.
-  // Phase 2 (0.1–0.35): carousel row 1 fades in from below.
-  // Phase 3 (0.2–0.5): carousel row 2 fades in from below.
-  // On initial page load (scrollYProgress === 0) only the heading is visible.
-  const headingY = useTransform(scrollYProgress, [0, 0.35], [180, -60]);
-  const headingScale = useTransform(scrollYProgress, [0, 0.35], [1, 0.9]);
+  // Scroll choreography (section is 300vh tall, sticky inner viewport):
+  //   0.00 – 0.00  Only the headline is visible, vertically centered.
+  //   0.00 – 0.25  User scrolls: headline slides up & shrinks to make room,
+  //                 carousels fade in from below and slide into place.
+  //   0.25 – 0.85  Sticky phase — headline + carousels stay locked on screen
+  //                 while the user continues scrolling.
+  //   0.85 – 1.00  Hand-off to the next section (no extra transforms here;
+  //                 the sticky container simply unsticks as we reach the end).
+  const headingY = useTransform(scrollYProgress, [0, 0.25], [0, -140]);
+  const headingScale = useTransform(scrollYProgress, [0, 0.25], [1, 0.88]);
 
   // Carousels start fully hidden and are revealed as the user scrolls.
-  const c1Opacity = useTransform(scrollYProgress, [0.08, 0.3], [0, 1]);
-  const c1Y = useTransform(scrollYProgress, [0.08, 0.35], [60, 0]);
+  const c1Opacity = useTransform(scrollYProgress, [0.05, 0.22], [0, 1]);
+  const c1Y = useTransform(scrollYProgress, [0.05, 0.25], [80, 0]);
 
-  const c2Opacity = useTransform(scrollYProgress, [0.18, 0.45], [0, 1]);
-  const c2Y = useTransform(scrollYProgress, [0.18, 0.5], [80, 0]);
+  const c2Opacity = useTransform(scrollYProgress, [0.12, 0.3], [0, 1]);
+  const c2Y = useTransform(scrollYProgress, [0.12, 0.32], [100, 0]);
 
-  // Scroll indicator fades out quickly as user starts scrolling
-  const scrollHintOpacity = useTransform(scrollYProgress, [0, 0.08], [1, 0]);
+  // Scroll indicator is shown only before the user has scrolled.
+  const scrollHintOpacity = useTransform(scrollYProgress, [0, 0.05], [1, 0]);
 
   return (
     <section
       ref={sectionRef}
-      style={{ background: T.bg, position: 'relative', height: '250vh' }}
+      style={{ background: T.bg, position: 'relative', height: '300vh' }}
     >
       {/* Sticky viewport */}
       <div style={{
         position: 'sticky', top: 0,
         height: '100vh', overflow: 'hidden',
       }}>
-        {/* Heading — positioned in the top portion, leaves room for carousels below */}
+        {/* Heading — vertically centered on load, slides up as the user scrolls
+           to make room for the carousels below. */}
         <motion.div
           style={{
             position: 'absolute', inset: 0,
-            display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
-            padding: '56px 24px 0',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: '0 24px',
             y: headingY,
             scale: headingScale,
           }}
