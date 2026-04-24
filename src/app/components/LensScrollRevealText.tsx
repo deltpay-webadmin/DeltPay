@@ -65,8 +65,11 @@ export function LensScrollRevealText() {
   // Base44-style sunset: gradient strip starts BELOW the viewport (only bottom
   // glow peeking), then rises UP through the viewport as you scroll. At the
   // end, the saturated bottom has passed the top — a soft top-glow remains.
-  // We translate the gradient layer from +40vh (below fold) to -180vh (above).
-  const gradientY = useTransform(scrollYProgress, [0, 1], ['40vh', '-180vh']);
+  // IMPORTANT: the gradient strip is 320vh tall and we translate between
+  // +20vh and -220vh, which keeps its bottom edge ALWAYS at or below the
+  // bottom of the 100vh sticky viewport (320 - 220 = 100vh), so the blue
+  // wash always reaches the bottom of the visual area — no hard edge.
+  const gradientY = useTransform(scrollYProgress, [0, 1], ['20vh', '-220vh']);
 
   const words = TEXT.split(' ');
   let ci = 0;
@@ -112,8 +115,15 @@ export function LensScrollRevealText() {
            rising-sun effect. Taller = more time to reveal the gradient. */
         /* overflow:hidden on the outer would break position:sticky. Instead
            we mask the moving sunset inside .lsrt-sticky (which has its own
-           overflow:hidden on a 100vh frame — safe because sticky clips
-           only the viewport, not the parent scroll area). */
+           overflow:hidden — safe because sticky clips only the viewport,
+           not the parent scroll area). */
+        /* NOTE: the site applies body { zoom: 0.8 } on desktop (see
+           theme.css). vh units are based on the actual viewport, so a
+           100vh sticky element shrinks to 80vh of visible space and
+           leaves a white strip at the bottom of the visual area.
+           We compensate by sizing in terms of 125vh on desktop
+           (100 / 0.8 = 125) so the sticky frame visually fills the
+           entire viewport. Mobile has no zoom and uses 100vh directly. */
         .lsrt-outer {
           position: relative;
           height: 320vh;
@@ -133,6 +143,14 @@ export function LensScrollRevealText() {
           overflow: hidden;
         }
 
+        @media (min-width: 1024px) {
+          /* Desktop has body { zoom: 0.8 } — size everything at 125%
+             so the sticky frame fills the full visible viewport and
+             the outer section scrolls proportionally. */
+          .lsrt-outer { height: 400vh; }
+          .lsrt-sticky { height: 125vh; }
+        }
+
         /* The sunset: a tall vertical gradient strip positioned to start
            below the viewport. As scroll progresses, Framer Motion translates
            it upward so the saturated bottom glow enters, fills the frame,
@@ -144,19 +162,25 @@ export function LensScrollRevealText() {
           left: 0;
           right: 0;
           top: 0;
-          height: 220vh;
+          /* Taller than its translate range so the bottom edge never enters
+             the sticky viewport. Sticky frame is up to 125vh on desktop;
+             we translate from +20vh to -220vh (240vh of motion), so we need
+             the strip to be at least 125 + 220 = 345vh. We use 400vh for
+             comfortable buffer on desktop and it also covers mobile. */
+          height: 400vh;
           pointer-events: none;
           will-change: transform;
           background:
             linear-gradient(180deg,
               rgba(255,255,255,0)      0%,
-              rgba(73,69,255,0.04)     8%,
-              rgba(73,69,255,0.10)    18%,
-              rgba(73,69,255,0.18)    30%,
-              rgba(73,69,255,0.28)    45%,
-              rgba(73,69,255,0.38)    60%,
-              rgba(73,69,255,0.46)    75%,
-              rgba(73,69,255,0.52)    88%,
+              rgba(73,69,255,0.04)     5%,
+              rgba(73,69,255,0.10)    12%,
+              rgba(73,69,255,0.18)    20%,
+              rgba(73,69,255,0.28)    30%,
+              rgba(73,69,255,0.38)    42%,
+              rgba(73,69,255,0.46)    55%,
+              rgba(73,69,255,0.52)    70%,
+              rgba(73,69,255,0.58)    85%,
               rgba(73,69,255,0.58)   100%);
         }
 

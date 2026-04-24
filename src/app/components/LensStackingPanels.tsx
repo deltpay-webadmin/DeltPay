@@ -255,8 +255,13 @@ function Panel({
   counter: string; title: string; body: string; cta: string;
   mockup: React.ReactNode; index: number;
 }) {
-  // Offset each panel so stack has visible stagger at the top
-  const topOffset = 80 + index * 14;
+  // Offset each panel so stack has visible stagger, clearing the floating
+  // pill nav with room to breathe. NOTE: site uses body { zoom: 0.8 } on
+  // desktop (see theme.css), so the nav actually renders at ~64 visual px
+  // (not 80). We want ~40px of visual breathing room below the nav before
+  // the panel locks — that's ~104 visual px = 130px CSS. Each subsequent
+  // panel staggers 14px down from the previous.
+  const topOffset = 130 + index * 14;
   return (
     <div
       style={{
