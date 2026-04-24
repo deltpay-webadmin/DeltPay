@@ -1,13 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
+import { motion, useScroll, useTransform } from 'motion/react';
 import { LensHero } from '../components/LensHero';
 import { Link } from 'react-router';
 import { ChatGPTvsLens } from '../components/ChatGPTvsLens';
+
+const HERO_VIDEO_URL =
+  'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260217_030345_246c0224-10a4-422c-b324-070b7c0eceda.mp4';
 
 /* ════════════════════════════════════════════════════════════
    PALETTE (from lens-proof-section)
    ════════════════════════════════════════════════════════════ */
 const C = {
-  bg:          '#03152E',
+  bg:          '#000000',
   card:        '#071428',
   border:      'rgba(255,255,255,0.08)',
   white:       '#ffffff',
@@ -185,6 +189,95 @@ function ProofCard(p: ProofCardProps) {
 }
 
 /* ════════════════════════════════════════════════════════════
+   LENS AI BACKGROUND — fixed looping video behind the whole page,
+   with a scroll-tied dim overlay so content stays readable as the
+   user scrolls past the hero.
+   ════════════════════════════════════════════════════════════ */
+function LensAiBackground() {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [videoReady, setVideoReady] = useState(false);
+  const { scrollY } = useScroll();
+
+  // Overlay opacity ramps from 0.5 (top of page) to 0.88 after ~110vh of scroll,
+  // so text in later sections reads cleanly while the video still shows through.
+  const overlayOpacity = useTransform(
+    scrollY,
+    [0, typeof window !== 'undefined' ? window.innerHeight * 1.1 : 900],
+    [0.5, 0.88]
+  );
+
+  useEffect(() => {
+    const el = videoRef.current;
+    if (!el) return;
+    const handleReady = () => setVideoReady(true);
+    if (el.readyState >= 2) setVideoReady(true);
+    el.addEventListener('loadeddata', handleReady);
+    el.addEventListener('canplay', handleReady);
+    return () => {
+      el.removeEventListener('loadeddata', handleReady);
+      el.removeEventListener('canplay', handleReady);
+    };
+  }, []);
+
+  return (
+    <>
+      <style>{`
+        .lensai-video {
+          position: fixed;
+          inset: 0;
+          width: 100vw;
+          height: 100vh;
+          object-fit: cover;
+          z-index: 0;
+          opacity: 0;
+          transition: opacity 900ms ease;
+          pointer-events: none;
+        }
+        .lensai-video.is-ready { opacity: 1; }
+      `}</style>
+
+      <video
+        ref={videoRef}
+        className={`lensai-video ${videoReady ? 'is-ready' : ''}`}
+        src={HERO_VIDEO_URL}
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="auto"
+        aria-hidden="true"
+      />
+
+      {/* Scroll-tied black dimmer */}
+      <motion.div
+        aria-hidden
+        style={{
+          position: 'fixed',
+          inset: 0,
+          backgroundColor: '#000',
+          opacity: overlayOpacity,
+          zIndex: 1,
+          pointerEvents: 'none',
+        }}
+      />
+
+      {/* Radial vignette for extra contrast */}
+      <div
+        aria-hidden
+        style={{
+          position: 'fixed',
+          inset: 0,
+          background:
+            'radial-gradient(ellipse at center, rgba(0,0,0,0) 40%, rgba(0,0,0,0.35) 100%)',
+          zIndex: 1,
+          pointerEvents: 'none',
+        }}
+      />
+    </>
+  );
+}
+
+/* ════════════════════════════════════════════════════════════
    PAGE
    ════════════════════════════════════════════════════════════ */
 export function DeltAiPage() {
@@ -201,15 +294,21 @@ export function DeltAiPage() {
   };
 
   return (
-    <div style={{ background: C.bg, minHeight: '100vh', color: C.white }}>
-      {/* ══ HERO — keep exactly as-is ══ */}
-      <LensHero onAutoplay={handleAutoplay} />
+    <div style={{ background: C.bg, minHeight: '100vh', color: C.white, position: 'relative' }}>
+      {/* Fixed looping video background (follows the scroll) */}
+      <LensAiBackground />
+
+      {/* ══ HERO ══ */}
+      <div style={{ position: 'relative', zIndex: 2 }}>
+        <LensHero onAutoplay={handleAutoplay} />
+      </div>
 
       {/* ══ PROOF SECTION ══ */}
       <section
         id="lens-proof"
         style={{
           position: 'relative',
+          zIndex: 2,
           maxWidth: 1320,
           margin: '0 auto',
           padding: 'clamp(120px, 12vw, 180px) clamp(20px, 4vw, 56px) clamp(80px, 9vw, 112px)',
@@ -465,10 +564,14 @@ export function DeltAiPage() {
       </section>
 
       {/* ══ CHATGPT vs LENS COMPARISON ══ */}
-      <ChatGPTvsLens />
+      <div style={{ position: 'relative', zIndex: 2 }}>
+        <ChatGPTvsLens />
+      </div>
 
       {/* ══ HOW IT WORKS ══ */}
       <section style={{
+        position: 'relative',
+        zIndex: 2,
         maxWidth: 1100,
         margin: '0 auto',
         padding: 'clamp(40px, 6vw, 80px) clamp(20px, 4vw, 56px)',
@@ -508,9 +611,9 @@ export function DeltAiPage() {
 
       {/* ══ FINAL CTA ══ */}
       <div style={{
-        background: C.bg,
         padding: 'clamp(60px, 8vw, 96px) clamp(20px, 4vw, 56px) clamp(80px, 10vw, 120px)',
         position: 'relative',
+        zIndex: 2,
         overflow: 'hidden',
       }}>
         {/* Ambient glow behind the card */}

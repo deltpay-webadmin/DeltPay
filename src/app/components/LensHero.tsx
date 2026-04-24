@@ -1,11 +1,7 @@
-import { useRef, useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import { ArrowRight } from 'lucide-react';
 import { ScrollIndicator } from './ScrollIndicator';
 import deltLogoImg from 'figma:asset/ba16007295b082bbfe774b1ba0c31a403b5502d6.png';
-
-const HERO_VIDEO_URL =
-  'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260217_030345_246c0224-10a4-422c-b324-070b7c0eceda.mp4';
 
 const FONT_GS =
   "'General Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
@@ -15,28 +11,10 @@ interface LensHeroProps {
 }
 
 export function LensHero({ onAutoplay: _onAutoplay }: LensHeroProps) {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [videoReady, setVideoReady] = useState(false);
-
-  useEffect(() => {
-    const el = videoRef.current;
-    if (!el) return;
-    const handleReady = () => setVideoReady(true);
-    if (el.readyState >= 2) setVideoReady(true);
-    el.addEventListener('loadeddata', handleReady);
-    el.addEventListener('canplay', handleReady);
-    return () => {
-      el.removeEventListener('loadeddata', handleReady);
-      el.removeEventListener('canplay', handleReady);
-    };
-  }, []);
-
   return (
     <section
       className="relative min-h-screen flex items-center overflow-hidden"
-      style={{ backgroundColor: '#000000' }}
     >
-      {/* Fontshare: General Sans */}
       <style>{`
         @import url('https://api.fontshare.com/v2/css?f[]=general-sans@200,300,400,500,600,700&display=swap');
 
@@ -105,41 +83,7 @@ export function LensHero({ onAutoplay: _onAutoplay }: LensHeroProps) {
           0% { background-position: 200% 0; }
           100% { background-position: -200% 0; }
         }
-
-        /* Video fade-in */
-        .lh-video {
-          opacity: 0;
-          transition: opacity 900ms ease;
-        }
-        .lh-video.is-ready {
-          opacity: 1;
-        }
       `}</style>
-
-      {/* ══ Fullscreen looping background video ══ */}
-      <video
-        ref={videoRef}
-        className={`lh-video absolute inset-0 w-full h-full object-cover ${videoReady ? 'is-ready' : ''}`}
-        src={HERO_VIDEO_URL}
-        autoPlay
-        muted
-        loop
-        playsInline
-        preload="auto"
-        aria-hidden="true"
-      />
-
-      {/* 50% black overlay for readability */}
-      <div className="absolute inset-0 bg-black/50 pointer-events-none" />
-
-      {/* Subtle vignette for extra text contrast */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background:
-            'radial-gradient(ellipse at center, rgba(0,0,0,0) 40%, rgba(0,0,0,0.35) 100%)',
-        }}
-      />
 
       {/* ══ HERO CONTENT — vertically stacked, centered ══ */}
       <div
