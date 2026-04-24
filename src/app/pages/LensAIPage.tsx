@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Sparkles, ChevronDown, Check, Plus, Mic, ArrowUp, Info } from 'lucide-react';
 import { LensScrollRevealText } from '../components/LensScrollRevealText';
 import { LensStackingPanels } from '../components/LensStackingPanels';
@@ -28,6 +28,71 @@ const SUGGESTIONS = [
   'Who are my top 10 customers?',
   'Show me my slowest hour',
 ];
+
+/* ─────────────────────────────────────────────────────────────
+   TYPEWRITER — cycles prompts with real char-by-char typing,
+   fast speed (Base44 feel). Runs only while the input is empty.
+   ───────────────────────────────────────────────────────────── */
+const TYPE_PROMPTS = [
+  'Which products made me the most last month?',
+  'Why was Tuesday slower than last week?',
+  'Show me my top 10 customers by profit…',
+  'When should I run my next promo?',
+  'Who are my top spenders this quarter?',
+];
+
+function useTypewriter(prompts: string[], active: boolean) {
+  const [text, setText] = useState('');
+  const idxRef = useRef(0);      // which prompt
+  const charRef = useRef(0);     // current char count
+  const phaseRef = useRef<'typing' | 'holding' | 'deleting'>('typing');
+  const timerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (!active) {
+      if (timerRef.current) window.clearTimeout(timerRef.current);
+      return;
+    }
+
+    const step = () => {
+      const current = prompts[idxRef.current % prompts.length];
+      let delay = 36; // fast typing speed (ms/char)
+
+      if (phaseRef.current === 'typing') {
+        charRef.current += 1;
+        setText(current.slice(0, charRef.current));
+        if (charRef.current >= current.length) {
+          phaseRef.current = 'holding';
+          delay = 1400;
+        }
+      } else if (phaseRef.current === 'holding') {
+        phaseRef.current = 'deleting';
+        delay = 240;
+      } else {
+        charRef.current -= 2; // delete a bit faster than typing
+        if (charRef.current <= 0) {
+          charRef.current = 0;
+          setText('');
+          phaseRef.current = 'typing';
+          idxRef.current += 1;
+          delay = 260;
+        } else {
+          setText(current.slice(0, charRef.current));
+          delay = 22;
+        }
+      }
+
+      timerRef.current = window.setTimeout(step, delay);
+    };
+
+    timerRef.current = window.setTimeout(step, 420);
+    return () => {
+      if (timerRef.current) window.clearTimeout(timerRef.current);
+    };
+  }, [active, prompts]);
+
+  return text;
+}
 
 /* ─────────────────────────────────────────────────────────────
    FAQ DATA
@@ -82,6 +147,8 @@ export function LensAIPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const [planMode, setPlanMode] = useState(false);
   const [input, setInput] = useState('');
+  const [inputFocused, setInputFocused] = useState(false);
+  const typedText = useTypewriter(TYPE_PROMPTS, !input && !inputFocused);
 
   return (
     <div style={{ fontFamily: FONT, color: C.navy, background: C.white }}>
@@ -91,18 +158,43 @@ export function LensAIPage() {
       ══════════════════════════════════════════════════════════ */}
       <section style={{
         position: 'relative', overflow: 'hidden',
-        background: `radial-gradient(ellipse 95% 65% at 50% -20%, rgba(73,69,255,0.18) 0%, rgba(73,69,255,0.06) 35%, #FFFFFF 70%)`,
-        paddingTop: 'clamp(80px, 9vw, 120px)',
-        paddingBottom: 'clamp(60px, 7vw, 90px)',
+        minHeight: 'calc(100vh - 72px)',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'flex-start',
+        paddingTop: 'clamp(72px, 9vw, 128px)',
+        paddingBottom: 'clamp(56px, 7vw, 96px)',
         textAlign: 'center',
+        /* Base44-style large horizontal-band hero gradient — a
+           generous purple wash at the top softens to white through
+           the middle and settles on a warm, on-palette off-white
+           at the bottom. Layered radial accent keeps the top lively. */
+        background: `
+          linear-gradient(180deg,
+            rgba(73,69,255,0.38) 0%,
+            rgba(73,69,255,0.22) 16%,
+            rgba(73,69,255,0.10) 32%,
+            rgba(255,255,255,1)  60%,
+            rgba(246,247,251,1)  100%)
+        `,
       }}>
+        {/* Top radial depth accent — adds the “sky” feel from Base44 */}
+        <div aria-hidden style={{
+          position: 'absolute', inset: '0 0 auto 0', height: '62%',
+          background: `radial-gradient(ellipse 110% 85% at 50% 0%,
+            rgba(73,69,255,0.30) 0%,
+            rgba(73,69,255,0.12) 40%,
+            rgba(255,255,255,0)  72%)`,
+          pointerEvents: 'none',
+        }} />
+
         {/* Softer dot texture */}
         <div aria-hidden style={{
-          position: 'absolute', inset: 0, opacity: 0.4, pointerEvents: 'none',
-          backgroundImage: 'radial-gradient(circle, rgba(73,69,255,0.08) 1px, transparent 1px)',
+          position: 'absolute', inset: 0, opacity: 0.32, pointerEvents: 'none',
+          backgroundImage: 'radial-gradient(circle, rgba(73,69,255,0.09) 1px, transparent 1px)',
           backgroundSize: '24px 24px',
-          maskImage: 'linear-gradient(180deg, #000 0%, transparent 70%)',
-          WebkitMaskImage: 'linear-gradient(180deg, #000 0%, transparent 70%)',
+          maskImage: 'linear-gradient(180deg, #000 0%, transparent 80%)',
+          WebkitMaskImage: 'linear-gradient(180deg, #000 0%, transparent 80%)',
         }} />
 
         {/* Eyebrow pill */}
@@ -146,73 +238,80 @@ export function LensAIPage() {
 
         {/* ───── PROMINENT CHAT CARD (Base44 liquid-glass style) ───── */}
         <div style={{
-          position: 'relative', maxWidth: 880, margin: '64px auto 0',
-          padding: '0 20px',
+          position: 'relative',
+          width: '100%',
+          maxWidth: 1120,
+          margin: 'clamp(40px, 5vw, 72px) auto 0',
+          padding: '0 clamp(16px, 3vw, 32px)',
         }}>
           {/* Outer soft glow behind card */}
           <div aria-hidden style={{
             position: 'absolute', top: '50%', left: '50%',
             transform: 'translate(-50%, -50%)',
-            width: '94%', height: 320, borderRadius: '50%',
-            background: 'rgba(73,69,255,0.28)',
-            filter: 'blur(140px)',
+            width: '96%', height: 420, borderRadius: '50%',
+            background: 'rgba(73,69,255,0.32)',
+            filter: 'blur(160px)',
             pointerEvents: 'none', zIndex: 0,
           }} />
 
           {/* Liquid-glass card — layered gradients + inner highlight */}
           <div className="lens-chat-card" style={{
             position: 'relative', zIndex: 1,
-            background: 'linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.80) 100%)',
+            background: 'linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(255,255,255,0.82) 100%)',
             backdropFilter: 'blur(20px) saturate(140%)',
             WebkitBackdropFilter: 'blur(20px) saturate(140%)',
             borderRadius: 28,
             boxShadow: [
               '0 1px 0 rgba(255,255,255,0.9) inset',            // top highlight
               '0 -1px 0 rgba(255,255,255,0.5) inset',           // bottom highlight
-              '0 30px 80px -20px rgba(4,30,66,0.18)',           // soft drop
-              '0 12px 32px -8px rgba(4,30,66,0.10)',            // closer drop
+              '0 40px 110px -24px rgba(4,30,66,0.22)',          // soft drop
+              '0 18px 44px -10px rgba(4,30,66,0.12)',           // closer drop
               '0 2px 6px rgba(4,30,66,0.05)',
             ].join(', '),
             border: '1px solid rgba(255,255,255,0.8)',
             outline: '1px solid rgba(4,30,66,0.06)',
             outlineOffset: '-1px',
             overflow: 'hidden',
-            minHeight: 240,
+            minHeight: 'clamp(260px, 34vh, 360px)',
             display: 'flex', flexDirection: 'column',
           }}>
             {/* Shimmer sweep on inner highlight — recurring polish pass */}
             <div aria-hidden className="lens-chat-shimmer" />
             {/* Input area — generous breathing room, animated typing placeholder */}
             <div style={{
-              padding: '40px 40px 24px',
+              padding: 'clamp(28px, 4vw, 48px) clamp(28px, 4vw, 48px) 20px',
               flex: 1,
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'flex-start',
+              textAlign: 'left',
             }}>
-              <div style={{ position: 'relative', minHeight: 76 }}>
+              <div style={{ position: 'relative', minHeight: 84 }}>
                 <input
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
+                  onFocus={() => setInputFocused(true)}
+                  onBlur={() => setInputFocused(false)}
                   style={{
                     width: '100%', border: 'none', outline: 'none',
-                    fontSize: 22, lineHeight: 1.5, color: C.navy,
+                    fontSize: 'clamp(20px, 2vw, 24px)', lineHeight: 1.5, color: C.navy,
                     background: 'transparent',
                     fontFamily: FONT, padding: '4px 0',
                     position: 'relative', zIndex: 1,
                   }}
                 />
-                {/* Typing placeholder — only visible when input is empty */}
-                {!input && (
+                {/* Typing placeholder — JS-driven typewriter, Base44-style */}
+                {!input && !inputFocused && (
                   <div style={{
                     position: 'absolute', top: 0, left: 0, right: 0,
                     pointerEvents: 'none',
-                    fontSize: 22, lineHeight: 1.5, color: C.muted,
+                    fontSize: 'clamp(20px, 2vw, 24px)', lineHeight: 1.5, color: C.muted,
                     fontFamily: FONT, padding: '4px 0',
                     display: 'flex', alignItems: 'center',
+                    whiteSpace: 'pre',
                   }}>
-                    <span className="lens-typing" />
+                    <span>{typedText}</span>
                     <span className="lens-caret" />
                   </div>
                 )}
@@ -629,12 +728,7 @@ export function LensAIPage() {
           .lens-chat-shimmer::before { animation: none; opacity: 0; }
         }
 
-        /* Typing placeholder animation — cycles through Lens prompts */
-        .lens-typing::before {
-          content: '';
-          white-space: pre;
-          animation: lensType 16s steps(1) infinite;
-        }
+        /* Blinking caret for the JS typewriter placeholder */
         .lens-caret {
           display: inline-block;
           width: 1.5px;
@@ -646,13 +740,6 @@ export function LensAIPage() {
         }
         @keyframes lensBlink {
           50% { opacity: 0; }
-        }
-        @keyframes lensType {
-          0%   { content: 'Which products made me the most last month…'; }
-          25%  { content: 'Why was Tuesday slower than last week?'; }
-          50%  { content: 'Show me my top 10 customers by profit…'; }
-          75%  { content: 'When should I run my next promo?'; }
-          100% { content: 'Which products made me the most last month…'; }
         }
       `}</style>
     </div>
