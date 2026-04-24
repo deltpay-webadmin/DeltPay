@@ -84,7 +84,7 @@ export function CustomerStories() {
         <ScrollReveal className="text-center mb-16">
           <h2 className="text-[51px] sm:text-[61px] font-bold mb-4" style={{ fontFamily: '"Codec Pro", "Codec", Inter, sans-serif' }}>
             <span className="text-[#041E42]">Learn why small businesses </span>
-            <span className="bg-gradient-to-r from-[#4945FF] via-[#7C3AED] to-[#A855F7] bg-clip-text text-transparent">trust us.</span>
+            <span className="text-[#4945FF]">trust us.</span>
           </h2>
           <p className="text-lg text-[#6B7280] max-w-3xl mx-auto">
             Explore real Delt reviews from owners like you, affirming our promise to provide human, transparent, and affordable payment processing.

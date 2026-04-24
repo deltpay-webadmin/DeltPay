@@ -6,18 +6,23 @@ import { SeeItInAction } from '@/app/components/SeeItInAction';
 import { FinalCTA } from '@/app/components/FinalCTA';
 import { ScrollRevealText } from '@/app/components/ScrollRevealText';
 import { SpotlightTestimonial } from '@/app/components/SpotlightTestimonial';
+import { IndustryPanel } from '@/app/components/IndustryPanel';
+import { EmailCaptureBar } from '@/app/components/EmailCaptureBar';
 import DeltMarquee from '@/app/components/DeltMarquee';
 
 export function HomePage() {
   return (
     <div className="relative">
       <JuspayHero />
-      <div style={{ height: '40px', background: '#041E42' }} />
+      {/* Wave 5 — email capture beneath hero */}
+      <EmailCaptureBar />
       <ByTheNumbers />
       <div style={{ height: '160px', background: '#041E42' }} />
       <SeeItInAction />
       <ScrollRevealText />
       <FeatureShowcase />
+      {/* Wave 2 — Made for how you actually work (industry panel) */}
+      <IndustryPanel />
       <ResultsBento />
       <SpotlightTestimonial />
       <FinalCTA />

@@ -1,0 +1,244 @@
+/* =========================================================
+   DeltPay UI Refinements — patch.css
+   Implements recommendations R1..R16 from recommendations.md.
+   Source of truth: design_spec.md (§6 proposed tokens).
+   Non-destructive: layout and section order preserved.
+   Inject via <style id="delt-patch"> or append to main stylesheet.
+   ========================================================= */
+
+/* ---------- §6 Tokens (proposed) ------------------------- */
+:root {
+  --delt-navy-900: #03152E;
+  --delt-navy-800: #041E42;
+  --delt-indigo-500: #4945FF;
+  --delt-indigo-600: #4318FF;
+  --delt-indigo-100: #E7E6FF;
+  --delt-lilac-300: #9B97FF;
+
+  --delt-success: #16C784;
+  --delt-ink:     #0F172A;
+  --delt-ink-2:   #334155;
+  --delt-ink-3:   #64748B;
+  --delt-line:    #E5E7EB;
+
+  --delt-surface:    #FFFFFF;
+  --delt-surface-2:  #F8FAFC;
+  --delt-surface-3:  #F1F5F9;
+  --delt-surface-warm: #F7F3EE;   /* R14 */
+
+  --delt-font-display: "Plus Jakarta Sans", system-ui, sans-serif;
+  --delt-font-accent:  "Playfair Display", Georgia, serif;
+  --delt-font-mono:    "JetBrains Mono", ui-monospace, monospace;
+
+  --delt-radius-sm: 8px;
+  --delt-radius-md: 12px;
+  --delt-radius-lg: 20px;
+  --delt-shadow-card: 0 1px 2px rgba(4,30,66,.04), 0 12px 28px rgba(4,30,66,.08);
+}
+
+/* ---------- R4: consolidate font families ---------------- */
+/* Retire Inter + DM Sans at body level; standardize on Plus Jakarta Sans.
+   Playfair Display is preserved only for the kinetic accent (.ih-title-accent).
+   JetBrains Mono is preserved only for numeric/metric labels. */
+body,
+body * {
+  font-family: var(--delt-font-display);
+}
+.ih-title-accent,
+.ih-cycling-wrapper,
+.ih-cycling-wrapper * {
+  font-family: var(--delt-font-accent) !important;
+}
+.btn-stat-trait,
+.btn-stat-label,
+[class*="mono"],
+code, kbd, samp {
+  font-family: var(--delt-font-mono) !important;
+}
+
+/* ---------- R5: collapse the indigo ramp ----------------- */
+/* Map every variant to the primary + hover pair. */
+.bg-\[\#4945FF\], .bg-\[\#4318FF\], .bg-\[\#6B4FFF\], .bg-\[\#6C63FF\], .bg-\[\#7B75FF\] {
+  background-color: var(--delt-indigo-500) !important;
+}
+.bg-\[\#4945FF\]:hover, .bg-\[\#4318FF\]:hover {
+  background-color: var(--delt-indigo-600) !important;
+}
+.hover\:bg-\[\#3933CC\]:hover { background-color: var(--delt-indigo-600) !important; }
+
+/* ---------- R1: FIX broken mobile H1 --------------------- */
+/* The cycling wrapper was rendering as a zero-height line on < 768px
+   (translateY animation + position absolute). Force it to display
+   beneath "Your business," with its own line. */
+@media (max-width: 767px) {
+  .ih-title { display: block !important; }
+  .ih-title .ih-title-line { display: block !important; width: 100%; }
+  .ih-title .ih-title-accent,
+  .ih-title .ih-cycling-wrapper {
+    display: inline-block !important;
+    position: static !important;
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+    min-height: 1.1em;
+    margin-top: 4px;
+  }
+  .ih-title .ih-cycling-wrapper > .ih-title-accent {
+    transform: none !important;
+  }
+  /* tighten hero type so two lines fit on 390 px */
+  .ih-title { font-size: clamp(44px, 12vw, 60px); line-height: 1.05; }
+}
+
+/* ---------- R7: de-clutter the hero focal point ---------- */
+/* Pin Lens AI popover to bottom-right of the dashboard mock, shrink it,
+   reduce opacity slightly so the balance reads first. */
+.dp-lens {
+  width: 300px !important;
+  max-width: 44% !important;
+  right: 16px !important;
+  left: auto !important;
+  bottom: 16px !important;
+  top: auto !important;
+  transform: none !important;
+  opacity: .96 !important;
+  font-size: 13px !important;
+  line-height: 1.45 !important;
+  padding: 14px 16px !important;
+  box-shadow: 0 8px 24px rgba(3,21,46,.35) !important;
+  border-radius: var(--delt-radius-md) !important;
+}
+/* Shrink the dashboard mock just slightly at ≥1280 so the H1 owns the left column */
+@media (min-width: 1280px) {
+  .dp-wrapper { transform: scale(.95) !important; transform-origin: top right; }
+}
+
+/* ---------- R9: left-align the nav logo ------------------ */
+/* Already DOM-left, but the mock rendered centered because the middle
+   nav floats. Force left block to hug the edge and the CTA cluster to align
+   right, visually repositioning the logo. */
+.flex.justify-between.items-center.h-\[68px\] {
+  gap: 32px;
+}
+.flex.justify-between.items-center.h-\[68px\] > div:first-child {
+  margin-right: auto;
+}
+/* Slightly shrink the logo so it doesn't loom over the 68px bar */
+.flex.justify-between.items-center.h-\[68px\] img[alt="Delt"] {
+  height: 52px !important;
+}
+
+/* ---------- R10: normalize the stats strip labels -------- */
+/* Unified: 12px Mono, uppercase, success green, tight tracking. */
+.btn-stat-trait {
+  font-family: var(--delt-font-mono) !important;
+  font-size: 12px !important;
+  letter-spacing: .12em !important;
+  text-transform: uppercase !important;
+  color: var(--delt-success) !important;
+  font-weight: 500 !important;
+  display: block !important;
+  text-align: center !important;
+  margin-top: 8px !important;
+}
+
+/* ---------- R6: tighten the tagline band ----------------- */
+/* The "This is what running a business should feel like." band burns
+   ~1400px of scroll via a sticky tall wrapper. Halve the container height
+   and reduce vertical padding without killing the reveal effect. */
+.fs-scroll-container { min-height: 55vh !important; }
+.fs-text-section { min-height: 55vh !important; padding-top: 48px !important; padding-bottom: 48px !important; }
+.fs-text-track { gap: 24px !important; }
+
+/* ---------- R16: compress footer whitespace --------------- */
+footer .grid, footer [class*="grid-cols"] { gap: 32px !important; }
+footer { padding-top: 48px !important; padding-bottom: 32px !important; }
+
+/* ---------- R14: warm neutral for one outcome section ----- */
+/* Target the "What changes when everything works together" band.
+   Tailwind class on the section was `bg-white py-24 px-6 md:px-12`. */
+section.bg-white.py-24.px-6.md\:px-12 {
+  background-color: var(--delt-surface-warm) !important;
+}
+/* Keep its inner cards crisp-white so the warm read stays behind them */
+section.bg-white.py-24.px-6.md\:px-12 [class*="rounded"][class*="bg-"]:not([class*="bg-transparent"]) {
+  background-color: var(--delt-surface) !important;
+}
+
+/* ---------- R13: cool the marquee ribbon ------------------ */
+/* The giant lilac marquee at the bottom (before footer). Scope by
+   oversized uppercase wordmarks via approximate selectors. */
+[class*="marquee"] { font-size: clamp(36px, 5vw, 64px) !important; opacity: .48 !important; letter-spacing: .01em; }
+[class*="marquee"] * { color: var(--delt-lilac-300) !important; }
+
+/* ---------- R12: testimonial polish ----------------------- */
+/* Promote the single 3-tools chip into a green success chip,
+   and upgrade the author line rendering. */
+[class*="testimonial"] [class*="chip"],
+[class*="testimonial"] [class*="pill"],
+[class*="testimonial"] [class*="badge"] {
+  background: rgba(22,199,132,.12) !important;
+  color: #0E8C5C !important;
+  border: 0 !important;
+  font-weight: 600 !important;
+}
+
+/* ---------- R8 (CSS-only prep): inline capture styles ---- */
+/* Real inline email capture is injected via JS (see patch.js R8).
+   These rules style the injected field consistently. */
+.delt-capture {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(255,255,255,.96);
+  border-radius: 999px;
+  padding: 6px 6px 6px 18px;
+  box-shadow: var(--delt-shadow-card);
+  width: 100%;
+  max-width: 420px;
+  flex: 0 0 auto;
+}
+.delt-capture input {
+  border: 0; outline: 0; background: transparent;
+  flex: 1 1 auto; min-width: 0;
+  font: 500 16px/1.4 var(--delt-font-display);
+  color: var(--delt-ink);
+}
+.delt-capture input::placeholder { color: var(--delt-ink-3); }
+.delt-capture button {
+  border: 0;
+  background: var(--delt-indigo-500);
+  color: #fff;
+  border-radius: 999px;
+  padding: 10px 18px;
+  font: 600 15px/1 var(--delt-font-display);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.delt-capture button:hover { background: var(--delt-indigo-600); }
+
+/* Ensure the CTA row in the hero wraps cleanly when we inject capture */
+.ih-ctas {
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  gap: 12px !important;
+  max-width: 640px !important;
+}
+.ih-ctas .delt-capture { flex: 0 1 420px; min-width: 280px; }
+.ih-ctas .ih-btn-ghost { flex: 0 0 auto; white-space: nowrap !important; }
+.ih-section a[href*="demo"],
+.ih-btn-ghost {
+  white-space: nowrap !important;
+}
+
+/* ---------- R3: funding image visibility -------------- */
+/* The Business Funding image is animated via inline opacity; force
+   the active-section image to always render. Targeted only at images
+   we explicitly marked in patch.js to avoid breaking the cross-fade. */
+.fs-img-stage img[data-delt-ensured] {
+  opacity: 1 !important;
+  transform: none !important;
+  transition: opacity .4s ease;
+}
+
+/* ---------- Small hardening ------------------------------ */
+/* Ensure the cycling wrapper never swallows clicks under the mobile fix. */
+.ih-cycling-wrapper { pointer-events: none; }

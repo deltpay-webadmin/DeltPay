@@ -124,7 +124,7 @@ export function DeltHeroHub() {
                 className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-md border"
                 style={{ borderColor: BORDER, background: BG_ALT }}
               >
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                <div className="w-1.5 h-1.5 rounded-full bg-[#4945FF]" />
                 <span
                   className="text-xs font-medium"
                   style={{ fontFamily: MONO, color: GRAY }}
@@ -410,7 +410,7 @@ export function DeltHeroHub() {
                 style={{ letterSpacing: '-1px', color: NAVY }}
               >
                 ChatGPT reads the internet.
-                <br /><span className="bg-gradient-to-r from-[#4945FF] via-[#6E8CFA] to-[#93B4FF] bg-clip-text text-transparent">Lens</span> reads your books.
+                <br /><span className="bg-gradient-to-r from-[#4945FF] to-[#4945FF] bg-clip-text text-transparent">Lens</span> reads your books.
               </h2>
             </Reveal>
             <Reveal delay={0.14}>

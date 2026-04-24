@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router';
 import visaLogo from 'figma:asset/5cf2d9ae329933b6a54b2cba81d519f09d3ef10c.png';
 import mastercardLogo from 'figma:asset/022b31c587f70b1784d7c7073c010a00f2155ca6.png';
 import discoverLogo from 'figma:asset/c2dbb2b13b0ce77c8fa0aba3e1365f51c2c38c1d.png';
@@ -30,16 +31,16 @@ export function TransparentPricing() {
           
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-4">
-            <a
-              href="#/apply"
+            <Link
+              to="/apply"
               className="inline-flex items-center justify-center px-8 py-4 bg-[#4945FF] text-white rounded-xl font-medium hover:bg-[#3832E5] transition-all text-lg shadow-lg hover:shadow-xl"
             >
               Find your custom rate
-            </a>
+            </Link>
           </div>
           
-          <a
-            href="#/pricing"
+          <Link
+            to="/pricing"
             className="inline-flex items-center gap-2 text-[#4945FF] font-medium hover:underline"
           >
             How does it work?
@@ -47,7 +48,7 @@ export function TransparentPricing() {
               <circle cx="10" cy="10" r="9" stroke="currentColor" strokeWidth="1.5" fill="none" />
               <path d="M10 7v6M10 7h.01" strokeLinecap="round" strokeWidth="1.5" stroke="currentColor" fill="none" />
             </svg>
-          </a>
+          </Link>
         </div>
 
         {/* Pricing Cards Container */}

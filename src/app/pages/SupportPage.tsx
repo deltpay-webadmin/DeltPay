@@ -29,20 +29,20 @@ export function SupportPage() {
     },
     {
       question: 'How do I contact support?',
-      answer: 'You can reach us via live chat, call us at (864) 729-3358, or email support@delt.com. We typically respond within minutes.'
+      answer: 'Our team is available Mon\u2013Fri 8 AM\u20138 PM EST and Saturday 9 AM\u20135 PM EST. Outside these hours, leave a message and we\'ll reply by the next business day.'
     }
   ];
 
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
-      <section className="pt-32 pb-20 lg:pt-44 lg:pb-24 bg-gradient-to-br from-[#F0F4FF] via-white to-[#E8ECFF]">
+      <section className="pt-32 pb-20 lg:pt-44 lg:pb-24 bg-[#F6F7FB]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl mx-auto text-center">
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-[#041E42] mb-6">
               We're here to <span className="text-[#4945FF]">help</span>
             </h1>
-            <p className="text-lg sm:text-xl text-[#6B7280] max-w-2xl mx-auto">
+            <p className="text-lg sm:text-xl text-[#475569] max-w-2xl mx-auto">
               Get technical support from our dedicated team. We're available to answer your questions and resolve any issues.
             </p>
           </div>
@@ -50,7 +50,7 @@ export function SupportPage() {
       </section>
 
       {/* Contact Methods */}
-      <section className="py-20 bg-gradient-to-br from-[#F0F4FF] via-white to-[#E8ECFF]">
+      <section className="py-20 bg-[#F6F7FB]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-6">
             {/* Live Chat */}
@@ -59,8 +59,8 @@ export function SupportPage() {
                 <MessageSquare className="w-5 h-5 text-[#4945FF]" />
               </div>
               <h3 className="text-lg font-bold text-[#041E42] mb-3">Live Chat</h3>
-              <p className="text-sm text-[#6B7280] mb-6 flex-grow leading-relaxed">
-                Chat with our support team in real-time. Get instant answers to your questions.
+              <p className="text-sm text-[#475569] mb-6 flex-grow leading-relaxed">
+                Chat with our support team. Get fast answers during business hours.
               </p>
               <button 
                 onClick={() => setIsChatOpen(true)}
@@ -76,7 +76,7 @@ export function SupportPage() {
                 <Phone className="w-5 h-5 text-[#4945FF]" />
               </div>
               <h3 className="text-lg font-bold text-[#041E42] mb-3">Call Us</h3>
-              <p className="text-sm text-[#6B7280] mb-4 leading-relaxed">
+              <p className="text-sm text-[#475569] mb-4 leading-relaxed">
                 Speak directly with a support specialist. We're here to help you resolve any issue.
               </p>
               <a
@@ -85,12 +85,9 @@ export function SupportPage() {
               >
                 (864) 729-3358
               </a>
-              <a
-                href="tel:+18647293358"
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-[#4945FF] text-[#4945FF] rounded-lg hover:bg-[#F0F0FF] transition-colors font-semibold mt-auto"
-              >
+              <button className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-[#4945FF] text-[#4945FF] rounded-lg hover:bg-[#4945FF]/8 transition-colors font-semibold mt-auto">
                 Call Now <ArrowRight className="w-4 h-4" />
-              </a>
+              </button>
             </div>
 
             {/* Email Us */}
@@ -99,7 +96,7 @@ export function SupportPage() {
                 <Mail className="w-5 h-5 text-[#4945FF]" />
               </div>
               <h3 className="text-lg font-bold text-[#041E42] mb-3">Email Us</h3>
-              <p className="text-sm text-[#6B7280] mb-4 leading-relaxed">
+              <p className="text-sm text-[#475569] mb-4 leading-relaxed">
                 Send us a detailed message and we'll get back to you within 24 hours.
               </p>
               <a
@@ -108,7 +105,7 @@ export function SupportPage() {
               >
                 support@delt.com
               </a>
-              <button className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-[#4945FF] text-[#4945FF] rounded-lg hover:bg-[#F0F0FF] transition-colors font-semibold mt-auto">
+              <button className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-[#4945FF] text-[#4945FF] rounded-lg hover:bg-[#4945FF]/8 transition-colors font-semibold mt-auto">
                 Send Email <ArrowRight className="w-4 h-4" />
               </button>
             </div>
@@ -117,7 +114,7 @@ export function SupportPage() {
       </section>
 
       {/* Support Hours */}
-      <section className="pb-20 bg-gradient-to-br from-[#F0F4FF] via-white to-[#E8ECFF]">
+      <section className="pb-20 bg-[#F6F7FB]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-6xl mx-auto bg-[#F6F7FB] rounded-2xl p-8">
             <div className="flex items-center gap-3 mb-8">
@@ -128,31 +125,31 @@ export function SupportPage() {
             <div className="grid md:grid-cols-3 gap-6 mb-8">
               <div className="flex flex-col gap-1">
                 <span className="text-[#041E42] font-semibold text-sm">Monday - Friday</span>
-                <span className="text-[#6B7280] text-sm">8:00 AM - 8:00 PM EST</span>
+                <span className="text-[#475569] text-sm">8:00 AM - 8:00 PM EST</span>
               </div>
               <div className="flex flex-col gap-1">
                 <span className="text-[#041E42] font-semibold text-sm">Saturday</span>
-                <span className="text-[#6B7280] text-sm">9:00 AM - 5:00 PM EST</span>
+                <span className="text-[#475569] text-sm">9:00 AM - 5:00 PM EST</span>
               </div>
               <div className="flex flex-col gap-1">
                 <span className="text-[#041E42] font-semibold text-sm">Sunday</span>
-                <span className="text-[#6B7280] text-sm">Closed</span>
+                <span className="text-[#475569] text-sm">Closed</span>
               </div>
             </div>
 
             <div className="pt-6 border-t border-[#E5E7EB]">
               <div className="flex items-center gap-2 mb-1">
-                <div className="w-2.5 h-2.5 bg-[#10B981] rounded-full animate-pulse"></div>
+                <div className="w-2.5 h-2.5 bg-[#4945FF] rounded-full animate-pulse"></div>
                 <span className="text-[#041E42] font-semibold text-sm">We're Online Now</span>
               </div>
-              <p className="text-sm text-[#6B7280] pl-5">Average response time: Under 2 minutes</p>
+              <p className="text-sm text-[#475569] pl-5">During business hours: average response under 2 minutes. Outside hours, we'll reply by next business day.</p>
             </div>
           </div>
         </div>
       </section>
 
       {/* FAQ Section */}
-      <section className="py-20 bg-gradient-to-br from-[#F0F4FF] via-white to-[#E8ECFF]">
+      <section className="py-20 bg-[#F6F7FB]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-5xl mx-auto">
             {/* Left-aligned title like sister site */}
@@ -197,25 +194,25 @@ export function SupportPage() {
             <h2 className="text-3xl sm:text-4xl font-bold text-[#041E42] mb-4">
               Trusted by businesses everywhere
             </h2>
-            <p className="text-lg text-[#6B7280] mb-12">
+            <p className="text-lg text-[#475569] mb-12">
               Join thousands of businesses that rely on Delt for payments and support.
             </p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
               <div>
                 <div className="text-4xl sm:text-5xl font-bold text-[#4945FF] mb-2">5K+</div>
-                <div className="text-sm text-[#6B7280]">Businesses served</div>
+                <div className="text-sm text-[#475569]">Businesses served</div>
               </div>
               <div>
                 <div className="text-4xl sm:text-5xl font-bold text-[#4945FF] mb-2">99.6%</div>
-                <div className="text-sm text-[#6B7280]">Uptime</div>
+                <div className="text-sm text-[#475569]">Uptime</div>
               </div>
               <div>
-                <div className="text-4xl sm:text-5xl font-bold text-[#4945FF] mb-2">24/7</div>
-                <div className="text-sm text-[#6B7280]">Support</div>
+                <div className="text-4xl sm:text-5xl font-bold text-[#4945FF] mb-2">Mon–Sat</div>
+                <div className="text-sm text-[#475569]">Support hours</div>
               </div>
               <div>
                 <div className="text-4xl sm:text-5xl font-bold text-[#4945FF] mb-2">$1B+</div>
-                <div className="text-sm text-[#6B7280]">Processed annually</div>
+                <div className="text-sm text-[#475569]">Processed annually</div>
               </div>
             </div>
           </div>

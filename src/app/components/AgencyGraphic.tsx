@@ -10,24 +10,26 @@ export function AgencyGraphic() {
 
   return (
     <div style={{
+      width: "100%",
+      height: "100%",
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
-      padding: "40px 20px",
-      minHeight: 420,
+      padding: "40px 32px",
+      boxSizing: "border-box",
     }}>
       <div style={{
         width: "100%",
-        maxWidth: 780,
+        maxWidth: 600,
         position: "relative",
         display: "flex",
         alignItems: "flex-start",
         justifyContent: "center",
-        gap: 32,
+        gap: 24,
       }}>
         {/* BEFORE */}
         <div style={{
-          width: 220,
+          width: 180,
           opacity: revealed ? 0.35 : 0.9,
           transition: "all 1.4s cubic-bezier(0.4, 0, 0.2, 1)",
           transform: revealed ? "scale(0.92)" : "scale(1)",
@@ -138,7 +140,7 @@ export function AgencyGraphic() {
 
         {/* AFTER */}
         <div style={{
-          width: 340,
+          width: 320,
           opacity: revealed ? 1 : 0.3,
           transition: "all 1.4s cubic-bezier(0.4, 0, 0.2, 1)",
           transform: revealed ? "scale(1)" : "scale(0.96)",
@@ -295,9 +297,54 @@ export function AgencyGraphic() {
                 </div>
                 <div style={{ display: "flex", gap: 8 }}>
                   {[
-                    { name: "Margherita", price: "$14", desc: "Classic simplicity", gradient: "linear-gradient(135deg, #8B4513 0%, #D2691E 50%, #CD853F 100%)" },
-                    { name: "Truffle Bianca", price: "$22", desc: "Black truffle & fontina", gradient: "linear-gradient(135deg, #2F1B14 0%, #4A3228 50%, #3E2723 100%)" },
-                    { name: "Diavola", price: "$17", desc: "Calabrian chili & honey", gradient: "linear-gradient(135deg, #5D1A0B 0%, #8B2500 50%, #A0522D 100%)" },
+                    {
+                      name: "Margherita",
+                      price: "$14",
+                      desc: "Classic simplicity",
+                      crust: "radial-gradient(ellipse at 50% 55%, #F4C77E 0%, #D9994A 35%, #8A5A24 70%, #4A2E0E 100%)",
+                      toppings: [
+                        { t: 30, l: 22, c: "#E54444", size: 10 },
+                        { t: 45, l: 62, c: "#E54444", size: 12 },
+                        { t: 65, l: 30, c: "#E54444", size: 9 },
+                        { t: 55, l: 75, c: "#E54444", size: 8 },
+                        { t: 40, l: 45, c: "#FFF8E1", size: 7 },
+                        { t: 68, l: 58, c: "#FFF8E1", size: 8 },
+                        { t: 25, l: 50, c: "#65A944", size: 5 },
+                        { t: 72, l: 40, c: "#65A944", size: 4 },
+                      ],
+                    },
+                    {
+                      name: "Truffle Bianca",
+                      price: "$22",
+                      desc: "Black truffle & fontina",
+                      crust: "radial-gradient(ellipse at 50% 50%, #F9EBC7 0%, #E0BE80 40%, #8A5A24 75%, #3E2112 100%)",
+                      toppings: [
+                        { t: 35, l: 28, c: "#FFFEF6", size: 14 },
+                        { t: 52, l: 58, c: "#FFFEF6", size: 15 },
+                        { t: 30, l: 62, c: "#FFFEF6", size: 10 },
+                        { t: 65, l: 35, c: "#FFFEF6", size: 9 },
+                        { t: 42, l: 48, c: "#2A1810", size: 4 },
+                        { t: 55, l: 70, c: "#2A1810", size: 3 },
+                        { t: 62, l: 50, c: "#2A1810", size: 4 },
+                        { t: 38, l: 36, c: "#2A1810", size: 3 },
+                      ],
+                    },
+                    {
+                      name: "Diavola",
+                      price: "$17",
+                      desc: "Calabrian chili & honey",
+                      crust: "radial-gradient(ellipse at 50% 50%, #EFB86A 0%, #C57934 40%, #7A3A12 75%, #3E1906 100%)",
+                      toppings: [
+                        { t: 30, l: 32, c: "#D62828", size: 7 },
+                        { t: 28, l: 56, c: "#D62828", size: 6 },
+                        { t: 48, l: 22, c: "#D62828", size: 7 },
+                        { t: 58, l: 62, c: "#D62828", size: 8 },
+                        { t: 70, l: 42, c: "#D62828", size: 6 },
+                        { t: 40, l: 70, c: "#D62828", size: 6 },
+                        { t: 55, l: 46, c: "#FFD670", size: 5 },
+                        { t: 35, l: 44, c: "#FFD670", size: 4 },
+                      ],
+                    },
                   ].map((item, idx) => (
                     <div key={idx} style={{
                       flex: 1,
@@ -308,14 +355,64 @@ export function AgencyGraphic() {
                     }}>
                       <div style={{
                         width: "100%",
-                        height: 48,
-                        background: item.gradient,
+                        height: 62,
+                        background: "linear-gradient(180deg, #2a1c10 0%, #120a04 100%)",
                         position: "relative",
+                        overflow: "hidden",
                       }}>
+                        {/* Pizza disc */}
+                        <div style={{
+                          position: "absolute",
+                          top: "50%",
+                          left: "50%",
+                          transform: "translate(-50%, -50%)",
+                          width: 64,
+                          height: 64,
+                          borderRadius: "50%",
+                          background: item.crust,
+                          boxShadow: "0 3px 10px rgba(0,0,0,0.6), inset 0 -4px 8px rgba(0,0,0,0.4), inset 0 2px 4px rgba(255,230,180,0.25)",
+                        }}>
+                          {/* Char spots on crust */}
+                          <div style={{
+                            position: "absolute",
+                            inset: 0,
+                            borderRadius: "50%",
+                            background: "radial-gradient(circle at 20% 30%, rgba(0,0,0,0.25) 0%, transparent 8%), radial-gradient(circle at 80% 75%, rgba(0,0,0,0.3) 0%, transparent 7%), radial-gradient(circle at 70% 15%, rgba(0,0,0,0.2) 0%, transparent 5%)",
+                            pointerEvents: "none",
+                          }} />
+                          {/* Toppings */}
+                          {item.toppings.map((top, ti) => (
+                            <div key={ti} style={{
+                              position: "absolute",
+                              top: `${top.t}%`,
+                              left: `${top.l}%`,
+                              width: top.size,
+                              height: top.size,
+                              borderRadius: "50%",
+                              background: top.c,
+                              boxShadow: "0 1px 2px rgba(0,0,0,0.4), inset 0 1px 1px rgba(255,255,255,0.25)",
+                              transform: "translate(-50%, -50%)",
+                            }} />
+                          ))}
+                          {/* Shine highlight */}
+                          <div style={{
+                            position: "absolute",
+                            top: "15%",
+                            left: "25%",
+                            width: "40%",
+                            height: "25%",
+                            borderRadius: "50%",
+                            background: "radial-gradient(ellipse, rgba(255,255,255,0.18) 0%, transparent 70%)",
+                            filter: "blur(2px)",
+                            pointerEvents: "none",
+                          }} />
+                        </div>
+                        {/* Vignette */}
                         <div style={{
                           position: "absolute",
                           inset: 0,
-                          background: "radial-gradient(circle at 30% 60%, rgba(255,255,255,0.08), transparent 60%)",
+                          background: "radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.4) 100%)",
+                          pointerEvents: "none",
                         }} />
                       </div>
                       <div style={{ padding: "8px 10px 10px" }}>

@@ -595,15 +595,29 @@ function FeatureWalkthrough() {
         .we-dot-active .we-dot-inner {
           transform: scale(1);
         }
+        /* Uniform frame — each graphic is centered inside the same 540px
+           tall stage, regardless of its natural aspect ratio. This makes all
+           three panels read as a consistent set instead of mismatched sizes. */
         .we-preview-stage {
           flex: 1;
-          min-height: 440px;
+          height: 540px;
+          min-height: 540px;
           border-radius: 20px;
           overflow: hidden;
           background: ${T.surface};
           border: 1px solid ${T.border};
           position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: center;
           box-shadow: 0 30px 80px rgba(0,0,0,0.25), 0 4px 20px rgba(0,0,0,0.15);
+        }
+        .we-preview-stage > * {
+          width: 100%;
+          height: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
         }
         @media (max-width: 900px) {
           .we-scroll-container { grid-template-columns: 1fr; }
@@ -617,7 +631,7 @@ function FeatureWalkthrough() {
           .we-text-section { min-height: auto; padding: 40px 20px; }
           .we-text-inner { opacity: 1; transform: none; }
           .we-progress-bar { display: none; }
-          .we-preview-stage { min-height: 320px; }
+          .we-preview-stage { height: 420px; min-height: 420px; }
         }
       `}</style>
     </>
@@ -1093,271 +1107,407 @@ const tundraHeroImg = 'https://images.unsplash.com/photo-1635650804263-1a1941e14
 const gringosHeroImg = 'https://images.unsplash.com/photo-1768938896401-fe52fd18d3af?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxiYXJiZXJzaG9wJTIwaGFpcmN1dCUyMHZpbnRhZ2UlMjBpbnRlcmlvcnxlbnwxfHx8fDE3NzI4MzQ2MDZ8MA&ixlib=rb-4.1.0&q=80&w=1080';
 
 /* ── Fake Website Preview Renderers ──
-   These render mini website UIs so every showcase card looks like
-   a real premium website screenshot, not just a raw photo. */
+   Each preview mimics a distinct Framer Gallery aesthetic so the grid reads
+   as 8 unique studio-quality sites rather than 8 variations of the same
+   dark-photo-hero template. Styles referenced:
+     Kuro      → Temper Studio (minimal-luxe cream/terracotta)
+     Foamy     → Matcha Cartel (zine mosaic + neon chartreuse)
+     Tundra    → Mr. Crank (dark B&W bilingual fashion)
+     Gringos   → Monday Studio (electric-blue typographic maximalism)
+     Aura      → Panton Vitra (retro burgundy modernist gradient)
+     Atelier   → Panic Frame Travel (aerial photo editorial)
+     Noir      → Huehaus (maximalist color-blob on black)
+     Maison    → Wild Week Athens (brutalist cobalt-blue poster) */
 const F = { sans: "'Plus Jakarta Sans', sans-serif", serif: "'Instrument Serif', Georgia, serif" };
 
+/* ── 8 Distinct Style Genres ──
+   Each preview is a different website genre so the grid reads as 8 completely
+   different studios. Several cards include subtle animations (rotating rings,
+   drifting blobs, running marquees) to show motion capability.
+     Kuro      → LIGHT MINIMALIST editorial (cream, serif, spacious)
+     Foamy     → COLORFUL PLAYFUL zine (neon + mosaic + bold type)
+     Tundra    → DARK E-COMMERCE grid (product cards, prices, filters)
+     Gringos   → ANIMATED RETRO (rotating badge on electric blue)
+     Aura      → ANIMATED GRADIENT (slow-drifting sunset + orbit)
+     Atelier   → PHOTO EDITORIAL (full-bleed aerial, glass cards)
+     Noir      → MAXIMALIST ANIMATED (floating color blobs on black)
+     Maison    → RETAIL GRID brutalist (cobalt poster + product tiles) */
+
+/* KURO — Light minimalist editorial. Cream, lots of whitespace, one
+   serif statement, single close-cropped food frame. Feels like a Michelin
+   tasting-menu site. */
 function KuroPreview() {
   return (
-    <div style={{ width: '100%', height: '100%', background: '#0A0806', position: 'relative', overflow: 'hidden', fontFamily: F.sans }}>
-      <img src={kuroHeroImg} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.4 }} />
-      <div style={{ position: 'relative', zIndex: 1, height: '100%', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 18px' }}>
-          <span style={{ fontSize: 13, fontWeight: 300, letterSpacing: 6, color: '#D4A574', fontFamily: F.serif, fontStyle: 'italic' }}>Kuro</span>
-          <div style={{ display: 'flex', gap: 14 }}>
-            {['Menu', 'Reserve', 'Private Dining'].map(n => <span key={n} style={{ fontSize: 7, color: 'rgba(255,255,255,0.4)', letterSpacing: 1.5 }}>{n}</span>)}
-          </div>
+    <div style={{ width: '100%', height: '100%', background: '#FAF7F0', position: 'relative', overflow: 'hidden', fontFamily: F.sans }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 22px' }}>
+        <span style={{ fontSize: 10, fontWeight: 500, letterSpacing: 4, color: '#2B1F14' }}>KURO</span>
+        <div style={{ display: 'flex', gap: 16 }}>
+          {['Menu', 'Visit', 'Journal', 'Reserve'].map(n => <span key={n} style={{ fontSize: 7, color: 'rgba(43,31,20,0.5)', letterSpacing: 1 }}>{n}</span>)}
         </div>
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '0 20px', textAlign: 'center' }}>
-          <div style={{ fontSize: 7, letterSpacing: 5, color: '#D4A574', marginBottom: 12, textTransform: 'uppercase' as const, fontWeight: 600 }}>FINE DINING EXPERIENCE</div>
-          <div style={{ fontSize: 28, fontWeight: 300, color: '#fff', fontFamily: F.serif, fontStyle: 'italic', lineHeight: 1.1, marginBottom: 10 }}>Where Flavor<br/>Meets Art.</div>
-          <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.4)', lineHeight: 1.6, maxWidth: 180, marginBottom: 16 }}>An intimate culinary journey through seasonal Japanese-inspired cuisine.</div>
-          <div style={{ padding: '7px 22px', borderRadius: 50, border: '1px solid #D4A574', fontSize: 8, fontWeight: 700, color: '#D4A574', letterSpacing: 0.5 }}>Reserve a Table</div>
+      </div>
+      <div style={{ padding: '32px 22px 0', maxWidth: '100%' }}>
+        <div style={{ fontSize: 6.5, letterSpacing: 4, color: '#B88766', marginBottom: 12, fontWeight: 600 }}>SEASONAL — AUTUMN ’26</div>
+        <div style={{ fontSize: 22, fontWeight: 300, color: '#2B1F14', fontFamily: F.serif, lineHeight: 1.05, marginBottom: 10, letterSpacing: -0.5 }}>
+          <span style={{ fontStyle: 'italic' as const }}>Quiet</span> cooking<br/>for <span style={{ fontStyle: 'italic' as const }}>loud</span> years.
         </div>
-        <div style={{ padding: '10px 18px 14px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-          <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
-            {[{ l: 'Tasting Menu', p: '$185' }, { l: 'Omakase', p: '$250' }, { l: 'Wine Pairing', p: '+$95' }].map(m => (
-              <div key={m.l} style={{ textAlign: 'center' as const, padding: '6px 10px', background: 'rgba(212,165,116,0.06)', borderRadius: 8, border: '1px solid rgba(212,165,116,0.1)' }}>
-                <div style={{ fontSize: 7, fontWeight: 600, color: '#fff' }}>{m.l}</div>
-                <div style={{ fontSize: 7, color: '#D4A574', marginTop: 1 }}>{m.p}</div>
-              </div>
-            ))}
-          </div>
+        <div style={{ fontSize: 7, color: 'rgba(43,31,20,0.5)', lineHeight: 1.7, maxWidth: 160, marginBottom: 14 }}>Seven courses. No menu. Market-driven, fire-led, unhurried.</div>
+      </div>
+      <div style={{ position: 'absolute', top: '50%', right: 18, width: 100, height: 130, borderRadius: 2, overflow: 'hidden' }}>
+        <img src={kuroHeroImg} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'sepia(0.25) saturate(0.9) brightness(0.95)' }} />
+      </div>
+      <div style={{ position: 'absolute', bottom: 14, left: 22, right: 22, display: 'flex', justifyContent: 'space-between', alignItems: 'end', fontSize: 6.5, color: 'rgba(43,31,20,0.45)', letterSpacing: 1.5 }}>
+        <div>
+          <div style={{ marginBottom: 3, fontWeight: 700, color: '#2B1F14' }}>RESERVE →</div>
+          <div>Tue–Sat · 5–10pm</div>
+        </div>
+        <div style={{ textAlign: 'right' as const }}>
+          <div style={{ fontFamily: F.serif, fontSize: 8, fontStyle: 'italic' as const, color: '#2B1F14' }}>“Thoughtful.”</div>
+          <div>— NYT</div>
         </div>
       </div>
     </div>
   );
 }
 
+/* FOAMY — Colorful playful zine. Neon mosaic, speech-bubble blobs,
+   chartreuse + lime stacked color. Animated spinning sparkle. */
 function FoamyPreview() {
+  const tiles = ['#2E3B1F', '#9DCC0A', '#F472B6', '#5D7A2E', '#67E8F9', '#FBBF24', '#9DCC0A', '#E8E3D4'];
   return (
-    <div style={{ width: '100%', height: '100%', background: '#1C1410', position: 'relative', overflow: 'hidden', fontFamily: F.sans }}>
-      <img src={foamyHeroImg} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.35 }} />
-      <div style={{ position: 'relative', zIndex: 1, height: '100%', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 18px' }}>
-          <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: 2, color: '#C4956B' }}>FOAMY & CO.</span>
-          <div style={{ display: 'flex', gap: 14 }}>
-            {['Menu', 'Locations', 'Order'].map(n => <span key={n} style={{ fontSize: 7, color: 'rgba(255,255,255,0.45)', letterSpacing: 1 }}>{n}</span>)}
+    <div style={{ width: '100%', height: '100%', background: '#FFF6E0', position: 'relative', overflow: 'hidden', fontFamily: F.sans }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 18px' }}>
+        <span style={{ fontSize: 10, fontWeight: 900, letterSpacing: 1, color: '#2E3B1F' }}>FOAMY!</span>
+        <div style={{ display: 'flex', gap: 10 }}>
+          {['Shop', 'Drops', 'Cart · 2'].map(n => <span key={n} style={{ fontSize: 7, color: '#2E3B1F', fontWeight: 700, padding: '3px 8px', background: n === 'Cart · 2' ? '#9DCC0A' : 'transparent', borderRadius: 20 }}>{n}</span>)}
+        </div>
+      </div>
+      {/* Mosaic hero */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gridAutoRows: 40, gap: 4, padding: '4px 18px' }}>
+        {tiles.map((bg, i) => (
+          <div key={i} style={{
+            background: bg,
+            borderRadius: 6,
+            gridColumn: i === 0 ? 'span 2' : i === 2 ? 'span 2' : 'span 1',
+            gridRow: i === 0 || i === 2 ? 'span 2' : 'span 1',
+            position: 'relative',
+            overflow: 'hidden',
+          }}>
+            {i === 0 && (
+              <motion.div animate={{ rotate: 360 }} transition={{ duration: 12, repeat: Infinity, ease: 'linear' }}
+                style={{ position: 'absolute', inset: '50%', width: 28, height: 28, marginLeft: -14, marginTop: -14, fontSize: 24, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✿</motion.div>
+            )}
+            {i === 2 && <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 30% 30%, rgba(255,255,255,0.45), transparent 55%)' }} />}
           </div>
-        </div>
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '0 18px' }}>
-          <div style={{ fontSize: 7, letterSpacing: 4, color: '#C4956B', marginBottom: 10, textTransform: 'uppercase' as const, fontWeight: 600 }}>ARTISAN COFFEE ROASTERS</div>
-          <div style={{ fontSize: 26, fontWeight: 300, color: '#fff', fontFamily: F.serif, fontStyle: 'italic', lineHeight: 1.15, marginBottom: 8 }}>Crafted<br/>with Care.</div>
-          <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.4)', lineHeight: 1.6, maxWidth: 170, marginBottom: 16 }}>Single-origin beans roasted in-house. Every cup tells a story from farm to table.</div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <div style={{ padding: '7px 18px', borderRadius: 50, background: '#C4956B', fontSize: 8, fontWeight: 700, color: '#fff', letterSpacing: 0.5 }}>Order Ahead</div>
-            <div style={{ padding: '7px 18px', borderRadius: 50, border: '1px solid rgba(196,149,107,0.3)', fontSize: 8, fontWeight: 600, color: '#C4956B', letterSpacing: 0.5 }}>Our Story</div>
-          </div>
-        </div>
-        <div style={{ display: 'flex', gap: 8, padding: '10px 18px 14px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-          {[{ name: 'Espresso', price: '$4.50' }, { name: 'Americano', price: '$5.00' }, { name: 'Mocha', price: '$6.50' }].map(c => (
-            <div key={c.name} style={{ flex: 1, background: 'rgba(196,149,107,0.06)', borderRadius: 8, padding: 8, border: '1px solid rgba(196,149,107,0.1)' }}>
-              <div style={{ fontSize: 7, fontWeight: 600, color: '#fff', marginBottom: 2 }}>{c.name}</div>
-              <div style={{ fontSize: 7, color: '#C4956B' }}>{c.price}</div>
-            </div>
-          ))}
-        </div>
+        ))}
+      </div>
+      {/* Jumbo wordmark */}
+      <div style={{ padding: '10px 18px 4px', lineHeight: 0.82 }}>
+        <div style={{ fontSize: 44, fontWeight: 900, color: '#2E3B1F', letterSpacing: -2, fontFamily: F.sans, textTransform: 'lowercase' as const }}>matcha!</div>
+        <div style={{ fontSize: 8, color: '#2E3B1F', letterSpacing: 2, fontWeight: 700, marginTop: 4 }}>DROP 07 · NOW SHIPPING</div>
+      </div>
+      {/* Marquee ticker */}
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: '#2E3B1F', color: '#9DCC0A', overflow: 'hidden', padding: '7px 0', whiteSpace: 'nowrap' as const }}>
+        <motion.div animate={{ x: ['0%', '-50%'] }} transition={{ duration: 16, repeat: Infinity, ease: 'linear' }}
+          style={{ display: 'inline-block', fontSize: 8, fontWeight: 800, letterSpacing: 2 }}>
+          {'★ CEREMONIAL UJI · FREE SHIP $50+ · ★ NEW MERCH · ★ CEREMONIAL UJI · FREE SHIP $50+ · ★ NEW MERCH · '.repeat(2)}
+        </motion.div>
       </div>
     </div>
   );
 }
 
+/* TUNDRA — Dark e-commerce product grid. Shows real commerce UX —
+   category chips, product cards with prices + sale badges, cart CTA. */
 function TundraPreview() {
+  const products = [
+    { n: 'Shell Jacket', p: '$420', tag: 'SS26' },
+    { n: 'Tech Trouser', p: '$285', tag: 'NEW' },
+    { n: 'Field Cap', p: '$95', tag: '' },
+    { n: 'Tote', p: '$140', tag: 'LAST' },
+  ];
   return (
-    <div style={{ width: '100%', height: '100%', background: '#F8F8F6', position: 'relative', overflow: 'hidden', fontFamily: F.sans }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 18px', borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
-        <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: 3, color: '#0E1F2E', textTransform: 'uppercase' as const }}>TUNDRA</span>
-        <div style={{ display: 'flex', gap: 14 }}>
-          {['New', 'Men', 'Women', 'Sale'].map(n => <span key={n} style={{ fontSize: 7, color: 'rgba(0,0,0,0.4)', letterSpacing: 1 }}>{n}</span>)}
+    <div style={{ width: '100%', height: '100%', background: '#0B0B0C', position: 'relative', overflow: 'hidden', fontFamily: F.sans, color: '#fff' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 18px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+          <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: 3 }}>TUNDRA</span>
+          <span style={{ fontSize: 6, color: 'rgba(255,255,255,0.35)', fontFamily: 'monospace' }}>ツンドラ</span>
+        </div>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          <span style={{ fontSize: 6.5, color: 'rgba(255,255,255,0.5)', fontFamily: 'monospace' }}>⌕ SEARCH</span>
+          <span style={{ fontSize: 6.5, padding: '2px 7px', background: '#67E8F9', color: '#0B0B0C', borderRadius: 20, fontWeight: 800 }}>BAG · 2</span>
         </div>
       </div>
-      <div style={{ padding: '10px 18px 8px' }}>
-        <div style={{ fontSize: 7, letterSpacing: 3, color: 'rgba(0,0,0,0.3)', fontWeight: 600, marginBottom: 4 }}>NEW ARRIVALS FOR 2026</div>
+      {/* Category chips */}
+      <div style={{ display: 'flex', gap: 5, padding: '8px 14px 4px', overflow: 'hidden' }}>
+        {['All', 'Outerwear', 'Bottoms', 'Caps'].map((c, i) => (
+          <span key={c} style={{ fontSize: 6.5, padding: '3px 8px', borderRadius: 20, fontWeight: 600, letterSpacing: 0.5, background: i === 0 ? '#fff' : 'transparent', color: i === 0 ? '#0B0B0C' : 'rgba(255,255,255,0.6)', border: i === 0 ? 'none' : '1px solid rgba(255,255,255,0.15)' }}>{c}</span>
+        ))}
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, padding: '0 18px' }}>
-        <div style={{ position: 'relative', borderRadius: 10, overflow: 'hidden', aspectRatio: '3/4' }}>
-          <img src={tundraHeroImg} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '8px 10px', background: 'linear-gradient(to top, rgba(0,0,0,0.7), transparent)' }}>
-            <div style={{ fontSize: 7, fontWeight: 700, color: '#fff' }}>Technical Parka</div>
-            <div style={{ fontSize: 7, color: '#67E8F9' }}>$320</div>
-          </div>
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {[{ name: 'Down Vest', price: '$180', bg: '#E8E6E0' }, { name: 'Rain Shell', price: '$240', bg: '#D4D8DC' }].map(p => (
-            <div key={p.name} style={{ flex: 1, background: p.bg, borderRadius: 10, padding: '12px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-              <div style={{ fontSize: 7, fontWeight: 700, color: '#1A1A1A' }}>{p.name}</div>
-              <div style={{ fontSize: 7, color: 'rgba(0,0,0,0.5)' }}>{p.price}</div>
+      {/* Product grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 4, padding: '4px 14px' }}>
+        {products.map((pr, i) => (
+          <div key={pr.n} style={{ background: '#141416', borderRadius: 4, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)' }}>
+            <div style={{ position: 'relative', aspectRatio: '1 / 0.85', background: i === 0 ? `linear-gradient(135deg, #2A2B2E 0%, #0B0B0C 100%)` : i === 1 ? '#1C2123' : i === 2 ? '#1A1A1A' : '#232327', overflow: 'hidden' }}>
+              {i === 0 && <img src={tundraHeroImg} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', filter: 'grayscale(1) contrast(1.1)' }} />}
+              {i === 1 && <div style={{ position: 'absolute', inset: '20% 28%', background: 'linear-gradient(180deg, #3A3A3F 0%, #1C1C1F 100%)', borderRadius: 2 }} />}
+              {i === 2 && <div style={{ position: 'absolute', top: '30%', left: '25%', right: '25%', bottom: '30%', background: 'radial-gradient(ellipse, #2A2A2A 40%, transparent 70%)', borderRadius: '50%' }} />}
+              {i === 3 && <div style={{ position: 'absolute', inset: '18% 24%', background: '#1C1C1F', borderRadius: 3, border: '1px solid rgba(255,255,255,0.08)' }} />}
+              {pr.tag && <div style={{ position: 'absolute', top: 3, left: 3, fontSize: 5, color: pr.tag === 'NEW' ? '#67E8F9' : '#fff', background: pr.tag === 'NEW' ? 'rgba(103,232,249,0.12)' : 'rgba(255,255,255,0.15)', padding: '1px 5px', borderRadius: 20, fontWeight: 700, letterSpacing: 1 }}>{pr.tag}</div>}
             </div>
-          ))}
-        </div>
+            <div style={{ padding: '4px 6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: 6.5, color: '#fff' }}>{pr.n}</span>
+              <span style={{ fontSize: 6.5, color: '#67E8F9', fontWeight: 700 }}>{pr.p}</span>
+            </div>
+          </div>
+        ))}
       </div>
-      <div style={{ padding: '12px 18px', marginTop: 8, borderTop: '1px solid rgba(0,0,0,0.04)' }}>
-        <div style={{ display: 'flex', gap: 6 }}>
-          {['Jackets', 'Boots', 'Layers', 'Accessories'].map(c => (
-            <div key={c} style={{ padding: '5px 10px', borderRadius: 50, border: '1px solid rgba(0,0,0,0.08)', fontSize: 7, color: 'rgba(0,0,0,0.5)', fontWeight: 600 }}>{c}</div>
-          ))}
-        </div>
+      {/* Bottom checkout bar */}
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '8px 18px', background: '#fff', color: '#0B0B0C', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ fontSize: 7, fontWeight: 700, letterSpacing: 1 }}>SUBTOTAL · $705</div>
+        <div style={{ fontSize: 7, fontWeight: 800, letterSpacing: 2, padding: '5px 14px', background: '#0B0B0C', color: '#fff', borderRadius: 20 }}>CHECKOUT →</div>
       </div>
     </div>
   );
 }
 
+/* GRINGOS — Animated retro. Electric blue canvas, rotating circular
+   "SINCE 2005" badge, bleeding italic serif wordmark. */
 function GringosPreview() {
   return (
-    <div style={{ width: '100%', height: '100%', background: '#0E1A0E', position: 'relative', overflow: 'hidden', fontFamily: F.sans }}>
-      <img src={gringosHeroImg} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.3 }} />
-      <div style={{ position: 'relative', zIndex: 1, height: '100%', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 18px' }}>
-          <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: 2, color: '#86EFAC', textTransform: 'uppercase' as const }}>GRINGOS</span>
-          <div style={{ display: 'flex', gap: 14 }}>
-            {['Services', 'Locations', 'Shop', 'Book Now'].map(n => <span key={n} style={{ fontSize: 7, color: 'rgba(255,255,255,0.4)', letterSpacing: 1 }}>{n}</span>)}
-          </div>
-        </div>
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '0 18px' }}>
-          <div style={{ fontSize: 7, letterSpacing: 4, color: '#86EFAC', marginBottom: 12, textTransform: 'uppercase' as const, fontWeight: 600 }}>PREMIUM BARBERSHOP EST. 2005</div>
-          <div style={{ fontSize: 28, fontWeight: 300, color: '#fff', fontFamily: F.serif, fontStyle: 'italic', lineHeight: 1.1, marginBottom: 10 }}>Craft. Sharp.<br/>Results.</div>
-          <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.4)', lineHeight: 1.6, maxWidth: 170, marginBottom: 16 }}>Traditional barbering meets modern style. Walk-ins welcome, appointments preferred.</div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <div style={{ padding: '7px 18px', borderRadius: 50, background: '#86EFAC', fontSize: 8, fontWeight: 700, color: '#0E1A0E', letterSpacing: 0.5 }}>Book Now</div>
-            <div style={{ padding: '7px 18px', borderRadius: 50, border: '1px solid rgba(134,239,172,0.3)', fontSize: 8, fontWeight: 600, color: '#86EFAC', letterSpacing: 0.5 }}>Services</div>
-          </div>
-        </div>
-        <div style={{ padding: '10px 18px 14px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-          <div style={{ display: 'flex', gap: 8 }}>
-            {[{ name: 'Classic Cut', price: '$35' }, { name: 'Fade & Beard', price: '$55' }, { name: 'Hot Towel Shave', price: '$40' }].map(s => (
-              <div key={s.name} style={{ flex: 1, background: 'rgba(134,239,172,0.05)', borderRadius: 8, padding: 8, border: '1px solid rgba(134,239,172,0.1)' }}>
-                <div style={{ fontSize: 7, fontWeight: 600, color: '#fff', marginBottom: 2 }}>{s.name}</div>
-                <div style={{ fontSize: 7, color: '#86EFAC' }}>{s.price}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function AuraPreview() {
-  return (
-    <div style={{ width: '100%', height: '100%', background: '#0C0A14', position: 'relative', overflow: 'hidden', fontFamily: F.sans }}>
-      <img src={aurumSpaImg} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.35 }} />
-      <div style={{ position: 'relative', zIndex: 1, height: '100%', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 18px' }}>
-          <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: 3, color: '#A78BFA', textTransform: 'uppercase' as const }}>AURA</span>
-          <div style={{ display: 'flex', gap: 14 }}>
-            {['Services', 'About', 'Book'].map(n => <span key={n} style={{ fontSize: 8, color: 'rgba(255,255,255,0.5)', letterSpacing: 1 }}>{n}</span>)}
-          </div>
-        </div>
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '0 20px', textAlign: 'center' }}>
-          <div style={{ fontSize: 7, letterSpacing: 4, color: '#A78BFA', marginBottom: 10, textTransform: 'uppercase' as const, fontWeight: 600 }}>LUXURY WELLNESS STUDIO</div>
-          <div style={{ fontSize: 26, fontWeight: 300, color: '#fff', fontFamily: F.serif, fontStyle: 'italic', lineHeight: 1.15, marginBottom: 8 }}>Find Your<br/>Inner Balance</div>
-          <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.45)', lineHeight: 1.6, maxWidth: 180, marginBottom: 16 }}>A sanctuary designed for renewal. Premium spa experiences tailored to you.</div>
-          <div style={{ padding: '7px 22px', borderRadius: 50, background: '#A78BFA', fontSize: 8, fontWeight: 700, color: '#fff', letterSpacing: 0.5 }}>Book Your Experience</div>
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 24, padding: '12px 18px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-          {[{ n: '12+', l: 'Treatments' }, { n: '4.9', l: 'Rating' }, { n: '8K', l: 'Clients' }].map(s => (
-            <div key={s.l} style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 12, fontWeight: 800, color: '#A78BFA' }}>{s.n}</div>
-              <div style={{ fontSize: 6, color: 'rgba(255,255,255,0.35)', letterSpacing: 1 }}>{s.l}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function AtelierPreview() {
-  return (
-    <div style={{ width: '100%', height: '100%', background: '#F5F3EE', position: 'relative', overflow: 'hidden', fontFamily: F.sans }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 18px', borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
-        <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: 2, color: '#1A1A1A', textTransform: 'uppercase' as const }}>ATELIER</span>
+    <div style={{ width: '100%', height: '100%', background: '#1C35E0', position: 'relative', overflow: 'hidden', fontFamily: F.sans, color: '#fff' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 20px', position: 'relative', zIndex: 2 }}>
+        <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: 3 }}>● GRINGOS BARBERS</span>
         <div style={{ display: 'flex', gap: 14 }}>
-          {['Projects', 'Studio', 'Contact'].map(n => <span key={n} style={{ fontSize: 7, color: 'rgba(0,0,0,0.4)', letterSpacing: 1 }}>{n}</span>)}
+          {['Book', 'Services', 'Shop'].map(n => <span key={n} style={{ fontSize: 7.5, color: 'rgba(255,255,255,0.75)', letterSpacing: 1, fontWeight: 600 }}>{n}</span>)}
         </div>
       </div>
-      <div style={{ position: 'relative', height: '52%', overflow: 'hidden' }}>
-        <img src={showcaseArchImg} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+      {/* Jumbo wordmark that bleeds off */}
+      <div style={{ position: 'absolute', top: '24%', left: -10, right: -10, lineHeight: 0.78, pointerEvents: 'none', zIndex: 1 }}>
+        <div style={{ fontSize: 86, fontWeight: 900, color: '#fff', letterSpacing: -4, fontFamily: F.serif, fontStyle: 'italic' as const }}>Sharp.</div>
+        <div style={{ fontSize: 86, fontWeight: 900, color: 'rgba(255,255,255,0.22)', letterSpacing: -4, fontFamily: F.serif, fontStyle: 'italic' as const, textAlign: 'right' as const }}>Clean.</div>
       </div>
-      <div style={{ padding: '16px 18px' }}>
-        <div style={{ fontSize: 7, letterSpacing: 3, color: 'rgba(0,0,0,0.35)', marginBottom: 8, textTransform: 'uppercase' as const, fontWeight: 600 }}>FEATURED PROJECT</div>
-        <div style={{ fontSize: 20, fontWeight: 300, color: '#1A1A1A', fontFamily: F.serif, fontStyle: 'italic', lineHeight: 1.15, marginBottom: 8 }}>The Meridian<br/>Tower</div>
-        <div style={{ fontSize: 7, color: 'rgba(0,0,0,0.4)', lineHeight: 1.7, marginBottom: 14 }}>A 42-story mixed-use development redefining the downtown skyline with sustainable design.</div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <div style={{ padding: '6px 16px', borderRadius: 50, background: '#1A1A1A', fontSize: 7, fontWeight: 700, color: '#fff', letterSpacing: 0.5 }}>View Project</div>
-          <div style={{ padding: '6px 16px', borderRadius: 50, border: '1px solid rgba(0,0,0,0.15)', fontSize: 7, fontWeight: 600, color: '#1A1A1A', letterSpacing: 0.5 }}>All Work</div>
-        </div>
+      {/* Rotating badge bottom-left over pole */}
+      <motion.div animate={{ rotate: 360 }} transition={{ duration: 16, repeat: Infinity, ease: 'linear' }}
+        style={{ position: 'absolute', bottom: 76, left: 14, width: 56, height: 56, zIndex: 3 }}>
+        <svg viewBox="0 0 100 100" style={{ width: '100%', height: '100%' }}>
+          <defs>
+            <path id="circTxtG" d="M 50,50 m -38,0 a 38,38 0 1,1 76,0 a 38,38 0 1,1 -76,0" />
+          </defs>
+          <text style={{ fontSize: 11, fontWeight: 800, letterSpacing: 1.2, fill: '#fff' }}>
+            <textPath href="#circTxtG">SINCE 2005 · SHARP + CLEAN · </textPath>
+          </text>
+          <circle cx="50" cy="50" r="7" fill="#fff" />
+        </svg>
+      </motion.div>
+      {/* Barber pole stripes animated */}
+      <div style={{ position: 'absolute', right: 16, top: '38%', width: 6, height: 70, overflow: 'hidden', borderRadius: 3, border: '1px solid rgba(255,255,255,0.3)', zIndex: 2 }}>
+        <motion.div animate={{ y: [0, -14] }} transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
+          style={{ width: '100%', height: '400%', background: 'repeating-linear-gradient(135deg, #fff 0 7px, #E8224C 7px 14px)' }} />
       </div>
-    </div>
-  );
-}
-
-function NoirPreview() {
-  return (
-    <div style={{ width: '100%', height: '100%', background: '#0D0D0D', position: 'relative', overflow: 'hidden', fontFamily: F.sans }}>
-      <img src={showcaseBarImg} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.3 }} />
-      <div style={{ position: 'relative', zIndex: 1, height: '100%', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 18px' }}>
-          <span style={{ fontSize: 12, fontWeight: 300, letterSpacing: 6, color: '#F472B6', fontFamily: F.serif, fontStyle: 'italic' }}>Noir</span>
-          <div style={{ display: 'flex', gap: 14 }}>
-            {['Menu', 'Reserve', 'Events'].map(n => <span key={n} style={{ fontSize: 7, color: 'rgba(255,255,255,0.4)', letterSpacing: 1.5 }}>{n}</span>)}
-          </div>
+      {/* Bottom info strip */}
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '14px 20px', borderTop: '1px solid rgba(255,255,255,0.15)', display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: 16, alignItems: 'end', zIndex: 2 }}>
+        <div>
+          <div style={{ fontSize: 6.5, letterSpacing: 2, color: 'rgba(255,255,255,0.6)', marginBottom: 4, fontWeight: 600 }}>BROOKLYN · LA · TOKYO</div>
+          <div style={{ fontSize: 7, color: '#fff', lineHeight: 1.5 }}>Walk-ins Mon–Wed. Book the rest.</div>
         </div>
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '0 18px' }}>
-          <div style={{ fontSize: 7, letterSpacing: 4, color: '#F472B6', marginBottom: 12, textTransform: 'uppercase' as const, fontWeight: 600 }}>COCKTAIL LOUNGE & BAR</div>
-          <div style={{ fontSize: 28, fontWeight: 300, color: '#fff', fontFamily: F.serif, fontStyle: 'italic', lineHeight: 1.1, marginBottom: 10 }}>Every Sip,<br/>a Story.</div>
-          <div style={{ fontSize: 7, color: 'rgba(255,255,255,0.4)', lineHeight: 1.7, maxWidth: 170, marginBottom: 16 }}>Craft cocktails. Rare spirits. An atmosphere that turns strangers into regulars.</div>
-          <div style={{ padding: '7px 18px', borderRadius: 50, border: '1px solid #F472B6', fontSize: 7, fontWeight: 700, color: '#F472B6', letterSpacing: 0.5, display: 'inline-block', width: 'fit-content' }}>Reserve a Table</div>
-        </div>
-        <div style={{ padding: '10px 18px 14px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-          <div style={{ fontSize: 6, letterSpacing: 2, color: 'rgba(255,255,255,0.25)', marginBottom: 8 }}>SIGNATURE COCKTAILS</div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            {[{ name: 'Velvet Dusk', price: '$18' }, { name: 'Midnight Bloom', price: '$22' }, { name: 'Smoke & Ember', price: '$20' }].map(c => (
-              <div key={c.name} style={{ flex: 1, background: 'rgba(255,255,255,0.04)', borderRadius: 8, padding: 8, border: '1px solid rgba(255,255,255,0.06)' }}>
-                <div style={{ fontSize: 7, fontWeight: 600, color: '#fff', marginBottom: 2 }}>{c.name}</div>
-                <div style={{ fontSize: 7, color: '#F472B6' }}>{c.price}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function MaisonPreview() {
-  return (
-    <div style={{ width: '100%', height: '100%', background: '#FDF8F0', position: 'relative', overflow: 'hidden', fontFamily: F.sans }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 18px', borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
-        <span style={{ fontSize: 13, fontWeight: 300, letterSpacing: 2, color: '#8B6914', fontFamily: F.serif, fontStyle: 'italic' }}>Maison</span>
-        <div style={{ display: 'flex', gap: 14 }}>
-          {['Menu', 'Catering', 'Visit'].map(n => <span key={n} style={{ fontSize: 7, color: 'rgba(0,0,0,0.35)', letterSpacing: 1 }}>{n}</span>)}
-        </div>
-      </div>
-      <div style={{ position: 'relative', height: '48%', overflow: 'hidden' }}>
-        <img src={showcaseBakeryImg} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #FDF8F0 0%, transparent 50%)' }} />
-      </div>
-      <div style={{ padding: '4px 18px 14px' }}>
-        <div style={{ fontSize: 7, letterSpacing: 4, color: '#C4956B', marginBottom: 8, textTransform: 'uppercase' as const, fontWeight: 600 }}>ARTISAN PÂTISSERIE</div>
-        <div style={{ fontSize: 22, fontWeight: 300, color: '#3D2B1F', fontFamily: F.serif, fontStyle: 'italic', lineHeight: 1.15, marginBottom: 8 }}>Baked with<br/>Passion.</div>
-        <div style={{ fontSize: 7, color: 'rgba(0,0,0,0.4)', lineHeight: 1.7, marginBottom: 14 }}>French-inspired pastries crafted daily. From croissants to custom celebration cakes.</div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <div style={{ padding: '6px 18px', borderRadius: 50, background: '#8B6914', fontSize: 7, fontWeight: 700, color: '#fff', letterSpacing: 0.5 }}>Order Now</div>
-          <div style={{ padding: '6px 18px', borderRadius: 50, border: '1px solid rgba(139,105,20,0.3)', fontSize: 7, fontWeight: 600, color: '#8B6914', letterSpacing: 0.5 }}>Our Menu</div>
-        </div>
-      </div>
-      <div style={{ padding: '0 18px 14px', display: 'flex', gap: 8 }}>
-        {[{ name: 'Croissants', from: '$4' }, { name: 'Tarts', from: '$8' }, { name: 'Macarons', from: '$3' }].map(it => (
-          <div key={it.name} style={{ flex: 1, background: 'rgba(139,105,20,0.05)', borderRadius: 8, padding: 8, border: '1px solid rgba(139,105,20,0.1)', textAlign: 'center' as const }}>
-            <div style={{ fontSize: 7, fontWeight: 700, color: '#3D2B1F' }}>{it.name}</div>
-            <div style={{ fontSize: 7, color: '#8B6914', marginTop: 1 }}>from {it.from}</div>
+        {[{ n: 'CUT', p: '$35' }, { n: 'FADE', p: '$55' }, { n: 'SHAVE', p: '$40' }].map(s => (
+          <div key={s.n} style={{ borderLeft: '1px solid rgba(255,255,255,0.2)', paddingLeft: 10 }}>
+            <div style={{ fontSize: 6.5, color: 'rgba(255,255,255,0.55)', letterSpacing: 1.5, marginBottom: 2, fontWeight: 600 }}>{s.n}</div>
+            <div style={{ fontSize: 13, fontWeight: 800, color: '#fff' }}>{s.p}</div>
           </div>
         ))}
       </div>
     </div>
   );
 }
+
+/* AURA — Animated gradient. Slow-drifting sunset gradient with
+   orbiting sun and pulsing shapes. Meditative, screensaver feel. */
+function AuraPreview() {
+  return (
+    <div style={{ width: '100%', height: '100%', background: '#1E0B1C', position: 'relative', overflow: 'hidden', fontFamily: F.sans }}>
+      {/* Animated mesh gradient */}
+      <motion.div
+        animate={{ backgroundPosition: ['0% 0%', '100% 100%', '0% 0%'] }}
+        transition={{ duration: 18, repeat: Infinity, ease: 'linear' }}
+        style={{
+          position: 'absolute', inset: 0,
+          backgroundImage: 'radial-gradient(circle at 20% 30%, #F4A261 0%, transparent 45%), radial-gradient(circle at 80% 70%, #E76F51 0%, transparent 50%), radial-gradient(circle at 50% 50%, #5C1A2A 0%, transparent 60%), linear-gradient(165deg, #FAE1D0 0%, #E8A89E 40%, #8B3A5A 100%)',
+          backgroundSize: '200% 200%',
+        }}
+      />
+      {/* Orbiting sun */}
+      <motion.div
+        animate={{ rotate: 360 }}
+        transition={{ duration: 22, repeat: Infinity, ease: 'linear' }}
+        style={{ position: 'absolute', top: '30%', left: '30%', width: '1px', height: '1px' }}>
+        <div style={{ position: 'absolute', top: -60, left: -12, width: 44, height: 44, borderRadius: '50%', background: 'radial-gradient(circle at 35% 35%, #FFE4B8 0%, #F4A261 40%, #E76F51 100%)', boxShadow: '0 0 30px rgba(244,162,97,0.5)' }} />
+      </motion.div>
+      {/* Pulsing circle */}
+      <motion.div
+        animate={{ scale: [1, 1.15, 1], opacity: [0.7, 0.9, 0.7] }}
+        transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+        style={{ position: 'absolute', top: '22%', left: '12%', width: 90, height: 140, background: '#5C1A2A', borderRadius: '50% 50% 45% 45%' }}
+      />
+      <div style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 20px', zIndex: 2 }}>
+        <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: 3, color: '#2B0F16' }}>AURA STUDIO</span>
+        <div style={{ display: 'flex', gap: 14 }}>
+          {['Treatments', 'Membership', 'Visit'].map(n => <span key={n} style={{ fontSize: 7, color: 'rgba(43,15,22,0.75)', letterSpacing: 1, fontWeight: 600 }}>{n}</span>)}
+        </div>
+      </div>
+      {/* Jumbo year centered */}
+      <div style={{ position: 'absolute', bottom: 72, left: 0, right: 0, textAlign: 'center' as const, lineHeight: 0.85, zIndex: 2 }}>
+        <div style={{ fontSize: 68, fontWeight: 900, color: '#2B0F16', letterSpacing: -3, fontFamily: F.serif, fontStyle: 'italic' as const }}>breathe</div>
+        <div style={{ fontSize: 7, color: 'rgba(43,15,22,0.65)', letterSpacing: 3, marginTop: 6, fontWeight: 600 }}>— SEASON OF SLOWNESS —</div>
+      </div>
+      {/* Bottom strip */}
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '12px 20px', background: 'rgba(43,15,22,0.94)', backdropFilter: 'blur(8px)', color: '#FAE1D0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 2 }}>
+        <div>
+          <div style={{ fontSize: 6.5, letterSpacing: 2, color: 'rgba(250,225,208,0.55)', marginBottom: 2, fontWeight: 600 }}>SPRING ’26 RITUALS</div>
+          <div style={{ fontSize: 9, fontWeight: 700, fontFamily: F.serif, fontStyle: 'italic' as const }}>Book a 90-min reset.</div>
+        </div>
+        <div style={{ padding: '7px 16px', border: '1px solid #FAE1D0', borderRadius: 20, fontSize: 7, fontWeight: 700, letterSpacing: 2 }}>RESERVE</div>
+      </div>
+    </div>
+  );
+}
+
+/* ATELIER — Photo editorial minimalist. Full-bleed aerial, serif italic
+   overlay, glass destination cards at bottom. Feels like a boutique
+   travel / architecture magazine. */
+function AtelierPreview() {
+  return (
+    <div style={{ width: '100%', height: '100%', background: '#0B1610', position: 'relative', overflow: 'hidden', fontFamily: F.sans, color: '#fff' }}>
+      <img src={showcaseArchImg} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '75%', objectFit: 'cover' }} />
+      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(11,22,16,0.45) 0%, transparent 25%, transparent 55%, rgba(11,22,16,0.98) 85%)' }} />
+      <div style={{ position: 'relative', zIndex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 20px' }}>
+        <span style={{ fontSize: 10, fontWeight: 500, letterSpacing: 5 }}>ATELIER — STUDIO</span>
+        <div style={{ display: 'flex', gap: 14 }}>
+          {['Work', 'Studio', 'Journal'].map(n => <span key={n} style={{ fontSize: 7, color: 'rgba(255,255,255,0.7)', letterSpacing: 1 }}>{n}</span>)}
+        </div>
+      </div>
+      <div style={{ position: 'relative', zIndex: 1, padding: '18px 20px 0' }}>
+        <div style={{ fontSize: 6.5, letterSpacing: 3, color: 'rgba(255,255,255,0.75)', marginBottom: 8, textTransform: 'uppercase' as const, fontWeight: 600 }}>Somewhere off the map</div>
+        <div style={{ fontSize: 30, fontWeight: 300, fontFamily: F.serif, fontStyle: 'italic' as const, lineHeight: 1, letterSpacing: -0.8 }}>Build where<br/>the land ends.</div>
+      </div>
+      {/* Film-strip index markers */}
+      <div style={{ position: 'absolute', right: 16, top: '44%', display: 'flex', flexDirection: 'column', gap: 4, zIndex: 1 }}>
+        {['01', '02', '03'].map((n, i) => (
+          <div key={n} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div style={{ width: i === 0 ? 16 : 8, height: 1, background: i === 0 ? '#fff' : 'rgba(255,255,255,0.4)' }} />
+            <span style={{ fontSize: 6, color: i === 0 ? '#fff' : 'rgba(255,255,255,0.5)', fontFamily: 'monospace', letterSpacing: 1 }}>{n}</span>
+          </div>
+        ))}
+      </div>
+      {/* Bottom destination cards */}
+      <div style={{ position: 'absolute', bottom: 14, left: 20, right: 20, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, zIndex: 1 }}>
+        {[{ n: 'The Meridian', l: '42 stories', s: 'Downtown' }, { n: 'North Cove', l: 'Residential', s: '2027' }, { n: 'Hall No. 7', l: 'Civic', s: 'In progress' }].map(c => (
+          <div key={c.n} style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)', borderRadius: 6, padding: '8px 10px', border: '1px solid rgba(255,255,255,0.1)' }}>
+            <div style={{ fontSize: 7.5, fontWeight: 700, color: '#fff', marginBottom: 3 }}>{c.n}</div>
+            <div style={{ fontSize: 6.5, color: 'rgba(255,255,255,0.55)' }}>{c.l}</div>
+            <div style={{ fontSize: 6, color: 'rgba(255,255,255,0.35)', marginTop: 1, letterSpacing: 0.5 }}>{c.s}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* NOIR — Maximalist animated. Dark canvas with drifting, colorful blobs
+   that gently float. Tri-color italic wordmark. */
+function NoirPreview() {
+  const blobs = [
+    { x: '-4%', y: '14%', size: 90, color: '#E85E27', delay: 0 },
+    { x: '82%', y: '10%', size: 60, color: '#F472B6', delay: 0.8 },
+    { x: '6%', y: '72%', size: 36, color: '#FBBF24', delay: 1.6 },
+    { x: '84%', y: '68%', size: 44, color: '#A78BFA', delay: 2.4 },
+  ];
+  return (
+    <div style={{ width: '100%', height: '100%', background: '#0A0A0A', position: 'relative', overflow: 'hidden', fontFamily: F.sans, color: '#fff' }}>
+      {blobs.map((b, i) => (
+        <motion.div key={i}
+          animate={{ y: [0, -10, 0, 8, 0], x: [0, 6, 0, -6, 0] }}
+          transition={{ duration: 8 + i, repeat: Infinity, ease: 'easeInOut', delay: b.delay }}
+          style={{ position: 'absolute', top: b.y, left: b.x, width: b.size, height: b.size, background: b.color, borderRadius: '50%', filter: 'blur(0.5px)' }}
+        />
+      ))}
+      {/* Horizontal pill */}
+      <motion.div
+        animate={{ scaleX: [1, 1.15, 1] }}
+        transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+        style={{ position: 'absolute', top: '76%', left: '40%', width: 70, height: 24, background: '#67E8F9', borderRadius: 50 }}
+      />
+      {/* Nav */}
+      <div style={{ position: 'relative', zIndex: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 20px' }}>
+        <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: 3 }}>◌ NOIR BAR</span>
+        <div style={{ display: 'flex', gap: 12 }}>
+          {['Menu', 'Events', 'Reserve'].map(n => <span key={n} style={{ fontSize: 7, color: 'rgba(255,255,255,0.7)', letterSpacing: 1, fontWeight: 600 }}>{n}</span>)}
+        </div>
+      </div>
+      {/* Giant mixed-case wordmark */}
+      <div style={{ position: 'relative', zIndex: 2, padding: '64px 20px 0', lineHeight: 0.92 }}>
+        <div style={{ fontSize: 48, fontWeight: 900, color: '#fff', letterSpacing: -2, fontFamily: F.sans }}>every</div>
+        <div style={{ fontSize: 48, fontWeight: 300, color: '#F472B6', letterSpacing: -2, fontFamily: F.serif, fontStyle: 'italic' as const, marginLeft: 28 }}>sip is</div>
+        <div style={{ fontSize: 48, fontWeight: 900, color: '#67E8F9', letterSpacing: -2, fontFamily: F.sans }}>a story.</div>
+      </div>
+      {/* Bottom ribbon */}
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '12px 20px', background: '#fff', color: '#0A0A0A', display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 2 }}>
+        <div style={{ fontSize: 7, fontWeight: 700, letterSpacing: 2 }}>OPEN WED–SUN · 5PM–2AM</div>
+        <div style={{ fontSize: 7, fontWeight: 700, letterSpacing: 2 }}>RESERVE →</div>
+      </div>
+    </div>
+  );
+}
+
+/* MAISON — Retail grid brutalist. Cream poster canvas, cobalt display
+   type, 4-up product tile grid with prices + SKU codes, weekly drop bar. */
+function MaisonPreview() {
+  const items = [
+    { d: 'THU', n: 'Croissant', p: '$4', sku: '#001' },
+    { d: 'FRI', n: 'Tarte', p: '$8', sku: '#002' },
+    { d: 'SAT', n: 'Macaron', p: '$3', sku: '#003' },
+    { d: 'SUN', n: 'Canelé', p: '$5', sku: '#004' },
+  ];
+  return (
+    <div style={{ width: '100%', height: '100%', background: '#F7F2E8', position: 'relative', overflow: 'hidden', fontFamily: F.sans, color: '#0A1A3C' }}>
+      {/* Top meta strip */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 18px', borderBottom: '1px solid rgba(10,26,60,0.15)', fontSize: 6.5, fontFamily: 'monospace', letterSpacing: 1 }}>
+        <span>PARIS — LYON — BROOKLYN</span>
+        <span>VOL. 07 / APR ’26</span>
+      </div>
+      {/* Jumbo cobalt type */}
+      <div style={{ padding: '12px 18px 4px', lineHeight: 0.82 }}>
+        <div style={{ fontSize: 56, fontWeight: 900, color: '#1C4EE8', letterSpacing: -3, fontFamily: F.sans }}>MAISON</div>
+        <div style={{ fontSize: 18, fontWeight: 300, color: '#0A1A3C', fontFamily: F.serif, fontStyle: 'italic' as const, letterSpacing: -0.5, marginTop: 2 }}>une pâtisserie.</div>
+      </div>
+      {/* 4-up product tile grid */}
+      <div style={{ padding: '8px 18px', display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 6 }}>
+        {items.map((it, i) => (
+          <div key={it.d} style={{ background: i === 0 ? '#1C4EE8' : '#fff', borderRadius: 2, padding: '8px 10px', border: i === 0 ? 'none' : '1px solid rgba(10,26,60,0.12)', position: 'relative', overflow: 'hidden' }}>
+            {i === 0 && (
+              <img src={showcaseBakeryImg} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', mixBlendMode: 'luminosity', opacity: 0.85 }} />
+            )}
+            <div style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+              <span style={{ fontSize: 6, fontFamily: 'monospace', color: i === 0 ? 'rgba(247,242,232,0.7)' : 'rgba(10,26,60,0.5)', letterSpacing: 1 }}>{it.sku}</span>
+              <span style={{ fontSize: 6.5, fontWeight: 700, color: i === 0 ? '#F7F2E8' : '#0A1A3C', letterSpacing: 1 }}>{it.d}</span>
+            </div>
+            <div style={{ position: 'relative', marginTop: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'end' }}>
+              <span style={{ fontSize: 11, fontWeight: 800, color: i === 0 ? '#F7F2E8' : '#0A1A3C', fontFamily: F.serif, fontStyle: 'italic' as const }}>{it.n}</span>
+              <span style={{ fontSize: 9, fontWeight: 800, color: i === 0 ? '#F7F2E8' : '#1C4EE8' }}>{it.p}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+      {/* Bottom CTA bar */}
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: '#1C4EE8', color: '#F7F2E8', padding: '10px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ fontSize: 8, fontWeight: 900, letterSpacing: 2 }}>THIS WEEK’S DROP →</div>
+        <div style={{ fontSize: 7, letterSpacing: 1, fontFamily: 'monospace' }}>07 ITEMS / 3 DAYS</div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Hide original preview renderers below ───────────────────────── */
 
 const SITE_PREVIEWS: Record<string, React.FC> = {
   'Kuro': KuroPreview,

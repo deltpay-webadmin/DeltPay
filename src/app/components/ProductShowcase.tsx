@@ -72,9 +72,9 @@ export function ProductShowcase() {
               <div className="bg-[#E5E7EB] rounded-lg p-2 shadow-2xl">
                 <div className="bg-white rounded-t flex items-center gap-2 px-3 py-2.5 mb-1">
                   <div className="flex gap-1.5">
-                    <div className="w-2.5 h-2.5 rounded-full bg-red-400"></div>
-                    <div className="w-2.5 h-2.5 rounded-full bg-yellow-400"></div>
-                    <div className="w-2.5 h-2.5 rounded-full bg-green-400"></div>
+                    <div className="w-2.5 h-2.5 rounded-full bg-[#041E42]/25"></div>
+                    <div className="w-2.5 h-2.5 rounded-full bg-[#041E42]/25"></div>
+                    <div className="w-2.5 h-2.5 rounded-full bg-[#041E42]/25"></div>
                   </div>
                   <div className="flex-1 bg-[#F6F7FB] rounded px-3 py-1.5 text-xs text-[#6B7280]">
                     thenovarestaurant.com

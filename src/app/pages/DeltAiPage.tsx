@@ -7,8 +7,8 @@ import { ChatGPTvsLens } from '../components/ChatGPTvsLens';
    PALETTE (from lens-proof-section)
    ════════════════════════════════════════════════════════════ */
 const C = {
-  bg:          '#03152E',
-  card:        '#071428',
+  bg:          '#041E42',
+  card:        '#07264D',
   border:      'rgba(255,255,255,0.08)',
   white:       '#ffffff',
   white70:     'rgba(255,255,255,0.7)',
@@ -18,10 +18,10 @@ const C = {
   white05:     'rgba(255,255,255,0.05)',
   indigo:      '#4f46ff',
   indigoLight: '#7b61ff',
-  green:       '#34d399',
-  red:         '#f87171',
-  amber:       '#fbbf24',
-  blue:        '#60a5fa',
+  green:       'rgba(73,69,255,0.9)',
+  red:         'rgba(4,30,66,0.55)',
+  amber:       'rgba(73,69,255,0.6)',
+  blue:        'rgba(4,30,66,0.7)',
 };
 
 const FONT_SERIF = "'Playfair Display', Georgia, serif";
@@ -583,6 +583,8 @@ export function DeltAiPage() {
             }}>
               Get answers you can act on — with the money, timing, and next step already attached.
             </p>
+
+            <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', marginBottom: 24, fontFamily: FONT_SANS, maxWidth: 440, margin: '0 auto 24px' }}>AI-generated insights should be reviewed before acting. Delt is not liable for decisions made solely on AI output.</p>
 
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center' }}>
               <Link

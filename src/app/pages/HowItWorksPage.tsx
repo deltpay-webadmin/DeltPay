@@ -31,16 +31,16 @@ const products = [
     title: 'Payments',
     headline: 'Accept payments everywhere. Keep more.',
     description:
-      'Delt Payments is built directly into your site — no plugins, no third-party processors. Accept cards, contactless, and online payments with transparent pricing and instant settlement to your Delt balance.',
+      'Delt Payments is built directly into your site — no plugins, no third-party processors. Accept cards, contactless, and online payments with transparent pricing and instant settlement to your Delt balance; standard bank transfers in 1\u20132 business days.',
     bullets: [
-      'Integrated checkout — zero configuration needed',
+      'Integrated checkout — minimal configuration — works out of the box for standard setups',
       'In-person POS and contactless tap-to-pay',
       'Real-time transaction monitoring & analytics',
       'PCI-compliant, encrypted by default',
     ],
     icon: CreditCard,
     image: 'https://images.unsplash.com/photo-1715635845732-b52d2f408a40?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjb250YWN0bGVzcyUyMHBheW1lbnQlMjBjYXJkJTIwdGVybWluYWwlMjBwcm9mZXNzaW9uYWx8ZW58MXx8fHwxNzc1MTM3MTczfDA&ixlib=rb-4.1.0&q=80&w=1080',
-    color: '#16C784',
+    color: '#4945FF',
     stat: { value: '2.6%', label: 'Flat processing rate' },
   },
   {
@@ -48,7 +48,7 @@ const products = [
     title: 'Capital',
     headline: 'Funding matched to your momentum.',
     description:
-      'Because Delt already processes your payments and tracks your performance, we can underwrite instantly. Revenue-based funding with no equity dilution, no personal guarantees, and average 48-hour disbursement.',
+      'Because Delt already processes your payments and tracks your performance, we can underwrite rapidly — typically within hours using your Delt data. Revenue-based funding with no equity dilution, no personal guarantees, and average 48-hour disbursement.',
     bullets: [
       'Revenue-based — repay as a % of daily sales',
       'No equity, no personal guarantee required',
@@ -63,7 +63,7 @@ const products = [
   {
     id: 'ai',
     title: 'Lens AI',
-    headline: 'Your business brain. Always on.',
+    headline: 'Your business brain. Available around the clock.',
     description:
       'Lens is Delt\'s AI layer — a conversational analytics engine that watches your sales, traffic, and cash flow 24/7. Ask questions in plain English, get anomaly alerts before problems escalate, and surface opportunities you\'d otherwise miss.',
     bullets: [
@@ -74,8 +74,8 @@ const products = [
     ],
     icon: Sparkles,
     image: lensAiImg,
-    color: '#16C784',
-    stat: { value: '24/7', label: 'Always monitoring' },
+    color: '#4945FF',
+    stat: { value: '24/7', label: 'Always monitoring*' },
   },
 ];
 
@@ -135,6 +135,7 @@ function ProductCard({ i, product, progress, range, targetScale }: CardProps) {
             <div className="hiw-card-stat">
               <span className="hiw-card-stat-value" style={{ color: product.color }}>{product.stat.value}</span>
               <span className="hiw-card-stat-label">{product.stat.label}</span>
+              {product.id === 'ai' && <p style={{ fontSize: '0.75rem', color: '#475569', marginTop: 4 }}>*Subject to service availability.</p>}
             </div>
           </div>
 
@@ -254,7 +255,7 @@ export function HowItWorksPage() {
 
       <style>{`
         .hiw-page {
-          background: #03152E;
+          background: #041E42;
           min-height: 100vh;
         }
 
@@ -516,7 +517,7 @@ export function HowItWorksPage() {
           box-shadow: 0 0 28px rgba(73,69,255,0.25), 0 4px 14px rgba(0,0,0,0.2);
         }
         .hiw-cta-primary:hover {
-          background: #3d3ae0;
+          background: #4945FF;
           transform: translateY(-1px);
           box-shadow: 0 0 44px rgba(73,69,255,0.4), 0 8px 24px rgba(0,0,0,0.3);
         }

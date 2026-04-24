@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'motion/react';
+import { Link } from 'react-router';
 import { Calculator, CheckCircle } from 'lucide-react';
 
 export function CalculatorPage() {
@@ -37,7 +38,7 @@ export function CalculatorPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8F9FB]">
+    <div className="min-h-screen bg-[#F6F7FB]">
       {/* Hero */}
       <div className="pt-32 pb-16 text-center">
         <motion.div
@@ -45,10 +46,11 @@ export function CalculatorPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#16C784] text-white rounded-full text-sm mb-8" style={{ fontWeight: 600 }}>
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#4945FF] text-white rounded-full text-sm mb-4" style={{ fontWeight: 600 }}>
             <CheckCircle className="w-4 h-4" />
-            Free processing on first $5K in sales
+            Free processing on first $5K in sales*
           </div>
+          <p className="text-xs text-[#475569] mt-2 mb-4">*Applies to new accounts on the Free plan. Subject to eligibility. See <Link to="/terms" className="underline">Terms</Link>.</p>
 
           <h1 className="text-5xl md:text-6xl text-[#041E42] mb-4" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 800 }}>
             Calculate your{' '}
@@ -56,7 +58,7 @@ export function CalculatorPage() {
               savings
             </span>
           </h1>
-          <p className="text-[#6B7280] text-lg">Calculate your savings with Delt</p>
+          <p className="text-[#475569] text-lg">Calculate your savings with Delt</p>
         </motion.div>
       </div>
 
@@ -140,7 +142,7 @@ export function CalculatorPage() {
                 {/* Calculate Button */}
                 <button
                   onClick={() => setCalculated(true)}
-                  className="w-full py-3.5 bg-[#16C784] hover:bg-[#12B474] text-white rounded-lg transition-colors text-base"
+                  className="w-full py-3.5 bg-[#4945FF] hover:bg-[#3933CC] text-white rounded-lg transition-colors text-base"
                   style={{ fontWeight: 600 }}
                 >
                   Calculate my savings
@@ -148,10 +150,10 @@ export function CalculatorPage() {
               </div>
 
               {/* Delt Rates */}
-              <div className="mt-6 p-5 bg-[#F0EDFF] rounded-xl border border-[#E0DBFF]">
+              <div className="mt-6 p-5 bg-[#4945FF]/8 rounded-xl border border-[#4945FF]/15">
                 <div className="text-xs text-[#4945FF] mb-1 tracking-wider uppercase" style={{ fontWeight: 700 }}>Delt Rates</div>
                 <div className="text-2xl text-[#041E42]" style={{ fontWeight: 800 }}>2.6% + $0.10</div>
-                <div className="text-sm text-[#6B7280] mt-0.5">Per transaction · No hidden fees</div>
+                <div className="text-sm text-[#475569] mt-0.5">Per transaction · No hidden fees</div>
               </div>
             </div>
 
@@ -162,7 +164,7 @@ export function CalculatorPage() {
                   <div className="w-16 h-16 bg-[#F0EDFF] rounded-2xl flex items-center justify-center mx-auto mb-4">
                     <Calculator className="w-8 h-8 text-[#4945FF]" />
                   </div>
-                  <p className="text-[#6B7280]">Fill out the form to see your savings</p>
+                  <p className="text-[#475569]">Fill out the form to see your savings</p>
                 </div>
               ) : (
                 <motion.div
@@ -172,38 +174,43 @@ export function CalculatorPage() {
                   transition={{ duration: 0.4 }}
                 >
                   <div>
-                    <p className="text-sm text-[#6B7280] mb-1">Your current monthly cost</p>
+                    <p className="text-sm text-[#475569] mb-1">Your current monthly cost</p>
                     <p className="text-2xl text-[#041E42]" style={{ fontWeight: 700 }}>{formatCurrency(currentCost)}</p>
                   </div>
 
                   <div>
-                    <p className="text-sm text-[#6B7280] mb-1">With Delt</p>
+                    <p className="text-sm text-[#475569] mb-1">With Delt</p>
                     <p className="text-2xl text-[#4945FF]" style={{ fontWeight: 700 }}>{formatCurrency(deltCost)}</p>
                   </div>
 
                   <div className="h-px bg-[#E5E7EB]" />
 
                   <div>
-                    <p className="text-sm text-[#6B7280] mb-1">Monthly savings</p>
-                    <p className="text-3xl text-[#16C784]" style={{ fontWeight: 800 }}>
+                    <p className="text-sm text-[#475569] mb-1">Monthly savings</p>
+                    <p className="text-3xl text-[#4945FF]" style={{ fontWeight: 800 }}>
                       {savings > 0 ? formatCurrency(savings) : '$0.00'}
                     </p>
                     {savings > 0 && (
-                      <p className="text-sm text-[#16C784] mt-1" style={{ fontWeight: 500 }}>
+                      <p className="text-sm text-[#4945FF] mt-1" style={{ fontWeight: 500 }}>
                         {formatCurrency(savings * 12)} saved per year
                       </p>
                     )}
                   </div>
 
-                  <motion.a
-                    href="#/apply"
-                    className="block w-full text-center py-3.5 bg-[#4945FF] hover:bg-[#3933CC] text-white rounded-lg transition-colors"
-                    style={{ fontWeight: 600 }}
+                  <motion.div
                     whileHover={{ scale: 1.01 }}
                     whileTap={{ scale: 0.99 }}
                   >
-                    Get started with Delt
-                  </motion.a>
+                    <Link
+                      to="/apply"
+                      className="block w-full text-center py-3.5 bg-[#4945FF] hover:bg-[#3933CC] text-white rounded-lg transition-colors"
+                      style={{ fontWeight: 600 }}
+                    >
+                      Get started with Delt
+                    </Link>
+                  </motion.div>
+                  <p className="text-xs text-[#475569] mt-4 max-w-md">Savings estimates are illustrative and based on rates you entered. Actual savings depend on card mix, plan, and volume. Delt's 2.6% + $0.10 rate applies to standard card-present transactions on the Free plan.</p>
+                  <p className="text-sm text-[#475569] mt-2">Questions? <Link to="/support" className="text-[#4945FF] underline">Chat with us</Link></p>
                 </motion.div>
               )}
             </div>

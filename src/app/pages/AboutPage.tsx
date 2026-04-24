@@ -6,9 +6,9 @@ const COLORS = {
   navy: '#041e42',
   indigo: '#4945FF',
   white: '#FFFFFF',
-  gray50: '#F8F9FA',
-  gray600: '#6C757D',
-  gray800: '#343A40',
+  gray50: '#F6F7FB',
+  gray600: '#475569',
+  gray800: '#041E42',
 };
 
 const fonts = {
@@ -155,7 +155,7 @@ export function AboutPage() {
               },
               {
                 title: 'Speed Matters',
-                body: 'Whether it\'s funding in 48 hours or instant transaction insights, we believe fast is better. Your time is valuable.'
+                body: 'Whether it\'s funding often within 48 hours or near-instant transaction insights, we believe fast is better. Your time is valuable.'
               },
               {
                 title: 'Built to Scale',
@@ -265,7 +265,7 @@ export function AboutPage() {
                   textDecoration: 'none',
                   transition: 'all 0.2s'
                 }}
-                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#3530e0'; }}
+                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#3933CC'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = COLORS.indigo; }}
               >
                 Get Started

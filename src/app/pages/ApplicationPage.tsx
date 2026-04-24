@@ -70,13 +70,13 @@ export function ApplicationPage() {
       <div className="min-h-screen bg-[#F6F7FB] flex items-center justify-center p-4">
         <div className="max-w-2xl w-full">
           <div className="bg-white rounded-2xl shadow-xl p-8 md:p-12 text-center">
-            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Check className="w-10 h-10 text-green-600" />
+            <div className="w-20 h-20 bg-[#4945FF]/10 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Check className="w-10 h-10 text-[#4945FF]" />
             </div>
             <h1 className="text-3xl font-bold text-[#041E42] mb-4">
               Application Submitted Successfully!
             </h1>
-            <p className="text-lg text-[#6B7280] mb-8">
+            <p className="text-lg text-[#475569] mb-8">
               Welcome to Delt, {formData.fullName}! We've received your application and verified your bank account.
             </p>
             <div className="bg-[#F6F7FB] rounded-lg p-6 mb-8 text-left">
@@ -84,19 +84,19 @@ export function ApplicationPage() {
               <ul className="space-y-3">
                 <li className="flex items-start gap-3">
                   <Check className="w-5 h-5 text-[#4945FF] flex-shrink-0 mt-0.5" />
-                  <span className="text-[#6B7280]">
-                    Our team will review your application within 24 hours
+                  <span className="text-[#475569]">
+                    Our team will review your application within 1 business day (Mon–Fri, excluding holidays)
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
                   <Check className="w-5 h-5 text-[#4945FF] flex-shrink-0 mt-0.5" />
-                  <span className="text-[#6B7280]">
+                  <span className="text-[#475569]">
                     You'll receive your Delt Reader at {formData.email}
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
                   <Check className="w-5 h-5 text-[#4945FF] flex-shrink-0 mt-0.5" />
-                  <span className="text-[#6B7280]">
+                  <span className="text-[#475569]">
                     Start processing payments immediately with $0 monthly fees
                   </span>
                 </li>
@@ -133,7 +133,7 @@ export function ApplicationPage() {
             <h1 className="text-2xl font-bold text-[#041E42] mb-4">
               Connecting to Your Bank...
             </h1>
-            <p className="text-[#6B7280] mb-8">
+            <p className="text-[#475569] mb-8">
               Please complete the bank verification process in the popup window.
             </p>
             <button
@@ -145,7 +145,7 @@ export function ApplicationPage() {
             </button>
             <button
               onClick={() => setStep('form')}
-              className="block mx-auto mt-4 text-[#6B7280] hover:text-[#041E42] text-sm"
+              className="block mx-auto mt-4 text-[#475569] hover:text-[#041E42] text-sm"
             >
               Go Back
             </button>
@@ -173,7 +173,7 @@ export function ApplicationPage() {
             <h1 className="text-3xl sm:text-4xl font-bold text-[#041E42] mb-3">
               Get Started with Delt
             </h1>
-            <p className="text-lg text-[#6B7280]">
+            <p className="text-lg text-[#475569]">
               Complete this quick application to start processing payments
             </p>
           </div>
@@ -188,7 +188,7 @@ export function ApplicationPage() {
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <Building2 className="h-5 w-5 text-[#6B7280]" />
+                    <Building2 className="h-5 w-5 text-[#475569]" />
                   </div>
                   <input
                     type="text"
@@ -210,7 +210,7 @@ export function ApplicationPage() {
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <User className="h-5 w-5 text-[#6B7280]" />
+                    <User className="h-5 w-5 text-[#475569]" />
                   </div>
                   <input
                     type="text"
@@ -232,7 +232,7 @@ export function ApplicationPage() {
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <Mail className="h-5 w-5 text-[#6B7280]" />
+                    <Mail className="h-5 w-5 text-[#475569]" />
                   </div>
                   <input
                     type="email"
@@ -254,7 +254,7 @@ export function ApplicationPage() {
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <Phone className="h-5 w-5 text-[#6B7280]" />
+                    <Phone className="h-5 w-5 text-[#475569]" />
                   </div>
                   <input
                     type="tel"
@@ -292,11 +292,17 @@ export function ApplicationPage() {
 
               {/* Info Box */}
               <div className="bg-[#F6F7FB] rounded-lg p-4 border-l-4 border-[#4945FF]">
-                <p className="text-sm text-[#6B7280]">
+                <p className="text-sm text-[#475569]">
                   <strong className="text-[#041E42]">Next step:</strong> After submitting this form, 
                   you'll securely connect your bank account using Plaid to verify your business.
                 </p>
               </div>
+
+              {/* Plaid Consent */}
+              <div className="bg-[#F6F7FB] border border-[#4945FF]/15 rounded-lg p-4 text-sm text-[#475569] mb-4">By continuing, you authorize Delt and our bank-verification partner Plaid to access your bank account information. See <a href="https://plaid.com/legal/#consumers" target="_blank" rel="noopener" className="underline text-[#4945FF]">Plaid's Privacy Policy</a>.</div>
+
+              {/* Privacy consent */}
+              <p className="text-xs text-[#475569] mb-2">By submitting, you acknowledge our <a href="/privacy" className="underline text-[#4945FF]">Privacy Policy</a> and agree to our <a href="/terms" className="underline text-[#4945FF]">Terms of Service</a>.</p>
 
               {/* Submit Button */}
               <button
@@ -307,14 +313,14 @@ export function ApplicationPage() {
               </button>
 
               {/* Trust Signals */}
-              <div className="flex items-center justify-center gap-8 pt-4 text-sm text-[#6B7280]">
+              <div className="flex items-center justify-center gap-8 pt-4 text-sm text-[#475569]">
                 <div className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-green-600" />
+                  <Check className="w-4 h-4 text-[#4945FF]" />
                   <span>Secure & Encrypted</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-green-600" />
-                  <span>No Hidden Fees</span>
+                  <Check className="w-4 h-4 text-[#4945FF]" />
+                  <span>Transparent Fees</span>
                 </div>
               </div>
             </form>

@@ -2,7 +2,7 @@ import { ArrowRight, ArrowLeft, ExternalLink } from 'lucide-react';
 import { Link, useNavigate } from 'react-router';
 import { motion } from 'motion/react';
 
-const BG      = '#03152E';
+const BG      = '#FFFFFF';
 const PURPLE  = '#4945FF';
 const JAKARTA = '"Plus Jakarta Sans", system-ui, -apple-system, sans-serif';
 const MONO    = '"JetBrains Mono", "Fira Mono", monospace';
@@ -46,7 +46,7 @@ const POSTS: BlogPost[] = [
     id: '3',
     category: 'Capital',
     title: 'Businesses grow revenue 27 points faster after accepting Capital financing',
-    excerpt: 'In a new study, we found a strong causal relationship between accepting financing and growing revenue on Delt. Learn which businesses are most likely to benefit, and how greater access to financing could drive significant GDP growth.',
+    excerpt: 'In a new study, we found a strong causal relationship between accepting financing and growing revenue on Delt. Learn which businesses are most likely to benefit, and how greater access to financing could drive significant GDP growth. *Based on Delt internal analysis; individual results vary.',
     date: 'January 22, 2026',
     authors: [
       { name: 'Jun Wen',     title: 'Data Science, Delt Capital', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop' },
@@ -57,7 +57,7 @@ const POSTS: BlogPost[] = [
     id: '4',
     category: 'Intelligence',
     title: 'How Delt AI helps restaurants predict peak hours and optimize staffing',
-    excerpt: 'Discover how our predictive analytics engine helps restaurant owners reduce labor costs by 15% while improving customer service during busy periods.',
+    excerpt: 'Discover how our predictive analytics engine helps restaurant owners reduce labor costs by 15% while improving customer service during busy periods. *Based on Delt internal analysis; individual results vary.',
     date: 'January 15, 2026',
     authors: [
       { name: 'Maria Rodriguez', title: 'Product Manager, Delt AI', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop' },
@@ -86,12 +86,12 @@ const POSTS: BlogPost[] = [
 ];
 
 const CATEGORY_COLORS: Record<string, string> = {
-  Product:      PURPLE,
-  Capital:      '#22c55e',
-  Intelligence: '#06b6d4',
-  Commerce:     '#f59e0b',
-  Company:      '#a78bfa',
-  Industry:     '#f97316',
+  Product:      'rgba(73,69,255,1.0)',
+  Capital:      'rgba(73,69,255,0.85)',
+  Intelligence: 'rgba(73,69,255,0.7)',
+  Commerce:     'rgba(73,69,255,0.55)',
+  Company:      'rgba(73,69,255,0.4)',
+  Industry:     'rgba(73,69,255,0.4)',
 };
 
 export function BlogPage() {
