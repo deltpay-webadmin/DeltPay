@@ -82,11 +82,11 @@ export function ApexFitnessPreview() {
             <div style={{ padding: '5px 14px', borderRadius: 4, border: '1px solid rgba(103,232,249,0.3)', fontSize: 6, fontWeight: 700, color: '#67E8F9', letterSpacing: 1 }}>CLASSES</div>
           </div>
         </div>
-        <div style={{ display: 'flex', padding: '8px 14px 10px', gap: 0, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+        <div style={{ display: 'flex', padding: '8px 14px 10px', gap: 0, background: 'rgba(11,22,32,0.82)', backdropFilter: 'blur(6px)', borderTop: '1px solid rgba(103,232,249,0.15)' }}>
           {[{ n: '240+', l: 'MEMBERS' }, { n: '18', l: 'CLASSES/WK' }, { n: '4.9★', l: 'RATING' }].map(s => (
             <div key={s.l} style={{ flex: 1, textAlign: 'center' }}>
               <div style={{ fontSize: 10, fontWeight: 900, color: '#67E8F9' }}>{s.n}</div>
-              <div style={{ fontSize: 5, color: 'rgba(255,255,255,0.35)', letterSpacing: 1.5 }}>{s.l}</div>
+              <div style={{ fontSize: 5, color: 'rgba(255,255,255,0.7)', letterSpacing: 1.5 }}>{s.l}</div>
             </div>
           ))}
         </div>
@@ -105,20 +105,20 @@ export function MeridianRealtyPreview() {
           {['Listings', 'Sell', 'Agents'].map(n => <span key={n} style={{ fontSize: 6, color: 'rgba(0,0,0,0.45)', letterSpacing: 1 }}>{n}</span>)}
         </div>
       </div>
-      <div style={{ position: 'relative', height: '48%', overflow: 'hidden' }}>
+      <div style={{ position: 'relative', height: '42%', overflow: 'hidden' }}>
         <img src={imgRealEstate} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         <div style={{ position: 'absolute', left: 10, bottom: 8, padding: '4px 8px', background: 'rgba(255,255,255,0.95)', borderRadius: 4, fontSize: 6, fontWeight: 700, color: '#1A1A1A' }}>
           $2.4M · 4BR · Brooklyn
         </div>
       </div>
-      <div style={{ padding: '10px 14px' }}>
-        <div style={{ fontSize: 6, letterSpacing: 3, color: 'rgba(0,0,0,0.35)', marginBottom: 4, fontWeight: 600 }}>CURATED PROPERTIES</div>
-        <div style={{ fontSize: 16, fontWeight: 300, color: '#1A1A1A', fontFamily: F.serif, fontStyle: 'italic', lineHeight: 1.1, marginBottom: 6 }}>Homes with<br/>character.</div>
-        <div style={{ display: 'flex', gap: 6 }}>
+      <div style={{ padding: '8px 14px 10px' }}>
+        <div style={{ fontSize: 6, letterSpacing: 3, color: 'rgba(0,0,0,0.35)', marginBottom: 3, fontWeight: 600 }}>CURATED PROPERTIES</div>
+        <div style={{ fontSize: 14, fontWeight: 300, color: '#1A1A1A', fontFamily: F.serif, fontStyle: 'italic', lineHeight: 1.05, marginBottom: 6 }}>Homes with<br/>character.</div>
+        <div style={{ display: 'flex', gap: 5 }}>
           {[{ c: 'Brooklyn', n: 42 }, { c: 'Queens', n: 28 }, { c: 'Manhattan', n: 19 }].map(s => (
-            <div key={s.c} style={{ flex: 1, padding: '5px 6px', background: '#fff', borderRadius: 6, border: '1px solid rgba(0,0,0,0.06)' }}>
+            <div key={s.c} style={{ flex: 1, padding: '4px 6px', background: '#fff', borderRadius: 5, border: '1px solid rgba(0,0,0,0.06)' }}>
               <div style={{ fontSize: 6, fontWeight: 700, color: '#1A1A1A' }}>{s.c}</div>
-              <div style={{ fontSize: 6, color: 'rgba(0,0,0,0.4)' }}>{s.n} homes</div>
+              <div style={{ fontSize: 5, color: 'rgba(0,0,0,0.4)' }}>{s.n} homes</div>
             </div>
           ))}
         </div>
@@ -328,18 +328,18 @@ export function OrbitJewelryPreview() {
           {['Rings', 'Necklaces', 'Bespoke'].map(n => <span key={n} style={{ fontSize: 6, color: 'rgba(0,0,0,0.5)', letterSpacing: 1 }}>{n}</span>)}
         </div>
       </div>
-      <div style={{ position: 'relative', height: '46%', overflow: 'hidden' }}>
+      <div style={{ position: 'relative', height: '40%', overflow: 'hidden' }}>
         <img src={imgJewelry} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 55%, #FAF8F4 100%)' }} />
       </div>
       <div style={{ padding: '6px 14px 10px' }}>
-        <div style={{ fontSize: 5, letterSpacing: 4, color: '#B08A4E', marginBottom: 4, fontWeight: 700 }}>NEW · THE ECLIPSE COLLECTION</div>
-        <div style={{ fontSize: 18, fontWeight: 300, color: '#1A1A1A', fontFamily: F.serif, fontStyle: 'italic', lineHeight: 1.1, marginBottom: 6 }}>Made to<br/>be remembered.</div>
-        <div style={{ display: 'flex', gap: 6 }}>
+        <div style={{ fontSize: 5, letterSpacing: 4, color: '#B08A4E', marginBottom: 3, fontWeight: 700 }}>NEW · THE ECLIPSE COLLECTION</div>
+        <div style={{ fontSize: 14, fontWeight: 300, color: '#1A1A1A', fontFamily: F.serif, fontStyle: 'italic', lineHeight: 1.05, marginBottom: 6 }}>Made to<br/>be remembered.</div>
+        <div style={{ display: 'flex', gap: 5 }}>
           {[{ n: 'Eclipse Ring', p: '$1,850' }, { n: 'Luna Band', p: '$920' }, { n: 'Meridian Chain', p: '$1,240' }].map(x => (
-            <div key={x.n} style={{ flex: 1, padding: '5px 6px', background: '#fff', borderRadius: 6, border: '1px solid rgba(0,0,0,0.05)' }}>
+            <div key={x.n} style={{ flex: 1, padding: '4px 6px', background: '#fff', borderRadius: 5, border: '1px solid rgba(0,0,0,0.05)' }}>
               <div style={{ fontSize: 6, fontWeight: 700, color: '#1A1A1A' }}>{x.n}</div>
-              <div style={{ fontSize: 6, color: '#B08A4E', marginTop: 1 }}>{x.p}</div>
+              <div style={{ fontSize: 5, color: '#B08A4E', marginTop: 1 }}>{x.p}</div>
             </div>
           ))}
         </div>
@@ -352,7 +352,8 @@ export function OrbitJewelryPreview() {
 export function CaskWinePreview() {
   return (
     <div style={{ width: '100%', height: '100%', background: '#2A0F18', position: 'relative', overflow: 'hidden', fontFamily: F.sans }}>
-      <img src={imgWine} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.28 }} />
+      <img src={imgWine} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.18 }} />
+      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(42,15,24,0.3) 0%, rgba(42,15,24,0.85) 100%)' }} />
       <div style={{ position: 'relative', zIndex: 1, height: '100%', display: 'flex', flexDirection: 'column' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px' }}>
           <span style={{ fontSize: 13, fontWeight: 300, letterSpacing: 5, color: '#E9A6B8', fontFamily: F.serif, fontStyle: 'italic' }}>cask.</span>
@@ -366,7 +367,7 @@ export function CaskWinePreview() {
           <div style={{ fontSize: 6, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6, maxWidth: 180, marginBottom: 10 }}>A rotating list of 80+ low-intervention producers, pulled fresh every Tuesday.</div>
           <div style={{ padding: '5px 14px', borderRadius: 50, border: '1px solid #E9A6B8', fontSize: 6, fontWeight: 700, color: '#E9A6B8', letterSpacing: 1, display: 'inline-block', width: 'fit-content' }}>Book a Table</div>
         </div>
-        <div style={{ display: 'flex', padding: '8px 14px 10px', gap: 6, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+        <div style={{ display: 'flex', padding: '8px 14px 10px', gap: 6, background: 'rgba(42,15,24,0.7)', backdropFilter: 'blur(6px)', borderTop: '1px solid rgba(233,166,184,0.18)' }}>
           {[{ n: "Jura '22", v: 'Ganevat', p: '$14' }, { n: "Etna '21", v: 'Cornelissen', p: '$17' }, { n: "Loire '23", v: 'Brendan Tracey', p: '$12' }].map(w => (
             <div key={w.n} style={{ flex: 1, fontSize: 6 }}>
               <div style={{ fontWeight: 700, color: '#fff' }}>{w.n}</div>
@@ -434,7 +435,7 @@ export function IronWaxDetailPreview() {
             <div style={{ padding: '5px 14px', borderRadius: 4, border: '1px solid rgba(255,217,58,0.35)', fontSize: 6, fontWeight: 800, color: '#FFD93A', letterSpacing: 1 }}>PACKAGES</div>
           </div>
         </div>
-        <div style={{ display: 'flex', padding: '8px 14px 10px', gap: 6, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+        <div style={{ display: 'flex', padding: '8px 14px 10px', gap: 6, background: 'rgba(15,15,16,0.82)', backdropFilter: 'blur(6px)', borderTop: '1px solid rgba(255,217,58,0.2)' }}>
           {[{ n: 'Essential', p: '$180' }, { n: 'Paint Correction', p: '$650' }, { n: 'Ceramic 5yr', p: '$1,400' }].map(p => (
             <div key={p.n} style={{ flex: 1, fontSize: 6 }}>
               <div style={{ fontWeight: 700, color: '#fff' }}>{p.n}</div>
