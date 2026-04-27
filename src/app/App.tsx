@@ -24,7 +24,6 @@ import { ReviewsPage } from '@/app/pages/ReviewsPage';
 import { LensAIPage } from '@/app/pages/LensAIPage';
 import { WebsiteBuilderDemo } from '@/app/pages/WebsiteBuilderDemo';
 import { ApplicationPage } from '@/app/pages/ApplicationPage';
-import { AboutPage } from '@/app/pages/AboutPage';
 import { CareersPage } from '@/app/pages/CareersPage';
 import { PrivacyPolicyPage } from '@/app/pages/PrivacyPolicyPage';
 import { TermsPage } from '@/app/pages/TermsPage';
@@ -74,7 +73,6 @@ export default function App() {
                 <Route path="/business-types" element={<BusinessTypesPage />} />
                 <Route path="/products" element={<ProductsPage />} />
                 <Route path="/about" element={<AboutUsPage />} />
-                <Route path="/about-legacy" element={<AboutPage />} />
                 <Route path="/reviews" element={<ReviewsPage />} />
                 <Route path="/lens-ai" element={<LensAIPage />} />
                 <Route path="/careers" element={<CareersPage />} />
