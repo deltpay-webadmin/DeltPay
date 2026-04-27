@@ -38,6 +38,7 @@ export function Footer() {
     Company: [
       { label: 'About Us', path: '/about' },
       { label: 'Careers', path: '/careers' },
+      { label: 'Investor Relations', path: '/investor-relations' },
       { label: 'Contact', path: '/contact-sales' },
     ],
     Legal: [

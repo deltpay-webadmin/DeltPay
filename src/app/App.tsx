@@ -39,6 +39,7 @@ import { CalculatorPage } from '@/app/pages/CalculatorPage';
 import { GetAQuotePage } from '@/app/pages/GetAQuotePage';
 import { IndustryPage } from '@/app/pages/IndustryPage';
 import { LensDemoPage } from '@/app/pages/LensDemoPage';
+import { InvestorRelationsPage } from '@/app/pages/InvestorRelationsPage';
 
 /* App root - v2 */
 export default function App() {
@@ -89,6 +90,7 @@ export default function App() {
                 <Route path="/calculator" element={<CalculatorPage />} />
                 <Route path="/industries/:slug" element={<IndustryPage />} />
                 <Route path="/lens-demo" element={<LensDemoPage />} />
+                <Route path="/investor-relations" element={<InvestorRelationsPage />} />
               </Routes>
               <Footer />
             </div>
