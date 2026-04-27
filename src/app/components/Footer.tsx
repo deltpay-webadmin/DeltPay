@@ -31,7 +31,7 @@ export function Footer() {
       { label: 'E-commerce', path: '/business-types' },
     ],
     Resources: [
-      { label: 'Help Center', path: '/support' },
+      { label: 'Help Center', path: '/help-center' },
       { label: 'Blog', path: '/blog' },
       { label: 'Pricing', path: '/pricing' },
     ],
