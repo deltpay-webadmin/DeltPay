@@ -4,7 +4,7 @@ import { BusinessScene } from '../components/BusinessScene';
 
 /* ─── Palette ────────────────────────────────────────── */
 const NAVY      = '#041E42';
-const NAVY_DEEP = '#020E22';
+const NAVY_DEEP = '#041E42';
 const PURPLE    = '#4945FF';
 const PURPLE_HI = '#6D68FF';
 const WHITE     = '#FFFFFF';
