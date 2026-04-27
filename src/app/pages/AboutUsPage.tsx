@@ -52,7 +52,7 @@ function StatTile({ value, label, sub }: { value: string; label: string; sub: st
       <p
         className="text-4xl md:text-5xl font-bold tracking-[-0.02em]"
         style={{
-          background: `linear-gradient(180deg, ${WHITE} 0%, #C4BEFF 140%)`,
+          background: `linear-gradient(180deg, ${WHITE} 0%, rgba(73,69,255,0.20) 140%)`,
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent',
           backgroundClip: 'text',
@@ -221,7 +221,7 @@ export function AboutUsPage() {
             of{' '}
             <span
               style={{
-                background: `linear-gradient(90deg, ${PURPLE_HI} 0%, #C4BEFF 100%)`,
+                background: `linear-gradient(90deg, ${PURPLE_HI} 0%, rgba(73,69,255,0.20) 100%)`,
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text',

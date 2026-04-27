@@ -326,7 +326,7 @@ export function WhatsNewPage() {
             <br />
             <span
               style={{
-                background: `linear-gradient(90deg, ${WHITE} 0%, #C4BEFF 60%, ${PURPLE_HI} 100%)`,
+                background: `linear-gradient(90deg, ${WHITE} 0%, rgba(73,69,255,0.20) 60%, ${PURPLE_HI} 100%)`,
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text',
