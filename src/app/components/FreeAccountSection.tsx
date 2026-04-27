@@ -61,7 +61,7 @@ export function FreeAccountSection() {
               <div className="inline-block mb-4 px-4 py-2 bg-[#4945FF]/10 rounded-full">
                 <span className="text-[#4945FF] font-semibold text-sm uppercase tracking-wide">No Setup Fees &bull; No Monthly Fees</span>
               </div>
-              <h2 className="text-[60px] sm:text-[72px] font-bold text-[#041E42] mb-6 leading-tight" style={{ fontFamily: '"Codec Pro", "Codec", Inter, sans-serif' }}>
+              <h2 className="text-[60px] sm:text-[72px] font-bold text-[#041E42] mb-6 leading-tight" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
                 Start for free, scale when you're ready
               </h2>
             </div>
