@@ -348,7 +348,7 @@ export function HelpCenterPage() {
                     className="w-2 h-2 rounded-full animate-pulse"
                     style={{ background: '#16c784' }}
                   />
-                  <span className="text-sm font-medium" style={{ color: '#0e7a49' }}>
+                  <span className="text-sm font-medium" style={{ color: '#16C784' }}>
                     All systems operational
                   </span>
                 </div>

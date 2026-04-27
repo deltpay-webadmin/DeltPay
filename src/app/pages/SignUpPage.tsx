@@ -99,8 +99,8 @@ export function SignUpPage() {
             animate={{ opacity: 1, y: 0 }}
             className="text-center py-20"
           >
-            <div className="w-16 h-16 rounded-full mx-auto mb-6 flex items-center justify-center bg-[#00D924]/10">
-              <CheckCircle2 size={32} className="text-[#00D924]" />
+            <div className="w-16 h-16 rounded-full mx-auto mb-6 flex items-center justify-center bg-[#16C784]/10">
+              <CheckCircle2 size={32} className="text-[#16C784]" />
             </div>
             <h2 className="text-3xl font-semibold mb-3" style={{ color: TEXT_DARK }}>
               Application received

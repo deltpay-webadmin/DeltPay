@@ -584,7 +584,7 @@ export function ScrollExpandingHero() {
           >
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
               <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 22, fontWeight: 700, color: '#fff', letterSpacing: '-0.02em', display: 'flex', alignItems: 'center' }}>
-                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#22c55e', marginRight: 6, display: 'inline-block', animation: 'sehCounterPulse 2s ease-in-out infinite', flexShrink: 0 }} />
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#16C784', marginRight: 6, display: 'inline-block', animation: 'sehCounterPulse 2s ease-in-out infinite', flexShrink: 0 }} />
                 <span ref={txnCountRef}>12,847</span>
               </div>
               <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.25)' }}>Transactions today</div>
