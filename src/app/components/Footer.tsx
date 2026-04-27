@@ -138,7 +138,6 @@ export function Footer() {
               {[
                 { label: 'Privacy', path: '/privacy' },
                 { label: 'Terms', path: '/terms' },
-                { label: 'Sitemap', path: '/sitemap', ariaDisabled: true },
               ].map((item) => (
                 <Link
                   key={item.label}
