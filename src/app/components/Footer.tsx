@@ -60,7 +60,7 @@ export function Footer() {
             transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
           >
             <div className="flex items-center mb-6">
-              <img src={logoImage} alt="Delt" className="h-8 w-auto" />
+              <img src={logoImage} alt="Delt" className="h-[72px] w-auto" />
             </div>
             <p className="text-sm mb-4" style={{ color: 'rgba(4,30,66,0.6)' }}>
               Everything you need to run and grow your business.
