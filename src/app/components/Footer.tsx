@@ -19,7 +19,7 @@ export function Footer() {
 
   const footerLinks = {
     Products: [
-      { label: 'Payments', path: '/products' },
+      { label: 'Payments', path: '/payments' },
       { label: 'Capital', path: '/apply' },
       { label: 'Website Builder', path: '/website-builder' },
       { label: 'Business Tools', path: '/delt-ai' },
