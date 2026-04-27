@@ -6,7 +6,7 @@ const NAVY_DEEP = '#041E42';
 const PURPLE    = '#4945FF';
 const PURPLE_HI = '#6D68FF';
 const WHITE     = '#FFFFFF';
-const INK       = '#0F172A';
+const INK       = '#041E42';
 const MUTED     = '#475569';
 const HAIRLINE  = 'rgba(4,30,66,0.08)';
 

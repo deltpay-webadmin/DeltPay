@@ -161,7 +161,7 @@ export function DashboardPreview() {
           font-family: 'JetBrains Mono', monospace;
           font-size: 32px;
           font-weight: 800;
-          color: #0F172A;
+          color: #041E42;
         }
         .dp-actions {
           display: flex;
@@ -210,7 +210,7 @@ export function DashboardPreview() {
           font-family: 'JetBrains Mono', monospace;
           font-size: 18px;
           font-weight: 700;
-          color: #0F172A;
+          color: #041E42;
         }
         .dp-card-trend {
           font-family: 'JetBrains Mono', monospace;
