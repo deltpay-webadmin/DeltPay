@@ -25,10 +25,10 @@ export function Footer() {
       { label: 'Business Tools', path: '/delt-ai' },
     ],
     Solutions: [
-      { label: 'Retail', path: '/business-types' },
-      { label: 'Restaurants', path: '/business-types' },
-      { label: 'Professional Services', path: '/business-types' },
-      { label: 'E-commerce', path: '/business-types' },
+      { label: 'Retail', path: '/industries/retail' },
+      { label: 'Restaurants', path: '/industries/restaurants' },
+      { label: 'Professional Services', path: '/industries/professional-services' },
+      { label: 'E-commerce', path: '/industries/retail' },
     ],
     Resources: [
       { label: 'Help Center', path: '/help-center' },
