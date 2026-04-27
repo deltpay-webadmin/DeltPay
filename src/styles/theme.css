@@ -11,6 +11,12 @@ body {
   body {
     zoom: 0.8;
   }
+  /* Compensate so chrome (nav + footer) renders at native scale.
+     0.8 × 1.25 = 1.0. Mirrors the pattern used in InvoiceBuilder. */
+  #delt-main-nav,
+  footer {
+    zoom: 1.25;
+  }
 }
 
 html {
