@@ -6,8 +6,6 @@ import { ChevronDown, ArrowRight, Check, Award, ShoppingBag, Printer, CreditCard
 const COLORS = {
   navy: "#041e42",
   indigo: "#4945FF",
-  indigoLight: "#6C69FF",
-  indigoPale: "#EEEDFF",
   white: "#FFFFFF",
   gray50: "#F8F9FA",
   gray100: "#F1F3F5",
