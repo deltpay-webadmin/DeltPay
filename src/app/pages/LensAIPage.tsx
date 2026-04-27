@@ -741,11 +741,7 @@ export function LensAIPage() {
         .lens-word-gradient {
           background: linear-gradient(
             180deg,
-            #7B73FF 0%,
-            #5A52FF 22%,
-            #4945FF 45%,
-            #2E2AC7 68%,
-            #1B2A6B 86%,
+            #4945FF 0%,
             #041E42 100%
           );
           -webkit-background-clip: text;
