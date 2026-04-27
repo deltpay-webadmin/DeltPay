@@ -458,6 +458,7 @@ export function JuspayHero() {
           gap: 16px;
         }
 
+        /* Hero-only primary; #4318FF is brighter than the in-page #4945FF by design. See design_spec.md §4. */
         .ih-btn-primary {
           display: inline-flex;
           align-items: center;
