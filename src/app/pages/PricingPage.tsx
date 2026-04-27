@@ -13,7 +13,7 @@ const COLORS = {
   gray400: "#ADB5BD",
   gray600: "#6C757D",
   gray800: "#343A40",
-  green: "#4945FF",
+  included: "#4945FF",
 };
 
 /* Toast tokens */
@@ -470,7 +470,7 @@ export function PricingPage() {
                     lineHeight: 1.4,
                   }}>
                     <span style={{
-                      color: f.included ? (tier.bundle ? COLORS.indigo : COLORS.green) : COLORS.gray400,
+                      color: f.included ? (tier.bundle ? COLORS.indigo : COLORS.included) : COLORS.gray400,
                       fontSize: f.included ? 15 : 16,
                       lineHeight: 1.3,
                       flexShrink: 0,
