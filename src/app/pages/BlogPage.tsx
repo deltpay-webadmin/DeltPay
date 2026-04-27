@@ -6,7 +6,7 @@ import { BusinessScene } from '../components/BusinessScene';
 const NAVY      = '#041E42';
 const NAVY_DEEP = '#041E42';
 const PURPLE    = '#4945FF';
-const PURPLE_HI = '#6D68FF';
+const PURPLE_HI = 'rgba(73,69,255,0.85)';
 const WHITE     = '#FFFFFF';
 const INK       = '#041E42';
 const MUTED     = '#475569';
