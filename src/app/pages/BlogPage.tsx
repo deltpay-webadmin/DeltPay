@@ -1,337 +1,735 @@
-import { ArrowRight, ArrowLeft, ExternalLink } from 'lucide-react';
-import { Link, useNavigate } from 'react-router';
-import { motion } from 'motion/react';
+import { useState, useMemo } from 'react';
+import { ArrowRight, ArrowLeft, Clock, Mail } from 'lucide-react';
+import { BusinessScene } from '../components/BusinessScene';
 
-const BG      = '#FFFFFF';
-const PURPLE  = '#4945FF';
-const JAKARTA = '"Plus Jakarta Sans", system-ui, -apple-system, sans-serif';
-const MONO    = '"JetBrains Mono", "Fira Mono", monospace';
+/* ─── Palette ────────────────────────────────────────── */
+const NAVY      = '#041E42';
+const NAVY_DEEP = '#020E22';
+const PURPLE    = '#4945FF';
+const PURPLE_HI = '#6D68FF';
+const WHITE     = '#FFFFFF';
+const INK       = '#0F172A';
+const MUTED     = '#475569';
+const HAIRLINE  = 'rgba(4,30,66,0.08)';
 
-interface BlogPost {
-  id: string;
-  category: string;
+/* ─── Types ──────────────────────────────────────────── */
+type Category = 'All' | 'Product' | 'Engineering' | 'Culture' | 'Customers' | 'Policy';
+
+interface Post {
+  id: number;
+  category: Exclude<Category, 'All'>;
   title: string;
   excerpt: string;
+  author: string;
   date: string;
-  authors: { name: string; title: string; avatar?: string }[];
-  featured?: boolean;
-  tag?: string;
+  readMin: number;
 }
 
-const POSTS: BlogPost[] = [
+/* ─── Data ───────────────────────────────────────────── */
+const FEATURED: Post = {
+  id: 0,
+  category: 'Product',
+  title: 'Why we rebuilt Capital for small business — and what we got wrong the first time.',
+  excerpt:
+    "The first version of Delt Capital was fast. It was also broken in ways we didn't fully see until our merchants started telling us — politely, then less politely. Here's what we learned, and how we rebuilt.",
+  author: 'Avery Chen',
+  date: 'Apr 18, 2026',
+  readMin: 12,
+};
+
+const POSTS: Post[] = [
   {
-    id: '1',
+    id: 1,
     category: 'Product',
-    tag: 'NEW',
-    title: 'Delt + AI: Building the future of payment intelligence',
-    excerpt: 'Together, Delt and AI are building the most flexible and complete payment solution on the market—one that works for everyone, from small businesses to enterprises scaling at global levels.',
-    date: 'February 6, 2026',
-    authors: [
-      { name: 'Sarah Mitchell', title: 'Product Lead, Delt AI',  avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop' },
-      { name: 'David Chen',     title: 'CEO and Founder, Delt',  avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop' },
-    ],
-    featured: true,
+    title: 'Shipping Lens AI: our first autonomous product.',
+    excerpt: 'What it took to go from "AI assistant" to an agent that acts on your behalf.',
+    author: 'Daniel Kim',
+    date: 'Apr 11, 2026',
+    readMin: 9,
   },
   {
-    id: '2',
+    id: 2,
+    category: 'Engineering',
+    title: 'How we handle 3M transactions per hour.',
+    excerpt: "A deep dive into the architecture powering Delt's payment processing at scale.",
+    author: 'Marcus Webb',
+    date: 'Apr 04, 2026',
+    readMin: 14,
+  },
+  {
+    id: 3,
+    category: 'Customers',
+    title: "Inside Roma Trattoria's 3× sales year.",
+    excerpt: 'How a family-run Italian restaurant tripled revenue with Delt Payments and Capital.',
+    author: 'Zara Okafor',
+    date: 'Mar 28, 2026',
+    readMin: 7,
+  },
+  {
+    id: 4,
+    category: 'Culture',
+    title: 'Why we write before we code.',
+    excerpt: "Every feature at Delt starts with a one-pager. Here's why that makes us faster, not slower.",
+    author: 'Elena Rodriguez',
+    date: 'Mar 21, 2026',
+    readMin: 6,
+  },
+  {
+    id: 5,
+    category: 'Policy',
+    title: 'On the new SMB lending disclosures.',
+    excerpt: 'What the latest regulatory changes mean for merchants — and how Delt is responding.',
+    author: 'Priya Patel',
+    date: 'Mar 14, 2026',
+    readMin: 8,
+  },
+  {
+    id: 6,
     category: 'Product',
-    title: 'Delt Scale in 2026: Year in review',
-    excerpt: '2026 was a breakout year for growth-stage businesses, as entrepreneurs launched more companies and generated revenue faster than ever. Three shifts stand out: customer bases are more international than ever, time-to-revenue has compressed, and founders are turning their attention to AI agents over AI infrastructure or copilots.',
-    date: 'January 28, 2026',
-    authors: [
-      { name: 'Jesse Carey', title: 'Delt Scale', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop' },
-    ],
+    title: 'Designing for distracted operators.',
+    excerpt: 'Most software is designed for focused users. Our merchants are anything but.',
+    author: 'Daniel Kim',
+    date: 'Mar 07, 2026',
+    readMin: 10,
   },
   {
-    id: '3',
-    category: 'Capital',
-    title: 'Businesses grow revenue 27 points faster after accepting Capital financing',
-    excerpt: 'In a new study, we found a strong causal relationship between accepting financing and growing revenue on Delt. Learn which businesses are most likely to benefit, and how greater access to financing could drive significant GDP growth. *Based on Delt internal analysis; individual results vary.',
-    date: 'January 22, 2026',
-    authors: [
-      { name: 'Jun Wen',     title: 'Data Science, Delt Capital', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop' },
-      { name: 'Tanay Jaeel', title: 'Product Lead, Delt Capital', avatar: 'https://images.unsplash.com/photo-1519345182560-3f2917c472ef?w=100&h=100&fit=crop' },
-    ],
+    id: 7,
+    category: 'Engineering',
+    title: 'Our approach to zero-downtime migrations.',
+    excerpt: 'Shipping database schema changes without ever taking the system offline.',
+    author: 'Marcus Webb',
+    date: 'Feb 28, 2026',
+    readMin: 11,
   },
   {
-    id: '4',
-    category: 'Intelligence',
-    title: 'How Delt AI helps restaurants predict peak hours and optimize staffing',
-    excerpt: 'Discover how our predictive analytics engine helps restaurant owners reduce labor costs by 15% while improving customer service during busy periods. *Based on Delt internal analysis; individual results vary.',
-    date: 'January 15, 2026',
-    authors: [
-      { name: 'Maria Rodriguez', title: 'Product Manager, Delt AI', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop' },
-    ],
+    id: 8,
+    category: 'Customers',
+    title: 'How Bloom Salon cut no-shows by 40%.',
+    excerpt: "A beauty studio in Portland used Delt's SMS reminders to transform its booking rate.",
+    author: 'Zara Okafor',
+    date: 'Feb 21, 2026',
+    readMin: 5,
   },
   {
-    id: '5',
-    category: 'Company',
-    title: 'Delt reaches 500,000 businesses milestone',
-    excerpt: "From small coffee shops to multi-location franchises, we're proud to serve half a million businesses across the country. Here's what we've learned along the way.",
-    date: 'January 10, 2026',
-    authors: [
-      { name: 'Alex Thompson', title: 'Chief Operating Officer', avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop' },
-    ],
-  },
-  {
-    id: '6',
-    category: 'Commerce',
-    title: 'The future of contactless payments: QR codes vs NFC',
-    excerpt: 'An in-depth look at emerging payment technologies and what they mean for brick-and-mortar businesses in 2026 and beyond.',
-    date: 'January 5, 2026',
-    authors: [
-      { name: 'Kevin Park', title: 'Payment Technology Expert', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop' },
-    ],
+    id: 9,
+    category: 'Product',
+    title: 'The case against dashboards.',
+    excerpt: "We removed half the charts from Lens and merchants loved it. Here's what we replaced them with.",
+    author: 'Avery Chen',
+    date: 'Feb 14, 2026',
+    readMin: 8,
   },
 ];
 
-const CATEGORY_COLORS: Record<string, string> = {
-  Product:      'rgba(73,69,255,1.0)',
-  Capital:      'rgba(73,69,255,0.85)',
-  Intelligence: 'rgba(73,69,255,0.7)',
-  Commerce:     'rgba(73,69,255,0.55)',
-  Company:      'rgba(73,69,255,0.4)',
-  Industry:     'rgba(73,69,255,0.4)',
+const CATEGORIES: Category[] = ['All', 'Product', 'Engineering', 'Culture', 'Customers', 'Policy'];
+
+const CATEGORY_COLOR: Record<Exclude<Category, 'All'>, string> = {
+  Product:     PURPLE,
+  Engineering: '#0B6CF0',
+  Culture:     '#B45309',
+  Customers:   '#0E8A5F',
+  Policy:      NAVY,
 };
 
+/* ─── Sub-components ─────────────────────────────────── */
+
+function CategoryCover({ post, className = '' }: { post: Post; className?: string }) {
+  const { category } = post;
+
+  // Customers → real BusinessScene photo
+  if (category === 'Customers') {
+    const customerTheme =
+      post.title.includes('Roma')  ? 'restaurant' :
+      post.title.includes('Bloom') ? 'salon' :
+      'cafe';
+    const initials = post.title.includes('Roma') ? 'RT' : post.title.includes('Bloom') ? 'BS' : 'BW';
+    const biz      = post.title.includes('Roma') ? 'Roma Trattoria' : post.title.includes('Bloom') ? 'Bloom Salon' : 'Blue Wren Coffee';
+    return (
+      <div className={className} style={{ overflow: 'hidden' }}>
+        <BusinessScene
+          theme={customerTheme as any}
+          initials={initials}
+          businessName={biz}
+          location="Customer story"
+          aspect="landscape"
+          variant="navy"
+          className="w-full h-full !rounded-none"
+        />
+      </div>
+    );
+  }
+
+  // Product → stylised UI mockup
+  if (category === 'Product') {
+    return (
+      <div
+        className={className}
+        style={{
+          background: `linear-gradient(135deg, ${NAVY} 0%, #0a1638 60%, ${PURPLE} 160%)`,
+          position: 'relative', overflow: 'hidden',
+        }}
+      >
+        <div
+          aria-hidden
+          style={{
+            position: 'absolute', inset: 0,
+            background: `radial-gradient(circle at 80% 20%, ${PURPLE_HI}55 0%, transparent 55%)`,
+          }}
+        />
+        {/* browser window */}
+        <div style={{
+          position: 'absolute', left: '10%', top: '18%', right: '10%', bottom: '18%',
+          background: WHITE, borderRadius: 10,
+          boxShadow: '0 20px 40px -10px rgba(0,0,0,0.45)', overflow: 'hidden',
+        }}>
+          <div style={{ height: 14, background: '#F6F7FB', display: 'flex', alignItems: 'center', gap: 4, paddingLeft: 6 }}>
+            <span style={{ width: 5, height: 5, borderRadius: 99, background: '#ff5f57' }} />
+            <span style={{ width: 5, height: 5, borderRadius: 99, background: '#febc2e' }} />
+            <span style={{ width: 5, height: 5, borderRadius: 99, background: '#28c840' }} />
+          </div>
+          <div style={{ padding: 8, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+            <div style={{ background: `${PURPLE}14`, borderRadius: 5, padding: '6px 7px' }}>
+              <div style={{ width: 18, height: 3, background: `${PURPLE}80`, borderRadius: 2, marginBottom: 3 }} />
+              <div style={{ width: 34, height: 7, background: NAVY, borderRadius: 2 }} />
+            </div>
+            <div style={{ background: `${NAVY}10`, borderRadius: 5, padding: '6px 7px' }}>
+              <div style={{ width: 14, height: 3, background: `${NAVY}60`, borderRadius: 2, marginBottom: 3 }} />
+              <div style={{ width: 28, height: 7, background: PURPLE, borderRadius: 2 }} />
+            </div>
+            <div style={{ gridColumn: 'span 2', background: '#F6F7FB', borderRadius: 5, height: 26, position: 'relative', overflow: 'hidden' }}>
+              <svg viewBox="0 0 100 30" preserveAspectRatio="none" style={{ width: '100%', height: '100%' }}>
+                <path d="M0 22 L15 18 L30 20 L45 12 L60 14 L75 6 L100 10" stroke={PURPLE} strokeWidth="2" fill="none" strokeLinecap="round" />
+                <path d="M0 22 L15 18 L30 20 L45 12 L60 14 L75 6 L100 10 L100 30 L0 30 Z" fill={`${PURPLE}20`} />
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Engineering → terminal/code feel
+  if (category === 'Engineering') {
+    return (
+      <div
+        className={className}
+        style={{
+          background: 'linear-gradient(135deg, #060e22 0%, #0a1628 100%)',
+          position: 'relative', overflow: 'hidden',
+        }}
+      >
+        <div style={{
+          position: 'absolute', inset: 0,
+          backgroundImage: `linear-gradient(${PURPLE}14 1px, transparent 1px), linear-gradient(90deg, ${PURPLE}14 1px, transparent 1px)`,
+          backgroundSize: '22px 22px',
+        }} />
+        <div style={{
+          position: 'absolute', left: '8%', right: '8%', top: '16%', bottom: '16%',
+          background: '#0b1026', borderRadius: 8,
+          border: `1px solid ${PURPLE}40`,
+          boxShadow: `0 0 0 1px ${PURPLE}20, 0 20px 40px -10px rgba(0,0,0,0.6)`,
+          padding: 10,
+          fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+          fontSize: 9, lineHeight: 1.45, color: '#94A3B8', overflow: 'hidden',
+        }}>
+          <div style={{ color: '#6D68FF' }}>$ deploy --region us-east-1</div>
+          <div>✓ build succeeded <span style={{ color: '#28c840' }}>2.1s</span></div>
+          <div>✓ tests passed <span style={{ color: '#28c840' }}>128/128</span></div>
+          <div style={{ color: WHITE }}>→ rolling out <span style={{ color: PURPLE }}>v2026.04</span></div>
+          <div style={{ color: '#6D68FF' }}>█</div>
+        </div>
+      </div>
+    );
+  }
+
+  // Culture → notebook / handwritten
+  if (category === 'Culture') {
+    return (
+      <div
+        className={className}
+        style={{
+          background: `linear-gradient(160deg, #f3f1ff 0%, ${WHITE} 60%)`,
+          position: 'relative', overflow: 'hidden',
+        }}
+      >
+        {[0, 1, 2, 3, 4].map(i => (
+          <div key={i} style={{
+            position: 'absolute', left: '10%', right: '10%',
+            top: `${22 + i * 14}%`, height: 1, background: `${NAVY}10`,
+          }} />
+        ))}
+        <div style={{
+          position: 'absolute', left: '8%', top: '-5%',
+          fontFamily: 'Georgia, serif', fontSize: 120, lineHeight: 1,
+          color: `${PURPLE}30`, fontWeight: 700,
+        }}>&ldquo;</div>
+        <svg viewBox="0 0 200 80" style={{ position: 'absolute', right: '8%', bottom: '12%', width: '55%' }}>
+          <path d="M10 50 Q 40 10, 80 40 T 160 30" stroke={PURPLE} strokeWidth="3" fill="none" strokeLinecap="round" />
+          <circle cx="162" cy="29" r="4" fill={PURPLE} />
+        </svg>
+      </div>
+    );
+  }
+
+  // Policy → document with seal
+  return (
+    <div
+      className={className}
+      style={{
+        background: `linear-gradient(135deg, ${NAVY} 0%, #1a3060 100%)`,
+        position: 'relative', overflow: 'hidden',
+      }}
+    >
+      <div style={{
+        position: 'absolute', left: '14%', top: '18%', width: '42%', bottom: '18%',
+        background: WHITE, borderRadius: 4,
+        boxShadow: '0 10px 30px -6px rgba(0,0,0,0.5)',
+        padding: 10,
+      }}>
+        <div style={{ width: '70%', height: 4, background: NAVY, borderRadius: 2, marginBottom: 6 }} />
+        {[0,1,2,3,4,5].map(i => (
+          <div key={i} style={{ width: `${60 + (i * 7) % 35}%`, height: 2, background: `${NAVY}40`, borderRadius: 1, marginBottom: 3 }} />
+        ))}
+        <div style={{ width: 22, height: 22, border: `2px solid ${PURPLE}`, borderRadius: 99, position: 'absolute', right: 8, bottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 700, color: PURPLE, transform: 'rotate(-12deg)' }}>SEAL</div>
+      </div>
+      <div style={{ position: 'absolute', right: '10%', bottom: 0, display: 'flex', alignItems: 'flex-end', gap: 4, opacity: 0.4 }}>
+        {[40, 50, 60, 50, 40].map((h, i) => (
+          <div key={i} style={{ width: 8, height: h, background: WHITE, borderRadius: '2px 2px 0 0' }} />
+        ))}
+        <div style={{ position: 'absolute', left: -4, right: -4, bottom: 60, height: 4, background: WHITE, borderRadius: 1 }} />
+      </div>
+    </div>
+  );
+}
+
+function CategoryPill({ category, small = false, onDark = false }: {
+  category: Exclude<Category, 'All'>;
+  small?: boolean;
+  onDark?: boolean;
+}) {
+  const color = CATEGORY_COLOR[category];
+  const size = small ? 'px-2 py-0.5 text-[11px]' : 'px-2.5 py-1 text-xs';
+  const bg = onDark ? `${WHITE}1f` : `${color}14`;
+  const txt = onDark ? WHITE : color;
+  return (
+    <span
+      className={`inline-flex items-center rounded-full font-semibold tracking-wide ${size}`}
+      style={{
+        background: bg,
+        color: txt,
+        boxShadow: onDark ? 'inset 0 0 0 1px rgba(255,255,255,0.24)' : `inset 0 0 0 1px ${color}26`,
+      }}
+    >
+      {category}
+    </span>
+  );
+}
+
+function AuthorRow({ author, date, readMin, muted = false }: {
+  author: string; date: string; readMin: number; muted?: boolean;
+}) {
+  const initials = author.split(' ').map(p => p[0]).join('').slice(0, 2);
+  return (
+    <div className="flex items-center gap-2.5 text-xs" style={{ color: muted ? '#94A3B8' : MUTED }}>
+      <span
+        className="inline-flex items-center justify-center w-6 h-6 rounded-full text-[10px] font-bold"
+        style={{
+          background: `linear-gradient(135deg, ${NAVY} 0%, ${PURPLE} 100%)`,
+          color: WHITE,
+        }}
+      >
+        {initials}
+      </span>
+      <span className="font-semibold" style={{ color: muted ? '#CBD5E1' : NAVY }}>{author}</span>
+      <span>·</span>
+      <span>{date}</span>
+      <span>·</span>
+      <span className="inline-flex items-center gap-1">
+        <Clock size={11} strokeWidth={2.25} />
+        {readMin} min read
+      </span>
+    </div>
+  );
+}
+
+function ArticleCard({ post }: { post: Post }) {
+  return (
+    <article
+      className="group rounded-2xl flex flex-col overflow-hidden transition-all duration-200 cursor-pointer bg-white"
+      style={{
+        boxShadow: `inset 0 0 0 1px ${HAIRLINE}, 0 1px 0 rgba(4,30,66,0.02)`,
+      }}
+      onMouseEnter={e => {
+        (e.currentTarget as HTMLElement).style.boxShadow =
+          `inset 0 0 0 1px ${PURPLE}4D, 0 24px 48px -20px rgba(4,30,66,0.2), 0 0 0 4px ${PURPLE}14`;
+        (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)';
+      }}
+      onMouseLeave={e => {
+        (e.currentTarget as HTMLElement).style.boxShadow =
+          `inset 0 0 0 1px ${HAIRLINE}, 0 1px 0 rgba(4,30,66,0.02)`;
+        (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
+      }}
+    >
+      <CategoryCover post={post} className="h-44" />
+      <div className="p-6 flex flex-col gap-3 flex-1">
+        <CategoryPill category={post.category} small />
+        <h3
+          className="text-[17px] font-bold tracking-tight leading-snug transition-colors"
+          style={{ color: NAVY }}
+        >
+          {post.title}
+        </h3>
+        <p className="text-sm leading-relaxed flex-1" style={{ color: MUTED }}>
+          {post.excerpt}
+        </p>
+        <div className="pt-4 mt-2 border-t" style={{ borderColor: HAIRLINE }}>
+          <AuthorRow author={post.author} date={post.date} readMin={post.readMin} />
+        </div>
+      </div>
+    </article>
+  );
+}
+
+/* ─── Page ───────────────────────────────────────────── */
 export function BlogPage() {
-  const navigate = useNavigate();
-  const featured = POSTS[0];
-  const rest     = POSTS.slice(1);
+  const [activeCategory, setActiveCategory] = useState<Category>('All');
+
+  const filteredPosts = useMemo(
+    () => (activeCategory === 'All' ? POSTS : POSTS.filter(p => p.category === activeCategory)),
+    [activeCategory],
+  );
 
   return (
-    <div style={{ backgroundColor: BG, fontFamily: JAKARTA, minHeight: '100vh' }}>
+    <div style={{ background: WHITE, color: INK, fontFamily: 'system-ui, -apple-system, sans-serif' }}>
 
-      {/* ── Page header ───────────────────────────────── */}
-      <div style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', backgroundColor: 'rgba(4,30,66,0.4)' }}>
-        <div className="max-w-[900px] mx-auto px-6 lg:px-12 py-5 flex items-center justify-between">
-          <button
-            onClick={() => navigate(-1)}
-            className="flex items-center gap-2 transition-colors group"
-            style={{ color: 'rgba(255,255,255,0.4)', fontFamily: MONO, fontSize: 12, letterSpacing: '0.06em', background: 'none', border: 'none', cursor: 'pointer' }}
-            onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
-            onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.4)')}
-          >
-            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
-            BACK
-          </button>
+      {/* ══ DARK HERO + FEATURED ══════════════════════════════ */}
+      <section
+        className="relative overflow-hidden"
+        style={{ background: NAVY_DEEP, color: WHITE }}
+      >
+        <div
+          aria-hidden
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              `radial-gradient(55% 80% at 15% 0%, ${PURPLE}66 0%, transparent 55%),` +
+              `radial-gradient(45% 75% at 90% 30%, ${PURPLE_HI}33 0%, transparent 60%),` +
+              `radial-gradient(90% 60% at 50% 120%, ${NAVY} 0%, transparent 70%)`,
+          }}
+        />
+        <div
+          aria-hidden
+          className="absolute inset-0 pointer-events-none opacity-[0.055] mix-blend-soft-light"
+          style={{
+            backgroundImage:
+              `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
+            backgroundSize: '200px 200px',
+          }}
+        />
 
-          <div className="text-center">
-            <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.2em', textTransform: 'uppercase', color: PURPLE }}>
-              WHAT&apos;S NEW
+        <div className="relative max-w-6xl mx-auto px-6 pt-28 md:pt-36 pb-16 md:pb-20">
+          <div className="flex items-center gap-2 mb-6">
+            <span
+              className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em]"
+              style={{
+                background: 'rgba(255,255,255,0.08)',
+                color: '#E0DCFF',
+                boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.14)',
+              }}
+            >
+              From the team
             </span>
-            <h1 style={{ fontFamily: JAKARTA, fontSize: 'clamp(1.1rem,2vw,1.4rem)', fontWeight: 800, color: '#fff', lineHeight: 1, marginTop: 4, letterSpacing: '-0.02em' }}>
-              Product updates &amp; releases
-            </h1>
           </div>
-
-          <a
-            href="https://x.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1.5 transition-colors"
-            style={{ fontFamily: MONO, fontSize: 12, letterSpacing: '0.06em', color: 'rgba(255,255,255,0.4)', textDecoration: 'none' }}
-            onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
-            onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.4)')}
+          <h1
+            className="font-bold tracking-[-0.02em] max-w-4xl"
+            style={{
+              fontSize: 'clamp(2.5rem, 5.6vw, 4.75rem)',
+              lineHeight: 1.03,
+              color: WHITE,
+            }}
           >
-            DELT ON X
-            <ExternalLink className="w-3 h-3" />
+            Essays, dispatches,
+            <br />
+            <span
+              style={{
+                background: `linear-gradient(90deg, ${WHITE} 0%, #C4BEFF 60%, ${PURPLE_HI} 100%)`,
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+                fontStyle: 'italic',
+              }}
+            >
+              and product stories.
+            </span>
+          </h1>
+          <p
+            className="mt-6 text-lg md:text-xl max-w-xl leading-relaxed"
+            style={{ color: 'rgba(255,255,255,0.72)' }}
+          >
+            The people building Delt, writing about how and why.
+          </p>
+        </div>
+
+        {/* ── Featured article — dark card that lives inside the hero ── */}
+        <div className="relative max-w-6xl mx-auto px-6 pb-24">
+          <p
+            className="text-[10px] font-bold uppercase tracking-[0.22em] mb-5"
+            style={{ color: 'rgba(255,255,255,0.5)' }}
+          >
+            Editor&rsquo;s pick
+          </p>
+          <a
+            href="#"
+            className="group block rounded-3xl overflow-hidden transition-all duration-300 grid md:grid-cols-[1.1fr_1fr]"
+            style={{
+              background: 'linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.03) 100%)',
+              boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.1), 0 40px 80px -30px rgba(0,0,0,0.6)',
+              backdropFilter: 'blur(10px)',
+            }}
+          >
+            {/* Left: illustrated capital scene */}
+            <div
+              className="relative min-h-72 md:min-h-0 overflow-hidden"
+              style={{
+                background: `linear-gradient(135deg, ${NAVY} 0%, #0a1638 55%, ${PURPLE} 140%)`,
+              }}
+            >
+              <div
+                aria-hidden
+                className="absolute inset-0"
+                style={{
+                  background: `radial-gradient(circle at 85% 20%, ${PURPLE}66 0%, transparent 55%)`,
+                }}
+              />
+              {/* Capital offer card */}
+              <div
+                className="absolute right-6 top-8 rounded-2xl p-4 w-52 transition-transform duration-500 group-hover:-translate-y-1"
+                style={{
+                  background: 'rgba(255,255,255,0.98)',
+                  boxShadow: '0 20px 40px -12px rgba(0,0,0,0.4)',
+                }}
+              >
+                <p className="text-[10px] font-bold uppercase tracking-[0.18em]" style={{ color: PURPLE }}>
+                  Capital offer
+                </p>
+                <p className="text-2xl font-bold mt-1 tracking-tight" style={{ color: NAVY }}>
+                  $42,000
+                </p>
+                <div className="mt-3 h-1.5 rounded-full" style={{ background: `${NAVY}14` }}>
+                  <div className="h-1.5 rounded-full" style={{ width: '68%', background: `linear-gradient(90deg, ${PURPLE} 0%, ${PURPLE_HI} 100%)` }} />
+                </div>
+                <p className="mt-2 text-[10px] font-medium" style={{ color: MUTED }}>
+                  68% of offer used · 12 months
+                </p>
+              </div>
+              {/* Funded badge */}
+              <div
+                className="absolute right-6 top-44 rounded-xl px-3 py-2 flex items-center gap-2 transition-transform duration-500 group-hover:-translate-y-1"
+                style={{
+                  background: 'rgba(255,255,255,0.94)',
+                  boxShadow: '0 10px 24px -8px rgba(0,0,0,0.3)',
+                }}
+              >
+                <span
+                  className="w-5 h-5 rounded-lg flex items-center justify-center text-[11px] font-bold"
+                  style={{ background: `${PURPLE}22`, color: PURPLE }}
+                >
+                  ✓
+                </span>
+                <span className="text-[11px] font-semibold" style={{ color: NAVY }}>
+                  Funded in 24h
+                </span>
+              </div>
+
+              {/* Floor tag */}
+              <div className="absolute left-8 bottom-8">
+                <CategoryPill category={FEATURED.category} onDark />
+              </div>
+            </div>
+
+            {/* Right: text */}
+            <div className="p-8 md:p-10 flex flex-col gap-5">
+              <h2
+                className="font-bold tracking-[-0.015em]"
+                style={{
+                  color: WHITE,
+                  fontSize: 'clamp(1.5rem, 2.4vw, 2rem)',
+                  lineHeight: 1.15,
+                }}
+              >
+                {FEATURED.title}
+              </h2>
+              <p className="text-[15px] leading-relaxed" style={{ color: 'rgba(255,255,255,0.72)' }}>
+                {FEATURED.excerpt}
+              </p>
+              <div className="mt-auto pt-4 border-t flex items-center justify-between gap-4 flex-wrap" style={{ borderColor: 'rgba(255,255,255,0.1)' }}>
+                <AuthorRow author={FEATURED.author} date={FEATURED.date} readMin={FEATURED.readMin} muted />
+                <span
+                  className="inline-flex items-center gap-1.5 text-sm font-semibold transition-transform group-hover:translate-x-1"
+                  style={{ color: PURPLE_HI }}
+                >
+                  Read the essay
+                  <ArrowRight size={14} strokeWidth={2.5} />
+                </span>
+              </div>
+            </div>
           </a>
         </div>
-      </div>
 
-      {/* ── Article list ──────────────────────────────── */}
-      <div className="max-w-[900px] mx-auto px-6 lg:px-12 py-12">
-        <div className="flex flex-col gap-5">
+        {/* soft transition to white */}
+        <div
+          aria-hidden
+          className="absolute inset-x-0 bottom-0 h-16 pointer-events-none"
+          style={{ background: `linear-gradient(to bottom, transparent, ${WHITE})` }}
+        />
+      </section>
 
-          {/* Featured */}
-          <motion.article
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.45 }}
-            className="group cursor-pointer"
-            style={{
-              background: 'rgba(255,255,255,0.03)',
-              border: '1px solid rgba(255,255,255,0.08)',
-              borderRadius: 18,
-              padding: 'clamp(28px,4vw,44px)',
-              transition: 'border-color 0.25s, background 0.25s',
-            }}
-            onMouseEnter={e => {
-              (e.currentTarget as HTMLElement).style.borderColor = 'rgba(73,69,255,0.4)';
-              (e.currentTarget as HTMLElement).style.background  = 'rgba(255,255,255,0.05)';
-            }}
-            onMouseLeave={e => {
-              (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.08)';
-              (e.currentTarget as HTMLElement).style.background  = 'rgba(255,255,255,0.03)';
-            }}
-          >
-            {/* Category row */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
-              <span style={{ display: 'inline-block', width: 3, height: 18, background: CATEGORY_COLORS[featured.category] || PURPLE, borderRadius: 2 }} />
-              <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '0.14em', color: CATEGORY_COLORS[featured.category] || PURPLE }}>
-                {featured.category.toUpperCase()}
-              </span>
-              {featured.tag && (
-                <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.12em', background: 'rgba(73,69,255,0.18)', color: PURPLE, border: '1px solid rgba(73,69,255,0.4)', borderRadius: 4, padding: '2px 8px' }}>
-                  {featured.tag}
-                </span>
-              )}
+      {/* ══ STICKY CATEGORY BAR ═══════════════════════════════ */}
+      <div
+        className="sticky top-0 z-20 backdrop-blur-md"
+        style={{
+          background: 'rgba(255,255,255,0.86)',
+          borderBottom: `1px solid ${HAIRLINE}`,
+        }}
+      >
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="flex items-center justify-between gap-4 py-3">
+            <div className="flex items-center gap-1 overflow-x-auto">
+              {CATEGORIES.map(cat => {
+                const active = activeCategory === cat;
+                return (
+                  <button
+                    key={cat}
+                    onClick={() => setActiveCategory(cat)}
+                    className="flex-shrink-0 px-3.5 py-2 rounded-lg text-sm font-semibold transition-all duration-150"
+                    style={
+                      active
+                        ? { background: NAVY, color: WHITE }
+                        : { color: MUTED, background: 'transparent' }
+                    }
+                  >
+                    {cat}
+                  </button>
+                );
+              })}
             </div>
-
-            {/* Title */}
-            <h2
-              className="group-hover:text-[#4945FF]"
-              style={{ fontFamily: JAKARTA, fontSize: 'clamp(1.5rem,3vw,2.2rem)', fontWeight: 900, color: '#fff', letterSpacing: '-0.03em', lineHeight: 1.1, marginBottom: 22, transition: 'color 0.2s' }}
-            >
-              {featured.title}
-            </h2>
-
-            {/* Authors */}
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, marginBottom: 20 }}>
-              {featured.authors.map((author, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  {author.avatar && (
-                    <img src={author.avatar} alt={author.name} style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.1)' }} />
-                  )}
-                  <div>
-                    <p style={{ fontFamily: JAKARTA, fontWeight: 700, fontSize: 13, color: '#fff', margin: 0 }}>{author.name}</p>
-                    <p style={{ fontFamily: JAKARTA, fontSize: 11, color: 'rgba(255,255,255,0.4)', margin: 0 }}>{author.title}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Excerpt */}
-            <p style={{ fontFamily: JAKARTA, fontSize: 15, lineHeight: 1.75, color: 'rgba(255,255,255,0.55)', marginBottom: 28 }}>
-              {featured.excerpt}
+            <p className="hidden sm:block text-xs font-medium" style={{ color: '#94A3B8' }}>
+              <span style={{ color: NAVY, fontWeight: 700 }}>{filteredPosts.length}</span> essays
             </p>
+          </div>
+        </div>
+      </div>
 
-            {/* Footer */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: 20 }}>
-              <button
-                className="group/btn"
-                style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: JAKARTA, fontWeight: 700, fontSize: 14, color: PURPLE, background: 'none', border: 'none', cursor: 'pointer' }}
-              >
-                Read more
-                <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
-              </button>
-              <span style={{ fontFamily: MONO, fontSize: 11, color: 'rgba(255,255,255,0.28)', letterSpacing: '0.04em' }}>
-                {featured.date}
-              </span>
+      {/* ══ ARTICLE GRID ══════════════════════════════════════ */}
+      <section className="py-16 md:py-20 px-6">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-7">
+            {filteredPosts.map(post => (
+              <ArticleCard key={post.id} post={post} />
+            ))}
+          </div>
+
+          {/* Pagination */}
+          <div
+            className="mt-16 flex items-center justify-center gap-8 text-sm"
+            style={{ color: MUTED }}
+          >
+            <button
+              className="inline-flex items-center gap-1.5 opacity-40 cursor-default"
+              disabled
+            >
+              <ArrowLeft size={14} /> Previous
+            </button>
+            <span className="flex items-center gap-2">
+              {[1, 2, 3].map(n => (
+                <span
+                  key={n}
+                  className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-sm font-semibold"
+                  style={
+                    n === 1
+                      ? { background: NAVY, color: WHITE }
+                      : { color: MUTED, background: 'transparent' }
+                  }
+                >
+                  {n}
+                </span>
+              ))}
+            </span>
+            <button
+              className="inline-flex items-center gap-1.5 font-semibold transition-colors"
+              style={{ color: PURPLE }}
+            >
+              Next <ArrowRight size={14} strokeWidth={2.5} />
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* ══ NEWSLETTER — dark band ════════════════════════════ */}
+      <section
+        className="relative overflow-hidden"
+        style={{ background: NAVY }}
+      >
+        <div
+          aria-hidden
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              `radial-gradient(50% 100% at 90% 50%, ${PURPLE}40 0%, transparent 55%),` +
+              `radial-gradient(40% 80% at 10% 10%, ${PURPLE_HI}2a 0%, transparent 60%)`,
+          }}
+        />
+        <div className="relative max-w-6xl mx-auto px-6 py-20 md:py-24 grid md:grid-cols-[1.3fr_1fr] gap-10 items-center">
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <Mail size={16} strokeWidth={2.5} style={{ color: PURPLE_HI }} />
+              <p className="text-[11px] font-bold uppercase tracking-[0.2em]" style={{ color: PURPLE_HI }}>
+                The Delt Dispatch
+              </p>
             </div>
-          </motion.article>
-
-          {/* Rest */}
-          {rest.map((post, i) => (
-            <motion.article
-              key={post.id}
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.06 * (i + 1) }}
-              className="group cursor-pointer"
+            <h2
+              className="font-bold tracking-[-0.015em]"
               style={{
-                background: 'rgba(255,255,255,0.025)',
-                border: '1px solid rgba(255,255,255,0.07)',
-                borderRadius: 16,
-                padding: 'clamp(22px,3.5vw,36px)',
-                transition: 'border-color 0.25s, background 0.25s',
-              }}
-              onMouseEnter={e => {
-                (e.currentTarget as HTMLElement).style.borderColor = 'rgba(73,69,255,0.32)';
-                (e.currentTarget as HTMLElement).style.background  = 'rgba(255,255,255,0.04)';
-              }}
-              onMouseLeave={e => {
-                (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.07)';
-                (e.currentTarget as HTMLElement).style.background  = 'rgba(255,255,255,0.025)';
+                fontSize: 'clamp(1.75rem, 3.2vw, 2.5rem)',
+                lineHeight: 1.1,
+                color: WHITE,
               }}
             >
-              {/* Category row */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-                <span style={{ display: 'inline-block', width: 3, height: 15, background: CATEGORY_COLORS[post.category] || PURPLE, borderRadius: 2 }} />
-                <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.14em', color: CATEGORY_COLORS[post.category] || PURPLE }}>
-                  {post.category.toUpperCase()}
-                </span>
-              </div>
-
-              {/* Title */}
-              <h2
-                className="group-hover:text-[#4945FF]"
-                style={{ fontFamily: JAKARTA, fontSize: 'clamp(1.05rem,2vw,1.5rem)', fontWeight: 800, color: '#fff', letterSpacing: '-0.025em', lineHeight: 1.2, marginBottom: 14, transition: 'color 0.2s' }}
-              >
-                {post.title}
-              </h2>
-
-              {/* Authors */}
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginBottom: 14 }}>
-                {post.authors.map((author, idx) => (
-                  <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    {author.avatar && (
-                      <img src={author.avatar} alt={author.name} style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover', border: '1.5px solid rgba(255,255,255,0.1)' }} />
-                    )}
-                    <div>
-                      <p style={{ fontFamily: JAKARTA, fontWeight: 600, fontSize: 12, color: 'rgba(255,255,255,0.75)', margin: 0 }}>{author.name}</p>
-                      <p style={{ fontFamily: JAKARTA, fontSize: 11, color: 'rgba(255,255,255,0.32)', margin: 0 }}>{author.title}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Excerpt */}
-              <p style={{ fontFamily: JAKARTA, fontSize: 14, lineHeight: 1.72, color: 'rgba(255,255,255,0.44)', marginBottom: 20 }}>
-                {post.excerpt}
-              </p>
-
-              {/* Footer */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 16 }}>
-                <button
-                  className="group/btn"
-                  style={{ display: 'flex', alignItems: 'center', gap: 5, fontFamily: JAKARTA, fontWeight: 700, fontSize: 13, color: PURPLE, background: 'none', border: 'none', cursor: 'pointer' }}
-                >
-                  Read more
-                  <ArrowRight className="w-3.5 h-3.5 group-hover/btn:translate-x-1 transition-transform" />
-                </button>
-                <span style={{ fontFamily: MONO, fontSize: 10, color: 'rgba(255,255,255,0.22)', letterSpacing: '0.04em' }}>
-                  {post.date}
-                </span>
-              </div>
-            </motion.article>
-          ))}
-        </div>
-
-        {/* Bottom CTA */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.45 }}
-          className="text-center mt-14 pb-6"
-        >
-          <p style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '0.12em', color: 'rgba(255,255,255,0.18)', marginBottom: 16 }}>
-            STAY IN THE LOOP
-          </p>
-          <Link
-            to="/contact"
+              Never miss a post.
+            </h2>
+            <p className="mt-4 text-base md:text-lg leading-relaxed max-w-lg" style={{ color: 'rgba(255,255,255,0.7)' }}>
+              One thoughtful email every other week. Essays, product stories, and the occasional engineering deep dive.
+            </p>
+          </div>
+          <form
+            onSubmit={e => e.preventDefault()}
+            className="flex flex-col sm:flex-row gap-3 p-2 rounded-2xl"
             style={{
-              display: 'inline-flex', alignItems: 'center', gap: 8,
-              background: 'rgba(73,69,255,0.15)', border: '1px solid rgba(73,69,255,0.35)',
-              color: PURPLE, borderRadius: 10, padding: '12px 28px',
-              fontFamily: JAKARTA, fontWeight: 700, fontSize: 14,
-              textDecoration: 'none', transition: 'background 0.2s, border-color 0.2s',
-            }}
-            onMouseEnter={e => {
-              (e.currentTarget as HTMLElement).style.background   = 'rgba(73,69,255,0.25)';
-              (e.currentTarget as HTMLElement).style.borderColor  = PURPLE;
-            }}
-            onMouseLeave={e => {
-              (e.currentTarget as HTMLElement).style.background   = 'rgba(73,69,255,0.15)';
-              (e.currentTarget as HTMLElement).style.borderColor  = 'rgba(73,69,255,0.35)';
+              background: 'rgba(255,255,255,0.06)',
+              boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.1)',
             }}
           >
-            Subscribe to updates
-            <ArrowRight className="w-4 h-4" />
-          </Link>
-        </motion.div>
-      </div>
+            <input
+              type="email"
+              placeholder="you@company.com"
+              className="flex-1 bg-transparent px-4 py-3 text-sm outline-none placeholder:text-white/40"
+              style={{ color: WHITE }}
+            />
+            <button
+              type="submit"
+              className="inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold transition-all"
+              style={{
+                background: WHITE,
+                color: NAVY,
+                boxShadow: '0 10px 24px -10px rgba(0,0,0,0.5)',
+              }}
+            >
+              Subscribe
+              <ArrowRight size={14} strokeWidth={2.5} />
+            </button>
+          </form>
+        </div>
+      </section>
     </div>
   );
 }
