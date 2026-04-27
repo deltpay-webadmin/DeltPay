@@ -232,11 +232,11 @@ function CategoryCover({ post, className = '' }: { post: Post; className?: strin
           fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
           fontSize: 9, lineHeight: 1.45, color: '#94A3B8', overflow: 'hidden',
         }}>
-          <div style={{ color: '#6D68FF' }}>$ deploy --region us-east-1</div>
+          <div style={{ color: 'rgba(73,69,255,0.85)' }}>$ deploy --region us-east-1</div>
           <div>✓ build succeeded <span style={{ color: '#28c840' }}>2.1s</span></div>
           <div>✓ tests passed <span style={{ color: '#28c840' }}>128/128</span></div>
           <div style={{ color: WHITE }}>→ rolling out <span style={{ color: PURPLE }}>v2026.04</span></div>
-          <div style={{ color: '#6D68FF' }}>█</div>
+          <div style={{ color: 'rgba(73,69,255,0.85)' }}>█</div>
         </div>
       </div>
     );
