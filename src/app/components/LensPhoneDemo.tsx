@@ -4,7 +4,7 @@ import { Link } from 'react-router';
 import { ArrowRight } from 'lucide-react';
 import lensOrbImg from 'figma:asset/469f37b2152191081bbcb3a26c5c8b22bf58788b.png';
 
-const DEEP = '#03152E';
+const DEEP = '#041E42';
 const ACCENT = '#4945FF';
 
 /* ═══════════════════════════════════════════════════════════

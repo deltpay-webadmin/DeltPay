@@ -1,6 +1,6 @@
 import { LensChatSimulator } from '@/app/components/LensChatSimulator';
 
-const DEEP = '#03152E';
+const DEEP = '#041E42';
 
 export function LensChatPage() {
   return (

@@ -418,7 +418,7 @@ export default function HardwareCarouselSection() {
   return (
     <section
       style={{
-        backgroundColor: '#03152E',
+        backgroundColor: '#041E42',
         overflow: 'hidden',
         position: 'relative',
       }}

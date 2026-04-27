@@ -189,12 +189,12 @@ export function LensPreview() {
        The inner section is sticky at top:0 so it "pauses" in the
        viewport while the user scrolls through the barrier zone,
        then releases naturally into the next section / CTA. */
-    <div style={{ paddingBottom: BARRIER_PX, backgroundColor: '#03152E' }}>
+    <div style={{ paddingBottom: BARRIER_PX, backgroundColor: '#041E42' }}>
       <section
         ref={sectionRef}
         className="relative py-24 lg:py-36 overflow-hidden"
         style={{
-          background: 'linear-gradient(180deg, #03152E 0%, #051D3B 50%, #03152E 100%)',
+          background: 'linear-gradient(180deg, #041E42 0%, #051D3B 50%, #041E42 100%)',
           position: 'sticky',
           top: 0,
         }}

@@ -4,7 +4,7 @@ import { ImageWithFallback } from './figma/ImageWithFallback';
 
 /* ── Design tokens ── */
 const T = {
-  bg: '#03152E',
+  bg: '#041E42',
   surface: '#071D3A',
   card: '#0A2444',
   border: '#163057',

@@ -50,7 +50,7 @@ export function ChatGPTvsLens() {
       ref={ref}
       style={{
         width: '100%',
-        background: '#03152E',
+        background: '#041E42',
         borderTop: '1px solid rgba(255,255,255,0.06)',
         borderBottom: '1px solid rgba(255,255,255,0.06)',
         padding: 'clamp(56px, 8vw, 96px) clamp(20px, 5vw, 64px)',

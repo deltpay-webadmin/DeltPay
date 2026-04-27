@@ -6,7 +6,7 @@ import { ScrollIndicator } from './ScrollIndicator';
 import deltLogoImg from 'figma:asset/ba16007295b082bbfe774b1ba0c31a403b5502d6.png';
 
 const ACCENT = '#4945FF';
-const DEEP = '#03152E';
+const DEEP = '#041E42';
 
 /* ─────────────────────────────────────────────────────────────
    Portal geometry — mirrors LensPortal (DeltAiPage)
@@ -384,7 +384,7 @@ export function LensHero({ onAutoplay }: LensHeroProps) {
               <stop offset="0%"   stopColor="#60A5FA" stopOpacity="0.1" />
               <stop offset="40%"  stopColor="#1E3A8A" stopOpacity="0.12" />
               <stop offset="70%"  stopColor="#1E3A8A" stopOpacity="0.05" />
-              <stop offset="100%" stopColor="#03152E" stopOpacity="0" />
+              <stop offset="100%" stopColor="#041E42" stopOpacity="0" />
             </radialGradient>
             <filter id="hg-heavy" x="-80%" y="-80%" width="260%" height="260%">
               <feGaussianBlur stdDeviation="16" />

@@ -3,7 +3,7 @@ import { Link } from 'react-router';
 import deltLogo from 'figma:asset/ba16007295b082bbfe774b1ba0c31a403b5502d6.png';
 
 const PURPLE  = '#4945FF';
-const BG      = '#03152E';
+const BG      = '#041E42';
 
 const TOKENS = [
   'VISA','MC','AMEX','AUTH:','TXN:','CVV:','$','BIN:','PCI','EMV',

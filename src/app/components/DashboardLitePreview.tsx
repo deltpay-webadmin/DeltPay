@@ -320,7 +320,7 @@ export function DashboardLitePreview({ onClickOverride }: { onClickOverride?: ()
         }
 
         .dlp-chrome {
-          background: #03152E;
+          background: #041E42;
           padding: 12px;
           border-radius: 16px;
         }

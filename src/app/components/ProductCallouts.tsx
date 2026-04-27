@@ -254,7 +254,7 @@ function TerminalVisual() {
       style={{
         borderRadius: 20,
         overflow: 'hidden',
-        background: 'linear-gradient(145deg, #0d1f3c 0%, #03152E 60%, #0a0f2a 100%)',
+        background: 'linear-gradient(145deg, #0d1f3c 0%, #041E42 60%, #0a0f2a 100%)',
         border: '1px solid rgba(255,255,255,0.07)',
         boxShadow: '0 32px 80px rgba(0,0,0,0.35), 0 4px 16px rgba(0,0,0,0.2)',
         padding: 'clamp(24px, 4vw, 48px)',

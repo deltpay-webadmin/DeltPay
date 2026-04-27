@@ -28,7 +28,7 @@ import domainFeatureImg from 'figma:asset/ef017fc324ce7ff3c59c8bef86869d7625d5c1
    DESIGN TOKENS
    ═══════════════════════════════════════════════════════════ */
 const T = {
-  bg: '#03152E',
+  bg: '#041E42',
   surface: '#071D3A',
   card: '#0A2444',
   border: '#163057',
