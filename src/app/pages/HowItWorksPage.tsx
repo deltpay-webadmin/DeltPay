@@ -303,7 +303,7 @@ export function HowItWorksPage() {
           margin: 0 0 28px;
         }
         .hiw-hero-title-accent {
-          background: linear-gradient(90deg, #4945FF 0%, #7B78FF 60%, #4945FF 100%);
+          background: linear-gradient(90deg, #4945FF 0%, #4945FF 60%, #4945FF 100%);
           background-size: 200% 100%;
           animation: hiw-shimmer 6s ease-in-out infinite;
           -webkit-background-clip: text;
