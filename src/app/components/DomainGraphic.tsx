@@ -199,7 +199,7 @@ export function DomainGraphic() {
                 position: "absolute",
                 top: -9,
                 right: 10,
-                background: "linear-gradient(135deg, #4945FF, #6C69FF)",
+                background: "linear-gradient(135deg, #4945FF, #4945FF)",
                 color: "#fff",
                 fontSize: 8,
                 fontWeight: 700,

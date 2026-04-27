@@ -34,7 +34,7 @@ const T = {
   border: '#163057',
   borderHi: '#1E4070',
   accent: '#4945FF',
-  accentLight: '#6C69FF',
+  accentLight: '#4945FF',
   accentDim: 'rgba(73,69,255,0.10)',
   accentGlow: 'rgba(73,69,255,0.35)',
   blue: '#3B82F6',
@@ -666,7 +666,7 @@ const ECO_ITEMS = [
     backTitle: 'Autonomous Intelligence',
     backBody: 'Lens acts as your digital analyst, spotting revenue leaks and drafting customer re-engagement offers before you even ask.',
     backTag: 'Decisions, not just dashboards.',
-    accentColor: '#6C69FF',
+    accentColor: '#4945FF',
   },
   {
     label: 'Payments & Commerce', num: '03',

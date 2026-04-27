@@ -139,7 +139,7 @@ export function SpeedGraphic() {
                   borderRadius: 4,
                   background: step >= 5
                     ? "linear-gradient(135deg, #4A2E0E 0%, #8A5A24 50%, #D9994A 100%)"
-                    : "linear-gradient(135deg, #4945FF 0%, #6C69FF 100%)",
+                    : "linear-gradient(135deg, #4945FF 0%, #4945FF 100%)",
                   marginTop: 2,
                   position: "relative",
                   overflow: "hidden",
@@ -251,7 +251,7 @@ export function SpeedGraphic() {
             <div style={{
               width: `${Math.min(step / 5 * 100, 100)}%`,
               height: "100%",
-              background: "linear-gradient(90deg, #4945FF 0%, #6C69FF 70%, #10B981 100%)",
+              background: "linear-gradient(90deg, #4945FF 0%, #4945FF 70%, #10B981 100%)",
               transition: "width 0.6s cubic-bezier(0.4, 0, 0.2, 1)",
               borderRadius: 2,
               boxShadow: "0 0 12px rgba(73,69,255,0.4)",
@@ -279,7 +279,7 @@ export function SpeedGraphic() {
                   background: isFinal
                     ? "linear-gradient(135deg, #10B981, #059669)"
                     : isActive
-                      ? "linear-gradient(135deg, #4945FF, #6C69FF)"
+                      ? "linear-gradient(135deg, #4945FF, #4945FF)"
                       : "rgba(255,255,255,0.04)",
                   border: isActive ? "none" : "1.5px solid rgba(255,255,255,0.1)",
                   display: "flex",
@@ -355,7 +355,7 @@ export function SpeedGraphic() {
           }}>
             <div style={{
               fontSize: 9,
-              color: "#6C69FF",
+              color: "#4945FF",
               fontWeight: 700,
               letterSpacing: "0.1em",
               textTransform: "uppercase",

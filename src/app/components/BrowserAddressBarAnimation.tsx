@@ -9,7 +9,7 @@ const T = {
   card: '#0A2444',
   border: '#163057',
   accent: '#4945FF',
-  accentLight: '#6C69FF',
+  accentLight: '#4945FF',
   accentGlow: 'rgba(73,69,255,0.35)',
   green: '#22C55E',
   greenDim: 'rgba(34,197,94,0.08)',
