@@ -163,7 +163,7 @@ export function CareersPage() {
                     </div>
                     <p className="text-sm text-[#475569] mt-2">Estimated base salary: {position.payRange}, depending on experience and location. This role may include equity compensation.</p>
                   </div>
-                  <button onClick={() => navigate('/contact-sales')} className="flex items-center gap-2 px-6 py-3 bg-[#4945FF] text-white rounded-lg hover:bg-[#3730FF] transition-colors font-semibold whitespace-nowrap">
+                  <button onClick={() => navigate('/contact-sales')} className="flex items-center gap-2 px-6 py-3 bg-[#4945FF] text-white rounded-lg hover:bg-[#3933CC] transition-colors font-semibold whitespace-nowrap">
                     Apply Now <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
@@ -183,7 +183,7 @@ export function CareersPage() {
             <p className="text-xl text-[#475569] mb-8">
               We're always looking for talented people. Send us your resume and we'll keep you in mind for future opportunities.
             </p>
-            <button onClick={() => { window.location.href = 'mailto:careers@delt.com'; }} className="px-8 py-4 bg-[#4945FF] text-white rounded-lg hover:bg-[#3730FF] transition-colors font-semibold">
+            <button onClick={() => { window.location.href = 'mailto:careers@delt.com'; }} className="px-8 py-4 bg-[#4945FF] text-white rounded-lg hover:bg-[#3933CC] transition-colors font-semibold">
               Send Us Your Resume
             </button>
           </div>

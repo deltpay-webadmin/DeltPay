@@ -90,7 +90,7 @@ export function CustomersDashboard() {
               <button onClick={() => addToast('success', 'Exported', 'Customer data CSV downloaded')} className="flex items-center gap-2 px-4 py-2.5 rounded-full border border-[#E8E8E8] text-sm text-[#333] hover:bg-[#F5F5F5] transition-colors" style={{ fontWeight: 500 }}>
                 <Download className="w-4 h-4" /> Export
               </button>
-              <button onClick={() => setAddCustomerOpen(true)} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#4945FF] text-white text-sm hover:bg-[#3730FF] transition-colors" style={{ fontWeight: 600 }}>
+              <button onClick={() => setAddCustomerOpen(true)} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#4945FF] text-white text-sm hover:bg-[#3933CC] transition-colors" style={{ fontWeight: 600 }}>
                 <UserPlus className="w-4 h-4" /> Add Customer
               </button>
             </div>
@@ -244,7 +244,7 @@ export function CustomersDashboard() {
                 <button onClick={() => addToast('success', 'Email sent', `Draft email opened for ${selectedCustomer.name}`)} className="flex-1 py-2 rounded-lg border border-[#E8E8E8] text-xs text-[#333] hover:bg-[#F5F5F5] transition-colors" style={{ fontWeight: 500 }}>
                   Send Email
                 </button>
-                <button onClick={() => addToast('info', 'Full profile', `Showing complete history for ${selectedCustomer.name}`)} className="flex-1 py-2 rounded-lg bg-[#4945FF] text-xs text-white hover:bg-[#3730FF] transition-colors" style={{ fontWeight: 600 }}>
+                <button onClick={() => addToast('info', 'Full profile', `Showing complete history for ${selectedCustomer.name}`)} className="flex-1 py-2 rounded-lg bg-[#4945FF] text-xs text-white hover:bg-[#3933CC] transition-colors" style={{ fontWeight: 600 }}>
                   View Full Profile
                 </button>
               </div>
@@ -273,7 +273,7 @@ export function CustomersDashboard() {
                 <input className="w-full px-4 py-3 border border-[#E8E8E8] rounded-xl text-sm text-[#333] outline-none focus:ring-2 focus:ring-[#4945FF]/20 focus:border-[#4945FF]" placeholder="(555) 000-0000" />
               </div>
             </div>
-            <button onClick={() => { setAddCustomerOpen(false); addToast('success', 'Customer added', 'New customer has been created'); }} className="w-full py-3 rounded-xl bg-[#4945FF] text-white text-sm hover:bg-[#3730FF] transition-colors" style={{ fontWeight: 600 }}>
+            <button onClick={() => { setAddCustomerOpen(false); addToast('success', 'Customer added', 'New customer has been created'); }} className="w-full py-3 rounded-xl bg-[#4945FF] text-white text-sm hover:bg-[#3933CC] transition-colors" style={{ fontWeight: 600 }}>
               Add Customer
             </button>
           </div>

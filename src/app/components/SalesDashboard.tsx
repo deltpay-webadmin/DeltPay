@@ -70,7 +70,7 @@ export function SalesDashboard() {
             <Filter className="w-4 h-4" />
             Filter
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-[#4945ff] text-white rounded-lg hover:bg-[#3730ff] transition-colors font-medium">
+          <button className="flex items-center gap-2 px-4 py-2 bg-[#4945ff] text-white rounded-lg hover:bg-[#3933CC] transition-colors font-medium">
             <Download className="w-4 h-4" />
             Export Report
           </button>
@@ -82,7 +82,7 @@ export function SalesDashboard() {
         {/* Total Revenue */}
         <div className="bg-white rounded-2xl p-6 border border-[#041E42]/10 relative">
           <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-[#4945FF] to-[#3730FF] rounded-xl flex items-center justify-center">
+            <div className="w-12 h-12 bg-gradient-to-br from-[#4945FF] to-[#3933CC] rounded-xl flex items-center justify-center">
               <DollarSign className="w-6 h-6 text-white" />
             </div>
             <div className="text-[#10B981] flex items-center gap-1 text-sm font-semibold">
@@ -328,7 +328,7 @@ export function SalesDashboard() {
             <h2 className="text-xl font-bold text-[#041E42]">Recent Sales</h2>
             <p className="text-sm text-[#041E42]/50 mt-1">Latest transactions</p>
           </div>
-          <button className="text-[#4945ff] text-sm font-medium hover:text-[#3730ff]">
+          <button className="text-[#4945ff] text-sm font-medium hover:text-[#3933CC]">
             View All Sales →
           </button>
         </div>

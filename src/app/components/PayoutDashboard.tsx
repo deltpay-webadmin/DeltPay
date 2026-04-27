@@ -134,7 +134,7 @@ export function PayoutDashboard() {
             <Filter className="w-4 h-4" />
             Filter
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-[#4945ff] text-white rounded-lg hover:bg-[#3730ff] transition-colors font-medium">
+          <button className="flex items-center gap-2 px-4 py-2 bg-[#4945ff] text-white rounded-lg hover:bg-[#3933CC] transition-colors font-medium">
             <Download className="w-4 h-4" />
             Export
           </button>
@@ -146,7 +146,7 @@ export function PayoutDashboard() {
         {/* Total Payouts */}
         <div className="bg-white rounded-2xl p-6 border border-[#041E42]/10">
           <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-[#4945FF] to-[#3730FF] rounded-xl flex items-center justify-center">
+            <div className="w-12 h-12 bg-gradient-to-br from-[#4945FF] to-[#3933CC] rounded-xl flex items-center justify-center">
               <DollarSign className="w-6 h-6 text-white" />
             </div>
           </div>
@@ -290,7 +290,7 @@ export function PayoutDashboard() {
             <button className="px-4 py-2 border border-[#041E42]/10 text-[#041E42]/50 rounded-lg hover:bg-[#041E42]/5 transition-colors text-sm font-medium">
               Previous
             </button>
-            <button className="px-4 py-2 bg-[#4945ff] text-white rounded-lg hover:bg-[#3730ff] transition-colors text-sm font-medium">
+            <button className="px-4 py-2 bg-[#4945ff] text-white rounded-lg hover:bg-[#3933CC] transition-colors text-sm font-medium">
               Next
             </button>
           </div>

@@ -516,7 +516,7 @@ export function DashboardLitePreview({ onClickOverride }: { onClickOverride?: ()
           white-space: nowrap;
           transition: background 0.12s;
         }
-        .dlp-btn-primary:hover { background: #3730FF; }
+        .dlp-btn-primary:hover { background: #3933CC; }
         .dlp-btn-outline {
           background: white;
           color: #333;

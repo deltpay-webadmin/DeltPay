@@ -390,7 +390,7 @@ export function PaymentsDashboard({ forceTerminalKey }: { forceTerminalKey?: num
                   <div className="mt-3">
                     <button
                       onClick={() => setBillToMode('invoice')}
-                      className="flex items-center gap-2 text-xs text-[#4945FF] hover:text-[#3730FF] transition-colors py-1"
+                      className="flex items-center gap-2 text-xs text-[#4945FF] hover:text-[#3933CC] transition-colors py-1"
                       style={{ fontWeight: 500 }}
                     >
                       <Plus className="w-3.5 h-3.5" /> Attach an invoice for this customer
@@ -575,7 +575,7 @@ export function PaymentsDashboard({ forceTerminalKey }: { forceTerminalKey?: num
                     setSelectedCustomer(null); setSelectedInvoice(null); setBillToMode(null);
                   }, 2000);
                 }}
-                className={`w-full py-3.5 rounded-full text-white text-sm transition-colors ${processing ? 'bg-[#4945FF]/60 cursor-wait' : parsedAmount <= 0 ? 'bg-[#E8E8E8] text-[#999] cursor-not-allowed' : 'bg-[#4945FF] hover:bg-[#3730FF]'}`}
+                className={`w-full py-3.5 rounded-full text-white text-sm transition-colors ${processing ? 'bg-[#4945FF]/60 cursor-wait' : parsedAmount <= 0 ? 'bg-[#E8E8E8] text-[#999] cursor-not-allowed' : 'bg-[#4945FF] hover:bg-[#3933CC]'}`}
                 style={{ fontWeight: 600 }}
               >
                 {processing ? 'Processing...' : 'Process Payment'}
@@ -751,7 +751,7 @@ export function PaymentsDashboard({ forceTerminalKey }: { forceTerminalKey?: num
             <div className="px-8 pb-8 space-y-3">
               <button
                 onClick={() => setPaymentSuccess(null)}
-                className="w-full py-3.5 rounded-full bg-[#4945FF] text-white text-sm hover:bg-[#3730FF] transition-colors"
+                className="w-full py-3.5 rounded-full bg-[#4945FF] text-white text-sm hover:bg-[#3933CC] transition-colors"
                 style={{ fontWeight: 600 }}
               >
                 Done

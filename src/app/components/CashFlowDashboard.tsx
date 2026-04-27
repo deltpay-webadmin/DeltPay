@@ -157,7 +157,7 @@ export function CashFlowDashboard() {
                 />
               </div>
               <button
-                className={`w-full py-3 rounded-xl text-white text-sm transition-colors ${transferring ? 'bg-[#4945FF]/60 cursor-wait' : !transferAmount ? 'bg-[#E8E8E8] text-[#999] cursor-not-allowed' : 'bg-[#4945FF] hover:bg-[#3730FF]'}`}
+                className={`w-full py-3 rounded-xl text-white text-sm transition-colors ${transferring ? 'bg-[#4945FF]/60 cursor-wait' : !transferAmount ? 'bg-[#E8E8E8] text-[#999] cursor-not-allowed' : 'bg-[#4945FF] hover:bg-[#3933CC]'}`}
                 style={{ fontWeight: 600 }}
                 disabled={transferring || !transferAmount}
                 onClick={() => {

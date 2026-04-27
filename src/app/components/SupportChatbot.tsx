@@ -239,7 +239,7 @@ export function SupportChatbot({ isOpen, onClose }: SupportChatbotProps) {
             <button
               onClick={handleSendMessage}
               disabled={!inputValue.trim()}
-              className="px-6 py-3 bg-[#4945FF] text-white rounded-lg hover:bg-[#3730FF] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 font-semibold"
+              className="px-6 py-3 bg-[#4945FF] text-white rounded-lg hover:bg-[#3933CC] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 font-semibold"
             >
               <Send className="w-4 h-4" />
             </button>

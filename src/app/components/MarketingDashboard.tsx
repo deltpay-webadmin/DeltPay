@@ -96,7 +96,7 @@ export function MarketingDashboard() {
     },
   ];
 
-  const COLORS = ['#4945FF', '#041E42', '#6B68FF', '#0A2E5C', '#3730FF'];
+  const COLORS = ['#4945FF', '#041E42', '#6B68FF', '#0A2E5C', '#3933CC'];
 
   // Calculate key metrics
   const totalAdSpend = 89300;
@@ -121,7 +121,7 @@ export function MarketingDashboard() {
             <Filter className="w-4 h-4" />
             Filter
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-[#4945ff] text-white rounded-lg hover:bg-[#3730ff] transition-colors font-medium">
+          <button className="flex items-center gap-2 px-4 py-2 bg-[#4945ff] text-white rounded-lg hover:bg-[#3933CC] transition-colors font-medium">
             <Download className="w-4 h-4" />
             Export Report
           </button>
@@ -133,7 +133,7 @@ export function MarketingDashboard() {
         {/* ROAS */}
         <div className="bg-white rounded-2xl p-6 border border-[#041E42]/10 relative">
           <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-[#4945FF] to-[#3730FF] rounded-xl flex items-center justify-center">
+            <div className="w-12 h-12 bg-gradient-to-br from-[#4945FF] to-[#3933CC] rounded-xl flex items-center justify-center">
               <TrendingUp className="w-6 h-6 text-white" />
             </div>
             <div className="text-[#10B981] flex items-center gap-1 text-sm font-semibold">
@@ -197,7 +197,7 @@ export function MarketingDashboard() {
         {/* Conversion Rate */}
         <div className="bg-white rounded-2xl p-6 border border-[#041E42]/10 relative">
           <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-[#3730FF] to-[#4945FF] rounded-xl flex items-center justify-center">
+            <div className="w-12 h-12 bg-gradient-to-br from-[#3933CC] to-[#4945FF] rounded-xl flex items-center justify-center">
               <MousePointerClick className="w-6 h-6 text-white" />
             </div>
             <div className="text-[#10B981] flex items-center gap-1 text-sm font-semibold">
@@ -407,7 +407,7 @@ export function MarketingDashboard() {
             <h2 className="text-xl font-bold text-[#041E42]">Active Campaigns</h2>
             <p className="text-sm text-[#041E42]/50 mt-1">Current marketing initiatives</p>
           </div>
-          <button className="text-[#4945ff] text-sm font-medium hover:text-[#3730ff]">
+          <button className="text-[#4945ff] text-sm font-medium hover:text-[#3933CC]">
             View All Campaigns →
           </button>
         </div>

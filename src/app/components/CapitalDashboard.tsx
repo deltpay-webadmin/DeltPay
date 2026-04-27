@@ -194,7 +194,7 @@ export function CapitalDashboard() {
               </div>
 
               <div className="flex items-center gap-3">
-                <button onClick={() => addToast('info', 'Capital offers', 'You qualify for up to $62,000. Offer details sent to email.')} className="px-5 py-2.5 rounded-xl bg-[#4945FF] text-white text-sm hover:bg-[#3730FF] transition-colors" style={{ fontWeight: 600 }}>
+                <button onClick={() => addToast('info', 'Capital offers', 'You qualify for up to $62,000. Offer details sent to email.')} className="px-5 py-2.5 rounded-xl bg-[#4945FF] text-white text-sm hover:bg-[#3933CC] transition-colors" style={{ fontWeight: 600 }}>
                   Explore Offers
                 </button>
                 <button onClick={() => addToast('success', 'Advisor contacted', 'A capital advisor will reach out within 1 business day')} className="px-5 py-2.5 rounded-full border border-[#E8E8E8] text-sm text-[#333] hover:bg-[#F5F5F5] transition-colors" style={{ fontWeight: 500 }}>
@@ -231,7 +231,7 @@ export function CapitalDashboard() {
                 </select>
               </div>
             </div>
-            <button onClick={() => { setApplyModalOpen(false); addToast('success', 'Application submitted', 'We\'ll review your request within 24 hours'); }} className="w-full py-3 rounded-xl bg-[#4945FF] text-white text-sm hover:bg-[#3730FF] transition-colors" style={{ fontWeight: 600 }}>
+            <button onClick={() => { setApplyModalOpen(false); addToast('success', 'Application submitted', 'We\'ll review your request within 24 hours'); }} className="w-full py-3 rounded-xl bg-[#4945FF] text-white text-sm hover:bg-[#3933CC] transition-colors" style={{ fontWeight: 600 }}>
               Submit Application
             </button>
             <button onClick={() => setApplyModalOpen(false)} className="w-full py-2 mt-2 text-sm text-[#999] hover:text-[#333] transition-colors">Cancel</button>
@@ -306,7 +306,7 @@ export function CapitalDashboard() {
                 addToast('success', 'Savings calculated', `You could save $${savingsData.savings.toFixed(2)}/month with Delt`);
                 setSavingsToolMode(null);
               }}
-              className="w-full py-3 rounded-lg bg-[#4945FF] text-white text-sm hover:bg-[#3730FF] transition-colors mb-3" 
+              className="w-full py-3 rounded-lg bg-[#4945FF] text-white text-sm hover:bg-[#3933CC] transition-colors mb-3" 
               style={{ fontWeight: 600 }}
             >
               Calculate my savings

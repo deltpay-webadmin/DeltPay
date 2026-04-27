@@ -107,7 +107,7 @@ export function SignInPage() {
                 />
                 <span className="ml-2 text-sm text-[#475569]">Remember me</span>
               </label>
-              <Link to="/contact" className="text-sm font-medium text-[#4945FF] hover:text-[#3730FF] transition-colors">
+              <Link to="/contact" className="text-sm font-medium text-[#4945FF] hover:text-[#3933CC] transition-colors">
                 Forgot password?
               </Link>
             </div>
@@ -123,7 +123,7 @@ export function SignInPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-[#4945FF] text-white py-3 rounded-lg font-semibold hover:bg-[#3730FF] transition-all flex items-center justify-center gap-2 group disabled:opacity-60 disabled:cursor-not-allowed"
+              className="w-full bg-[#4945FF] text-white py-3 rounded-lg font-semibold hover:bg-[#3933CC] transition-all flex items-center justify-center gap-2 group disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {loading ? 'Signing in…' : 'Sign in'}
               {!loading && <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />}
@@ -163,7 +163,7 @@ export function SignInPage() {
         {/* Sign Up Link */}
         <p className="text-center text-[#475569]">
           Don't have an account?{' '}
-          <Link to="/signup" className="font-semibold text-[#4945FF] hover:text-[#3730FF] transition-colors">
+          <Link to="/signup" className="font-semibold text-[#4945FF] hover:text-[#3933CC] transition-colors">
             Sign up for free
           </Link>
         </p>

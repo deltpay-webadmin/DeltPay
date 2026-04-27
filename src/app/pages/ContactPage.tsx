@@ -150,7 +150,7 @@ export function ContactPage() {
                   </p>
                   <button
                     onClick={() => setIsChatOpen(true)}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#4945FF] text-white rounded-lg hover:bg-[#3730FF] transition-colors font-semibold"
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#4945FF] text-white rounded-lg hover:bg-[#3933CC] transition-colors font-semibold"
                   >
                     Start Chat <ArrowRight className="w-4 h-4" />
                   </button>
@@ -292,7 +292,7 @@ export function ContactPage() {
                     We'll call you within one business day to discuss your needs.
                   </p>
                   <p className="text-xs text-[#94A3B8] mb-4">Monday - Friday: 9am - 6pm ET</p>
-                  <button className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#4945FF] text-white rounded-lg hover:bg-[#3730FF] transition-colors font-semibold">
+                  <button className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#4945FF] text-white rounded-lg hover:bg-[#3933CC] transition-colors font-semibold">
                     Request a Call <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
@@ -536,7 +536,7 @@ export function ContactPage() {
 
                       <button
                         type="submit"
-                        className="w-full px-6 py-4 bg-[#4945FF] text-white rounded-lg hover:bg-[#3730FF] hover:shadow-lg transition-all font-semibold text-lg"
+                        className="w-full px-6 py-4 bg-[#4945FF] text-white rounded-lg hover:bg-[#3933CC] hover:shadow-lg transition-all font-semibold text-lg"
                       >
                         Submit
                       </button>

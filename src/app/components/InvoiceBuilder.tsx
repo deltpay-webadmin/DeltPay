@@ -372,7 +372,7 @@ export function InvoiceBuilder({ onClose, onSave }: InvoiceBuilderProps) {
 
       {/* ═══ BOTTOM BAR ═══ */}
       <div className="flex items-center justify-between px-6 h-16 border-t border-[#E8E8E8] bg-white flex-shrink-0">
-        <button className="text-xs text-[#4945FF] hover:text-[#3730FF] transition-colors" style={{ fontWeight: 600 }}>
+        <button className="text-xs text-[#4945FF] hover:text-[#3933CC] transition-colors" style={{ fontWeight: 600 }}>
           Print or download
         </button>
         <div className="flex items-center gap-3">
@@ -393,7 +393,7 @@ export function InvoiceBuilder({ onClose, onSave }: InvoiceBuilderProps) {
               handleSave();
               onClose();
             }}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#4945FF] text-white text-sm hover:bg-[#3730FF] transition-colors"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#4945FF] text-white text-sm hover:bg-[#3933CC] transition-colors"
             style={{ fontWeight: 600 }}
           >
             <Send className="w-4 h-4" />
@@ -510,7 +510,7 @@ function EditView({
                         ))}
                       </div>
                       <div className="border-t border-[#F0F0F0] px-4 py-2.5">
-                        <button className="flex items-center gap-2 text-xs text-[#4945FF] hover:text-[#3730FF]" style={{ fontWeight: 600 }}>
+                        <button className="flex items-center gap-2 text-xs text-[#4945FF] hover:text-[#3933CC]" style={{ fontWeight: 600 }}>
                           <Plus className="w-3.5 h-3.5" /> Add new customer
                         </button>
                       </div>
@@ -746,7 +746,7 @@ function EmailView({ invoiceNo, customer, total }: { invoiceNo: string; customer
             <p className="text-sm text-[#666] italic">The email message you write will go here</p>
           </div>
 
-          <button className="mx-auto px-10 py-3 rounded-xl bg-[#4945FF] text-white text-sm hover:bg-[#3730FF] transition-colors" style={{ fontWeight: 600 }}>
+          <button className="mx-auto px-10 py-3 rounded-xl bg-[#4945FF] text-white text-sm hover:bg-[#3933CC] transition-colors" style={{ fontWeight: 600 }}>
             View details
           </button>
 

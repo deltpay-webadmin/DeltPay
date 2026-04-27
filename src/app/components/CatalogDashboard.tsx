@@ -50,7 +50,7 @@ export function CatalogDashboard() {
               <h1 className="text-[#111] mb-1" style={{ fontSize: '1.5rem', fontWeight: 700 }}>Catalog</h1>
               <p className="text-sm text-[#999]">Manage inventory, menu items, and categories</p>
             </div>
-            <button onClick={() => addToast('success', 'Item added', 'New item created in catalog')} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#4945FF] text-white text-sm hover:bg-[#3730FF] transition-colors" style={{ fontWeight: 600 }}>
+            <button onClick={() => addToast('success', 'Item added', 'New item created in catalog')} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#4945FF] text-white text-sm hover:bg-[#3933CC] transition-colors" style={{ fontWeight: 600 }}>
               <Plus className="w-4 h-4" /> Add Item
             </button>
           </div>

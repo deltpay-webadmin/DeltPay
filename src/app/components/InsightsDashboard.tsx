@@ -490,7 +490,7 @@ export function InsightsDashboard() {
                 </label>
               ))}
             </div>
-            <button className="w-full py-2.5 rounded-full bg-[#4945FF] text-white text-sm hover:bg-[#3730FF] transition-colors" style={{ fontWeight: 600 }} onClick={() => { setFilterOpen(false); addToast('success', 'Filters applied', `${activeFilters.length || 'No'} filters active`); }}>
+            <button className="w-full py-2.5 rounded-full bg-[#4945FF] text-white text-sm hover:bg-[#3933CC] transition-colors" style={{ fontWeight: 600 }} onClick={() => { setFilterOpen(false); addToast('success', 'Filters applied', `${activeFilters.length || 'No'} filters active`); }}>
               Apply Filters
             </button>
           </div>

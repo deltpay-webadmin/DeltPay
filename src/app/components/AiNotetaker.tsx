@@ -482,7 +482,7 @@ export function AiNotetaker() {
             className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm transition-all ${
               isRecording
                 ? 'bg-[#EF4444] text-white hover:bg-[#DC2626]'
-                : 'bg-[#4945FF] text-white hover:bg-[#3730FF]'
+                : 'bg-[#4945FF] text-white hover:bg-[#3933CC]'
             }`}
             style={{ fontWeight: 600 }}
           >
@@ -702,7 +702,7 @@ export function AiNotetaker() {
                     </div>
                     <h3 className="text-[#041E42] mb-2" style={{ fontWeight: 600 }}>No transcript available</h3>
                     <p className="text-sm text-[#041E42]/40 max-w-sm mx-auto">This meeting was recorded without live transcription. You can upload an audio file to generate a transcript.</p>
-                    <button className="mt-4 px-4 py-2 bg-[#4945FF] text-white rounded-lg text-sm hover:bg-[#3730FF] transition-colors" style={{ fontWeight: 600 }}>
+                    <button className="mt-4 px-4 py-2 bg-[#4945FF] text-white rounded-lg text-sm hover:bg-[#3933CC] transition-colors" style={{ fontWeight: 600 }}>
                       Upload Audio
                     </button>
                   </div>
@@ -874,7 +874,7 @@ export function AiNotetaker() {
                   </button>
                   <button
                     onClick={() => { setShowNewMeetingModal(false); setIsRecording(true); }}
-                    className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-[#4945FF] text-white rounded-lg text-sm hover:bg-[#3730FF] transition-colors"
+                    className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-[#4945FF] text-white rounded-lg text-sm hover:bg-[#3933CC] transition-colors"
                     style={{ fontWeight: 600 }}
                   >
                     <Mic className="w-4 h-4" />

@@ -112,7 +112,7 @@ export function ShoppingCartPage() {
                   <p className="text-[#475569] mb-6">Add products to get started</p>
                   <Link
                     to="/products"
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-[#4945FF] text-white rounded-lg font-semibold hover:bg-[#3730FF] transition-all"
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-[#4945FF] text-white rounded-lg font-semibold hover:bg-[#3933CC] transition-all"
                   >
                     Browse Products
                     <ArrowRight className="h-5 w-5" />
@@ -262,7 +262,7 @@ export function ShoppingCartPage() {
 
                   {/* Checkout Button */}
                   <button
-                    className="w-full bg-[#4945FF] text-white py-4 rounded-lg font-bold hover:bg-[#3730FF] transition-all flex items-center justify-center gap-2 group mb-2"
+                    className="w-full bg-[#4945FF] text-white py-4 rounded-lg font-bold hover:bg-[#3933CC] transition-all flex items-center justify-center gap-2 group mb-2"
                     onClick={() => navigate('/apply')}
                   >
                     Proceed to Checkout
@@ -295,7 +295,7 @@ export function ShoppingCartPage() {
                   {/* Continue Shopping */}
                   <Link
                     to="/products"
-                    className="block w-full text-center py-3 mt-4 text-[#4945FF] font-semibold hover:text-[#3730FF] transition-colors"
+                    className="block w-full text-center py-3 mt-4 text-[#4945FF] font-semibold hover:text-[#3933CC] transition-colors"
                   >
                     Continue Shopping
                   </Link>

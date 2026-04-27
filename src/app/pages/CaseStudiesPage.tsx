@@ -220,7 +220,7 @@ export function CaseStudiesPage() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
                 to="/apply"
-                className="px-8 py-4 bg-[#4945FF] text-white rounded-lg hover:bg-[#3730FF] transition-colors font-semibold"
+                className="px-8 py-4 bg-[#4945FF] text-white rounded-lg hover:bg-[#3933CC] transition-colors font-semibold"
               >
                 Get Started Free
               </Link>

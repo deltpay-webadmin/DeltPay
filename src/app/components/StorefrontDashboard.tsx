@@ -77,7 +77,7 @@ export function StorefrontDashboard() {
               <h1 className="text-[#111] mb-1" style={{ fontSize: '1.5rem', fontWeight: 700 }}>Storefront</h1>
               <p className="text-sm text-[#999]">Website, SEO, social links, inventory, and menu management</p>
             </div>
-            <button onClick={() => addToast('info', 'Site preview', 'Opening deltdeli.com preview...')} className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-[#4945FF] text-white text-sm hover:bg-[#3730FF] transition-colors" style={{ fontWeight: 600 }}>
+            <button onClick={() => addToast('info', 'Site preview', 'Opening deltdeli.com preview...')} className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-[#4945FF] text-white text-sm hover:bg-[#3933CC] transition-colors" style={{ fontWeight: 600 }}>
               <Eye className="w-4 h-4" /> Preview Site
             </button>
           </div>
@@ -283,7 +283,7 @@ export function StorefrontDashboard() {
                         addToast('success', `${s.platform} connected`, `Your ${s.platform} account is now linked`);
                       }
                     }}
-                    className={`px-4 py-2 rounded-lg text-sm transition-colors ${s.connected ? 'border border-[#E8E8E8] text-[#333] hover:bg-[#F5F5F5]' : 'bg-[#4945FF] text-white hover:bg-[#3730FF]'}`} style={{ fontWeight: 600 }}>
+                    className={`px-4 py-2 rounded-lg text-sm transition-colors ${s.connected ? 'border border-[#E8E8E8] text-[#333] hover:bg-[#F5F5F5]' : 'bg-[#4945FF] text-white hover:bg-[#3933CC]'}`} style={{ fontWeight: 600 }}>
                     {s.connected ? 'Manage' : 'Connect'}
                   </button>
                 </div>

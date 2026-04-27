@@ -634,7 +634,7 @@ export function HomeDashboard({ pinnedChats = [], onUnpinChat, onNavigateToLens,
             Hello! You have <AnimatedNumber value={12384} prefix="$" />.23 available.
           </h1>
           <div className="flex items-center gap-3 flex-wrap">
-            <button onClick={() => onNavigate?.('analytics')} className="px-5 py-2.5 rounded-full bg-[#4945FF] text-white text-sm hover:bg-[#3730FF] transition-colors" style={{ fontWeight: 600 }}>
+            <button onClick={() => onNavigate?.('analytics')} className="px-5 py-2.5 rounded-full bg-[#4945FF] text-white text-sm hover:bg-[#3933CC] transition-colors" style={{ fontWeight: 600 }}>
               Transfer $2,324.12 now
             </button>
             <button onClick={() => onNavigate?.('payments')} className="px-5 py-2.5 rounded-full border border-[#E8E8E8] text-sm text-[#333] hover:bg-[#F5F5F5] transition-colors" style={{ fontWeight: 500 }}>

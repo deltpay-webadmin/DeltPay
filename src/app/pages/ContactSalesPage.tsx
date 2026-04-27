@@ -354,7 +354,7 @@ export function ContactSalesPage() {
 
                 <button
                   type="submit"
-                  className="w-full px-6 py-4 bg-[#4945FF] text-white rounded-lg hover:bg-[#3730FF] hover:shadow-[0_16px_40px_-12px_rgba(73,69,255,0.6)] transition-all font-semibold text-lg"
+                  className="w-full px-6 py-4 bg-[#4945FF] text-white rounded-lg hover:bg-[#3933CC] hover:shadow-[0_16px_40px_-12px_rgba(73,69,255,0.6)] transition-all font-semibold text-lg"
                 >
                   Submit
                 </button>

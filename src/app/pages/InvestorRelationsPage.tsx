@@ -68,7 +68,7 @@ export function InvestorRelationsPage() {
               Powering commerce for millions of businesses worldwide. Explore our financial performance, corporate governance, and growth strategy.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <button className="px-8 py-4 bg-[#4945FF] text-white rounded-lg hover:bg-[#3730FF] transition-colors font-semibold flex items-center justify-center gap-2">
+              <button className="px-8 py-4 bg-[#4945FF] text-white rounded-lg hover:bg-[#3933CC] transition-colors font-semibold flex items-center justify-center gap-2">
                 <Download className="w-5 h-5" />
                 Download Q4 2025 Report
               </button>
@@ -243,7 +243,7 @@ export function InvestorRelationsPage() {
                 href="https://www.sec.gov"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-6 py-3 bg-[#4945FF] text-white rounded-lg hover:bg-[#3730FF] transition-colors font-semibold whitespace-nowrap flex items-center gap-2"
+                className="px-6 py-3 bg-[#4945FF] text-white rounded-lg hover:bg-[#3933CC] transition-colors font-semibold whitespace-nowrap flex items-center gap-2"
               >
                 View on SEC.gov
                 <ArrowUpRight className="w-4 h-4" />
@@ -280,7 +280,7 @@ export function InvestorRelationsPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between mb-12">
             <h2 className="text-4xl font-bold text-[#041E42]">Recent Press Releases</h2>
-            <a href="#" className="text-[#4945FF] font-semibold hover:text-[#3730FF] flex items-center gap-2">
+            <a href="#" className="text-[#4945FF] font-semibold hover:text-[#3933CC] flex items-center gap-2">
               View All
               <ArrowUpRight className="w-4 h-4" />
             </a>
@@ -345,7 +345,7 @@ export function InvestorRelationsPage() {
                   placeholder="Enter your email"
                   className="flex-1 px-4 py-3 rounded-lg bg-white/20 border border-white/30 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-[#4945FF]"
                 />
-                <button className="px-6 py-3 bg-[#4945FF] text-white rounded-lg hover:bg-[#3730FF] transition-colors font-semibold whitespace-nowrap">
+                <button className="px-6 py-3 bg-[#4945FF] text-white rounded-lg hover:bg-[#3933CC] transition-colors font-semibold whitespace-nowrap">
                   Subscribe
                 </button>
               </div>

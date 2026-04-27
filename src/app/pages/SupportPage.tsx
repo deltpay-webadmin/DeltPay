@@ -64,7 +64,7 @@ export function SupportPage() {
               </p>
               <button 
                 onClick={() => setIsChatOpen(true)}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#4945FF] text-white rounded-lg hover:bg-[#3730FF] transition-colors font-semibold"
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#4945FF] text-white rounded-lg hover:bg-[#3933CC] transition-colors font-semibold"
               >
                 Start Chat <ArrowRight className="w-4 h-4" />
               </button>

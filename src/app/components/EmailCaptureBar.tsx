@@ -53,7 +53,7 @@ export function EmailCaptureBar() {
                 />
                 <button
                   type="submit"
-                  className="inline-flex items-center justify-center gap-2 px-6 py-4 bg-[#4945FF] text-white rounded-xl hover:bg-[#3730FF] hover:shadow-[0_16px_40px_-12px_rgba(73,69,255,0.7)] transition-all font-semibold whitespace-nowrap"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-4 bg-[#4945FF] text-white rounded-xl hover:bg-[#3933CC] hover:shadow-[0_16px_40px_-12px_rgba(73,69,255,0.7)] transition-all font-semibold whitespace-nowrap"
                 >
                   Get my quote
                   <ArrowRight className="w-4 h-4" />
