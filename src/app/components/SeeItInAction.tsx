@@ -51,7 +51,7 @@ export function SeeItInAction() {
         }
 
         .siia-subtitle {
-          font-family: 'DM Sans', 'Plus Jakarta Sans', sans-serif;
+          font-family: 'Plus Jakarta Sans', sans-serif;
           font-size: 19px;
           color: rgba(255,255,255,0.55);
           line-height: 1.65;
