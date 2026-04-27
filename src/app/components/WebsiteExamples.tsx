@@ -211,12 +211,15 @@ function Hero() {
   const headingY = useTransform(scrollYProgress, [0, 0.25], [0, -140]);
   const headingScale = useTransform(scrollYProgress, [0, 0.25], [1, 0.88]);
 
-  // Carousels start fully hidden and are revealed as the user scrolls.
-  const c1Opacity = useTransform(scrollYProgress, [0.05, 0.22], [0, 1]);
-  const c1Y = useTransform(scrollYProgress, [0.05, 0.25], [80, 0]);
+  // Carousels start fully hidden and are revealed AFTER the headline has lifted
+  // out of the way, so the cards never arrive on top of the CTA buttons.
+  // (Headline finishes its lift at progress 0.25 — carousels start at 0.18 and
+  // settle by 0.34, giving the buttons clear space first.)
+  const c1Opacity = useTransform(scrollYProgress, [0.18, 0.30], [0, 1]);
+  const c1Y = useTransform(scrollYProgress, [0.18, 0.32], [80, 0]);
 
-  const c2Opacity = useTransform(scrollYProgress, [0.12, 0.3], [0, 1]);
-  const c2Y = useTransform(scrollYProgress, [0.12, 0.32], [100, 0]);
+  const c2Opacity = useTransform(scrollYProgress, [0.22, 0.34], [0, 1]);
+  const c2Y = useTransform(scrollYProgress, [0.22, 0.36], [100, 0]);
 
   // Scroll indicator is shown only before the user has scrolled.
   const scrollHintOpacity = useTransform(scrollYProgress, [0, 0.05], [1, 0]);
@@ -232,20 +235,26 @@ function Hero() {
         height: '100vh', overflow: 'hidden',
       }}>
         {/* Heading — vertically centered on load, slides up as the user scrolls
-           to make room for the carousels below. */}
+           to make room for the carousels below.
+           z-index: 3 keeps the hero copy + CTAs above the carousel "stage" so
+           the buttons are always clickable and never covered by the cards. */}
         <motion.div
+          className="hero-copy"
           style={{
             position: 'absolute', inset: 0,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             padding: '0 24px',
             y: headingY,
             scale: headingScale,
+            zIndex: 3,
+            pointerEvents: 'none',
           }}
         >
           <div style={{
             maxWidth: 900, textAlign: 'center',
             opacity: loaded ? 1 : 0, transform: loaded ? 'none' : 'translateY(16px)',
             transition: 'opacity 0.8s cubic-bezier(0.16,1,0.3,1), transform 0.8s cubic-bezier(0.16,1,0.3,1)',
+            pointerEvents: 'auto',
           }}>
             <div style={{
               display: 'inline-flex', alignItems: 'center', gap: 8,
@@ -287,13 +296,17 @@ function Hero() {
               Your business makes a great first impression in person. Your website should too.
             </p>
 
-            <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+            <div className="hero-actions" style={{
+              display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap',
+              position: 'relative', zIndex: 3,
+            }}>
               <Link to="/apply" style={{
                 padding: '13px 30px', borderRadius: 50, border: 'none',
                 background: `linear-gradient(135deg, ${T.accent}, ${T.blue})`,
                 color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer',
                 fontFamily: T.sans, textDecoration: 'none',
                 display: 'inline-flex', alignItems: 'center', gap: 8,
+                position: 'relative', zIndex: 3,
               }}>
                 Get Your Site <ArrowRight size={16} />
               </Link>
@@ -302,6 +315,7 @@ function Hero() {
                 border: `1px solid ${T.border}`, background: 'transparent',
                 color: T.gray1, fontSize: 14, fontWeight: 600, cursor: 'pointer',
                 fontFamily: T.sans, textDecoration: 'none',
+                position: 'relative', zIndex: 3,
               }}>
                 See Examples
               </a>
@@ -309,13 +323,16 @@ function Hero() {
           </div>
         </motion.div>
 
-        {/* Carousel row 1 — visible on load, subtle scroll entrance */}
+        {/* Carousel "stage" — sits below the hero copy/CTA layer (z-index: 1)
+           so the floating site cards can never visually cover the buttons. */}
         <motion.div
+          className="websites-stage"
           style={{
             position: 'absolute',
             bottom: 256, left: 0, right: 0,
             opacity: c1Opacity,
             y: c1Y,
+            zIndex: 1,
           }}
         >
           <ScrollingGallery sites={CAROUSEL_ROW1} direction="left" speed={42} />
@@ -323,11 +340,13 @@ function Hero() {
 
         {/* Carousel row 2 — visible on load, subtle scroll entrance */}
         <motion.div
+          className="websites-stage"
           style={{
             position: 'absolute',
             bottom: 16, left: 0, right: 0,
             opacity: c2Opacity,
             y: c2Y,
+            zIndex: 1,
           }}
         >
           <ScrollingGallery sites={CAROUSEL_ROW2} direction="right" speed={48} />
