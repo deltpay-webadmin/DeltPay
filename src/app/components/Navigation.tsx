@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Search, X, ArrowRight, Globe, CreditCard, DollarSign, BarChart3, Star, User, AlignLeft, HelpCircle, LayoutDashboard, Calculator, ChevronRight, Menu, ChevronDown } from 'lucide-react';
+import { Search, X, ArrowRight, Globe, CreditCard, DollarSign, BarChart3, Star, User, AlignLeft, HelpCircle, LayoutDashboard, Calculator, ChevronRight, Menu, ChevronDown, Globe2, ShieldAlert } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router';
 import logoImage from 'figma:asset/61527edee0ea2e963bace756584cec3657b62f9e.png';
 import logoWhite from 'figma:asset/419e83442bb1bf5965a966a8870b00dd4288dd57.png';
@@ -245,7 +245,7 @@ export function Navigation() {
           >
             {/* Nav bar row */}
             <div className="px-6 xl:px-8">
-              <div className="flex justify-between items-center h-[68px]">
+              <div className="flex justify-between items-center h-[88px]">
 
                 {/* ── Left — Logo ── */}
                 <div className="flex items-center">
@@ -253,7 +253,7 @@ export function Navigation() {
                     <img
                       src={isSolid ? logoDark : logoWhite}
                       alt="Delt"
-                      className="h-[72px] m-[0px]"
+                      className="h-[94px] m-[0px]"
                       style={{
                         imageRendering: '-webkit-optimize-contrast',
                         transition: 'opacity 0.3s ease',
@@ -263,7 +263,7 @@ export function Navigation() {
                 </div>
 
                 {/* ── Center — Nav Links ── */}
-                <nav className="hidden lg:flex items-center gap-1 xl:gap-2">
+                <nav className="hidden lg:flex items-center gap-2 xl:gap-3">
 
                   {/* ─── Solutions Mega Menu ─── */}
                   <div
@@ -272,7 +272,7 @@ export function Navigation() {
                     onMouseLeave={() => closeDropdown()}
                   >
                     <button
-                      className="flex items-center gap-1.5 px-4 py-2 text-[18px] font-medium transition-colors whitespace-nowrap"
+                      className="flex items-center gap-2 px-5 py-3 text-[23px] font-medium transition-colors whitespace-nowrap"
                       style={{ color: isSolid ? '#041E42' : '#FFFFFF', transition: 'color 0.3s ease' }}
                     >
                       Solutions
@@ -283,7 +283,7 @@ export function Navigation() {
                   {/* ─── Pricing ─── */}
                   <Link
                     to="/pricing"
-                    className="px-4 py-2 text-[18px] font-medium transition-colors whitespace-nowrap"
+                    className="px-5 py-3 text-[23px] font-medium transition-colors whitespace-nowrap"
                     style={{ color: isSolid ? '#041E42' : '#FFFFFF', transition: 'color 0.3s ease' }}
                   >
                     Pricing
@@ -296,7 +296,7 @@ export function Navigation() {
                     onMouseLeave={() => closeDropdown()}
                   >
                     <button
-                      className="flex items-center gap-1.5 px-4 py-2 text-[18px] font-medium transition-colors whitespace-nowrap"
+                      className="flex items-center gap-2 px-5 py-3 text-[23px] font-medium transition-colors whitespace-nowrap"
                       style={{ color: isSolid ? '#041E42' : '#FFFFFF', transition: 'color 0.3s ease' }}
                     >
                       Resources
@@ -307,7 +307,7 @@ export function Navigation() {
                 </nav>
 
                 {/* ── Right — Actions ── */}
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-4">
 
                   {/* Search (⌘K) */}
                   <button
@@ -320,7 +320,7 @@ export function Navigation() {
                       setShowSearch(true);
                       setSelectedIndex(0);
                     }}
-                    className="hidden lg:flex p-2 transition-colors"
+                    className="hidden lg:flex p-2.5 transition-colors"
                     style={{ color: isSolid ? '#041E42' : '#FFFFFF', transition: 'color 0.3s ease' }}
                     aria-label="Search"
                   >
@@ -329,14 +329,14 @@ export function Navigation() {
                       whileTap={{ scale: 0.9 }}
                       transition={{ type: 'spring', stiffness: 400, damping: 17 }}
                     >
-                      <Search className="h-5 w-5" />
+                      <Search className="h-[26px] w-[26px]" />
                     </motion.div>
                   </button>
 
                   {/* Sign In */}
                   <Link
                     to="/signin"
-                    className="hidden md:flex items-center px-4 py-1.5 text-[17px] font-medium transition-all whitespace-nowrap"
+                    className="hidden md:flex items-center px-5 py-2 text-[22px] font-medium transition-all whitespace-nowrap"
                     style={{
                       color: isSolid ? '#041E42' : '#FFFFFF',
                       transition: 'color 0.3s ease',
@@ -348,20 +348,20 @@ export function Navigation() {
                   {/* Contact Sales CTA */}
                   <Link
                     to="/contact-sales"
-                    className="hidden md:flex items-center gap-1.5 px-5 py-2.5 text-[16px] font-semibold text-white bg-[#4945FF] rounded-full hover:bg-[#3933CC] transition-colors whitespace-nowrap"
+                    className="hidden md:flex items-center gap-2 px-7 py-3.5 text-[21px] font-semibold text-white bg-[#4945FF] rounded-full hover:bg-[#3933CC] transition-colors whitespace-nowrap"
                   >
                     Contact sales
-                    <ArrowRight className="w-4 h-4" />
+                    <ArrowRight className="w-5 h-5" />
                   </Link>
 
                   {/* Mobile Hamburger Menu Button */}
                   <button
                     onClick={() => setMobileMenuOpen(true)}
-                    className="lg:hidden flex p-2 transition-colors"
+                    className="lg:hidden flex p-2.5 transition-colors"
                     style={{ color: isSolid ? '#041E42' : '#FFFFFF' }}
                     aria-label="Menu"
                   >
-                    <Menu size={24} />
+                    <Menu size={31} />
                   </button>
 
                 </div>
@@ -513,27 +513,66 @@ export function Navigation() {
                         </div>
                       </div>
 
-                      {/* Col 3 — Featured */}
+                      {/* Col 3 — Specialized solutions */}
                       <div className="flex-1 flex flex-col justify-between rounded-2xl ml-4" style={{ background: '#F6F7FB', padding: '24px 28px' }}>
                         <div>
                           <div className="text-[12px] font-bold uppercase text-[#4945FF] mb-4" style={{ letterSpacing: '1.4px' }}>
-                            Featured
+                            Specialized
                           </div>
 
-                          {/* Stat card */}
-                          <div className="bg-white rounded-xl p-5 border border-[#4945FF]/15 mb-4">
-                            <div className="text-[36px] font-extrabold text-[#4945FF] leading-none mb-1">$2.4B+</div>
-                            <div className="text-[15px] text-[#475569] leading-snug">processed by Delt merchants in the last 12 months</div>
-                          </div>
-
-                          {/* Testimonial */}
-                          <div className="bg-white rounded-xl p-5 border border-[#4945FF]/15">
-                            <div className="text-[15px] text-[#475569] leading-relaxed italic mb-3">
-                              {`"Switched from Square — the done-for-you website alone was worth it. Then we got funded in 48 hours."`}
+                          {/* International USDT card */}
+                          <Link
+                            to="/solutions/international-usdt"
+                            onClick={() => setActiveDropdown(null)}
+                            className="block bg-white rounded-xl p-5 border border-[#4945FF]/15 mb-4 hover:border-[#4945FF]/40 hover:shadow-sm transition-all group"
+                          >
+                            <div className="flex items-start gap-3">
+                              <div
+                                className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                                style={{ backgroundColor: 'rgba(73,69,255,0.10)' }}
+                              >
+                                <Globe2 className="w-5 h-5 text-[#4945FF]" strokeWidth={1.6} />
+                              </div>
+                              <div className="flex-1">
+                                <div className="text-[15px] font-bold text-[#041E42] group-hover:text-[#4945FF] transition-colors leading-tight mb-1">
+                                  Same-Day International Payments
+                                </div>
+                                <div className="text-[13px] text-[#475569] leading-snug">
+                                  Pay suppliers abroad instantly — no wire delays, no bank fees.
+                                </div>
+                                <div className="text-[12px] font-semibold text-[#4945FF] mt-2 inline-flex items-center gap-1">
+                                  Learn more <span>→</span>
+                                </div>
+                              </div>
                             </div>
-                            <div className="text-[14px] font-semibold text-[#041E42]">Marcus R.</div>
-                            <div className="text-[13px] text-[#64748B]">Owner, Precision Auto Repair</div>
-                          </div>
+                          </Link>
+
+                          {/* High Risk card */}
+                          <Link
+                            to="/solutions/high-risk-processing"
+                            onClick={() => setActiveDropdown(null)}
+                            className="block bg-white rounded-xl p-5 border border-[#4945FF]/15 hover:border-[#4945FF]/40 hover:shadow-sm transition-all group"
+                          >
+                            <div className="flex items-start gap-3">
+                              <div
+                                className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                                style={{ backgroundColor: 'rgba(73,69,255,0.10)' }}
+                              >
+                                <ShieldAlert className="w-5 h-5 text-[#4945FF]" strokeWidth={1.6} />
+                              </div>
+                              <div className="flex-1">
+                                <div className="text-[15px] font-bold text-[#041E42] group-hover:text-[#4945FF] transition-colors leading-tight mb-1">
+                                  High Risk Processing
+                                </div>
+                                <div className="text-[13px] text-[#475569] leading-snug">
+                                  Shut down by your processor? We approve every high-risk vertical — custom rates, rate match, rate compare.
+                                </div>
+                                <div className="text-[12px] font-semibold text-[#4945FF] mt-2 inline-flex items-center gap-1">
+                                  Learn more <span>→</span>
+                                </div>
+                              </div>
+                            </div>
+                          </Link>
                         </div>
 
                         <Link
@@ -736,6 +775,30 @@ export function Navigation() {
                               </Link>
                             );
                           })}
+                          <div className="pt-2 mt-2 border-t border-gray-200 space-y-1">
+                            <Link
+                              to="/solutions/international-usdt"
+                              onClick={() => setMobileMenuOpen(false)}
+                              className="flex items-start gap-3 p-3 rounded-lg hover:bg-[#F6F7FB] transition-colors"
+                            >
+                              <Globe2 size={20} className="text-[#4945FF] mt-0.5 flex-shrink-0" />
+                              <div>
+                                <div className="font-medium text-[#041E42]">Same-Day International Payments</div>
+                                <div className="text-sm text-[#475569]">Pay suppliers abroad instantly — no wire delays, no bank fees</div>
+                              </div>
+                            </Link>
+                            <Link
+                              to="/solutions/high-risk-processing"
+                              onClick={() => setMobileMenuOpen(false)}
+                              className="flex items-start gap-3 p-3 rounded-lg hover:bg-[#F6F7FB] transition-colors"
+                            >
+                              <ShieldAlert size={20} className="text-[#4945FF] mt-0.5 flex-shrink-0" />
+                              <div>
+                                <div className="font-medium text-[#041E42]">High Risk Processing</div>
+                                <div className="text-sm text-[#475569]">Custom rates for every high-risk vertical</div>
+                              </div>
+                            </Link>
+                          </div>
                           <div className="pt-2 mt-2 border-t border-gray-200">
                             {solutionsSecondary.map((item) => (
                               <Link
