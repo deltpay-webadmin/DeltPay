@@ -535,7 +535,7 @@ export function Navigation() {
                               </div>
                               <div className="flex-1">
                                 <div className="text-[14px] font-bold text-[#041E42] group-hover:text-[#4945FF] transition-colors leading-tight mb-1">
-                                  Send Money Internationally. Same Day.
+                                  Same-Day International Payments
                                 </div>
                                 <div className="text-[12px] text-[#475569] leading-snug">
                                   Pay suppliers abroad instantly — no wire delays, no bank fees.
@@ -783,7 +783,7 @@ export function Navigation() {
                             >
                               <Globe2 size={20} className="text-[#4945FF] mt-0.5 flex-shrink-0" />
                               <div>
-                                <div className="font-medium text-[#041E42]">Send Money Internationally. Same Day.</div>
+                                <div className="font-medium text-[#041E42]">Same-Day International Payments</div>
                                 <div className="text-sm text-[#475569]">Pay suppliers abroad instantly — no wire delays, no bank fees</div>
                               </div>
                             </Link>
