@@ -535,10 +535,10 @@ export function Navigation() {
                               </div>
                               <div className="flex-1">
                                 <div className="text-[14px] font-bold text-[#041E42] group-hover:text-[#4945FF] transition-colors leading-tight mb-1">
-                                  International USDT Payments
+                                  Send Money Internationally. Same Day.
                                 </div>
                                 <div className="text-[12px] text-[#475569] leading-snug">
-                                  Same-day cross-border settlement for wholesalers — powered by Shield.
+                                  Pay suppliers abroad instantly — no wire delays, no bank fees.
                                 </div>
                                 <div className="text-[11px] font-semibold text-[#4945FF] mt-2 inline-flex items-center gap-1">
                                   Learn more <span>→</span>
@@ -783,8 +783,8 @@ export function Navigation() {
                             >
                               <Globe2 size={20} className="text-[#4945FF] mt-0.5 flex-shrink-0" />
                               <div>
-                                <div className="font-medium text-[#041E42]">International USDT Payments</div>
-                                <div className="text-sm text-[#475569]">Same-day settlement — powered by Shield</div>
+                                <div className="font-medium text-[#041E42]">Send Money Internationally. Same Day.</div>
+                                <div className="text-sm text-[#475569]">Pay suppliers abroad instantly — no wire delays, no bank fees</div>
                               </div>
                             </Link>
                             <Link
