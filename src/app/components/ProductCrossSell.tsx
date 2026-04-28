@@ -86,7 +86,7 @@ export function ProductCrossSell({
           <div
             className={`inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm mb-5 ${
               isLight
-                ? 'border border-[#041E42]/10 bg-[#F6F7FB] text-[#475569]'
+                ? 'border border-[#041E42]/10 bg-[#F4F3FA] text-[#475569]'
                 : 'border border-white/15 bg-white/5 text-white/80'
             }`}
           >
