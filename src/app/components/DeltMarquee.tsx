@@ -74,7 +74,7 @@ export default function DeltMarquee() {
       <div style={{ height: '16px' }} />
 
       <MarqueeLine direction="right" speed={180}>
-        Built for merchants · Powered by Lens ·
+        Built for owners · Powered by Lens ·
       </MarqueeLine>
     </div>
   );

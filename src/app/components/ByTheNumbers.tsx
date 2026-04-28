@@ -5,10 +5,10 @@ import { motion, useInView } from 'motion/react';
 import { Link } from 'react-router';
 
 const stats = [
-  { label: 'Go Live', value: '<1 Day', trait: 'Speed' },
-  { label: 'Avg. monthly savings', value: '$847', trait: 'Savings' },
-  { label: 'Capital deployed', value: '$50M', trait: 'Scale' },
-  { label: 'Merchant retention rate', value: '97%', trait: 'Reliability' },
+  { label: 'Up and running', value: '<1 Day', trait: 'Fast' },
+  { label: 'Avg. saved per month', value: '$847', trait: 'Money back' },
+  { label: 'Funded to owners', value: '$50M', trait: 'Real money' },
+  { label: 'Owners who stay', value: '97%', trait: 'Trusted' },
 ];
 
 const MARKERS = [
@@ -87,7 +87,7 @@ export function ByTheNumbers() {
                 animate={inView ? { opacity: 1, y: 0 } : {}}
                 transition={{ delay: 0.5, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
               >
-                Fewer tools.<br />More money. Less stress.
+Fewer tools to juggle.<br />More money. Less stress.
               </motion.h2>
               <motion.p
                 className="btn-globe-sub"
@@ -95,7 +95,7 @@ export function ByTheNumbers() {
                 animate={inView ? { opacity: 1, y: 0 } : {}}
                 transition={{ delay: 0.65, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
               >
-                Trusted by 10,000+ businesses worldwide.
+Over 10,000 owners around the world run their day with Delt.
               </motion.p>
               <motion.div
                 initial={{ opacity: 0, y: 12 }}
@@ -104,7 +104,7 @@ export function ByTheNumbers() {
                 style={{ marginTop: 28 }}
               >
                 <Link to="/contact" className="btn-schedule-btn">
-                  Schedule a call <span className="btn-schedule-arrow">›</span>
+                  Talk to us <span className="btn-schedule-arrow">›</span>
                 </Link>
               </motion.div>
             </div>

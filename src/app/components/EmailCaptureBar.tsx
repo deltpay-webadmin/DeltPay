@@ -18,13 +18,13 @@ export function EmailCaptureBar() {
           <div className="flex flex-col lg:flex-row lg:items-center gap-6 lg:gap-8">
             <div className="flex-1">
               <div className="text-xs font-semibold text-[#4945FF] uppercase tracking-wider mb-2">
-                Get started in minutes
+                Up and running in minutes
               </div>
               <h3 className="text-2xl lg:text-3xl font-bold text-white leading-tight">
-                See your custom rate in 60 seconds.
+                See your price in 60 seconds.
               </h3>
               <p className="text-sm text-white/60 mt-2">
-                Drop your email — we'll send a tailored quote and setup link, no call required.
+                Leave your email and we'll send your rate and a sign-up link. No phone call needed.
               </p>
             </div>
 
@@ -35,7 +35,7 @@ export function EmailCaptureBar() {
                 </div>
                 <div>
                   <div className="text-white font-semibold">You're in.</div>
-                  <div className="text-sm text-white/60">Check your inbox — quote on the way.</div>
+                  <div className="text-sm text-white/60">Check your inbox — your price is on the way.</div>
                 </div>
               </div>
             ) : (
@@ -47,7 +47,7 @@ export function EmailCaptureBar() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@company.com"
+                  placeholder="you@yourbusiness.com"
                   required
                   className="flex-1 px-5 py-4 bg-white/10 border border-white/15 rounded-xl text-white placeholder:text-white/40 focus:bg-white/15 focus:border-[#4945FF] focus:outline-none focus:ring-4 focus:ring-[#4945FF]/20 transition-all"
                 />
@@ -55,7 +55,7 @@ export function EmailCaptureBar() {
                   type="submit"
                   className="inline-flex items-center justify-center gap-2 px-6 py-4 bg-[#4945FF] text-white rounded-xl hover:bg-[#3730FF] hover:shadow-[0_16px_40px_-12px_rgba(73,69,255,0.7)] transition-all font-semibold whitespace-nowrap"
                 >
-                  Get my quote
+Show me my price
                   <ArrowRight className="w-4 h-4" />
                 </button>
               </form>

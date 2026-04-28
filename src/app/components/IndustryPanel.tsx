@@ -59,7 +59,7 @@ export function IndustryPanel() {
               className="text-[12px] font-bold uppercase text-[#4945FF] mb-4"
               style={{ letterSpacing: '0.2em' }}
             >
-              For your kind of business
+Built for your kind of business
             </div>
             <h2
               className="text-[#041E42] font-bold leading-[1.05]"
@@ -69,14 +69,14 @@ export function IndustryPanel() {
                 maxWidth: 820,
               }}
             >
-              Made for how you actually work.
+Made for how you really work.
             </h2>
           </div>
           <Link
             to="/business-types"
             className="inline-flex items-center gap-2 text-[#041E42] text-[15px] font-semibold hover:text-[#4945FF] transition-colors group"
           >
-            See every industry
+See every business type
             <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
           </Link>
         </div>

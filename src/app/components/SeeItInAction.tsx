@@ -10,10 +10,10 @@ export function SeeItInAction() {
         {/* Header */}
         <div className="siia-header">
           <h2 className="siia-title">
-            One dashboard. The whole picture<span style={{ color: '#4945FF' }}>.</span>
+            One screen. Your whole business<span style={{ color: '#4945FF' }}>.</span>
           </h2>
           <p className="siia-subtitle">
-            Explore our platform to see how Delt helps you run, grow, and fund your business — all from one dashboard.
+            See your sales, customers, and cash all in one place — then take what you need to keep growing.
           </p>
         </div>
 

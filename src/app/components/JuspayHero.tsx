@@ -207,7 +207,7 @@ export function JuspayHero() {
                   animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
                   transition={{ duration: 0.7, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
                 >
-                  Your business,
+                  Run your business.
                 </motion.span>
                 <motion.span
                   className="ih-title-line ih-title-accent"
@@ -215,30 +215,31 @@ export function JuspayHero() {
                   animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
                   transition={{ duration: 0.7, delay: 0.35, ease: [0.16, 1, 0.3, 1] }}
                 >
-                  instantly paid.
+                  Get paid faster.
                 </motion.span>
               </motion.h1>
 
               <motion.p className="ih-subtitle" style={{ y: subY, opacity: subOpacity }}>
-                Launch your site, accept payments,<br />
-                and access capital — all from one platform.
+                A website that brings in customers.<br />
+                Card payments that just work.<br />
+                Cash to grow when you need it.
               </motion.p>
               <motion.p className="ih-subtitle-ai" style={{ y: subY, opacity: subOpacity }}>
-                Powered by AI that learns your business.
+                One simple platform that gets to know your business.
               </motion.p>
 
               <motion.div className="ih-ctas" style={{ y: subY, opacity: subOpacity }}>
                 <Link to="/apply" className="ih-btn-primary">
-                  Get Started <span className="ih-btn-arrow">›</span>
+                  Start free <span className="ih-btn-arrow">›</span>
                 </Link>
                 <Link to="/sandbox" className="ih-btn-ghost">
-                  See the demo <span className="ih-btn-arrow">›</span>
+                  See it in action <span className="ih-btn-arrow">›</span>
                 </Link>
               </motion.div>
 
               <motion.p className="ih-social-proof" style={{ y: subY, opacity: subOpacity }}>
                 <span className="ih-social-proof-dot" />
-                Join 200+ merchants who went live this month
+Over 200 owners opened their Delt account this month
               </motion.p>
             </div>
 
@@ -261,7 +262,7 @@ export function JuspayHero() {
       {/* Trust bar */}
       <section className="ih-trust">
         <div className="ih-trust-inner">
-          <span className="ih-trust-label">Trusted by growing businesses nationwide</span>
+          <span className="ih-trust-label">Owners across the country run their business with Delt</span>
           <div className="ih-trust-marquee">
             <div className="ih-trust-track">
               {[...Array(2)].map((_, setIdx) => (
