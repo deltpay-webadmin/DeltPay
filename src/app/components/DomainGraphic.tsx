@@ -1,21 +1,17 @@
 import { useState, useEffect } from "react";
 
 /* ════════════════════════════════════════════════════════════════
-   DOMAIN GRAPHIC — premium Google SERP mockup inside a floating
-   browser frame. Refined typography, elevated "YOUR SITE" pill,
-   ambient glow, faint grid backdrop.
+   DOMAIN GRAPHIC — Toast-inspired phone showing search results.
+   The Delt customer is the #1 result (highlighted with brand glow,
+   rating, "Top Match" pill). Competitors below in muted gray.
+   Floating ranking pill peeks from the side for layered depth.
    ════════════════════════════════════════════════════════════════ */
 export function DomainGraphic() {
-  const [loaded, setLoaded] = useState(false);
-  const [highlight, setHighlight] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const t1 = setTimeout(() => setLoaded(true), 350);
-    const t2 = setTimeout(() => setHighlight(true), 1500);
-    return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-    };
+    const t = setTimeout(() => setMounted(true), 80);
+    return () => clearTimeout(t);
   }, []);
 
   return (
@@ -25,411 +21,454 @@ export function DomainGraphic() {
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
-      padding: "28px 32px",
+      padding: "20px 16px",
       boxSizing: "border-box",
       position: "relative",
+      fontFamily: "'DM Sans', sans-serif",
     }}>
       {/* Ambient glow */}
       <div style={{
         position: "absolute",
-        left: "18%",
-        top: "30%",
-        width: 320,
+        left: "50%",
+        top: "50%",
+        transform: "translate(-50%, -50%)",
+        width: 480,
         height: 320,
-        borderRadius: "50%",
-        background: "radial-gradient(circle, rgba(73,69,255,0.18) 0%, rgba(73,69,255,0) 70%)",
-        opacity: loaded ? 1 : 0,
-        transition: "opacity 1.2s ease",
+        background: "radial-gradient(closest-side, rgba(73,69,255,0.18), transparent 70%)",
         pointerEvents: "none",
-        filter: "blur(8px)",
       }} />
-      {/* Faint grid */}
+
+      {/* ═══ Floating "RANK #1" pill — peeking left ═══ */}
+      <div style={{
+        position: "absolute",
+        left: 36,
+        top: "24%",
+        opacity: mounted ? 1 : 0,
+        transform: mounted ? "translateY(0) rotate(-4deg)" : "translateY(20px) rotate(-4deg)",
+        transition: "all 0.9s cubic-bezier(0.16,1,0.3,1) 0.4s",
+        zIndex: 5,
+      }}>
+        <div style={{
+          padding: "12px 16px",
+          background: "linear-gradient(135deg, rgba(73,69,255,0.95), rgba(108,105,255,0.85))",
+          borderRadius: 14,
+          boxShadow: "0 18px 40px rgba(73,69,255,0.4), 0 4px 12px rgba(0,0,0,0.2)",
+          color: "#fff",
+          fontFamily: "'DM Sans', sans-serif",
+          minWidth: 140,
+          border: "1px solid rgba(255,255,255,0.18)",
+        }}>
+          <div style={{
+            fontSize: 9,
+            fontWeight: 700,
+            letterSpacing: "0.16em",
+            textTransform: "uppercase",
+            opacity: 0.85,
+          }}>Position</div>
+          <div style={{
+            fontSize: 32,
+            fontWeight: 800,
+            fontFamily: "'Plus Jakarta Sans', sans-serif",
+            letterSpacing: "-0.02em",
+            lineHeight: 1,
+            marginTop: 2,
+          }}>#1</div>
+          <div style={{
+            fontSize: 10,
+            opacity: 0.85,
+            marginTop: 4,
+            fontWeight: 500,
+          }}>of 2,400 results</div>
+        </div>
+      </div>
+
+      {/* ═══ Floating "+312% traffic" pill — peeking right ═══ */}
+      <div style={{
+        position: "absolute",
+        right: 36,
+        top: "60%",
+        opacity: mounted ? 1 : 0,
+        transform: mounted ? "translateY(0) rotate(5deg)" : "translateY(-20px) rotate(5deg)",
+        transition: "all 0.9s cubic-bezier(0.16,1,0.3,1) 0.55s",
+        zIndex: 5,
+      }}>
+        <div style={{
+          padding: "11px 14px",
+          background: "rgba(255,255,255,0.06)",
+          backdropFilter: "blur(20px)",
+          WebkitBackdropFilter: "blur(20px)",
+          border: "1px solid rgba(255,255,255,0.14)",
+          borderRadius: 12,
+          boxShadow: "0 18px 40px rgba(0,0,0,0.3)",
+          color: "#fff",
+          fontFamily: "'DM Sans', sans-serif",
+          minWidth: 130,
+        }}>
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            fontSize: 9,
+            fontWeight: 700,
+            letterSpacing: "0.12em",
+            textTransform: "uppercase",
+            color: "rgba(255,255,255,0.65)",
+          }}>
+            <span style={{
+              width: 6,
+              height: 6,
+              borderRadius: "50%",
+              background: "#34D399",
+              boxShadow: "0 0 8px rgba(52,211,153,0.8)",
+            }} />
+            Traffic
+          </div>
+          <div style={{
+            fontSize: 22,
+            fontWeight: 800,
+            fontFamily: "'Plus Jakarta Sans', sans-serif",
+            letterSpacing: "-0.02em",
+            color: "#34D399",
+            marginTop: 4,
+            lineHeight: 1,
+          }}>+312%</div>
+          <div style={{
+            fontSize: 9,
+            color: "rgba(255,255,255,0.6)",
+            marginTop: 4,
+          }}>since launch</div>
+        </div>
+      </div>
+
+      {/* ═══ CENTER PHONE — Search Results ═══ */}
+      <div style={{
+        position: "relative",
+        zIndex: 10,
+        opacity: mounted ? 1 : 0,
+        transform: mounted ? "translateY(0)" : "translateY(20px)",
+        transition: "all 0.9s cubic-bezier(0.16,1,0.3,1) 0.1s",
+      }}>
+        <SearchPhone mounted={mounted} />
+      </div>
+    </div>
+  );
+}
+
+function SearchPhone({ mounted }: { mounted: boolean }) {
+  return (
+    <div style={{
+      width: 232,
+      height: 470,
+      position: "relative",
+      filter: "drop-shadow(0 30px 60px rgba(0,0,0,0.5)) drop-shadow(0 12px 24px rgba(0,0,0,0.3))",
+    }}>
+      {/* Outer bezel */}
       <div style={{
         position: "absolute",
         inset: 0,
-        backgroundImage:
-          "linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)",
-        backgroundSize: "32px 32px",
-        opacity: 0.5,
-        maskImage: "radial-gradient(ellipse at center, #000 30%, transparent 80%)",
-        WebkitMaskImage: "radial-gradient(ellipse at center, #000 30%, transparent 80%)",
-        pointerEvents: "none",
-      }} />
-
-      {/* Glass frame */}
-      <div style={{
-        position: "relative",
-        width: "100%",
-        maxWidth: 540,
-        transform: loaded ? "translateY(0)" : "translateY(16px)",
-        opacity: loaded ? 1 : 0,
-        transition: "all 0.8s cubic-bezier(0.4, 0, 0.2, 1)",
+        borderRadius: 38,
+        background: "linear-gradient(155deg, #2a2a2e, #0e0e10)",
+        padding: 4,
       }}>
-        {/* Outer glass ring */}
         <div style={{
-          position: "absolute",
-          inset: -7,
-          borderRadius: 18,
-          background: "linear-gradient(135deg, rgba(255,255,255,0.07), rgba(255,255,255,0.01))",
-          border: "1px solid rgba(255,255,255,0.07)",
-          boxShadow: "0 50px 110px rgba(0,0,0,0.55), 0 18px 40px rgba(73,69,255,0.16)",
-          backdropFilter: "blur(8px)",
-        }} />
-
-        <div style={{
-          position: "relative",
-          borderRadius: 12,
+          width: "100%",
+          height: "100%",
+          borderRadius: 34,
+          background: "#000",
+          padding: 3,
           overflow: "hidden",
-          background: "#fff",
-          border: "1px solid rgba(0,0,0,0.06)",
+          position: "relative",
         }}>
-          {/* Browser chrome */}
+          {/* Screen — light app */}
           <div style={{
-            background: "linear-gradient(180deg, #ECEEF1 0%, #DFE2E6 100%)",
-            padding: "10px 14px 0",
-            borderBottom: "1px solid #D0D2D5",
+            width: "100%",
+            height: "100%",
+            borderRadius: 31,
+            background: "#F7F8FA",
+            position: "relative",
+            overflow: "hidden",
           }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <div style={{ display: "flex", gap: 6 }}>
-                <div style={{ width: 11, height: 11, borderRadius: "50%", background: "#FF5F56", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.35)" }} />
-                <div style={{ width: 11, height: 11, borderRadius: "50%", background: "#FFBD2E", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.35)" }} />
-                <div style={{ width: 11, height: 11, borderRadius: "50%", background: "#27C93F", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.35)" }} />
-              </div>
-              <div style={{
-                flex: 1,
-                display: "flex",
-                gap: 4,
-                marginTop: 2,
+            {/* Status bar */}
+            <div style={{
+              position: "absolute",
+              top: 0, left: 0, right: 0,
+              height: 26,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              padding: "0 18px",
+              fontSize: 9,
+              fontWeight: 600,
+              color: "#0a182b",
+              fontFamily: "'DM Sans', sans-serif",
+              zIndex: 5,
+            }}>
+              <span>9:41</span>
+              <span style={{
+                display: "inline-block",
+                width: 14,
+                height: 6,
+                border: "1px solid rgba(10,24,43,0.4)",
+                borderRadius: 1.5,
+                position: "relative",
               }}>
-                <div style={{
-                  padding: "6px 12px",
-                  background: "#fff",
-                  borderRadius: "8px 8px 0 0",
-                  fontSize: 10,
-                  color: "#3C4043",
-                  fontWeight: 500,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 6,
-                  maxWidth: 220,
-                  whiteSpace: "nowrap",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  boxShadow: "0 -1px 0 rgba(0,0,0,0.04)",
-                }}>
-                  <span style={{ fontSize: 9 }}>🔍</span>
-                  <span>best pizza near me — Google</span>
-                </div>
-                <div style={{
-                  padding: "6px 10px",
-                  fontSize: 10,
-                  color: "rgba(60,64,67,0.5)",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 5,
-                }}>
-                  <span style={{ fontSize: 8 }}>+</span>
-                </div>
-              </div>
+                <span style={{
+                  position: "absolute",
+                  inset: 1,
+                  background: "#0a182b",
+                  borderRadius: 0.5,
+                }} />
+              </span>
             </div>
             <div style={{
+              position: "absolute",
+              top: 7,
+              left: "50%",
+              transform: "translateX(-50%)",
+              width: 70,
+              height: 16,
+              background: "#000",
+              borderRadius: 10,
+              zIndex: 6,
+            }} />
+
+            {/* Search bar */}
+            <div style={{
+              position: "absolute",
+              top: 36,
+              left: 16,
+              right: 16,
+              padding: "10px 12px",
+              background: "#fff",
+              border: "1px solid #E5E7EB",
+              borderRadius: 12,
               display: "flex",
               alignItems: "center",
               gap: 8,
-              padding: "8px 4px 10px",
+              boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
             }}>
-              <div style={{ display: "flex", gap: 6, color: "#5F6368", fontSize: 12 }}>
-                <span>←</span>
-                <span>→</span>
-                <span>⟳</span>
-              </div>
-              <div style={{
-                flex: 1,
-                background: "#fff",
-                borderRadius: 20,
-                padding: "5px 12px",
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
-                fontSize: 10.5,
-                color: "#3C4043",
-                border: "1px solid #DADCE0",
-                boxShadow: "inset 0 1px 2px rgba(0,0,0,0.02)",
+              <span style={{
+                width: 12,
+                height: 12,
+                borderRadius: "50%",
+                border: "1.5px solid #4945FF",
+                position: "relative",
               }}>
-                <span style={{ fontSize: 9, color: "#5F6368" }}>🔒</span>
-                <span style={{ fontWeight: 500 }}>google.com</span>
-                <span style={{ color: "#5F6368" }}>/search?q=best+pizza+near+me</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Page body */}
-          <div style={{ padding: "14px 20px 18px", background: "#fff" }}>
-            <div style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 16,
-              marginBottom: 10,
-            }}>
-              <div style={{
-                fontSize: 20,
-                fontWeight: 500,
-                letterSpacing: "-0.5px",
-                display: "flex",
-                fontFamily: "'Product Sans', 'Google Sans', -apple-system, sans-serif",
-              }}>
-                <span style={{ color: "#4285F4" }}>G</span>
-                <span style={{ color: "#EA4335" }}>o</span>
-                <span style={{ color: "#FBBC05" }}>o</span>
-                <span style={{ color: "#4285F4" }}>g</span>
-                <span style={{ color: "#34A853" }}>l</span>
-                <span style={{ color: "#EA4335" }}>e</span>
-              </div>
-              <div style={{
-                flex: 1,
-                height: 32,
-                background: "#fff",
-                borderRadius: 20,
-                border: "1px solid #DFE1E5",
-                boxShadow: "0 1px 6px rgba(32,33,36,0.08)",
-                display: "flex",
-                alignItems: "center",
-                padding: "0 14px",
-                gap: 10,
-                fontSize: 12,
-                color: "#3C4043",
-                fontWeight: 400,
-              }}>
-                <span style={{ fontSize: 12 }}>🔍</span>
-                <span style={{ flex: 1 }}>best pizza near me</span>
-                <span style={{ color: "#4285F4", fontSize: 11 }}>🎤</span>
-                <span style={{ color: "#4285F4", fontSize: 11 }}>📷</span>
-              </div>
-            </div>
-
-            <div style={{
-              display: "flex",
-              gap: 22,
-              fontSize: 10.5,
-              color: "#5F6368",
-              paddingBottom: 8,
-              borderBottom: "1px solid #EBEBEB",
-              marginBottom: 10,
-            }}>
-              <span style={{ color: "#1A73E8", fontWeight: 500, borderBottom: "2px solid #1A73E8", paddingBottom: 10, marginBottom: -11 }}>All</span>
-              <span>Maps</span>
-              <span>Images</span>
-              <span>News</span>
-              <span>Videos</span>
-              <span style={{ color: "#9AA0A6" }}>⋮</span>
-            </div>
-
-            <div style={{
-              fontSize: 9.5,
-              color: "#70757A",
-              marginBottom: 10,
-            }}>About 1,240,000 results (0.38 seconds)</div>
-
-            {/* Featured result — Joe's */}
-            <div style={{
-              marginBottom: 14,
-              padding: 12,
-              borderRadius: 12,
-              background: highlight
-                ? "linear-gradient(135deg, rgba(73,69,255,0.07) 0%, rgba(108,105,255,0.025) 100%)"
-                : "transparent",
-              border: highlight ? "1px solid rgba(73,69,255,0.22)" : "1px solid transparent",
-              boxShadow: highlight ? "0 8px 24px rgba(73,69,255,0.10)" : "none",
-              transition: "all 0.8s ease",
-              position: "relative",
-            }}>
-              {highlight && (
-                <div style={{
+                <span style={{
                   position: "absolute",
-                  top: -10,
-                  right: 10,
-                  background: "linear-gradient(135deg, #4945FF 0%, #6C69FF 100%)",
-                  color: "#fff",
-                  fontSize: 8.5,
-                  fontWeight: 800,
-                  padding: "4px 11px",
-                  borderRadius: 999,
-                  letterSpacing: "0.1em",
-                  boxShadow: "0 8px 22px rgba(73,69,255,0.45), 0 0 0 1px rgba(108,105,255,0.55)",
-                  textTransform: "uppercase",
-                  fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif",
-                }}>Your Site</div>
-              )}
+                  bottom: -3,
+                  right: -3,
+                  width: 5,
+                  height: 1.5,
+                  background: "#4945FF",
+                  transform: "rotate(45deg)",
+                  borderRadius: 1,
+                }} />
+              </span>
+              <span style={{
+                fontSize: 11,
+                color: "#0a182b",
+                fontWeight: 500,
+                flex: 1,
+              }}>best pizza near me</span>
+              <span style={{ fontSize: 11, color: "#9CA3AF" }}>×</span>
+            </div>
+
+            {/* Filters row */}
+            <div style={{
+              position: "absolute",
+              top: 76,
+              left: 16,
+              right: 16,
+              display: "flex",
+              gap: 6,
+              overflow: "hidden",
+            }}>
+              {[
+                { label: "Open now", active: true },
+                { label: "Top rated", active: false },
+                { label: "Delivery", active: false },
+                { label: "$$", active: false },
+              ].map((f) => (
+                <span key={f.label} style={{
+                  padding: "5px 10px",
+                  fontSize: 9,
+                  fontWeight: 600,
+                  borderRadius: 50,
+                  background: f.active ? "#0a182b" : "#fff",
+                  color: f.active ? "#fff" : "#0a182b",
+                  border: f.active ? "none" : "1px solid #E5E7EB",
+                  whiteSpace: "nowrap",
+                }}>{f.label}</span>
+              ))}
+            </div>
+
+            {/* Results header */}
+            <div style={{
+              position: "absolute",
+              top: 108,
+              left: 16,
+              right: 16,
+              fontSize: 9,
+              color: "#6B7280",
+              fontWeight: 500,
+            }}>2,400 results · Sorted by relevance</div>
+
+            {/* ═══ #1 result — Joe's Pizza (Delt customer) ═══ */}
+            <div style={{
+              position: "absolute",
+              top: 130,
+              left: 12,
+              right: 12,
+              padding: 11,
+              background: "#fff",
+              border: "1.5px solid #4945FF",
+              borderRadius: 14,
+              boxShadow: "0 12px 28px rgba(73,69,255,0.18), 0 0 0 4px rgba(73,69,255,0.08)",
+              animation: mounted ? "domainPulse 2.4s ease-in-out infinite" : "none",
+            }}>
+              {/* Top match pill */}
               <div style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                marginBottom: 4,
-              }}>
+                position: "absolute",
+                top: -8,
+                right: 12,
+                padding: "3px 9px",
+                background: "linear-gradient(135deg, #4945FF, #6C69FF)",
+                color: "#fff",
+                fontSize: 8,
+                fontWeight: 800,
+                letterSpacing: "0.1em",
+                borderRadius: 50,
+                boxShadow: "0 4px 10px rgba(73,69,255,0.4)",
+              }}>★ TOP MATCH</div>
+
+              <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                {/* Logo */}
                 <div style={{
-                  width: 22,
-                  height: 22,
-                  borderRadius: "50%",
-                  background: "linear-gradient(135deg, #D62828 0%, #9A0000 100%)",
+                  width: 38,
+                  height: 38,
+                  borderRadius: 8,
+                  background: "linear-gradient(135deg, #c43a18, #7a1f0c)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontSize: 10,
+                  fontFamily: "'Playfair Display', Georgia, serif",
+                  fontStyle: "italic",
                   color: "#fff",
+                  fontSize: 18,
                   fontWeight: 700,
                   flexShrink: 0,
-                  boxShadow: "0 2px 6px rgba(214,40,40,0.3), inset 0 1px 1px rgba(255,255,255,0.25)",
                 }}>J</div>
-                <div style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
+
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <span style={{
+                      fontSize: 11,
+                      fontWeight: 700,
+                      color: "#0a182b",
+                      fontFamily: "'Plus Jakarta Sans', sans-serif",
+                    }}>Joe's Pizza</span>
+                    <span style={{
+                      fontSize: 8,
+                      padding: "1px 5px",
+                      background: "#EFEEFF",
+                      color: "#4945FF",
+                      borderRadius: 3,
+                      fontWeight: 700,
+                    }}>VERIFIED</span>
+                  </div>
                   <div style={{
-                    fontSize: 10.5,
-                    color: "#202124",
-                    fontWeight: 500,
-                  }}>Joe's Pizza</div>
+                    fontSize: 9,
+                    color: "#4945FF",
+                    fontWeight: 600,
+                    marginTop: 2,
+                  }}>joespizza.com</div>
                   <div style={{
-                    fontSize: 10,
-                    color: "#5F6368",
+                    fontSize: 9,
+                    color: "#6B7280",
+                    marginTop: 3,
+                    lineHeight: 1.4,
+                  }}>Wood-fired pizza · Midtown · Fresh dough daily</div>
+                  <div style={{
                     display: "flex",
                     alignItems: "center",
-                    gap: 4,
+                    gap: 8,
+                    marginTop: 6,
+                    fontSize: 9,
                   }}>
-                    <span>https://www.joespizza.com</span>
-                    <span style={{ color: "#70757A" }}>▾</span>
+                    <span style={{ color: "#F59E0B", fontWeight: 700 }}>★ 4.9</span>
+                    <span style={{ color: "#9CA3AF" }}>2,400 reviews</span>
+                    <span style={{ color: "#10B981", fontWeight: 600 }}>● Open</span>
                   </div>
                 </div>
               </div>
-              <div style={{
-                fontSize: 17,
-                color: "#1A0DAB",
-                fontWeight: 400,
-                marginBottom: 5,
-                lineHeight: 1.25,
-                fontFamily: "'Times', 'Georgia', serif",
-                letterSpacing: "-0.1px",
-              }}>Joe's Pizza — Wood-Fired Pizza &amp; Italian Kitchen</div>
-              <div style={{
-                fontSize: 11,
-                color: "#4D5156",
-                lineHeight: 1.5,
-                marginBottom: 8,
+            </div>
+
+            {/* ═══ #2-4 results — competitors (muted) ═══ */}
+            {[
+              { rank: "2", name: "Tony's Slice Shop", url: "tonys-slice.wixsite.com", rating: "4.2", reviews: "184" },
+              { rank: "3", name: "Marco's Pizzeria", url: "marcospizza.squarespace.com", rating: "4.0", reviews: "97" },
+              { rank: "4", name: "Pizza Express NYC", url: "pizzaexpress.business.site", rating: "3.8", reviews: "62" },
+            ].map((r, i) => (
+              <div key={r.rank} style={{
+                position: "absolute",
+                top: 234 + i * 52,
+                left: 16,
+                right: 16,
+                padding: "10px 12px",
+                background: "#fff",
+                border: "1px solid #E5E7EB",
+                borderRadius: 11,
+                opacity: 0.55,
+                filter: "saturate(0.4)",
               }}>
-                <span style={{ color: "#70757A", fontWeight: 500 }}>Nov 12, 2026 —</span>{" "}
-                Award-winning wood-fired pizza in Midtown. Fresh ingredients, craft cocktails, and our famous Margherita. Order online for pickup or{" "}
-                <span style={{ background: "rgba(255,234,0,0.35)", padding: "0 1px" }}>delivery</span>.
-              </div>
-              <div style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
-                fontSize: 10,
-                color: "#70757A",
-                marginBottom: 10,
-              }}>
-                <span style={{ color: "#F59E0B", letterSpacing: "1px" }}>★★★★★</span>
-                <span style={{ color: "#4D5156", fontWeight: 500 }}>Rating: 4.9</span>
-                <span>· 2,400 reviews</span>
-                <span>· $$</span>
-                <span>· Italian</span>
-              </div>
-              <div style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                gap: "6px 20px",
-              }}>
-                {[
-                  { t: "Menu", d: "Wood-fired pizzas, pastas" },
-                  { t: "Order Online", d: "Pickup or delivery" },
-                  { t: "Reservations", d: "Book a table tonight" },
-                  { t: "Hours & Location", d: "Open until 11 PM" },
-                ].map((sl, i) => (
-                  <div key={i}>
-                    <div style={{ fontSize: 11, color: "#1A0DAB", fontWeight: 400, lineHeight: 1.3 }}>{sl.t}</div>
-                    <div style={{ fontSize: 9.5, color: "#70757A", lineHeight: 1.3 }}>{sl.d}</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{
+                    width: 16,
+                    height: 16,
+                    borderRadius: 4,
+                    background: "#E5E7EB",
+                    color: "#6B7280",
+                    fontSize: 8,
+                    fontWeight: 800,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                  }}>{r.rank}</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{
+                      fontSize: 9,
+                      fontWeight: 700,
+                      color: "#0a182b",
+                    }}>{r.name}</div>
+                    <div style={{
+                      fontSize: 8,
+                      color: "#9CA3AF",
+                      marginTop: 1,
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                    }}>{r.url}</div>
+                    <div style={{
+                      fontSize: 8,
+                      color: "#6B7280",
+                      marginTop: 3,
+                    }}>★ {r.rating} · {r.reviews} reviews</div>
                   </div>
-                ))}
+                </div>
               </div>
-            </div>
-
-            {/* Result 2 — competitor on subdomain */}
-            <div style={{ marginBottom: 12, opacity: 0.55 }}>
-              <div style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                marginBottom: 3,
-              }}>
-                <div style={{
-                  width: 18,
-                  height: 18,
-                  borderRadius: "50%",
-                  background: "#E8EAED",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: 9,
-                  color: "#70757A",
-                }}>T</div>
-                <div style={{
-                  fontSize: 10,
-                  color: "#5F6368",
-                }}>tonys-slice.square.site</div>
-              </div>
-              <div style={{
-                fontSize: 14,
-                color: "#1A0DAB",
-                fontWeight: 400,
-                lineHeight: 1.3,
-                fontFamily: "'Times', 'Georgia', serif",
-                marginBottom: 3,
-              }}>Tony's Slice Shop</div>
-              <div style={{
-                fontSize: 10.5,
-                color: "#4D5156",
-                lineHeight: 1.5,
-              }}>Pizza restaurant. View menu and hours. Family-owned since 2012...</div>
-            </div>
-
-            {/* Result 3 */}
-            <div style={{ opacity: 0.4 }}>
-              <div style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                marginBottom: 3,
-              }}>
-                <div style={{
-                  width: 18,
-                  height: 18,
-                  borderRadius: "50%",
-                  background: "#E8EAED",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: 9,
-                  color: "#70757A",
-                }}>M</div>
-                <div style={{
-                  fontSize: 10,
-                  color: "#5F6368",
-                }}>marcopizzeria.wixsite.com › home</div>
-              </div>
-              <div style={{
-                fontSize: 14,
-                color: "#1A0DAB",
-                fontWeight: 400,
-                lineHeight: 1.3,
-                fontFamily: "'Times', 'Georgia', serif",
-                marginBottom: 3,
-              }}>Marco's Pizzeria — Home</div>
-              <div style={{
-                fontSize: 10.5,
-                color: "#4D5156",
-                lineHeight: 1.5,
-              }}>Welcome to our website. We serve pizza and pasta to the community...</div>
-            </div>
+            ))}
           </div>
         </div>
       </div>
+
+      <style>{`
+        @keyframes domainPulse {
+          0%, 100% { box-shadow: 0 12px 28px rgba(73,69,255,0.18), 0 0 0 4px rgba(73,69,255,0.08); }
+          50% { box-shadow: 0 12px 28px rgba(73,69,255,0.28), 0 0 0 6px rgba(73,69,255,0.14); }
+        }
+      `}</style>
     </div>
   );
 }
