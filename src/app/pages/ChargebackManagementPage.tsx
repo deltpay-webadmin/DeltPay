@@ -262,7 +262,7 @@ export function ChargebackManagementPage() {
       </section>
 
       {/* ═══ 2. STATS BAND ═══════════════════════════════════════ */}
-      <section className="py-16 lg:py-20" style={{ background: IVORY }}>
+      <section className="py-16 lg:py-20" style={{ background: '#FFFFFF' }}>
         <div className="max-w-[1240px] mx-auto px-6 lg:px-12">
           <div
             className="text-[12px] font-bold uppercase mb-8 text-center"
@@ -276,7 +276,7 @@ export function ChargebackManagementPage() {
                 key={s.label}
                 className="rounded-2xl p-7 text-center"
                 style={{
-                  background: '#FFFFFF',
+                  background: IVORY,
                   border: `1px solid ${HAIRLINE}`,
                 }}
               >
@@ -346,7 +346,7 @@ export function ChargebackManagementPage() {
       </section>
 
       {/* ═══ 4. FOUR PILLARS ═════════════════════════════════════ */}
-      <section className="py-20 lg:py-24" style={{ background: IVORY }}>
+      <section className="py-20 lg:py-24" style={{ background: '#FFFFFF' }}>
         <div className="max-w-[1240px] mx-auto px-6 lg:px-12">
           <motion.div
             initial={{ opacity: 0, y: 14 }}
@@ -385,7 +385,7 @@ export function ChargebackManagementPage() {
                   transition={{ duration: 0.5, delay: i * 0.05 }}
                   className="rounded-2xl p-7"
                   style={{
-                    background: '#FFFFFF',
+                    background: IVORY,
                     border: `1px solid ${HAIRLINE}`,
                   }}
                 >
@@ -468,7 +468,7 @@ export function ChargebackManagementPage() {
       </section>
 
       {/* ═══ 6. DIFFERENTIATORS ══════════════════════════════════ */}
-      <section className="py-20 lg:py-24" style={{ background: IVORY }}>
+      <section className="py-20 lg:py-24" style={{ background: '#FFFFFF' }}>
         <div className="max-w-[1240px] mx-auto px-6 lg:px-12">
           <div className="mb-14 max-w-[760px]">
             <div
@@ -493,7 +493,7 @@ export function ChargebackManagementPage() {
                   key={d.title}
                   className="rounded-2xl p-6"
                   style={{
-                    background: '#FFFFFF',
+                    background: IVORY,
                     border: `1px solid ${HAIRLINE}`,
                   }}
                 >
