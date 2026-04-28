@@ -65,16 +65,7 @@ export function ProductCrossSell({
     <section
       className={`relative overflow-hidden py-20 lg:py-28 ${isLight ? 'bg-white' : 'bg-[#041E42] text-white'}`}
     >
-      {/* Backdrop grid */}
-      <div
-        className={`absolute inset-0 pointer-events-none ${isLight ? 'opacity-[0.04]' : 'opacity-[0.06]'}`}
-        style={{
-          backgroundImage: isLight
-            ? 'linear-gradient(rgba(4,30,66,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(4,30,66,0.5) 1px, transparent 1px)'
-            : 'linear-gradient(rgba(255,255,255,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.6) 1px, transparent 1px)',
-          backgroundSize: '56px 56px',
-        }}
-      />
+      {/* Soft purple radial glow (grid removed for cleaner background) */}
       <div
         className={`absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full blur-[140px] pointer-events-none ${
           isLight ? 'bg-[#4945FF]/8' : 'bg-[#4945FF]/15'
