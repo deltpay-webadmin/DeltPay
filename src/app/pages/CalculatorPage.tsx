@@ -58,7 +58,7 @@ export function CalculatorPage() {
               savings
             </span>
           </h1>
-          <p className="text-[#475569] text-lg">Calculate your savings with Delt</p>
+          <p className="text-[#475569] text-lg">See how much you could save by switching to Delt's flat processing rates</p>
         </motion.div>
       </div>
 
@@ -74,7 +74,7 @@ export function CalculatorPage() {
             {/* Left - Form */}
             <div className="p-8 md:p-10">
               <h2 className="text-xl text-[#041E42] mb-6" style={{ fontWeight: 700, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-                Your current payment fees
+                What you pay today
               </h2>
 
               <div className="space-y-5">
@@ -164,7 +164,7 @@ export function CalculatorPage() {
                   <div className="w-16 h-16 bg-[#F0EDFF] rounded-2xl flex items-center justify-center mx-auto mb-4">
                     <Calculator className="w-8 h-8 text-[#4945FF]" />
                   </div>
-                  <p className="text-[#475569]">Fill out the form to see your savings</p>
+                  <p className="text-[#475569]">Enter your current fees above to see what you'd save with Delt</p>
                 </div>
               ) : (
                 <motion.div

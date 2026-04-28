@@ -9,48 +9,48 @@ interface FAQItem {
 
 const faqData: FAQItem[] = [
   {
-    question: "Why should I choose Delt?",
-    answer: "Delt offers transparent pricing with a full fee schedule disclosed upfront, competitive processing rates, and dedicated customer support during business hours. We provide everything you need to accept payments and grow your business, from hardware to software."
+    question: "Why should I pick Delt?",
+    answer: "You see every fee up front — no surprises on your statement. You get competitive processing rates, real people on the phone during business hours, and one place to handle payments, your website, and funding. Everything from the card reader on your counter to the software on your phone comes from us."
   },
   {
     question: "Are there any contracts or hidden fees?",
-    answer: "No long-term contracts, and a full fee schedule disclosed before you accept any offer. You only pay the transparent processing rates shown on our pricing page. Cancel anytime with no penalties."
+    answer: "No long-term contracts. You see every fee up front before you sign anything. You only pay the processing rates shown on our pricing page. Cancel anytime — no early termination fee."
   },
   {
     question: "Who is Delt for?",
-    answer: "Delt is designed for businesses of all sizes - from solo entrepreneurs and small businesses to large enterprises. Whether you're just starting out or scaling up, our solutions grow with you."
+    answer: "Delt is built for owner-run businesses — restaurants, retail shops, salons, auto shops, gyms, contractors, e-commerce stores. Whether you're a one-person shop or running a few locations, you get the same tools either way."
   },
   {
-    question: "How long do funds take to be deposited?",
-    answer: "Funds are typically deposited into your bank account within 1-2 business days. For high-volume businesses, we offer next-day deposit options."
+    question: "How fast does money hit my bank account?",
+    answer: "Sales usually land in your bank account in 1–2 business days. If you do higher volume, we can set you up for next-day deposits."
   },
   {
     question: "Is there a monthly fee?",
-    answer: "Our Essential plan has no monthly fee. Growth and Pro plans have monthly subscription fees that unlock advanced features like AI-powered analytics and priority support."
+    answer: "Our Essential plan has no monthly fee. Growth and Pro plans have a monthly fee that unlocks extras like Lens AI insights and priority support."
   },
   {
-    question: "How long should I wait to get my payment hardware?",
-    answer: "Free card readers ship within 2-3 business days via standard shipping. Expedited shipping options are available at checkout if you need your hardware sooner."
+    question: "How long until my card reader shows up?",
+    answer: "Your free card reader ships in 2–3 business days. Need it faster? Pick rush shipping at checkout and we'll get it to you sooner."
   },
   {
-    question: "What type of funding options does Delt offer?",
-    answer: "Delt offers business loans, lines of credit, and revenue-based financing options. Get approved quickly and access funds to invest in inventory, equipment, or growth initiatives."
+    question: "What kind of funding can I get?",
+    answer: "Working capital that pays itself back as a small piece of your daily sales, plus standard small-business loans and lines of credit. Get approved fast and use the money for inventory, equipment, payroll, or a new location."
   },
   {
-    question: "How much are the processing rates?",
-    answer: "Our transparent pricing starts at 2.6% + $0.10 per transaction for in-person payments and 2.9% + $0.30 for online payments. Volume discounts are available for high-volume merchants."
+    question: "What are the processing rates?",
+    answer: "Flat rate: 2.6% + $0.10 per swipe, tap, or dip in person. 2.9% + $0.30 for online orders. If you do higher volume, you can switch to our 0% Cash Discount program where the customer covers the card fee instead — and we'll quote custom rates above $100K/month."
   },
   {
-    question: "Do I need to change banks?",
-    answer: "No, you can use your existing bank account. Delt works with all major banks and credit unions in the US."
+    question: "Do I have to switch banks?",
+    answer: "Nope. Keep the bank account you already use. Delt deposits into any U.S. bank or credit union."
   },
   {
-    question: "Do you offer volume discounts?",
-    answer: "Yes! If you process over $100,000 per month, contact our sales team for custom pricing and volume discounts tailored to your business."
+    question: "Do you give volume discounts?",
+    answer: "Yes. If you run over $100,000 a month in card sales, give our sales team a call and we'll put together custom pricing for you."
   },
   {
     question: "How does signing up work?",
-    answer: "Signing up takes just minutes. Create your account, verify your business information, and you'll be approved to start accepting payments right away. Your free card reader will ship immediately."
+    answer: "Takes a few minutes. Create your account, send us your basic business info (EIN, bank account, ID), and most owners get approved the same day. Your free card reader ships out right after."
   }
 ];
 

@@ -14,12 +14,12 @@ const products = [
     title: 'Website',
     headline: 'A site that sells — from day one.',
     description:
-      'We design and build your entire digital storefront: brand-aligned, mobile-optimized, and conversion-focused. No templates. No drag-and-drop. A real site, built by real designers, live in under two weeks.',
+      'We design and build your entire website: custom to your brand, fast on mobile, and ready to take orders. No templates, no drag-and-drop. A real site, built by real designers, live in under two weeks.',
     bullets: [
-      'Custom design tailored to your brand and audience',
-      'Mobile-first, blazing-fast performance',
-      'Hosting, SSL, and infrastructure fully managed',
-      'SEO-ready architecture out of the box',
+      'Custom design that fits your brand and your customers',
+      'Fast on every phone and screen size',
+      'Hosting, security, and maintenance fully handled',
+      'Built so customers and search engines can find you',
     ],
     icon: Globe,
     image: websiteImg,
@@ -31,12 +31,12 @@ const products = [
     title: 'Payments',
     headline: 'Accept payments everywhere. Keep more.',
     description:
-      'Delt Payments is built directly into your site — no plugins, no third-party processors. Accept cards, contactless, and online payments with transparent pricing and instant settlement to your Delt balance; standard bank transfers in 1\u20132 business days.',
+      'Delt Payments is built right into your site — no extra plugins, no third-party processors. Accept cards, contactless, and online payments with clear pricing. Money lands in your Delt account the same day; standard bank deposits in 1\u20132 business days.',
     bullets: [
-      'Integrated checkout — minimal configuration — works out of the box for standard setups',
-      'In-person POS and contactless tap-to-pay',
-      'Real-time transaction monitoring & analytics',
-      'PCI-compliant, encrypted by default',
+      'Works out of the box — no technical setup required',
+      'In-person POS, card reader, and contactless tap-to-pay',
+      'See every sale as it happens',
+      'Secure by default — card data is protected end to end',
     ],
     icon: CreditCard,
     image: 'https://images.unsplash.com/photo-1715635845732-b52d2f408a40?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjb250YWN0bGVzcyUyMHBheW1lbnQlMjBjYXJkJTIwdGVybWluYWwlMjBwcm9mZXNzaW9uYWx8ZW58MXx8fHwxNzc1MTM3MTczfDA&ixlib=rb-4.1.0&q=80&w=1080',
@@ -46,31 +46,31 @@ const products = [
   {
     id: 'capital',
     title: 'Capital',
-    headline: 'Funding matched to your momentum.',
+    headline: 'Get funded based on what you already earn.',
     description:
-      'Because Delt already processes your payments and tracks your performance, we can underwrite rapidly — typically within hours using your Delt data. Revenue-based funding with no equity dilution, no personal guarantees, and average 48-hour disbursement.',
+      'Because Delt already sees your card sales and tracks your business, we can approve you fast — usually within hours. Funding that pays itself back from your daily sales, no equity given up, no personal guarantee required, money in your account in as little as 48 hours.',
     bullets: [
-      'Revenue-based — repay as a % of daily sales',
+      'Pays itself back from a fixed share of your daily card sales',
       'No equity, no personal guarantee required',
-      'Pre-qualified offers based on your Delt data',
-      'Funds available in as little as 48 hours',
+      'Pre-qualified offers waiting in your dashboard',
+      'Money in your account in as little as 48 hours',
     ],
     icon: TrendingUp,
     image: capitalImg,
     color: '#4945FF',
-    stat: { value: '48 hrs', label: 'Average disbursement' },
+    stat: { value: '48 hrs', label: 'Avg. time to funding' },
   },
   {
     id: 'ai',
     title: 'Lens AI',
     headline: 'Your business brain. Available around the clock.',
     description:
-      'Lens is Delt\'s AI layer — a conversational analytics engine that watches your sales, traffic, and cash flow 24/7. Ask questions in plain English, get anomaly alerts before problems escalate, and surface opportunities you\'d otherwise miss.',
+      'Lens AI is your always-on business brain. It watches your sales, website traffic, and cash flow around the clock. Ask it anything in plain English and get a real answer. It also spots problems and opportunities before you do.',
     bullets: [
-      'Natural language queries — "How did Tuesday compare to last week?"',
-      'Proactive anomaly detection & trend alerts',
-      'Cross-product insights: site traffic → sales → cash flow',
-      'Actionable recommendations, not just dashboards',
+      'Ask questions in plain English — "How did Tuesday compare to last week?"',
+      'Alerts you when something unusual happens — before it becomes a problem',
+      'Connects your website traffic, card sales, and cash in one view',
+      'Tells you what to do, not just what happened',
     ],
     icon: Sparkles,
     image: lensAiImg,
@@ -180,15 +180,14 @@ export function HowItWorksPage() {
         >
           <div className="hiw-hero-badge">
             <span className="hiw-hero-badge-dot" />
-            The Delt Platform
+            Built for Business Owners
           </div>
           <h1 className="hiw-hero-title">
-            Four products.<br />
-            <span className="hiw-hero-title-accent">One platform.</span>
+            Four tools.<br />
+            <span className="hiw-hero-title-accent">One place.</span>
           </h1>
           <p className="hiw-hero-sub">
-            Every Delt merchant starts with a site. Then payments flow in, capital unlocks,
-            and Lens AI connects it all — giving you a business operating system, not just another tool.
+            Start with a website. Add payments. Get funded when you need it. Lens AI ties it all together — so you always know where your business stands.
           </p>
           <div className="hiw-hero-scroll-hint">
             <motion.div
@@ -236,11 +235,10 @@ export function HowItWorksPage() {
           className="hiw-bottom-cta-inner"
         >
           <h2 className="hiw-bottom-cta-heading">
-            All four products.<br />One login. Zero friction.
+            Everything your business needs.<br />One login. No complexity.
           </h2>
           <p className="hiw-bottom-cta-sub">
-            Every product feeds the next. Your site generates traffic, payments capture revenue,
-            Capital fuels growth, and Lens keeps you ahead of it all.
+            Your website brings customers. Payments capture the sale. Capital funds your next move. Lens AI shows you what’s working — and what isn’t.
           </p>
           <div className="hiw-bottom-cta-buttons">
             <Link to="/apply" className="hiw-cta-primary">

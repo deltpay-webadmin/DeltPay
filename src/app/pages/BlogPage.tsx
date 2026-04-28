@@ -121,7 +121,7 @@ export function BlogPage() {
               WHAT&apos;S NEW
             </span>
             <h1 style={{ fontFamily: JAKARTA, fontSize: 'clamp(1.1rem,2vw,1.4rem)', fontWeight: 800, color: '#fff', lineHeight: 1, marginTop: 4, letterSpacing: '-0.02em' }}>
-              Product updates &amp; releases
+              What we&apos;re building &amp; shipping
             </h1>
           </div>
 
@@ -307,7 +307,7 @@ export function BlogPage() {
           className="text-center mt-14 pb-6"
         >
           <p style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '0.12em', color: 'rgba(255,255,255,0.18)', marginBottom: 16 }}>
-            STAY IN THE LOOP
+            GET UPDATES
           </p>
           <Link
             to="/contact"
@@ -327,7 +327,7 @@ export function BlogPage() {
               (e.currentTarget as HTMLElement).style.borderColor  = 'rgba(73,69,255,0.35)';
             }}
           >
-            Subscribe to updates
+            Get updates from Delt
             <ArrowRight className="w-4 h-4" />
           </Link>
         </motion.div>

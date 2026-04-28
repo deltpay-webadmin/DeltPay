@@ -11,19 +11,19 @@ const CATEGORIES = [
   {
     icon: CreditCard,
     title: 'Payments',
-    subtitle: 'Processing, fees, refunds',
+    subtitle: 'Accepting payments, processing rates, refunds',
     count: 12,
   },
   {
     icon: Wallet,
     title: 'Payouts',
-    subtitle: 'Schedules, holds, bank accounts',
+    subtitle: 'When money lands, holds, your bank account',
     count: 9,
   },
   {
     icon: DollarSign,
     title: 'Capital',
-    subtitle: 'Loans, repayment, eligibility',
+    subtitle: 'Business funding, repayment, who qualifies',
     count: 8,
   },
   {
@@ -35,13 +35,13 @@ const CATEGORIES = [
   {
     icon: Sparkles,
     title: 'Lens AI',
-    subtitle: 'Questions, actions, data sources',
+    subtitle: 'Your AI business advisor — questions & answers',
     count: 11,
   },
   {
     icon: ShieldCheck,
     title: 'Account & security',
-    subtitle: 'Logins, users, permissions',
+    subtitle: 'Account access, staff logins, permissions',
     count: 10,
   },
 ];
@@ -51,15 +51,15 @@ const POPULAR_TAGS = ['Payouts', 'Refunds', 'Chargebacks', 'Tax', 'API keys'];
 const POPULAR_ARTICLES = [
   {
     title: 'How payouts are scheduled',
-    snippet: 'Learn how Delt calculates your payout date and what affects your settlement timeline.',
+    snippet: 'Learn how Delt calculates your deposit date and what can affect when money arrives.',
   },
   {
     title: 'Disputing a chargeback',
-    snippet: 'Step-by-step guide to submitting evidence and managing chargeback disputes in your dashboard.',
+    snippet: 'Step-by-step guide to fighting a chargeback and submitting evidence through your dashboard.',
   },
   {
     title: 'Adding a team member',
-    snippet: 'Invite staff, set role permissions, and manage access levels for your Delt account.',
+    snippet: 'Add staff to your account, set what they can see, and manage logins.',
   },
   {
     title: 'Connecting your Square data on migration',
@@ -67,11 +67,11 @@ const POPULAR_ARTICLES = [
   },
   {
     title: 'Refunding a customer',
-    snippet: 'Issue full or partial refunds directly from a transaction record in seconds.',
+    snippet: 'Give a customer their money back — full or partial — right from the payment record.',
   },
   {
     title: 'Resetting your admin password',
-    snippet: "Recover account access via email, SMS, or a backup passkey if you're locked out.",
+    snippet: "Regain access via email, SMS, or a backup passkey if you're locked out.",
   },
 ];
 
@@ -165,7 +165,7 @@ export function HelpCenterPage() {
             className="text-5xl md:text-6xl font-bold tracking-tight mb-8"
             style={{ color: NAVY, lineHeight: 1.08 }}
           >
-            How can we help?
+            Pick a topic below
           </h1>
 
           {/* Search bar */}
@@ -176,7 +176,7 @@ export function HelpCenterPage() {
             <Search size={18} style={{ color: '#94A3B8', flexShrink: 0 }} />
             <input
               type="search"
-              placeholder="Search articles, guides, and docs…"
+              placeholder="Search for help…"
               className="text-sm flex-1 outline-none bg-transparent"
               style={{ color: NAVY, fontFamily: 'system-ui, -apple-system, sans-serif' }}
             />
@@ -235,7 +235,7 @@ export function HelpCenterPage() {
             Top reads
           </p>
           <h2 className="text-2xl font-bold tracking-tight mb-10" style={{ color: NAVY }}>
-            Popular articles
+            Commonly needed guides
           </h2>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {POPULAR_ARTICLES.map(a => (
@@ -252,7 +252,7 @@ export function HelpCenterPage() {
             Need more?
           </p>
           <h2 className="text-2xl font-bold tracking-tight mb-10" style={{ color: NAVY }}>
-            Still need help?
+            Didn't find the answer?
           </h2>
           <div className="grid md:grid-cols-3 gap-5">
             {/* Talk to a human */}
@@ -277,7 +277,7 @@ export function HelpCenterPage() {
               <div>
                 <p className="font-semibold mb-1" style={{ color: NAVY }}>Talk to a human</p>
                 <p className="text-sm text-[#475569] leading-relaxed">
-                  Our support team is available Monday–Friday, 9am–6pm ET. Average response time under 4 minutes during business hours. Outside these hours, leave a message and we'll reply by the next business day.
+                  Mon–Fri 8am–8pm ET, Sat 9am–5pm ET. Average response under 2 minutes during business hours. Outside these hours, leave a message and we'll reply the next business day.
                 </p>
               </div>
               <button
@@ -310,7 +310,7 @@ export function HelpCenterPage() {
               <div>
                 <p className="font-semibold mb-1" style={{ color: NAVY }}>Email support</p>
                 <p className="text-sm text-[#475569] leading-relaxed">
-                  For complex questions about Capital, disputes, or account setup, email us and a specialist will respond within one business day.
+                  For questions about chargebacks, funding, or account setup — email us and a specialist will reply within one business day.
                 </p>
               </div>
               <a

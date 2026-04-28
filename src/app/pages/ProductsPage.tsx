@@ -30,18 +30,18 @@ export function ProductsPage() {
       icon: CreditCard,
       title: 'Payment Processing',
       href: '#/payments',
-      tagline: 'Accept payments anywhere, anytime',
+      tagline: 'Accept cards in person, online, and on the phone',
       description:
-        'Process payments online, in-person, or on-the-go. Accept all major credit cards, mobile wallets, and contactless payments.',
+        'Take payments anywhere — at the counter, on your website, or over the phone. Accept all major cards, mobile wallets, and contactless payments. Clear pricing, money in your account fast.',
       features: [
-        'Accept all major payment methods',
-        'Contactless & mobile wallets',
-        'Online payment gateway',
-        'Recurring billing',
+        'Accept all major cards and mobile wallets',
+        'Contactless tap-to-pay and chip & swipe',
+        'Online checkout built into your website',
+        'Recurring billing for memberships and retainers',
       ],
       stats: [
-        { value: '2.6%', label: 'Transaction fee' },
-        { value: '1–2 days', label: 'Deposit time' },
+        { value: '2.6%', label: 'Flat processing rate' },
+        { value: '1–2 days', label: 'Bank deposit time' },
         { value: '99.9%', label: 'Uptime' },
       ],
       route: '/payments',
@@ -50,19 +50,19 @@ export function ProductsPage() {
       icon: Wallet,
       title: 'Business Capital',
       href: '#/capital',
-      tagline: 'Fast funding for your business',
+      tagline: 'Funding that pays itself back from your daily sales',
       description:
-        'Get the capital you need to grow with flexible financing. No lengthy applications, no collateral required.',
+        'Borrow from $1,000 to $300,000. No lengthy paperwork, no collateral. Repayment comes out of your daily card sales automatically — so on slow days, you pay less.',
       features: [
-        'Fast approval process',
-        'Flexible repayment terms',
-        'No collateral required',
-        'Based on actual sales',
+        'Same-day approval for most businesses',
+        'Repayment tied to your daily card sales',
+        'No collateral, no personal guarantee required',
+        'Offered based on your actual card sales history',
       ],
       stats: [
         { value: '$1K–$300K', label: 'Funding range' },
         { value: 'Next day', label: 'After approval' },
-        { value: '8%', label: 'Starting rate' },
+        { value: '8%', label: 'Starting fee' },
       ],
       route: '/capital',
     },
@@ -70,17 +70,17 @@ export function ProductsPage() {
       icon: Globe,
       title: 'Website Builder',
       href: '#/website-examples',
-      tagline: 'Build your online presence',
+      tagline: 'A professional website that takes orders from day one',
       description:
-        'Launch a professional website in minutes with drag-and-drop. Includes hosting, SSL, and seamless payment integration.',
+        'Get a real website built for your business — not a generic template. Includes hosting, security, and payments already connected. Your customers can order, book, or pay online without you lifting a finger.',
       features: [
-        'Drag & drop builder',
-        'Mobile-responsive designs',
-        'Free hosting & SSL',
-        'Built-in e-commerce',
+        'Easy to set up — no coding needed',
+        'Looks great on phones, tablets, and desktops',
+        'Free hosting and security included',
+        'Built-in e-commerce and online ordering',
       ],
       stats: [
-        { value: '100+', label: 'Templates' },
+        { value: '100+', label: 'Starting templates' },
         { value: '0', label: 'Code needed' },
         { value: '24/7', label: 'Monitoring' },
       ],
@@ -90,17 +90,17 @@ export function ProductsPage() {
       icon: BarChart3,
       title: 'Business Analytics',
       href: '#/delt-ai',
-      tagline: 'AI-powered insights for growth',
+      tagline: 'Know your numbers without being a numbers person',
       description:
-        'Make data-driven decisions with powerful analytics and reporting. Real-time insights into sales, customers, and performance.',
+        'Lens AI watches your sales, customers, and cash flow in real time. Ask it a question in plain English and get a straight answer. It also tells you when something looks off — before it costs you money.',
       features: [
-        'Real-time dashboards',
-        'Predictive analytics',
-        'Customer insights',
-        'Sales forecasting',
+        'Live sales and customer dashboards',
+        'Ask questions in plain English and get real answers',
+        'Know what\'s selling, what\'s slowing, and what to do about it',
+        'Alerts when your numbers look unusual',
       ],
       stats: [
-        { value: 'Real-time', label: 'Updates' },
+        { value: 'Real-time', label: 'Sales updates' },
         { value: 'AI-powered', label: 'Insights' },
         { value: 'Unlimited', label: 'Reports*' },
       ],
@@ -113,22 +113,22 @@ export function ProductsPage() {
       icon: Smartphone,
       name: 'Delt Terminal',
       price: '$299',
-      description: 'All-in-one terminal with touchscreen',
+      description: 'All-in-one terminal for your counter or table',
       features: ['5" touchscreen', 'WiFi & LTE', 'All-day battery', 'Built-in printer'],
     },
     {
       icon: Monitor,
       name: 'Delt Register',
       price: '$799',
-      description: 'Complete POS system for your counter',
-      features: ['13" display', 'Customer display', 'Cash drawer', 'Receipt printer'],
+      description: 'Full POS setup built for busy counters',
+      features: ['13" display', 'Customer-facing screen', 'Cash drawer', 'Receipt printer'],
     },
     {
       icon: Smartphone,
       name: 'Delt Reader',
       price: '$49',
-      description: 'Mobile card reader for phones',
-      features: ['Bluetooth', 'Chip & tap', 'Portable', 'Long battery life'],
+      description: 'Take card payments from your phone — anywhere',
+      features: ['Bluetooth', 'Chip & tap', 'Fits in your pocket', 'Long battery life'],
     },
   ];
 
@@ -161,14 +161,13 @@ export function ProductsPage() {
               color: NAVY,
             }}
           >
-            Everything you need to run your business.
+            Everything you need to run your business — in one place.
           </h1>
           <p
             className="mx-auto leading-relaxed mb-9"
             style={{ fontSize: 'clamp(16px, 1.2vw, 18px)', color: MUTED, maxWidth: 620 }}
           >
-            From payment processing to AI-powered analytics, Delt provides the tools you need
-            to grow — integrated into one platform.
+            Take card payments. Build a website. Get funding. Understand your sales. Delt brings it all together so you’re not juggling five different apps.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4">
             <Link
@@ -327,7 +326,7 @@ export function ProductsPage() {
               className="mx-auto leading-relaxed"
               style={{ fontSize: 'clamp(15px, 1.2vw, 17px)', color: MUTED, maxWidth: 620 }}
             >
-              Professional payment hardware designed for reliability and ease of use.
+              Plug it in, pair it up, start taking payments. Every piece of Delt hardware is built to just work.
             </p>
           </div>
 
@@ -398,7 +397,7 @@ export function ProductsPage() {
               className="text-[12px] font-bold uppercase mb-3"
               style={{ color: PURPLE, letterSpacing: '0.18em' }}
             >
-              Built for modern business
+              Why owners choose Delt
             </div>
             <h2
               className="font-bold leading-[1.1]"
@@ -408,17 +407,17 @@ export function ProductsPage() {
                 letterSpacing: '-0.025em',
               }}
             >
-              Everything you need, integrated into one platform.
+              The tools that keep your business running — all in one dashboard.
             </h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-x-10 gap-y-12 max-w-[960px] mx-auto">
             {[
-              { icon: Shield, title: 'Bank-level security', description: 'PCI-DSS compliant with end-to-end encryption.' },
-              { icon: Zap, title: 'Lightning fast', description: 'Process payments in under 2 seconds.' },
-              { icon: Clock, title: 'Quick setup', description: 'Start accepting payments in minutes.' },
-              { icon: Globe, title: 'Global reach', description: 'Accept payments from 135+ countries.' },
-              { icon: BarChart3, title: 'Real-time analytics', description: 'Track business performance live.' },
-              { icon: CreditCard, title: 'All payment types', description: 'Cards, wallets, contactless, and more.' },
+              { icon: Shield, title: 'Your data is safe', description: 'PCI-compliant — the security standard for card data — with encryption on by default.' },
+              { icon: Zap, title: 'Payments process fast', description: 'Charges go through in under 2 seconds.' },
+              { icon: Clock, title: 'Ready in minutes', description: 'Sign up, plug in your card reader, start taking payments.' },
+              { icon: Globe, title: 'Sell anywhere', description: 'Accept payments from customers in 135+ countries.' },
+              { icon: BarChart3, title: 'See your sales live', description: 'Know exactly how your business is doing, right now.' },
+              { icon: CreditCard, title: 'Every card type accepted', description: 'Visa, Mastercard, Amex, tap-to-pay, mobile wallets — all of it.' },
             ].map((f) => {
               const Icon = f.icon;
               return (
@@ -468,7 +467,7 @@ export function ProductsPage() {
             className="mx-auto leading-relaxed mb-10"
             style={{ fontSize: 'clamp(15px, 1.2vw, 17px)', color: MUTED, maxWidth: 560 }}
           >
-            Seamlessly integrate with the software you already use.
+            Delt connects to the tools you already use — no manual data entry.
           </p>
           <div className="flex flex-wrap justify-center gap-3">
             {integrations.map((i) => (
@@ -513,13 +512,13 @@ export function ProductsPage() {
               letterSpacing: '-0.025em',
             }}
           >
-            Ready to get started?
+            Ready to run your business on Delt?
           </h2>
           <p
             className="mb-8 leading-relaxed mx-auto"
             style={{ fontSize: 'clamp(15px, 1.2vw, 17px)', color: MUTED, maxWidth: 480 }}
           >
-            Join thousands of businesses running on Delt. Free to start, no contracts.
+            Thousands of restaurants, shops, and salons already use Delt. Free to start, no contracts.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4">
             <Link

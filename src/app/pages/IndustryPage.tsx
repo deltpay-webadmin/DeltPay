@@ -107,7 +107,7 @@ const INDUSTRIES: Record<string, Industry> = {
       {
         icon: 'capital',
         title: 'Capital for a new hood, not a pitch deck',
-        body: 'Funding based on your sales, repaid as a small slice of every transaction. No fixed monthly payment.',
+        body: 'Get funded based on your sales history. Repayment comes as a small slice of each transaction automatically. No fixed monthly payment.',
       },
     ],
     quote:
@@ -116,7 +116,7 @@ const INDUSTRIES: Record<string, Industry> = {
     quoteRole: 'Owner, Rosella — Austin, TX',
     finalHeadline: 'Run the restaurant. Delt runs the rest.',
     finalBody:
-      'Two-week white-glove onboarding, menu import done for you, and a dedicated pod on standby for your first Saturday night.',
+      'Two-week hands-on setup, menu import done for you, and a dedicated team on standby for your first busy night.',
   },
 
   retail: {
@@ -145,7 +145,7 @@ const INDUSTRIES: Record<string, Industry> = {
       },
       {
         title: 'Funding on your sales, not your credit score',
-        body: 'Open a second location, buy into a trend, or stock up for Q4 — Capital offers you what your store can actually support.',
+        body: 'Open a second location, buy into a trend, or stock up for Q4 — you get what your store’s sales can actually support.',
       },
     ],
     stats: [
@@ -167,7 +167,7 @@ const INDUSTRIES: Record<string, Industry> = {
       {
         icon: 'lens',
         title: 'Lens AI finds the hidden wins',
-        body: 'Sell-through, dead stock, and price-elasticity signals — delivered weekly, in plain English.',
+        body: 'Find out what’s selling, what’s sitting, and which products could handle a price bump — in plain English, every week.',
       },
       {
         icon: 'capital',
@@ -190,7 +190,7 @@ const INDUSTRIES: Record<string, Industry> = {
     specialistLabel: 'a services specialist',
     heroTagline: 'Get paid faster. Spend less time chasing invoices and more on clients.',
     heroLede:
-      'Delt turns a patchwork of invoicing, accounting, and billing tools into one clean system — so revenue recognition, ACH, and project profitability aren’t three separate conversations anymore.',
+      'Delt puts your invoicing, payments, and billing in one place — so getting paid, tracking what you’re owed, and knowing which projects make money aren’t three separate headaches anymore.',
     image:
       'https://images.unsplash.com/photo-1664575601711-67110e027b9b?auto=format&fit=crop&w=1600&q=80',
     imageAlt: 'A professional consultant working at a laptop in a modern office',
@@ -209,8 +209,8 @@ const INDUSTRIES: Record<string, Industry> = {
         body: 'Lens AI ties time, expenses, and invoices to each engagement so you know which clients are paying the bills — and which are quietly losing money.',
       },
       {
-        title: 'Capital on your receivables',
-        body: 'Funding underwritten on your actual monthly invoices, not a personal credit score. Repay from what your clients already owe.',
+        title: 'Funding based on what clients owe you',
+        body: 'Funding based on your actual monthly invoices, not a personal credit score. Repay from what your clients already owe.',
       },
     ],
     stats: [
@@ -232,12 +232,12 @@ const INDUSTRIES: Record<string, Industry> = {
       {
         icon: 'lens',
         title: 'Know your best clients',
-        body: 'Engagement margin, utilization, and client LTV — scored and ranked so partners can make calls faster.',
+        body: 'See which clients are most profitable, who’s paying late, and which projects are costing more than they’re worth.',
       },
       {
         icon: 'capital',
         title: 'Bridge payroll without a bank',
-        body: 'Capital advances against booked revenue. Pay staff on time even when clients are on net-60.',
+        body: 'Draw on upcoming invoices to cover payroll. Pay your team on time even when clients take 60 days to pay.',
       },
     ],
     quote:
@@ -246,7 +246,7 @@ const INDUSTRIES: Record<string, Industry> = {
     quoteRole: 'Managing Partner, Becker & Wei — Chicago, IL',
     finalHeadline: 'Billing should be the easy part of running a firm.',
     finalBody:
-      'Migrate your clients, contracts, and recurring charges in a weekend — with a concierge who does it with you, not for a fee.',
+      'Migrate your clients, contracts, and recurring charges in a weekend — with a real person who helps you do it, at no extra charge.',
   },
 
   'salon-barber': {
@@ -302,7 +302,7 @@ const INDUSTRIES: Record<string, Industry> = {
       {
         icon: 'capital',
         title: 'Capital for a build-out',
-        body: 'Add a chair, buy into a retail line, or open a second location — with funding tied to your books.',
+        body: 'Add a chair, buy into a retail line, or open a second location — with funding tied to your sales, not your credit score.',
       },
     ],
     quote:
@@ -311,7 +311,7 @@ const INDUSTRIES: Record<string, Industry> = {
     quoteRole: 'Owner, Sage & Shear — Brooklyn, NY',
     finalHeadline: 'Keep the chair full, keep the tips fair.',
     finalBody:
-      'A concierge onboards your stylists, imports your clients, and sets up your services — usually in under a week.',
+      'A real person sets up your stylists, imports your client list, and gets your services live — usually in under a week.',
   },
 
   'health-wellness': {
@@ -367,7 +367,7 @@ const INDUSTRIES: Record<string, Industry> = {
       {
         icon: 'capital',
         title: 'Grow the next studio',
-        body: 'Equipment, build-out, or a second location — funding underwritten on your existing books.',
+        body: 'Equipment, build-out, or a second location — funding based on what your current studio already brings in.',
       },
     ],
     quote:
@@ -376,7 +376,7 @@ const INDUSTRIES: Record<string, Industry> = {
     quoteRole: 'Founder, Hearth Pilates — Denver, CO',
     finalHeadline: 'Run a practice people come back to.',
     finalBody:
-      'A dedicated onboarding pod handles your member migration, schedule import, and staff training — end to end.',
+      'A dedicated team handles your member migration, schedule import, and staff training — start to finish.',
   },
 };
 
@@ -535,7 +535,7 @@ export function IndustryPage() {
             Coming soon
           </h1>
           <p className="text-[17px] text-[#475569] mb-8">
-            This industry page is being built. In the meantime, see all industries or talk with our team.
+            This page is on its way. In the meantime, browse all industries or talk with our team.
           </p>
           <Link
             to="/business-types"
@@ -986,7 +986,7 @@ export function IndustryPage() {
       <ProductCrossSell
         eyebrow={`Built for ${data.name}`}
         title="Pick your starting point"
-        subtitle="Every product plugs into the same stack. Start with one, add the rest when you're ready."
+        subtitle="Every product works together. Start with what you need today, add the rest when you're ready."
       />
 
       {/* ════════ Final CTA ════════ */}

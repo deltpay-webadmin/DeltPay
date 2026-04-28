@@ -57,17 +57,17 @@ const HIGHLIGHTS = [
   {
     icon: TrendingDown,
     title: 'Rate compare',
-    body: 'Side-by-side breakdown of your effective cost — interchange, assessments, processor margin, all of it.',
+    body: "Side-by-side breakdown of what you're actually paying \u2014 the card network's cut, the processor's margin, monthly fees, all of it.",
   },
   {
     icon: Lock,
-    title: 'Stable MIDs',
-    body: 'Underwriting that lasts. We build durable accounts, not 90-day burner MIDs that get shut off the second volume spikes.',
+    title: 'Stable accounts',
+    body: 'We build accounts that last. Not 90-day temp setups that get shut down the second your sales volume spikes.',
   },
   {
     icon: Zap,
     title: 'Fast approvals',
-    body: 'Most high-risk merchants approved in 48–72 hours with documents in. Multi-MID structuring on day one if you need it.',
+    body: 'Most high-risk businesses approved in 48\u201372 hours once documents are in. Multiple accounts structured from day one if you need it.',
   },
   {
     icon: ShieldAlert,
@@ -185,9 +185,9 @@ export function HighRiskProcessingPage() {
               className="text-[18px] lg:text-[20px] leading-relaxed mb-10 max-w-[680px]"
               style={{ color: 'rgba(255,255,255,0.78)' }}
             >
-              Delt approves every major high-risk vertical with a real underwriting team,
-              custom rate cards, and stable MIDs that don't disappear the second your
-              volume scales. Bring us your statement — we'll match it, beat it, or tell
+              Delt approves every major high-risk vertical with a real approval team,
+              custom processing rates, and stable accounts that won't disappear the second your
+              sales grow. Bring us your statement — we'll match it, beat it, or tell
               you straight up that we can't.
             </p>
 
@@ -314,11 +314,11 @@ export function HighRiskProcessingPage() {
               className="text-[36px] lg:text-[48px] font-extrabold leading-[1.1] mb-5"
               style={{ color: NAVY, letterSpacing: '-0.02em' }}
             >
-              Real underwriting. Real rates. Real accounts that survive scale.
+              Real approval process. Real rates. Real accounts that hold up as you grow.
             </h2>
             <p className="text-[17px] leading-relaxed" style={{ color: MUTED }}>
-              Every Delt high-risk merchant gets a dedicated underwriter, a custom
-              rate card built from your statement, and a structure designed to last.
+              Every Delt high-risk business gets a dedicated reviewer, a custom
+              processing rate built from your statement, and an account structure designed to last.
             </p>
           </motion.div>
 
@@ -380,8 +380,8 @@ export function HighRiskProcessingPage() {
               Every high-risk vertical that aggregators say no to.
             </h2>
             <p className="text-[16px] leading-relaxed" style={{ color: MUTED }}>
-              Not on the list? Ask us anyway — our underwriting team writes accounts
-              for verticals most processors won't even quote.
+              Not on the list? Ask us anyway — our team approves categories
+              most processors won't even consider.
             </p>
           </div>
 
@@ -444,8 +444,7 @@ export function HighRiskProcessingPage() {
                 </h2>
                 <p className="text-[16px] leading-relaxed mb-7" style={{ color: MUTED }}>
                   We don't quote off vibes. Send last month's processing statement
-                  and we'll return a line-by-line comparison — interchange, assessments,
-                  processor margin, monthly fees, the whole stack — within 24 hours.
+                  and we'll return a line-by-line comparison — the card network's cut, your processor's margin, monthly fees, all of it — within 24 hours.
                 </p>
                 <div className="flex flex-wrap gap-3">
                   <Link
@@ -532,9 +531,7 @@ export function HighRiskProcessingPage() {
               className="text-[17px] leading-relaxed mb-8 max-w-[640px] mx-auto"
               style={{ color: 'rgba(255,255,255,0.75)' }}
             >
-              48–72 hour approvals for most high-risk verticals. Multi-MID structures
-              available on day one. Bring your statement and let's get you off the
-              aggregator hamster wheel.
+              48–72 hour approvals for most high-risk businesses. Multiple account structures available from day one. Bring your statement and let's get you off the aggregator hamster wheel.
             </p>
             <div className="flex flex-wrap justify-center gap-3">
               <Link
@@ -548,7 +545,7 @@ export function HighRiskProcessingPage() {
                   e.currentTarget.style.transform = 'translateY(0)';
                 }}
               >
-                Talk to underwriting <ArrowRight size={16} />
+                Talk to our team <ArrowRight size={16} />
               </Link>
               <Link
                 to="/apply"

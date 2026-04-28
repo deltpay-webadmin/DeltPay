@@ -58,7 +58,7 @@ export function CareersPage() {
               Build the future of <span className="text-[#4945FF]">commerce</span>
             </h1>
             <p className="text-xl text-[#475569] max-w-3xl mx-auto leading-relaxed">
-              Join our team of innovators, builders, and dreamers who are transforming how businesses operate and grow. We're looking for talented people who want to make a real impact.
+              We build the tools that help business owners run their shops, serve more customers, and keep more of what they earn. Come work on something that matters every day.
             </p>
           </div>
         </div>
@@ -70,7 +70,7 @@ export function CareersPage() {
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-[#041E42] mb-4">Why work at Delt?</h2>
             <p className="text-xl text-[#475569]">
-              We offer more than just a job—we offer a career with purpose
+              We care about the work and the people doing it
             </p>
           </div>
 
@@ -79,7 +79,7 @@ export function CareersPage() {
               <Lightbulb className="w-10 h-10 text-[#4945FF] mb-4" />
               <h3 className="text-xl font-bold text-[#041E42] mb-3">Innovation</h3>
               <p className="text-[#475569]">
-                Work on cutting-edge technology and solve complex problems that impact thousands of businesses.
+                Work on real problems — the kind that show up when a restaurant owner is closing out on a Friday night or a shop is trying to get paid faster.
               </p>
             </div>
 
@@ -87,7 +87,7 @@ export function CareersPage() {
               <Star className="w-10 h-10 text-[#4945FF] mb-4" />
               <h3 className="text-xl font-bold text-[#041E42] mb-3">Growth</h3>
               <p className="text-[#475569]">
-                Continuous learning opportunities, mentorship programs, and clear career progression paths.
+                Mentorship, learning budget, and a clear path forward. You grow here.
               </p>
             </div>
 
@@ -95,7 +95,7 @@ export function CareersPage() {
               <Users className="w-10 h-10 text-[#4945FF] mb-4" />
               <h3 className="text-xl font-bold text-[#041E42] mb-3">Culture</h3>
               <p className="text-[#475569]">
-                Collaborative environment with talented colleagues who are passionate about what they do.
+                A team that gives honest feedback, shares the credit, and actually enjoys working together.
               </p>
             </div>
 
@@ -103,7 +103,7 @@ export function CareersPage() {
               <Scale className="w-10 h-10 text-[#4945FF] mb-4" />
               <h3 className="text-xl font-bold text-[#041E42] mb-3">Balance</h3>
               <p className="text-[#475569]">
-                Flexible work arrangements, generous PTO, and a focus on sustainable work-life balance.
+                Flexible schedules, generous time off, and the trust to manage your own time.
               </p>
             </div>
 
@@ -111,7 +111,7 @@ export function CareersPage() {
               <Heart className="w-10 h-10 text-[#4945FF] mb-4" />
               <h3 className="text-xl font-bold text-[#041E42] mb-3">Benefits</h3>
               <p className="text-[#475569]">
-                Comprehensive health coverage, 401(k) matching, equity options, and wellness programs.
+                Full health coverage, 401(k) match, equity, and wellness support.
               </p>
             </div>
 
@@ -119,7 +119,7 @@ export function CareersPage() {
               <Globe className="w-10 h-10 text-[#4945FF] mb-4" />
               <h3 className="text-xl font-bold text-[#041E42] mb-3">Impact</h3>
               <p className="text-[#475569]">
-                Make a real difference by helping businesses succeed and empowering entrepreneurs worldwide.
+                The restaurants, salons, and shops that use Delt are real businesses run by real people. Your work helps them thrive.
               </p>
             </div>
           </div>
@@ -132,7 +132,7 @@ export function CareersPage() {
           <div className="text-center mb-12">
             <h2 className="text-4xl font-bold text-[#041E42] mb-4">Open positions</h2>
             <p className="text-xl text-[#475569]">
-              Find your next opportunity at Delt
+              Good work, honest pay, real purpose
             </p>
           </div>
 
@@ -181,7 +181,7 @@ export function CareersPage() {
               Don't see the right role?
             </h2>
             <p className="text-xl text-[#475569] mb-8">
-              We're always looking for talented people. Send us your resume and we'll keep you in mind for future opportunities.
+              Don't see a match? We're always open to meeting people who care about the work. Send us your resume and we'll reach out when something fits.
             </p>
             <button onClick={() => { window.location.href = 'mailto:careers@delt.com'; }} className="px-8 py-4 bg-[#4945FF] text-white rounded-lg hover:bg-[#3730FF] transition-colors font-semibold">
               Send Us Your Resume

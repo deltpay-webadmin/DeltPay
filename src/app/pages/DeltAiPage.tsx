@@ -272,7 +272,7 @@ export function DeltAiPage() {
             fontSize: 18, lineHeight: 1.7,
             color: C.white50, fontFamily: FONT_SANS,
           }}>
-            Lens turns hidden business signals into plain-English actions owners can take immediately — with the money, timing, and next step attached.
+            Lens spots what's hurting your business — or what's about to — and tells you in plain English what to do, with the dollar amount and next step right there.
           </p>
         </div>
 
@@ -390,7 +390,7 @@ export function DeltAiPage() {
             actionBorder="rgba(248,113,113,0.2)"
             actionValue="$5,000"
             actionLabel="Recommended move"
-            actionDesc="Pull from your Delt line now to avoid late fees"
+            actionDesc="Draw from your Delt line now to cover it before it's due"
             note="Not just a warning — a path to fix it before the shortfall hits."
             delay={0.16}
           />
@@ -436,7 +436,7 @@ export function DeltAiPage() {
             actionValue="15% OFF"
             actionLabel="Recommended action"
             actionDesc='Send a "We miss you" text now'
-            note="Revenue risk is easier to recover when you catch it early."
+            note="Lost customers are easier to win back when you catch it early."
             delay={0.24}
           />
         </div>
@@ -483,12 +483,12 @@ export function DeltAiPage() {
             },
             {
               label: 'Shows what changed',
-              text:  'Merchants see the new signal immediately — and exactly why it matters right now.',
+              text:  'You see what changed immediately — and exactly why it matters right now.',
               accent: C.blue,
             },
             {
               label: 'Points toward action',
-              text:  'Every important insight creates a next step, not just another metric to stare at.',
+              text:  'Every important insight comes with a next step — not just another number to stare at.',
               accent: C.indigoLight,
             },
           ].map((item) => (
@@ -581,10 +581,10 @@ export function DeltAiPage() {
               fontSize: 18, lineHeight: 1.7,
               color: C.white50, fontFamily: FONT_SANS,
             }}>
-              Get answers you can act on — with the money, timing, and next step already attached.
+              Get answers you can act on today — with the dollar amount, timing, and next step already spelled out.
             </p>
 
-            <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', marginBottom: 24, fontFamily: FONT_SANS, maxWidth: 440, margin: '0 auto 24px' }}>AI-generated insights should be reviewed before acting. Delt is not liable for decisions made solely on AI output.</p>
+            <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', marginBottom: 24, fontFamily: FONT_SANS, maxWidth: 440, margin: '0 auto 24px' }}>Lens is here to help you think, not think for you. Review insights before acting. Delt is not liable for decisions made solely on AI output.</p>
 
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center' }}>
               <Link

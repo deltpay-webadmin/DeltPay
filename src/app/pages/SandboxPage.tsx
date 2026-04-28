@@ -259,7 +259,7 @@ export function SandboxPage() {
       >
         <p className="text-white text-sm">
           <strong style={{ fontWeight: 600 }}>Live demo.</strong>
-          {'  '}Some features are reserved for trial accounts.
+          {'  '}Some views are only available on a trial or live account.
         </p>
         <motion.button
           onClick={() => navigate('/signup')}
@@ -598,14 +598,13 @@ export function SandboxPage() {
                       className="text-[11px] font-bold uppercase"
                       style={{ letterSpacing: '0.18em', color: '#4945FF' }}
                     >
-                      Available on trial
+                        Start a free trial to unlock
                     </div>
                     <p style={{ fontWeight: 700, color: '#FFFFFF', fontSize: 19, letterSpacing: '-0.3px' }}>
                       {NAV_ITEMS.find(n => n.id === activeMenuItem)?.label}
                     </p>
                     <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: 13.5, lineHeight: 1.6 }}>
-                      This view is reserved for trial and live accounts. Your free dashboard already includes
-                      Home, Lens AI, and Analytics.
+                        This view is included with your trial. Your free demo already includes Home, Lens AI, and Analytics.
                     </p>
                   </div>
 

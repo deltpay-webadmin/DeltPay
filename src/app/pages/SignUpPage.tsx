@@ -64,9 +64,9 @@ export function SignUpPage() {
   const [businessDescription, setBusinessDescription] = useState('');
 
   const steps = [
-    { number: 1, title: 'Business details' },
-    { number: 2, title: 'Contact information' },
-    { number: 3, title: 'Processing information' },
+    { number: 1, title: 'Your business' },
+    { number: 2, title: 'Your contact info' },
+    { number: 3, title: 'Your card sales' },
   ];
 
   const canProceedStep1 = businessName.length > 0 && businessType.length > 0 && industry.length > 0;
@@ -103,17 +103,17 @@ export function SignUpPage() {
               <CheckCircle2 size={32} className="text-[#00D924]" />
             </div>
             <h2 className="text-3xl font-semibold mb-3" style={{ color: TEXT_DARK }}>
-              Application received
+              You're in — application received
             </h2>
             <p className="text-lg mb-8 max-w-md mx-auto" style={{ color: TEXT_GRAY }}>
-              We'll review your information and get back to you within 1-2 business days.
+              We'll look this over and be in touch within 1–2 business days.
             </p>
             <button
               onClick={() => navigate('/')}
               className="px-6 py-3 rounded-md font-medium transition-colors cursor-pointer"
               style={{ backgroundColor: ACCENT, color: 'white' }}
             >
-              Return to home
+              Back to home
             </button>
           </motion.div>
         ) : (
@@ -182,11 +182,11 @@ export function SignUpPage() {
                   >
                     <div className="mb-8">
                       <h1 className="text-3xl font-semibold mb-2" style={{ color: TEXT_DARK }}>
-                        Get started with Delt
+                        Open your Delt account
                       </h1>
                     {/* Step 1 */}
                       <p className="text-base" style={{ color: TEXT_GRAY }}>
-                        Complete this quick application to start processing payments
+                        Takes about 3 minutes. Tell us about your business and we'll set you up.
                       </p>
                     </div>
 
@@ -218,7 +218,7 @@ export function SignUpPage() {
 
                       <div>
                         <label className="block text-sm font-medium mb-2" style={{ color: TEXT_DARK }}>
-                          Business type
+                          Business structure
                         </label>
                         <div className="relative">
                           <button
@@ -230,7 +230,7 @@ export function SignUpPage() {
                               color: businessType ? TEXT_DARK : TEXT_GRAY,
                             }}
                           >
-                            <span>{businessType || 'Select business type'}</span>
+                            <span>{businessType || 'Choose one'}</span>
                             <ChevronDown size={16} className="text-[#8A94A6]" />
                           </button>
                           {businessTypeOpen && (
@@ -271,7 +271,7 @@ export function SignUpPage() {
                               color: industry ? TEXT_DARK : TEXT_GRAY,
                             }}
                           >
-                            <span>{industry || 'Select industry'}</span>
+                            <span>{industry || 'Choose your industry'}</span>
                             <ChevronDown size={16} className="text-[#8A94A6]" />
                           </button>
                           {industryOpen && (
@@ -337,10 +337,10 @@ export function SignUpPage() {
                   >
                     <div className="mb-8">
                       <h2 className="text-3xl font-semibold mb-2" style={{ color: TEXT_DARK }}>
-                        Contact information
+                        Your contact details
                       </h2>
                       <p className="text-base" style={{ color: TEXT_GRAY }}>
-                        Who should we contact about this account?
+                        Who runs this business?
                       </p>
                     </div>
 
@@ -398,7 +398,7 @@ export function SignUpPage() {
 
                       <div>
                         <label className="block text-sm font-medium mb-2" style={{ color: TEXT_DARK }}>
-                          Email address
+                          Business email
                         </label>
                         <input
                           type="email"
@@ -462,17 +462,17 @@ export function SignUpPage() {
                   >
                     <div className="mb-8">
                       <h2 className="text-3xl font-semibold mb-2" style={{ color: TEXT_DARK }}>
-                        Processing information
+                        About your card sales
                       </h2>
                       <p className="text-base" style={{ color: TEXT_GRAY }}>
-                        Help us understand your payment needs
+                        This helps us recommend the right plan and processing rates.
                       </p>
                     </div>
 
                     <div className="space-y-5">
                       <div>
                         <label className="block text-sm font-medium mb-2" style={{ color: TEXT_DARK }}>
-                          Expected monthly processing volume
+                          Monthly card sales (estimate)
                         </label>
                         <div className="relative">
                           <button
@@ -484,7 +484,7 @@ export function SignUpPage() {
                               color: monthlyVolume ? TEXT_DARK : TEXT_GRAY,
                             }}
                           >
-                            <span>{monthlyVolume || 'Select volume range'}</span>
+                            <span>{monthlyVolume || 'Choose a range'}</span>
                             <ChevronDown size={16} className="text-[#8A94A6]" />
                           </button>
                           {volumeOpen && (
@@ -513,7 +513,7 @@ export function SignUpPage() {
 
                       <div>
                         <label className="block text-sm font-medium mb-2" style={{ color: TEXT_DARK }}>
-                          Average transaction size
+                          Average sale amount
                         </label>
                         <div className="relative">
                           <span
@@ -548,12 +548,12 @@ export function SignUpPage() {
 
                       <div>
                         <label className="block text-sm font-medium mb-2" style={{ color: TEXT_DARK }}>
-                          Business description
+                          What does your business sell?
                         </label>
                         <textarea
                           value={businessDescription}
                           onChange={e => setBusinessDescription(e.target.value)}
-                          placeholder="Briefly describe what your business does and what you'll be selling..."
+                          placeholder="Tell us what you sell and how customers pay you..."
                           rows={4}
                           className="w-full px-3 py-2.5 rounded-md text-sm border transition-colors focus:outline-none resize-none"
                           style={{
@@ -605,7 +605,7 @@ export function SignUpPage() {
                     color: 'white',
                   }}
                 >
-                  {currentStep === 3 ? 'Submit application' : 'Continue'}
+                  {currentStep === 3 ? 'Submit my application' : 'Continue'}
                   <ArrowRight size={16} />
                 </button>
               </div>

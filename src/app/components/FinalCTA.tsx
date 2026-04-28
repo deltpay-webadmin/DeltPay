@@ -206,7 +206,7 @@ export function FinalCTA() {
             marginBottom: 20,
           }}
         >
-          Start free. See the difference this week.
+Start today. Feel the difference this week.
         </motion.h2>
 
         <motion.p
@@ -224,7 +224,7 @@ export function FinalCTA() {
             marginRight: 'auto',
           }}
         >
-          Payments, funding, a website, and AI — all in one place. Start free today.
+A website, card payments, AI insights, and funding — all in one place. Free to start.
         </motion.p>
 
         <motion.div

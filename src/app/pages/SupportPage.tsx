@@ -8,27 +8,27 @@ export function SupportPage() {
 
   const faqs = [
     {
-      question: 'How long does it take to set up my account?',
-      answer: 'You can set up your Delt account in just a few minutes. Once verified, you can start accepting payments immediately.'
+      question: 'How quickly can I start accepting payments?',
+      answer: "You can be up and running in under a day. Once we verify your business, you're ready to accept cards."
     },
     {
-      question: 'What payment methods do you support?',
-      answer: 'We support all major credit and debit cards, contactless payments, mobile wallets (Apple Pay, Google Pay), and more.'
+      question: 'What types of payments can I accept?',
+      answer: 'All major credit and debit cards, tap-to-pay, Apple Pay, Google Pay, and more.'
     },
     {
-      question: 'Are there any setup fees or monthly fees?',
-      answer: 'Our Essential plan is completely free with no setup fees or monthly fees. You only pay per transaction.'
+      question: 'What does it cost to get started?',
+      answer: 'Our Free plan has no setup fee and no monthly fee. You pay a small processing rate per sale — nothing else.'
     },
     {
-      question: 'How quickly will I receive my funds?',
-      answer: 'Standard deposits arrive in 1-2 business days. With instant payouts, you can get your money in seconds.'
+      question: 'When does the money land in my account?',
+      answer: 'Standard deposits arrive in 1–2 business days. With instant payouts, the money hits your bank in seconds.'
     },
     {
-      question: 'Can I use Delt for online and in-person payments?',
-      answer: 'Yes! Delt works seamlessly for both online payments through our API and in-person payments with our hardware.'
+      question: 'Can I use Delt in my store and online?',
+      answer: 'Yes. Delt works in person with a card reader and online through your website — everything shows up in one place.'
     },
     {
-      question: 'How do I contact support?',
+      question: 'What are your support hours?',
       answer: 'Our team is available Mon\u2013Fri 8 AM\u20138 PM EST and Saturday 9 AM\u20135 PM EST. Outside these hours, leave a message and we\'ll reply by the next business day.'
     }
   ];
@@ -40,10 +40,10 @@ export function SupportPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl mx-auto text-center">
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-[#041E42] mb-6">
-              We're here to <span className="text-[#4945FF]">help</span>
+              We're here when you need us
             </h1>
             <p className="text-lg sm:text-xl text-[#475569] max-w-2xl mx-auto">
-              Get technical support from our dedicated team. We're available to answer your questions and resolve any issues.
+              Got a question about your account, a payment, or a chargeback? Our team is here to help.
             </p>
           </div>
         </div>
@@ -60,7 +60,7 @@ export function SupportPage() {
               </div>
               <h3 className="text-lg font-bold text-[#041E42] mb-3">Live Chat</h3>
               <p className="text-sm text-[#475569] mb-6 flex-grow leading-relaxed">
-                Chat with our support team. Get fast answers during business hours.
+                Ask a question and get a real answer, usually in under 2 minutes during business hours.
               </p>
               <button 
                 onClick={() => setIsChatOpen(true)}
@@ -77,7 +77,7 @@ export function SupportPage() {
               </div>
               <h3 className="text-lg font-bold text-[#041E42] mb-3">Call Us</h3>
               <p className="text-sm text-[#475569] mb-4 leading-relaxed">
-                Speak directly with a support specialist. We're here to help you resolve any issue.
+                Talk to a real person. We pick up the phone.
               </p>
               <a
                 href="tel:+18647293358"
@@ -97,7 +97,7 @@ export function SupportPage() {
               </div>
               <h3 className="text-lg font-bold text-[#041E42] mb-3">Email Us</h3>
               <p className="text-sm text-[#475569] mb-4 leading-relaxed">
-                Send us a detailed message and we'll get back to you within 24 hours.
+                Send us a message and we'll reply within 24 hours.
               </p>
               <a
                 href="mailto:support@delt.com"
@@ -192,15 +192,15 @@ export function SupportPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto">
             <h2 className="text-3xl sm:text-4xl font-bold text-[#041E42] mb-4">
-              Trusted by businesses everywhere
+              Businesses across the country trust Delt
             </h2>
             <p className="text-lg text-[#475569] mb-12">
-              Join thousands of businesses that rely on Delt for payments and support.
+              From restaurants to retail shops — thousands of business owners run on Delt.
             </p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
               <div>
                 <div className="text-4xl sm:text-5xl font-bold text-[#4945FF] mb-2">5K+</div>
-                <div className="text-sm text-[#475569]">Businesses served</div>
+                <div className="text-sm text-[#475569]">Businesses using Delt</div>
               </div>
               <div>
                 <div className="text-4xl sm:text-5xl font-bold text-[#4945FF] mb-2">99.6%</div>
@@ -208,11 +208,11 @@ export function SupportPage() {
               </div>
               <div>
                 <div className="text-4xl sm:text-5xl font-bold text-[#4945FF] mb-2">Mon–Sat</div>
-                <div className="text-sm text-[#475569]">Support hours</div>
+                <div className="text-sm text-[#475569]">When we're available</div>
               </div>
               <div>
                 <div className="text-4xl sm:text-5xl font-bold text-[#4945FF] mb-2">$1B+</div>
-                <div className="text-sm text-[#475569]">Processed annually</div>
+                <div className="text-sm text-[#475569]">Card sales processed each year</div>
               </div>
             </div>
           </div>

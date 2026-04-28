@@ -3,24 +3,24 @@ import { motion, AnimatePresence } from 'motion/react';
 
 const testimonials = [
   {
-    quote: "Delt replaced three different tools we were paying for. One dashboard, one login, one bill. Our team actually uses it every day now.",
+    quote: "Delt replaced three different things we were paying for. One screen, one login, one bill. The team actually uses it every day now.",
     name: 'Sarah Kim',
-    role: 'Operations Lead, Bloom & Barrel',
+    role: 'Owner, Bloom & Barrel',
     metric: '3 tools replaced',
     color: '#4945FF',
   },
   {
-    quote: "We got approved for capital in 48 hours and the repayment just comes out of daily sales. No awkward bank meetings, no personal guarantee.",
+    quote: "We got approved for funding in 48 hours and it pays itself back a little bit out of every sale. No awkward bank meetings, no putting my house on the line.",
     name: 'Marcus Rivera',
     role: 'Owner, Rivera Auto Detail',
     metric: '$52K funded',
     color: '#16C784',
   },
   {
-    quote: "Lens told us our Tuesday lunch traffic was dropping before we even noticed. We adjusted the menu and saw a 20% bump in two weeks.",
+    quote: "Lens told us Tuesday lunch was slipping before we'd even noticed. We tweaked the menu and were back up 20% in two weeks.",
     name: 'Priya Nair',
-    role: 'Co-founder, Saffron Kitchen',
-    metric: '20% revenue lift',
+    role: 'Co-owner, Saffron Kitchen',
+    metric: '20% sales lift',
     color: '#4945FF',
   },
 ];
@@ -77,7 +77,7 @@ export function SpotlightTestimonial() {
             textTransform: 'uppercase',
           }}
         >
-          What merchants are saying
+          What owners are saying
         </motion.div>
 
         {/* Quote */}

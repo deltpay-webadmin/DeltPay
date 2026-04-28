@@ -15,25 +15,25 @@ const ICON_COLOR = '#041E42';
 const solutionsStartGrow = [
   {
     label: 'Website',
-    description: 'Professional websites built and managed for you',
+    description: 'A professional website, built and updated for you',
     href: '/website-examples',
     icon: Globe,
   },
   {
     label: 'Lens AI',
-    description: 'Ask your business questions in plain English',
+    description: 'Get clear answers about your business — just ask',
     href: '/lens-ai',
     icon: BarChart3,
   },
   {
     label: 'Payments',
-    description: 'In-store, online & mobile payment processing',
+    description: 'Take cards in-store, online, and on the go',
     href: '/payments',
     icon: CreditCard,
   },
   {
     label: 'Capital',
-    description: 'Revenue-based funding with fast approvals',
+    description: 'Cash for your business — approved in days, not months',
     href: '/capital',
     icon: DollarSign,
   },
@@ -46,11 +46,11 @@ const solutionsSecondary = [
 ];
 
 const solutionsBusinessTypes = [
-  { label: 'Restaurants & Food Service', description: 'POS, online ordering, table management', href: '/industries/restaurants' },
-  { label: 'Retail & E-commerce', description: 'Inventory, checkout, multi-channel', href: '/industries/retail' },
-  { label: 'Professional Services', description: 'Invoicing, scheduling, client management', href: '/industries/professional-services' },
-  { label: 'Salon & Barber', description: 'Appointments, memberships, tipping', href: '/industries/salon-barber' },
-  { label: 'Health & Wellness', description: 'Bookings, memberships, HIPAA-ready', href: '/industries/health-wellness' },
+  { label: 'Restaurants & Food Service', description: 'POS, online orders, and tables — running together', href: '/industries/restaurants' },
+  { label: 'Retail & E-commerce', description: 'One place for inventory, checkout, and online sales', href: '/industries/retail' },
+  { label: 'Professional Services', description: 'Send invoices, book clients, get paid faster', href: '/industries/professional-services' },
+  { label: 'Salon & Barber', description: 'Book appointments, take tips, sell memberships', href: '/industries/salon-barber' },
+  { label: 'Health & Wellness', description: 'Bookings, memberships, and HIPAA-ready records', href: '/industries/health-wellness' },
 ];
 
 /* ═══════════════════════════════════════════════════════
@@ -58,20 +58,20 @@ const solutionsBusinessTypes = [
    ═══════════════════════════════════════════════════════ */
 
 const resourcesLearn = [
-  { label: "What's New", description: 'Product updates & releases', href: '/whats-new', icon: Star, badge: 'LATEST' },
-  { label: 'About Us', description: 'Our story, team & mission', href: '/about', icon: User },
-  { label: 'Blog', description: 'Insights for growing businesses', href: '/blog', icon: AlignLeft },
-  { label: 'Reviews', description: 'What merchants are saying', href: '/reviews', icon: Star },
+  { label: "What's New", description: 'See what we just launched', href: '/whats-new', icon: Star, badge: 'LATEST' },
+  { label: 'About Us', description: 'Who we are and why we built Delt', href: '/about', icon: User },
+  { label: 'Blog', description: 'Tips for owners ready to grow', href: '/blog', icon: AlignLeft },
+  { label: 'Reviews', description: 'Hear from owners like you', href: '/reviews', icon: Star },
 ];
 
 const resourcesSupport = [
-  { label: 'Help Center', description: 'Common questions answered', href: '/help-center', icon: HelpCircle },
-  { label: 'Contact & Support', description: 'Sales, support, partnerships', href: '/contact', icon: CreditCard },
+  { label: 'Help Center', description: 'Quick answers to everyday questions', href: '/help-center', icon: HelpCircle },
+  { label: 'Contact & Support', description: 'Talk to sales, support, or partnerships', href: '/contact', icon: CreditCard },
 ];
 
 const resourcesCTAs = [
-  { label: 'Demo', description: 'Dashboard sandbox preview', href: '/sandbox', icon: LayoutDashboard },
-  { label: 'Calculator', description: 'Calculate your savings', href: '/calculator', icon: Calculator },
+  { label: 'Demo', description: 'Try the dashboard before you sign up', href: '/sandbox', icon: LayoutDashboard },
+  { label: 'Calculator', description: 'See how much you could save', href: '/calculator', icon: Calculator },
 ];
 
 /* ═══════════════════════════════════════════════════════
@@ -157,13 +157,13 @@ export function Navigation() {
   }, []);
 
   const frequentSearches = [
-    { text: 'Payment processing fees', icon: '💳', link: '/pricing' },
-    { text: 'Hardware setup guide', icon: '🖥️', link: '/support' },
-    { text: 'API documentation', icon: '📚', link: '/support' },
-    { text: 'Pricing plans comparison', icon: '💰', link: '/pricing' },
-    { text: 'Delt AI Analytics', icon: '✨', link: '/delt-ai' },
-    { text: 'Contact support team', icon: '💬', link: '/support' },
-    { text: 'Business types overview', icon: '🏢', link: '/business-types' },
+    { text: 'How much will I pay in card fees?', icon: '💳', link: '/pricing' },
+    { text: 'How do I set up my card reader?', icon: '🖥️', link: '/support' },
+    { text: 'Connect Delt to my own system', icon: '📚', link: '/support' },
+    { text: 'Compare pricing plans', icon: '💰', link: '/pricing' },
+    { text: 'Lens AI — ask about your business', icon: '✨', link: '/delt-ai' },
+    { text: 'Talk to a human', icon: '💬', link: '/support' },
+    { text: 'Find my business type', icon: '🏢', link: '/business-types' },
     { text: 'Shopping cart', icon: '🛒', link: '/cart' },
   ];
 
@@ -402,10 +402,10 @@ export function Navigation() {
                         </div>
                         <div>
                           <div className="text-white text-[20px] font-bold mb-1" style={{ letterSpacing: '-0.01em' }}>
-                            Go All-In
+                            Get Everything
                           </div>
                           <div className="text-[16px]" style={{ color: 'rgba(255,255,255,0.8)' }}>
-                            Website + Payments + Lens AI + Capital — one plan, one price
+                            Website, payments, AI, and funding — all in one plan
                           </div>
                         </div>
                       </div>
@@ -538,7 +538,7 @@ export function Navigation() {
                                   Same-Day International Payments
                                 </div>
                                 <div className="text-[15px] text-[#475569] leading-snug">
-                                  Pay suppliers abroad instantly — no wire delays, no bank fees.
+                                  Pay your overseas suppliers today — skip the wire wait and the bank fees.
                                 </div>
                                 <div className="text-[14px] font-semibold text-[#4945FF] mt-2 inline-flex items-center gap-1">
                                   Learn more <span>→</span>
@@ -565,7 +565,7 @@ export function Navigation() {
                                   High Risk Processing
                                 </div>
                                 <div className="text-[15px] text-[#475569] leading-snug">
-                                  Shut down by your processor? We approve every high-risk vertical — custom rates, rate match, rate compare.
+                                  Got shut off by your processor? We say yes — every high-risk industry, with rates that beat or match yours.
                                 </div>
                                 <div className="text-[14px] font-semibold text-[#4945FF] mt-2 inline-flex items-center gap-1">
                                   Learn more <span>→</span>
@@ -784,7 +784,7 @@ export function Navigation() {
                               <Globe2 size={20} className="text-[#4945FF] mt-0.5 flex-shrink-0" />
                               <div>
                                 <div className="font-medium text-[#041E42]">Same-Day International Payments</div>
-                                <div className="text-sm text-[#475569]">Pay suppliers abroad instantly — no wire delays, no bank fees</div>
+                                <div className="text-sm text-[#475569]">Pay overseas suppliers today — no wire wait, no bank fees</div>
                               </div>
                             </Link>
                             <Link
@@ -795,7 +795,7 @@ export function Navigation() {
                               <ShieldAlert size={20} className="text-[#4945FF] mt-0.5 flex-shrink-0" />
                               <div>
                                 <div className="font-medium text-[#041E42]">High Risk Processing</div>
-                                <div className="text-sm text-[#475569]">Custom rates for every high-risk vertical</div>
+                                <div className="text-sm text-[#475569]">We approve high-risk businesses — with rates that work</div>
                               </div>
                             </Link>
                           </div>

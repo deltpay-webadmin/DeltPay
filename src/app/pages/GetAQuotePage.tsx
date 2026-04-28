@@ -26,7 +26,7 @@ const FEATURES = [
   {
     id: 'lens',
     label: 'Lens AI',
-    sub: 'Revenue insights, forecasting, trends',
+    sub: 'See where your money comes from and what to do next',
     icon: (
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/>
@@ -36,7 +36,7 @@ const FEATURES = [
   {
     id: 'payments',
     label: 'Payments',
-    sub: 'In-person, online & mobile processing',
+    sub: 'Accept cards in person, online, and on the phone',
     icon: (
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
         <rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/>
@@ -46,7 +46,7 @@ const FEATURES = [
   {
     id: 'capital',
     label: 'Capital',
-    sub: 'Revenue-based funding & advances',
+    sub: 'Funding that pays itself back from your daily sales',
     icon: (
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
@@ -56,7 +56,7 @@ const FEATURES = [
   {
     id: 'marketing',
     label: 'Marketing Suite',
-    sub: 'CRM, loyalty, SMS, email',
+    sub: 'Keep regulars coming back — loyalty, SMS, email',
     icon: (
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
         <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
@@ -66,7 +66,7 @@ const FEATURES = [
   {
     id: 'payroll',
     label: 'Payroll & Team',
-    sub: 'Payroll, scheduling, staff management',
+    sub: 'Pay your team on time, every time',
     icon: (
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
@@ -76,7 +76,7 @@ const FEATURES = [
   {
     id: 'inventory',
     label: 'Inventory',
-    sub: 'Stock management and catalog tools',
+    sub: 'Know what you have before you run out',
     icon: (
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
         <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/>
@@ -86,7 +86,7 @@ const FEATURES = [
   {
     id: 'other',
     label: 'Something else',
-    sub: "I'll describe my needs below",
+    sub: "I'll tell you what I need",
     icon: (
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>
@@ -107,10 +107,10 @@ const BIZ_TYPES = [
 
 /* Step 3 — Monthly volume */
 const VOLUMES = [
-  { id: 'under10k', label: 'Under $10,000', sub: 'Just getting started' },
+  { id: 'under10k', label: 'Under $10,000', sub: 'Getting started' },
   { id: '10k_50k', label: '$10,000 – $50,000', sub: 'Growing steadily' },
   { id: '50k_150k', label: '$50,000 – $150,000', sub: 'Established business' },
-  { id: '150k_plus', label: '$150,000+', sub: 'High-volume merchant' },
+  { id: '150k_plus', label: '$150,000+', sub: 'High-volume business' },
 ];
 
 /* ── Recommendation engine ── */
@@ -124,20 +124,20 @@ function getRecommendation(features: string[], volume: string): { plan: string; 
     return {
       plan: 'Custom Pricing',
       color: NAVY,
-      why: 'Based on your needs, a tailored package will unlock the best rates and features for your business.',
+      why: 'Based on what you need, a custom package will get you the best rates and the right tools.',
     };
   }
   if (features.length >= 2 || volume === '10k_50k' || volume === '50k_150k') {
     return {
       plan: 'Growth',
       color: INDIGO,
-      why: 'The Growth plan covers everything you selected and grows with your business.',
+      why: 'The Growth plan covers everything you chose and keeps up as your business gets busier.',
     };
   }
   return {
     plan: 'Free',
     color: '#374151',
-    why: 'The Free plan is a great starting point — you can upgrade anytime as your needs evolve.',
+    why: "The Free plan is a solid starting point — switch to a paid plan whenever you're ready.",
   };
 }
 
@@ -301,10 +301,10 @@ export function GetAQuotePage() {
             </svg>
           </div>
           <h2 style={{ fontFamily: JAK, fontSize: 28, fontWeight: 800, color: NAVY, letterSpacing: '-0.5px', marginBottom: 12 }}>
-            You're all set, {form.name.split(' ')[0]}!
+            Got it, {form.name.split(' ')[0]} — we're on it.
           </h2>
           <p style={{ fontSize: 15, color: '#6B7280', lineHeight: 1.7, marginBottom: 8 }}>
-            Our team will review your needs and reach out within <strong>1 business day</strong> with a tailored quote.
+            Someone from our team will look this over and reach out within <strong>1 business day</strong> with a quote built for your business.
           </p>
           <div style={{ display: 'inline-block', margin: '24px 0', padding: '14px 24px', borderRadius: 12, background: 'rgba(73,69,255,0.06)', border: '1.5px solid rgba(73,69,255,0.15)' }}>
             <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: INDIGO, marginBottom: 4 }}>Recommended plan</div>
@@ -349,10 +349,10 @@ export function GetAQuotePage() {
             <motion.div key="step1" variants={variants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.28, ease: [0.4,0,0.2,1] }}>
               <div style={{ textAlign: 'center', marginBottom: 48 }}>
                 <h1 style={{ fontFamily: JAK, fontSize: 'clamp(30px,4vw,48px)', fontWeight: 800, color: NAVY, letterSpacing: '-1px', marginBottom: 14 }}>
-                  What features do you need?
+                  What do you need help with?
                 </h1>
                 <p style={{ fontSize: 18, color: '#6B7280', lineHeight: 1.65, maxWidth: 520, margin: '0 auto' }}>
-                  Select everything that matters to your business. We'll find the right fit.
+                  Pick everything that applies. We'll match you to the right plan.
                 </p>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(190px, 1fr))', gap: 14, marginBottom: 48 }}>
@@ -372,7 +372,7 @@ export function GetAQuotePage() {
                 >
                   Continue →
                 </button>
-                {!canNext1 && <p style={{ fontSize: 14, color: '#94A3B8', marginTop: 12 }}>Select at least one feature</p>}
+                {!canNext1 && <p style={{ fontSize: 14, color: '#94A3B8', marginTop: 12 }}>Choose at least one option to continue</p>}
               </div>
             </motion.div>
           )}
@@ -385,7 +385,7 @@ export function GetAQuotePage() {
                   What kind of business do you run?
                 </h2>
                 <p style={{ fontSize: 18, color: '#6B7280', lineHeight: 1.65, maxWidth: 520, margin: '0 auto' }}>
-                  This helps us tailor your quote to your industry.
+                  We'll use this to match you with owners in the same industry.
                 </p>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 14, marginBottom: 48 }}>
@@ -415,7 +415,7 @@ export function GetAQuotePage() {
                   What's your monthly payment volume?
                 </h2>
                 <p style={{ fontSize: 18, color: '#6B7280', lineHeight: 1.65, maxWidth: 520, margin: '0 auto' }}>
-                  We use this to recommend the most cost-effective rates for your business.
+                  This helps us find the best processing rates for your volume.
                 </p>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14, maxWidth: 540, margin: '0 auto 48px' }}>
@@ -442,10 +442,10 @@ export function GetAQuotePage() {
             <motion.div key="step4" variants={variants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.28, ease: [0.4,0,0.2,1] }}>
               <div style={{ textAlign: 'center', marginBottom: 48 }}>
                 <h2 style={{ fontFamily: JAK, fontSize: 'clamp(30px,4vw,48px)', fontWeight: 800, color: NAVY, letterSpacing: '-1px', marginBottom: 14 }}>
-                  Almost there — where should we send your quote?
+                  Last step — where should we send your quote?
                 </h2>
                 <p style={{ fontSize: 18, color: '#6B7280', lineHeight: 1.65, maxWidth: 520, margin: '0 auto' }}>
-                  We'll only use your contact info to send your quote and relevant product updates. Unsubscribe anytime.
+                  We'll only use this to send your quote. No spam, unsubscribe anytime.
                 </p>
               </div>
 
@@ -455,8 +455,8 @@ export function GetAQuotePage() {
                 <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
                   {[
                     { key: 'name', label: 'Full name', placeholder: 'Jane Smith', type: 'text', required: true },
-                    { key: 'email', label: 'Work email', placeholder: 'jane@business.com', type: 'email', required: true },
-                    { key: 'phone', label: 'Phone (optional)', placeholder: '+1 (555) 000-0000', type: 'tel', required: false },
+                    { key: 'email', label: 'Business email', placeholder: 'jane@business.com', type: 'email', required: true },
+                    { key: 'phone', label: 'Phone number (optional)', placeholder: '+1 (555) 000-0000', type: 'tel', required: false },
                     { key: 'business', label: 'Business name (optional)', placeholder: 'Acme Coffee Co.', type: 'text', required: false },
                   ].map(field => (
                     <div key={field.key}>
@@ -485,7 +485,7 @@ export function GetAQuotePage() {
                       Anything else? (optional)
                     </label>
                     <textarea
-                      placeholder="Tell us more about your specific needs..."
+                      placeholder="Anything else we should know about your business..."
                       value={form.notes}
                       onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
                       rows={3}
@@ -570,7 +570,7 @@ export function GetAQuotePage() {
                       <path d="M5 13l4 4L19 7" stroke={GREEN} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
                     <span style={{ fontFamily: JAK, fontSize: 13.5, color: '#374151', lineHeight: 1.55 }}>
-                      No commitment required. We'll build your quote, you decide.
+                      No commitment. We build the quote, you decide if it works.
                     </span>
                   </div>
                 </div>

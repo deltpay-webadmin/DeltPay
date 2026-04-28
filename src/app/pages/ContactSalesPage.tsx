@@ -9,8 +9,8 @@ function SuccessPanel() {
       <div className="w-20 h-20 rounded-full bg-[#4945FF]/10 flex items-center justify-center mb-6">
         <CheckCircle className="w-10 h-10 text-[#4945FF]" />
       </div>
-      <h3 className="text-2xl font-bold text-[#041E42] mb-3">Thanks — we'll be in touch within 1 business day.</h3>
-      <p className="text-[#475569] max-w-sm">A Delt specialist will reach out to the email you provided.</p>
+      <h3 className="text-2xl font-bold text-[#041E42] mb-3">We'll be in touch within 1 business day.</h3>
+      <p className="text-[#475569] max-w-sm">Someone from our team will call or email you at the address you gave us.</p>
     </div>
   );
 }
@@ -82,11 +82,10 @@ export function ContactSalesPage() {
               Talk to sales
             </div>
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight mb-6">
-              Let's grow your business <span className="text-[#4945FF]">together.</span>
+              Let's get your business paid <span className="text-[#4945FF]">faster.</span>
             </h1>
             <p className="text-xl text-white/70 max-w-2xl">
-              Chat with a specialist to size up Delt for your business. No hard sell — just
-              honest answers, real pricing, and a clear path to go live.
+              Talk to someone who knows payments. No pressure — just honest answers, real pricing, and a fast path to go live.
             </p>
           </div>
         </div>
@@ -102,7 +101,7 @@ export function ContactSalesPage() {
                 <Phone className="w-7 h-7 text-white" />
               </div>
               <h3 className="text-2xl font-bold text-[#041E42] mb-2">Schedule a call</h3>
-              <p className="text-[#475569] mb-4">We'll call you back within one business day.</p>
+              <p className="text-[#475569] mb-4">We'll call you back within one business day. Tell us what you need and we'll come prepared.</p>
               <p className="text-sm text-[#94A3B8] mb-6">Mon–Fri · 9am–6pm ET</p>
               <button className="inline-flex items-center gap-2 text-[#4945FF] font-semibold hover:gap-3 transition-all">
                 Request a call <span aria-hidden>→</span>
@@ -115,7 +114,7 @@ export function ContactSalesPage() {
                 <MessageCircle className="w-7 h-7 text-white" />
               </div>
               <h3 className="text-2xl font-bold mb-2">Book a demo</h3>
-              <p className="text-white/70 mb-4">See Delt in a 30-minute personalized walkthrough.</p>
+              <p className="text-white/70 mb-4">Watch Delt in action for your type of business — 30 minutes, flexible times.</p>
               <p className="text-sm text-white/50 mb-6">Flexible times, same or next day.</p>
               <button className="inline-flex items-center gap-2 text-white font-semibold hover:gap-3 transition-all">
                 Schedule demo <span aria-hidden>→</span>
@@ -127,9 +126,9 @@ export function ContactSalesPage() {
               <div className="w-14 h-14 bg-[#041E42] rounded-xl flex items-center justify-center mb-6 group-hover:bg-[#4945FF] transition-colors">
                 <Book className="w-7 h-7 text-white" />
               </div>
-              <h3 className="text-2xl font-bold text-[#041E42] mb-2">Explore the docs</h3>
-              <p className="text-[#475569] mb-4">Browse guides, API references, and playbooks.</p>
-              <p className="text-sm text-[#94A3B8] mb-6">Built for operators and builders.</p>
+              <h3 className="text-2xl font-bold text-[#041E42] mb-2">Browse guides</h3>
+              <p className="text-[#475569] mb-4">Step-by-step guides for getting started, switching processors, and managing your account.</p>
+              <p className="text-sm text-[#94A3B8] mb-6">Written in plain English.</p>
               <button className="inline-flex items-center gap-2 text-[#4945FF] font-semibold hover:gap-3 transition-all">
                 View docs <span aria-hidden>→</span>
               </button>
@@ -148,19 +147,18 @@ export function ContactSalesPage() {
                 What to expect
               </div>
               <h2 className="text-4xl font-bold text-[#041E42] mb-6 leading-tight">
-                A short call.<br />A real answer.
+                A short call.<br />A straight answer.
               </h2>
               <p className="text-lg text-[#475569] mb-10">
-                Tell us a little about your business and we'll show you exactly what Delt will cost,
-                how fast you can go live, and where you'll save money.
+                Tell us a bit about your business. We'll show you exactly what Delt costs, how quickly you can go live, and where you'll save money.
               </p>
 
               <ul className="space-y-4 mb-10">
                 {[
-                  'Transparent pricing — no surprise fees',
-                  'Go live in less than a day',
-                  'Dedicated specialist for your industry',
-                  'Cancel anytime, no long-term contracts',
+                  'Clear pricing — no surprise fees',
+                  'Accept your first payment the same day you sign up',
+                  'A specialist who knows your type of business',
+                  'No long-term contracts, cancel anytime',
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-3">
                     <div className="w-6 h-6 rounded-full bg-[#4945FF]/10 flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -200,7 +198,7 @@ export function ContactSalesPage() {
                   </div>
                   <div>
                     <h4 className="font-semibold text-[#041E42]">Careers</h4>
-                    <p className="text-sm text-[#475569]">Join the team building the future of payments.</p>
+                    <p className="text-sm text-[#475569]">Join the team building the payments tools every shop owner deserves.</p>
                   </div>
                 </div>
                 <div className="flex gap-4 items-start">
@@ -209,7 +207,7 @@ export function ContactSalesPage() {
                   </div>
                   <div>
                     <h4 className="font-semibold text-[#041E42]">Partner with Delt</h4>
-                    <p className="text-sm text-[#475569]">Agencies, ISOs, and referral partners welcome.</p>
+                    <p className="text-sm text-[#475569]">Agencies and referral partners: let's talk about revenue sharing.</p>
                   </div>
                 </div>
               </div>
@@ -217,8 +215,8 @@ export function ContactSalesPage() {
 
             {/* Right — form */}
             <div className="bg-white rounded-2xl p-8 lg:p-10 shadow-[0_24px_60px_-24px_rgba(4,30,66,0.18)] border border-[#041E42]/8">
-              <h3 className="text-2xl font-bold text-[#041E42] mb-2">Get in touch</h3>
-              <p className="text-[#475569] mb-8">A specialist will reach out within one business day.</p>
+              <h3 className="text-2xl font-bold text-[#041E42] mb-2">Send us a message</h3>
+              <p className="text-[#475569] mb-8">We'll get back to you within one business day.</p>
 
               {submitted ? <SuccessPanel /> : <form onSubmit={handleSubmit} className="space-y-5">
                 <div className="grid grid-cols-2 gap-4">
@@ -360,7 +358,7 @@ export function ContactSalesPage() {
                 </button>
 
                 <p className="text-xs text-center text-[#94A3B8]">
-                  By submitting this form, you agree to our privacy policy and terms of service.
+                  By submitting, you agree to our privacy policy and terms of service.
                 </p>
               </form>}
             </div>
@@ -372,18 +370,17 @@ export function ContactSalesPage() {
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-14">
-            <h2 className="text-4xl font-bold text-[#041E42] mb-4">Built for operators, not spreadsheets</h2>
+            <h2 className="text-4xl font-bold text-[#041E42] mb-4">Real numbers from real business owners</h2>
             <p className="text-lg text-[#475569]">
-              We're a young company with a straightforward promise: fair pricing, fast setup, and
-              humans who actually answer the phone.
+              We're direct about what we cost and what we do. Fair pricing, fast setup, and a team that answers the phone.
             </p>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-5xl mx-auto">
             {[
-              { big: '<1 Day', small: 'Go live', sub: 'Speed' },
-              { big: '$847', small: 'Avg. monthly savings', sub: 'Savings' },
+              { big: '<1 Day', small: 'Live on day one', sub: 'Speed' },
+              { big: '$847', small: 'Avg. monthly savings vs. Square', sub: 'Savings' },
               { big: '$50M', small: 'Capital deployed', sub: 'Scale' },
-              { big: '97%', small: 'Merchant retention', sub: 'Reliability' },
+              { big: '97%', small: 'Owner retention', sub: 'Reliability' },
             ].map((s) => (
               <div key={s.small} className="text-center">
                 <div className="text-5xl font-bold text-[#4945FF] mb-2">{s.big}</div>
@@ -397,9 +394,9 @@ export function ContactSalesPage() {
 
       {/* Cross-sell at bottom for continuity */}
       <ProductCrossSell
-        eyebrow="Explore the platform"
-        title="Everything you need to run your business"
-        subtitle="Payments, capital, websites, and AI — all under one roof."
+        eyebrow="What else Delt can do for you"
+        title="Payments, capital, and more — all in one place"
+        subtitle="Accept cards, get funded, build your site, and understand your numbers — without juggling five apps."
       />
     </div>
   );

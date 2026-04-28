@@ -26,23 +26,23 @@ const JAKARTA  = "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif";
 const HIGHLIGHTS = [
   {
     icon: Zap,
-    title: 'Same-day wires',
-    body: 'Funds clear at blockchain speed and settle to your US or EU bank account the same business day.',
+    title: 'Money in your account the same day',
+    body: 'Your overseas buyer pays in USDT. The money lands in your US or EU bank account the same business day — no waiting a week.',
   },
   {
     icon: Globe2,
-    title: 'Built for wholesalers',
-    body: 'Move six- and seven-figure invoices across borders without the SWIFT delays, lifts, or surprise fees.',
+    title: 'Built for big invoices',
+    body: 'Move six- and seven-figure invoices across borders without SWIFT delays, held funds, or surprise fees.',
   },
   {
     icon: ShieldCheck,
-    title: 'Compliant by design',
-    body: 'Real-time AML screening on every transaction. Licensed VASP operator with US MSB registration.',
+    title: 'Fully legal and screened',
+    body: 'Every payment goes through real-time anti-money-laundering checks. Shield is a US-registered and licensed payment operator.',
   },
   {
     icon: Banknote,
-    title: 'Multi-currency accounts',
-    body: 'Hold and pay out in USD or EUR. Customers send USDT, you receive fiat — or the other way around.',
+    title: 'USD and EUR payouts',
+    body: 'Your buyer sends USDT. You receive dollars or euros in your bank — or the other way around if you prefer.',
   },
 ];
 
@@ -50,18 +50,18 @@ const HIGHLIGHTS = [
 const STEPS = [
   {
     n: '01',
-    title: 'Invoice your buyer',
-    body: 'Send a Delt-branded payment link, button, or wallet address to your international wholesale customer.',
+    title: 'Send your buyer an invoice link',
+    body: 'Share a Delt payment link or your account address with your international wholesale customer. Works like any other invoice.',
   },
   {
     n: '02',
     title: 'They pay in USDT',
-    body: 'Buyers fund the invoice with USDT or other supported stablecoins from anywhere in the world.',
+    body: 'Your buyer sends USDT (a dollar-pegged digital currency) from anywhere in the world. No wire delays on their end.',
   },
   {
     n: '03',
-    title: 'You get a same-day wire',
-    body: 'Shield converts on-chain in real time and wires fiat to your US or European bank account the same day.',
+    title: 'You get a same-day bank wire',
+    body: 'Shield converts the USDT to dollars and wires it to your US or European bank account the same day. You never touch crypto.',
   },
 ];
 
@@ -175,9 +175,8 @@ export function InternationalUSDTPage() {
                   className="text-[18px] lg:text-[20px] leading-relaxed mb-8 max-w-[640px]"
                   style={{ color: MUTED }}
                 >
-                  Take stablecoin payments from international buyers and receive
-                  same-day fiat wires to your US or European bank account.
-                  No SWIFT delays. No lifted funds. No surprise FX margins.
+                  Your overseas buyer pays you in USDT. The money lands in your US or European bank account the same day — in dollars.
+                  No SWIFT delays. No held funds. No surprise fees.
                 </p>
 
                 <div className="flex flex-wrap gap-3">
@@ -220,7 +219,7 @@ export function InternationalUSDTPage() {
                 {/* Quick proof bar */}
                 <div className="mt-10 flex flex-wrap gap-x-8 gap-y-3">
                   {[
-                    { icon: Clock, label: 'Same-day settlement' },
+                    { icon: Clock, label: 'Same-day bank deposit' },
                     { icon: ShieldCheck, label: 'AML screened' },
                     { icon: Banknote, label: 'USD & EUR payouts' },
                   ].map((p) => {
@@ -272,7 +271,7 @@ export function InternationalUSDTPage() {
                     250,000 USDT
                   </div>
                   <div className="text-[12px]" style={{ color: MUTED }}>
-                    Pays your invoice in stablecoin
+                    Pays your invoice in USDT (dollar-pegged digital currency)
                   </div>
                 </div>
 
@@ -295,10 +294,10 @@ export function InternationalUSDTPage() {
                     <ShieldCheck size={16} style={{ color: PURPLE }} />
                   </div>
                   <div className="text-[14px] font-semibold" style={{ color: NAVY }}>
-                    AML screen → on-chain conversion → fiat wire
+                    Fraud check → convert USDT to dollars → wire to your bank
                   </div>
                   <div className="text-[12px]" style={{ color: MUTED }}>
-                    Real-time, fully compliant
+                    Happens automatically, every time
                   </div>
                 </div>
 
@@ -350,11 +349,11 @@ export function InternationalUSDTPage() {
               className="text-[36px] lg:text-[48px] font-extrabold leading-[1.1] mb-5"
               style={{ color: NAVY, letterSpacing: '-0.02em' }}
             >
-              International settlement that actually feels domestic.
+              Getting paid overseas should feel like getting paid down the street.
             </h2>
             <p className="text-[17px] leading-relaxed" style={{ color: MUTED }}>
-              Delt partners with <a href="https://www.getshield.xyz/" target="_blank" rel="noopener noreferrer" style={{ color: PURPLE, fontWeight: 600 }}>Shield</a> — a regulated B2B stablecoin banking platform — so wholesalers
-              can take USDT from any buyer, anywhere, and treat it like a same-day wire.
+              Delt partners with <a href="https://www.getshield.xyz/" target="_blank" rel="noopener noreferrer" style={{ color: PURPLE, fontWeight: 600 }}>Shield</a> — a licensed payment platform for international business — so you
+              can accept USDT from buyers anywhere in the world and have the money in your bank the same day.
             </p>
           </motion.div>
 
@@ -471,11 +470,10 @@ export function InternationalUSDTPage() {
                 className="text-[34px] lg:text-[40px] font-extrabold leading-[1.1] mb-5"
                 style={{ color: NAVY, letterSpacing: '-0.02em' }}
               >
-                Built for wholesalers and US exporters moving real volume.
+                Built for wholesalers and US exporters who need to get paid faster.
               </h2>
               <p className="text-[16px] leading-relaxed" style={{ color: MUTED }}>
-                If your buyers are sitting on USDT and your bank is sitting on
-                their wire for three days, this is the bridge.
+                If your buyers want to pay in USDT and you're tired of waiting three days for a bank wire to clear, this is the solution.
               </p>
             </div>
 
@@ -520,18 +518,13 @@ export function InternationalUSDTPage() {
                 className="text-[34px] lg:text-[42px] font-extrabold leading-[1.1] mb-5"
                 style={{ color: '#FFFFFF', letterSpacing: '-0.02em' }}
               >
-                Delt + Shield: stablecoin rails wired into your merchant account.
+                Delt + Shield: accept USDT payments, get paid in dollars.
               </h2>
               <p
                 className="text-[17px] leading-relaxed mb-6"
                 style={{ color: 'rgba(255,255,255,0.75)' }}
               >
-                Shield is a US-registered MSB and licensed VASP operating the
-                first B2B cryptocurrency exchange built specifically for
-                international businesses. Through our partnership, every
-                qualifying Delt merchant gets direct access to Shield's same-day
-                stablecoin settlement — with onboarding handled by your Delt
-                account team.
+                Shield is a US-registered and internationally licensed payment operator built specifically for businesses doing cross-border deals. Through our partnership, qualifying Delt customers get direct access to Shield's same-day USDT-to-dollars service — set up by your Delt account team, no crypto knowledge needed.
               </p>
               <a
                 href="https://www.getshield.xyz/"
@@ -560,7 +553,7 @@ export function InternationalUSDTPage() {
               >
                 <div className="grid grid-cols-2 gap-6">
                   {[
-                    { stat: 'Same-day', label: 'fiat wires' },
+                    { stat: 'Same-day', label: 'bank wires' },
                     { stat: 'From 1%', label: 'all-in fee' },
                     { stat: '$0', label: 'monthly fees' },
                     { stat: 'US + EU', label: 'payout rails' },
@@ -598,14 +591,13 @@ export function InternationalUSDTPage() {
               className="text-[32px] lg:text-[44px] font-extrabold leading-[1.1] mb-4"
               style={{ color: NAVY, letterSpacing: '-0.02em' }}
             >
-              Ready to settle international invoices today instead of next week?
+              Ready to get paid by overseas customers today instead of next week?
             </h2>
             <p
               className="text-[17px] leading-relaxed mb-8 max-w-[640px] mx-auto"
               style={{ color: MUTED }}
             >
-              Tell us about your volume and corridors — we'll get you set up with
-              Shield rails inside your Delt merchant account.
+              Tell us about your sales volume and which countries you sell to — we'll get you set up with Shield inside your Delt account.
             </p>
             <div className="flex flex-wrap justify-center gap-3">
               <Link

@@ -67,27 +67,27 @@ export function ContactPage() {
 
   const faqs = [
     {
-      question: 'How long does it take to set up my account?',
-      answer: 'You can set up your Delt account in just a few minutes. Once verified, you can start accepting payments immediately.',
+      question: 'How quickly can I start accepting payments?',
+      answer: "You can be up and running in under a day. Once we verify your business, you're ready to accept cards.",
     },
     {
-      question: 'What payment methods do you support?',
-      answer: 'We support all major credit and debit cards, contactless payments, mobile wallets (Apple Pay, Google Pay), and more.',
+      question: 'What types of payments can I accept?',
+      answer: 'All major credit and debit cards, tap-to-pay, Apple Pay, Google Pay, and more.',
     },
     {
-      question: 'Are there any setup fees or monthly fees?',
-      answer: 'Our Essential plan is completely free with no setup fees or monthly fees. You only pay per transaction.',
+      question: 'What does it cost to get started?',
+      answer: 'Our Free plan has no setup fee and no monthly fee. You pay a small processing rate per sale — nothing else.',
     },
     {
-      question: 'How quickly will I receive my funds?',
-      answer: 'Standard deposits arrive in 1-2 business days. With instant payouts, you can get your money in seconds.',
+      question: 'When does the money land in my account?',
+      answer: 'Standard deposits arrive in 1–2 business days. With instant payouts, the money hits your bank in seconds.',
     },
     {
-      question: 'Can I use Delt for online and in-person payments?',
-      answer: 'Yes! Delt works seamlessly for both online payments through our API and in-person payments with our hardware.',
+      question: 'Can I use Delt in my store and online?',
+      answer: 'Yes. Delt works in person with a card reader and online through your website — everything shows up in one place.',
     },
     {
-      question: 'How do I contact support?',
+      question: 'What are your support hours?',
       answer: "Our team is available Mon\u2013Fri 8 AM\u20138 PM EST and Saturday 9 AM\u20135 PM EST. Outside these hours, leave a message and we'll reply by the next business day.",
     },
   ];
@@ -99,10 +99,10 @@ export function ContactPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl mx-auto text-center">
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-[#041E42] mb-6">
-              We're here to <span className="text-[#4945FF]">help</span>
+              We're here when you need us
             </h1>
             <p className="text-lg sm:text-xl text-[#475569] max-w-2xl mx-auto mb-10">
-              Whether you need technical support or want to explore how Delt can grow your business, our team is ready.
+              Need help with a payment, your account, or figuring out if Delt is right for your business? We've got you.
             </p>
 
             {/* Tab Toggle */}
@@ -146,7 +146,7 @@ export function ContactPage() {
                   </div>
                   <h3 className="text-lg font-bold text-[#041E42] mb-3">Live Chat</h3>
                   <p className="text-sm text-[#475569] mb-6 flex-grow leading-relaxed">
-                    Chat with our support team during business hours.
+                    Ask a question and get a real answer, usually in under 2 minutes during business hours.
                   </p>
                   <button
                     onClick={() => setIsChatOpen(true)}
@@ -163,7 +163,7 @@ export function ContactPage() {
                   </div>
                   <h3 className="text-lg font-bold text-[#041E42] mb-3">Call Us</h3>
                   <p className="text-sm text-[#475569] mb-4 leading-relaxed">
-                    Speak directly with a support specialist. We're here to help you resolve any issue.
+                    Talk to a real person. We pick up the phone.
                   </p>
                   <a
                     href="tel:+18647293358"
@@ -183,7 +183,7 @@ export function ContactPage() {
                   </div>
                   <h3 className="text-lg font-bold text-[#041E42] mb-3">Email Us</h3>
                   <p className="text-sm text-[#475569] mb-4 leading-relaxed">
-                    Send us a detailed message and we'll get back to you within 24 hours.
+                    Send us a message and we'll reply within 24 hours.
                   </p>
                   <a
                     href="mailto:support@delt.com"
@@ -304,7 +304,7 @@ export function ContactPage() {
                   </div>
                   <h3 className="text-lg font-bold text-[#041E42] mb-3">Book a Demo</h3>
                   <p className="text-sm text-[#475569] mb-4 leading-relaxed flex-grow">
-                    See Delt in action with a personalized walkthrough of our platform.
+                    Watch Delt in action for your type of business — 30 minutes, flexible times.
                   </p>
                   <p className="text-xs text-[#94A3B8] mb-4">30-minute sessions available</p>
                   <button className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-[#4945FF] text-[#4945FF] rounded-lg hover:bg-[#4945FF]/8 transition-colors font-semibold">
@@ -341,9 +341,9 @@ export function ContactPage() {
               <div className="grid lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
                 {/* Left Column */}
                 <div>
-                  <h2 className="text-3xl font-bold text-[#041E42] mb-3">Let's grow your business together</h2>
+                  <h2 className="text-3xl font-bold text-[#041E42] mb-3">Ready to see what Delt can do for your business?</h2>
                   <p className="text-[#475569] mb-10 leading-relaxed">
-                    Connect with our team to explore how Delt can help you accept payments, manage your business, and increase revenue.
+                    Talk to someone on our team. We'll walk you through pricing, answer your questions, and help you decide if Delt is the right fit.
                   </p>
 
                   <div className="space-y-8">
@@ -354,7 +354,7 @@ export function ContactPage() {
                       <div>
                         <h3 className="text-lg font-bold text-[#041E42] mb-1">Careers</h3>
                         <p className="text-sm text-[#475569]">
-                          Join our team and help us build the future of payments
+                          Join our team and help us build better tools for small businesses
                         </p>
                       </div>
                     </div>
@@ -366,7 +366,7 @@ export function ContactPage() {
                       <div>
                         <h3 className="text-lg font-bold text-[#041E42] mb-1">Partner with Delt</h3>
                         <p className="text-sm text-[#475569]">
-                          Become a partner and help businesses accept payments
+                          Refer businesses to Delt and earn revenue share
                         </p>
                       </div>
                     </div>
@@ -399,8 +399,8 @@ export function ContactPage() {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
                       </div>
-                      <h4 className="text-xl font-bold text-[#041E42] mb-2">Thank you!</h4>
-                      <p className="text-[#475569]">We'll be in touch within one business day.</p>
+                      <h4 className="text-xl font-bold text-[#041E42] mb-2">Got it — we'll be in touch.</h4>
+                      <p className="text-[#475569]">Someone from our team will follow up within one business day.</p>
                     </div>
                   ) : (
                     <form onSubmit={handleSubmit} className="space-y-5">
@@ -542,7 +542,7 @@ export function ContactPage() {
                       </button>
 
                       <p className="text-xs text-center text-[#94A3B8]">
-                        By submitting this form, you agree to our privacy policy and terms of service
+                        By submitting, you agree to our privacy policy and terms of service
                       </p>
                     </form>
                   )}
@@ -558,15 +558,15 @@ export function ContactPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto">
             <h2 className="text-3xl sm:text-4xl font-bold text-[#041E42] mb-4">
-              Trusted by businesses everywhere
+              Businesses across the country trust Delt
             </h2>
             <p className="text-lg text-[#475569] mb-12">
-              Join thousands of businesses that rely on Delt for payments and support.
+              From restaurants to retail shops — thousands of business owners run on Delt.
             </p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
               <div>
                 <div className="text-4xl sm:text-5xl font-bold text-[#4945FF] mb-2">5K+</div>
-                <div className="text-sm text-[#475569]">Businesses served</div>
+                <div className="text-sm text-[#475569]">Businesses using Delt</div>
               </div>
               <div>
                 <div className="text-4xl sm:text-5xl font-bold text-[#4945FF] mb-2">99.6%</div>
@@ -574,12 +574,12 @@ export function ContactPage() {
               </div>
               <div>
                 <div className="text-4xl sm:text-5xl font-bold text-[#4945FF] mb-2">Mon-Sat</div>
-                <div className="text-sm text-[#475569]">Support available</div>
+                <div className="text-sm text-[#475569]">When we're available</div>
                 <div className="text-xs text-[#475569] mt-1">During business hours, average response under 2 minutes.</div>
               </div>
               <div>
                 <div className="text-4xl sm:text-5xl font-bold text-[#4945FF] mb-2">$1B+</div>
-                <div className="text-sm text-[#475569]">Processed annually</div>
+                <div className="text-sm text-[#475569]">Card sales processed each year</div>
               </div>
             </div>
           </div>

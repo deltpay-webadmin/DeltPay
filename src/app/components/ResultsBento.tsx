@@ -143,13 +143,13 @@ const cards: CardData[] = [
     id: 'sale',
     icon: <BadgeDollarSign size={24} color="#4945FF" />,
     title: <>Keep more of <em className="not-italic" style={{ fontStyle: 'italic' }}>every sale</em></>,
-    description: 'Your customers cover the cost — you keep every dollar.',
-    stats: [{ value: '$2,400–$6,000', label: 'Recovered annually', color: '#4945FF' }],
-    pill: { icon: <Banknote size={14} color="#4945FF" />, text: '100% fee transparency' },
+    description: 'Your customer covers the card fee. You keep the full ticket.',
+    stats: [{ value: '$2,400–$6,000', label: 'Saved per year', color: '#4945FF' }],
+    pill: { icon: <Banknote size={14} color="#4945FF" />, text: 'No surprise fees' },
     visual: <SavingsBarChart />,
-    backTitle: 'Zero-Cost Processing',
-    backDesc: 'Your customers cover the processing cost at checkout — you keep 100% of the sale. No monthly fees, no per-transaction charges, no hidden costs. Every dollar you ring up is a dollar you deposit.',
-    backList: ['No monthly fees', 'No per-transaction charges', '100% of every sale deposited'],
+    backTitle: 'Cash Discount Program',
+    backDesc: 'Customers paying by card cover the processing fee at checkout. You keep 100% of every sale. No monthly fee, no per-swipe fee, no hidden charges. Every dollar you ring up is a dollar in your bank account.',
+    backList: ['No monthly fees', 'No per-swipe charges', 'Full sale amount in your bank'],
     backIcon: <BadgeDollarSign size={32} color="#7B75FF" />,
   },
   {
@@ -157,12 +157,12 @@ const cards: CardData[] = [
     icon: <Brain size={22} color="#4945FF" />,
     title: <>Turn visitors into <em className="not-italic" style={{ fontStyle: 'italic' }}>repeat buyers</em></>,
     description: '',
-    stats: [{ value: '+23%', label: 'Repeat purchase rate', color: '#4945FF' }],
-    pill: { icon: <Users size={14} color="#4945FF" />, text: 'AI-powered recovery' },
+    stats: [{ value: '+23%', label: 'More repeat customers', color: '#4945FF' }],
+    pill: { icon: <Users size={14} color="#4945FF" />, text: 'AI brings them back' },
     visual: <RepeatBuyerFunnel />,
-    backTitle: 'AI Re-Engagement',
-    backDesc: "Lens spots customers who haven't returned in 30 days and drafts a re-engagement offer. Your checkout remembers their last order. Your site adjusts to what's actually selling.",
-    backList: ['30-day lapse detection', 'Auto-drafted re-engagement offers', 'Personalized checkout memory'],
+    backTitle: 'Bring customers back automatically',
+    backDesc: "Lens notices when a regular hasn't been in for 30 days and drafts a 'we miss you' offer for them. Your checkout remembers what they ordered last time. Your site shows what's actually selling this week.",
+    backList: ['Spots customers who stopped coming in', 'Drafts win-back offers for you', 'Remembers each customer at checkout'],
     backIcon: <Brain size={32} color="#4945FF" />,
   },
   {
@@ -170,25 +170,25 @@ const cards: CardData[] = [
     icon: <ShieldCheck size={24} color="#4945FF" />,
     title: <>Fewer chargebacks. <em className="not-italic" style={{ fontStyle: 'italic' }}>Cleaner books.</em></>,
     description: '',
-    stats: [{ value: '91%', label: 'Dispute win rate' }, { value: '< 0.3%', label: 'Chargeback ratio' }],
-    pill: { icon: <ShieldCheck size={14} color="#4945FF" />, text: 'Auto-flags suspicious transactions' },
+    stats: [{ value: '91%', label: 'Chargebacks won' }, { value: '< 0.3%', label: 'Chargeback rate' }],
+    pill: { icon: <ShieldCheck size={14} color="#4945FF" />, text: 'Catches fishy charges early' },
     visual: <DisputeTimeline />,
-    backTitle: 'Automated Dispute Defense',
-    backDesc: 'Delt auto-flags suspicious transactions before they settle and generates dispute evidence from your records. Most responses go out within 24 hours — without you touching anything.',
-    backList: ['Pre-settlement fraud flagging', 'Auto-generated dispute evidence', '24-hour response turnaround'],
+    backTitle: 'Chargebacks fought for you',
+    backDesc: 'Delt flags risky charges before the money moves and pulls the receipts and records the bank wants to see. Most responses go out the same day — you barely have to lift a finger.',
+    backList: ['Catches fraud before it costs you', 'Builds your evidence packet for you', 'Responds within 24 hours'],
     backIcon: <ShieldCheck size={32} color="#7B75FF" />,
   },
   {
     id: 'unified',
     icon: <Puzzle size={24} color="#4945FF" />,
     title: <>One login. <em className="not-italic" style={{ fontStyle: 'italic' }}>Zero headaches.</em></>,
-    description: 'Everything works together out of the box. No setup fees, no middleware, no logins to remember.',
+    description: 'Everything works together from day one. No setup fees, no extra plug-ins, no third password to forget.',
     stats: undefined,
-    pill: { icon: <Layers size={14} color="#4945FF" />, text: '30% avg. savings vs. separate tools' },
+    pill: { icon: <Layers size={14} color="#4945FF" />, text: '~30% cheaper than buying it piecemeal' },
     visual: <UnifiedStackVisual />,
-    backTitle: 'Unified Platform',
-    backDesc: 'Your storefront feeds your payments, your payments feed your intelligence, your intelligence unlocks your capital. One system, one bill, one dataset.',
-    backList: ['Storefront → Payments → Intelligence → Capital', 'Single bill, single dataset', 'Zero integration maintenance'],
+    backTitle: 'One platform. Everything connected.',
+    backDesc: 'Your website feeds your payments. Your payments feed your reports. Your sales history is what unlocks the funding offer. One bill, one login, one place to see how the business is doing.',
+    backList: ['Website → Payments → Reports → Funding, all in one place', 'One bill, one set of numbers', 'Nothing to wire up or maintain'],
     backIcon: <Puzzle size={32} color="#4945FF" />,
   },
 ];
@@ -364,7 +364,7 @@ function BentoCard({ card, delay, inView, onExpand }: { card: CardData; delay: n
           className="text-sm text-[#4945FF] font-semibold group-hover:opacity-100 opacity-0 translate-y-2 group-hover:translate-y-0 pt-1 flex items-center gap-1 transition-all duration-300"
           style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
         >
-          Click to expand
+          See how it works
           <ArrowUpRight size={15} />
         </a>
       </article>
@@ -383,11 +383,11 @@ export function ResultsBento() {
     <section className="bg-white py-24 px-6 md:px-12" ref={ref}>
       <div className="text-center mb-5">
         <span className="inline-block text-xs tracking-[0.08em] uppercase border-[1.5px] border-[#4945FF] text-[#4945FF] px-[18px] py-1.5 rounded-full" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 700 }}>
-          Platform Outcomes
+          What you get
         </span>
       </div>
       <h2 className="text-center text-[#0F1119] mb-15" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 800, fontSize: 'clamp(2.2rem, 4vw, 3.4rem)', letterSpacing: '-0.03em' }}>
-        What changes when everything <span className="text-[#4945FF] italic">works together.</span>
+        What your day looks like when everything <span className="text-[#4945FF] italic">works together.</span>
       </h2>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-[1200px] mx-auto">

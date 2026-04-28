@@ -42,9 +42,9 @@ const INDUSTRIES: IndustryEntry[] = [
     tagline:
       'Sell in-store, online, and anywhere in between — all running on one brain.',
     bullets: [
-      'Unified inventory across channels',
-      'Done-for-you e-commerce store',
-      'Capital funded on your sales',
+      'In-store and online inventory in sync',
+      'Your own online store, built for you',
+      'Funding that repays from your daily sales',
     ],
     image:
       'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1400&q=80',
@@ -57,9 +57,9 @@ const INDUSTRIES: IndustryEntry[] = [
     tagline:
       'Get paid faster. Spend less time chasing invoices and more on clients.',
     bullets: [
-      'Proposals, invoices, retainers in one place',
-      'Client portal with ACH & auto-pay',
-      'Engagement profitability, live',
+      'Proposals, invoices, and retainers in one place',
+      'Client portal with ACH and auto-pay',
+      'See which clients are actually profitable',
     ],
     image:
       'https://images.unsplash.com/photo-1664575601711-67110e027b9b?auto=format&fit=crop&w=1400&q=80',
@@ -135,9 +135,9 @@ export function BusinessTypesPage() {
               Built for the way your business actually runs.
             </h1>
             <p className="text-[18px] text-white/70 max-w-[640px] leading-relaxed">
-              Website, Payments, Lens AI, and Capital — tuned for five of the
-              hardest, most human businesses to operate. Pick yours and see the
-              full playbook.
+              Website, Payments, Lens AI, and Capital — set up for five of the
+              most common types of small business. Pick yours and see
+              exactly what you get.
             </p>
           </motion.div>
         </div>
@@ -325,7 +325,7 @@ export function BusinessTypesPage() {
                 </h2>
                 <p className="text-[16.5px] text-white/70 leading-relaxed max-w-[520px]">
                   Website, Payments, Lens AI, and Capital — one account, one
-                  price, one concierge onboarding.
+                  price, and someone who walks you through setup on day one.
                 </p>
               </div>
               <div className="flex flex-col gap-3">
