@@ -854,7 +854,7 @@ export function PricingPage() {
       </section>
 
       {/* ═══ 7. SMALL-PRINT LEGAL (ivory, above footer) ════════════ */}
-      <section style={{ background: IVORY, padding: '40px 24px', borderTop: `1px solid ${HAIRLINE}` }}>
+      <section style={{ background: 'linear-gradient(180deg, #FFFFFF 0%, #F4F3FA 100%)', padding: '48px 24px' }}>
         <div style={{ maxWidth: 980, margin: '0 auto' }}>
           <p style={{
             fontSize: 11,

@@ -195,15 +195,6 @@ export function WebsiteBuilderDemo() {
 
       {/* ════════ 1. HERO ════════ */}
       <section className="relative overflow-hidden bg-[#041E42] text-white pt-32 pb-24 px-6">
-        {/* Subtle grid */}
-        <div
-          className="absolute inset-0 opacity-[0.05] pointer-events-none"
-          style={{
-            backgroundImage:
-              'linear-gradient(rgba(255,255,255,0.7) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.7) 1px, transparent 1px)',
-            backgroundSize: '52px 52px',
-          }}
-        />
         {/* Glow accents */}
         <div className="absolute -top-48 left-1/2 -translate-x-1/2 w-[640px] h-[640px] rounded-full bg-[#4945FF]/25 blur-[160px] pointer-events-none" />
         <div className="absolute top-20 right-0 w-[360px] h-[360px] rounded-full bg-[#4945FF]/15 blur-[120px] pointer-events-none" />
