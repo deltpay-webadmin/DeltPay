@@ -32,7 +32,7 @@ const ITEMS: ChangelogItem[] = [
     version: 'v2026.04.18',
     title: 'Lens AI now writes your weekly recap.',
     description:
-      "Every Monday morning, Lens AI automatically compiles your week's key metrics — revenue, top-selling items, and outstanding tasks — into a crisp, one-page summary. Customise the format or ask follow-up questions directly in the chat.",
+      "Every Monday morning, Lens AI automatically pulls together your week's key numbers — revenue, top-selling items, and open tasks — into a clear, one-page summary. Adjust the format or ask follow-up questions in chat.",
     highlight: true,
   },
   {
@@ -66,7 +66,7 @@ const ITEMS: ChangelogItem[] = [
     tag: 'Compliance',
     title: 'PCI DSS 4.0 certification complete.',
     description:
-      'Delt has achieved full PCI DSS 4.0 compliance across all card-processing infrastructure. Merchants no longer need to complete their own SAQ-A questionnaire for standard integrations.',
+      'Delt has achieved full PCI DSS 4.0 compliance — the card-data security standard — across all processing infrastructure. If you use a standard Delt integration, you no longer need to complete your own SAQ-A questionnaire.',
   },
   {
     date: 'Mar 21, 2026',
@@ -74,7 +74,7 @@ const ITEMS: ChangelogItem[] = [
     tag: 'Product',
     title: 'Capital pre-qualified offers, on your dashboard.',
     description:
-      'Eligible merchants now see their pre-qualified Capital offer on the dashboard home screen, with a one-click path to apply. Offers are recalculated nightly based on processing volume and are available to businesses processing $2k+ per month.',
+      'If your business qualifies, you\'ll now see a pre-approved funding offer right on your dashboard home screen — one click to apply. Offers are recalculated nightly based on your card sales and are available to businesses processing $2k+ per month.',
   },
   {
     date: 'Mar 14, 2026',
@@ -91,7 +91,7 @@ const ITEMS: ChangelogItem[] = [
     tag: 'Product',
     title: 'Inventory low-stock alerts by SMS.',
     description:
-      'Set per-product stock thresholds and receive an SMS the moment inventory dips below your chosen level. Configured per location — especially useful for multi-site merchants.',
+      'Set per-product stock thresholds and get an SMS the moment inventory dips below your chosen level. Configured per location — especially useful if you run more than one location.',
   },
   {
     date: 'Feb 28, 2026',
@@ -107,7 +107,7 @@ const ITEMS: ChangelogItem[] = [
     tag: 'Product',
     title: 'Apple Tap to Pay on iPhone — generally available.',
     description:
-      'Accept contactless payments directly on any iPhone XS or later — no card reader required. Now generally available to all US merchants on Delt Payments, with support for credit, debit, and digital wallets.',
+      'Accept contactless payments directly on any iPhone XS or later — no card reader needed. Now available to all US businesses on Delt Payments, with support for credit, debit, and digital wallets.',
   },
 ];
 
@@ -340,7 +340,7 @@ export function WhatsNewPage() {
             className="mt-7 text-lg md:text-xl max-w-xl leading-relaxed"
             style={{ color: 'rgba(255,255,255,0.72)' }}
           >
-            The updates, features, and fixes we ship at Delt — written in plain English, dated, and searchable.
+              Every update, feature, and fix we ship at Delt — written plainly, dated, and easy to find.
           </p>
 
           <div className="mt-10 flex flex-wrap items-center gap-4">
@@ -533,10 +533,10 @@ export function WhatsNewPage() {
                 color: WHITE,
               }}
             >
-              Get the changelog in your inbox every Friday.
+              Get new features in your inbox every Friday.
             </h2>
             <p className="mt-4 text-base md:text-lg leading-relaxed max-w-lg" style={{ color: 'rgba(255,255,255,0.7)' }}>
-              One email. The ship notes, the why behind them, and the occasional engineering post. No sales pitch.
+              One email a week. What shipped, why it matters for your business, and nothing else.
             </p>
           </div>
           <form

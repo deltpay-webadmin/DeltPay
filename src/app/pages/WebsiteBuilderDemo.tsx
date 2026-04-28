@@ -138,11 +138,11 @@ function BuilderMockup() {
 const FAQ_ITEMS = [
   {
     q: 'Is the website builder easy to use?',
-    a: 'Yes — it\'s designed for operators, not developers. If you\'ve used a doc editor, you can use this.',
+    a: 'Yes — it\'s built for business owners, not developers. If you can write an email, you can use this.',
   },
   {
-    q: 'Do you offer onboarding?',
-    a: 'Yes. Delt offers onboarding for a one-time fee to get you typically live within your first week — timing depends on how quickly your content and domain are ready.'
+    q: 'Do you offer setup help?',
+    a: 'Yes. Delt offers setup assistance for a one-time fee to get you live within your first week — timing depends on how quickly your content and domain are ready.'
   },
   {
     q: 'Does it integrate with other Delt products?',
@@ -225,8 +225,7 @@ export function WebsiteBuilderDemo() {
             </h1>
 
             <p className="text-white/65 text-lg sm:text-xl leading-relaxed mb-10 max-w-lg">
-              Delt's fully customizable website builder keeps your menu, online ordering, POS,
-              and inventory in lockstep — update once, everywhere updates.
+              Your menu, online ordering, POS, and inventory all stay in sync. Change your hours or add a special — it updates everywhere at once.
             </p>
 
             <div className="flex flex-wrap gap-4">
@@ -260,10 +259,10 @@ export function WebsiteBuilderDemo() {
               className="font-bold text-[#041E42] leading-tight tracking-tight mb-4"
               style={{ fontSize: 'clamp(28px, 4vw, 48px)' }}
             >
-              Fully integrated. Customizable. Easy to discover.{' '}
-              <span className="text-[#4945FF]">And delightfully simple.</span>
+              Everything connected. Easy to manage.{' '}
+              <span className="text-[#4945FF]">No tech background needed.</span>
             </h2>
-            <p className="text-[#475569] text-lg">Build in minutes. Update in seconds.</p>
+            <p className="text-[#475569] text-lg">Get your site live this week. Change anything in seconds.</p>
           </div>
 
           {/* 3-card row */}
@@ -271,18 +270,18 @@ export function WebsiteBuilderDemo() {
             {[
               {
                 icon: <Palette className="w-6 h-6 text-[#4945FF]" />,
-                title: 'Designer-grade templates',
-                copy: 'Customize your site with a library of beautifully designed templates, custom fonts, colors, and images that actually look like you.',
+                title: 'Templates that look the part',
+                copy: 'Pick a design that fits your business, then make it yours — custom colors, fonts, and photos. No designer required.',
               },
               {
                 icon: <Search className="w-6 h-6 text-[#4945FF]" />,
-                title: 'SEO built in',
-                copy: 'Our sites are search-engine optimized out of the box, so customers find your business first when they search nearby.',
+                title: 'Shows up in Google',
+                copy: 'Your site is search-engine ready from day one. When a customer searches nearby, your business comes up.',
               },
               {
                 icon: <Boxes className="w-6 h-6 text-[#4945FF]" />,
-                title: 'One integrated stack',
-                copy: 'Your site, online ordering, inventory, and checkout all speak the same language. No plugins. No duct tape.',
+                title: 'Everything in one place',
+                copy: 'Your site, online ordering, inventory, and checkout all stay in sync. No plugins. No duct tape.',
               },
             ].map((card) => (
               <div
@@ -319,8 +318,8 @@ export function WebsiteBuilderDemo() {
               <span className="text-[#4945FF]">Done.</span>
             </h2>
             <p className="text-[#475569] text-lg leading-relaxed">
-              Edit your hero. Swap a menu item. Change your hours. Changes go live in seconds —
-              no developer required.
+              Change your hours. Update a menu item. Swap a photo. Changes go live in seconds —
+              no IT help needed.
             </p>
           </div>
 
@@ -346,20 +345,20 @@ export function WebsiteBuilderDemo() {
             style={{ fontSize: 'clamp(26px, 3.5vw, 44px)' }}
           >
             Websites is part of the Delt{' '}
-            <span className="text-[#4945FF]">Digital Storefront Suite</span> — built to bring
-            guests in with features that work better together.
+            <span className="text-[#4945FF]">Digital Storefront Suite</span> — tools built to bring
+            customers in and keep everything in sync.
           </h2>
 
           {/* 3 sub-feature cards */}
           <div className="grid md:grid-cols-3 gap-6">
             {[
               {
-                title: 'Easily build and manage your business\'s website',
-                copy: 'From first click to first booking, nothing falls through.',
+                title: 'Build and manage your website with ease',
+                copy: 'From first visit to first booking, nothing falls through.',
               },
               {
-                title: 'Stand out from search to storefront',
-                copy: 'SEO, local listings, and Google Business sync included.',
+                title: 'Get found on Google',
+                copy: 'SEO, local listings, and Google Business sync are all included.',
               },
               {
                 title: 'Every tool connected',
@@ -401,7 +400,7 @@ export function WebsiteBuilderDemo() {
             className="font-bold text-white tracking-tight leading-tight mb-4"
             style={{ fontSize: 'clamp(28px, 4vw, 48px)' }}
           >
-            Get a demo and see every side of Delt.
+            See your store live in a demo.
           </h2>
           <p className="text-white/55 text-base mb-10">
             Already a Delt customer?{' '}

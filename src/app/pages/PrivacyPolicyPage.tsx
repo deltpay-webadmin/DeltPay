@@ -27,7 +27,7 @@ export function PrivacyPolicyPage() {
             <div className="mb-12">
               <h2 className="text-3xl font-bold text-[#041E42] mb-4">Introduction</h2>
               <p className="text-[#475569] leading-relaxed">
-                At Delt, we take your privacy seriously. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our payment processing services, website, and related products.
+                Your privacy matters to us. Here's a plain-English summary of how we collect, use, and protect your information when you use Delt's payment services, website, and related products.
               </p>
             </div>
 

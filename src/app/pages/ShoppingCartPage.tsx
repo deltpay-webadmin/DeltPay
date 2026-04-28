@@ -109,7 +109,7 @@ export function ShoppingCartPage() {
                     <ShoppingBag className="h-10 w-10 text-[#4945FF]" />
                   </div>
                   <h3 className="text-2xl font-bold text-[#041E42] mb-2">Your cart is empty</h3>
-                  <p className="text-[#475569] mb-6">Add products to get started</p>
+                  <p className="text-[#475569] mb-6">Add a card reader or plan to get started</p>
                   <Link
                     to="/products"
                     className="inline-flex items-center gap-2 px-6 py-3 bg-[#4945FF] text-white rounded-lg font-semibold hover:bg-[#3730FF] transition-all"
@@ -276,19 +276,19 @@ export function ShoppingCartPage() {
                       <div className="w-8 h-8 bg-[#EBF3FF] rounded-lg flex items-center justify-center flex-shrink-0">
                         <Lock className="h-4 w-4 text-[#4945FF]" />
                       </div>
-                      <span>Secure SSL encryption</span>
+                      <span>Secure checkout</span>
                     </div>
                     <div className="flex items-center gap-3 text-sm text-[#475569]">
                       <div className="w-8 h-8 bg-[#EBF3FF] rounded-lg flex items-center justify-center flex-shrink-0">
                         <CreditCard className="h-4 w-4 text-[#4945FF]" />
                       </div>
-                      <span>Multiple payment options</span>
+                      <span>Card, ACH, or bank transfer</span>
                     </div>
                     <div className="flex items-center gap-3 text-sm text-[#475569]">
                       <div className="w-8 h-8 bg-[#EBF3FF] rounded-lg flex items-center justify-center flex-shrink-0">
                         <Package className="h-4 w-4 text-[#4945FF]" />
                       </div>
-                      <span>Free shipping on all orders</span>
+                      <span>Free shipping on every order</span>
                     </div>
                   </div>
 

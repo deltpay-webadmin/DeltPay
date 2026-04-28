@@ -437,7 +437,7 @@ export function NewBlogPage() {
                 boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.14)',
               }}
             >
-              From the team
+              From our team
             </span>
           </div>
           <h1
@@ -448,7 +448,7 @@ export function NewBlogPage() {
               color: WHITE,
             }}
           >
-            Essays, dispatches,
+            Stories, updates,
             <br />
             <span
               style={{
@@ -459,14 +459,14 @@ export function NewBlogPage() {
                 fontStyle: 'italic',
               }}
             >
-              and product stories.
+              and honest takes.
             </span>
           </h1>
           <p
             className="mt-6 text-lg md:text-xl max-w-xl leading-relaxed"
             style={{ color: 'rgba(255,255,255,0.72)' }}
           >
-            The people building Delt, writing about how and why.
+              The team behind Delt writing about what we build, what we learn, and what we get wrong.
           </p>
         </div>
 
@@ -684,7 +684,7 @@ export function NewBlogPage() {
             <div className="flex items-center gap-2 mb-4">
               <Mail size={16} strokeWidth={2.5} style={{ color: PURPLE_HI }} />
               <p className="text-[11px] font-bold uppercase tracking-[0.2em]" style={{ color: PURPLE_HI }}>
-                The Delt Dispatch
+                  The Delt Dispatch
               </p>
             </div>
             <h2
@@ -695,10 +695,10 @@ export function NewBlogPage() {
                 color: WHITE,
               }}
             >
-              Never miss a post.
+              Keep up with Delt.
             </h2>
             <p className="mt-4 text-base md:text-lg leading-relaxed max-w-lg" style={{ color: 'rgba(255,255,255,0.7)' }}>
-              One thoughtful email every other week. Essays, product stories, and the occasional engineering deep dive.
+              One email every other week. Product news, owner stories, and the occasional behind-the-scenes look at how we build.
             </p>
           </div>
           <form

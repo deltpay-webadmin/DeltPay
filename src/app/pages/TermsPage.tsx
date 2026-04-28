@@ -29,6 +29,9 @@ export function TermsPage() {
               <p className="text-[#475569] leading-relaxed">
                 These Terms of Service ("Terms") govern your access to and use of Delt's payment processing services, website, and related products (collectively, the "Services"). By accessing or using our Services, you agree to be bound by these Terms.
               </p>
+              <p className="text-[#475569] leading-relaxed mt-4">
+                Read these before you sign up. They explain what Delt can and can't do, what you're responsible for, and how we handle payments, disputes, and account issues.
+              </p>
             </div>
 
             <div className="mb-12">

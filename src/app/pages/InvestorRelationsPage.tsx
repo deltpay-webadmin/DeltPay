@@ -5,7 +5,7 @@ export function InvestorRelationsPage() {
   const financialHighlights = [
     { label: 'Revenue (2025)', value: '$2.4B', change: '+42%' },
     { label: 'Gross Payment Volume', value: '$156B', change: '+38%' },
-    { label: 'Active Merchants', value: '2.8M', change: '+25%' },
+    { label: 'Active Businesses', value: '2.8M', change: '+25%' },
     { label: 'Market Cap', value: '$48.2B', change: '+56%' },
   ];
 
@@ -65,7 +65,7 @@ export function InvestorRelationsPage() {
               Investor Relations
             </h1>
             <p className="text-xl text-white/80 max-w-3xl leading-relaxed mb-8">
-              Powering commerce for millions of businesses worldwide. Explore our financial performance, corporate governance, and growth strategy.
+              Delt is a payment and business platform built for small and medium businesses. Learn about our financial performance and growth.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <button className="px-8 py-4 bg-[#4945FF] text-white rounded-lg hover:bg-[#3730FF] transition-colors font-semibold flex items-center justify-center gap-2">
@@ -118,7 +118,7 @@ export function InvestorRelationsPage() {
             <h2 className="text-4xl font-bold text-[#041E42] mb-4">Financial Highlights</h2>
             <p className="text-base text-[#475569] mt-2">All figures as of the period noted; unaudited unless otherwise indicated.</p>
             <p className="text-xl text-[#475569]">
-              Strong growth across all key metrics
+                Consistent growth across key numbers
             </p>
           </div>
 
@@ -259,7 +259,7 @@ export function InvestorRelationsPage() {
           <div className="text-center mb-12">
             <h2 className="text-4xl font-bold text-[#041E42] mb-4">Leadership Team</h2>
             <p className="text-xl text-[#475569]">
-              Experienced executives driving our vision forward
+              The people running Delt
             </p>
           </div>
 
@@ -320,7 +320,7 @@ export function InvestorRelationsPage() {
             <div>
               <h2 className="text-4xl font-bold text-white mb-6">Investor Relations Contact</h2>
               <p className="text-xl text-white/80 mb-8">
-                Our investor relations team is here to answer your questions and provide additional information.
+                Have questions? Our investor relations team is ready to help.
               </p>
               <div className="space-y-4">
                 <a href="mailto:ir@deltcapital.com" className="flex items-center gap-3 text-white hover:text-[#4945FF] transition-colors">
@@ -337,7 +337,7 @@ export function InvestorRelationsPage() {
             <div className="bg-white/10 backdrop-blur-sm p-8 rounded-2xl">
               <h3 className="text-2xl font-bold text-white mb-4">Email Alerts</h3>
               <p className="text-white/80 mb-6">
-                Subscribe to receive the latest financial news, earnings releases, and SEC filings.
+                  Get earnings releases, financial news, and SEC filings sent straight to your inbox.
               </p>
               <div className="flex flex-col sm:flex-row gap-3">
                 <input
