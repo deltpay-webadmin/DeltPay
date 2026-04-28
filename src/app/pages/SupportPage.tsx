@@ -9,7 +9,7 @@ export function SupportPage() {
   const faqs = [
     {
       question: 'How quickly can I start accepting payments?',
-      answer: 'You can be up and running in under a day. Once we verify your business, you're ready to accept cards.'
+      answer: "You can be up and running in under a day. Once we verify your business, you're ready to accept cards."
     },
     {
       question: 'What types of payments can I accept?',
