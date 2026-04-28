@@ -245,7 +245,7 @@ export function Navigation() {
           >
             {/* Nav bar row */}
             <div className="px-6 xl:px-8">
-              <div className="flex justify-between items-center h-[68px]">
+              <div className="flex justify-between items-center h-[88px]">
 
                 {/* ── Left — Logo ── */}
                 <div className="flex items-center">
@@ -253,7 +253,7 @@ export function Navigation() {
                     <img
                       src={isSolid ? logoDark : logoWhite}
                       alt="Delt"
-                      className="h-[72px] m-[0px]"
+                      className="h-[94px] m-[0px]"
                       style={{
                         imageRendering: '-webkit-optimize-contrast',
                         transition: 'opacity 0.3s ease',
@@ -263,7 +263,7 @@ export function Navigation() {
                 </div>
 
                 {/* ── Center — Nav Links ── */}
-                <nav className="hidden lg:flex items-center gap-1 xl:gap-2">
+                <nav className="hidden lg:flex items-center gap-2 xl:gap-3">
 
                   {/* ─── Solutions Mega Menu ─── */}
                   <div
@@ -272,7 +272,7 @@ export function Navigation() {
                     onMouseLeave={() => closeDropdown()}
                   >
                     <button
-                      className="flex items-center gap-1.5 px-4 py-2 text-[18px] font-medium transition-colors whitespace-nowrap"
+                      className="flex items-center gap-2 px-5 py-3 text-[23px] font-medium transition-colors whitespace-nowrap"
                       style={{ color: isSolid ? '#041E42' : '#FFFFFF', transition: 'color 0.3s ease' }}
                     >
                       Solutions
@@ -283,7 +283,7 @@ export function Navigation() {
                   {/* ─── Pricing ─── */}
                   <Link
                     to="/pricing"
-                    className="px-4 py-2 text-[18px] font-medium transition-colors whitespace-nowrap"
+                    className="px-5 py-3 text-[23px] font-medium transition-colors whitespace-nowrap"
                     style={{ color: isSolid ? '#041E42' : '#FFFFFF', transition: 'color 0.3s ease' }}
                   >
                     Pricing
@@ -296,7 +296,7 @@ export function Navigation() {
                     onMouseLeave={() => closeDropdown()}
                   >
                     <button
-                      className="flex items-center gap-1.5 px-4 py-2 text-[18px] font-medium transition-colors whitespace-nowrap"
+                      className="flex items-center gap-2 px-5 py-3 text-[23px] font-medium transition-colors whitespace-nowrap"
                       style={{ color: isSolid ? '#041E42' : '#FFFFFF', transition: 'color 0.3s ease' }}
                     >
                       Resources
@@ -307,7 +307,7 @@ export function Navigation() {
                 </nav>
 
                 {/* ── Right — Actions ── */}
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-4">
 
                   {/* Search (⌘K) */}
                   <button
@@ -320,7 +320,7 @@ export function Navigation() {
                       setShowSearch(true);
                       setSelectedIndex(0);
                     }}
-                    className="hidden lg:flex p-2 transition-colors"
+                    className="hidden lg:flex p-2.5 transition-colors"
                     style={{ color: isSolid ? '#041E42' : '#FFFFFF', transition: 'color 0.3s ease' }}
                     aria-label="Search"
                   >
@@ -329,14 +329,14 @@ export function Navigation() {
                       whileTap={{ scale: 0.9 }}
                       transition={{ type: 'spring', stiffness: 400, damping: 17 }}
                     >
-                      <Search className="h-5 w-5" />
+                      <Search className="h-[26px] w-[26px]" />
                     </motion.div>
                   </button>
 
                   {/* Sign In */}
                   <Link
                     to="/signin"
-                    className="hidden md:flex items-center px-4 py-1.5 text-[17px] font-medium transition-all whitespace-nowrap"
+                    className="hidden md:flex items-center px-5 py-2 text-[22px] font-medium transition-all whitespace-nowrap"
                     style={{
                       color: isSolid ? '#041E42' : '#FFFFFF',
                       transition: 'color 0.3s ease',
@@ -348,20 +348,20 @@ export function Navigation() {
                   {/* Contact Sales CTA */}
                   <Link
                     to="/contact-sales"
-                    className="hidden md:flex items-center gap-1.5 px-5 py-2.5 text-[16px] font-semibold text-white bg-[#4945FF] rounded-full hover:bg-[#3933CC] transition-colors whitespace-nowrap"
+                    className="hidden md:flex items-center gap-2 px-7 py-3.5 text-[21px] font-semibold text-white bg-[#4945FF] rounded-full hover:bg-[#3933CC] transition-colors whitespace-nowrap"
                   >
                     Contact sales
-                    <ArrowRight className="w-4 h-4" />
+                    <ArrowRight className="w-5 h-5" />
                   </Link>
 
                   {/* Mobile Hamburger Menu Button */}
                   <button
                     onClick={() => setMobileMenuOpen(true)}
-                    className="lg:hidden flex p-2 transition-colors"
+                    className="lg:hidden flex p-2.5 transition-colors"
                     style={{ color: isSolid ? '#041E42' : '#FFFFFF' }}
                     aria-label="Menu"
                   >
-                    <Menu size={24} />
+                    <Menu size={31} />
                   </button>
 
                 </div>
