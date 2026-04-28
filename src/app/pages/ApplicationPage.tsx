@@ -74,30 +74,30 @@ export function ApplicationPage() {
               <Check className="w-10 h-10 text-[#4945FF]" />
             </div>
             <h1 className="text-3xl font-bold text-[#041E42] mb-4">
-              Application Submitted Successfully!
+              You're in, {formData.fullName.split(' ')[0]} — application received.
             </h1>
             <p className="text-lg text-[#475569] mb-8">
-              Welcome to Delt, {formData.fullName}! We've received your application and verified your bank account.
+              Welcome to Delt. We've received your application and confirmed your bank account. Here's what happens next.
             </p>
             <div className="bg-[#F6F7FB] rounded-lg p-6 mb-8 text-left">
-              <h3 className="font-semibold text-[#041E42] mb-4">What's Next?</h3>
+              <h3 className="font-semibold text-[#041E42] mb-4">Next steps</h3>
               <ul className="space-y-3">
                 <li className="flex items-start gap-3">
                   <Check className="w-5 h-5 text-[#4945FF] flex-shrink-0 mt-0.5" />
                   <span className="text-[#475569]">
-                    Our team will review your application within 1 business day (Mon–Fri, excluding holidays)
+                    We’ll review your application within 1 business day (Mon–Fri)
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
                   <Check className="w-5 h-5 text-[#4945FF] flex-shrink-0 mt-0.5" />
                   <span className="text-[#475569]">
-                    You'll receive your Delt Reader at {formData.email}
+                    Shipping details for your card reader will go to {formData.email}
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
                   <Check className="w-5 h-5 text-[#4945FF] flex-shrink-0 mt-0.5" />
                   <span className="text-[#475569]">
-                    Start processing payments immediately with $0 monthly fees
+                    Start accepting payments right away — no monthly fees on the Free plan
                   </span>
                 </li>
               </ul>
@@ -171,17 +171,17 @@ export function ApplicationPage() {
           {/* Header */}
           <div className="text-center mb-8">
             <h1 className="text-3xl sm:text-4xl font-bold text-[#041E42] mb-3">
-              Get Started with Delt
+              Open your Delt account
             </h1>
             <p className="text-lg text-[#475569]">
-              Complete this quick application to start processing payments
+              Takes about 3 minutes. No credit check to apply.
             </p>
           </div>
 
           {/* Application Form */}
           <div className="bg-white rounded-2xl shadow-xl p-8 md:p-10">
             <form onSubmit={handleFormSubmit} className="space-y-6">
-              {/* Business Name */}
+              {/* Business name/}
               <div>
                 <label htmlFor="businessName" className="block text-sm font-semibold text-[#041E42] mb-2">
                   Business Name *
@@ -203,7 +203,7 @@ export function ApplicationPage() {
                 </div>
               </div>
 
-              {/* Full Name */}
+              {/* Your name/}
               <div>
                 <label htmlFor="fullName" className="block text-sm font-semibold text-[#041E42] mb-2">
                   Full Name *
@@ -228,7 +228,7 @@ export function ApplicationPage() {
               {/* Email */}
               <div>
                 <label htmlFor="email" className="block text-sm font-semibold text-[#041E42] mb-2">
-                  Email Address *
+                  Business email
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -250,7 +250,7 @@ export function ApplicationPage() {
               {/* Phone */}
               <div>
                 <label htmlFor="phone" className="block text-sm font-semibold text-[#041E42] mb-2">
-                  Phone Number *
+                  Phone number
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -269,7 +269,7 @@ export function ApplicationPage() {
                 </div>
               </div>
 
-              {/* Business Type */}
+              {/* Business structure/}
               <div>
                 <label htmlFor="businessType" className="block text-sm font-semibold text-[#041E42] mb-2">
                   Business Type *
@@ -293,8 +293,7 @@ export function ApplicationPage() {
               {/* Info Box */}
               <div className="bg-[#F6F7FB] rounded-lg p-4 border-l-4 border-[#4945FF]">
                 <p className="text-sm text-[#475569]">
-                  <strong className="text-[#041E42]">Next step:</strong> After submitting this form, 
-                  you'll securely connect your bank account using Plaid to verify your business.
+                  <strong className="text-[#041E42]">Almost done:</strong> After you submit, you'll securely connect your bank account so we can verify your business.
                 </p>
               </div>
 
@@ -309,18 +308,18 @@ export function ApplicationPage() {
                 type="submit"
                 className="w-full bg-[#4945FF] text-white py-4 rounded-lg font-semibold hover:bg-[#3933CC] transition-all text-lg"
               >
-                Continue to Bank Verification
+                Continue — connect your bank
               </button>
 
               {/* Trust Signals */}
               <div className="flex items-center justify-center gap-8 pt-4 text-sm text-[#475569]">
                 <div className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-[#4945FF]" />
-                  <span>Secure & Encrypted</span>
+                  <span>Secure & encrypted</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-[#4945FF]" />
-                  <span>Transparent Fees</span>
+                  <span>No hidden fees</span>
                 </div>
               </div>
             </form>

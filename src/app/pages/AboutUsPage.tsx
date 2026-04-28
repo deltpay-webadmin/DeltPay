@@ -12,33 +12,33 @@ const HAIRLINE  = 'rgba(4,30,66,0.08)';
 
 /* ─── Data ───────────────────────────────────────────── */
 const STATS = [
-  { value: '<1 Day',  label: 'Go live on Payments',        sub: 'Median onboarding' },
-  { value: '$847',    label: 'Avg. monthly savings',       sub: 'vs. Square / Stripe' },
+  { value: '<1 Day',  label: 'Live on day one',             sub: 'Median from signup to first sale' },
+  { value: '$847',    label: 'Avg. monthly savings',       sub: 'vs. Square & Stripe' },
   { value: '$50M',    label: 'Capital deployed',           sub: 'Since 2019' },
-  { value: '97%',     label: 'Merchant retention',         sub: 'Twelve-month' },
+  { value: '97%',     label: 'Owner retention',            sub: 'Twelve-month' },
 ];
 
 const LEADERS = [
-  { name: 'Avery Chen',      title: 'Chief Executive Officer',  initials: 'AC', bio: 'Former founder of two SMB fintechs; ran ops at Block.' },
-  { name: 'Priya Patel',     title: 'Chief Financial Officer',  initials: 'PP', bio: 'Finance lead at Plaid and Robinhood; CPA.' },
-  { name: 'Marcus Webb',     title: 'Chief Technology Officer', initials: 'MW', bio: 'Payments infra at Stripe; built risk & ledger stacks.' },
-  { name: 'Elena Rodriguez', title: 'Chief Operating Officer',  initials: 'ER', bio: 'Scaled ops teams at DoorDash and Toast.' },
-  { name: 'Daniel Kim',      title: 'Chief Product Officer',    initials: 'DK', bio: 'Designed Lens AI; ex-Figma, ex-Linear.' },
-  { name: 'Zara Okafor',     title: 'Chief Marketing Officer',  initials: 'ZO', bio: 'Brand lead at Shopify merchant & small-biz orgs.' },
+  { name: 'Avery Chen',      title: 'Chief Executive Officer',  initials: 'AC', bio: 'Started two businesses before building Delt; led payments operations at Block.' },
+  { name: 'Priya Patel',     title: 'Chief Financial Officer',  initials: 'PP', bio: 'Finance lead at Plaid and Robinhood; CPA. Keeps the books honest.' },
+  { name: 'Marcus Webb',     title: 'Chief Technology Officer', initials: 'MW', bio: 'Built payments infrastructure at Stripe including risk and ledger systems.' },
+  { name: 'Elena Rodriguez', title: 'Chief Operating Officer',  initials: 'ER', bio: 'Scaled support and operations at DoorDash and Toast.' },
+  { name: 'Daniel Kim',      title: 'Chief Product Officer',    initials: 'DK', bio: 'Designed Lens AI. Former product lead at Figma and Linear.' },
+  { name: 'Zara Okafor',     title: 'Chief Marketing Officer',  initials: 'ZO', bio: 'Built brand strategy for Shopify and small-business organizations.' },
 ];
 
 const VALUES = [
-  { icon: Heart,       title: 'Operators first.',     description: 'Every product decision starts with one question: does this make running a business easier?' },
-  { icon: Compass,     title: 'Honest by default.',   description: 'We tell merchants the truth about fees, terms, and eligibility — even when it costs us the deal.' },
-  { icon: ShieldCheck, title: 'Secure by design.',    description: 'Security is baked into every layer, not bolted on after. PCI, SOC 2, and passkeys are table stakes.' },
-  { icon: Rocket,      title: 'Ship weekly.',         description: 'Momentum compounds. Our changelog is our north star — something ships every Friday.' },
+  { icon: Heart,       title: 'Owner first.',     description: 'Every product decision starts with one question: does this make running a business easier for the owner?' },
+  { icon: Compass,     title: 'Honest by default.',   description: 'We tell business owners the truth about fees, terms, and who qualifies — even when it costs us the sale.' },
+  { icon: ShieldCheck, title: 'Secure by design.',    description: 'Security is built into every layer, not added as an afterthought. PCI-compliant and SOC 2 certified.' },
+  { icon: Rocket,      title: 'Ship weekly.',         description: 'We ship new features every week. Check the changelog and you\'ll see.' },
 ];
 
 const PRESS = ['Forbes', 'TechCrunch', 'The Information', 'Axios', 'Bloomberg', 'Inc.'];
 
 const COMPANY_FACTS = [
   { icon: Building2, label: 'Headquartered',   value: 'New York City' },
-  { icon: Users,     label: 'People',          value: '180 and growing' },
+  { icon: Users,     label: 'Team',            value: '180 and growing' },
   { icon: MapPin,    label: 'Remote-first',    value: 'Americas & Europe' },
 ];
 
@@ -216,7 +216,7 @@ export function AboutUsPage() {
               color: WHITE,
             }}
           >
-            Building the economic backbone
+            Building tools for the people who keep the economy running
             <br />
             of{' '}
             <span
@@ -236,7 +236,7 @@ export function AboutUsPage() {
             className="mt-8 text-lg md:text-xl max-w-2xl leading-relaxed"
             style={{ color: 'rgba(255,255,255,0.72)' }}
           >
-            Delt exists because running a business is already hard enough. We handle the payments, the capital, the website, the books — so operators can focus on the work they actually love.
+            Delt exists because running a business is already hard enough. We handle payments, capital, your website, and your numbers — so you can focus on the work you actually love.
           </p>
 
           <div className="mt-10 flex flex-wrap items-center gap-4">
@@ -331,7 +331,7 @@ export function AboutUsPage() {
 
           <div className="flex flex-col gap-7 text-[17px] leading-[1.7]" style={{ color: '#334155' }}>
             <p>
-              Delt was founded in 2019 by a team of former small-business operators who were tired of stitching together seven different tools to run a single shop. We started with payments — fast, fair, transparent — and kept hearing the same thing from our first thousand merchants: <em>&ldquo;Great, what else can you do?&rdquo;</em>
+              Delt was founded in 2019 by people who had run small businesses and were tired of using seven different tools just to manage one shop. We started with payments — fast, fair, transparent — and kept hearing the same thing from our first thousand business owners: <em>&ldquo;Great, what else can you do?&rdquo;</em>
             </p>
 
             <figure
@@ -360,10 +360,10 @@ export function AboutUsPage() {
             </figure>
 
             <p>
-              Today we&rsquo;re 180 people headquartered in New York City, with a remote-first engineering team spread across the Americas and Europe. We serve more than 10,000 businesses — restaurants, salons, gyms, retailers, and professional-services firms — processing over $2 billion in annual volume.
+              Today we’re 180 people headquartered in New York City, with a remote-first team across the Americas and Europe. We serve more than 10,000 businesses — restaurants, salons, gyms, retail shops, and service businesses — processing over $2 billion in annual card sales.
             </p>
             <p>
-              We&rsquo;ve expanded from payments into working capital, a website builder, an AI business advisor (Lens), and a full point-of-sale stack. The surface area has grown; the mission hasn&rsquo;t changed. Make the back office disappear so operators can focus on the work they actually love.
+              We’ve grown from payments into working capital, a website builder, an AI business advisor called Lens, and a full POS stack. The product has grown; the mission hasn’t changed. Make the back office invisible so business owners can focus on the work they actually love.
             </p>
           </div>
         </div>
@@ -391,7 +391,7 @@ export function AboutUsPage() {
               </h2>
             </div>
             <p className="text-sm max-w-md" style={{ color: MUTED }}>
-              Operators, engineers, and designers who&rsquo;ve scaled consumer fintech, payments infra, and merchant tools.
+              Former operators, engineers, and designers who’ve built and scaled payments products.
             </p>
           </div>
 
@@ -481,7 +481,7 @@ export function AboutUsPage() {
             Come build with us.
           </h2>
           <p className="mt-5 text-lg leading-relaxed" style={{ color: MUTED }}>
-            We&rsquo;re hiring across engineering, product, design, and go-to-market. Remote-friendly, competitive comp, real equity.
+            We’re hiring in engineering, product, design, and sales. Remote-friendly, competitive pay, real equity.
           </p>
           <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
             <a

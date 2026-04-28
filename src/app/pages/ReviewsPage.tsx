@@ -10,10 +10,10 @@ const MUTED  = '#475569';
 
 /* ─── Data ───────────────────────────────────────────── */
 const STATS = [
-  { value: '10,000+',  label: 'Businesses', icon: TrendingUp },
+  { value: '10,000+',  label: 'Businesses on Delt', icon: TrendingUp },
   { value: '$50M+',    label: 'Capital deployed', icon: DollarSign },
-  { value: '4.9/5',    label: 'Avg rating', icon: Star },
-  { value: '97%',      label: 'Retention', icon: Clock },
+  { value: '4.9/5',    label: 'Average rating', icon: Star },
+  { value: '97%',      label: 'Owner retention', icon: Clock },
 ];
 
 type Theme = 'hardware' | 'cafe' | 'bakery' | 'wellness' | 'auto' | 'restaurant' | 'retail' | 'salon' | 'dental' | 'office' | 'books' | 'fitness' | 'flowers';
@@ -31,7 +31,7 @@ interface Testimonial {
 
 const TESTIMONIALS: Testimonial[] = [
   {
-    quote: "Switching to Delt Payments took an afternoon. We went from T+3 settlements to same-day deposits and haven't looked back.",
+    quote: "Switching to Delt took an afternoon. We went from 3-day waits to same-day deposits and haven't looked back.",
     name: 'Carlos Mendez',
     role: 'Owner',
     business: 'Northside Auto',
@@ -367,10 +367,10 @@ export function ReviewsPage() {
                   letterSpacing: '-0.025em',
                 }}
               >
-                Trusted by the businesses we serve.
+                Trusted by the business owners we serve.
               </h1>
               <p className="text-lg max-w-xl mb-8" style={{ color: MUTED, lineHeight: 1.55 }}>
-                Thousands of merchants run their shops on Delt. Here are a few of their stories — raw, unedited, and in their own words.
+                Thousands of business owners run their shops on Delt. Here are some of their stories — unedited, in their own words.
               </p>
               <div className="flex items-center gap-3">
                 <a
@@ -385,7 +385,7 @@ export function ReviewsPage() {
                   className="inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold border"
                   style={{ borderColor: `${NAVY}1A`, color: NAVY, background: WHITE }}
                 >
-                  Submit your story
+                  Share your story
                 </a>
               </div>
               {/* Hero stars strip */}
@@ -446,7 +446,7 @@ export function ReviewsPage() {
             By the numbers
           </p>
           <h2 className="text-3xl font-bold tracking-tight text-center mb-10" style={{ color: NAVY, letterSpacing: '-0.02em' }}>
-            Real scale, real results.
+            Real numbers, real businesses.
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {STATS.map(s => <StatTile key={s.label} {...s} />)}
@@ -500,7 +500,7 @@ export function ReviewsPage() {
                   letterSpacing: '-0.015em',
                 }}
               >
-                "Our payout hits the bank before the coffee&apos;s brewed. We've tried every processor out there — Delt is the only one that understands what a small business actually needs."
+                "Our deposit hits the bank before the coffee's brewed. We've tried every processor out there — Delt is the only one that actually gets what a small business needs."
               </p>
               <div className="flex items-center gap-4 relative">
                 <div
@@ -524,10 +524,10 @@ export function ReviewsPage() {
             Reviews
           </p>
           <h2 className="text-4xl font-bold tracking-tight mb-3" style={{ color: NAVY, letterSpacing: '-0.025em' }}>
-            What merchants are saying
+            What business owners are saying
           </h2>
           <p className="mb-12 max-w-2xl" style={{ color: MUTED, fontSize: 16 }}>
-            From hardware stores to yoga studios — real operators, real numbers.
+            From hardware stores to yoga studios — real owners, real results.
           </p>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {TESTIMONIALS.map(t => <TestimonialCard key={t.name} t={t} />)}
@@ -544,11 +544,11 @@ export function ReviewsPage() {
                 Case studies
               </p>
               <h2 className="text-4xl font-bold tracking-tight" style={{ color: NAVY, letterSpacing: '-0.025em' }}>
-                Deep dives
+                How they did it
               </h2>
             </div>
             <a href="#" className="inline-flex items-center gap-1.5 text-sm font-semibold" style={{ color: PURPLE }}>
-              View all stories <ArrowRight size={14} />
+              See all stories <ArrowRight size={14} />
             </a>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -569,7 +569,7 @@ export function ReviewsPage() {
             Trusted by thousands
           </p>
           <h2 className="text-3xl font-bold tracking-tight text-center mb-12" style={{ color: NAVY, letterSpacing: '-0.02em' }}>
-            The businesses on Delt.
+            Some of the businesses on Delt.
           </h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
             {LOGOS.map(logo => (
@@ -588,13 +588,13 @@ export function ReviewsPage() {
       >
         <div className="max-w-2xl mx-auto">
           <p className="text-xs font-bold tracking-[0.18em] uppercase mb-4" style={{ color: PURPLE }}>
-            Your story could be next
+            Your business could be next
           </p>
           <h2 className="text-5xl font-bold tracking-tight mb-5" style={{ color: NAVY, letterSpacing: '-0.025em', lineHeight: 1.05 }}>
             Join them.
           </h2>
           <p className="mb-10 text-lg" style={{ color: MUTED }}>
-            Create a free account and see why 10,000+ businesses run on Delt.
+            Open a free account today. See why 10,000+ business owners chose Delt.
           </p>
           <div className="flex items-center justify-center gap-3 flex-wrap">
             <a
@@ -602,14 +602,14 @@ export function ReviewsPage() {
               className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl text-sm font-semibold"
               style={{ background: PURPLE, color: WHITE, boxShadow: '0 8px 24px rgba(73,69,255,0.35)' }}
             >
-              Create a free account <ArrowRight size={14} />
+              Open a free account <ArrowRight size={14} />
             </a>
             <a
               href="#"
               className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl text-sm font-semibold border"
               style={{ borderColor: `${NAVY}1A`, color: NAVY, background: WHITE }}
             >
-              Talk to sales
+              Talk to our team
             </a>
           </div>
         </div>

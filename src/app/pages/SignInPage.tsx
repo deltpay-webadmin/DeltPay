@@ -19,7 +19,7 @@ export function SignInPage() {
     // Simulated auth - replace with real endpoint
     setTimeout(() => {
       setLoading(false);
-      setError('Invalid email or password. Try signing up instead.');
+      setError('Wrong email or password. Try again, or sign up for a new account.');
     }, 1000);
   };
 
@@ -54,7 +54,7 @@ export function SignInPage() {
             {/* Email Field */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-[#041E42] mb-2">
-                Email address
+                Business email
               </label>
               <div className="relative">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-[#94A3B8]" />
@@ -83,7 +83,7 @@ export function SignInPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full pl-12 pr-12 py-3 border-2 border-[#E2E8F0] rounded-lg focus:outline-none focus:border-[#4945FF] transition-colors text-[#041E42]"
-                  placeholder="Enter your password"
+                  placeholder="Your password"
                   required
                 />
                 <button
@@ -105,7 +105,7 @@ export function SignInPage() {
                   onChange={(e) => setRememberMe(e.target.checked)}
                   className="w-4 h-4 border-2 border-[#E2E8F0] rounded text-[#4945FF] focus:ring-[#4945FF] focus:ring-offset-0 cursor-pointer"
                 />
-                <span className="ml-2 text-sm text-[#475569]">Remember me</span>
+                <span className="ml-2 text-sm text-[#475569]">Stay signed in</span>
               </label>
               <Link to="/contact" className="text-sm font-medium text-[#4945FF] hover:text-[#3730FF] transition-colors">
                 Forgot password?
@@ -162,7 +162,7 @@ export function SignInPage() {
 
         {/* Sign Up Link */}
         <p className="text-center text-[#475569]">
-          Don't have an account?{' '}
+          Don't have an account yet?{' '}
           <Link to="/signup" className="font-semibold text-[#4945FF] hover:text-[#3730FF] transition-colors">
             Sign up for free
           </Link>

@@ -45,7 +45,7 @@ export function AboutPage() {
               letterSpacing: '-0.03em',
               marginBottom: 32
             }}>
-              We're building for the backbone of the economy.
+              We're building for the business owners who make things run.
             </h1>
           </FadeIn>
           <FadeIn delay={0.1}>
@@ -55,8 +55,7 @@ export function AboutPage() {
               color: COLORS.gray600,
               maxWidth: 720
             }}>
-              Delt exists to give small businesses the same powerful tools that enterprise companies have —
-              payments, capital, analytics, and a web presence — unified in one simple platform.
+              Delt exists to give every shop owner the same tools that big companies have — payments, capital, analytics, and a website — all in one place.
             </p>
           </FadeIn>
         </div>
@@ -86,7 +85,7 @@ export function AboutPage() {
               letterSpacing: '-0.02em',
               marginBottom: 24
             }}>
-              Level the playing field for every business owner
+              Every business owner deserves a fair shot
             </h2>
           </FadeIn>
           <FadeIn delay={0.2}>
@@ -96,18 +95,14 @@ export function AboutPage() {
               color: COLORS.gray600,
               marginBottom: 20
             }}>
-              For too long, small businesses have been forced to choose between expensive, complicated enterprise
-              software and cobbling together a dozen different tools. Delt was founded on the belief that every
-              merchant deserves technology that's powerful, transparent, and built for how they actually work.
+              For too long, small businesses had to choose between expensive, complicated software and stitching together a dozen different tools. Delt was built on one belief: every business owner deserves technology that's powerful, honest, and built for how they actually run their shop.
             </p>
             <p style={{
               fontSize: 18,
               lineHeight: 1.7,
               color: COLORS.gray600
             }}>
-              We started with a simple goal: build the operating system for modern commerce. Today, we're
-              helping thousands of businesses process payments, grow their revenue, and make smarter decisions — all
-              from one platform.
+              We started with a simple goal: put everything a business needs in one place. Today, we help thousands of business owners accept payments, access capital, and understand their numbers — without switching between apps.
             </p>
           </FadeIn>
         </div>
@@ -150,16 +145,16 @@ export function AboutPage() {
                 body: 'No hidden fees. No fine print. We publish our pricing openly and hold ourselves accountable to the standards we set.'
               },
               {
-                title: 'Merchant Obsessed',
-                body: 'Every feature we build starts with the question: does this make life easier for the people running their businesses?'
+                title: 'Owner Obsessed',
+                body: 'Every feature we build starts with one question: does this make life easier for the person running their business?'
               },
               {
                 title: 'Speed Matters',
-                body: 'Whether it\'s funding often within 48 hours or near-instant transaction insights, we believe fast is better. Your time is valuable.'
+                body: 'Whether it\'s funding often within 48 hours or same-day deposits, we believe fast matters. Your time is too valuable to wait.'
               },
               {
                 title: 'Built to Scale',
-                body: 'From your first sale to your thousandth location, Delt grows with you. One platform for every stage.'
+                body: 'From your first sale to your tenth location, Delt grows with you.'
               }
             ].map((value, i) => (
               <FadeIn key={value.title} delay={0.15 + i * 0.05}>
@@ -192,7 +187,7 @@ export function AboutPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {[
               { value: '2026', label: 'Founded' },
-              { value: '5,000+', label: 'Merchants' },
+              { value: '5,000+', label: 'Business owners' },
               { value: '$2.4B+', label: 'Processed' },
               { value: '150+', label: 'Team Members' }
             ].map((stat, i) => (
@@ -235,7 +230,7 @@ export function AboutPage() {
               letterSpacing: '-0.02em',
               marginBottom: 24
             }}>
-              Ready to grow with Delt?
+              Ready to simplify how you run your business?
             </h2>
           </FadeIn>
           <FadeIn delay={0.1}>
@@ -245,7 +240,7 @@ export function AboutPage() {
               color: COLORS.gray600,
               marginBottom: 40
             }}>
-              Join thousands of businesses building their future on our platform.
+              Join thousands of business owners who already run on Delt.
             </p>
           </FadeIn>
           <FadeIn delay={0.2}>

@@ -13,12 +13,12 @@ export function CaseStudiesPage() {
       theme: 'retail' as const,
       metric: '+180%',
       metricLabel: 'Sales Growth',
-      description: 'How a small boutique transformed their business with integrated payment processing and e-commerce tools.',
+      description: 'How a small boutique doubled down on online sales and grew fast.',
       results: [
-        'Increased online sales by 180% in 6 months',
-        'Reduced checkout abandonment by 45%',
-        'Streamlined inventory management',
-        'Expanded to 3 new locations',
+        'Online sales up 180% in 6 months',
+        '45% fewer abandoned carts',
+        'Inventory management that actually works',
+        'Opened 3 new locations',
       ],
     },
     {
@@ -30,12 +30,12 @@ export function CaseStudiesPage() {
       theme: 'restaurant' as const,
       metric: '3x',
       metricLabel: 'Order Volume',
-      description: 'A farm-to-table restaurant leveraged Delt\'s POS system and online ordering to triple their business.',
+      description: 'A farm-to-table restaurant used Delt\'s POS and online ordering to triple their order volume.',
       results: [
-        'Tripled delivery orders in first quarter',
-        'Cut payment processing time by 60%',
-        'Improved table turnover rate',
-        'Added catering revenue stream',
+        'Delivery orders tripled in the first quarter',
+        'Checkout 60% faster at the register',
+        'Better table turnover',
+        'Added a catering revenue stream',
       ],
     },
     {
@@ -47,12 +47,12 @@ export function CaseStudiesPage() {
       theme: 'office' as const,
       metric: '99%',
       metricLabel: 'On-time Payments',
-      description: 'Professional services firm automated invoicing and improved cash flow with Delt\'s business tools.',
+      description: 'A consulting firm automated billing and got paid on time, every time.',
       results: [
         '99% of invoices paid on time',
-        'Reduced admin time by 15 hours/week',
-        'Automated recurring billing',
-        'Improved client satisfaction scores',
+        '15 fewer admin hours every week',
+        'Recurring billing runs itself',
+        'Happier clients, fewer payment headaches',
       ],
     },
     {
@@ -64,12 +64,12 @@ export function CaseStudiesPage() {
       theme: 'wellness' as const,
       metric: '$50K',
       metricLabel: 'Capital Funded',
-      description: 'Spa and wellness center used Delt Capital to expand services and grow their customer base.',
+      description: 'A wellness studio got 0K in funding within 48 hours and used it to grow.',
       results: [
-        'Secured $50K funding in 48 hours',
-        'Added 3 new service rooms',
-        'Hired 5 additional staff members',
-        'Increased monthly revenue by 65%',
+        '$50K approved in under 48 hours',
+        'Added 3 treatment rooms',
+        'Hired 5 new staff',
+        'Monthly revenue up 65%',
       ],
     },
     {
@@ -81,12 +81,12 @@ export function CaseStudiesPage() {
       theme: 'salon' as const,
       metric: '250K',
       metricLabel: 'Monthly Transactions',
-      description: 'Online beauty brand scaled from startup to processing 250K monthly transactions with Delt.',
+      description: 'An online beauty brand scaled from zero to 250K monthly charges with Delt.',
       results: [
-        'Process 250K+ transactions monthly',
-        'Expanded to 12 international markets',
-        '99.9% uptime on peak sales days',
-        'Reduced fraud by 78%',
+        'Processing 250K+ charges every month',
+        'Expanded to 12 countries',
+        '99.9% uptime on their busiest sales days',
+        'Fraud down 78%',
       ],
     },
     {
@@ -98,12 +98,12 @@ export function CaseStudiesPage() {
       theme: 'hardware' as const,
       metric: '$2M',
       metricLabel: 'Annual Savings',
-      description: 'Hardware supply chain switched to Delt and saved $2M annually in payment processing fees.',
+      description: 'A 15-location hardware chain switched to Delt and saved $2M a year in processing fees.',
       results: [
-        'Saved $2M in annual processing fees',
-        'Unified 15 store locations',
-        'Real-time inventory across all stores',
-        'Improved vendor payment terms',
+        '$2M saved in processing fees each year',
+        'All 15 stores connected in one dashboard',
+        'Real-time inventory across every location',
+        'Better terms with vendors',
       ],
     },
   ];
@@ -115,10 +115,10 @@ export function CaseStudiesPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-[#041E42] mb-6">
-              Success <span className="text-[#4945FF]">stories</span>
+              Results from real <span className="text-[#4945FF]">businesses</span>
             </h1>
             <p className="text-xl text-[#475569] max-w-3xl mx-auto leading-relaxed">
-              See how businesses like yours are growing with Delt. From small startups to established enterprises, discover real results from real customers.
+              Real numbers from real business owners. See what happened when they switched to Delt.
             </p>
           </div>
         </div>
@@ -173,7 +173,7 @@ export function CaseStudiesPage() {
                   </p>
 
                   <div className="space-y-3">
-                    <h4 className="font-bold text-[#041E42]">Key Results:</h4>
+                    <h4 className="font-bold text-[#041E42]">What changed:</h4>
                     <ul className="space-y-2">
                       {study.results.map((result, resultIndex) => (
                         <li
@@ -188,7 +188,7 @@ export function CaseStudiesPage() {
                   </div>
 
                   <button className="w-full mt-6 px-6 py-3 border-2 border-[#4945FF] text-[#4945FF] rounded-lg hover:bg-[#4945FF]/8 transition-colors font-semibold">
-                    Read Full Story
+                    Read the full story
                   </button>
                   </div>
                 </div>
@@ -202,7 +202,7 @@ export function CaseStudiesPage() {
       <section className="py-6 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <p className="text-xs text-[#475569] mt-8 max-w-3xl mx-auto text-center">
-            Results described are based on individual customer experiences and may not reflect typical outcomes. Business results vary based on many factors including industry, business size, and market conditions. Delt does not guarantee specific results.
+            Results shown are based on individual customer experiences. Your results will vary depending on your industry, business size, and other factors. Delt does not guarantee specific outcomes.
           </p>
         </div>
       </section>
@@ -212,23 +212,23 @@ export function CaseStudiesPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-4xl font-bold text-white mb-6">
-              Ready to write your success story?
+              Ready to build your own results?
             </h2>
             <p className="text-xl text-white/80 mb-8">
-              Join thousands of businesses that trust Delt to power their growth.
+              Thousands of business owners already run on Delt. See what it looks like for yours.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
                 to="/apply"
                 className="px-8 py-4 bg-[#4945FF] text-white rounded-lg hover:bg-[#3730FF] transition-colors font-semibold"
               >
-                Get Started Free
+                Open a free account
               </Link>
               <Link
                 to="/contact"
                 className="px-8 py-4 bg-white text-[#041E42] rounded-lg hover:bg-[#F6F7FB] transition-colors font-semibold"
               >
-                Contact Sales
+                Talk to our team
               </Link>
             </div>
           </div>
