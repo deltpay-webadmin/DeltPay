@@ -80,7 +80,7 @@ const resourcesCTAs = [
 
 const SectionHeading = ({ children }: { children: React.ReactNode }) => (
   <div
-    className="text-[12px] font-bold uppercase text-[#94A3B8] mb-4 pl-3"
+    className="text-[13px] font-bold uppercase text-[#94A3B8] mb-4 pl-3"
     style={{ letterSpacing: '1.4px' }}
   >
     {children}
@@ -200,7 +200,7 @@ export function Navigation() {
   /* Column heading */
   const ColHeading = ({ children }: { children: React.ReactNode }) => (
     <div
-      className="text-[11px] font-bold uppercase text-[#94A3B8] mb-4"
+      className="text-[12px] font-bold uppercase text-[#94A3B8] mb-4"
       style={{ letterSpacing: '1.4px' }}
     >
       {children}
@@ -401,17 +401,17 @@ export function Navigation() {
                           </svg>
                         </div>
                         <div>
-                          <div className="text-white text-[16px] font-bold mb-0.5" style={{ letterSpacing: '-0.01em' }}>
+                          <div className="text-white text-[17px] font-bold mb-0.5" style={{ letterSpacing: '-0.01em' }}>
                             Go All-In
                           </div>
-                          <div className="text-[13px]" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                          <div className="text-[14px]" style={{ color: 'rgba(255,255,255,0.7)' }}>
                             Website + Payments + Lens AI + Capital — one plan, one price
                           </div>
                         </div>
                       </div>
                       <Link
                         to="/pricing"
-                        className="px-5 py-2.5 rounded-lg text-[14px] font-bold transition-all"
+                        className="px-5 py-2.5 rounded-lg text-[15px] font-bold transition-all"
                         style={{ 
                           background: '#4945FF',
                           color: 'white',
@@ -454,10 +454,10 @@ export function Navigation() {
                                   <IconComp className="w-5 h-5" style={{ color: ICON_COLOR }} strokeWidth={1.4} />
                                 </div>
                                 <div>
-                                  <div className="text-[15px] text-[#041E42] group-hover:text-[#4945FF] transition-colors leading-tight" style={{ fontWeight: 650 }}>
+                                  <div className="text-[16px] text-[#041E42] group-hover:text-[#4945FF] transition-colors leading-tight" style={{ fontWeight: 650 }}>
                                     {item.label}
                                   </div>
-                                  <div className="text-[13px] text-[#94A3B8] leading-snug mt-0.5">
+                                  <div className="text-[14px] text-[#475569] leading-snug mt-1">
                                     {item.description}
                                   </div>
                                 </div>
@@ -472,7 +472,7 @@ export function Navigation() {
                             <Link
                               key={link.label}
                               to={link.href}
-                              className="text-[13px] font-medium text-[#94A3B8] hover:text-[#4945FF] transition-colors"
+                              className="text-[14px] font-medium text-[#64748B] hover:text-[#4945FF] transition-colors"
                               onClick={() => setActiveDropdown(null)}
                             >
                               {link.label}
@@ -492,10 +492,10 @@ export function Navigation() {
                               className="block px-3 py-2.5 rounded-xl hover:bg-[#F6F7FB] transition-colors group"
                               onClick={() => setActiveDropdown(null)}
                             >
-                              <div className="text-[15px] text-[#041E42] group-hover:text-[#4945FF] transition-colors leading-tight" style={{ fontWeight: 600 }}>
+                              <div className="text-[16px] text-[#041E42] group-hover:text-[#4945FF] transition-colors leading-tight" style={{ fontWeight: 600 }}>
                                 {item.label}
                               </div>
-                              <div className="text-[13px] text-[#94A3B8] leading-snug mt-0.5">
+                              <div className="text-[14px] text-[#475569] leading-snug mt-1">
                                 {item.description}
                               </div>
                             </Link>
@@ -504,11 +504,11 @@ export function Navigation() {
                         <div className="mt-3 pt-3 border-t border-[#F3F4F6]">
                           <Link
                             to="/business-types"
-                            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-[14px] font-semibold text-[#4945FF] hover:bg-[#4945FF]/8 transition-colors"
+                            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-[15px] font-semibold text-[#4945FF] hover:bg-[#4945FF]/8 transition-colors"
                             onClick={() => setActiveDropdown(null)}
                           >
                             See all industries
-                            <span className="text-[13px]">→</span>
+                            <span className="text-[14px]">→</span>
                           </Link>
                         </div>
                       </div>
@@ -516,29 +516,29 @@ export function Navigation() {
                       {/* Col 3 — Featured */}
                       <div className="flex-1 flex flex-col justify-between rounded-2xl ml-4" style={{ background: '#F6F7FB', padding: '24px 28px' }}>
                         <div>
-                          <div className="text-[11px] font-bold uppercase text-[#4945FF] mb-4" style={{ letterSpacing: '1.4px' }}>
+                          <div className="text-[12px] font-bold uppercase text-[#4945FF] mb-4" style={{ letterSpacing: '1.4px' }}>
                             Featured
                           </div>
 
                           {/* Stat card */}
                           <div className="bg-white rounded-xl p-5 border border-[#4945FF]/15 mb-4">
                             <div className="text-[36px] font-extrabold text-[#4945FF] leading-none mb-1">$2.4B+</div>
-                            <div className="text-[14px] text-[#475569] leading-snug">processed by Delt merchants in the last 12 months</div>
+                            <div className="text-[15px] text-[#475569] leading-snug">processed by Delt merchants in the last 12 months</div>
                           </div>
 
                           {/* Testimonial */}
                           <div className="bg-white rounded-xl p-5 border border-[#4945FF]/15">
-                            <div className="text-[14px] text-[#475569] leading-relaxed italic mb-3">
+                            <div className="text-[15px] text-[#475569] leading-relaxed italic mb-3">
                               {`"Switched from Square — the done-for-you website alone was worth it. Then we got funded in 48 hours."`}
                             </div>
-                            <div className="text-[13px] font-semibold text-[#041E42]">Marcus R.</div>
-                            <div className="text-[12px] text-[#94A3B8]">Owner, Precision Auto Repair</div>
+                            <div className="text-[14px] font-semibold text-[#041E42]">Marcus R.</div>
+                            <div className="text-[13px] text-[#64748B]">Owner, Precision Auto Repair</div>
                           </div>
                         </div>
 
                         <Link
                           to="/apply"
-                          className="inline-flex items-center gap-1.5 text-[14px] font-bold text-[#4945FF] hover:text-[#3933CC] transition-colors mt-5"
+                          className="inline-flex items-center gap-1.5 text-[15px] font-bold text-[#4945FF] hover:text-[#3933CC] transition-colors mt-5"
                           onClick={() => setActiveDropdown(null)}
                         >
                           Get started for free <span>→</span>
@@ -583,7 +583,7 @@ export function Navigation() {
                                 </div>
                                 <div>
                                   <div className="flex items-center gap-2">
-                                    <span className="text-[14px] text-[#041E42] group-hover:text-[#4945FF] transition-colors leading-tight" style={{ fontWeight: 650 }}>
+                                    <span className="text-[15px] text-[#041E42] group-hover:text-[#4945FF] transition-colors leading-tight" style={{ fontWeight: 650 }}>
                                       {item.label}
                                     </span>
                                     {'badge' in item && item.badge && (
@@ -592,7 +592,7 @@ export function Navigation() {
                                       </span>
                                     )}
                                   </div>
-                                  <div className="text-[12px] text-[#94A3B8] leading-snug mt-0.5">{item.description}</div>
+                                  <div className="text-[13px] text-[#64748B] leading-snug mt-1">{item.description}</div>
                                 </div>
                               </Link>
                             );
@@ -617,10 +617,10 @@ export function Navigation() {
                                   <IconComp className="w-4 h-4 text-[#4945FF]" strokeWidth={1.5} />
                                 </div>
                                 <div>
-                                  <div className="text-[14px] text-[#041E42] group-hover:text-[#4945FF] transition-colors leading-tight" style={{ fontWeight: 650 }}>
+                                  <div className="text-[15px] text-[#041E42] group-hover:text-[#4945FF] transition-colors leading-tight" style={{ fontWeight: 650 }}>
                                     {item.label}
                                   </div>
-                                  <div className="text-[12px] text-[#94A3B8] leading-snug mt-0.5">{item.description}</div>
+                                  <div className="text-[13px] text-[#64748B] leading-snug mt-1">{item.description}</div>
                                 </div>
                               </Link>
                             );
@@ -645,10 +645,10 @@ export function Navigation() {
                             <IconComp className="w-5 h-5 text-white" strokeWidth={1.5} />
                           </div>
                           <div className="flex-1">
-                            <div className="text-[14px] text-[#041E42] group-hover:text-[#4945FF] transition-colors leading-tight" style={{ fontWeight: 650 }}>
+                            <div className="text-[15px] text-[#041E42] group-hover:text-[#4945FF] transition-colors leading-tight" style={{ fontWeight: 650 }}>
                               {item.label}
                             </div>
-                            <div className="text-[12px] text-[#94A3B8] leading-snug mt-0.5">{item.description}</div>
+                            <div className="text-[13px] text-[#64748B] leading-snug mt-1">{item.description}</div>
                           </div>
                           <ChevronRight className="w-4 h-4 text-[#C4C4C4] group-hover:text-[#4945FF] transition-colors flex-shrink-0" />
                         </Link>

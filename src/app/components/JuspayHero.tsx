@@ -432,20 +432,20 @@ export function JuspayHero() {
 
         .ih-subtitle {
           font-family: 'Plus Jakarta Sans', sans-serif;
-          font-size: 18px;
-          line-height: 1.75;
-          color: rgba(255,255,255,0.7);
-          max-width: 460px;
+          font-size: 19px;
+          line-height: 1.7;
+          color: rgba(255,255,255,0.82);
+          max-width: 480px;
           margin: 0 0 0;
           text-align: left;
         }
 
         .ih-subtitle-ai {
           font-family: 'Plus Jakarta Sans', sans-serif;
-          font-size: 18px;
-          line-height: 1.75;
-          color: rgba(255,255,255,0.7);
-          max-width: 460px;
+          font-size: 19px;
+          line-height: 1.7;
+          color: rgba(255,255,255,0.82);
+          max-width: 480px;
           margin: 20px 0 48px;
           text-align: left;
         }
@@ -513,10 +513,11 @@ export function JuspayHero() {
           font-family: 'Plus Jakarta Sans', sans-serif;
           font-size: 16px;
           line-height: 1.5;
-          color: rgba(255,255,255,0.5);
-          max-width: 460px;
-          margin: 20px 0 0;
+          color: rgba(255,255,255,0.72);
+          max-width: 480px;
+          margin: 24px 0 0;
           text-align: left;
+          font-weight: 500;
         }
 
         .ih-social-proof-dot {
@@ -558,9 +559,10 @@ export function JuspayHero() {
 
         .ih-trust-label {
           font-family: 'Plus Jakarta Sans', sans-serif;
-          font-size: 13px;
-          color: rgba(255,255,255,0.4);
-          letter-spacing: 0.08em;
+          font-size: 14px;
+          font-weight: 600;
+          color: rgba(255,255,255,0.6);
+          letter-spacing: 0.1em;
           text-transform: uppercase;
         }
 
@@ -578,9 +580,9 @@ export function JuspayHero() {
 
         .ih-trust-item {
           font-family: 'Plus Jakarta Sans', sans-serif;
-          font-size: 19px;
+          font-size: 20px;
           font-weight: 700;
-          color: rgba(255,255,255,0.25);
+          color: rgba(255,255,255,0.45);
           letter-spacing: -0.01em;
           white-space: nowrap;
           padding: 0 32px;
