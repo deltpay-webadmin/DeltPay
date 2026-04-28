@@ -80,7 +80,7 @@ const resourcesCTAs = [
 
 const SectionHeading = ({ children }: { children: React.ReactNode }) => (
   <div
-    className="text-[13px] font-bold uppercase text-[#94A3B8] mb-4 pl-3"
+    className="text-[14px] font-bold uppercase text-[#94A3B8] mb-4 pl-3"
     style={{ letterSpacing: '1.4px' }}
   >
     {children}
@@ -200,7 +200,7 @@ export function Navigation() {
   /* Column heading */
   const ColHeading = ({ children }: { children: React.ReactNode }) => (
     <div
-      className="text-[12px] font-bold uppercase text-[#94A3B8] mb-4"
+      className="text-[14px] font-bold uppercase text-[#94A3B8] mb-4"
       style={{ letterSpacing: '1.4px' }}
     >
       {children}
@@ -245,7 +245,7 @@ export function Navigation() {
           >
             {/* Nav bar row */}
             <div className="px-6 xl:px-8">
-              <div className="flex justify-between items-center h-[88px]">
+              <div className="flex justify-between items-center h-[78px]">
 
                 {/* ── Left — Logo ── */}
                 <div className="flex items-center">
@@ -253,7 +253,7 @@ export function Navigation() {
                     <img
                       src={isSolid ? logoDark : logoWhite}
                       alt="Delt"
-                      className="h-[94px] m-[0px]"
+                      className="h-[82px] m-[0px]"
                       style={{
                         imageRendering: '-webkit-optimize-contrast',
                         transition: 'opacity 0.3s ease',
@@ -272,7 +272,7 @@ export function Navigation() {
                     onMouseLeave={() => closeDropdown()}
                   >
                     <button
-                      className="flex items-center gap-2 px-5 py-3 text-[23px] font-medium transition-colors whitespace-nowrap"
+                      className="flex items-center gap-2 px-4 py-2.5 text-[20px] font-medium transition-colors whitespace-nowrap"
                       style={{ color: isSolid ? '#041E42' : '#FFFFFF', transition: 'color 0.3s ease' }}
                     >
                       Solutions
@@ -283,7 +283,7 @@ export function Navigation() {
                   {/* ─── Pricing ─── */}
                   <Link
                     to="/pricing"
-                    className="px-5 py-3 text-[23px] font-medium transition-colors whitespace-nowrap"
+                    className="px-4 py-2.5 text-[20px] font-medium transition-colors whitespace-nowrap"
                     style={{ color: isSolid ? '#041E42' : '#FFFFFF', transition: 'color 0.3s ease' }}
                   >
                     Pricing
@@ -296,7 +296,7 @@ export function Navigation() {
                     onMouseLeave={() => closeDropdown()}
                   >
                     <button
-                      className="flex items-center gap-2 px-5 py-3 text-[23px] font-medium transition-colors whitespace-nowrap"
+                      className="flex items-center gap-2 px-4 py-2.5 text-[20px] font-medium transition-colors whitespace-nowrap"
                       style={{ color: isSolid ? '#041E42' : '#FFFFFF', transition: 'color 0.3s ease' }}
                     >
                       Resources
@@ -329,14 +329,14 @@ export function Navigation() {
                       whileTap={{ scale: 0.9 }}
                       transition={{ type: 'spring', stiffness: 400, damping: 17 }}
                     >
-                      <Search className="h-[26px] w-[26px]" />
+                      <Search className="h-[22px] w-[22px]" />
                     </motion.div>
                   </button>
 
                   {/* Sign In */}
                   <Link
                     to="/signin"
-                    className="hidden md:flex items-center px-5 py-2 text-[22px] font-medium transition-all whitespace-nowrap"
+                    className="hidden md:flex items-center px-4 py-2 text-[19px] font-medium transition-all whitespace-nowrap"
                     style={{
                       color: isSolid ? '#041E42' : '#FFFFFF',
                       transition: 'color 0.3s ease',
@@ -348,7 +348,7 @@ export function Navigation() {
                   {/* Contact Sales CTA */}
                   <Link
                     to="/contact-sales"
-                    className="hidden md:flex items-center gap-2 px-7 py-3.5 text-[21px] font-semibold text-white bg-[#4945FF] rounded-full hover:bg-[#3933CC] transition-colors whitespace-nowrap"
+                    className="hidden md:flex items-center gap-2 px-6 py-3 text-[18px] font-semibold text-white bg-[#4945FF] rounded-full hover:bg-[#3933CC] transition-colors whitespace-nowrap"
                   >
                     Contact sales
                     <ArrowRight className="w-5 h-5" />
@@ -361,7 +361,7 @@ export function Navigation() {
                     style={{ color: isSolid ? '#041E42' : '#FFFFFF' }}
                     aria-label="Menu"
                   >
-                    <Menu size={31} />
+                    <Menu size={28} />
                   </button>
 
                 </div>
@@ -401,17 +401,17 @@ export function Navigation() {
                           </svg>
                         </div>
                         <div>
-                          <div className="text-white text-[17px] font-bold mb-0.5" style={{ letterSpacing: '-0.01em' }}>
+                          <div className="text-white text-[18px] font-bold mb-1" style={{ letterSpacing: '-0.01em' }}>
                             Go All-In
                           </div>
-                          <div className="text-[14px]" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                          <div className="text-[15px]" style={{ color: 'rgba(255,255,255,0.78)' }}>
                             Website + Payments + Lens AI + Capital — one plan, one price
                           </div>
                         </div>
                       </div>
                       <Link
                         to="/pricing"
-                        className="px-5 py-2.5 rounded-lg text-[15px] font-bold transition-all"
+                        className="px-5 py-2.5 rounded-lg text-[16px] font-bold transition-all"
                         style={{ 
                           background: '#4945FF',
                           color: 'white',
@@ -454,10 +454,10 @@ export function Navigation() {
                                   <IconComp className="w-5 h-5" style={{ color: ICON_COLOR }} strokeWidth={1.4} />
                                 </div>
                                 <div>
-                                  <div className="text-[16px] text-[#041E42] group-hover:text-[#4945FF] transition-colors leading-tight" style={{ fontWeight: 650 }}>
+                                  <div className="text-[17px] text-[#041E42] group-hover:text-[#4945FF] transition-colors leading-tight" style={{ fontWeight: 650 }}>
                                     {item.label}
                                   </div>
-                                  <div className="text-[14px] text-[#475569] leading-snug mt-1">
+                                  <div className="text-[15px] text-[#475569] leading-snug mt-1">
                                     {item.description}
                                   </div>
                                 </div>
@@ -472,7 +472,7 @@ export function Navigation() {
                             <Link
                               key={link.label}
                               to={link.href}
-                              className="text-[14px] font-medium text-[#64748B] hover:text-[#4945FF] transition-colors"
+                              className="text-[15px] font-medium text-[#64748B] hover:text-[#4945FF] transition-colors"
                               onClick={() => setActiveDropdown(null)}
                             >
                               {link.label}
@@ -492,10 +492,10 @@ export function Navigation() {
                               className="block px-3 py-2.5 rounded-xl hover:bg-[#F6F7FB] transition-colors group"
                               onClick={() => setActiveDropdown(null)}
                             >
-                              <div className="text-[16px] text-[#041E42] group-hover:text-[#4945FF] transition-colors leading-tight" style={{ fontWeight: 600 }}>
+                              <div className="text-[17px] text-[#041E42] group-hover:text-[#4945FF] transition-colors leading-tight" style={{ fontWeight: 600 }}>
                                 {item.label}
                               </div>
-                              <div className="text-[14px] text-[#475569] leading-snug mt-1">
+                              <div className="text-[15px] text-[#475569] leading-snug mt-1">
                                 {item.description}
                               </div>
                             </Link>
@@ -504,11 +504,11 @@ export function Navigation() {
                         <div className="mt-3 pt-3 border-t border-[#F3F4F6]">
                           <Link
                             to="/business-types"
-                            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-[15px] font-semibold text-[#4945FF] hover:bg-[#4945FF]/8 transition-colors"
+                            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-[16px] font-semibold text-[#4945FF] hover:bg-[#4945FF]/8 transition-colors"
                             onClick={() => setActiveDropdown(null)}
                           >
                             See all industries
-                            <span className="text-[14px]">→</span>
+                            <span className="text-[15px]">→</span>
                           </Link>
                         </div>
                       </div>
@@ -516,7 +516,7 @@ export function Navigation() {
                       {/* Col 3 — Specialized solutions */}
                       <div className="flex-1 flex flex-col justify-between rounded-2xl ml-4" style={{ background: '#F6F7FB', padding: '24px 28px' }}>
                         <div>
-                          <div className="text-[12px] font-bold uppercase text-[#4945FF] mb-4" style={{ letterSpacing: '1.4px' }}>
+                          <div className="text-[13px] font-bold uppercase text-[#4945FF] mb-4" style={{ letterSpacing: '1.4px' }}>
                             Specialized
                           </div>
 
@@ -534,13 +534,13 @@ export function Navigation() {
                                 <Globe2 className="w-5 h-5 text-[#4945FF]" strokeWidth={1.6} />
                               </div>
                               <div className="flex-1">
-                                <div className="text-[15px] font-bold text-[#041E42] group-hover:text-[#4945FF] transition-colors leading-tight mb-1">
+                                <div className="text-[16px] font-bold text-[#041E42] group-hover:text-[#4945FF] transition-colors leading-tight mb-1">
                                   Same-Day International Payments
                                 </div>
-                                <div className="text-[13px] text-[#475569] leading-snug">
+                                <div className="text-[14px] text-[#475569] leading-snug">
                                   Pay suppliers abroad instantly — no wire delays, no bank fees.
                                 </div>
-                                <div className="text-[12px] font-semibold text-[#4945FF] mt-2 inline-flex items-center gap-1">
+                                <div className="text-[13px] font-semibold text-[#4945FF] mt-2 inline-flex items-center gap-1">
                                   Learn more <span>→</span>
                                 </div>
                               </div>
@@ -561,13 +561,13 @@ export function Navigation() {
                                 <ShieldAlert className="w-5 h-5 text-[#4945FF]" strokeWidth={1.6} />
                               </div>
                               <div className="flex-1">
-                                <div className="text-[15px] font-bold text-[#041E42] group-hover:text-[#4945FF] transition-colors leading-tight mb-1">
+                                <div className="text-[16px] font-bold text-[#041E42] group-hover:text-[#4945FF] transition-colors leading-tight mb-1">
                                   High Risk Processing
                                 </div>
-                                <div className="text-[13px] text-[#475569] leading-snug">
+                                <div className="text-[14px] text-[#475569] leading-snug">
                                   Shut down by your processor? We approve every high-risk vertical — custom rates, rate match, rate compare.
                                 </div>
-                                <div className="text-[12px] font-semibold text-[#4945FF] mt-2 inline-flex items-center gap-1">
+                                <div className="text-[13px] font-semibold text-[#4945FF] mt-2 inline-flex items-center gap-1">
                                   Learn more <span>→</span>
                                 </div>
                               </div>
@@ -577,7 +577,7 @@ export function Navigation() {
 
                         <Link
                           to="/apply"
-                          className="inline-flex items-center gap-1.5 text-[15px] font-bold text-[#4945FF] hover:text-[#3933CC] transition-colors mt-5"
+                          className="inline-flex items-center gap-1.5 text-[16px] font-bold text-[#4945FF] hover:text-[#3933CC] transition-colors mt-5"
                           onClick={() => setActiveDropdown(null)}
                         >
                           Get started for free <span>→</span>
@@ -622,7 +622,7 @@ export function Navigation() {
                                 </div>
                                 <div>
                                   <div className="flex items-center gap-2">
-                                    <span className="text-[15px] text-[#041E42] group-hover:text-[#4945FF] transition-colors leading-tight" style={{ fontWeight: 650 }}>
+                                    <span className="text-[16px] text-[#041E42] group-hover:text-[#4945FF] transition-colors leading-tight" style={{ fontWeight: 650 }}>
                                       {item.label}
                                     </span>
                                     {'badge' in item && item.badge && (
@@ -631,7 +631,7 @@ export function Navigation() {
                                       </span>
                                     )}
                                   </div>
-                                  <div className="text-[13px] text-[#64748B] leading-snug mt-1">{item.description}</div>
+                                  <div className="text-[14px] text-[#475569] leading-snug mt-1">{item.description}</div>
                                 </div>
                               </Link>
                             );
@@ -656,10 +656,10 @@ export function Navigation() {
                                   <IconComp className="w-4 h-4 text-[#4945FF]" strokeWidth={1.5} />
                                 </div>
                                 <div>
-                                  <div className="text-[15px] text-[#041E42] group-hover:text-[#4945FF] transition-colors leading-tight" style={{ fontWeight: 650 }}>
+                                  <div className="text-[16px] text-[#041E42] group-hover:text-[#4945FF] transition-colors leading-tight" style={{ fontWeight: 650 }}>
                                     {item.label}
                                   </div>
-                                  <div className="text-[13px] text-[#64748B] leading-snug mt-1">{item.description}</div>
+                                  <div className="text-[14px] text-[#475569] leading-snug mt-1">{item.description}</div>
                                 </div>
                               </Link>
                             );
@@ -684,10 +684,10 @@ export function Navigation() {
                             <IconComp className="w-5 h-5 text-white" strokeWidth={1.5} />
                           </div>
                           <div className="flex-1">
-                            <div className="text-[15px] text-[#041E42] group-hover:text-[#4945FF] transition-colors leading-tight" style={{ fontWeight: 650 }}>
+                            <div className="text-[16px] text-[#041E42] group-hover:text-[#4945FF] transition-colors leading-tight" style={{ fontWeight: 650 }}>
                               {item.label}
                             </div>
-                            <div className="text-[13px] text-[#64748B] leading-snug mt-1">{item.description}</div>
+                            <div className="text-[14px] text-[#475569] leading-snug mt-1">{item.description}</div>
                           </div>
                           <ChevronRight className="w-4 h-4 text-[#C4C4C4] group-hover:text-[#4945FF] transition-colors flex-shrink-0" />
                         </Link>
