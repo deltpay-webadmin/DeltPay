@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Search, X, ArrowRight, Globe, CreditCard, DollarSign, BarChart3, Star, User, AlignLeft, HelpCircle, LayoutDashboard, Calculator, ChevronRight, Menu, ChevronDown, Globe2, ShieldAlert } from 'lucide-react';
+import { Search, X, ArrowRight, Globe, CreditCard, DollarSign, BarChart3, Star, User, AlignLeft, HelpCircle, LayoutDashboard, Calculator, ChevronRight, Menu, ChevronDown, Globe2, ShieldAlert, ShieldCheck } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router';
 import logoImage from 'figma:asset/61527edee0ea2e963bace756584cec3657b62f9e.png';
 import logoWhite from 'figma:asset/419e83442bb1bf5965a966a8870b00dd4288dd57.png';
@@ -513,11 +513,11 @@ export function Navigation() {
                         </div>
                       </div>
 
-                      {/* Col 3 — Specialized solutions */}
+                      {/* Col 3 — More from Delt (additional offerings) */}
                       <div className="flex-1 flex flex-col justify-between rounded-2xl ml-4" style={{ background: '#F6F7FB', padding: '24px 28px' }}>
                         <div>
                           <div className="text-[14px] font-bold uppercase text-[#4945FF] mb-5" style={{ letterSpacing: '1.4px' }}>
-                            Specialized
+                            More from Delt
                           </div>
 
                           {/* International USDT card */}
@@ -551,7 +551,7 @@ export function Navigation() {
                           <Link
                             to="/solutions/high-risk-processing"
                             onClick={() => setActiveDropdown(null)}
-                            className="block bg-white rounded-xl p-5 border border-[#4945FF]/15 hover:border-[#4945FF]/40 hover:shadow-sm transition-all group"
+                            className="block bg-white rounded-xl p-5 border border-[#4945FF]/15 mb-4 hover:border-[#4945FF]/40 hover:shadow-sm transition-all group"
                           >
                             <div className="flex items-start gap-3">
                               <div
@@ -566,6 +566,33 @@ export function Navigation() {
                                 </div>
                                 <div className="text-[15px] text-[#475569] leading-snug">
                                   Shut down by your processor? We approve every high-risk vertical — custom rates, rate match, rate compare.
+                                </div>
+                                <div className="text-[14px] font-semibold text-[#4945FF] mt-2 inline-flex items-center gap-1">
+                                  Learn more <span>→</span>
+                                </div>
+                              </div>
+                            </div>
+                          </Link>
+
+                          {/* Chargeback Management card */}
+                          <Link
+                            to="/solutions/chargeback-management"
+                            onClick={() => setActiveDropdown(null)}
+                            className="block bg-white rounded-xl p-5 border border-[#4945FF]/15 hover:border-[#4945FF]/40 hover:shadow-sm transition-all group"
+                          >
+                            <div className="flex items-start gap-3">
+                              <div
+                                className="w-11 h-11 rounded-lg flex items-center justify-center flex-shrink-0"
+                                style={{ backgroundColor: 'rgba(73,69,255,0.10)' }}
+                              >
+                                <ShieldCheck className="w-[22px] h-[22px] text-[#4945FF]" strokeWidth={1.6} />
+                              </div>
+                              <div className="flex-1">
+                                <div className="text-[18px] font-bold text-[#041E42] group-hover:text-[#4945FF] transition-colors leading-tight mb-1">
+                                  Chargeback Management
+                                </div>
+                                <div className="text-[15px] text-[#475569] leading-snug">
+                                  Cut chargebacks by up to 95% and win more disputes — automated alerts, AI fraud blocking, and representment.
                                 </div>
                                 <div className="text-[14px] font-semibold text-[#4945FF] mt-2 inline-flex items-center gap-1">
                                   Learn more <span>→</span>
@@ -796,6 +823,17 @@ export function Navigation() {
                               <div>
                                 <div className="font-medium text-[#041E42]">High Risk Processing</div>
                                 <div className="text-sm text-[#475569]">Custom rates for every high-risk vertical</div>
+                              </div>
+                            </Link>
+                            <Link
+                              to="/solutions/chargeback-management"
+                              onClick={() => setMobileMenuOpen(false)}
+                              className="flex items-start gap-3 p-3 rounded-lg hover:bg-[#F6F7FB] transition-colors"
+                            >
+                              <ShieldCheck size={20} className="text-[#4945FF] mt-0.5 flex-shrink-0" />
+                              <div>
+                                <div className="font-medium text-[#041E42]">Chargeback Management</div>
+                                <div className="text-sm text-[#475569]">Slash chargebacks up to 95%, win more disputes</div>
                               </div>
                             </Link>
                           </div>

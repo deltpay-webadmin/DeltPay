@@ -41,6 +41,7 @@ import { IndustryPage } from '@/app/pages/IndustryPage';
 import { LensDemoPage } from '@/app/pages/LensDemoPage';
 import { InternationalUSDTPage } from '@/app/pages/InternationalUSDTPage';
 import { HighRiskProcessingPage } from '@/app/pages/HighRiskProcessingPage';
+import { ChargebackManagementPage } from '@/app/pages/ChargebackManagementPage';
 
 /* App root - v2 */
 export default function App() {
@@ -93,6 +94,7 @@ export default function App() {
                 <Route path="/lens-demo" element={<LensDemoPage />} />
                 <Route path="/solutions/international-usdt" element={<InternationalUSDTPage />} />
                 <Route path="/solutions/high-risk-processing" element={<HighRiskProcessingPage />} />
+                <Route path="/solutions/chargeback-management" element={<ChargebackManagementPage />} />
               </Routes>
               <Footer />
             </div>
