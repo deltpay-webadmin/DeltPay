@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Search, X, ArrowRight, Globe, CreditCard, DollarSign, BarChart3, Star, User, AlignLeft, HelpCircle, LayoutDashboard, Calculator, ChevronRight, Menu, ChevronDown } from 'lucide-react';
+import { Search, X, ArrowRight, Globe, CreditCard, DollarSign, BarChart3, Star, User, AlignLeft, HelpCircle, LayoutDashboard, Calculator, ChevronRight, Menu, ChevronDown, Globe2, ShieldAlert } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router';
 import logoImage from 'figma:asset/61527edee0ea2e963bace756584cec3657b62f9e.png';
 import logoWhite from 'figma:asset/419e83442bb1bf5965a966a8870b00dd4288dd57.png';
@@ -513,27 +513,66 @@ export function Navigation() {
                         </div>
                       </div>
 
-                      {/* Col 3 — Featured */}
+                      {/* Col 3 — Specialized solutions */}
                       <div className="flex-1 flex flex-col justify-between rounded-2xl ml-4" style={{ background: '#F6F7FB', padding: '24px 28px' }}>
                         <div>
                           <div className="text-[11px] font-bold uppercase text-[#4945FF] mb-4" style={{ letterSpacing: '1.4px' }}>
-                            Featured
+                            Specialized
                           </div>
 
-                          {/* Stat card */}
-                          <div className="bg-white rounded-xl p-5 border border-[#4945FF]/15 mb-4">
-                            <div className="text-[36px] font-extrabold text-[#4945FF] leading-none mb-1">$2.4B+</div>
-                            <div className="text-[14px] text-[#475569] leading-snug">processed by Delt merchants in the last 12 months</div>
-                          </div>
-
-                          {/* Testimonial */}
-                          <div className="bg-white rounded-xl p-5 border border-[#4945FF]/15">
-                            <div className="text-[14px] text-[#475569] leading-relaxed italic mb-3">
-                              {`"Switched from Square — the done-for-you website alone was worth it. Then we got funded in 48 hours."`}
+                          {/* International USDT card */}
+                          <Link
+                            to="/solutions/international-usdt"
+                            onClick={() => setActiveDropdown(null)}
+                            className="block bg-white rounded-xl p-5 border border-[#4945FF]/15 mb-4 hover:border-[#4945FF]/40 hover:shadow-sm transition-all group"
+                          >
+                            <div className="flex items-start gap-3">
+                              <div
+                                className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                                style={{ backgroundColor: 'rgba(73,69,255,0.10)' }}
+                              >
+                                <Globe2 className="w-5 h-5 text-[#4945FF]" strokeWidth={1.6} />
+                              </div>
+                              <div className="flex-1">
+                                <div className="text-[14px] font-bold text-[#041E42] group-hover:text-[#4945FF] transition-colors leading-tight mb-1">
+                                  International USDT Payments
+                                </div>
+                                <div className="text-[12px] text-[#475569] leading-snug">
+                                  Same-day cross-border settlement for wholesalers — powered by Shield.
+                                </div>
+                                <div className="text-[11px] font-semibold text-[#4945FF] mt-2 inline-flex items-center gap-1">
+                                  Learn more <span>→</span>
+                                </div>
+                              </div>
                             </div>
-                            <div className="text-[13px] font-semibold text-[#041E42]">Marcus R.</div>
-                            <div className="text-[12px] text-[#94A3B8]">Owner, Precision Auto Repair</div>
-                          </div>
+                          </Link>
+
+                          {/* High Risk card */}
+                          <Link
+                            to="/solutions/high-risk-processing"
+                            onClick={() => setActiveDropdown(null)}
+                            className="block bg-white rounded-xl p-5 border border-[#4945FF]/15 hover:border-[#4945FF]/40 hover:shadow-sm transition-all group"
+                          >
+                            <div className="flex items-start gap-3">
+                              <div
+                                className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                                style={{ backgroundColor: 'rgba(73,69,255,0.10)' }}
+                              >
+                                <ShieldAlert className="w-5 h-5 text-[#4945FF]" strokeWidth={1.6} />
+                              </div>
+                              <div className="flex-1">
+                                <div className="text-[14px] font-bold text-[#041E42] group-hover:text-[#4945FF] transition-colors leading-tight mb-1">
+                                  High Risk Processing
+                                </div>
+                                <div className="text-[12px] text-[#475569] leading-snug">
+                                  Shut down by your processor? We approve every high-risk vertical — custom rates, rate match, rate compare.
+                                </div>
+                                <div className="text-[11px] font-semibold text-[#4945FF] mt-2 inline-flex items-center gap-1">
+                                  Learn more <span>→</span>
+                                </div>
+                              </div>
+                            </div>
+                          </Link>
                         </div>
 
                         <Link
@@ -736,6 +775,30 @@ export function Navigation() {
                               </Link>
                             );
                           })}
+                          <div className="pt-2 mt-2 border-t border-gray-200 space-y-1">
+                            <Link
+                              to="/solutions/international-usdt"
+                              onClick={() => setMobileMenuOpen(false)}
+                              className="flex items-start gap-3 p-3 rounded-lg hover:bg-[#F6F7FB] transition-colors"
+                            >
+                              <Globe2 size={20} className="text-[#4945FF] mt-0.5 flex-shrink-0" />
+                              <div>
+                                <div className="font-medium text-[#041E42]">International USDT Payments</div>
+                                <div className="text-sm text-[#475569]">Same-day settlement — powered by Shield</div>
+                              </div>
+                            </Link>
+                            <Link
+                              to="/solutions/high-risk-processing"
+                              onClick={() => setMobileMenuOpen(false)}
+                              className="flex items-start gap-3 p-3 rounded-lg hover:bg-[#F6F7FB] transition-colors"
+                            >
+                              <ShieldAlert size={20} className="text-[#4945FF] mt-0.5 flex-shrink-0" />
+                              <div>
+                                <div className="font-medium text-[#041E42]">High Risk Processing</div>
+                                <div className="text-sm text-[#475569]">Custom rates for every high-risk vertical</div>
+                              </div>
+                            </Link>
+                          </div>
                           <div className="pt-2 mt-2 border-t border-gray-200">
                             {solutionsSecondary.map((item) => (
                               <Link
