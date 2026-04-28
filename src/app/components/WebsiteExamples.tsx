@@ -1655,45 +1655,181 @@ function ShowcaseGrid() {
 }
 
 /* ═══════════════════════════════════════════════════════════
-   SECTION 6: FINAL CTA
+   SECTION 6: FINAL CTA — premium dark panel with real CTA button
    ═══════════════════════════════════════════════════════════ */
 function FinalCTA() {
   return (
     <section style={{
-      background: 'linear-gradient(180deg, #F8F9FB 0%, #FFFFFF 50%, #F8F9FB 100%)',
-      padding: '80px 24px 100px', textAlign: 'center',
-      borderTop: `1px solid #E2E6ED`,
+      position: 'relative',
+      background: T.bg,
+      padding: '110px 24px 130px',
+      textAlign: 'center',
+      borderTop: `1px solid ${T.border}`,
+      overflow: 'hidden',
     }}>
+      {/* Ambient background glow */}
+      <div style={{
+        position: 'absolute',
+        top: '50%', left: '50%',
+        transform: 'translate(-50%, -50%)',
+        width: 720, height: 360,
+        borderRadius: '50%',
+        background: 'radial-gradient(ellipse, rgba(73,69,255,0.18) 0%, rgba(73,69,255,0) 65%)',
+        filter: 'blur(8px)',
+        pointerEvents: 'none',
+      }} />
+      {/* Faint grid */}
+      <div style={{
+        position: 'absolute', inset: 0,
+        backgroundImage:
+          'linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px)',
+        backgroundSize: '40px 40px',
+        maskImage: 'radial-gradient(ellipse at center, #000 25%, transparent 75%)',
+        WebkitMaskImage: 'radial-gradient(ellipse at center, #000 25%, transparent 75%)',
+        pointerEvents: 'none',
+      }} />
+
       <Reveal>
-        <h2 style={{
-          fontSize: 'clamp(32px, 5.5vw, 52px)', fontWeight: 800, color: '#041E42',
-          fontFamily: T.heading, lineHeight: 1.1, letterSpacing: -1,
-          margin: '0 0 18px',
-          WebkitFontSmoothing: 'antialiased',
+        <div style={{
+          position: 'relative',
+          maxWidth: 720,
+          margin: '0 auto',
+          padding: '56px 32px 52px',
+          borderRadius: 24,
+          background: 'linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.015) 100%)',
+          border: '1px solid rgba(255,255,255,0.08)',
+          boxShadow: '0 50px 120px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.06)',
+          backdropFilter: 'blur(8px)',
         }}>
-          Your site. Live in days.
-        </h2>
-        <p style={{
-          fontSize: 15, color: '#6B7280', maxWidth: 420,
-          margin: '0 auto 32px', lineHeight: 1.6, fontFamily: T.sans,
-        }}>
-          One platform. Professional website, payment processing,<br />
-          capital access, and AI insights. All connected.
-        </p>
-        <Link to="/apply" style={{
-          padding: '16px 40px', borderRadius: 50, border: 'none',
-          background: `linear-gradient(135deg, ${T.accent}, ${T.blue})`,
-          color: '#fff', fontSize: 16, fontWeight: 700, cursor: 'pointer',
-          fontFamily: T.sans, textDecoration: 'none',
-          display: 'inline-flex', alignItems: 'center', gap: 8,
-          boxShadow: `0 4px 24px ${T.accentGlow}`,
-        }}>
-          Get Your Delt Site <ArrowRight size={18} />
-        </Link>
-        <div style={{ marginTop: 14, fontSize: 12, color: '#9AA3B2', fontFamily: T.sans }}>
-          No contracts. No cancellation fees. Live in under a week.
+          {/* Top sheen */}
+          <div style={{
+            position: 'absolute', top: 0, left: '15%', right: '15%',
+            height: 1,
+            background: 'linear-gradient(90deg, transparent, rgba(108,105,255,0.6), transparent)',
+          }} />
+
+          {/* Eyebrow */}
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: 8,
+            padding: '6px 14px',
+            borderRadius: 999,
+            background: 'rgba(73,69,255,0.10)',
+            border: '1px solid rgba(73,69,255,0.28)',
+            fontFamily: T.sans,
+            fontSize: 11,
+            fontWeight: 700,
+            letterSpacing: '0.18em',
+            textTransform: 'uppercase',
+            color: T.accentLight,
+            marginBottom: 22,
+          }}>
+            <span style={{
+              width: 6, height: 6, borderRadius: '50%',
+              background: T.accentLight,
+              boxShadow: '0 0 10px rgba(108,105,255,0.8)',
+            }} />
+            Ready when you are
+          </div>
+
+          <h2 style={{
+            fontSize: 'clamp(34px, 5.6vw, 56px)',
+            fontWeight: 800,
+            color: T.white,
+            fontFamily: T.heading,
+            lineHeight: 1.05,
+            letterSpacing: '-0.035em',
+            margin: '0 0 18px',
+            WebkitFontSmoothing: 'antialiased',
+          }}>
+            Your site.{' '}
+            <span style={{
+              background: 'linear-gradient(90deg, #6C69FF 0%, #4945FF 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              fontFamily: T.serif,
+              fontStyle: 'italic',
+              fontWeight: 500,
+            }}>Live in days.</span>
+          </h2>
+          <p style={{
+            fontSize: 16,
+            color: T.gray1,
+            maxWidth: 480,
+            margin: '0 auto 36px',
+            lineHeight: 1.65,
+            fontFamily: T.sans,
+          }}>
+            One platform. Professional website, payment processing,
+            capital access, and AI insights. All connected.
+          </p>
+
+          {/* THE button — solid brand purple, real CTA energy */}
+          <Link
+            to="/apply"
+            className="we-final-cta-btn"
+            style={{
+              padding: '17px 36px',
+              borderRadius: 14,
+              border: '1px solid rgba(108,105,255,0.6)',
+              background: T.accent,
+              color: '#fff',
+              fontSize: 16,
+              fontWeight: 700,
+              cursor: 'pointer',
+              fontFamily: T.sans,
+              textDecoration: 'none',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 10,
+              boxShadow:
+                '0 14px 38px rgba(73,69,255,0.45), 0 4px 12px rgba(73,69,255,0.30), inset 0 1px 0 rgba(255,255,255,0.18)',
+              letterSpacing: '-0.005em',
+              transition: 'transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease',
+            }}
+          >
+            Get Your Delt Site <ArrowRight size={18} />
+          </Link>
+
+          <div style={{
+            marginTop: 18,
+            fontSize: 13,
+            color: T.gray2,
+            fontFamily: T.sans,
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            gap: 18,
+            flexWrap: 'wrap',
+          }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <Check size={13} style={{ color: T.green }} /> No contracts
+            </span>
+            <span style={{ width: 3, height: 3, borderRadius: '50%', background: T.gray3 }} />
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <Check size={13} style={{ color: T.green }} /> No cancellation fees
+            </span>
+            <span style={{ width: 3, height: 3, borderRadius: '50%', background: T.gray3 }} />
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <Check size={13} style={{ color: T.green }} /> Live in under a week
+            </span>
+          </div>
         </div>
       </Reveal>
+
+      <style>{`
+        .we-final-cta-btn:hover {
+          transform: translateY(-2px);
+          background: #5754FF !important;
+          box-shadow:
+            0 22px 50px rgba(73,69,255,0.55),
+            0 6px 16px rgba(73,69,255,0.40),
+            inset 0 1px 0 rgba(255,255,255,0.22) !important;
+        }
+        .we-final-cta-btn:active {
+          transform: translateY(0);
+        }
+      `}</style>
     </section>
   );
 }
