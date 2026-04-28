@@ -216,9 +216,7 @@ export function AboutUsPage() {
               color: WHITE,
             }}
           >
-            Building tools for the people who keep the economy running
-            <br />
-            of{' '}
+            Tools that work as hard as{' '}
             <span
               style={{
                 background: `linear-gradient(90deg, ${PURPLE_HI} 0%, #C4BEFF 100%)`,

@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Rss, ArrowRight, ChevronRight, Sparkles, Zap, Shield, FileCheck, Package } from 'lucide-react';
+import { Rss, ArrowRight, ChevronRight, Sparkles, CreditCard, Scale, Cpu, Store, Package } from 'lucide-react';
 
 /* ─── Palette ────────────────────────────────────────── */
 const NAVY      = '#041E42';
@@ -12,102 +12,118 @@ const MUTED     = '#475569';
 const HAIRLINE  = 'rgba(4,30,66,0.08)';
 
 /* ─── Data ───────────────────────────────────────────── */
-type Tag = 'All' | 'Product' | 'API' | 'Security' | 'Compliance';
+type Tag = 'All' | 'Payments' | 'Regulation' | 'Tech & AI' | 'Retail';
 
-interface ChangelogItem {
+interface NewsItem {
   date: string;
   monthLabel: string;    // e.g. 'April 2026'
   tag: Exclude<Tag, 'All'>;
-  version?: string;
+  source?: string;       // short publication or body that owns the story
   title: string;
   description: string;
+  ownerNote?: string;    // short "what this means for your shop" line
   highlight?: boolean;
 }
 
-const ITEMS: ChangelogItem[] = [
+const ITEMS: NewsItem[] = [
   {
-    date: 'Apr 18, 2026',
+    date: 'Apr 22, 2026',
     monthLabel: 'April 2026',
-    tag: 'Product',
-    version: 'v2026.04.18',
-    title: 'Lens AI now writes your weekly recap.',
+    tag: 'Regulation',
+    source: 'Federal Reserve / merchant trade press',
+    title: 'Visa and Mastercard credit interchange settlement takes effect.',
     description:
-      "Every Monday morning, Lens AI automatically pulls together your week's key numbers — revenue, top-selling items, and open tasks — into a clear, one-page summary. Adjust the format or ask follow-up questions in chat.",
+      'After years of court fights, the new interchange rules from the Visa/Mastercard merchant settlement go into effect this month. The biggest change for small businesses: clearer rights to surcharge credit-card payments at the register, and slightly lower swipe rates on certain credit categories.',
+    ownerNote: 'If you accept credit cards, ask your processor whether your effective rate has dropped — it should.',
     highlight: true,
   },
   {
-    date: 'Apr 14, 2026',
+    date: 'Apr 15, 2026',
     monthLabel: 'April 2026',
-    tag: 'API',
-    version: 'v2.14',
-    title: 'New /v2/payouts/schedule endpoint.',
+    tag: 'Tech & AI',
+    source: 'Industry reports',
+    title: 'AI "shift managers" arrive for restaurants and retail.',
     description:
-      'Merchants and developers can programmatically retrieve and update payout schedule preferences. Supports daily, weekly, and monthly cadences and returns ISO 8601 next-payout timestamps.',
+      'A wave of small-business tools launched this spring use AI to read your sales data and suggest staff schedules, prep lists, and reorder quantities. Early case studies from independent restaurants show 8–12% labor savings without cutting hours.',
+    ownerNote: 'Worth a look if you build your weekly schedule by feel — these tools learn your rush hours.',
   },
   {
-    date: 'Apr 09, 2026',
+    date: 'Apr 08, 2026',
     monthLabel: 'April 2026',
-    tag: 'Security',
-    title: 'SOC 2 Type II report refreshed for FY26.',
+    tag: 'Payments',
+    source: 'Card networks',
+    title: 'Tap to Pay on iPhone now supported in 30+ countries.',
     description:
-      'Our annual SOC 2 Type II audit covering the full FY2026 period is complete and available to enterprise customers under NDA. Covers security, availability, and confidentiality trust-service criteria across all Delt infrastructure.',
+      'Apple expanded Tap to Pay on iPhone to dozens more countries this quarter. For US owners it has been available for a while, but if you have international suppliers or pop-up locations abroad, you can now accept cards directly on an iPhone in most major markets.',
   },
   {
     date: 'Apr 02, 2026',
     monthLabel: 'April 2026',
-    tag: 'Product',
-    title: 'Auto-save drafts in Websites Builder.',
+    tag: 'Retail',
+    source: 'NRF / industry surveys',
+    title: 'Foot traffic up 4% YoY at independent shops in Q1.',
     description:
-      'No more lost work. Websites Builder now saves your changes automatically every 10 seconds and maintains a 30-day version history. Restore any prior save from the new "History" panel in the editor toolbar.',
+      'The latest National Retail Federation read on small independent retailers shows the first positive year-over-year foot-traffic quarter since 2023. Service businesses (salons, repair, fitness) led the gain. Apparel and home goods were flat.',
+    ownerNote: 'If your numbers are not up, your category may be the issue — not your store.',
   },
   {
-    date: 'Mar 28, 2026',
+    date: 'Mar 26, 2026',
     monthLabel: 'March 2026',
-    tag: 'Compliance',
-    title: 'PCI DSS 4.0 certification complete.',
+    tag: 'Regulation',
+    source: 'PCI Security Standards Council',
+    title: 'PCI DSS 4.0 fully in force — every business that takes cards is on the hook.',
     description:
-      'Delt has achieved full PCI DSS 4.0 compliance — the card-data security standard — across all processing infrastructure. If you use a standard Delt integration, you no longer need to complete your own SAQ-A questionnaire.',
+      'The PCI DSS 4.0 transition window closed at the end of March. PCI is the security standard for handling card data. If you use a modern processor that handles card storage for you (most owners do), there is little for you to do. If you store card numbers yourself, your annual self-assessment got longer.',
+    ownerNote: 'Ask your processor whether they cover your PCI assessment. Most good ones do at no extra cost.',
   },
   {
-    date: 'Mar 21, 2026',
+    date: 'Mar 19, 2026',
     monthLabel: 'March 2026',
-    tag: 'Product',
-    title: 'Capital pre-qualified offers, on your dashboard.',
+    tag: 'Payments',
+    source: 'The Federal Reserve',
+    title: 'FedNow now used by 1,200+ banks — instant deposits go mainstream.',
     description:
-      'If your business qualifies, you\'ll now see a pre-approved funding offer right on your dashboard home screen — one click to apply. Offers are recalculated nightly based on your card sales and are available to businesses processing $2k+ per month.',
+      'FedNow is the Federal Reserve\'s instant-payment rail. With more than 1,200 banks live, more processors are starting to offer same-day or instant deposits to small business accounts as a default, not a paid add-on.',
+    ownerNote: 'Worth checking how fast your money currently lands. "1–2 business days" is starting to look slow.',
   },
   {
-    date: 'Mar 14, 2026',
+    date: 'Mar 11, 2026',
     monthLabel: 'March 2026',
-    tag: 'API',
-    version: 'v3.0',
-    title: 'Webhooks v3: signed, versioned, rotatable keys.',
+    tag: 'Tech & AI',
+    source: 'Industry analysts',
+    title: 'Restaurant tech consolidation continues — fewer separate tools, more bundles.',
     description:
-      'Webhooks v3 introduces HMAC-SHA256 request signing, versioned event schemas, and the ability to rotate signing keys without downtime. All existing webhooks were migrated automatically.',
+      'Two more big POS players announced bundled payments + scheduling + inventory packages this month, mirroring a clear industry trend: owners are tired of paying five vendors and getting five logins. Expect more bundling and more aggressive switching offers through the rest of the year.',
   },
   {
-    date: 'Mar 07, 2026',
+    date: 'Mar 04, 2026',
     monthLabel: 'March 2026',
-    tag: 'Product',
-    title: 'Inventory low-stock alerts by SMS.',
+    tag: 'Regulation',
+    source: 'CFPB',
+    title: 'CFPB clarifies overdraft and "junk fee" rules for small business accounts.',
     description:
-      'Set per-product stock thresholds and get an SMS the moment inventory dips below your chosen level. Configured per location — especially useful if you run more than one location.',
+      'The Consumer Financial Protection Bureau issued new guidance narrowing what banks can charge in overdraft and account fees, and how those have to be disclosed. Most rules apply to consumer accounts, but small-business deposit accounts at large banks are increasingly being held to the same standard.',
+    ownerNote: 'If your bank\'s monthly fees crept up last year, this is a good moment to compare.',
   },
   {
-    date: 'Feb 28, 2026',
+    date: 'Feb 25, 2026',
     monthLabel: 'February 2026',
-    tag: 'Security',
-    title: 'Passkey support for all admins.',
+    tag: 'Retail',
+    source: 'Square / Yelp small business reports',
+    title: 'Tipping fatigue is real — average tip percent down 1.4 points.',
     description:
-      'All admin accounts can now register a passkey (Face ID, Touch ID, or hardware key) as a primary or secondary authentication method. Passkeys are phishing-resistant and eliminate reliance on SMS codes.',
+      'Multiple small-business reports this winter confirmed what owners have been seeing: average tip percentage on card payments fell from roughly 19.6% to 18.2% over the last twelve months, with the steepest drop at quick-service and counter-pickup spots. Sit-down restaurants held mostly steady.',
+    ownerNote: 'Some owners are quietly removing the 25% tip preset on counter screens. Worth testing.',
   },
   {
-    date: 'Feb 21, 2026',
+    date: 'Feb 17, 2026',
     monthLabel: 'February 2026',
-    tag: 'Product',
-    title: 'Apple Tap to Pay on iPhone — generally available.',
+    tag: 'Tech & AI',
+    source: 'Apple, Google, payment networks',
+    title: 'Digital wallets cross 50% of in-person card volume for the first time.',
     description:
-      'Accept contactless payments directly on any iPhone XS or later — no card reader needed. Now available to all US businesses on Delt Payments, with support for credit, debit, and digital wallets.',
+      'Apple Pay, Google Pay, and Samsung Pay (combined with tap-to-pay cards) now account for over half of in-person card transactions at small businesses, according to multiple network reports. The shift means contactless-capable hardware is no longer optional.',
+    ownerNote: 'If your card reader does not take a tap, you are leaving sales on the counter.',
   },
 ];
 
@@ -116,10 +132,10 @@ const TAG_META: Record<
   Exclude<Tag, 'All'>,
   { icon: React.ElementType; accent: string; label: string }
 > = {
-  Product:    { icon: Sparkles,  accent: PURPLE,    label: 'Product' },
-  API:        { icon: Zap,       accent: '#0B6CF0', label: 'API' },
-  Security:   { icon: Shield,    accent: '#0E8A5F', label: 'Security' },
-  Compliance: { icon: FileCheck, accent: '#B45309', label: 'Compliance' },
+  Payments:     { icon: CreditCard, accent: PURPLE,    label: 'Payments' },
+  Regulation:   { icon: Scale,      accent: '#B45309', label: 'Regulation' },
+  'Tech & AI':  { icon: Cpu,        accent: '#0B6CF0', label: 'Tech & AI' },
+  Retail:       { icon: Store,      accent: '#0E8A5F', label: 'Retail' },
 };
 
 /* ─── Sub-components ─────────────────────────────────── */
@@ -138,7 +154,7 @@ function TagBadge({ tag, size = 'md' }: { tag: Exclude<Tag, 'All'>; size?: 'sm' 
 }
 
 /* A single entry along the timeline rail */
-function TimelineEntry({ item, index }: { item: ChangelogItem; index: number }) {
+function TimelineEntry({ item, index }: { item: NewsItem; index: number }) {
   const { accent } = TAG_META[item.tag];
   return (
     <article className="relative grid grid-cols-[140px_1fr] md:grid-cols-[180px_1fr] gap-6 md:gap-10">
@@ -148,12 +164,12 @@ function TimelineEntry({ item, index }: { item: ChangelogItem; index: number }) 
           <p className="text-xs font-semibold uppercase tracking-[0.14em]" style={{ color: MUTED }}>
             {item.date}
           </p>
-          {item.version && (
+          {item.source && (
             <p
-              className="mt-1 text-[11px] font-mono"
-              style={{ color: '#94A3B8', letterSpacing: '0.02em' }}
+              className="mt-1 text-[11px] leading-snug"
+              style={{ color: '#94A3B8' }}
             >
-              {item.version}
+              {item.source}
             </p>
           )}
         </div>
@@ -214,12 +230,25 @@ function TimelineEntry({ item, index }: { item: ChangelogItem; index: number }) 
         <p className="text-[15px] leading-relaxed mb-5" style={{ color: MUTED }}>
           {item.description}
         </p>
+        {item.ownerNote && (
+          <div
+            className="mb-5 rounded-lg px-4 py-3 text-[14px] leading-relaxed"
+            style={{
+              background: `${accent}0A`,
+              boxShadow: `inset 0 0 0 1px ${accent}26`,
+              color: NAVY,
+            }}
+          >
+            <span className="font-semibold" style={{ color: accent }}>What this means for your shop:</span>{' '}
+            <span style={{ color: MUTED }}>{item.ownerNote}</span>
+          </div>
+        )}
         <a
           href="#"
           className="inline-flex items-center gap-1.5 text-sm font-semibold transition-colors"
           style={{ color: PURPLE }}
         >
-          Read the full note
+          Read the full story
           <ChevronRight size={14} strokeWidth={2.5} />
         </a>
 
@@ -253,7 +282,7 @@ export function WhatsNewPage() {
     return Array.from(map.entries());
   }, [filtered]);
 
-  const tabs: Tag[] = ['All', 'Product', 'API', 'Security', 'Compliance'];
+  const tabs: Tag[] = ['All', 'Payments', 'Regulation', 'Tech & AI', 'Retail'];
 
   return (
     <div style={{ background: WHITE, color: INK, fontFamily: 'system-ui, -apple-system, sans-serif' }}>
@@ -286,12 +315,6 @@ export function WhatsNewPage() {
             backgroundSize: '200px 200px',
           }}
         />
-        {/* soft bottom fade into white page */}
-        <div
-          aria-hidden
-          className="absolute inset-x-0 bottom-0 h-24 pointer-events-none"
-          style={{ background: `linear-gradient(to bottom, transparent, ${WHITE})` }}
-        />
 
         <div className="relative max-w-6xl mx-auto px-6 pt-28 md:pt-36 pb-36">
           <div className="flex items-center gap-2 mb-6">
@@ -310,7 +333,7 @@ export function WhatsNewPage() {
                   boxShadow: '0 0 8px #6EE7B7',
                 }}
               />
-              What&rsquo;s new
+              The Delt Dispatch · Industry digest
             </span>
           </div>
 
@@ -322,8 +345,7 @@ export function WhatsNewPage() {
               color: WHITE,
             }}
           >
-            Every ship,
-            <br />
+            What&rsquo;s new in{' '}
             <span
               style={{
                 background: `linear-gradient(90deg, ${WHITE} 0%, #C4BEFF 60%, ${PURPLE_HI} 100%)`,
@@ -332,7 +354,7 @@ export function WhatsNewPage() {
                 backgroundClip: 'text',
               }}
             >
-              every week.
+              your industry.
             </span>
           </h1>
 
@@ -340,7 +362,7 @@ export function WhatsNewPage() {
             className="mt-7 text-lg md:text-xl max-w-xl leading-relaxed"
             style={{ color: 'rgba(255,255,255,0.72)' }}
           >
-              Every update, feature, and fix we ship at Delt — written plainly, dated, and easy to find.
+              Payments rules, retail trends, and the small-business news that actually matters — in plain English, with what it means for your shop.
           </p>
 
           <div className="mt-10 flex flex-wrap items-center gap-4">
@@ -354,14 +376,14 @@ export function WhatsNewPage() {
               }}
             >
               <Rss size={15} strokeWidth={2.5} />
-              Subscribe to RSS
+              Subscribe by RSS
             </a>
             <a
               href="#changelog"
               className="inline-flex items-center gap-2 text-sm font-semibold transition-colors"
               style={{ color: 'rgba(255,255,255,0.85)' }}
             >
-              Jump to the latest
+              Read the latest
               <ArrowRight size={14} strokeWidth={2.5} />
             </a>
           </div>
@@ -375,9 +397,9 @@ export function WhatsNewPage() {
             }}
           >
             {[
-              { label: 'Shipped this quarter', value: '42' },
-              { label: 'Avg. releases / week',  value: '3.2' },
-              { label: 'Open roadmap items',   value: '28' },
+              { label: 'Stories this quarter', value: '38' },
+              { label: 'Sources we read',      value: '60+' },
+              { label: 'New every week',       value: 'Fri' },
             ].map((s, i) => (
               <div
                 key={s.label}
@@ -491,10 +513,10 @@ export function WhatsNewPage() {
             >
               <Package size={22} strokeWidth={2} style={{ color: PURPLE }} className="mx-auto mb-3" />
               <p className="font-semibold" style={{ color: NAVY }}>
-                That&rsquo;s the last three months.
+                That&rsquo;s the last three months of industry news.
               </p>
               <p className="mt-1 text-sm" style={{ color: MUTED }}>
-                Looking for something older? Browse the full archive.
+                Looking for older stories? Browse the full archive.
               </p>
               <a
                 href="#"
@@ -533,10 +555,10 @@ export function WhatsNewPage() {
                 color: WHITE,
               }}
             >
-              Get new features in your inbox every Friday.
+              The Delt Dispatch, in your inbox every Friday.
             </h2>
             <p className="mt-4 text-base md:text-lg leading-relaxed max-w-lg" style={{ color: 'rgba(255,255,255,0.7)' }}>
-              One email a week. What shipped, why it matters for your business, and nothing else.
+              One short email a week. What changed in payments, retail, and small-business rules — and what it means for your shop. No spam.
             </p>
           </div>
           <form
