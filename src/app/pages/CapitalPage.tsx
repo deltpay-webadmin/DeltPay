@@ -451,7 +451,7 @@ export function CapitalPage() {
     <div style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", background: '#FFFFFF' }}>
 
       {/* ═══ 1. WHITE SPLIT HERO (Toast pattern) ════════════════════ */}
-      <section className="px-6 pt-16 pb-20 md:pt-24 md:pb-28" style={{ background: '#FFFFFF' }}>
+      <section className="px-6 pt-32 pb-20 md:pt-40 md:pb-28" style={{ background: '#FFFFFF' }}>
         <div
           style={{ maxWidth: 1200, margin: '0 auto' }}
           className="grid grid-cols-1 md:grid-cols-[1.05fr_0.95fr] gap-10 md:gap-16 items-center"

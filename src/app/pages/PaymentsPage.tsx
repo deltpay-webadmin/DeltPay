@@ -236,9 +236,13 @@ export function PaymentsPage() {
         </div>
       </section>
 
-      {/* ═══ 4. ACH — lavender full-bleed data band ════════════════ */}
-      <section className="py-20 lg:py-28" style={{ background: LAVENDER }}>
+      {/* ═══ 4. ACH — contained tinted panel on white ══════════════ */}
+      <section className="py-12 lg:py-16" style={{ background: '#FFFFFF' }}>
         <div className="max-w-[1240px] mx-auto px-6 lg:px-12">
+          <div
+            className="rounded-[32px] px-6 sm:px-10 lg:px-16 py-16 lg:py-20"
+            style={{ background: SURFACE_MUTED }}
+          >
           <div className="text-center mb-10">
             <div
               className="text-[12px] font-bold uppercase mb-3"
@@ -409,12 +413,18 @@ export function PaymentsPage() {
               })}
             </div>
           </div>
+          </div>
         </div>
       </section>
 
-      {/* ═══ 5. TESTIMONIAL (ivory, photo + quote + dots) ══════════ */}
-      <section className="px-6 py-20 md:py-28" style={{ background: IVORY }}>
-        <div style={{ maxWidth: 1040, margin: '0 auto' }}>
+      {/* ═══ 5. TESTIMONIAL — contained tinted panel on white ══════ */}
+      <section className="px-6 py-12 lg:py-16" style={{ background: '#FFFFFF' }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+          <div
+            className="rounded-[32px] px-6 sm:px-10 lg:px-16 py-16 lg:py-20"
+            style={{ background: SURFACE_MUTED }}
+          >
+          <div style={{ maxWidth: 1040, margin: '0 auto' }}>
           <div className="text-center mb-12">
             <div
               className="text-[12px] font-bold uppercase mb-3"
@@ -509,6 +519,8 @@ export function PaymentsPage() {
             >
               <ChevronRight size={18} />
             </button>
+          </div>
+          </div>
           </div>
         </div>
       </section>
