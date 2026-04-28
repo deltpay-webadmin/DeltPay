@@ -22,8 +22,12 @@ import { BusinessScene } from '../components/BusinessScene';
 /* ─── Design tokens ─────────────────────────────────────────── */
 const NAVY     = '#041E42';
 const PURPLE   = '#4945FF';
-const LAVENDER = '#EDEBFF';
-const IVORY    = '#F6F7FB';
+/* Single shared tinted-neutral token used across every tinted section
+   on the Payments page. Replaces the previous mix of LAVENDER (#EDEBFF)
+   and IVORY (#F6F7FB) that read as competing tones. */
+const SURFACE_MUTED = '#F4F3FA';
+const LAVENDER = SURFACE_MUTED;
+const IVORY    = SURFACE_MUTED;
 const MUTED    = '#475569';
 const MICRO    = '#94A3B8';
 const HAIRLINE = 'rgba(4,30,66,0.10)';

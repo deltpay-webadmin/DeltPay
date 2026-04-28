@@ -48,7 +48,7 @@ export function FreeAccountSection() {
   const totalSlides = Math.ceil(tools.length / 3);
 
   return (
-    <section className="py-24 lg:py-40 bg-[#F6F7FB] relative overflow-hidden">
+    <section className="py-24 lg:py-40 bg-[#F4F3FA] relative overflow-hidden">
       {/* Decorative Elements */}
       <div className="absolute top-20 right-10 w-96 h-96 bg-[#4945FF]/5 rounded-full blur-3xl"></div>
       <div className="absolute bottom-20 left-10 w-96 h-96 bg-[#4945FF]/5 rounded-full blur-3xl"></div>
