@@ -525,10 +525,10 @@ export function LensAIPage() {
             fontSize: 'clamp(1.75rem, 4vw, 3rem)',
             fontWeight: 800, letterSpacing: '-0.03em', color: C.navy,
           }}>
-            Pricing built for every business.
+            Simple pricing. No surprises.
           </h2>
           <p style={{ margin: 0, fontSize: 17, color: C.body, lineHeight: 1.6 }}>
-            Scale as you go with plans that match your operations.
+            Start free, upgrade when you need more. No long-term contract.
           </p>
         </div>
 
@@ -544,9 +544,9 @@ export function LensAIPage() {
             padding: 'clamp(28px, 4vw, 40px)',
           }}>
             <div style={{ fontSize: 22, fontWeight: 800, color: C.navy, marginBottom: 6 }}>Free</div>
-            <div style={{ fontSize: 14, color: C.body, marginBottom: 28 }}>Included with every Delt account</div>
+            <div style={{ fontSize: 14, color: C.body, marginBottom: 28 }}>Comes with every Delt account — no setup needed</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 32 }}>
-              {['500 Lens questions/month', 'Plain-English answers', 'Connects to your POS + Payments', 'Email summaries'].map(f => (
+              {['500 questions a month', 'Answers in plain English', 'Plugs into your POS and payments', 'Weekly email summaries'].map(f => (
                 <div key={f} style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                   <div style={{
                     width: 20, height: 20, borderRadius: '50%',
@@ -589,9 +589,9 @@ export function LensAIPage() {
               <span style={{ fontSize: 22, fontWeight: 800, color: C.white }}>Pro</span>
               <span style={{ fontSize: 18, fontWeight: 700, color: 'rgba(255,255,255,0.7)', marginLeft: 6 }}>$29/mo</span>
             </div>
-            <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.55)', marginBottom: 28 }}>Everything in Free, plus:</div>
+            <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.55)', marginBottom: 28 }}>Everything in Free, and:</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 32 }}>
-              {['Unlimited questions', 'Autonomous actions', 'Multi-location roll-up', 'Priority support'].map(f => (
+              {['Unlimited questions', 'Lens can take actions for you', 'All locations in one view', 'Priority support'].map(f => (
                 <div key={f} style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                   <div style={{
                     width: 20, height: 20, borderRadius: '50%',
@@ -616,13 +616,13 @@ export function LensAIPage() {
         </div>
 
         <p style={{ textAlign: 'center', marginTop: 32, fontSize: 14, color: C.muted }}>
-          Looking for enterprise?{' '}
+          Processing over $100K/month?{' '}
           <a href="#" style={{ color: C.navy, fontWeight: 600, textDecoration: 'underline' }}>
-            Schedule a call.
+            Let's talk custom rates.
           </a>
         </p>
         <p style={{ textAlign: 'center', fontSize: 12, color: C.muted, maxWidth: 600, margin: '16px auto 0', lineHeight: 1.6 }}>
-          Lens AI answers are grounded in your connected data sources and are intended to assist decision-making, not replace it. Verify important business decisions independently. Question limits apply to Free tier and reset monthly.
+          Lens answers come from your own connected data and are meant to help you make decisions, not replace your judgment. Always double-check before making big moves. Question limits on the Free plan reset every month.
         </p>
       </section>
 
@@ -676,15 +676,14 @@ export function LensAIPage() {
             fontWeight: 800, letterSpacing: '-0.04em',
             color: C.white, lineHeight: 1.1,
           }}>
-            Ready to stop guessing?
+            Stop flying blind.
           </h2>
           <p style={{
             margin: '0 auto 40px', maxWidth: 480,
             fontSize: 18, lineHeight: 1.7,
             color: 'rgba(255,255,255,0.8)',
           }}>
-            Lens is included in every Delt account. Start asking today — your first insights
-            typically appear within a few days of your first transactions.
+            Lens comes with every Delt account. Ask your first question today — most owners see useful answers within their first few days.
           </p>
           <a
             href="/sign-up"
