@@ -126,39 +126,39 @@ export function PaymentsPage() {
                 color: NAVY,
               }}
             >
-              Three ways to keep more of every sale.
+              Three ways to pay less on every sale.
             </h2>
             <p className="text-[17px] leading-relaxed max-w-[620px]" style={{ color: MUTED }}>
-              Pick the pricing structure that fits your business — or mix and match across locations.
-              Rates are transparent and there's no long-term contract.
+              Pick the pricing that fits your business — or mix and match across locations.
+              Rates are clear, and there's no long-term contract.
             </p>
           </motion.div>
 
           <div className="grid md:grid-cols-3 gap-5">
             {[
               {
-                tag: 'Merchant-net $0',
+                tag: 'You pay $0',
                 label: 'Cash Discount',
-                headline: '0% net cost',
-                body: 'Post two prices — cash and card. Customers who pay by card cover the fee. Your effective cost is $0. Delt handles compliance signage automatically.',
+                headline: '0% processing cost',
+                body: 'Show a cash price and a card price at checkout. Customers who pay by card cover the processing fee. Your cost is $0. Delt prints compliant signage and receipt disclosures automatically.',
                 detail: 'Compliant in all 50 states',
-                bullets: ['Automatic receipt disclosure', 'State-by-state signage', 'Opt-in or -out per location'],
+                bullets: ['Automatic receipt disclosure', 'Compliant signage handled for you', 'Turn on or off per location'],
               },
               {
                 tag: 'Most popular',
                 label: 'Flat Rate',
-                headline: 'One rate, every card',
-                body: 'A single blended rate regardless of card type. Simple, predictable billing that\'s easy to forecast and reconcile.',
+                headline: '2.6% + $0.10 — one rate, every card',
+                body: 'One flat processing rate no matter which card your customer swipes, taps, or dips. No surprises at month end — you always know your cost.',
                 detail: 'No per-card-type surprises',
-                bullets: ['Predictable monthly cost', 'Same rate across card types', 'No statement decoding'],
+                bullets: ['Same rate for every card type', 'Easy to budget and plan around', 'No decoding your monthly statement'],
               },
               {
                 tag: 'Transparent',
                 label: 'Interchange Plus',
-                headline: 'Cost + a small margin',
-                body: 'Pay the actual interchange rate set by card networks plus a fixed Delt margin. Full line-item transparency — best for high-volume merchants.',
+                headline: 'The card network\'s cost + a small Delt margin',
+                body: 'You pay the card network\'s base cost plus a fixed Delt margin — nothing more. Full line-item statements so you know exactly where every dollar goes. Best for higher-volume businesses.',
                 detail: 'Available on Growth & Custom',
-                bullets: ['Competitive rate structure', 'Line-item statements', 'Monthly rate review'],
+                bullets: ['Line-item monthly statements', 'Competitive for high card sales', 'Monthly rate review'],
               },
             ].map((model, i) => (
               <motion.div
@@ -240,7 +240,7 @@ export function PaymentsPage() {
               className="text-[12px] font-bold uppercase mb-3"
               style={{ color: PURPLE, letterSpacing: '0.18em' }}
             >
-              ACH · bank transfer
+              ACH · bank-to-bank transfer
             </div>
             <h2
               className="font-bold leading-[1.1] mb-4"
@@ -250,14 +250,13 @@ export function PaymentsPage() {
                 letterSpacing: '-0.025em',
               }}
             >
-              A flat 1%. No card network markup.
+              Send a $50,000 invoice. Pay 1% — not 2.6%.
             </h2>
             <p
               className="mx-auto leading-relaxed"
               style={{ fontSize: 'clamp(15px, 1.2vw, 17px)', color: MUTED, maxWidth: 620 }}
             >
-              Up to $100K per transfer, recurring or one-time. The smart way to get paid for
-              large invoices and subscriptions.
+              ACH moves money directly from your customer's bank account to yours — no card network in the middle. Flat 1%, up to $100K per transfer. Great for big invoices, retainers, and recurring charges.
             </p>
           </div>
 
@@ -303,22 +302,21 @@ export function PaymentsPage() {
                   className="font-semibold mb-3"
                   style={{ color: NAVY, fontSize: 22 }}
                 >
-                  per transaction
+                  per bank transfer
                 </div>
                 <p
                   className="leading-relaxed max-w-[420px]"
                   style={{ color: MUTED, fontSize: 16 }}
                 >
-                  Flat rate. No card network markup. No surprises. Up to $100K per transfer,
-                  recurring or one-time.
+                  Flat 1% — no card network markup. No surprises. Works for one-time and recurring payments up to $100K per transfer.
                 </p>
               </div>
 
               <div className="mt-10 grid grid-cols-1 gap-3">
                 {[
                   'No card network markup',
-                  'Recurring & one-time support',
-                  'Up to $100K per transaction',
+                  'Recurring and one-time payments',
+                  'Up to $100K per transfer',
                 ].map((item) => (
                   <div key={item} className="flex items-center gap-3">
                     <div
@@ -340,27 +338,27 @@ export function PaymentsPage() {
               {[
                 {
                   icon: TrendingDown,
-                  title: 'No card network fees',
-                  body: 'ACH bypasses Visa and Mastercard networks entirely. You pay only the flat 1%.',
+                  title: 'Skip the card network fees',
+                  body: 'ACH goes bank to bank — no Visa or Mastercard in the middle. You pay only the flat 1%.',
                   detail: 'Save 1.5–2.5% vs card processing',
                 },
                 {
                   icon: Repeat,
-                  title: 'Recurring billing built in',
-                  body: 'Automate subscriptions, retainers, and installments. Customers authorize once.',
+                  title: 'Set up recurring billing in minutes',
+                  body: 'Auto-charge retainers, memberships, and installments. Customers authorize once — you never have to chase them again.',
                   detail: 'Variable and fixed amounts',
                 },
                 {
                   icon: FileText,
-                  title: 'Large invoice support',
-                  body: 'ACH requests up to $100K. Perfect for contractors, agencies, and B2B.',
-                  detail: 'Up to $100K per transaction',
+                  title: 'Send big invoices — get paid fast',
+                  body: 'ACH handles up to $100K per transfer. Perfect for contractors, auto shops, and anyone billing large jobs.',
+                  detail: 'Up to $100K per transfer',
                 },
                 {
                   icon: Shield,
-                  title: 'Bank-level security',
-                  body: 'NACHA-compliant rails with encrypted tokenization and fraud monitoring.',
-                  detail: 'NACHA compliant · encrypted',
+                  title: 'Your customers\' bank info stays safe',
+                  body: 'Card data never touches your system. NACHA-compliant rails with active fraud monitoring running 24/7.',
+                  detail: 'NACHA compliant · secure by default',
                 },
               ].map((feat, i) => {
                 const Icon = feat.icon;
@@ -416,7 +414,7 @@ export function PaymentsPage() {
               className="text-[12px] font-bold uppercase mb-3"
               style={{ color: PURPLE, letterSpacing: '0.18em' }}
             >
-              Trusted by merchants
+              What owners are saying
             </div>
             <h2
               className="font-bold leading-[1.1]"
@@ -426,7 +424,7 @@ export function PaymentsPage() {
                 letterSpacing: '-0.025em',
               }}
             >
-              Real savings, real operators.
+              Real savings. Real business owners.
             </h2>
           </div>
 
@@ -514,10 +512,10 @@ export function PaymentsPage() {
         <div className="max-w-[1240px] mx-auto px-6 lg:px-12">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {[
-              { big: '<1 Day', small: 'Go live', sub: 'Speed' },
+              { big: '<1 Day', small: 'Ready to take payments', sub: 'Speed' },
               { big: '$847', small: 'Avg. monthly savings', sub: 'Savings' },
-              { big: '$50M', small: 'Capital deployed', sub: 'Scale' },
-              { big: '97%', small: 'Merchant retention', sub: 'Reliability' },
+              { big: '$50M', small: 'Funded to small businesses', sub: 'Scale' },
+              { big: '97%', small: 'Owners who stay with Delt', sub: 'Reliability' },
             ].map((s) => (
               <div key={s.small} className="text-center">
                 <div
@@ -556,7 +554,7 @@ export function PaymentsPage() {
               className="text-[12px] font-bold uppercase mb-3"
               style={{ color: PURPLE, letterSpacing: '0.18em' }}
             >
-              More for your business
+              Helpful reading
             </div>
             <h2
               className="font-bold leading-[1.1]"
@@ -566,14 +564,14 @@ export function PaymentsPage() {
                 letterSpacing: '-0.025em',
               }}
             >
-              Guides to get the most out of every sale.
+              Guides for business owners who take cards.
             </h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             {[
-              { title: 'How to read your merchant statement', tag: 'Guide', cta: 'Read' as const, icon: BookOpen, bg: LAVENDER },
+              { title: 'How to read your processing statement', tag: 'Guide', cta: 'Read' as const, icon: BookOpen, bg: LAVENDER },
               { title: 'The small-business ACH playbook', tag: 'Playbook', cta: 'Download' as const, icon: Download, bg: IVORY },
-              { title: 'Card-present vs card-not-present: what changes for fees?', tag: 'Research', cta: 'Read' as const, icon: BookOpen, bg: LAVENDER },
+              { title: 'In-person vs. online payments: what\'s different about fees?', tag: 'Guide', cta: 'Read' as const, icon: BookOpen, bg: LAVENDER },
             ].map((r) => {
               const Icon = r.icon;
               return (
@@ -615,9 +613,9 @@ export function PaymentsPage() {
       <ProductCrossSell
         currentProduct="payments"
         variant="light"
-        eyebrow="One platform, every tool"
+        eyebrow="Everything in one place"
         title="Payments is just the start"
-        subtitle="Add capital, websites, and AI analytics when you're ready — all on the same account."
+        subtitle="Add funding, a website, and sales insights when you're ready — all on the same account."
       />
 
       {/* ═══ 10. SMALL CENTERED FINAL CTA (white) ══════════════════ */}
@@ -631,13 +629,13 @@ export function PaymentsPage() {
               letterSpacing: '-0.025em',
             }}
           >
-            Start accepting payments today.
+            Start taking payments today.
           </h2>
           <p
             className="mb-8 leading-relaxed mx-auto"
             style={{ fontSize: 'clamp(15px, 1.2vw, 17px)', color: MUTED, maxWidth: 480 }}
           >
-            Free to start. Hardware included. No contracts. Upgrade when you're ready.
+            Free to start. Card reader included. No contracts. Upgrade when you're ready.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4">
             <Link
@@ -667,9 +665,9 @@ export function PaymentsPage() {
           style={{ color: MICRO, fontSize: 11, lineHeight: 1.7 }}
         >
           <p>
-            Rates shown are representative examples. Actual transaction rates depend on card type,
-            average ticket size, volume, and underwriting. The ACH flat rate applies to US bank
-            transfers under $100,000 per transaction. Delt Zero eligibility subject to terms.
+            Rates shown are representative examples. Actual processing rates depend on card type,
+            average ticket size, and volume. The ACH flat rate applies to US bank
+            transfers under $100,000 per transfer. Delt Zero eligibility subject to terms.
           </p>
         </div>
       </div>

@@ -32,7 +32,7 @@ const HAIRLINE  = 'rgba(4,30,66,0.10)';
 const FAQS = [
   {
     q: "How do I know if I'm eligible?",
-    a: 'Eligibility is based on your card processing volume, time on Delt, and status of any bankruptcy filings. Check your Delt dashboard for pre-qualified offers.',
+    a: 'We look at your card sales volume, how long you\'ve been using Delt, and whether there are any open bankruptcy filings. Log into your Delt dashboard — if you qualify, you\'ll see a pre-qualified offer waiting.',
   },
   {
     q: "Does applying affect my credit?",
@@ -43,16 +43,16 @@ const FAQS = [
     a: 'Repayment is a fixed percentage of daily card transactions processed through Delt. When sales are slower, you pay less. Target terms range from 90 to 360 days.',
   },
   {
-    q: "What are the fees?",
-    a: 'Delt Capital loans have a fixed fee that will not change regardless of how long it takes to repay. No compounding interest, no application fees, no prepayment fees, no late fees.',
+    q: "What does it cost?",
+    a: 'You pay one flat fee, set when you accept the offer. It never changes — no compounding interest, no application fee, no prepayment fee, no late fee.',
   },
   {
     q: "What can I use the loan for?",
     a: 'Anything your business needs — short-term cash flow, hiring, inventory, equipment, refinancing debt, renovation, or opening a new location.',
   },
   {
-    q: "How fast will I get funded?",
-    a: 'Funds arrive in your account as soon as the next business day after approval, subject to processing time and completion of your loan agreement.',
+    q: "How fast will I get the money?",
+    a: 'Money arrives in your account as soon as the next business day after approval, once you\'ve signed your loan agreement.',
   },
 ];
 
@@ -60,7 +60,7 @@ const FAQS = [
 const TESTIMONIALS = [
   {
     quote:
-      "Being able to automatically repay as a fixed percentage of daily card transactions is a game-changer. Not having to stress about monthly payments is a relief.",
+      "Repayment comes out of daily card sales automatically. On slow days we pay less. On busy days a little more. I never have to think about it.",
     name: 'Priya Shah',
     role: 'Owner, Peninsula Hardware Supply',
     location: 'Portland, OR',
@@ -488,17 +488,16 @@ export function CapitalPage() {
                 color: NAVY,
               }}
             >
-              Fast, easy, and flexible funding from a partner who gets it.
+              Business funding that pays itself back from your daily sales.
             </h1>
 
             <p
               className="mt-6 max-w-xl leading-relaxed"
               style={{ fontSize: 'clamp(16px, 1.2vw, 18px)', color: MUTED }}
             >
-              Access loans ranging from{' '}
-              <strong style={{ color: NAVY }}>$1,000 to $300,000</strong> with Delt Capital.
-              Repayment flexes with your daily card sales — nothing to schedule, nothing to
-              remember.
+              Borrow from{' '}
+              <strong style={{ color: NAVY }}>$1,000 to $300,000</strong> through Delt Capital.
+              A fixed share of each day's card sales goes toward repayment automatically — nothing to schedule, nothing to remember.
             </p>
 
             <div className="mt-9 flex flex-wrap items-center gap-4">
@@ -634,14 +633,14 @@ export function CapitalPage() {
               letterSpacing: '-0.025em',
             }}
           >
-            A financial partner like no other
+            Built for businesses like yours
           </h2>
           <p
             className="mx-auto leading-relaxed"
             style={{ color: MUTED, fontSize: 'clamp(15px, 1.2vw, 17px)', maxWidth: 640 }}
           >
-            We've been building alongside small-business owners for years, which means
-            industry-specific nuances like seasonality don't scare us one bit.
+            We've worked with restaurants, retailers, salons, and contractors for years.
+            Your busy season and your slow months are things we plan for — not ignore.
           </p>
         </div>
       </section>
@@ -650,36 +649,36 @@ export function CapitalPage() {
       <section className="px-6 py-12 md:py-16" style={{ background: '#FFFFFF' }}>
         <div style={{ maxWidth: 1120, margin: '0 auto' }} className="flex flex-col gap-20 md:gap-28">
           <FeatureBlock
-            eyebrow="Industry expertise"
+            eyebrow="Made for your type of business"
             title="We know how your business actually works."
-            body="Retail, restaurants, salons, professional services — we've funded them all. Offers are sized to your real cash flow, not a generic credit formula."
+            body="Retail, restaurants, salons, auto shops, contractors — we've funded them all. Your offer is sized to what your business actually earns, not a generic formula."
             bullets={[
-              'Industry-aware underwriting across 6 verticals',
-              'Offers that match your typical sales seasonality',
+              'Approval based on your card sales history — not just your credit score',
+              'Offers that account for your busy and slow seasons',
               'No collateral and no lengthy paperwork',
             ]}
             visual={<IndustryVisual />}
           />
           <FeatureBlock
             reverse
-            eyebrow="Fast & flexible"
-            title="From $1K to $300K — funded as soon as tomorrow."
-            body="Apply in minutes from your Delt dashboard. Most approvals land same-day and funds arrive in your account the next business day, subject to eligibility."
+            eyebrow="Fast approval, fast funding"
+            title="From $1K to $300K — money in your account as soon as tomorrow."
+            body="Apply in minutes from your Delt dashboard. Most approvals are same-day. Money arrives in your account the next business day, subject to eligibility."
             bullets={[
-              'Loan amounts from $1,000 to $300,000',
-              'Fixed fee — no compounding interest or hidden charges',
-              'No prepayment penalty, no late fees',
+              'Borrow from $1,000 to $300,000',
+              'One fixed fee — no compounding interest, no hidden charges',
+              'No penalty for paying early, no late fees',
             ]}
             visual={<SpeedVisual />}
           />
           <FeatureBlock
-            eyebrow="Easy repayment"
-            title="Payments flex with your daily card sales."
-            body="Your repayment is a fixed percentage of each day's card volume. Quiet week? Pay less. Busy weekend? Pay a little more. Nothing to schedule."
+            eyebrow="Repayment that moves with your sales"
+            title="Slow week? You pay less. Busy weekend? A little more."
+            body="Repayment is a fixed percentage of each day's card sales. It comes out automatically — no invoices to pay, no transfers to set up. When business is quiet, your repayment is too."
             bullets={[
-              'A fixed share of each day\'s card sales — not a flat monthly bill',
-              'Automatic — no invoices, no manual transfers',
-              'Typical target terms of 90 to 360 days',
+              'A fixed share of each day\'s card sales — never a flat monthly bill',
+              'Fully automatic — no invoices, no manual transfers',
+              'Target repayment windows of 90 to 360 days',
             ]}
             visual={<RepaymentMiniVisual />}
           />
@@ -704,14 +703,13 @@ export function CapitalPage() {
                 letterSpacing: '-0.025em',
               }}
             >
-              A rhythm that matches your week.
+              Your repayment follows your sales — automatically.
             </h2>
             <p
               className="mx-auto leading-relaxed"
               style={{ fontSize: 'clamp(15px, 1.2vw, 17px)', color: MUTED, maxWidth: 620 }}
             >
-              In small business, unpredictability is predictable. Delt Capital repayment flexes
-              with your cash flow — automatically.
+              Slow Tuesdays. Packed Fridays. Holiday rushes. Delt Capital repayment moves with your business — not against it.
             </p>
           </div>
 
@@ -730,8 +728,7 @@ export function CapitalPage() {
             className="text-center mt-8 text-xs"
             style={{ color: MICRO, maxWidth: 560, margin: '2rem auto 0' }}
           >
-            On days when your sales are higher, you'll pay a little more. On days your sales are
-            lower, you'll pay less. Illustrative only — actual terms vary by offer.
+            Higher sales day — a little more comes off. Slower day — a little less. Illustrative only — actual terms vary by offer.
           </p>
         </div>
       </section>
@@ -754,7 +751,7 @@ export function CapitalPage() {
                 letterSpacing: '-0.025em',
               }}
             >
-              Real merchants, real stories.
+              Real business owners. Real results.
             </h2>
           </div>
 
@@ -882,12 +879,12 @@ export function CapitalPage() {
                 letterSpacing: '-0.025em',
               }}
             >
-              Guides, templates, and playbooks.
+              Guides for small business owners.
             </h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             <ResourceCard
-              title="The small-business expansion checklist"
+              title="The checklist for opening a second location"
               tag="Template"
               cta="Download"
               icon={Download}
@@ -901,7 +898,7 @@ export function CapitalPage() {
               bg={IVORY}
             />
             <ResourceCard
-              title="Loans 101: everything about the application"
+              title="Business funding 101: how to apply and what to expect"
               tag="Guide"
               cta="Read"
               icon={BookOpen}
@@ -923,7 +920,7 @@ export function CapitalPage() {
                 className="text-[12px] font-bold uppercase mb-3"
                 style={{ color: PURPLE, letterSpacing: '0.18em' }}
               >
-                Already a Delt customer?
+                Already using Delt?
               </div>
               <h3
                 className="font-bold leading-[1.15] mb-4"
@@ -933,7 +930,7 @@ export function CapitalPage() {
                   letterSpacing: '-0.02em',
                 }}
               >
-                Check your personalized Capital dashboard to see if you're pre-qualified.
+                Log in and check your dashboard — your pre-qualified offer may already be waiting.
               </h3>
               <Link
                 to="/login"
@@ -998,13 +995,13 @@ export function CapitalPage() {
               letterSpacing: '-0.025em',
             }}
           >
-            Get started today.
+            Ready to get funded?
           </h2>
           <p
             className="mb-8 leading-relaxed mx-auto"
             style={{ fontSize: 'clamp(15px, 1.2vw, 17px)', color: MUTED, maxWidth: 460 }}
           >
-            Talk to a specialist and see how Delt Capital can help your business.
+            Book a quick call and we'll walk you through what your business qualifies for.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4">
             <Link
@@ -1041,13 +1038,11 @@ export function CapitalPage() {
           style={{ color: MICRO, fontSize: 11, lineHeight: 1.7 }}
         >
           <p>
-            Delt Capital loans are issued by Delt Banking Partners, member FDIC. Loans are
-            subject to credit approval and may not be available in certain jurisdictions.
+            Delt Capital loans are issued by Delt Banking Partners, member FDIC. All loans are
+            subject to approval and may not be available in all locations.
           </p>
           <p>
-            Pre-qualified offers are based on information about your business and your account
-            history with Delt. All loans subject to credit approval. Illustrative figures shown on
-            this page are for demonstration only.
+            Pre-qualified offers are based on your business information and your history with Delt. All loans subject to approval. Dollar figures shown on this page are for illustration only.
           </p>
         </div>
       </div>

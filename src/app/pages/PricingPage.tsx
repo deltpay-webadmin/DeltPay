@@ -35,15 +35,15 @@ const fonts = {
 const FAQS = [
   {
     q: "What's actually included in Delt Zero processing?",
-    a: 'Every Delt plan — Free, Growth, and Personalized — comes with $0 card processing. No percentage per transaction, no monthly processing minimum, no hidden swipe fees. You only pay the flat monthly plan price (or nothing, on Free).',
+    a: 'Every Delt plan — Free, Growth, and Personalized — comes with $0 card processing. No processing percentage, no monthly minimum, no hidden swipe fees. You only pay the flat monthly plan price (or nothing on the Free plan).',
   },
   {
     q: "How do I decide between Free and Growth?",
-    a: "If you just need to accept payments, Free works. If you want the website, online store, Lens AI analytics, and the full platform stitched together — that's Growth. Most merchants on Free upgrade to Growth within 90 days.",
+    a: "If you just need to accept card payments, Free works. If you want a website, an online store, Lens AI analytics, and everything in one place — that's Growth. Most owners on Free upgrade to Growth within 90 days.",
   },
   {
     q: "Can I change plans later?",
-    a: 'Yes. Upgrade, downgrade, or cancel at any time from your Delt dashboard. No contracts, no early-termination fees. Your data and configuration follow you between plans.',
+    a: 'Yes. Upgrade, downgrade, or cancel at any time from your Delt dashboard. No contracts, no cancellation fees. Your data and settings carry over when you switch.',
   },
   {
     q: "Is there a setup fee or contract?",
@@ -51,11 +51,11 @@ const FAQS = [
   },
   {
     q: "What hardware comes with each plan?",
-    a: "Every plan includes a free Delt card reader. Countertop terminals, printers, and kitchen display systems are available as add-ons — and bundled at a discount when you pick Growth or Personalized.",
+    a: "Every plan includes a free Delt card reader. Countertop terminals, receipt printers, and kitchen display systems are available as add-ons — and bundled at a discount on Growth or Personalized.",
   },
   {
     q: "What's the difference between Growth and Personalized?",
-    a: "Growth is $89/month and includes the full platform out of the box. Personalized is for larger operations — custom feature sets, custom rates, loyalty and SMS, payroll and scheduling, inventory, and Capital access — all quoted to fit your business.",
+    a: "Growth is $89/month and includes the full platform ready to go. Personalized is for larger businesses that need custom pricing, loyalty programs, SMS marketing, payroll, scheduling, inventory, and access to Delt Capital — all tailored to your operation.",
   },
 ];
 
@@ -116,52 +116,52 @@ export function PricingPage() {
   const tiers = [
     {
       name: "Free",
-      outcome: "Start getting paid today. No monthly cost.",
+      outcome: "Start getting paid today. No monthly fee.",
       price: 0,
-      cta: "Shop Now",
+      cta: "Get Started Free",
       ctaStyle: "outline",
       ctaRoute: "/signup",
-      belowCta: "Accept payments anywhere with no monthly fees.",
+      belowCta: "Take card payments anywhere — no monthly fee, no contract.",
       features: [
         { text: "Accept in-person and online payments", included: true },
-        { text: "Card reader included at no cost", included: true },
-        { text: "Add-ons available as you grow", included: false },
+        { text: "Free card reader included", included: true },
+        { text: "Add tools as your business grows", included: false },
       ],
     },
     {
       name: "Growth",
-      outcome: "Everything you need to run and understand your business.",
+      outcome: "Everything you need to run and grow your business from one place.",
       price: 89,
       originalPrice: 149,
       cta: "Get a Demo",
       ctaStyle: "primary",
       ctaRoute: "/contact-sales",
-      belowCta: "The full platform — website, payments, and intelligence.",
+      belowCta: "Your website, payments, and Lens AI analytics — all in one dashboard.",
       features: [
         { text: "Website and online store included", included: true },
         { text: "Lens AI analytics included", included: true },
-        { text: "Add-ons available as you grow", included: false },
+        { text: "Add tools as your business grows", included: false },
       ],
       bundle: true,
     },
     {
       name: "Personalized",
-      outcome: "For businesses ready to run the full operation from one place.",
+      outcome: "For larger operations that need custom pricing and a full toolkit.",
       price: null,
       cta: "Get a Quote",
       ctaStyle: "outline",
       ctaRoute: "/get-a-quote",
-      belowCta: "Custom features, custom rates. Solutions include, but not limited to:",
+      belowCta: "Custom rates. Custom features. Can include:",
       features: [
         { text: "Full Lens AI suite", included: false },
-        { text: "Forecasting and advanced analytics", included: false },
+        { text: "Sales forecasting and advanced reporting", included: false },
         { text: "Website with built-in online store", included: false },
-        { text: "Loyalty, SMS, and gift cards", included: false },
-        { text: "Integrated payroll and tips", included: false },
-        { text: "Employee scheduling and time tracking", included: false },
+        { text: "Loyalty programs, SMS marketing, and gift cards", included: false },
+        { text: "Payroll and tip management", included: false },
+        { text: "Staff scheduling and time tracking", included: false },
         { text: "Inventory management", included: false },
         { text: "Delt Capital access", included: false },
-        { text: "Hardware setup of your choosing", included: false },
+        { text: "Hardware setup of your choice", included: false },
       ],
     },
   ];
@@ -171,19 +171,19 @@ export function PricingPage() {
     {
       icon: <Users size={22} color={PURPLE} />,
       name: 'Payroll & Scheduling',
-      desc: 'Run payroll, track hours, and schedule shifts — all tied to the same system that rings sales.',
+      desc: 'Run payroll, track hours, and schedule shifts — all in the same system you use to ring up sales.',
       price: 'from $29/mo',
     },
     {
       icon: <MessageSquare size={22} color={PURPLE} />,
       name: 'Loyalty, SMS & Gift Cards',
-      desc: 'Bring regulars back and win new ones with text marketing, loyalty points, and digital gift cards.',
+      desc: 'Keep regulars coming back with text messages, loyalty points, and digital gift cards — set it up once and it runs itself.',
       price: 'from $39/mo',
     },
     {
       icon: <Sparkles size={22} color={PURPLE} />,
       name: 'Advanced Lens AI',
-      desc: 'Forecasting, anomaly alerts, cohort tracking, and AI copilots tuned to your operation.',
+      desc: 'Know what\'s coming before it arrives. Lens forecasts sales, flags unusual activity, and shows you which customers are slipping away.',
       price: 'from $49/mo',
     },
   ];
@@ -309,12 +309,12 @@ export function PricingPage() {
               fontSize: 16,
               fontWeight: 700,
               letterSpacing: "-0.01em",
-            }}>Most merchants choose the full platform.</div>
+            }}>Most owners pick Growth — the full platform.</div>
             <div style={{
               color: "rgba(255,255,255,0.55)",
               fontSize: 13,
               marginTop: 2,
-            }}>Website, payments, Lens AI, and capital — better together, built as one.</div>
+            }}>Website, payments, Lens AI, and funding — better together, built as one.</div>
           </div>
           <div
             className="bundle-button"
@@ -753,7 +753,7 @@ export function PricingPage() {
             color: MICRO,
             marginBottom: 22,
             fontFamily: fonts.heading,
-          }}>Recognized by operators everywhere</div>
+          }}>Recognized across the industry</div>
           <div style={{
             display: 'flex',
             flexWrap: 'wrap',
@@ -799,14 +799,14 @@ export function PricingPage() {
             margin: 0,
             marginBottom: 14,
             fontFamily: fonts.heading,
-          }}>Pick a plan today. See your first sale this week.</h2>
+          }}>Pick a plan. Start taking payments this week.</h2>
           <p style={{
             fontSize: 17,
             color: MUTED,
             lineHeight: 1.55,
             marginBottom: 28,
             fontFamily: fonts.heading,
-          }}>No contracts. No setup fees. Switch or cancel anytime.</p>
+          }}>No contracts. No setup fees. Change or cancel whenever you want.</p>
           <div style={{ display: 'inline-flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center' }}>
             <button
               onClick={() => navigate('/signup')}
@@ -863,7 +863,7 @@ export function PricingPage() {
             fontFamily: fonts.heading,
             margin: 0,
           }}>
-            Delt Zero $0 processing applies to eligible domestic card transactions on Delt hardware and Delt-hosted checkout; certain card-not-present, international, or keyed-entry transactions may incur standard interchange pass-through. Promotional Growth pricing of $89/mo reflects a limited-time offer from the regular price of $149/mo and is subject to change. Hardware pricing shown is a starting configuration; actual cost depends on the bundle and quantity selected. Add-on pricing is billed monthly and can be removed at any time. All plans are subject to Delt's Merchant Terms of Service and applicable Acceptable Use Policy. Delt Capital financing is offered through Delt Capital LLC to qualified merchants based on processing history and other underwriting criteria; not all applicants will qualify.
+            Delt Zero $0 processing applies to eligible domestic card transactions on Delt hardware and Delt-hosted checkout; certain card-not-present, international, or keyed-entry transactions may incur additional fees. Promotional Growth pricing of $89/mo is a limited-time offer from the standard price of $149/mo and is subject to change. Hardware prices shown are starting configurations; actual cost depends on bundle and quantity. Add-on fees are billed monthly and can be removed at any time. All plans are subject to Delt's Terms of Service and Acceptable Use Policy. Delt Capital financing is offered through Delt Capital LLC to qualified business owners based on card sales history and other approval criteria; not all applicants will qualify.
           </p>
         </div>
       </section>
