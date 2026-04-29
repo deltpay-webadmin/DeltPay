@@ -612,7 +612,10 @@ export function PaymentsPage() {
       </section>
 
       {/* ═══ 10. SMALL-PRINT LEGAL (ivory) ═════════════════════════ */}
-      <div className="px-6 py-10" style={{ background: 'linear-gradient(180deg, #FFFFFF 0%, #F4F3FA 100%)' }}>
+      <div
+        className="px-6 pt-9 pb-11"
+        style={{ background: '#FFFFFF', borderTop: `1px solid ${HAIRLINE}` }}
+      >
         <div
           className="max-w-4xl mx-auto"
           style={{ color: MICRO, fontSize: 11, lineHeight: 1.7 }}

@@ -1033,8 +1033,8 @@ export function CapitalPage() {
 
       {/* ═══ 11. SMALL-PRINT LEGAL BLOCK (soft gradient, no hard band) ═ */}
       <div
-        className="px-6 py-10"
-        style={{ background: 'linear-gradient(180deg, #FFFFFF 0%, #F4F3FA 100%)' }}
+        className="px-6 pt-9 pb-11"
+        style={{ background: '#FFFFFF', borderTop: `1px solid ${HAIRLINE}` }}
       >
         <div
           className="max-w-4xl mx-auto flex flex-col gap-2"

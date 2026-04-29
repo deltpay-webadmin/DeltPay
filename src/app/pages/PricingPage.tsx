@@ -751,45 +751,86 @@ export function PricingPage() {
         </div>
       </section>
 
-      {/* ═══ 5. RECOGNITION / AWARDS (muted, small, centered) ═══════ */}
-      <section style={{ background: IVORY, padding: '56px 24px', borderTop: `1px solid ${HAIRLINE}`, borderBottom: `1px solid ${HAIRLINE}` }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto', textAlign: 'center' }}>
-          <div style={{
-            fontSize: 11,
-            fontWeight: 700,
-            letterSpacing: '0.22em',
-            textTransform: 'uppercase',
-            color: MICRO,
-            marginBottom: 22,
-            fontFamily: fonts.heading,
-          }}>Recognized by operators everywhere</div>
-          <div style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: 32,
-            justifyContent: 'center',
-            alignItems: 'center',
-          }}>
+      {/* ═══ 5. RECOGNITION / AWARDS — confident dark band ═════════ */}
+      <section
+        style={{
+          background: NAVY,
+          padding: '40px 24px',
+          position: 'relative',
+          overflow: 'hidden',
+        }}
+      >
+        {/* subtle purple glow */}
+        <div
+          aria-hidden
+          style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: 720,
+            height: 280,
+            background: 'radial-gradient(ellipse, rgba(73,69,255,0.18) 0%, rgba(73,69,255,0) 70%)',
+            pointerEvents: 'none',
+          }}
+        />
+        <div style={{ position: 'relative', maxWidth: 1180, margin: '0 auto', textAlign: 'center' }}>
+          <div
+            style={{
+              fontSize: 11,
+              fontWeight: 700,
+              letterSpacing: '0.22em',
+              textTransform: 'uppercase',
+              color: 'rgba(255,255,255,0.55)',
+              marginBottom: 18,
+              fontFamily: fonts.heading,
+            }}
+          >
+            Recognized by operators everywhere
+          </div>
+          <div
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: '14px 28px',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}
+          >
             {[
-              { label: 'G2 · Leader 2026' },
-              { label: 'Capterra · Top 20' },
-              { label: 'Forbes Fintech 50' },
-              { label: 'Fast Company · Most Innovative' },
-              { label: 'Inc. · Best Workplaces' },
-            ].map((a) => (
-              <div key={a.label} style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 8,
-                color: NAVY,
-                fontSize: 13,
-                fontWeight: 700,
-                letterSpacing: '-0.005em',
-                opacity: 0.65,
-                fontFamily: fonts.heading,
-              }}>
-                <Award size={16} color={PURPLE} />
-                {a.label}
+              'G2 · Leader 2026',
+              'Capterra · Top 20',
+              'Forbes Fintech 50',
+              'Fast Company · Most Innovative',
+              'Inc. · Best Workplaces',
+            ].map((label, i, arr) => (
+              <div
+                key={label}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 28 }}
+              >
+                <span
+                  style={{
+                    color: '#FFFFFF',
+                    fontSize: 13,
+                    fontWeight: 600,
+                    letterSpacing: '0.01em',
+                    fontFamily: fonts.heading,
+                  }}
+                >
+                  {label}
+                </span>
+                {i < arr.length - 1 && (
+                  <span
+                    aria-hidden
+                    style={{
+                      width: 4,
+                      height: 4,
+                      borderRadius: '50%',
+                      background: PURPLE,
+                      opacity: 0.9,
+                    }}
+                  />
+                )}
               </div>
             ))}
           </div>
@@ -862,8 +903,14 @@ export function PricingPage() {
         </div>
       </section>
 
-      {/* ═══ 7. SMALL-PRINT LEGAL (ivory, above footer) ════════════ */}
-      <section style={{ background: 'linear-gradient(180deg, #FFFFFF 0%, #F4F3FA 100%)', padding: '48px 24px' }}>
+      {/* ═══ 7. SMALL-PRINT LEGAL — clean white with hairline ══════ */}
+      <section
+        style={{
+          background: '#FFFFFF',
+          padding: '36px 24px 44px',
+          borderTop: `1px solid ${HAIRLINE}`,
+        }}
+      >
         <div style={{ maxWidth: 980, margin: '0 auto' }}>
           <p style={{
             fontSize: 11,
