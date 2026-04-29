@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChevronDown, ArrowRight, Check, Award, ShoppingBag, Printer, CreditCard, Sparkles, Users, MessageSquare } from 'lucide-react';
+import { CapitalCrossSell } from '../components/CapitalCrossSell';
 
 const COLORS = {
   navy: "#041e42",
@@ -591,6 +592,14 @@ export function PricingPage() {
           </div>
         </div>
       </section>
+
+      {/* CAPITAL CROSS-SELL banner — between add-ons and hardware */}
+      <CapitalCrossSell
+        variant="banner"
+        eyebrow="Bonus for Delt merchants"
+        headline="Process with Delt — pre-approve for capital."
+        subhead="Best rates, daily-flex repayment, deposited in 24–48 hours. Same company, no separate application."
+      />
 
       {/* ═══ 3. HARDWARE IVORY BAND ═══════════════════════════════ */}
       <section style={{ background: IVORY, padding: '80px 24px' }}>

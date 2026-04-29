@@ -18,6 +18,7 @@ import { ScrollExpandingHero } from '../components/ScrollExpandingHero';
 import { FreeAccountSection } from '../components/FreeAccountSection';
 import { ProductCrossSell } from '../components/ProductCrossSell';
 import { BusinessScene } from '../components/BusinessScene';
+import { CapitalCrossSell } from '../components/CapitalCrossSell';
 
 /* ─── Design tokens ─────────────────────────────────────────── */
 const NAVY     = '#041E42';
@@ -562,6 +563,9 @@ export function PaymentsPage() {
       </section>
 
       {/* ═══ 7. KEEP — FreeAccountSection ══════════════════════════ */}
+      {/* CAPITAL CROSS-SELL — Merchant Services -> Capital */}
+      <CapitalCrossSell variant="full" theme="dark" />
+
       <FreeAccountSection />
 
       {/* ═══ 8. RESOURCES 3-UP (white, lavender/ivory cards) ═══════ */}

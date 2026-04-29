@@ -9,6 +9,7 @@ import { SpotlightTestimonial } from '@/app/components/SpotlightTestimonial';
 import { IndustryPanel } from '@/app/components/IndustryPanel';
 import { EmailCaptureBar } from '@/app/components/EmailCaptureBar';
 import DeltMarquee from '@/app/components/DeltMarquee';
+import { CapitalCrossSell } from '@/app/components/CapitalCrossSell';
 
 export function HomePage() {
   return (
@@ -21,6 +22,8 @@ export function HomePage() {
       <SeeItInAction />
       <ScrollRevealText />
       <FeatureShowcase />
+      {/* Merchant Services → Capital value loop */}
+      <CapitalCrossSell variant="full" theme="light" />
       {/* Wave 2 — Made for how you actually work (industry panel) */}
       <IndustryPanel />
       <ResultsBento />

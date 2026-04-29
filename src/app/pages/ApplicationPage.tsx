@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router';
 import { ArrowLeft, Check, Building2, Mail, Phone, User } from 'lucide-react';
 import { usePlaidLink } from 'react-plaid-link';
+import { CapitalCrossSell } from '../components/CapitalCrossSell';
 
 export function ApplicationPage() {
   const navigate = useNavigate();
@@ -324,6 +325,11 @@ export function ApplicationPage() {
                 </div>
               </div>
             </form>
+          </div>
+
+          {/* MERCHANT → CAPITAL value loop. Plant the seed at high intent. */}
+          <div className="mt-8">
+            <CapitalCrossSell variant="card" />
           </div>
         </div>
       </section>
