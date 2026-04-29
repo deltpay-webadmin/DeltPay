@@ -44,7 +44,7 @@ const PILLARS = [
   {
     icon: BadgeCheck,
     title: 'Pre-approved automatically',
-    body: 'Process with Delt and we underwrite from your real sales \u2014 no separate application, no credit pull surprises.',
+    body: 'Process with Delt and we underwrite from your real sales — no separate application, no credit pull surprises.',
   },
   {
     icon: Percent,
@@ -54,11 +54,11 @@ const PILLARS = [
   {
     icon: Repeat,
     title: 'Flexible repayment',
-    body: 'A small percentage of daily card sales \u2014 it flexes up on busy days, down on slow ones.',
+    body: 'A small percentage of daily card sales — it flexes up on busy days, down on slow ones.',
   },
   {
     icon: Zap,
-    title: 'Funded in 24\u201348 hours',
+    title: 'Funded in 24–48 hours',
     body: 'Accept an offer in your dashboard and the cash hits the bank account you already process into.',
   },
 ];
@@ -120,7 +120,7 @@ function FullSection({
             </h2>
             <p className="text-lg max-w-xl" style={{ color: bodyColor }}>
               {subhead ??
-                'Every Delt merchant gets pre-approved offers from Delt Capital \u2014 same company, different product. The longer you process with us, the better the rate and the bigger the offer.'}
+                'Every Delt merchant gets pre-approved offers from Delt Capital — same company, different product. The longer you process with us, the better the rate and the bigger the offer.'}
             </p>
           </div>
 
@@ -177,7 +177,7 @@ function FullSection({
                   Funded
                 </div>
                 <div className="text-sm font-bold" style={{ color: titleColor }}>
-                  24\u201348 hrs
+                  24–48 hrs
                 </div>
               </div>
             </div>
@@ -287,7 +287,7 @@ function BannerSection({
           </h3>
           <p className="text-white/70 max-w-2xl" style={{ fontSize: 15 }}>
             {subhead ??
-              'Best rates, repayment that flexes with daily sales, deposited in 24\u201348 hours \u2014 all from the same dashboard you already use.'}
+              'Best rates, repayment that flexes with daily sales, deposited in 24–48 hours — all from the same dashboard you already use.'}
           </p>
         </div>
 
@@ -337,21 +337,21 @@ function CardSection({
             {eyebrow ?? 'Bonus when you process with Delt'}
           </div>
           <h3 className="text-lg font-bold leading-snug" style={{ color: NAVY }}>
-            {headline ?? 'You\u2019re also pre-approved for Delt Capital.'}
+            {headline ?? 'You’re also pre-approved for Delt Capital.'}
           </h3>
         </div>
       </div>
 
       <p className="text-sm leading-relaxed mb-5" style={{ color: MUTED }}>
         {subhead ??
-          'Active merchants get our best rates, flexible daily repayment, and funds in 24\u201348 hours \u2014 no separate application required.'}
+          'Active merchants get our best rates, flexible daily repayment, and funds in 24–48 hours — no separate application required.'}
       </p>
 
       <div className="grid grid-cols-3 gap-3 mb-5">
         {[
           { k: 'Rate', v: 'Best available' },
           { k: 'Repay', v: 'Flexes with sales' },
-          { k: 'Funded', v: '24\u201348 hrs' },
+          { k: 'Funded', v: '24–48 hrs' },
         ].map((s) => (
           <div key={s.k}>
             <div
