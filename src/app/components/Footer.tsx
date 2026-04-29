@@ -1,135 +1,31 @@
 import { Facebook, Twitter, Linkedin, Instagram } from 'lucide-react';
 import { Link, useLocation } from 'react-router';
 import { motion, useInView } from 'motion/react';
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useMemo, useRef } from 'react';
 import logoImage from 'figma:asset/61527edee0ea2e963bace756584cec3657b62f9e.png';
 
 const NAVY = '#041E42';
 
 /**
- * Detect whether a CSS color string represents a "dark" background.
- * Handles rgb/rgba and #hex inputs returned by getComputedStyle.
- * Returns null when the color is fully transparent so callers can
- * walk further up the tree.
- */
-function colorBrightness(input: string): { lum: number; alpha: number } | null {
-  if (!input) return null;
-  const rgb = input.match(/rgba?\(([^)]+)\)/i);
-  if (rgb) {
-    const parts = rgb[1].split(',').map((s) => parseFloat(s.trim()));
-    const [r, g, b] = parts;
-    const a = parts.length === 4 ? parts[3] : 1;
-    if (a === 0) return null;
-    // Rec. 709 luminance
-    const lum = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
-    return { lum, alpha: a };
-  }
-  const hex = input.replace('#', '');
-  if (/^[0-9a-f]{6}$/i.test(hex)) {
-    const r = parseInt(hex.slice(0, 2), 16);
-    const g = parseInt(hex.slice(2, 4), 16);
-    const b = parseInt(hex.slice(4, 6), 16);
-    const lum = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
-    return { lum, alpha: 1 };
-  }
-  return null;
-}
-
-/**
- * Inspect a single element's background (solid + gradient stops).
- * Returns:
- *   true  → element has an opaque dark background
- *   false → element has an opaque light background
- *   null  → element is effectively transparent; caller should keep walking
- */
-function inspectElementBg(node: HTMLElement): boolean | null {
-  const cs = window.getComputedStyle(node);
-  const bg = cs.backgroundColor;
-  const parsed = colorBrightness(bg);
-  if (parsed && parsed.alpha > 0.05) {
-    return parsed.lum < 0.35;
-  }
-  // Check inline backgroundImage gradient stops crudely.
-  const bgImage = cs.backgroundImage;
-  if (bgImage && bgImage !== 'none') {
-    const stops = bgImage.match(/rgba?\([^)]+\)|#[0-9a-f]{6}/gi) || [];
-    let foundOpaque = false;
-    let darkVote = 0;
-    let lightVote = 0;
-    for (const s of stops) {
-      const p = colorBrightness(s);
-      if (p && p.alpha > 0.05) {
-        foundOpaque = true;
-        if (p.lum < 0.35) darkVote++;
-        else lightVote++;
-      }
-    }
-    if (foundOpaque) return darkVote >= lightVote;
-  }
-  return null;
-}
-
-/**
- * Find the visually-last opaque section/element that butts up against
- * the footer. Many of our pages wrap content in <div style="background:
- * white"> with a final dark <section> nested inside — we need to detect
- * THAT trailing section, not the wrapper's white background.
+ * Explicit theme map for routes whose content ENDS with a dark navy
+ * section (so the footer should also be dark for visual continuity).
+ * Anything not listed here defaults to light.
  *
- * Strategy: collect all descendants (including the root), filter to
- * those with an opaque background, then return the one that physically
- * sits CLOSEST to the bottom of the subtree (largest bottom edge).
+ * This is intentionally a simple mapping rather than DOM heuristics —
+ * the underlying pages each have their own wrappers/styles, and walking
+ * the DOM to guess what visually butts up against the footer is brittle
+ * (page wrapper backgrounds shadow nested CTA sections, content can
+ * still be loading on first paint, etc.). Editing one map is the
+ * cleanest place to express "this page ends dark".
  */
-function findVisualBottomBg(root: HTMLElement): boolean | null {
-  type Candidate = { el: HTMLElement; bottom: number; isDark: boolean };
-  const candidates: Candidate[] = [];
-
-  const walk = (node: HTMLElement, depth: number) => {
-    if (depth > 10) return;
-    const cs = window.getComputedStyle(node);
-    if (cs.display === 'none' || cs.visibility === 'hidden') return;
-    const verdict = inspectElementBg(node);
-    if (verdict !== null) {
-      const rect = node.getBoundingClientRect();
-      // Skip zero-height nodes (style tags, hidden wrappers).
-      if (rect.height > 4) {
-        candidates.push({ el: node, bottom: rect.bottom, isDark: verdict });
-      }
-    }
-    for (const child of Array.from(node.children) as HTMLElement[]) {
-      walk(child, depth + 1);
-    }
-  };
-  walk(root, 0);
-
-  if (candidates.length === 0) return null;
-  // Pick the candidate whose bottom edge is farthest down. If multiple
-  // tie at the same bottom (e.g. a wrapper and its last child), prefer
-  // the deeper one — it's the more specific background.
-  candidates.sort((a, b) => {
-    if (Math.abs(a.bottom - b.bottom) > 1) return b.bottom - a.bottom;
-    // Deeper element wins (more specific) — use DOM contains check.
-    if (a.el.contains(b.el)) return 1;
-    if (b.el.contains(a.el)) return -1;
-    return 0;
-  });
-  return candidates[0].isDark;
-}
-
-/**
- * Walk up the DOM from the previous sibling of `el` to find the first
- * element (or descendant) with a non-transparent background, and decide
- * if it's dark.
- */
-function prevSectionIsDark(el: HTMLElement | null): boolean {
-  if (!el) return false;
-  let prev = el.previousElementSibling as HTMLElement | null;
-  while (prev) {
-    const result = findVisualBottomBg(prev);
-    if (result !== null) return result;
-    prev = prev.previousElementSibling as HTMLElement | null;
-  }
-  return false;
-}
+const DARK_FOOTER_ROUTES = new Set<string>([
+  '/',
+  '/lens-ai',
+  '/business-types',
+  '/case-studies',
+  '/investor-relations',
+  '/website-builder',
+]);
 
 const socialIcons = [
   { icon: Facebook, label: 'Facebook', href: 'https://www.facebook.com/' },
@@ -141,25 +37,12 @@ const socialIcons = [
 export function Footer() {
   const ref = useRef<HTMLElement>(null);
   const isInView = useInView(ref, { once: true, amount: 0.1 });
-  const [isDark, setIsDark] = useState(false);
   const location = useLocation();
 
-  // Detect on mount + every route change so we adapt to the page above.
-  useLayoutEffect(() => {
-    if (!ref.current) return;
-    setIsDark(prevSectionIsDark(ref.current));
-  }, [location.pathname]);
-
-  // Re-check after fonts/images load and on resize, since heights can shift.
-  useEffect(() => {
-    if (!ref.current) return;
-    const recheck = () => setIsDark(prevSectionIsDark(ref.current));
-    const t = setTimeout(recheck, 250);
-    window.addEventListener('resize', recheck);
-    return () => {
-      clearTimeout(t);
-      window.removeEventListener('resize', recheck);
-    };
+  // Drive theme from an explicit route map — see DARK_FOOTER_ROUTES above.
+  const isDark = useMemo(() => {
+    const path = (location.pathname || '/').replace(/\/$/, '') || '/';
+    return DARK_FOOTER_ROUTES.has(path);
   }, [location.pathname]);
 
   /* Themed tokens */
