@@ -11,11 +11,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Quote,
-  Download,
-  BookOpen,
 } from 'lucide-react';
 import { ScrollExpandingHero } from '../components/ScrollExpandingHero';
-import { FreeAccountSection } from '../components/FreeAccountSection';
 import { ProductCrossSell } from '../components/ProductCrossSell';
 import { BusinessScene } from '../components/BusinessScene';
 import { CapitalCrossSell } from '../components/CapitalCrossSell';
@@ -562,76 +559,10 @@ export function PaymentsPage() {
         </div>
       </section>
 
-      {/* ═══ 7. KEEP — FreeAccountSection ══════════════════════════ */}
-      {/* CAPITAL CROSS-SELL — Merchant Services -> Capital */}
-      <CapitalCrossSell variant="full" theme="dark" />
+      {/* ═══ 7. CAPITAL CROSS-SELL — discrete banner, on-palette ═══ */}
+      <CapitalCrossSell variant="banner" />
 
-      <FreeAccountSection />
-
-      {/* ═══ 8. RESOURCES 3-UP (white, lavender/ivory cards) ═══════ */}
-      <section className="px-6 py-20 md:py-24" style={{ background: '#FFFFFF' }}>
-        <div style={{ maxWidth: 1120, margin: '0 auto' }}>
-          <div className="text-center mb-12">
-            <div
-              className="text-[12px] font-bold uppercase mb-3"
-              style={{ color: PURPLE, letterSpacing: '0.18em' }}
-            >
-              More for your business
-            </div>
-            <h2
-              className="font-bold leading-[1.1]"
-              style={{
-                fontSize: 'clamp(28px, 3.4vw, 40px)',
-                color: NAVY,
-                letterSpacing: '-0.025em',
-              }}
-            >
-              Guides to get the most out of every sale.
-            </h2>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            {[
-              { title: 'How to read your merchant statement', tag: 'Guide', cta: 'Read' as const, icon: BookOpen, bg: LAVENDER },
-              { title: 'The small-business ACH playbook', tag: 'Playbook', cta: 'Download' as const, icon: Download, bg: IVORY },
-              { title: 'Card-present vs card-not-present: what changes for fees?', tag: 'Research', cta: 'Read' as const, icon: BookOpen, bg: LAVENDER },
-            ].map((r) => {
-              const Icon = r.icon;
-              return (
-                <div
-                  key={r.title}
-                  className="rounded-2xl p-7 flex flex-col gap-5 cursor-pointer transition-transform"
-                  style={{ background: r.bg, minHeight: 240 }}
-                >
-                  <div
-                    className="w-10 h-10 rounded-xl flex items-center justify-center"
-                    style={{ background: '#FFFFFF' }}
-                  >
-                    <Icon size={18} color={PURPLE} />
-                  </div>
-                  <div
-                    className="text-[11px] font-bold uppercase"
-                    style={{ color: PURPLE, letterSpacing: '0.14em' }}
-                  >
-                    {r.tag}
-                  </div>
-                  <p
-                    className="font-bold leading-snug flex-1"
-                    style={{ color: NAVY, fontSize: 18 }}
-                  >
-                    {r.title}
-                  </p>
-                  <div className="flex items-center gap-1.5" style={{ color: PURPLE }}>
-                    <span className="text-sm font-semibold">{r.cta}</span>
-                    <ArrowRight size={14} />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* ═══ 9. PRODUCT CROSS-SELL (light) ═════════════════════════ */}
+      {/* ═══ 8. PRODUCT CROSS-SELL (light) ═════════════════════════ */}
       <ProductCrossSell
         currentProduct="payments"
         variant="light"
@@ -640,7 +571,7 @@ export function PaymentsPage() {
         subtitle="Add capital, websites, and AI analytics when you're ready — all on the same account."
       />
 
-      {/* ═══ 10. SMALL CENTERED FINAL CTA (white) ══════════════════ */}
+      {/* ═══ 9. SMALL CENTERED FINAL CTA (white) ══════════════════ */}
       <section className="px-6 py-20 md:py-24 text-center" style={{ background: '#FFFFFF' }}>
         <div style={{ maxWidth: 620, margin: '0 auto' }}>
           <h2
@@ -680,7 +611,7 @@ export function PaymentsPage() {
         </div>
       </section>
 
-      {/* ═══ 11. SMALL-PRINT LEGAL (ivory) ═════════════════════════ */}
+      {/* ═══ 10. SMALL-PRINT LEGAL (ivory) ═════════════════════════ */}
       <div className="px-6 py-10" style={{ background: 'linear-gradient(180deg, #FFFFFF 0%, #F4F3FA 100%)' }}>
         <div
           className="max-w-4xl mx-auto"
