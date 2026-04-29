@@ -583,31 +583,31 @@ export function ReviewsPage() {
       <section
         className="py-28 px-6 text-center relative overflow-hidden"
         style={{
-          background: `radial-gradient(ellipse 70% 80% at 50% 110%, ${PURPLE}20 0%, transparent 65%), ${WHITE}`,
+          background: `radial-gradient(ellipse 70% 80% at 50% 110%, ${PURPLE}30 0%, transparent 65%), ${NAVY}`,
         }}
       >
-        <div className="max-w-2xl mx-auto">
-          <p className="text-xs font-bold tracking-[0.18em] uppercase mb-4" style={{ color: PURPLE }}>
+        <div className="max-w-2xl mx-auto relative">
+          <p className="text-xs font-bold tracking-[0.18em] uppercase mb-4" style={{ color: '#9DA8FF' }}>
             Your story could be next
           </p>
-          <h2 className="text-5xl font-bold tracking-tight mb-5" style={{ color: NAVY, letterSpacing: '-0.025em', lineHeight: 1.05 }}>
+          <h2 className="text-5xl font-bold tracking-tight mb-5" style={{ color: WHITE, letterSpacing: '-0.025em', lineHeight: 1.05 }}>
             Join them.
           </h2>
-          <p className="mb-10 text-lg" style={{ color: MUTED }}>
+          <p className="mb-10 text-lg" style={{ color: 'rgba(255,255,255,0.75)' }}>
             Create a free account and see why 10,000+ businesses run on Delt.
           </p>
           <div className="flex items-center justify-center gap-3 flex-wrap">
             <a
               href="#"
               className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl text-sm font-semibold"
-              style={{ background: PURPLE, color: WHITE, boxShadow: '0 8px 24px rgba(73,69,255,0.35)' }}
+              style={{ background: PURPLE, color: WHITE, boxShadow: '0 8px 24px rgba(73,69,255,0.45)' }}
             >
               Create a free account <ArrowRight size={14} />
             </a>
             <a
               href="#"
               className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl text-sm font-semibold border"
-              style={{ borderColor: `${NAVY}1A`, color: NAVY, background: WHITE }}
+              style={{ borderColor: 'rgba(255,255,255,0.25)', color: WHITE, background: 'rgba(255,255,255,0.05)' }}
             >
               Talk to sales
             </a>

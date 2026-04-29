@@ -286,12 +286,6 @@ export function WhatsNewPage() {
             backgroundSize: '200px 200px',
           }}
         />
-        {/* soft bottom fade into white page */}
-        <div
-          aria-hidden
-          className="absolute inset-x-0 bottom-0 h-24 pointer-events-none"
-          style={{ background: `linear-gradient(to bottom, transparent, ${WHITE})` }}
-        />
 
         <div className="relative max-w-6xl mx-auto px-6 pt-28 md:pt-36 pb-36">
           <div className="flex items-center gap-2 mb-6">

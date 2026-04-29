@@ -25,6 +25,9 @@ const DARK_FOOTER_ROUTES = new Set<string>([
   '/case-studies',
   '/investor-relations',
   '/website-builder',
+  '/how-it-works',
+  '/delt-ai',
+  '/reviews',
 ]);
 
 const socialIcons = [

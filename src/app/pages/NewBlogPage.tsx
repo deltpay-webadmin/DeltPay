@@ -576,12 +576,6 @@ export function NewBlogPage() {
           </a>
         </div>
 
-        {/* soft transition to white */}
-        <div
-          aria-hidden
-          className="absolute inset-x-0 bottom-0 h-16 pointer-events-none"
-          style={{ background: `linear-gradient(to bottom, transparent, ${WHITE})` }}
-        />
       </section>
 
       {/* ══ STICKY CATEGORY BAR ═══════════════════════════════ */}
