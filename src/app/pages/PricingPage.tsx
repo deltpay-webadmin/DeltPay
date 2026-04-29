@@ -160,7 +160,7 @@ export function PricingPage() {
         { text: "Integrated payroll and tips", included: false },
         { text: "Employee scheduling and time tracking", included: false },
         { text: "Inventory management", included: false },
-        { text: "Delt Capital access", included: false },
+        { text: "Custom Delt Capital terms & higher lines", included: false },
         { text: "Hardware setup of your choosing", included: false },
       ],
     },
@@ -505,6 +505,71 @@ export function PricingPage() {
         </div>
       </div>
       </div>
+
+      {/* ═══ 1.5 CAPITAL ELIGIBILITY STRIP (every plan gets pre-approval) ═ */}
+      <section style={{ background: '#FFFFFF', padding: '24px' }}>
+        <div style={{ maxWidth: 1120, margin: '0 auto' }}>
+          <div
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 20,
+              padding: '20px 28px',
+              borderRadius: 16,
+              background: '#F4F3FA',
+              border: `1px solid ${HAIRLINE}`,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, flex: '1 1 auto', minWidth: 280 }}>
+              <div
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 12,
+                  background: PURPLE,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFF" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              </div>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: PURPLE, marginBottom: 4 }}>
+                  Included on every plan
+                </div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: NAVY, lineHeight: 1.35 }}>
+                  Process with Delt and you’re automatically pre-approved for Capital.
+                </div>
+                <div style={{ fontSize: 13, color: '#475569', marginTop: 4, lineHeight: 1.5 }}>
+                  Best rates · flexible repayment · funded in 24–48 hrs. Accept the offer or request more.
+                </div>
+              </div>
+            </div>
+            <Link
+              to="/capital"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '10px 20px',
+                borderRadius: 999,
+                background: PURPLE,
+                color: '#FFF',
+                fontSize: 14,
+                fontWeight: 600,
+                textDecoration: 'none',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              See your offer →
+            </Link>
+          </div>
+        </div>
+      </section>
 
       {/* ═══ 2. ADD-ONS 3-UP (LAVENDER CARDS on white) ══════════════ */}
       <section style={{ background: '#FFFFFF', padding: '80px 24px' }}>

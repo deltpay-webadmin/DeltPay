@@ -561,6 +561,9 @@ export function PaymentsPage() {
         </div>
       </section>
 
+      {/* ═══ 6.5 CAPITAL CROSS-SELL — same company, different product ═══ */}
+      <CapitalCrossSell variant="dark" />
+
       {/* ═══ 7. KEEP — FreeAccountSection ══════════════════════════ */}
       <FreeAccountSection />
 
@@ -627,13 +630,13 @@ export function PaymentsPage() {
         </div>
       </section>
 
-      {/* ═══ 9. PRODUCT CROSS-SELL (light) ═════════════════════════ */}
+      {/* ═══ 9. PRODUCT CROSS-SELL (light) — sites + AI; Capital above ═ */}
       <ProductCrossSell
         currentProduct="payments"
         variant="light"
         eyebrow="One platform, every tool"
-        title="Payments is just the start"
-        subtitle="Add capital, websites, and AI analytics when you're ready — all on the same account."
+        title="And the rest of the stack"
+        subtitle="Websites and Lens AI plug into the same account — turn on what you need, when you need it."
       />
 
       {/* ═══ 10. SMALL CENTERED FINAL CTA (white) ══════════════════ */}

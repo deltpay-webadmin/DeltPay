@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
-import { Phone, MessageCircle, Users, Briefcase, Book, ArrowLeft, Mail, Check, CheckCircle } from 'lucide-react';
+import { Phone, MessageCircle, Users, Briefcase, MessageSquare, ArrowLeft, Mail, Check, CheckCircle } from 'lucide-react';
 import { useNavigate } from 'react-router';
-import { ProductCrossSell } from '../components/ProductCrossSell';
+import { CapitalCrossSell } from '../components/CapitalCrossSell';
 
 function SuccessPanel() {
   return (
@@ -122,16 +122,19 @@ export function ContactSalesPage() {
               </button>
             </div>
 
-            {/* Resources */}
+            {/* Chat now */}
             <div className="group bg-white rounded-2xl p-8 border border-[#041E42]/10 hover:border-[#4945FF]/40 hover:shadow-[0_24px_60px_-24px_rgba(73,69,255,0.35)] transition-all duration-300">
               <div className="w-14 h-14 bg-[#041E42] rounded-xl flex items-center justify-center mb-6 group-hover:bg-[#4945FF] transition-colors">
-                <Book className="w-7 h-7 text-white" />
+                <MessageSquare className="w-7 h-7 text-white" />
               </div>
-              <h3 className="text-2xl font-bold text-[#041E42] mb-2">Explore the docs</h3>
-              <p className="text-[#475569] mb-4">Browse guides, API references, and playbooks.</p>
-              <p className="text-sm text-[#94A3B8] mb-6">Built for operators and builders.</p>
-              <button className="inline-flex items-center gap-2 text-[#4945FF] font-semibold hover:gap-3 transition-all">
-                View docs <span aria-hidden>→</span>
+              <h3 className="text-2xl font-bold text-[#041E42] mb-2">Chat now</h3>
+              <p className="text-[#475569] mb-4">Message a specialist live — get real answers in minutes.</p>
+              <p className="text-sm text-[#94A3B8] mb-6">Mon–Fri · 9am–6pm ET</p>
+              <button
+                onClick={() => navigate('/lens-chat')}
+                className="inline-flex items-center gap-2 text-[#4945FF] font-semibold hover:gap-3 transition-all"
+              >
+                Start a chat <span aria-hidden>→</span>
               </button>
             </div>
           </div>
@@ -395,12 +398,8 @@ export function ContactSalesPage() {
         </div>
       </section>
 
-      {/* Cross-sell at bottom for continuity */}
-      <ProductCrossSell
-        eyebrow="Explore the platform"
-        title="Everything you need to run your business"
-        subtitle="Payments, capital, websites, and AI — all under one roof."
-      />
+      {/* Capital cross-sell — Merchant Services + Capital are the same company */}
+      <CapitalCrossSell variant="dark" />
     </div>
   );
 }
