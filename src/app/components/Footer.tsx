@@ -70,31 +70,49 @@ function inspectElementBg(node: HTMLElement): boolean | null {
 }
 
 /**
- * Drill into a subtree to find the visually "last" element with a real
- * background — i.e. what visually butts up against the footer. We walk
- * down via lastElementChild but also scan trailing children for the last
- * one with a non-transparent background. This is needed when a page
- * wraps its content in a transparent <div>, so the footer's previous
- * sibling itself has no background but a nested <section> at the bottom
- * does (e.g. the dark CTA on /lens-ai).
+ * Find the visually-last opaque section/element that butts up against
+ * the footer. Many of our pages wrap content in <div style="background:
+ * white"> with a final dark <section> nested inside — we need to detect
+ * THAT trailing section, not the wrapper's white background.
+ *
+ * Strategy: collect all descendants (including the root), filter to
+ * those with an opaque background, then return the one that physically
+ * sits CLOSEST to the bottom of the subtree (largest bottom edge).
  */
-function findLastVisibleBg(root: HTMLElement, depth = 0): boolean | null {
-  if (depth > 8) return null;
-  // First, check the root element itself.
-  const self = inspectElementBg(root);
-  if (self !== null) return self;
-  // Walk children from the END so we find what visually sits closest
-  // to the footer.
-  const children = Array.from(root.children) as HTMLElement[];
-  for (let i = children.length - 1; i >= 0; i--) {
-    const child = children[i];
-    // Skip non-rendered nodes.
-    const cs = window.getComputedStyle(child);
-    if (cs.display === 'none' || cs.visibility === 'hidden') continue;
-    const result = findLastVisibleBg(child, depth + 1);
-    if (result !== null) return result;
-  }
-  return null;
+function findVisualBottomBg(root: HTMLElement): boolean | null {
+  type Candidate = { el: HTMLElement; bottom: number; isDark: boolean };
+  const candidates: Candidate[] = [];
+
+  const walk = (node: HTMLElement, depth: number) => {
+    if (depth > 10) return;
+    const cs = window.getComputedStyle(node);
+    if (cs.display === 'none' || cs.visibility === 'hidden') return;
+    const verdict = inspectElementBg(node);
+    if (verdict !== null) {
+      const rect = node.getBoundingClientRect();
+      // Skip zero-height nodes (style tags, hidden wrappers).
+      if (rect.height > 4) {
+        candidates.push({ el: node, bottom: rect.bottom, isDark: verdict });
+      }
+    }
+    for (const child of Array.from(node.children) as HTMLElement[]) {
+      walk(child, depth + 1);
+    }
+  };
+  walk(root, 0);
+
+  if (candidates.length === 0) return null;
+  // Pick the candidate whose bottom edge is farthest down. If multiple
+  // tie at the same bottom (e.g. a wrapper and its last child), prefer
+  // the deeper one — it's the more specific background.
+  candidates.sort((a, b) => {
+    if (Math.abs(a.bottom - b.bottom) > 1) return b.bottom - a.bottom;
+    // Deeper element wins (more specific) — use DOM contains check.
+    if (a.el.contains(b.el)) return 1;
+    if (b.el.contains(a.el)) return -1;
+    return 0;
+  });
+  return candidates[0].isDark;
 }
 
 /**
@@ -106,7 +124,7 @@ function prevSectionIsDark(el: HTMLElement | null): boolean {
   if (!el) return false;
   let prev = el.previousElementSibling as HTMLElement | null;
   while (prev) {
-    const result = findLastVisibleBg(prev);
+    const result = findVisualBottomBg(prev);
     if (result !== null) return result;
     prev = prev.previousElementSibling as HTMLElement | null;
   }
