@@ -179,7 +179,7 @@ export function DeltHeroHub() {
           <Reveal delay={0.3}>
             <div className="flex items-center gap-4 flex-wrap">
               <Link
-                to="/apply"
+                to="/get-funded"
                 className="inline-flex items-center gap-2 text-[15px] font-bold text-white px-[30px] py-3.5 rounded-lg transition-all duration-200 hover:-translate-y-0.5"
                 style={{ background: NAVY }}
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = PURPLE; }}
@@ -509,7 +509,7 @@ export function DeltHeroHub() {
                   'Payments': '/payments',
                   'Websites': '/website-examples',
                   'Lens AI': '/delt-ai',
-                  'Capital': '/apply',
+                  'Capital': '/get-funded',
                 };
                 
                 return (

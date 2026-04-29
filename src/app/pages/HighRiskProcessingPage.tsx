@@ -206,7 +206,7 @@ export function HighRiskProcessingPage() {
                 Get approved <ArrowRight size={16} />
               </Link>
               <Link
-                to="/apply"
+                to="/get-funded"
                 className="inline-flex items-center gap-2 px-7 py-4 rounded-full text-[15px] font-bold transition-all"
                 style={{
                   background: 'rgba(255,255,255,0.10)',
@@ -551,7 +551,7 @@ export function HighRiskProcessingPage() {
                 Talk to underwriting <ArrowRight size={16} />
               </Link>
               <Link
-                to="/apply"
+                to="/get-funded"
                 className="inline-flex items-center gap-2 px-7 py-4 rounded-full text-[15px] font-bold transition-all"
                 style={{
                   background: 'rgba(255,255,255,0.10)',

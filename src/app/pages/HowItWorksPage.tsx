@@ -243,7 +243,7 @@ export function HowItWorksPage() {
             Capital fuels growth, and Lens keeps you ahead of it all.
           </p>
           <div className="hiw-bottom-cta-buttons">
-            <Link to="/apply" className="hiw-cta-primary">
+            <Link to="/get-funded" className="hiw-cta-primary">
               Get started free <ArrowRight size={16} />
             </Link>
             <Link to="/pricing" className="hiw-cta-secondary">

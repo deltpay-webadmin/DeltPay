@@ -576,7 +576,7 @@ export function Navigation() {
                         </div>
 
                         <Link
-                          to="/apply"
+                          to="/get-funded"
                           className="inline-flex items-center gap-1.5 text-[17px] font-bold text-[#4945FF] hover:text-[#3933CC] transition-colors mt-5"
                           onClick={() => setActiveDropdown(null)}
                         >

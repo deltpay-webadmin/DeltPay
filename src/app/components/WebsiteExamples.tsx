@@ -288,7 +288,7 @@ function Hero() {
             </p>
 
             <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-              <Link to="/apply" style={{
+              <Link to="/get-funded" style={{
                 padding: '13px 30px', borderRadius: 50, border: 'none',
                 background: `linear-gradient(135deg, ${T.accent}, ${T.blue})`,
                 color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer',
@@ -1766,7 +1766,7 @@ function FinalCTA() {
 
           {/* THE button — solid brand purple, real CTA energy */}
           <Link
-            to="/apply"
+            to="/get-funded"
             className="we-final-cta-btn"
             style={{
               padding: '17px 36px',

@@ -507,7 +507,7 @@ export function ScrollExpandingHero() {
               }}
             >
               <Link
-                to="/apply"
+                to="/get-funded"
                 style={{
                   background: PURPLE,
                   color: '#fff',

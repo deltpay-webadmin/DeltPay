@@ -660,7 +660,7 @@ export function PaymentsPage() {
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4">
             <Link
-              to="/apply"
+              to="/get-funded"
               className="inline-flex items-center gap-2 rounded-full px-7 py-3.5 font-semibold text-white transition-all duration-200 hover:brightness-110"
               style={{ background: PURPLE, fontSize: 15, boxShadow: `0 4px 18px ${PURPLE}40` }}
             >

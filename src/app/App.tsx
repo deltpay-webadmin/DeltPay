@@ -25,6 +25,7 @@ import { ReviewsPage } from '@/app/pages/ReviewsPage';
 import { LensAIPage } from '@/app/pages/LensAIPage';
 import { WebsiteBuilderDemo } from '@/app/pages/WebsiteBuilderDemo';
 import { ApplicationPage } from '@/app/pages/ApplicationPage';
+import { GetFundedPage } from '@/app/pages/GetFundedPage';
 import { AboutPage } from '@/app/pages/AboutPage';
 import { CareersPage } from '@/app/pages/CareersPage';
 import { PrivacyPolicyPage } from '@/app/pages/PrivacyPolicyPage';
@@ -89,6 +90,7 @@ export default function App() {
                 <Route path="/delt-ai" element={<DeltAiPage />} />
                 <Route path="/capital" element={<CapitalPage />} />
                 <Route path="/calculator" element={<CalculatorPage />} />
+                <Route path="/get-funded" element={<GetFundedPage />} />
                 <Route path="/industries/:slug" element={<IndustryPage />} />
                 <Route path="/lens-demo" element={<LensDemoPage />} />
                 <Route path="/solutions/international-usdt" element={<InternationalUSDTPage />} />

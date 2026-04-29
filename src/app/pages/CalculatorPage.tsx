@@ -202,7 +202,7 @@ export function CalculatorPage() {
                     whileTap={{ scale: 0.99 }}
                   >
                     <Link
-                      to="/apply"
+                      to="/get-funded"
                       className="block w-full text-center py-3.5 bg-[#4945FF] hover:bg-[#3933CC] text-white rounded-lg transition-colors"
                       style={{ fontWeight: 600 }}
                     >

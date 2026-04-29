@@ -586,7 +586,7 @@ export function IndustryPage() {
             </p>
             <div className="flex flex-wrap gap-3">
               <Link
-                to="/apply"
+                to="/get-funded"
                 className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full bg-[#4945FF] text-white text-[15px] font-semibold hover:bg-[#3933CC] transition-colors"
               >
                 Get started free <ArrowRight className="w-4 h-4" />
@@ -1016,7 +1016,7 @@ export function IndustryPage() {
               </div>
               <div className="flex flex-col gap-3">
                 <Link
-                  to="/apply"
+                  to="/get-funded"
                   className="inline-flex items-center justify-center gap-2 px-6 py-4 rounded-full bg-[#4945FF] text-white text-[15px] font-semibold hover:bg-[#3933CC] transition-colors"
                 >
                   Start your free trial <ArrowRight className="w-4 h-4" />

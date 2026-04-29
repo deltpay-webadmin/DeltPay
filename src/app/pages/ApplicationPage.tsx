@@ -1,10 +1,48 @@
-import { useState, useCallback } from 'react';
-import { useNavigate } from 'react-router';
+import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router';
 import { ArrowLeft, Check, Building2, Mail, Phone, User } from 'lucide-react';
 import { usePlaidLink } from 'react-plaid-link';
 
+const LEAD_LABELS: Record<string, { label: string; sub: string }> = {
+  'MS+CAP-Switcher': {
+    label: 'Bundled offer — Processing + Capital',
+    sub: "You're switching processors and tapping Capital. We'll set up both in one application.",
+  },
+  'CAP-Only': {
+    label: 'Capital-only application',
+    sub: "We won't touch your processor. Quick verification — funded in 24–48 hours.",
+  },
+  'MS+CAP-NewMerchant': {
+    label: 'New merchant onboarding',
+    sub: 'Processing first — Capital pre-approval activates after ~30–60 days of volume.',
+  },
+  'Existing-Customer-Upsell': {
+    label: 'Existing Delt customer',
+    sub: "We'll route you through the customer flow to pre-fill your Capital offer.",
+  },
+};
+
 export function ApplicationPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  // CRM lead tag + qualifying answers passed in from /get-funded
+  const lead = searchParams.get('lead') || '';
+  const accepts = searchParams.get('accepts') || '';
+  const switchTo = searchParams.get('switch') || '';
+  const volume = searchParams.get('volume') || '';
+  const avg = searchParams.get('avg') || '';
+  const rate = searchParams.get('rate') || '';
+  const leadInfo = useMemo(() => LEAD_LABELS[lead] || null, [lead]);
+
+  // Funnel guard: anyone hitting /apply without a lead tag gets routed back
+  // through /get-funded so we capture the qualifying questions for CRM.
+  useEffect(() => {
+    if (!lead) {
+      navigate('/get-funded', { replace: true });
+    }
+  }, [lead, navigate]);
+
   const [step, setStep] = useState<'form' | 'plaid' | 'success'>('form');
   const [formData, setFormData] = useState({
     businessName: '',
@@ -12,6 +50,13 @@ export function ApplicationPage() {
     email: '',
     phone: '',
     businessType: 'llc',
+    // CRM tagging fields (carried forward to backend on submit)
+    leadTag: lead,
+    acceptsCards: accepts,
+    openToSwitch: switchTo,
+    monthlyVolume: volume,
+    avgTicket: avg,
+    currentRate: rate,
   });
   const [linkToken, setLinkToken] = useState<string | null>(null);
   const [publicToken, setPublicToken] = useState<string | null>(null);
@@ -171,11 +216,20 @@ export function ApplicationPage() {
           {/* Header */}
           <div className="text-center mb-8">
             <h1 className="text-3xl sm:text-4xl font-bold text-[#041E42] mb-3">
-              Get Started with Delt
+              {leadInfo ? leadInfo.label : 'Get Started with Delt'}
             </h1>
             <p className="text-lg text-[#475569]">
-              Complete this quick application to start processing payments
+              {leadInfo ? leadInfo.sub : 'Complete this quick application to start processing payments'}
             </p>
+            {leadInfo && (
+              <button
+                type="button"
+                onClick={() => navigate('/get-funded')}
+                className="mt-3 text-sm text-[#4945FF] hover:underline"
+              >
+                ← Change my answers
+              </button>
+            )}
           </div>
 
           {/* Application Form */}

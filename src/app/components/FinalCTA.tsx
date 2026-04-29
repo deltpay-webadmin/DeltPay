@@ -235,7 +235,7 @@ export function FinalCTA() {
           style={{ pointerEvents: 'auto' }}
         >
           <Link
-            to="/apply"
+            to="/get-funded"
             className="inline-flex items-center no-underline"
             style={{
               gap: 10,

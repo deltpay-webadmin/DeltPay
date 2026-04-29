@@ -228,7 +228,7 @@ export function JuspayHero() {
               </motion.p>
 
               <motion.div className="ih-ctas" style={{ y: subY, opacity: subOpacity }}>
-                <Link to="/apply" className="ih-btn-primary">
+                <Link to="/get-funded" className="ih-btn-primary">
                   Get Started <span className="ih-btn-arrow">›</span>
                 </Link>
                 <Link to="/sandbox" className="ih-btn-ghost">

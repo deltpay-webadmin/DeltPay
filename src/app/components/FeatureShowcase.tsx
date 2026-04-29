@@ -49,7 +49,7 @@ const features = [
     desc: "We already see your revenue. That's your application. Most merchants are funded in under 48 hours.",
     bullets: ['Approved based on what you\'ve earned, not your credit', 'Traditional lenders would take weeks. We don\'t.', 'Repayment that flexes with your slow seasons'],
     img: img4,
-    href: '/apply',
+    href: '/get-funded',
   },
 ];
 

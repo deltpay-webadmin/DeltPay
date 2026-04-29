@@ -624,7 +624,7 @@ export function InternationalUSDTPage() {
                 Talk to a specialist <ArrowRight size={16} />
               </Link>
               <Link
-                to="/apply"
+                to="/get-funded"
                 className="inline-flex items-center gap-2 px-7 py-4 rounded-full text-[15px] font-bold transition-all"
                 style={{
                   background: '#FFFFFF',

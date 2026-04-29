@@ -251,7 +251,7 @@ export function AboutPage() {
           <FadeIn delay={0.2}>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
-                to="/apply"
+                to="/get-funded"
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',

@@ -84,7 +84,7 @@ const PANELS = [
   },
   {
     id: 'capital',
-    href: '/apply',
+    href: '/get-funded',
     img: img1,
     num: '04 · Capital',
     name: 'Grow on Your Own Terms',
