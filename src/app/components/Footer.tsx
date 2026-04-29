@@ -36,33 +36,78 @@ function colorBrightness(input: string): { lum: number; alpha: number } | null {
 }
 
 /**
+ * Inspect a single element's background (solid + gradient stops).
+ * Returns:
+ *   true  → element has an opaque dark background
+ *   false → element has an opaque light background
+ *   null  → element is effectively transparent; caller should keep walking
+ */
+function inspectElementBg(node: HTMLElement): boolean | null {
+  const cs = window.getComputedStyle(node);
+  const bg = cs.backgroundColor;
+  const parsed = colorBrightness(bg);
+  if (parsed && parsed.alpha > 0.05) {
+    return parsed.lum < 0.35;
+  }
+  // Check inline backgroundImage gradient stops crudely.
+  const bgImage = cs.backgroundImage;
+  if (bgImage && bgImage !== 'none') {
+    const stops = bgImage.match(/rgba?\([^)]+\)|#[0-9a-f]{6}/gi) || [];
+    let foundOpaque = false;
+    let darkVote = 0;
+    let lightVote = 0;
+    for (const s of stops) {
+      const p = colorBrightness(s);
+      if (p && p.alpha > 0.05) {
+        foundOpaque = true;
+        if (p.lum < 0.35) darkVote++;
+        else lightVote++;
+      }
+    }
+    if (foundOpaque) return darkVote >= lightVote;
+  }
+  return null;
+}
+
+/**
+ * Drill into a subtree to find the visually "last" element with a real
+ * background — i.e. what visually butts up against the footer. We walk
+ * down via lastElementChild but also scan trailing children for the last
+ * one with a non-transparent background. This is needed when a page
+ * wraps its content in a transparent <div>, so the footer's previous
+ * sibling itself has no background but a nested <section> at the bottom
+ * does (e.g. the dark CTA on /lens-ai).
+ */
+function findLastVisibleBg(root: HTMLElement, depth = 0): boolean | null {
+  if (depth > 8) return null;
+  // First, check the root element itself.
+  const self = inspectElementBg(root);
+  if (self !== null) return self;
+  // Walk children from the END so we find what visually sits closest
+  // to the footer.
+  const children = Array.from(root.children) as HTMLElement[];
+  for (let i = children.length - 1; i >= 0; i--) {
+    const child = children[i];
+    // Skip non-rendered nodes.
+    const cs = window.getComputedStyle(child);
+    if (cs.display === 'none' || cs.visibility === 'hidden') continue;
+    const result = findLastVisibleBg(child, depth + 1);
+    if (result !== null) return result;
+  }
+  return null;
+}
+
+/**
  * Walk up the DOM from the previous sibling of `el` to find the first
- * element with a non-transparent background, and decide if it's dark.
+ * element (or descendant) with a non-transparent background, and decide
+ * if it's dark.
  */
 function prevSectionIsDark(el: HTMLElement | null): boolean {
   if (!el) return false;
   let prev = el.previousElementSibling as HTMLElement | null;
   while (prev) {
-    // Inspect the element itself, then its descendants' last block
-    const candidates: HTMLElement[] = [prev];
-    // Many pages wrap the final CTA inside <section><div>...</div></section>;
-    // checking the section is enough because backgrounds usually live there.
-    for (const node of candidates) {
-      const bg = window.getComputedStyle(node).backgroundColor;
-      const parsed = colorBrightness(bg);
-      if (parsed && parsed.alpha > 0.05) {
-        return parsed.lum < 0.35;
-      }
-      // also check inline backgroundImage gradient stops crudely
-      const bgImage = window.getComputedStyle(node).backgroundImage;
-      if (bgImage && bgImage !== 'none') {
-        const stops = bgImage.match(/rgba?\([^)]+\)|#[0-9a-f]{6}/gi) || [];
-        for (const s of stops) {
-          const p = colorBrightness(s);
-          if (p && p.alpha > 0.05 && p.lum < 0.35) return true;
-        }
-      }
-    }
+    const result = findLastVisibleBg(prev);
+    if (result !== null) return result;
     prev = prev.previousElementSibling as HTMLElement | null;
   }
   return false;
