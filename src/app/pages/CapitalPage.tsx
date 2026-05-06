@@ -54,6 +54,10 @@ const FAQS = [
     q: "How fast will I get funded?",
     a: 'Funds arrive in your account as soon as the next business day after approval, subject to processing time and completion of your loan agreement.',
   },
+  {
+    q: "What's the fine print?",
+    a: "Delt Capital loans are issued by Delt Banking Partners, member FDIC. Loans are subject to credit approval and may not be available in certain jurisdictions. Pre-qualified offers are based on information about your business and your account history with Delt. All loans subject to credit approval. Illustrative figures shown on this page are for demonstration only.",
+  },
 ];
 
 /* ─── Testimonial data ──────────────────────────────────────── */
@@ -1098,26 +1102,7 @@ export function CapitalPage() {
         </div>
       </section>
 
-      {/* ═══ 11. SMALL-PRINT LEGAL BLOCK (soft gradient, no hard band) ═ */}
-      <div
-        className="px-6 pt-9 pb-11"
-        style={{ background: '#FFFFFF', borderTop: `1px solid ${HAIRLINE}` }}
-      >
-        <div
-          className="max-w-4xl mx-auto flex flex-col gap-2"
-          style={{ color: MICRO, fontSize: 11, lineHeight: 1.7 }}
-        >
-          <p>
-            Delt Capital loans are issued by Delt Banking Partners, member FDIC. Loans are
-            subject to credit approval and may not be available in certain jurisdictions.
-          </p>
-          <p>
-            Pre-qualified offers are based on information about your business and your account
-            history with Delt. All loans subject to credit approval. Illustrative figures shown on
-            this page are for demonstration only.
-          </p>
-        </div>
-      </div>
+
 
     </div>
   );

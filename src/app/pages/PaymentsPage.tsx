@@ -463,6 +463,14 @@ export function PaymentsPage() {
               </motion.div>
             ))}
           </div>
+          <p
+            className="mt-10 mx-auto max-w-[820px] text-center"
+            style={{ color: MICRO, fontSize: 12, lineHeight: 1.65 }}
+          >
+            Rates shown are representative examples. Actual transaction rates depend on card type,
+            average ticket size, volume, and underwriting. The ACH flat rate applies to US bank
+            transfers under $100,000 per transaction. Delt Zero eligibility subject to terms.
+          </p>
         </div>
       </section>
 
@@ -842,23 +850,6 @@ export function PaymentsPage() {
           </div>
         </div>
       </section>
-
-      {/* ═══ 10. SMALL-PRINT LEGAL (ivory) ═════════════════════════ */}
-      <div
-        className="px-6 pt-9 pb-11"
-        style={{ background: '#FFFFFF', borderTop: `1px solid ${HAIRLINE}` }}
-      >
-        <div
-          className="max-w-4xl mx-auto"
-          style={{ color: MICRO, fontSize: 11, lineHeight: 1.7 }}
-        >
-          <p>
-            Rates shown are representative examples. Actual transaction rates depend on card type,
-            average ticket size, volume, and underwriting. The ACH flat rate applies to US bank
-            transfers under $100,000 per transaction. Delt Zero eligibility subject to terms.
-          </p>
-        </div>
-      </div>
 
     </div>
   );

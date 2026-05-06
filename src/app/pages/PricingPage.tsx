@@ -58,6 +58,10 @@ const FAQS = [
     q: "What's the difference between Growth and Personalized?",
     a: "Growth is $89/month and includes the full platform out of the box. Personalized is for larger operations — custom feature sets, custom rates, loyalty and SMS, payroll and scheduling, inventory, and Capital access — all quoted to fit your business.",
   },
+  {
+    q: "What's the fine print?",
+    a: "Delt Zero $0 processing applies to eligible domestic card transactions on Delt hardware and Delt-hosted checkout; certain card-not-present, international, or keyed-entry transactions may incur standard interchange pass-through. Promotional Growth pricing of $89/mo reflects a limited-time offer from the regular price of $149/mo and is subject to change. Hardware pricing shown is a starting configuration; actual cost depends on the bundle and quantity selected. Add-on pricing is billed monthly and can be removed at any time. All plans are subject to Delt's Merchant Terms of Service and applicable Acceptable Use Policy. Delt Capital financing is offered through Delt Capital LLC to qualified merchants based on processing history and other underwriting criteria; not all applicants will qualify.",
+  },
 ];
 
 /* ─── FAQ accordion item ─────────────────────────────────────── */
@@ -903,26 +907,7 @@ export function PricingPage() {
         </div>
       </section>
 
-      {/* ═══ 7. SMALL-PRINT LEGAL — clean white with hairline ══════ */}
-      <section
-        style={{
-          background: '#FFFFFF',
-          padding: '36px 24px 44px',
-          borderTop: `1px solid ${HAIRLINE}`,
-        }}
-      >
-        <div style={{ maxWidth: 980, margin: '0 auto' }}>
-          <p style={{
-            fontSize: 11,
-            lineHeight: 1.7,
-            color: MICRO,
-            fontFamily: fonts.heading,
-            margin: 0,
-          }}>
-            Delt Zero $0 processing applies to eligible domestic card transactions on Delt hardware and Delt-hosted checkout; certain card-not-present, international, or keyed-entry transactions may incur standard interchange pass-through. Promotional Growth pricing of $89/mo reflects a limited-time offer from the regular price of $149/mo and is subject to change. Hardware pricing shown is a starting configuration; actual cost depends on the bundle and quantity selected. Add-on pricing is billed monthly and can be removed at any time. All plans are subject to Delt's Merchant Terms of Service and applicable Acceptable Use Policy. Delt Capital financing is offered through Delt Capital LLC to qualified merchants based on processing history and other underwriting criteria; not all applicants will qualify.
-          </p>
-        </div>
-      </section>
+
     </>
   );
 }
