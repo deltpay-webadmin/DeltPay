@@ -6,6 +6,7 @@ import {
   Star, User, AlignLeft, HelpCircle, LayoutDashboard, Calculator,
   ChevronDown, Menu, Globe2, ShieldAlert,
 } from 'lucide-react';
+import { DeltLogo } from './DeltLogo';
 
 /* ──────────────────────────────────────────────────────────────
    Navigation — Delt Capital chrome + full DeltPay mega-menus
@@ -85,38 +86,9 @@ function MonoEyebrow({ children }: { children: React.ReactNode }) {
   );
 }
 
-/* ── Logo ── */
-function DeltPayLogo({ onDark = true }: { onDark?: boolean }) {
-  const cream = '#F7F5F0';
-  const indigo = '#4945FF';
-  return (
-    <div className="flex items-center gap-2.5">
-      {/* Two-bar mark */}
-      <div className="flex items-end gap-[3px]" aria-hidden>
-        <span
-          className="block rounded-[1px]"
-          style={{
-            width: 4, height: 16,
-            background: onDark ? cream : '#041E42',
-          }}
-        />
-        <span
-          className="block rounded-[1px]"
-          style={{ width: 4, height: 22, background: indigo }}
-        />
-      </div>
-      <span
-        className="font-semibold tracking-[-0.02em] text-[20px]"
-        style={{
-          fontFamily: 'var(--dc-font-display)',
-          color: onDark ? cream : '#041E42',
-        }}
-      >
-        Delt<span style={{ color: indigo }}>Pay</span>
-      </span>
-    </div>
-  );
-}
+/* ── Logo ──
+   The Delt brand mark + wordmark lives in <DeltLogo />. We reuse it across
+   nav, footer, and modals so sizing and color rules stay consistent. */
 
 /* ── Mega-menu container ── */
 function MegaPanel({ children, width = 920 }: { children: React.ReactNode; width?: number }) {
@@ -314,9 +286,9 @@ export function Navigation() {
         }}
       >
         <div className="mx-auto h-full flex items-center justify-between gap-6 px-6 lg:px-10 max-w-[1400px]">
-          {/* Logo */}
-          <Link to="/" className="flex items-center" aria-label="DeltPay home">
-            <DeltPayLogo onDark />
+          {/* Logo — nav sits on navy, so render the light-on-dark variant. */}
+          <Link to="/" className="flex items-center" aria-label="Delt — home">
+            <DeltLogo onDark height={30} />
           </Link>
 
           {/* Center menu (desktop) */}

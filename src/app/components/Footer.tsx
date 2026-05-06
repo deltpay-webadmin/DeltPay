@@ -1,4 +1,5 @@
 import { Link } from 'react-router';
+import { DeltLogo } from './DeltLogo';
 
 /* ════════════════════════════════════════════════════════════
    FOOTER — Delt Capital editorial style.
@@ -57,15 +58,9 @@ export function Footer() {
         <div className="dc-footer-grid">
           {/* Brand */}
           <div className="dc-footer-brand">
-            <Link to="/" className="dc-footer-logo" aria-label="Delt home">
-              <span className="dc-footer-mark" aria-hidden>
-                <span className="dc-footer-bar dc-footer-bar--cream" />
-                <span className="dc-footer-bar dc-footer-bar--indigo" />
-              </span>
-              <span className="dc-footer-logotype">
-                <span className="dc-footer-logo-light">Delt</span>
-                <span className="dc-footer-logo-indigo">Pay</span>
-              </span>
+            <Link to="/" className="dc-footer-logo" aria-label="Delt — home">
+              {/* Footer sits on navy — use the light-on-dark wordmark. */}
+              <DeltLogo onDark height={36} />
             </Link>
             <p className="dc-footer-tagline">
               Run, grow, and{' '}
