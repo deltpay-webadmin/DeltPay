@@ -101,11 +101,11 @@ export function ScrollRevealText() {
           text-align: center;
         }
         .srt-text {
-          font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+          font-family: 'Manrope', 'Inter Tight', system-ui, sans-serif;
           font-size: clamp(3.5rem, 7vw, 6rem);
-          font-weight: 700;
-          line-height: 1.2;
-          letter-spacing: -0.035em;
+          font-weight: 600;
+          line-height: 1.05;
+          letter-spacing: -0.045em;
           margin: 0;
         }
       `}</style>

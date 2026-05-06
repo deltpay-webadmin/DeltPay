@@ -80,10 +80,17 @@ const resourcesCTAs = [
 
 const SectionHeading = ({ children }: { children: React.ReactNode }) => (
   <div
-    className="text-[15px] font-bold uppercase text-[#94A3B8] mb-5 pl-3"
-    style={{ letterSpacing: '1.4px' }}
+    className="mb-5 pl-3"
+    style={{
+      fontFamily: 'JetBrains Mono, ui-monospace, Menlo, monospace',
+      fontSize: 12,
+      fontWeight: 500,
+      letterSpacing: '0.06em',
+      textTransform: 'uppercase',
+      color: 'var(--dc-on-light-subtle)',
+    }}
   >
-    {children}
+    — {children}
   </div>
 );
 
@@ -197,13 +204,20 @@ export function Navigation() {
     </svg>
   );
 
-  /* Column heading */
+  /* Column heading — editorial mono eyebrow */
   const ColHeading = ({ children }: { children: React.ReactNode }) => (
     <div
-      className="text-[15px] font-bold uppercase text-[#94A3B8] mb-5"
-      style={{ letterSpacing: '1.4px' }}
+      className="mb-5"
+      style={{
+        fontFamily: 'JetBrains Mono, ui-monospace, Menlo, monospace',
+        fontSize: 12,
+        fontWeight: 500,
+        letterSpacing: '0.06em',
+        textTransform: 'uppercase',
+        color: 'var(--dc-on-light-subtle)',
+      }}
     >
-      {children}
+      — {children}
     </div>
   );
 
@@ -235,10 +249,10 @@ export function Navigation() {
             onMouseEnter={() => setIsHovered(true)}
             style={{
               width: '100%',
-              maxWidth: 1080,
-              backgroundColor: isSolid ? '#FFFFFF' : 'rgba(255,255,255,0)',
-              borderRadius: 16,
-              boxShadow: isSolid ? '0 12px 48px rgba(0,0,0,0.1), 0 0 0 1px rgba(0,0,0,0.04)' : 'none',
+              maxWidth: 1200,
+              backgroundColor: isSolid ? '#F7F5F0' : 'rgba(255,255,255,0)',
+              borderRadius: 12,
+              boxShadow: isSolid ? '0 1px 2px rgba(4,30,66,0.04), 0 8px 24px rgba(4,30,66,0.06), 0 0 0 1px rgba(4,30,66,0.06)' : 'none',
               overflow: 'hidden',
               transition: 'background-color 0.35s ease, box-shadow 0.35s ease',
             }}
@@ -262,8 +276,8 @@ export function Navigation() {
                   </Link>
                 </div>
 
-                {/* ── Center — Nav Links ── */}
-                <nav className="hidden lg:flex items-center gap-2 xl:gap-3">
+                {/* ── Center — Nav Links — Inter 14px, 24px gap ── */}
+                <nav className="hidden lg:flex items-center gap-1 xl:gap-2">
 
                   {/* ─── Solutions Mega Menu ─── */}
                   <div
@@ -272,8 +286,14 @@ export function Navigation() {
                     onMouseLeave={() => closeDropdown()}
                   >
                     <button
-                      className="flex items-center gap-2 px-4 py-2.5 text-[20px] font-medium transition-colors whitespace-nowrap"
-                      style={{ color: isSolid ? '#041E42' : '#FFFFFF', transition: 'color 0.3s ease' }}
+                      className="dc-nav-link flex items-center gap-1.5 px-3 py-2 transition-colors whitespace-nowrap"
+                      style={{
+                        fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif',
+                        fontSize: 14,
+                        fontWeight: 500,
+                        color: isSolid ? '#041E42' : '#F7F5F0',
+                        transition: 'color 0.3s ease',
+                      }}
                     >
                       Solutions
                       <Chevron isOpen={activeDropdown === 'solutions'} />
@@ -283,8 +303,14 @@ export function Navigation() {
                   {/* ─── Pricing ─── */}
                   <Link
                     to="/pricing"
-                    className="px-4 py-2.5 text-[20px] font-medium transition-colors whitespace-nowrap"
-                    style={{ color: isSolid ? '#041E42' : '#FFFFFF', transition: 'color 0.3s ease' }}
+                    className="dc-nav-link px-3 py-2 transition-colors whitespace-nowrap"
+                    style={{
+                      fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif',
+                      fontSize: 14,
+                      fontWeight: 500,
+                      color: isSolid ? '#041E42' : '#F7F5F0',
+                      transition: 'color 0.3s ease',
+                    }}
                   >
                     Pricing
                   </Link>
@@ -296,8 +322,14 @@ export function Navigation() {
                     onMouseLeave={() => closeDropdown()}
                   >
                     <button
-                      className="flex items-center gap-2 px-4 py-2.5 text-[20px] font-medium transition-colors whitespace-nowrap"
-                      style={{ color: isSolid ? '#041E42' : '#FFFFFF', transition: 'color 0.3s ease' }}
+                      className="dc-nav-link flex items-center gap-1.5 px-3 py-2 transition-colors whitespace-nowrap"
+                      style={{
+                        fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif',
+                        fontSize: 14,
+                        fontWeight: 500,
+                        color: isSolid ? '#041E42' : '#F7F5F0',
+                        transition: 'color 0.3s ease',
+                      }}
                     >
                       Resources
                       <Chevron isOpen={activeDropdown === 'resources'} />
@@ -320,8 +352,8 @@ export function Navigation() {
                       setShowSearch(true);
                       setSelectedIndex(0);
                     }}
-                    className="hidden lg:flex p-2.5 transition-colors"
-                    style={{ color: isSolid ? '#041E42' : '#FFFFFF', transition: 'color 0.3s ease' }}
+                    className="hidden lg:flex p-2 transition-colors"
+                    style={{ color: isSolid ? '#041E42' : '#F7F5F0', transition: 'color 0.3s ease' }}
                     aria-label="Search"
                   >
                     <motion.div
@@ -329,29 +361,45 @@ export function Navigation() {
                       whileTap={{ scale: 0.9 }}
                       transition={{ type: 'spring', stiffness: 400, damping: 17 }}
                     >
-                      <Search className="h-[22px] w-[22px]" />
+                      <Search className="h-[18px] w-[18px]" strokeWidth={1.6} />
                     </motion.div>
                   </button>
 
                   {/* Sign In */}
                   <Link
                     to="/signin"
-                    className="hidden md:flex items-center px-4 py-2 text-[19px] font-medium transition-all whitespace-nowrap"
+                    className="hidden md:flex items-center px-3 py-2 transition-all whitespace-nowrap"
                     style={{
-                      color: isSolid ? '#041E42' : '#FFFFFF',
+                      fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif',
+                      fontSize: 14,
+                      fontWeight: 500,
+                      color: isSolid ? '#041E42' : '#F7F5F0',
                       transition: 'color 0.3s ease',
                     }}
                   >
-                    Sign in <span className="ml-1">›</span>
+                    Sign in
                   </Link>
 
-                  {/* Contact Sales CTA */}
+                  {/* Contact Sales CTA — Delt Capital primary */}
                   <Link
                     to="/contact-sales"
-                    className="hidden md:flex items-center gap-2 px-6 py-3 text-[18px] font-semibold text-white bg-[#4945FF] rounded-full hover:bg-[#3933CC] transition-colors whitespace-nowrap"
+                    className="hidden md:inline-flex items-center gap-2"
+                    style={{
+                      fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif',
+                      fontSize: 13,
+                      fontWeight: 500,
+                      color: '#FFFFFF',
+                      background: '#4945FF',
+                      padding: '10px 16px',
+                      borderRadius: 6,
+                      transition: 'background-color 150ms ease-out',
+                      whiteSpace: 'nowrap',
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = '#3730A3'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = '#4945FF'; }}
                   >
                     Contact sales
-                    <ArrowRight className="w-5 h-5" />
+                    <ArrowRight className="w-4 h-4" strokeWidth={1.6} />
                   </Link>
 
                   {/* Mobile Hamburger Menu Button */}
@@ -411,22 +459,22 @@ export function Navigation() {
                       </div>
                       <Link
                         to="/pricing"
-                        className="px-6 py-3 rounded-lg text-[17px] font-bold transition-all"
-                        style={{ 
+                        className="inline-flex items-center gap-2"
+                        style={{
+                          fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif',
+                          fontSize: 13,
+                          fontWeight: 500,
+                          color: '#FFFFFF',
                           background: '#4945FF',
-                          color: 'white',
+                          padding: '10px 16px',
+                          borderRadius: 6,
+                          transition: 'background-color 150ms ease-out',
                         }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.background = '#3933CC';
-                          e.currentTarget.style.transform = 'translateY(-1px)';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.background = '#4945FF';
-                          e.currentTarget.style.transform = 'translateY(0)';
-                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = '#3730A3'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = '#4945FF'; }}
                         onClick={() => setActiveDropdown(null)}
                       >
-                        See Plans →
+                        See plans →
                       </Link>
                     </div>
                   </div>
@@ -516,8 +564,18 @@ export function Navigation() {
                       {/* Col 3 — Specialized solutions */}
                       <div className="flex-1 flex flex-col justify-between rounded-2xl ml-4" style={{ background: '#F6F7FB', padding: '24px 28px' }}>
                         <div>
-                          <div className="text-[14px] font-bold uppercase text-[#4945FF] mb-5" style={{ letterSpacing: '1.4px' }}>
-                            Specialized
+                          <div
+                            className="mb-5"
+                            style={{
+                              fontFamily: 'JetBrains Mono, ui-monospace, Menlo, monospace',
+                              fontSize: 12,
+                              fontWeight: 500,
+                              letterSpacing: '0.06em',
+                              textTransform: 'uppercase',
+                              color: '#4945FF',
+                            }}
+                          >
+                            — Specialized
                           </div>
 
                           {/* International USDT card */}
@@ -895,17 +953,17 @@ export function Navigation() {
                   <Link
                     to="/signin"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="block w-full text-center py-3 px-5 text-base font-semibold text-[#041E42] bg-[#F6F7FB] rounded-full hover:bg-[#F6F7FB] transition-colors"
+                    className="block w-full text-center py-3 px-5 text-[14px] font-medium text-[#041E42] border border-[rgba(4,30,66,0.15)] rounded-md hover:bg-[#F7F5F0] transition-colors"
                   >
                     Sign in
                   </Link>
                   <Link
                     to="/contact-sales"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center justify-center gap-2 w-full py-3 px-5 text-base font-semibold text-white bg-[#4945FF] rounded-full hover:bg-[#3933CC] transition-colors"
+                    className="flex items-center justify-center gap-2 w-full py-3 px-5 text-[14px] font-medium text-white bg-[#4945FF] rounded-md hover:bg-[#3730A3] transition-colors"
                   >
                     Contact sales
-                    <ArrowRight size={18} />
+                    <ArrowRight size={16} strokeWidth={1.6} />
                   </Link>
                 </div>
               </div>

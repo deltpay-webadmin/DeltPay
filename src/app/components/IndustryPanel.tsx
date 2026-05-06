@@ -56,20 +56,39 @@ export function IndustryPanel() {
         <div className="flex items-end justify-between flex-wrap gap-6 mb-12">
           <div>
             <div
-              className="text-[12px] font-bold uppercase text-[#4945FF] mb-4"
-              style={{ letterSpacing: '0.2em' }}
+              className="mb-4"
+              style={{
+                fontFamily: "'JetBrains Mono', monospace",
+                fontSize: '12px',
+                letterSpacing: '0.18em',
+                textTransform: 'uppercase',
+                color: '#697386',
+              }}
             >
-              For your kind of business
+              — FOR YOUR KIND OF BUSINESS
             </div>
             <h2
-              className="text-[#041E42] font-bold leading-[1.05]"
+              className="text-[#041E42]"
               style={{
                 fontSize: 'clamp(34px, 5vw, 56px)',
-                letterSpacing: '-0.025em',
+                fontFamily: "'Manrope', 'Inter Tight', sans-serif",
+                fontWeight: 600,
+                letterSpacing: '-0.035em',
+                lineHeight: 1.05,
                 maxWidth: 820,
               }}
             >
-              Made for how you actually work.
+              Made for how you actually{' '}
+              <em
+                style={{
+                  fontFamily: "'Source Serif Pro', Georgia, serif",
+                  fontStyle: 'italic',
+                  fontWeight: 400,
+                  color: '#3730A3',
+                }}
+              >
+                work.
+              </em>
             </h2>
           </div>
           <Link

@@ -61,6 +61,7 @@ export function ByTheNumbers() {
     <>
       <section className="btn-section" ref={ref}>
         <div className="btn-card">
+          <div className="btn-eyebrow">— BY THE NUMBERS</div>
           {/* Stats row — top of section, no badge */}
           <div className="btn-stats">
             {stats.map((stat, i) => (
@@ -87,7 +88,7 @@ export function ByTheNumbers() {
                 animate={inView ? { opacity: 1, y: 0 } : {}}
                 transition={{ delay: 0.5, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
               >
-                Fewer tools.<br />More money. Less stress.
+                Fewer tools. More money.<br />Less <em className="btn-italic-accent">stress.</em>
               </motion.h2>
               <motion.p
                 className="btn-globe-sub"
@@ -191,24 +192,48 @@ export function ByTheNumbers() {
           align-items: center;
           text-align: center;
         }
+        .btn-eyebrow {
+          font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+          font-size: 12px;
+          font-weight: 500;
+          letter-spacing: 0.06em;
+          line-height: 1.4;
+          text-transform: uppercase;
+          color: rgba(247,245,240,0.55);
+          margin: 0 0 32px 8%;
+        }
         .btn-stat-label {
-          font-family: 'Plus Jakarta Sans', sans-serif;
-          font-size: 14px;
-          color: rgba(255,255,255,0.35);
+          font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+          font-size: 11px;
+          font-weight: 500;
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+          color: rgba(247,245,240,0.45);
+          margin-bottom: 6px;
         }
         .btn-stat-value {
-          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-family: 'Manrope', 'Inter Tight', sans-serif;
           font-size: clamp(2.5rem, 5vw, 4rem);
-          font-weight: 800;
-          color: #fff;
-          letter-spacing: -0.03em;
+          font-weight: 600;
+          color: #F7F5F0;
+          letter-spacing: -0.035em;
           line-height: 1;
         }
         .btn-stat-trait {
-          font-family: 'Plus Jakarta Sans', sans-serif;
-          font-size: 14px;
-          font-weight: 600;
-          color: #16C784;
+          font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+          font-size: 11px;
+          font-weight: 500;
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+          color: #1F845A;
+          margin-top: 4px;
+        }
+        .btn-stat-trait::before { content: "● "; }
+        .btn-italic-accent {
+          font-family: 'Source Serif Pro', Georgia, serif;
+          font-style: italic;
+          font-weight: 400;
+          color: #F7F5F0;
         }
 
         /* Globe layout */
@@ -256,38 +281,38 @@ export function ByTheNumbers() {
         }
 
         .btn-globe-heading {
-          font-family: 'Plus Jakarta Sans', sans-serif;
-          font-size: clamp(2rem, 4vw, 3.2rem);
-          font-weight: 800;
-          color: #fff;
-          letter-spacing: -0.03em;
-          line-height: 1.15;
+          font-family: 'Manrope', 'Inter Tight', sans-serif;
+          font-size: clamp(2rem, 4vw, 3.5rem);
+          font-weight: 600;
+          color: #F7F5F0;
+          letter-spacing: -0.035em;
+          line-height: 1.05;
           margin: 0 0 16px;
         }
         .btn-globe-sub {
-          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
           font-size: 16px;
-          color: rgba(255,255,255,0.4);
+          color: rgba(247,245,240,0.55);
           margin: 0;
         }
         .btn-schedule-btn {
           display: inline-flex;
           align-items: center;
-          gap: 6px;
-          font-family: 'Plus Jakarta Sans', sans-serif;
-          font-size: 15px;
-          font-weight: 600;
-          color: rgba(255,255,255,0.85);
-          background: rgba(255,255,255,0.08);
-          border: 1px solid rgba(255,255,255,0.12);
-          padding: 12px 28px;
-          border-radius: 999px;
+          gap: 8px;
+          font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+          font-size: 13px;
+          font-weight: 500;
+          color: #F7F5F0;
+          background: transparent;
+          border: 1px solid rgba(247,245,240,0.25);
+          padding: 12px 18px;
+          border-radius: 6px;
           text-decoration: none;
-          transition: background 0.2s, border-color 0.2s;
+          transition: background 150ms ease-out, border-color 150ms ease-out;
         }
         .btn-schedule-btn:hover {
-          background: rgba(255,255,255,0.12);
-          border-color: rgba(255,255,255,0.2);
+          background: rgba(247,245,240,0.06);
+          border-color: rgba(247,245,240,0.40);
         }
         .btn-schedule-arrow {
           font-size: 18px;

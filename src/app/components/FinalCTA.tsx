@@ -5,8 +5,12 @@ import { Link } from 'react-router';
 
 const NAVY = '#041E42';
 const PURPLE = '#4945FF';
-const WHITE = '#FFFFFF';
-const JAKARTA = "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif";
+const PURPLE_DEEP = '#3730A3';
+const CREAM = '#F7F5F0';
+const DISPLAY = "'Manrope', 'Inter Tight', system-ui, -apple-system, sans-serif";
+const BODY = "'Inter', system-ui, -apple-system, sans-serif";
+const MONO = "'JetBrains Mono', ui-monospace, Menlo, monospace";
+const SERIF_ITALIC = "'Source Serif Pro', Georgia, serif";
 
 /* ─── Interactive Dot Grid Canvas ─── */
 function InteractiveDots({
@@ -192,21 +196,42 @@ export function FinalCTA() {
         className="relative z-10"
         style={{ maxWidth: 800, margin: '0 auto', padding: '60px 48px', textAlign: 'center', pointerEvents: 'none' }}
       >
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.6 }}
+          style={{
+            fontFamily: MONO,
+            fontSize: 12,
+            fontWeight: 500,
+            letterSpacing: '0.06em',
+            textTransform: 'uppercase',
+            color: 'rgba(247,245,240,0.45)',
+            marginBottom: 24,
+          }}
+        >
+          — FINAL WORD
+        </motion.div>
+
         <motion.h2
           initial={{ opacity: 0, y: 40 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           style={{
-            fontFamily: JAKARTA,
-            fontSize: 'clamp(2.4rem, 4.5vw, 3.4rem)',
-            fontWeight: 800,
-            color: WHITE,
+            fontFamily: DISPLAY,
+            fontSize: 'clamp(2.4rem, 4.5vw, 3.6rem)',
+            fontWeight: 600,
+            color: CREAM,
             letterSpacing: '-0.035em',
-            lineHeight: 1.15,
+            lineHeight: 1.05,
             marginBottom: 20,
           }}
         >
-          Start free. See the difference this week.
+          Start free. See the{' '}
+          <span style={{ fontFamily: SERIF_ITALIC, fontStyle: 'italic', fontWeight: 400 }}>
+            difference
+          </span>{' '}
+          this week.
         </motion.h2>
 
         <motion.p
@@ -214,11 +239,12 @@ export function FinalCTA() {
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ delay: 0.12, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
           style={{
-            fontFamily: JAKARTA,
-            fontSize: 'clamp(1rem, 1.3vw, 1.15rem)',
-            color: 'rgba(255,255,255,0.50)',
-            lineHeight: 1.7,
-            marginBottom: 44,
+            fontFamily: BODY,
+            fontSize: 18,
+            fontWeight: 400,
+            color: 'rgba(247,245,240,0.75)',
+            lineHeight: 1.55,
+            marginBottom: 40,
             maxWidth: 560,
             marginLeft: 'auto',
             marginRight: 'auto',
@@ -231,28 +257,53 @@ export function FinalCTA() {
           initial={{ opacity: 0, y: 20 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ delay: 0.25, duration: 0.6 }}
-          className="flex justify-center"
-          style={{ pointerEvents: 'auto' }}
+          className="flex justify-center items-center"
+          style={{ pointerEvents: 'auto', gap: 12, flexWrap: 'wrap' }}
         >
           <Link
             to="/apply"
             className="inline-flex items-center no-underline"
             style={{
-              gap: 10,
+              gap: 8,
               background: PURPLE,
-              color: WHITE,
-              fontFamily: JAKARTA,
-              fontSize: 15,
-              fontWeight: 700,
-              padding: '14px 36px',
-              borderRadius: 12,
-              boxShadow: '0 8px 32px rgba(73,69,255,0.3)',
-              transition: 'transform 0.2s, box-shadow 0.2s',
+              color: '#FFFFFF',
+              fontFamily: BODY,
+              fontSize: 13,
+              fontWeight: 500,
+              padding: '13px 20px',
+              borderRadius: 6,
+              transition: 'background-color 150ms ease-out',
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 12px 40px rgba(73,69,255,0.4)'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(73,69,255,0.3)'; }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = PURPLE_DEEP; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = PURPLE; }}
           >
-            Get started <ArrowRight size={16} />
+            Get started <ArrowRight size={14} strokeWidth={1.6} />
+          </Link>
+          <Link
+            to="/contact-sales"
+            className="inline-flex items-center no-underline"
+            style={{
+              gap: 8,
+              background: 'transparent',
+              color: CREAM,
+              fontFamily: BODY,
+              fontSize: 13,
+              fontWeight: 500,
+              padding: '13px 20px',
+              borderRadius: 6,
+              border: '1px solid rgba(247,245,240,0.25)',
+              transition: 'background-color 150ms ease-out, border-color 150ms ease-out',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(247,245,240,0.06)';
+              e.currentTarget.style.borderColor = 'rgba(247,245,240,0.40)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'transparent';
+              e.currentTarget.style.borderColor = 'rgba(247,245,240,0.25)';
+            }}
+          >
+            Talk to a specialist
           </Link>
         </motion.div>
       </div>

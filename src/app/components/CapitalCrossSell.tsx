@@ -97,24 +97,41 @@ function FullSection({
         <div className="grid lg:grid-cols-[1.1fr_1fr] gap-12 items-end mb-14">
           <div>
             <div
-              className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm mb-5"
+              className="mb-6"
               style={{
-                border: `1px solid ${isDark ? 'rgba(255,255,255,0.15)' : HAIRLINE}`,
-                background: isDark ? 'rgba(255,255,255,0.05)' : SURFACE_MUTED,
+                fontFamily: "'JetBrains Mono', ui-monospace, monospace",
+                fontSize: '12px',
+                letterSpacing: '0.18em',
+                textTransform: 'uppercase',
                 color: eyebrowColor,
               }}
             >
-              <span className="w-2 h-2 rounded-full" style={{ background: PURPLE }} />
-              {eyebrow ?? 'Process with Delt. Unlock Delt Capital.'}
+              — {eyebrow ?? 'Process with Delt · Unlock Delt Capital'}
             </div>
             <h2
-              className="font-bold tracking-tight leading-[1.05] mb-5"
-              style={{ fontSize: 'clamp(34px, 4vw, 52px)', color: titleColor, letterSpacing: '-0.02em' }}
+              className="mb-5"
+              style={{
+                fontSize: 'clamp(34px, 4vw, 52px)',
+                color: titleColor,
+                fontFamily: "'Manrope', 'Inter Tight', sans-serif",
+                fontWeight: 600,
+                letterSpacing: '-0.035em',
+                lineHeight: 1.05,
+              }}
             >
               {headline ?? (
                 <>
                   Your sales already qualify you for{' '}
-                  <span style={{ color: PURPLE }}>capital.</span>
+                  <em
+                    style={{
+                      fontFamily: "'Source Serif Pro', Georgia, serif",
+                      fontStyle: 'italic',
+                      fontWeight: 400,
+                      color: isDark ? '#A5B4FC' : PURPLE,
+                    }}
+                  >
+                    capital.
+                  </em>
                 </>
               )}
             </h2>
@@ -126,17 +143,24 @@ function FullSection({
 
           {/* Sample offer card */}
           <div
-            className="rounded-2xl p-6 lg:p-7"
+            className="p-6 lg:p-7"
             style={{
+              borderRadius: '6px',
               background: isDark ? 'rgba(255,255,255,0.04)' : SURFACE_MUTED,
               border: `1px solid ${cardBorder}`,
             }}
           >
             <div
-              className="text-[11px] uppercase font-bold mb-3"
-              style={{ color: PURPLE, letterSpacing: '0.16em' }}
+              className="mb-3"
+              style={{
+                color: isDark ? '#A5B4FC' : PURPLE,
+                fontFamily: "'JetBrains Mono', monospace",
+                fontSize: '11px',
+                letterSpacing: '0.16em',
+                textTransform: 'uppercase',
+              }}
             >
-              Sample pre-approved offer
+              — Sample pre-approved offer
             </div>
             <div className="flex items-baseline gap-2 mb-1">
               <span
@@ -189,19 +213,28 @@ function FullSection({
           {PILLARS.map(({ icon: Icon, title, body }) => (
             <div
               key={title}
-              className="rounded-2xl p-6 transition-all duration-300"
+              className="p-6 transition-all duration-300"
               style={{
+                borderRadius: '6px',
                 background: cardBg,
                 border: `1px solid ${cardBorder}`,
               }}
             >
               <div
-                className="w-11 h-11 rounded-xl flex items-center justify-center mb-5"
-                style={{ background: PURPLE }}
+                className="w-11 h-11 flex items-center justify-center mb-5"
+                style={{ borderRadius: '6px', background: PURPLE }}
               >
                 <Icon className="w-5 h-5 text-white" />
               </div>
-              <h3 className="text-base font-bold mb-2" style={{ color: titleColor }}>
+              <h3
+                className="text-base mb-2"
+                style={{
+                  color: titleColor,
+                  fontFamily: "'Manrope', sans-serif",
+                  fontWeight: 600,
+                  letterSpacing: '-0.02em',
+                }}
+              >
                 {title}
               </h3>
               <p className="text-sm leading-relaxed" style={{ color: bodyColor }}>
@@ -215,11 +248,14 @@ function FullSection({
         <div className="flex flex-wrap items-center gap-4">
           <Link
             to={ctaHref}
-            className="inline-flex items-center gap-2 rounded-full px-7 py-3.5 font-semibold text-white transition-all duration-200 hover:brightness-110"
+            className="inline-flex items-center gap-2 px-7 py-3.5 text-white transition-all duration-200 hover:brightness-110"
             style={{
+              borderRadius: '6px',
               background: PURPLE,
               fontSize: 15,
-              boxShadow: `0 4px 18px ${PURPLE}40`,
+              fontFamily: "'Inter', sans-serif",
+              fontWeight: 600,
+              letterSpacing: '-0.005em',
             }}
           >
             {ctaLabel}

@@ -990,30 +990,48 @@ export function CapitalPage() {
       {/* ═══ 10. SMALL CENTERED FINAL CTA (white, no navy slab) ═══ */}
       <section className="px-6 py-20 md:py-24 text-center" style={{ background: '#FFFFFF' }}>
         <div style={{ maxWidth: 620, margin: '0 auto' }}>
+          <div
+            className="mb-5"
+            style={{
+              fontFamily: "'JetBrains Mono', monospace",
+              fontSize: '12px',
+              letterSpacing: '0.18em',
+              textTransform: 'uppercase',
+              color: '#697386',
+            }}
+          >
+            — FUND THE NEXT MOVE
+          </div>
           <h2
-            className="font-bold mb-4 leading-[1.1]"
+            className="mb-4"
             style={{
               fontSize: 'clamp(28px, 3.4vw, 40px)',
               color: NAVY,
-              letterSpacing: '-0.025em',
+              fontFamily: "'Manrope', 'Inter Tight', sans-serif",
+              fontWeight: 600,
+              letterSpacing: '-0.035em',
+              lineHeight: 1.05,
             }}
           >
-            Get started today.
+            Get started{' '}
+            <em style={{ fontFamily: "'Source Serif Pro', Georgia, serif", fontStyle: 'italic', fontWeight: 400, color: '#3730A3' }}>today.</em>
           </h2>
           <p
             className="mb-8 leading-relaxed mx-auto"
-            style={{ fontSize: 'clamp(15px, 1.2vw, 17px)', color: MUTED, maxWidth: 460 }}
+            style={{ fontSize: 'clamp(15px, 1.2vw, 17px)', color: MUTED, maxWidth: 460, fontFamily: "'Inter', sans-serif" }}
           >
             Talk to a specialist and see how Delt Capital can help your business.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4">
             <Link
               to="/demo"
-              className="inline-flex items-center gap-2 rounded-full px-7 py-3.5 font-semibold text-white transition-all duration-200 hover:brightness-110"
+              className="inline-flex items-center gap-2 px-7 py-3.5 text-white transition-all duration-200 hover:brightness-110"
               style={{
+                borderRadius: '6px',
                 background: PURPLE,
                 fontSize: 15,
-                boxShadow: `0 4px 18px ${PURPLE}40`,
+                fontFamily: "'Inter', sans-serif",
+                fontWeight: 600,
               }}
             >
               Schedule a demo

@@ -9,8 +9,10 @@ export function SeeItInAction() {
       <div className="siia-inner">
         {/* Header */}
         <div className="siia-header">
+          <div className="siia-eyebrow">— ONE DASHBOARD · EVERY MOVE</div>
           <h2 className="siia-title">
-            One dashboard. The whole picture<span style={{ color: '#4945FF' }}>.</span>
+            One dashboard. The whole{' '}
+            <em className="siia-italic">picture.</em>
           </h2>
           <p className="siia-subtitle">
             Explore our platform to see how Delt helps you run, grow, and fund your business — all from one dashboard.
@@ -40,22 +42,38 @@ export function SeeItInAction() {
           margin-bottom: 56px;
         }
 
+        .siia-eyebrow {
+          font-family: 'JetBrains Mono', ui-monospace, monospace;
+          font-size: 12px;
+          letter-spacing: 0.18em;
+          text-transform: uppercase;
+          color: rgba(247,245,240,0.65);
+          margin-bottom: 18px;
+        }
+
         .siia-title {
-          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-family: 'Manrope', 'Inter Tight', sans-serif;
           font-size: clamp(36px, 4.5vw, 56px);
-          font-weight: 800;
+          font-weight: 600;
           letter-spacing: -0.035em;
-          line-height: 1.08;
-          color: #FFFFFF;
+          line-height: 1.05;
+          color: #F7F5F0;
           margin: 0 0 20px;
         }
 
+        .siia-italic {
+          font-family: 'Source Serif Pro', Georgia, serif;
+          font-style: italic;
+          font-weight: 400;
+          color: #A5B4FC;
+        }
+
         .siia-subtitle {
-          font-family: 'DM Sans', 'Plus Jakarta Sans', sans-serif;
+          font-family: 'Inter', sans-serif;
           font-size: 19px;
-          color: rgba(255,255,255,0.55);
-          line-height: 1.65;
-          max-width: 520px;
+          color: rgba(247,245,240,0.65);
+          line-height: 1.55;
+          max-width: 560px;
           margin: 0 auto;
         }
 

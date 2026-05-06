@@ -1,0 +1,397 @@
+/* ============================================================
+   DELT CAPITAL DESIGN SYSTEM
+   Applied to deltpay-site for shell + non-protected pages.
+   Source: delt-capital-design-spec.md (extracted from deltcapital.com)
+
+   Protected pages keep their main content theme:
+     /payments, /website-examples, /capital, /lens-ai
+   Their CTAs, plus shared Nav + Footer, may use these tokens.
+   ============================================================ */
+
+/* ---- Editorial fonts (Manrope = open-source fallback for Codec Pro) ---- */
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Inter+Tight:wght@500;600;700&family=Source+Serif+Pro:ital,wght@1,400;1,600&display=swap');
+
+:root {
+  /* Surfaces */
+  --dc-bg-navy:        #041E42;
+  --dc-bg-ink:         #0F0E17;
+  --dc-bg-cream:       #F7F5F0;
+  --dc-bg-cream-2:     #E9E7DF;
+  --dc-bg-paper:       #F6F9FC;
+  --dc-bg-white:       #FFFFFF;
+
+  /* Accent */
+  --dc-indigo:         #4945FF;
+  --dc-indigo-deep:    #3730A3;
+  --dc-indigo-soft:    #A5B4FC;
+  --dc-indigo-tint-08: rgba(73, 69, 255, 0.08);
+  --dc-indigo-tint-15: rgba(73, 69, 255, 0.15);
+  --dc-indigo-tint-25: rgba(247, 245, 240, 0.25);
+  --dc-success:        #1F845A;
+
+  /* Text on dark */
+  --dc-on-dark:        #F7F5F0;
+  --dc-on-dark-muted:  rgba(247, 245, 240, 0.75);
+  --dc-on-dark-subtle: rgba(247, 245, 240, 0.65);
+  --dc-on-dark-faint:  rgba(247, 245, 240, 0.45);
+
+  /* Text on light */
+  --dc-on-light:         #041E42;
+  --dc-on-light-muted:   #425466;
+  --dc-on-light-subtle:  #697386;
+
+  /* Hairlines */
+  --dc-rule-on-dark:   rgba(247, 245, 240, 0.10);
+  --dc-rule-on-dark-strong: rgba(247, 245, 240, 0.20);
+  --dc-rule-on-light:  rgba(4, 30, 66, 0.10);
+
+  /* Type stacks */
+  --dc-font-display: "Codec Pro", "Manrope", "Inter Tight", ui-sans-serif, system-ui, sans-serif;
+  --dc-font-body:    "Inter", ui-sans-serif, system-ui, sans-serif;
+  --dc-font-mono:    "JetBrains Mono", ui-monospace, Menlo, monospace;
+  --dc-font-serif-italic: "Source Serif Pro", Georgia, serif;
+
+  /* Radii (the spec is much tighter than DeltPay's old defaults) */
+  --dc-radius-sm: 6px;
+  --dc-radius-md: 8px;
+  --dc-radius-lg: 12px;
+
+  /* Shadow — soft, light surfaces only */
+  --dc-shadow-card: 0 1px 2px rgba(4, 30, 66, 0.04), 0 8px 24px rgba(4, 30, 66, 0.06);
+}
+
+/* ---- Display heading (Codec Pro / Manrope) ---- */
+.dc-display {
+  font-family: var(--dc-font-display);
+  font-weight: 600;
+  letter-spacing: -0.045em;
+  line-height: 0.95;
+}
+.dc-h2 {
+  font-family: var(--dc-font-display);
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  line-height: 1.05;
+}
+.dc-h3 {
+  font-family: var(--dc-font-display);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.0;
+}
+
+/* ---- Editorial mono eyebrow ---- */
+.dc-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--dc-font-mono);
+  font-weight: 500;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  line-height: 1.4;
+  text-transform: uppercase;
+  color: var(--dc-on-dark-faint);
+}
+.dc-eyebrow.dc-on-light { color: var(--dc-on-light-subtle); }
+.dc-eyebrow::before { content: "— "; }
+
+/* No leading em-dash for chapter labels like "CH. 01 — WHERE IT GOES" */
+.dc-eyebrow.dc-bare::before { content: ""; }
+
+/* ---- Italic-serif single-word emphasis ---- */
+.dc-italic-accent {
+  font-family: var(--dc-font-serif-italic);
+  font-style: italic;
+  font-weight: 400;
+}
+
+/* ---- Buttons (compact, 6px radius, no shadow) ---- */
+.dc-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--dc-indigo);
+  color: #FFFFFF;
+  font-family: var(--dc-font-body);
+  font-weight: 500;
+  font-size: 13px;
+  line-height: 1;
+  padding: 12px 18px;
+  border: 0;
+  border-radius: var(--dc-radius-sm);
+  cursor: pointer;
+  transition: background 150ms ease-out, transform 150ms ease-out;
+  white-space: nowrap;
+}
+.dc-btn-primary:hover { background: var(--dc-indigo-deep); }
+.dc-btn-primary.dc-lg { font-size: 14px; padding: 14px 22px; }
+
+.dc-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  color: var(--dc-on-light);
+  font-family: var(--dc-font-body);
+  font-weight: 500;
+  font-size: 13px;
+  line-height: 1;
+  padding: 12px 18px;
+  border: 1px solid rgba(4, 30, 66, 0.15);
+  border-radius: var(--dc-radius-sm);
+  cursor: pointer;
+  transition: background 150ms ease-out, border-color 150ms ease-out;
+  white-space: nowrap;
+}
+.dc-btn-secondary:hover { background: var(--dc-indigo-tint-08); }
+
+.dc-btn-secondary.dc-on-dark {
+  color: var(--dc-on-dark);
+  border-color: var(--dc-rule-on-dark-strong);
+}
+.dc-btn-secondary.dc-on-dark:hover {
+  background: rgba(247, 245, 240, 0.06);
+  border-color: rgba(247, 245, 240, 0.40);
+}
+
+/* ---- Light card ---- */
+.dc-card-light {
+  background: var(--dc-bg-white);
+  border: 1px solid rgba(4, 30, 66, 0.08);
+  border-radius: var(--dc-radius-lg);
+  padding: 28px;
+  box-shadow: var(--dc-shadow-card);
+}
+
+/* ---- Dark card (over navy) ---- */
+.dc-card-dark {
+  background: rgba(247, 245, 240, 0.04);
+  border: 1px solid var(--dc-rule-on-dark);
+  border-radius: var(--dc-radius-lg);
+  padding: 28px;
+  color: var(--dc-on-dark);
+}
+
+/* ---- Hairline divider rules ---- */
+.dc-rule-dark { border-top: 1px solid var(--dc-rule-on-dark); }
+.dc-rule-light { border-top: 1px solid var(--dc-rule-on-light); }
+
+/* ---- Stat block (Codec Pro numeral + mono unit) ---- */
+.dc-stat-num {
+  font-family: var(--dc-font-display);
+  font-weight: 600;
+  font-size: clamp(40px, 5vw, 64px);
+  letter-spacing: -0.035em;
+  line-height: 1;
+}
+.dc-stat-unit {
+  font-family: var(--dc-font-mono);
+  font-weight: 400;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
+  color: var(--dc-on-light-subtle);
+}
+.dc-on-dark .dc-stat-unit { color: var(--dc-on-dark-faint); }
+
+/* ---- Status pill (FUNDED · WIRED) ---- */
+.dc-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--dc-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--dc-success);
+}
+.dc-pill::before {
+  content: "●";
+  font-size: 10px;
+  color: var(--dc-success);
+}
+
+/* ---- Section utility — navy hero canvas ---- */
+.dc-section-navy {
+  background: var(--dc-bg-navy);
+  color: var(--dc-on-dark);
+}
+.dc-section-cream {
+  background: var(--dc-bg-cream);
+  color: var(--dc-on-light);
+}
+.dc-section-paper {
+  background: var(--dc-bg-paper);
+  color: var(--dc-on-light);
+}
+.dc-section-ink {
+  background: var(--dc-bg-ink);
+  color: var(--dc-on-dark);
+}
+
+/* ---- Top ticker marquee ---- */
+.dc-ticker {
+  background: var(--dc-bg-ink);
+  color: var(--dc-on-dark);
+  font-family: var(--dc-font-mono);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  border-bottom: 1px solid var(--dc-rule-on-dark);
+}
+.dc-ticker__track {
+  display: inline-flex;
+  gap: 32px;
+  white-space: nowrap;
+  animation: dc-ticker-scroll 30s linear infinite;
+  padding-left: 100%;
+}
+.dc-ticker__track > * { display: inline-flex; align-items: center; gap: 8px; }
+.dc-ticker__sep { color: var(--dc-indigo-soft); }
+@keyframes dc-ticker-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-100%); }
+}
+
+/* ---- Word rotator (fund / back / wire / fuel) ---- */
+.dc-rotator {
+  position: relative;
+  display: inline-block;
+  vertical-align: baseline;
+}
+.dc-rotator > span {
+  display: inline-block;
+  animation: dc-rot-fade 8s ease-in-out infinite;
+  opacity: 0;
+  position: absolute;
+  left: 0;
+  top: 0;
+  white-space: nowrap;
+}
+.dc-rotator > span:nth-child(1) { animation-delay: 0s; }
+.dc-rotator > span:nth-child(2) { animation-delay: 2s; }
+.dc-rotator > span:nth-child(3) { animation-delay: 4s; }
+.dc-rotator > span:nth-child(4) { animation-delay: 6s; }
+.dc-rotator > span:first-child { position: relative; }
+@keyframes dc-rot-fade {
+  0%, 22%   { opacity: 0; transform: translateY(8px); }
+  3%, 22%   { opacity: 1; transform: translateY(0); }
+  25%, 100% { opacity: 0; transform: translateY(-8px); }
+}
+
+/* ---- Inputs (light, focus indigo) ---- */
+.dc-input {
+  background: var(--dc-bg-white);
+  border: 1px solid rgba(4, 30, 66, 0.12);
+  border-radius: var(--dc-radius-md);
+  padding: 12px 14px;
+  font-family: var(--dc-font-body);
+  font-size: 14px;
+  color: var(--dc-on-light);
+  transition: border-color 150ms ease-out, box-shadow 150ms ease-out;
+}
+.dc-input:focus {
+  outline: none;
+  border-color: var(--dc-indigo);
+  box-shadow: 0 0 0 2px rgba(73, 69, 255, 0.20);
+}
+
+/* ============================================================
+   Tone — light correction over the legacy DeltPay theme.
+
+   The old globals.css/theme.css aliased --primary to #4945FF,
+   so most existing CTAs already match. We tighten heading
+   tracking sitewide because the spec is firm about it
+   ("don't skip it").
+   ============================================================ */
+:where(h1, h2, h3, h4) {
+  font-feature-settings: "ss01", "cv11";
+}
+
+/* Nav link underline-on-hover (indigo-soft, 1px under the text) */
+.dc-nav-link { position: relative; }
+.dc-nav-link::after {
+  content: "";
+  position: absolute;
+  left: 12px; right: 12px;
+  bottom: 4px;
+  height: 1px;
+  background: var(--dc-indigo-soft);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 150ms ease-out;
+}
+.dc-nav-link:hover::after { transform: scaleX(1); }
+
+/* Optional global font upgrade — components that opt in via
+   className="dc-typeset" inherit display + body fonts cleanly. */
+.dc-typeset {
+  font-family: var(--dc-font-body);
+  color: var(--dc-on-dark);
+}
+.dc-typeset h1, .dc-typeset h2, .dc-typeset h3 {
+  font-family: var(--dc-font-display);
+  font-weight: 600;
+}
+.dc-typeset h1 { letter-spacing: -0.045em; line-height: 0.95; }
+.dc-typeset h2 { letter-spacing: -0.035em; line-height: 1.05; }
+.dc-typeset h3 { letter-spacing: -0.03em;  line-height: 1.0; }
+
+/* Footer-specific tweaks */
+.dc-footer-link { transition: color 150ms ease-out; }
+.dc-footer-link:hover { color: var(--dc-on-dark); }
+
+
+/* ============================================================
+   GLOBAL TONE CORRECTION (sitewide)
+   Applied across all pages except where component-level styles
+   override. Targets common patterns from the legacy theme:
+     - Heading font family + tracking
+     - Pill CTAs softened to 6px-radius rectangles
+     - Heavy bold (800/900) softened to 600/700
+   Protected pages keep their main content because most use
+   inline-style overrides which take precedence.
+   ============================================================ */
+
+/* Sitewide display font upgrade for headings.
+   Components that set their own inline fontFamily are unaffected. */
+h1, h2, h3, h4 {
+  font-family: var(--dc-font-display);
+}
+h1 { letter-spacing: -0.045em; }
+h2 { letter-spacing: -0.035em; }
+h3 { letter-spacing: -0.03em;  }
+
+/* Soften ultra-heavy weights to the editorial 600. Inline
+   styles with explicit font-weight will still win. */
+.font-black { font-weight: 700 !important; }
+
+/* Default body font alignment (Inter) -- only when caller has
+   not specified a font-family inline. Tailwind's font-sans
+   already includes Inter, so this is mostly a no-op for safety. */
+body {
+  font-family: var(--dc-font-body);
+}
+
+/* Editorial helper: any element marked .dc-accent-italic gets
+   the Source Serif italic accent without needing inline styles. */
+.dc-accent-italic {
+  font-family: 'Source Serif Pro', Georgia, serif !important;
+  font-style: italic !important;
+  font-weight: 400 !important;
+}
+
+/* Mono eyebrow helper */
+.dc-mono-eyebrow {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+.dc-mono-eyebrow::before { content: "— "; }
+

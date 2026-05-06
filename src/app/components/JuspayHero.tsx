@@ -197,6 +197,14 @@ export function JuspayHero() {
           >
             {/* Left column */}
             <div className="ih-left">
+              <motion.div
+                className="ih-eyebrow"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+              >
+                — VOL. I · 2026 · RUN · GROW · FUND
+              </motion.div>
               <motion.h1
                 className="ih-title"
                 style={{ y: titleY, opacity: titleOpacity, scale: titleScale }}
@@ -215,7 +223,7 @@ export function JuspayHero() {
                   animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
                   transition={{ duration: 0.7, delay: 0.35, ease: [0.16, 1, 0.3, 1] }}
                 >
-                  instantly paid.
+                  instantly <em className="ih-italic-accent">paid.</em>
                 </motion.span>
               </motion.h1>
 
@@ -376,13 +384,24 @@ export function JuspayHero() {
           50% { opacity: 0.5; box-shadow: 0 0 16px rgba(73,69,255,0.9); }
         }
 
+        .ih-eyebrow {
+          font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+          font-size: 12px;
+          font-weight: 500;
+          letter-spacing: 0.06em;
+          line-height: 1.4;
+          text-transform: uppercase;
+          color: rgba(247,245,240,0.45);
+          margin-bottom: 24px;
+        }
+
         .ih-title {
-          font-family: 'Plus Jakarta Sans', sans-serif;
-          font-size: clamp(2.8rem, 5.5vw, 4.5rem);
-          font-weight: 800;
-          line-height: 1.1;
-          letter-spacing: -0.035em;
-          color: #fff;
+          font-family: 'Manrope', 'Inter Tight', sans-serif;
+          font-size: clamp(2.8rem, 6.4vw, 5.7rem);
+          font-weight: 600;
+          line-height: 0.95;
+          letter-spacing: -0.045em;
+          color: #F7F5F0;
           margin: 0 0 28px;
         }
 
@@ -418,35 +437,39 @@ export function JuspayHero() {
         }
 
         .ih-title-accent {
-          color: #FFFFFF;
-          text-shadow: 0 0 20px rgba(123, 97, 255, 0.8), 0 0 60px rgba(123, 97, 255, 0.4);
-          -webkit-text-fill-color: #FFFFFF;
+          color: #F7F5F0;
+          -webkit-text-fill-color: #F7F5F0;
           background: none;
           -webkit-background-clip: unset;
           background-clip: unset;
           background-size: unset;
           animation: none;
+        }
+
+        .ih-italic-accent {
+          font-family: 'Source Serif Pro', Georgia, serif;
           font-style: italic;
-          font-family: 'Playfair Display', serif;
+          font-weight: 400;
+          color: #F7F5F0;
         }
 
         .ih-subtitle {
-          font-family: 'Plus Jakarta Sans', sans-serif;
-          font-size: 19px;
-          line-height: 1.7;
-          color: rgba(255,255,255,0.82);
+          font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+          font-size: 18px;
+          line-height: 1.55;
+          color: rgba(247,245,240,0.75);
           max-width: 480px;
           margin: 0 0 0;
           text-align: left;
         }
 
         .ih-subtitle-ai {
-          font-family: 'Plus Jakarta Sans', sans-serif;
-          font-size: 19px;
-          line-height: 1.7;
-          color: rgba(255,255,255,0.82);
+          font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+          font-size: 18px;
+          line-height: 1.55;
+          color: rgba(247,245,240,0.75);
           max-width: 480px;
-          margin: 20px 0 48px;
+          margin: 16px 0 40px;
           text-align: left;
         }
 
@@ -462,42 +485,36 @@ export function JuspayHero() {
           display: inline-flex;
           align-items: center;
           gap: 8px;
-          padding: 15px 34px;
-          border-radius: 12px;
-          background: #4318FF;
-          color: #fff;
-          font-family: 'Plus Jakarta Sans', sans-serif;
-          font-size: 15px;
-          font-weight: 700;
+          padding: 13px 20px;
+          border-radius: 6px;
+          background: #4945FF;
+          color: #FFFFFF;
+          font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+          font-size: 13px;
+          font-weight: 500;
           text-decoration: none;
-          transition: background 0.2s, transform 0.15s, box-shadow 0.3s;
-          box-shadow: 0 0 28px rgba(67,24,255,0.25), 0 4px 14px rgba(0,0,0,0.2);
+          transition: background 150ms ease-out;
         }
-        .ih-btn-primary:hover {
-          background: #3712e0;
-          transform: translateY(-1px);
-          box-shadow: 0 0 44px rgba(67,24,255,0.4), 0 8px 24px rgba(0,0,0,0.3);
-        }
+        .ih-btn-primary:hover { background: #3730A3; }
 
         .ih-btn-ghost {
           display: inline-flex;
           align-items: center;
-          gap: 6px;
-          padding: 15px 30px;
-          border-radius: 12px;
-          background: rgba(255,255,255,0.1);
-          border: 1px solid rgba(255,255,255,0.15);
-          color: rgba(255,255,255,0.7);
-          font-family: 'Plus Jakarta Sans', sans-serif;
-          font-size: 15px;
-          font-weight: 600;
+          gap: 8px;
+          padding: 13px 20px;
+          border-radius: 6px;
+          background: transparent;
+          border: 1px solid rgba(247,245,240,0.25);
+          color: #F7F5F0;
+          font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+          font-size: 13px;
+          font-weight: 500;
           text-decoration: none;
-          transition: background 0.2s, border-color 0.2s;
-          backdrop-filter: blur(8px);
+          transition: background 150ms ease-out, border-color 150ms ease-out;
         }
         .ih-btn-ghost:hover {
-          background: rgba(255,255,255,0.08);
-          border-color: rgba(255,255,255,0.22);
+          background: rgba(247,245,240,0.06);
+          border-color: rgba(247,245,240,0.40);
         }
 
         .ih-btn-arrow {
@@ -558,13 +575,14 @@ export function JuspayHero() {
         }
 
         .ih-trust-label {
-          font-family: 'Plus Jakarta Sans', sans-serif;
-          font-size: 14px;
-          font-weight: 600;
-          color: rgba(255,255,255,0.6);
-          letter-spacing: 0.1em;
+          font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+          font-size: 12px;
+          font-weight: 500;
+          color: rgba(247,245,240,0.55);
+          letter-spacing: 0.06em;
           text-transform: uppercase;
         }
+        .ih-trust-label::before { content: "— "; }
 
         .ih-trust-marquee {
           overflow: hidden;
@@ -579,11 +597,11 @@ export function JuspayHero() {
         }
 
         .ih-trust-item {
-          font-family: 'Plus Jakarta Sans', sans-serif;
-          font-size: 20px;
-          font-weight: 700;
-          color: rgba(255,255,255,0.45);
-          letter-spacing: -0.01em;
+          font-family: 'Manrope', 'Inter Tight', sans-serif;
+          font-size: 18px;
+          font-weight: 600;
+          color: rgba(247,245,240,0.45);
+          letter-spacing: -0.02em;
           white-space: nowrap;
           padding: 0 32px;
           flex-shrink: 0;

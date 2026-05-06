@@ -75,23 +75,45 @@ export function ProductCrossSell({
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-3xl mb-14">
           <div
-            className={`inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm mb-5 ${
-              isLight
-                ? 'border border-[#041E42]/10 bg-[#F4F3FA] text-[#475569]'
-                : 'border border-white/15 bg-white/5 text-white/80'
-            }`}
+            className="mb-6"
+            style={{
+              fontFamily: "'JetBrains Mono', ui-monospace, monospace",
+              fontSize: '12px',
+              letterSpacing: '0.18em',
+              textTransform: 'uppercase',
+              color: isLight ? '#697386' : 'rgba(247, 245, 240, 0.65)',
+            }}
           >
-            <span className="w-2 h-2 rounded-full bg-[#4945FF]" />
-            {eyebrow}
+            — {eyebrow}
           </div>
           <h2
-            className={`text-4xl sm:text-5xl font-bold tracking-tight mb-4 ${
-              isLight ? 'text-[#041E42]' : 'text-white'
-            }`}
+            className={`text-4xl sm:text-5xl mb-4 ${isLight ? 'text-[#041E42]' : 'text-white'}`}
+            style={{
+              fontFamily: "'Manrope', 'Inter Tight', sans-serif",
+              fontWeight: 600,
+              letterSpacing: '-0.035em',
+              lineHeight: 1.05,
+            }}
           >
-            {title}
+            {title.split(' ').map((word, i, arr) => (
+              i === arr.length - 1 ? (
+                <em
+                  key={i}
+                  style={{
+                    fontFamily: "'Source Serif Pro', Georgia, serif",
+                    fontStyle: 'italic',
+                    fontWeight: 400,
+                    color: isLight ? '#3730A3' : '#A5B4FC',
+                  }}
+                >
+                  {word}
+                </em>
+              ) : (
+                <span key={i}>{word} </span>
+              )
+            ))}
           </h2>
-          <p className={`text-lg ${isLight ? 'text-[#475569]' : 'text-white/70'}`}>{subtitle}</p>
+          <p className={`text-lg ${isLight ? 'text-[#475569]' : 'text-white/70'}`} style={{ fontFamily: "'Inter', sans-serif" }}>{subtitle}</p>
         </div>
 
         <div className={`grid gap-5 ${products.length === 4 ? 'md:grid-cols-2 lg:grid-cols-4' : 'md:grid-cols-3'}`}>
@@ -101,20 +123,36 @@ export function ProductCrossSell({
               <button
                 key={p.slug}
                 onClick={() => navigate(p.path)}
-                className={`group text-left relative rounded-2xl p-6 transition-all duration-300 ${
+                className={`group text-left relative p-6 transition-all duration-300 ${
                   isLight
-                    ? 'bg-white border border-[#041E42]/10 hover:border-[#4945FF]/60 hover:shadow-[0_8px_32px_rgba(73,69,255,0.15)]'
+                    ? 'bg-white border border-[#041E42]/10 hover:border-[#4945FF]/60'
                     : 'bg-white/5 border border-white/10 hover:border-[#4945FF]/60 hover:bg-white/[0.08]'
                 }`}
+                style={{ borderRadius: '6px' }}
               >
-                <div className="w-11 h-11 rounded-xl bg-[#4945FF] flex items-center justify-center mb-5">
+                <div className="w-11 h-11 bg-[#4945FF] flex items-center justify-center mb-5" style={{ borderRadius: '6px' }}>
                   <Icon className="w-5 h-5 text-white" />
                 </div>
                 <div className="flex items-baseline gap-3 mb-2">
-                  <h3 className={`text-xl font-bold ${isLight ? 'text-[#041E42]' : 'text-white'}`}>
+                  <h3
+                    className={`text-xl ${isLight ? 'text-[#041E42]' : 'text-white'}`}
+                    style={{
+                      fontFamily: "'Manrope', sans-serif",
+                      fontWeight: 600,
+                      letterSpacing: '-0.03em',
+                    }}
+                  >
                     {p.name}
                   </h3>
-                  <span className="text-xs uppercase tracking-wider text-[#4945FF] font-semibold">
+                  <span
+                    className="text-[#4945FF]"
+                    style={{
+                      fontFamily: "'JetBrains Mono', monospace",
+                      fontSize: '11px',
+                      letterSpacing: '0.14em',
+                      textTransform: 'uppercase',
+                    }}
+                  >
                     {p.stat}
                   </span>
                 </div>

@@ -68,16 +68,16 @@ export function SpotlightTestimonial() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           style={{
-            fontSize: 11,
-            fontWeight: 700,
-            letterSpacing: '0.15em',
-            color: '#4945FF',
+            fontSize: 12,
+            fontWeight: 500,
+            letterSpacing: '0.18em',
+            color: '#697386',
             marginBottom: 40,
-            fontFamily: "'Plus Jakarta Sans', sans-serif",
+            fontFamily: "'JetBrains Mono', monospace",
             textTransform: 'uppercase',
           }}
         >
-          What merchants are saying
+          — IN THEIR WORDS
         </motion.div>
 
         {/* Quote */}
@@ -93,11 +93,13 @@ export function SpotlightTestimonial() {
             >
               <p
                 style={{
-                  fontSize: 'clamp(20px, 3vw, 28px)',
-                  color: '#1A1A2E',
-                  lineHeight: 1.6,
-                  fontFamily: "'Plus Jakarta Sans', sans-serif",
-                  fontWeight: 500,
+                  fontSize: 'clamp(22px, 3vw, 32px)',
+                  color: '#041E42',
+                  lineHeight: 1.4,
+                  fontFamily: "'Source Serif Pro', Georgia, serif",
+                  fontStyle: 'italic',
+                  fontWeight: 400,
+                  letterSpacing: '-0.01em',
                   marginBottom: 32,
                 }}
               >
@@ -110,14 +112,16 @@ export function SpotlightTestimonial() {
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: 6,
-                  background: t.color === '#16C784' ? 'rgba(22,199,132,0.12)' : 'rgba(73,69,255,0.12)',
-                  color: t.color,
-                  fontSize: 13,
-                  fontWeight: 700,
-                  padding: '6px 14px',
-                  borderRadius: 20,
+                  background: t.color === '#16C784' ? 'rgba(31,132,90,0.10)' : 'rgba(73,69,255,0.10)',
+                  color: t.color === '#16C784' ? '#1F845A' : '#3730A3',
+                  fontSize: 11,
+                  fontWeight: 500,
+                  letterSpacing: '0.14em',
+                  textTransform: 'uppercase',
+                  padding: '6px 12px',
+                  borderRadius: 4,
                   marginBottom: 24,
-                  fontFamily: "'Plus Jakarta Sans', sans-serif",
+                  fontFamily: "'JetBrains Mono', monospace",
                 }}
               >
                 {t.metric}
