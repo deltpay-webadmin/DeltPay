@@ -224,12 +224,12 @@ function Hero() {
   return (
     <section
       ref={sectionRef}
-      style={{ background: T.bg, position: 'relative', height: '300vh' }}
+      style={{ background: T.bg, position: 'relative', height: 'calc(300vh / var(--site-zoom, 1))' }}
     >
       {/* Sticky viewport */}
       <div style={{
         position: 'sticky', top: 0,
-        height: '100vh', overflow: 'hidden',
+        height: 'calc(100vh / var(--site-zoom, 1))', overflow: 'hidden',
       }}>
         {/* Heading — vertically centered on load, slides up as the user scrolls
            to make room for the carousels below. */}
@@ -487,7 +487,7 @@ function FeatureWalkthrough() {
         }
         .we-text-track { order: 1; }
         .we-text-section {
-          min-height: 100vh;
+          min-height: calc(100vh / var(--site-zoom, 1));
           display: flex;
           align-items: center;
           padding: 80px 60px;
@@ -546,7 +546,7 @@ function FeatureWalkthrough() {
           order: 2;
           position: sticky;
           top: 0;
-          height: 100vh;
+          height: calc(100vh / var(--site-zoom, 1));
           display: flex;
           align-items: center;
           padding: 40px 60px 40px 20px;
@@ -1076,7 +1076,7 @@ function Testimonials() {
         <div
           style={{
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            minHeight: '100vh', padding: '4rem 1.5rem',
+            minHeight: 'calc(100vh / var(--site-zoom, 1))', padding: '4rem 1.5rem',
           }}
         >
           <article style={{ position: 'relative', zIndex: 50, mixBlendMode: 'difference' }}>

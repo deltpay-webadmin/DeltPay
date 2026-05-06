@@ -32,3 +32,25 @@ body {
     width: calc(100% / var(--site-zoom));
   }
 }
+
+/* ----------------------------------------------------------------
+   Viewport-height compensation under site-wide zoom.
+
+   When `body { zoom: N }` is active, `vh` units are evaluated in the
+   un-zoomed coordinate space — so a child with `min-height: 100vh`
+   renders at N × 100vh of physical pixels (taller than the viewport).
+   For sections that vertically center their content (e.g. LensHero,
+   ScrollExpandingHero, WebsiteExamples), this pushes the visual
+   center below the fold and leaves a large empty area above the
+   content.
+
+   Override Tailwind's `min-h-screen` / `h-screen` utilities (and the
+   raw inline-style equivalents) to divide by --site-zoom so they
+   match a single physical viewport again.
+---------------------------------------------------------------- */
+.min-h-screen {
+  min-height: calc(100vh / var(--site-zoom, 1)) !important;
+}
+.h-screen {
+  height: calc(100vh / var(--site-zoom, 1)) !important;
+}

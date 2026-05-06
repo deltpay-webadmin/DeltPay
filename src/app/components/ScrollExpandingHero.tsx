@@ -381,16 +381,17 @@ export function ScrollExpandingHero() {
       </div>
 
       {/* ── Main scroll container ─────────────────────────────────────────── */}
-      <div ref={containerRef} style={{ position: 'relative', height: '500vh' }}>
+      <div ref={containerRef} style={{ position: 'relative', height: 'calc(500vh / var(--site-zoom, 1))' }}>
         <div
           ref={stickyRef}
           style={{
             position: 'sticky',
             top: 0,
             width: '100%',
-            // calc(100vh / 0.8) = 125vh — compensates for body { zoom: 0.8 }
-            // so the sticky fills the actual physical viewport, not just 80% of it.
-            height: 'calc(100vh / 0.8)',
+            // Match a single physical viewport under the active body-level zoom.
+            // (Previously hard-coded /0.8 for an older zoom value; now reads
+            // the current factor from --site-zoom.)
+            height: 'calc(100vh / var(--site-zoom, 1))',
             overflow: 'hidden',
             background: BG,
           }}
