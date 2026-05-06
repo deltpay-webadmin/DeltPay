@@ -264,52 +264,22 @@ export function Navigation() {
   return (
     <header
       className="dc-nav-header sticky top-0 z-50"
-      style={{ background: 'var(--dc-bg-navy)' }}
+      style={{
+        // Liquid-glass header: translucent navy with a soft backdrop blur so the
+        // hero shader gradient bleeds through and the chrome no longer reads as
+        // a flat slab against the colored canvas.
+        background:
+          'linear-gradient(180deg, rgba(4, 30, 66, 0.62) 0%, rgba(4, 30, 66, 0.42) 100%)',
+        backdropFilter: 'blur(18px) saturate(140%)',
+        WebkitBackdropFilter: 'blur(18px) saturate(140%)',
+        borderBottom: '1px solid rgba(247, 245, 240, 0.10)',
+        boxShadow: 'inset 0 1px 0 rgba(247, 245, 240, 0.06)',
+      }}
     >
-      {/* Top ticker bar */}
-      <div
-        className="dc-ticker"
-        style={{
-          background: '#020E22',
-          borderBottom: '1px solid rgba(247, 245, 240, 0.08)',
-          height: 32,
-          overflow: 'hidden',
-          position: 'relative',
-        }}
-      >
-        <div
-          className="flex whitespace-nowrap"
-          style={{
-            fontFamily: 'var(--dc-font-mono)',
-            color: 'rgba(247, 245, 240, 0.55)',
-            fontSize: 11,
-            letterSpacing: '0.06em',
-            textTransform: 'uppercase',
-            animation: 'dc-ticker-scroll 90s linear infinite',
-            paddingTop: 10,
-            gap: 40,
-          }}
-        >
-          {[...TICKER, ...TICKER, ...TICKER].map((t, i) => (
-            <span key={i} className="inline-flex items-center gap-2">
-              <span style={{ color: 'rgba(247, 245, 240, 0.8)', fontWeight: 500 }}>
-                {t.split('  ')[0]}
-              </span>
-              <span style={{ color: 'rgba(247, 245, 240, 0.4)' }}>
-                {t.split('  ').slice(1).join(' ')}
-              </span>
-              <span style={{ color: 'rgba(247, 245, 240, 0.25)' }}>·</span>
-            </span>
-          ))}
-        </div>
-        <style>{`@keyframes dc-ticker-scroll { from { transform: translateX(0) } to { transform: translateX(-33.333%) } }`}</style>
-      </div>
-
       {/* Main nav row */}
       <nav
         className="relative"
         style={{
-          borderBottom: '1px solid rgba(247, 245, 240, 0.08)',
           height: 64,
         }}
       >
@@ -565,8 +535,8 @@ export function Navigation() {
             >
               Login
             </Link>
-            <Link to="/apply" className="dc-btn-primary">
-              Get Funded
+            <Link to="/get-a-quote" className="dc-btn-primary">
+              Get Started
               <ArrowRight size={12} />
             </Link>
           </div>
@@ -619,8 +589,8 @@ export function Navigation() {
               />
               <div className="pt-4 flex flex-col gap-3" style={{ borderTop: '1px solid rgba(247, 245, 240, 0.08)' }}>
                 <Link to="/signin" className="dc-btn-secondary dc-on-dark dc-lg w-full justify-center">Login</Link>
-                <Link to="/apply" className="dc-btn-primary dc-lg w-full justify-center">
-                  Get Funded <ArrowRight size={14} />
+                <Link to="/get-a-quote" className="dc-btn-primary dc-lg w-full justify-center">
+                  Get Started <ArrowRight size={14} />
                 </Link>
               </div>
             </div>
