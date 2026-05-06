@@ -3,6 +3,10 @@ import { Link } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
 import { DashboardPreview } from './DashboardPreview';
 import { HeroShaderBackground } from './HeroShaderBackground';
+import heroWireIt from '@/assets/hero-wire-it.png';
+
+// keep DashboardPreview import warm; some other surfaces still reference it
+void DashboardPreview;
 
 /* ──────────────────────────────────────────────────────────────
    JuspayHero — Delt Capital style
@@ -145,25 +149,35 @@ export function JuspayHero() {
             </div>
           </div>
 
-          {/* RIGHT: dashboard preview, framed */}
+          {/* RIGHT: cinematic visual — "we wire it" */}
           <div className="relative lg:pt-2">
             <div
-              className="relative rounded-[12px] overflow-hidden flex items-center justify-center"
+              className="relative rounded-[12px] overflow-hidden"
               style={{
-                border: '1px solid var(--dc-rule-on-dark)',
-                background: 'rgba(247, 245, 240, 0.02)',
                 aspectRatio: '4 / 3',
                 minHeight: 380,
-                padding: '40px 32px',
+                // Soft inner border that reads on dark without competing
+                // with the image; no fill so the visual is the surface.
+                boxShadow:
+                  'inset 0 0 0 1px var(--dc-rule-on-dark), 0 30px 80px -40px rgba(73, 69, 255, 0.45)',
               }}
             >
-              <div
-                style={{ width: '100%', maxWidth: 480 }}
-                className="jh-dp-fit"
-              >
-                <DashboardPreview />
-              </div>
-              <style>{`.jh-dp-fit .dp-wrapper { transform: none !important; }`}</style>
+              <img
+                src={heroWireIt}
+                alt="Glowing indigo fiber-optic cables routing through a dark space — a metaphor for wiring funds through one stack."
+                draggable={false}
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  objectPosition: 'center',
+                  display: 'block',
+                  userSelect: 'none',
+                  pointerEvents: 'none',
+                }}
+              />
             </div>
             {/* Caption */}
             <div className="mt-4 flex justify-end">
@@ -175,7 +189,7 @@ export function JuspayHero() {
                   textTransform: 'uppercase',
                 }}
               >
-                FIG. 01 — THE OFFER, IN MOTION
+                FIG. 01 — WE WIRE IT
               </span>
             </div>
           </div>
