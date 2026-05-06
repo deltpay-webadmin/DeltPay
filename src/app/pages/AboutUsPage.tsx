@@ -463,24 +463,24 @@ export function AboutUsPage() {
       <section
         className="relative overflow-hidden py-24 md:py-28 px-6"
         style={{
-          background: `linear-gradient(180deg, ${WHITE} 0%, #F5F4FF 100%)`,
+          background: '#4945FF',
         }}
       >
         <div
           aria-hidden
           className="absolute inset-0 pointer-events-none opacity-60"
           style={{
-            background: `radial-gradient(60% 100% at 50% 100%, ${PURPLE}22 0%, transparent 60%)`,
+            background: 'radial-gradient(60% 100% at 50% 100%, rgba(255,255,255,0.18) 0%, transparent 60%)',
           }}
         />
         <div className="relative max-w-3xl mx-auto text-center">
           <h2
             className="font-bold tracking-[-0.015em]"
-            style={{ color: NAVY, fontSize: 'clamp(2rem, 4vw, 3rem)', lineHeight: 1.05 }}
+            style={{ color: WHITE, fontSize: 'clamp(2rem, 4vw, 3rem)', lineHeight: 1.05 }}
           >
             Come build with us.
           </h2>
-          <p className="mt-5 text-lg leading-relaxed" style={{ color: MUTED }}>
+          <p className="mt-5 text-lg leading-relaxed" style={{ color: 'rgba(255,255,255,0.85)' }}>
             We&rsquo;re hiring across engineering, product, design, and go-to-market. Remote-friendly, competitive comp, real equity.
           </p>
           <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
@@ -488,9 +488,9 @@ export function AboutUsPage() {
               href="#/careers"
               className="inline-flex items-center gap-2 rounded-xl px-6 py-3.5 text-sm font-semibold transition-all"
               style={{
-                background: PURPLE,
-                color: WHITE,
-                boxShadow: '0 18px 40px -14px rgba(73,69,255,0.5), inset 0 1px 0 rgba(255,255,255,0.2)',
+                background: WHITE,
+                color: PURPLE,
+                boxShadow: '0 18px 40px -14px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.5)',
               }}
             >
               See open roles
@@ -499,7 +499,7 @@ export function AboutUsPage() {
             <a
               href="#/contact"
               className="inline-flex items-center gap-2 text-sm font-semibold transition-colors"
-              style={{ color: NAVY }}
+              style={{ color: WHITE }}
             >
               Or just say hi
               <ArrowRight size={14} strokeWidth={2.5} />

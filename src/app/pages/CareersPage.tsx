@@ -174,20 +174,20 @@ export function CareersPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-white">
+      <section className="py-20 bg-[#4945FF]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl mx-auto text-center">
-            <h2 className="text-4xl font-bold text-[#041E42] mb-6">
+            <h2 className="text-4xl font-bold text-white mb-6">
               Don't see the right role?
             </h2>
-            <p className="text-xl text-[#475569] mb-8">
+            <p className="text-xl text-white/85 mb-8">
               We're always looking for talented people. Send us your resume and we'll keep you in mind for future opportunities.
             </p>
-            <button onClick={() => { window.location.href = 'mailto:careers@delt.com'; }} className="px-8 py-4 bg-[#4945FF] text-white rounded-lg hover:bg-[#3730FF] transition-colors font-semibold">
+            <button onClick={() => { window.location.href = 'mailto:careers@delt.com'; }} className="px-8 py-4 bg-white text-[#4945FF] rounded-lg hover:bg-[#F6F7FB] transition-colors font-semibold">
               Send Us Your Resume
             </button>
           </div>
-          <div className="max-w-4xl mx-auto mt-12 p-6 bg-[#F6F7FB] rounded-xl text-sm text-[#475569]">Delt is an equal opportunity employer. We do not discriminate on the basis of race, color, religion, sex, national origin, age, disability, veteran status, or any other characteristic protected by applicable law. We are committed to creating an inclusive environment for all employees.</div>
+          <div className="max-w-4xl mx-auto mt-12 p-6 bg-white/10 border border-white/20 rounded-xl text-sm text-white/80">Delt is an equal opportunity employer. We do not discriminate on the basis of race, color, religion, sex, national origin, age, disability, veteran status, or any other characteristic protected by applicable law. We are committed to creating an inclusive environment for all employees.</div>
         </div>
       </section>
     </div>

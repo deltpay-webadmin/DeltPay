@@ -838,12 +838,12 @@ export function PricingPage() {
       </section>
 
       {/* ═══ 6. SMALL CENTERED FINAL CTA (white) ═══════════════════ */}
-      <section style={{ background: '#FFFFFF', padding: '88px 24px' }}>
+      <section style={{ background: '#4945FF', padding: '88px 24px' }}>
         <div style={{ maxWidth: 720, margin: '0 auto', textAlign: 'center' }}>
           <h2 style={{
             fontSize: 'clamp(28px, 3.2vw, 40px)',
             fontWeight: 800,
-            color: NAVY,
+            color: '#FFFFFF',
             letterSpacing: '-0.025em',
             lineHeight: 1.15,
             margin: 0,
@@ -852,7 +852,7 @@ export function PricingPage() {
           }}>Pick a plan today. See your first sale this week.</h2>
           <p style={{
             fontSize: 17,
-            color: MUTED,
+            color: 'rgba(255,255,255,0.85)',
             lineHeight: 1.55,
             marginBottom: 28,
             fontFamily: fonts.heading,
@@ -861,8 +861,8 @@ export function PricingPage() {
             <button
               onClick={() => navigate('/signup')}
               style={{
-                background: PURPLE,
-                color: '#FFFFFF',
+                background: '#FFFFFF',
+                color: '#4945FF',
                 border: 'none',
                 padding: '15px 28px',
                 borderRadius: 12,
@@ -875,8 +875,8 @@ export function PricingPage() {
                 gap: 8,
                 transition: 'background 0.2s',
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = '#3933CC'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = PURPLE; }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = '#F6F7FB'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = '#FFFFFF'; }}
             >
               Start on Free <ArrowRight size={16} />
             </button>
@@ -884,8 +884,8 @@ export function PricingPage() {
               onClick={() => navigate('/contact-sales')}
               style={{
                 background: 'transparent',
-                color: NAVY,
-                border: `1.5px solid ${NAVY}`,
+                color: '#FFFFFF',
+                border: '1.5px solid rgba(255,255,255,0.4)',
                 padding: '15px 28px',
                 borderRadius: 12,
                 fontSize: 15,
@@ -894,7 +894,7 @@ export function PricingPage() {
                 fontFamily: fonts.heading,
                 transition: 'background 0.2s',
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = IVORY; }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
               onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
             >
               Talk to sales

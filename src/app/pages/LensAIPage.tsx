@@ -659,7 +659,7 @@ export function LensAIPage() {
           6. CTA FOOTER
       ══════════════════════════════════════════════════════════ */}
       <section style={{
-        background: C.navy,
+        background: '#4945FF',
         padding: 'clamp(80px, 10vw, 120px) clamp(20px, 4vw, 56px)',
         textAlign: 'center',
         position: 'relative',
@@ -667,7 +667,7 @@ export function LensAIPage() {
       }}>
         <div aria-hidden style={{
           position: 'absolute', inset: 0, pointerEvents: 'none',
-          background: `radial-gradient(ellipse 60% 50% at 50% 100%, ${C.purple}25 0%, transparent 70%)`,
+          background: 'radial-gradient(ellipse 60% 50% at 50% 100%, rgba(255,255,255,0.18) 0%, transparent 70%)',
         }} />
         <div style={{ position: 'relative', maxWidth: 640, margin: '0 auto' }}>
           <h2 style={{
@@ -681,7 +681,7 @@ export function LensAIPage() {
           <p style={{
             margin: '0 auto 40px', maxWidth: 480,
             fontSize: 18, lineHeight: 1.7,
-            color: 'rgba(255,255,255,0.8)',
+            color: 'rgba(255,255,255,0.85)',
           }}>
             Lens is included in every Delt account. Start asking today — your first insights
             typically appear within a few days of your first transactions.
@@ -690,20 +690,20 @@ export function LensAIPage() {
             href="/sign-up"
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 8,
-              background: C.white, color: C.navy,
+              background: C.white, color: '#4945FF',
               textDecoration: 'none',
               border: 'none', borderRadius: 14,
               padding: '16px 36px', fontSize: 16,
               fontWeight: 700, cursor: 'pointer',
               fontFamily: FONT,
-              boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
             }}
           >
             Create a free account
           </a>
-          <p style={{ marginTop: 24, fontSize: 13, color: 'rgba(255,255,255,0.6)' }}>
+          <p style={{ marginTop: 24, fontSize: 13, color: 'rgba(255,255,255,0.7)' }}>
             Need help with Lens?{' '}
-            <a href="/help-center" style={{ color: 'rgba(255,255,255,0.85)', textDecoration: 'underline' }}>
+            <a href="/help-center" style={{ color: 'rgba(255,255,255,0.95)', textDecoration: 'underline' }}>
               Visit the Help Center
             </a>
           </p>

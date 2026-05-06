@@ -519,7 +519,7 @@ export function HighRiskProcessingPage() {
           <div
             className="rounded-3xl p-10 lg:p-14 text-center"
             style={{
-              background: NAVY,
+              background: '#4945FF',
             }}
           >
             <h2
@@ -530,7 +530,7 @@ export function HighRiskProcessingPage() {
             </h2>
             <p
               className="text-[17px] leading-relaxed mb-8 max-w-[640px] mx-auto"
-              style={{ color: 'rgba(255,255,255,0.75)' }}
+              style={{ color: 'rgba(255,255,255,0.85)' }}
             >
               48–72 hour approvals for most high-risk verticals. Multi-MID structures
               available on day one. Bring your statement and let's get you off the
@@ -540,7 +540,7 @@ export function HighRiskProcessingPage() {
               <Link
                 to="/contact-sales"
                 className="inline-flex items-center gap-2 px-7 py-4 rounded-full text-[15px] font-bold transition-all"
-                style={{ background: '#FFFFFF', color: NAVY }}
+                style={{ background: '#FFFFFF', color: '#4945FF' }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = 'translateY(-1px)';
                 }}

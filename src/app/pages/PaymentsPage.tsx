@@ -71,6 +71,234 @@ const TESTIMONIALS = [
   },
 ];
 
+/* ─── Pricing model visuals ─────────────────────────────────
+   Each card in the "Three ways to keep more of every sale" section
+   gets a distinct conceptual graphic so the difference between models
+   reads at a glance without having to parse the body copy. */
+function PricingModelVisual({
+  kind,
+}: {
+  kind: 'cash-discount' | 'flat-rate' | 'interchange-plus';
+}) {
+  if (kind === 'cash-discount') {
+    /* Two-price receipt: same item, cash price vs card price.
+       Customer pays the card surcharge → merchant nets the cash price. */
+    return (
+      <div
+        className="relative w-full mb-6 rounded-xl flex items-center justify-center"
+        style={{
+          height: 132,
+          background: `${PURPLE}08`,
+          border: `1px solid ${HAIRLINE}`,
+          overflow: 'hidden',
+        }}
+        aria-hidden="true"
+      >
+        <div
+          className="absolute inset-0 opacity-[0.6]"
+          style={{
+            backgroundImage:
+              'radial-gradient(rgba(4,30,66,0.08) 1px, transparent 1px)',
+            backgroundSize: '14px 14px',
+          }}
+        />
+        <div
+          className="relative rounded-md px-3.5 py-3 flex flex-col gap-1.5"
+          style={{
+            background: '#FFFFFF',
+            boxShadow: '0 8px 20px rgba(4,30,66,0.10)',
+            border: `1px solid ${HAIRLINE}`,
+            minWidth: 184,
+          }}
+        >
+          <div
+            className="text-[9px] font-bold uppercase"
+            style={{ color: MICRO, letterSpacing: '0.16em' }}
+          >
+            Today's special
+          </div>
+          <div
+            className="flex items-center justify-between text-[12px]"
+            style={{ color: NAVY }}
+          >
+            <span className="font-semibold">Cash price</span>
+            <span className="font-bold tabular-nums">$10.00</span>
+          </div>
+          <div
+            className="flex items-center justify-between text-[12px]"
+            style={{ color: MUTED }}
+          >
+            <span className="font-semibold">Card price</span>
+            <span className="font-bold tabular-nums">$10.40</span>
+          </div>
+          <div
+            className="flex items-center justify-between mt-1 pt-1.5"
+            style={{ borderTop: `1px dashed ${HAIRLINE}` }}
+          >
+            <span
+              className="text-[10px] font-bold uppercase"
+              style={{ color: PURPLE, letterSpacing: '0.12em' }}
+            >
+              You net
+            </span>
+            <span
+              className="text-[12px] font-bold tabular-nums"
+              style={{ color: PURPLE }}
+            >
+              $10.00
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (kind === 'flat-rate') {
+    /* Four card brands all funneling to one single rate badge — the
+       "one rate, every card" idea made literal. */
+    const brands = ['VISA', 'MC', 'AMEX', 'DISC'];
+    return (
+      <div
+        className="relative w-full mb-6 rounded-xl flex flex-col items-center justify-center gap-3"
+        style={{
+          height: 132,
+          background: `${PURPLE}08`,
+          border: `1px solid ${HAIRLINE}`,
+          padding: '14px 12px',
+        }}
+        aria-hidden="true"
+      >
+        <div className="flex items-center justify-center gap-1.5">
+          {brands.map((b) => (
+            <span
+              key={b}
+              className="px-2 py-1 rounded-md text-[9px] font-bold tabular-nums"
+              style={{
+                background: '#FFFFFF',
+                color: NAVY,
+                border: `1px solid ${HAIRLINE}`,
+                letterSpacing: '0.06em',
+              }}
+            >
+              {b}
+            </span>
+          ))}
+        </div>
+        {/* Funnel lines converging downward */}
+        <svg
+          width="170"
+          height="22"
+          viewBox="0 0 170 22"
+          fill="none"
+          style={{ display: 'block' }}
+        >
+          <path
+            d="M12 0 L85 22"
+            stroke={PURPLE}
+            strokeOpacity="0.45"
+            strokeWidth="1.2"
+          />
+          <path
+            d="M58 0 L85 22"
+            stroke={PURPLE}
+            strokeOpacity="0.45"
+            strokeWidth="1.2"
+          />
+          <path
+            d="M112 0 L85 22"
+            stroke={PURPLE}
+            strokeOpacity="0.45"
+            strokeWidth="1.2"
+          />
+          <path
+            d="M158 0 L85 22"
+            stroke={PURPLE}
+            strokeOpacity="0.45"
+            strokeWidth="1.2"
+          />
+        </svg>
+        <div
+          className="px-4 py-2 rounded-full inline-flex items-center gap-2"
+          style={{
+            background: PURPLE,
+            color: '#FFFFFF',
+            boxShadow: '0 6px 18px rgba(73,69,255,0.28)',
+          }}
+        >
+          <span
+            className="text-[10px] font-bold uppercase"
+            style={{ letterSpacing: '0.14em', opacity: 0.85 }}
+          >
+            One rate
+          </span>
+          <span className="text-[14px] font-bold tabular-nums">2.6%</span>
+        </div>
+      </div>
+    );
+  }
+
+  /* interchange-plus — itemized cost stack:
+     network interchange + Delt margin = total. The point is
+     transparent line-items, so we show them broken out. */
+  const components: { label: string; value: string; w: number; tone: 'navy' | 'purple' }[] = [
+    { label: 'Interchange', value: '1.65%', w: 62, tone: 'navy' },
+    { label: 'Network fee', value: '0.13%', w: 14, tone: 'navy' },
+    { label: 'Delt margin', value: '0.25%', w: 24, tone: 'purple' },
+  ];
+  return (
+    <div
+      className="relative w-full mb-6 rounded-xl flex flex-col justify-center gap-2"
+      style={{
+        height: 132,
+        background: `${PURPLE}08`,
+        border: `1px solid ${HAIRLINE}`,
+        padding: '14px 16px',
+      }}
+      aria-hidden="true"
+    >
+      <div
+        className="text-[9px] font-bold uppercase mb-0.5"
+        style={{ color: MICRO, letterSpacing: '0.16em' }}
+      >
+        Per-transaction breakdown
+      </div>
+      {components.map((c) => (
+        <div key={c.label} className="flex items-center gap-2">
+          <span
+            className="text-[10px] font-semibold flex-shrink-0"
+            style={{ color: NAVY, width: 78 }}
+          >
+            {c.label}
+          </span>
+          <div
+            className="flex-1 h-2 rounded-full overflow-hidden"
+            style={{ background: `${NAVY}10` }}
+          >
+            <div
+              className="h-full rounded-full"
+              style={{
+                width: `${c.w}%`,
+                background: c.tone === 'purple' ? PURPLE : NAVY,
+                opacity: c.tone === 'purple' ? 1 : 0.85,
+              }}
+            />
+          </div>
+          <span
+            className="text-[10px] font-bold tabular-nums flex-shrink-0"
+            style={{
+              color: c.tone === 'purple' ? PURPLE : NAVY,
+              width: 36,
+              textAlign: 'right',
+            }}
+          >
+            {c.value}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function PaymentsPage() {
   const [activeTestimonial, setActiveTestimonial] = useState(0);
   const t = TESTIMONIALS[activeTestimonial];
@@ -145,6 +373,7 @@ export function PaymentsPage() {
                 body: 'Post two prices — cash and card. Customers who pay by card cover the fee. Your effective cost is $0. Delt handles compliance signage automatically.',
                 detail: 'Compliant in all 50 states',
                 bullets: ['Automatic receipt disclosure', 'State-by-state signage', 'Opt-in or -out per location'],
+                visual: 'cash-discount' as const,
               },
               {
                 tag: 'Most popular',
@@ -153,6 +382,7 @@ export function PaymentsPage() {
                 body: 'A single blended rate regardless of card type. Simple, predictable billing that\'s easy to forecast and reconcile.',
                 detail: 'No per-card-type surprises',
                 bullets: ['Predictable monthly cost', 'Same rate across card types', 'No statement decoding'],
+                visual: 'flat-rate' as const,
               },
               {
                 tag: 'Transparent',
@@ -161,6 +391,7 @@ export function PaymentsPage() {
                 body: 'Pay the actual interchange rate set by card networks plus a fixed Delt margin. Full line-item transparency — best for high-volume merchants.',
                 detail: 'Available on Growth & Custom',
                 bullets: ['Competitive rate structure', 'Line-item statements', 'Monthly rate review'],
+                visual: 'interchange-plus' as const,
               },
             ].map((model, i) => (
               <motion.div
@@ -175,6 +406,7 @@ export function PaymentsPage() {
                   border: `1px solid ${HAIRLINE}`,
                 }}
               >
+                <PricingModelVisual kind={model.visual} />
                 <div className="flex items-center justify-between mb-6">
                   <span
                     className="text-[13px] font-bold"
@@ -572,13 +804,13 @@ export function PaymentsPage() {
       />
 
       {/* ═══ 9. SMALL CENTERED FINAL CTA (white) ══════════════════ */}
-      <section className="px-6 py-20 md:py-24 text-center" style={{ background: '#FFFFFF' }}>
+      <section className="px-6 py-20 md:py-24 text-center" style={{ background: '#4945FF' }}>
         <div style={{ maxWidth: 620, margin: '0 auto' }}>
           <h2
             className="font-bold mb-4 leading-[1.1]"
             style={{
               fontSize: 'clamp(28px, 3.4vw, 40px)',
-              color: NAVY,
+              color: '#FFFFFF',
               letterSpacing: '-0.025em',
             }}
           >
@@ -586,15 +818,15 @@ export function PaymentsPage() {
           </h2>
           <p
             className="mb-8 leading-relaxed mx-auto"
-            style={{ fontSize: 'clamp(15px, 1.2vw, 17px)', color: MUTED, maxWidth: 480 }}
+            style={{ fontSize: 'clamp(15px, 1.2vw, 17px)', color: 'rgba(255,255,255,0.85)', maxWidth: 480 }}
           >
             Free to start. Hardware included. No contracts. Upgrade when you're ready.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4">
             <Link
               to="/apply"
-              className="inline-flex items-center gap-2 rounded-full px-7 py-3.5 font-semibold text-white transition-all duration-200 hover:brightness-110"
-              style={{ background: PURPLE, fontSize: 15, boxShadow: `0 4px 18px ${PURPLE}40` }}
+              className="inline-flex items-center gap-2 rounded-full px-7 py-3.5 font-semibold transition-all duration-200 hover:brightness-105"
+              style={{ background: '#FFFFFF', color: '#4945FF', fontSize: 15, boxShadow: '0 4px 18px rgba(0,0,0,0.18)' }}
             >
               Get started — free
               <ArrowRight size={16} />
@@ -602,7 +834,7 @@ export function PaymentsPage() {
             <Link
               to="/pricing"
               className="inline-flex items-center gap-2 font-semibold"
-              style={{ color: PURPLE, fontSize: 15 }}
+              style={{ color: '#FFFFFF', fontSize: 15 }}
             >
               See pricing
               <ArrowRight size={14} />

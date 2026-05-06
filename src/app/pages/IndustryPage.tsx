@@ -993,16 +993,16 @@ export function IndustryPage() {
       <section className="pb-28 px-6 pt-24">
         <div className="max-w-[1100px] mx-auto">
           <div
-            className="relative overflow-hidden rounded-3xl p-12 md:p-16 border border-[#EEF0F4]"
-            style={{ background: '#FFFFFF' }}
+            className="relative overflow-hidden rounded-3xl p-12 md:p-16"
+            style={{ background: '#4945FF' }}
           >
             <div className="grid md:grid-cols-[1.2fr_1fr] gap-10 items-center">
               <div>
-                <div className="text-[12px] font-bold uppercase tracking-[0.2em] text-[#4945FF] mb-4">
+                <div className="text-[12px] font-bold uppercase tracking-[0.2em] text-white/80 mb-4">
                   Ready when you are
                 </div>
                 <h2
-                  className="text-[#041E42] font-bold leading-[1.1] mb-5"
+                  className="text-white font-bold leading-[1.1] mb-5"
                   style={{
                     fontSize: 'clamp(28px, 3.4vw, 40px)',
                     letterSpacing: '-0.02em',
@@ -1010,26 +1010,26 @@ export function IndustryPage() {
                 >
                   {data.finalHeadline}
                 </h2>
-                <p className="text-[16.5px] text-[#475569] leading-relaxed max-w-[520px]">
+                <p className="text-[16.5px] text-white/85 leading-relaxed max-w-[520px]">
                   {data.finalBody}
                 </p>
               </div>
               <div className="flex flex-col gap-3">
                 <Link
                   to="/apply"
-                  className="inline-flex items-center justify-center gap-2 px-6 py-4 rounded-full bg-[#4945FF] text-white text-[15px] font-semibold hover:bg-[#3933CC] transition-colors"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-4 rounded-full bg-white text-[#4945FF] text-[15px] font-semibold hover:bg-[#F6F7FB] transition-colors"
                 >
                   Start your free trial <ArrowRight className="w-4 h-4" />
                 </Link>
                 <Link
                   to="/contact-sales"
-                  className="inline-flex items-center justify-center gap-2 px-6 py-4 rounded-full bg-white text-[#041E42] text-[15px] font-semibold hover:bg-[#F2F3F7] transition-colors border border-[#E4E6EC]"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-4 rounded-full bg-transparent text-white text-[15px] font-semibold hover:bg-white/10 transition-colors border border-white/40"
                 >
                   Book a 20-minute demo
                 </Link>
                 <Link
                   to="/business-types"
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3 text-[#4945FF] text-[14px] font-semibold hover:text-[#3933CC] transition-colors"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 text-white/90 text-[14px] font-semibold hover:text-white transition-colors"
                 >
                   See every industry <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
