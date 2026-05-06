@@ -1,1124 +1,510 @@
 import { useState, useRef, useEffect } from 'react';
-import { Search, X, ArrowRight, Globe, CreditCard, DollarSign, BarChart3, Star, User, AlignLeft, HelpCircle, LayoutDashboard, Calculator, ChevronRight, Menu, ChevronDown, Globe2, ShieldAlert } from 'lucide-react';
+import { ArrowRight, ChevronDown, Menu, X, Search } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router';
-import logoImage from 'figma:asset/61527edee0ea2e963bace756584cec3657b62f9e.png';
-import logoWhite from 'figma:asset/419e83442bb1bf5965a966a8870b00dd4288dd57.png';
-import logoDark from 'figma:asset/746abd6783954952f0204b8234c57704fd17f698.png';
 import { motion, AnimatePresence } from 'motion/react';
 
-/* ═══════════════════════════════════════════════════════
-   SOLUTIONS MEGA-MENU DATA
-   ═══════════════════════════════════════════════════════ */
+/* ════════════════════════════════════════════════════════════
+   NAVIGATION — Delt Capital editorial style
+   Navy bar, mono ticker on top, simple text nav, indigo CTA.
+   Ported from deltcapital.com layout.
+   ════════════════════════════════════════════════════════════ */
 
-const ICON_COLOR = '#041E42';
+const NAVY = '#041E42';
+const NAVY_DEEP = '#020E22';
+const CREAM = '#F7F5F0';
+const INDIGO = '#4945FF';
+const INDIGO_SOFT = '#A5B4FC';
+const SUCCESS = '#1F845A';
 
-const solutionsStartGrow = [
-  {
-    label: 'Website',
-    description: 'Professional websites built and managed for you',
-    href: '/website-examples',
-    icon: Globe,
-  },
-  {
-    label: 'Lens AI',
-    description: 'Ask your business questions in plain English',
-    href: '/lens-ai',
-    icon: BarChart3,
-  },
-  {
-    label: 'Payments',
-    description: 'In-store, online & mobile payment processing',
-    href: '/payments',
-    icon: CreditCard,
-  },
-  {
-    label: 'Capital',
-    description: 'Revenue-based funding with fast approvals',
-    href: '/capital',
-    icon: DollarSign,
-  },
+/* ─── Ticker entries (mono) ──────────────────────────── */
+const TICKER = [
+  { name: 'ROSARIO CON.', amt: '$180K', x: '1.14×', state: 'WIRED' },
+  { name: 'BLOOM BTY.',   amt: '$65K',  x: '1.19×', state: 'FUNDED' },
+  { name: 'WILLIAMS LOG.',amt: '$80K',  x: '1.17×', state: 'CLOSED' },
+  { name: 'WARD MKT.',    amt: '$50K',  x: '1.18×', state: 'WIRED' },
+  { name: 'ROBERTS AUTO', amt: '$95K',  x: '1.15×', state: 'CLOSED' },
+  { name: 'DELT REST.',   amt: '$110K', x: '1.16×', state: 'CLOSED' },
+  { name: 'ALPINE CAFE',  amt: '$42K',  x: '1.20×', state: 'FUNDED' },
+  { name: 'KENT SUPPLY',  amt: '$140K', x: '1.13×', state: 'WIRED' },
+  { name: 'NORA BAKERY',  amt: '$28K',  x: '1.21×', state: 'FUNDED' },
 ];
 
-const solutionsSecondary = [
+/* ─── Primary nav items (mirrors deltcapital) ───────── */
+const NAV_LINKS = [
   { label: 'How it works', href: '/how-it-works' },
-  { label: 'Compare plans', href: '/pricing' },
-  { label: 'See a demo', href: '/sandbox' },
+  { label: 'Pricing',       href: '/pricing' },
+  { label: 'Calculator',    href: '/calculator' },
+  { label: 'About',         href: '/about' },
+  { label: 'FAQ',           href: '/help-center' },
+  { label: 'Talk',          href: '/contact' },
 ];
 
-const solutionsBusinessTypes = [
-  { label: 'Restaurants & Food Service', description: 'POS, online ordering, table management', href: '/industries/restaurants' },
-  { label: 'Retail & E-commerce', description: 'Inventory, checkout, multi-channel', href: '/industries/retail' },
-  { label: 'Professional Services', description: 'Invoicing, scheduling, client management', href: '/industries/professional-services' },
-  { label: 'Salon & Barber', description: 'Appointments, memberships, tipping', href: '/industries/salon-barber' },
-  { label: 'Health & Wellness', description: 'Bookings, memberships, HIPAA-ready', href: '/industries/health-wellness' },
+/* ─── Solutions dropdown content (preserved) ────────── */
+const SOLUTIONS = [
+  { label: 'Payments',   href: '/payments',          blurb: 'Card processing with transparent rates.' },
+  { label: 'Capital',    href: '/capital',           blurb: 'Revenue-based funding, fast approvals.' },
+  { label: 'Websites',   href: '/website-examples',  blurb: 'Built for you in five days.' },
+  { label: 'Lens AI',    href: '/lens-ai',           blurb: 'Ask your business in plain English.' },
 ];
-
-/* ═══════════════════════════════════════════════════════
-   RESOURCES MEGA-MENU DATA
-   ═══════════════════════════════════════════════════════ */
-
-const resourcesLearn = [
-  { label: "What's New", description: 'Product updates & releases', href: '/whats-new', icon: Star, badge: 'LATEST' },
-  { label: 'About Us', description: 'Our story, team & mission', href: '/about', icon: User },
-  { label: 'Blog', description: 'Insights for growing businesses', href: '/blog', icon: AlignLeft },
-  { label: 'Reviews', description: 'What merchants are saying', href: '/reviews', icon: Star },
-];
-
-const resourcesSupport = [
-  { label: 'Help Center', description: 'Common questions answered', href: '/help-center', icon: HelpCircle },
-  { label: 'Contact & Support', description: 'Sales, support, partnerships', href: '/contact', icon: CreditCard },
-];
-
-const resourcesCTAs = [
-  { label: 'Demo', description: 'Dashboard sandbox preview', href: '/sandbox', icon: LayoutDashboard },
-  { label: 'Calculator', description: 'Calculate your savings', href: '/calculator', icon: Calculator },
-];
-
-/* ═══════════════════════════════════════════════════════
-   Shared heading component
-   ═══════════════════════════════════════════════════════ */
-
-const SectionHeading = ({ children }: { children: React.ReactNode }) => (
-  <div
-    className="mb-5 pl-3"
-    style={{
-      fontFamily: 'JetBrains Mono, ui-monospace, Menlo, monospace',
-      fontSize: 12,
-      fontWeight: 500,
-      letterSpacing: '0.06em',
-      textTransform: 'uppercase',
-      color: 'var(--dc-on-light-subtle)',
-    }}
-  >
-    — {children}
-  </div>
-);
-
-/* ═══════════════════════════════════════════════════════
-   COMPONENT
-   ═══════════════════════════════════════════════════════ */
 
 export function Navigation() {
-  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
-  const [isHovered, setIsHovered] = useState(false);
-  const [showSearch, setShowSearch] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [mobileExpandedSection, setMobileExpandedSection] = useState<string | null>(null);
-  const [isScrolled, setIsScrolled] = useState(false);
-  const searchInputRef = useRef<HTMLInputElement>(null);
-  const searchBtnRef = useRef<HTMLButtonElement>(null);
   const navigate = useNavigate();
   const location = useLocation();
-  const [searchOrigin, setSearchOrigin] = useState({ x: 0, y: 0 });
-  const [selectedIndex, setSelectedIndex] = useState(0);
-  const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [solutionsOpen, setSolutionsOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  /* Only these pages have a dark hero — nav starts transparent with white text.
-     Every other page gets a solid white nav immediately so text is always visible. */
-  const darkHeroPages = ['/', '/payments', '/delt-ai', '/how-it-works', '/website-examples'];
-  const isDarkHero =
-    darkHeroPages.some((p) => location.pathname === p) ||
-    location.pathname.startsWith('/industries/');
-
-  /* Track scroll so header becomes solid once user moves past the hero.
-     This fixes the 'header vanishes on scroll' bug — it no longer disappears;
-     it transitions to a frosted white bar with navy text. */
+  // Close menus on route change
   useEffect(() => {
-    const onScroll = () => setIsScrolled(window.scrollY > 80);
-    onScroll();
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
-
-  /* Reset scroll state when route changes so each page evaluates from the top */
-  useEffect(() => {
-    setIsScrolled(window.scrollY > 80);
+    setSolutionsOpen(false);
+    setMobileOpen(false);
   }, [location.pathname]);
 
-  const isSolid = !isDarkHero || isHovered || !!activeDropdown || isScrolled;
-
-  const openDropdown = (key: string) => {
-    if (closeTimeoutRef.current) {
-      clearTimeout(closeTimeoutRef.current);
-      closeTimeoutRef.current = null;
-    }
-    setActiveDropdown(key);
+  const openSolutions = () => {
+    if (closeTimer.current) clearTimeout(closeTimer.current);
+    setSolutionsOpen(true);
   };
-  const closeDropdown = () => {
-    closeTimeoutRef.current = setTimeout(() => {
-      setActiveDropdown(null);
-    }, 100);
+  const scheduleClose = () => {
+    if (closeTimer.current) clearTimeout(closeTimer.current);
+    closeTimer.current = setTimeout(() => setSolutionsOpen(false), 150);
   };
-
-  // ⌘K / Ctrl+K keyboard shortcut
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault();
-        setShowSearch(prev => !prev);
-      }
-    };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, []);
-
-  const frequentSearches = [
-    { text: 'Payment processing fees', icon: '💳', link: '/pricing' },
-    { text: 'Hardware setup guide', icon: '🖥️', link: '/support' },
-    { text: 'API documentation', icon: '📚', link: '/support' },
-    { text: 'Pricing plans comparison', icon: '💰', link: '/pricing' },
-    { text: 'Delt AI Analytics', icon: '✨', link: '/delt-ai' },
-    { text: 'Contact support team', icon: '💬', link: '/support' },
-    { text: 'Business types overview', icon: '🏢', link: '/business-types' },
-    { text: 'Shopping cart', icon: '🛒', link: '/cart' },
-  ];
-
-  const filteredSearches = searchQuery.trim()
-    ? frequentSearches.filter(item =>
-        item.text.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    : frequentSearches;
-
-  useEffect(() => {
-    if (showSearch && searchInputRef.current) {
-      searchInputRef.current.focus();
-    }
-  }, [showSearch]);
-
-  const handleSearch = (query: string, link?: string) => {
-    if (link) {
-      navigate(link);
-      setShowSearch(false);
-      setSearchQuery('');
-    }
-  };
-
-  /* Chevron SVG helper */
-  const Chevron = ({ isOpen }: { isOpen: boolean }) => (
-    <svg
-      className={`w-3.5 h-3.5 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
-      fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}
-    >
-      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-    </svg>
-  );
-
-  /* Column heading — editorial mono eyebrow */
-  const ColHeading = ({ children }: { children: React.ReactNode }) => (
-    <div
-      className="mb-5"
-      style={{
-        fontFamily: 'JetBrains Mono, ui-monospace, Menlo, monospace',
-        fontSize: 12,
-        fontWeight: 500,
-        letterSpacing: '0.06em',
-        textTransform: 'uppercase',
-        color: 'var(--dc-on-light-subtle)',
-      }}
-    >
-      — {children}
-    </div>
-  );
 
   return (
-    <>
-      {/* Background Overlay for dropdowns */}
-      <AnimatePresence>
-        {activeDropdown && (
-          <motion.div
-            className="fixed inset-0 z-40"
-            style={{ backgroundColor: 'rgba(0,0,0,0.08)' }}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            onClick={() => setActiveDropdown(null)}
-          />
-        )}
-      </AnimatePresence>
-
-      <div
-        id="delt-main-nav"
-        className="fixed top-0 left-0 right-0 z-50"
-        onMouseLeave={() => { setIsHovered(false); closeDropdown(); }}
-      >
-        {/* Centered container — constant width like Stripe */}
-        <div className="flex justify-center pt-3 px-4">
-          <div
-            onMouseEnter={() => setIsHovered(true)}
-            style={{
-              width: '100%',
-              maxWidth: 1200,
-              backgroundColor: isSolid ? '#F7F5F0' : 'rgba(255,255,255,0)',
-              borderRadius: 12,
-              boxShadow: isSolid ? '0 1px 2px rgba(4,30,66,0.04), 0 8px 24px rgba(4,30,66,0.06), 0 0 0 1px rgba(4,30,66,0.06)' : 'none',
-              overflow: 'hidden',
-              transition: 'background-color 0.35s ease, box-shadow 0.35s ease',
-            }}
-          >
-            {/* Nav bar row */}
-            <div className="px-6 xl:px-8">
-              <div className="flex justify-between items-center h-[78px]">
-
-                {/* ── Left — Logo ── */}
-                <div className="flex items-center">
-                  <Link to="/" className="flex items-center">
-                    <img
-                      src={isSolid ? logoDark : logoWhite}
-                      alt="Delt"
-                      className="h-[82px] m-[0px]"
-                      style={{
-                        imageRendering: '-webkit-optimize-contrast',
-                        transition: 'opacity 0.3s ease',
-                      }}
-                    />
-                  </Link>
-                </div>
-
-                {/* ── Center — Nav Links — Inter 14px, 24px gap ── */}
-                <nav className="hidden lg:flex items-center gap-1 xl:gap-2">
-
-                  {/* ─── Solutions Mega Menu ─── */}
-                  <div
-                    className="relative"
-                    onMouseEnter={() => openDropdown('solutions')}
-                    onMouseLeave={() => closeDropdown()}
-                  >
-                    <button
-                      className="dc-nav-link flex items-center gap-1.5 px-3 py-2 transition-colors whitespace-nowrap"
-                      style={{
-                        fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif',
-                        fontSize: 14,
-                        fontWeight: 500,
-                        color: isSolid ? '#041E42' : '#F7F5F0',
-                        transition: 'color 0.3s ease',
-                      }}
-                    >
-                      Solutions
-                      <Chevron isOpen={activeDropdown === 'solutions'} />
-                    </button>
-                  </div>
-
-                  {/* ─── Pricing ─── */}
-                  <Link
-                    to="/pricing"
-                    className="dc-nav-link px-3 py-2 transition-colors whitespace-nowrap"
-                    style={{
-                      fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif',
-                      fontSize: 14,
-                      fontWeight: 500,
-                      color: isSolid ? '#041E42' : '#F7F5F0',
-                      transition: 'color 0.3s ease',
-                    }}
-                  >
-                    Pricing
-                  </Link>
-
-                  {/* ─── Resources Mega Menu ─── */}
-                  <div
-                    className="relative"
-                    onMouseEnter={() => openDropdown('resources')}
-                    onMouseLeave={() => closeDropdown()}
-                  >
-                    <button
-                      className="dc-nav-link flex items-center gap-1.5 px-3 py-2 transition-colors whitespace-nowrap"
-                      style={{
-                        fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif',
-                        fontSize: 14,
-                        fontWeight: 500,
-                        color: isSolid ? '#041E42' : '#F7F5F0',
-                        transition: 'color 0.3s ease',
-                      }}
-                    >
-                      Resources
-                      <Chevron isOpen={activeDropdown === 'resources'} />
-                    </button>
-                  </div>
-
-                </nav>
-
-                {/* ── Right — Actions ── */}
-                <div className="flex items-center gap-4">
-
-                  {/* Search (⌘K) */}
-                  <button
-                    ref={searchBtnRef}
-                    onClick={() => {
-                      if (searchBtnRef.current) {
-                        const rect = searchBtnRef.current.getBoundingClientRect();
-                        setSearchOrigin({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
-                      }
-                      setShowSearch(true);
-                      setSelectedIndex(0);
-                    }}
-                    className="hidden lg:flex p-2 transition-colors"
-                    style={{ color: isSolid ? '#041E42' : '#F7F5F0', transition: 'color 0.3s ease' }}
-                    aria-label="Search"
-                  >
-                    <motion.div
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      transition={{ type: 'spring', stiffness: 400, damping: 17 }}
-                    >
-                      <Search className="h-[18px] w-[18px]" strokeWidth={1.6} />
-                    </motion.div>
-                  </button>
-
-                  {/* Sign In */}
-                  <Link
-                    to="/signin"
-                    className="hidden md:flex items-center px-3 py-2 transition-all whitespace-nowrap"
-                    style={{
-                      fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif',
-                      fontSize: 14,
-                      fontWeight: 500,
-                      color: isSolid ? '#041E42' : '#F7F5F0',
-                      transition: 'color 0.3s ease',
-                    }}
-                  >
-                    Sign in
-                  </Link>
-
-                  {/* Contact Sales CTA — Delt Capital primary */}
-                  <Link
-                    to="/contact-sales"
-                    className="hidden md:inline-flex items-center gap-2"
-                    style={{
-                      fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif',
-                      fontSize: 13,
-                      fontWeight: 500,
-                      color: '#FFFFFF',
-                      background: '#4945FF',
-                      padding: '10px 16px',
-                      borderRadius: 6,
-                      transition: 'background-color 150ms ease-out',
-                      whiteSpace: 'nowrap',
-                    }}
-                    onMouseEnter={(e) => { e.currentTarget.style.background = '#3730A3'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.background = '#4945FF'; }}
-                  >
-                    Contact sales
-                    <ArrowRight className="w-4 h-4" strokeWidth={1.6} />
-                  </Link>
-
-                  {/* Mobile Hamburger Menu Button */}
-                  <button
-                    onClick={() => setMobileMenuOpen(true)}
-                    className="lg:hidden flex p-2.5 transition-colors"
-                    style={{ color: isSolid ? '#041E42' : '#FFFFFF' }}
-                    aria-label="Menu"
-                  >
-                    <Menu size={28} />
-                  </button>
-
-                </div>
-              </div>
-            </div>
-
-            {/* ═══════════════════════════════════════════════════
-               MEGA-MENU DROPDOWNS — inside the same white box
-               ═══════════════════════════════════════════════════ */}
-
-            <AnimatePresence>
-              {activeDropdown === 'solutions' && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
-                  style={{ overflow: 'hidden' }}
-                  onMouseEnter={() => openDropdown('solutions')}
-                  onMouseLeave={() => closeDropdown()}
-                >
-                  <div className="border-t border-[#F0F0F0]" />
-                  
-                  {/* Full Stack Header Banner */}
-                  <div className="px-8 pt-6 pb-5">
-                    <div 
-                      className="rounded-2xl flex items-center justify-between px-6 py-5"
-                      style={{ background: '#041E42' }}
-                    >
-                      <div className="flex items-center gap-4">
-                        <div 
-                          className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
-                          style={{ background: '#4945FF' }}
-                        >
-                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M12 5v14M5 12h14" />
-                          </svg>
-                        </div>
-                        <div>
-                          <div className="text-white text-[20px] font-bold mb-1" style={{ letterSpacing: '-0.01em' }}>
-                            Go All-In
-                          </div>
-                          <div className="text-[16px]" style={{ color: 'rgba(255,255,255,0.8)' }}>
-                            Website + Payments + Lens AI + Capital — one plan, one price
-                          </div>
-                        </div>
-                      </div>
-                      <Link
-                        to="/pricing"
-                        className="inline-flex items-center gap-2"
-                        style={{
-                          fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif',
-                          fontSize: 13,
-                          fontWeight: 500,
-                          color: '#FFFFFF',
-                          background: '#4945FF',
-                          padding: '10px 16px',
-                          borderRadius: 6,
-                          transition: 'background-color 150ms ease-out',
-                        }}
-                        onMouseEnter={(e) => { e.currentTarget.style.background = '#3730A3'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.background = '#4945FF'; }}
-                        onClick={() => setActiveDropdown(null)}
-                      >
-                        See plans →
-                      </Link>
-                    </div>
-                  </div>
-
-                  <div className="px-8 pb-8">
-                    <div className="flex">
-
-                      {/* Col 1 — Start & Grow */}
-                      <div className="w-[300px] pr-8 border-r border-[#F3F4F6]">
-                        <SectionHeading>Products</SectionHeading>
-                        <div className="space-y-1">
-                          {solutionsStartGrow.map((item) => {
-                            const IconComp = item.icon;
-                            return (
-                              <Link
-                                key={item.label}
-                                to={item.href}
-                                className="flex items-start gap-3.5 px-3 py-3 rounded-xl hover:bg-[#F6F7FB] transition-colors group"
-                                onClick={() => setActiveDropdown(null)}
-                              >
-                                <div
-                                  className="w-[44px] h-[44px] rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 border border-[#4945FF]/15"
-                                  style={{ backgroundColor: 'rgba(73,69,255,0.08)' }}
-                                >
-                                  <IconComp className="w-[22px] h-[22px]" style={{ color: ICON_COLOR }} strokeWidth={1.4} />
-                                </div>
-                                <div>
-                                  <div className="text-[19px] text-[#041E42] group-hover:text-[#4945FF] transition-colors leading-tight" style={{ fontWeight: 650 }}>
-                                    {item.label}
-                                  </div>
-                                  <div className="text-[16px] text-[#475569] leading-snug mt-1">
-                                    {item.description}
-                                  </div>
-                                </div>
-                              </Link>
-                            );
-                          })}
-                        </div>
-
-                        {/* Secondary links */}
-                        <div className="mt-4 pt-4 border-t border-[#F3F4F6] pl-3 flex gap-5">
-                          {solutionsSecondary.map((link) => (
-                            <Link
-                              key={link.label}
-                              to={link.href}
-                              className="text-[16px] font-medium text-[#64748B] hover:text-[#4945FF] transition-colors"
-                              onClick={() => setActiveDropdown(null)}
-                            >
-                              {link.label}
-                            </Link>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Col 2 — By Business Type */}
-                      <div className="w-[300px] px-8 border-r border-[#F3F4F6]">
-                        <SectionHeading>By Business Type</SectionHeading>
-                        <div className="space-y-1">
-                          {solutionsBusinessTypes.map((item) => (
-                            <Link
-                              key={item.label}
-                              to={item.href}
-                              className="block px-3 py-2.5 rounded-xl hover:bg-[#F6F7FB] transition-colors group"
-                              onClick={() => setActiveDropdown(null)}
-                            >
-                              <div className="text-[19px] text-[#041E42] group-hover:text-[#4945FF] transition-colors leading-tight" style={{ fontWeight: 600 }}>
-                                {item.label}
-                              </div>
-                              <div className="text-[16px] text-[#475569] leading-snug mt-1">
-                                {item.description}
-                              </div>
-                            </Link>
-                          ))}
-                        </div>
-                        <div className="mt-3 pt-3 border-t border-[#F3F4F6]">
-                          <Link
-                            to="/business-types"
-                            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-[17px] font-semibold text-[#4945FF] hover:bg-[#4945FF]/8 transition-colors"
-                            onClick={() => setActiveDropdown(null)}
-                          >
-                            See all industries
-                            <span className="text-[16px]">→</span>
-                          </Link>
-                        </div>
-                      </div>
-
-                      {/* Col 3 — Specialized solutions */}
-                      <div className="flex-1 flex flex-col justify-between rounded-2xl ml-4" style={{ background: '#F6F7FB', padding: '24px 28px' }}>
-                        <div>
-                          <div
-                            className="mb-5"
-                            style={{
-                              fontFamily: 'JetBrains Mono, ui-monospace, Menlo, monospace',
-                              fontSize: 12,
-                              fontWeight: 500,
-                              letterSpacing: '0.06em',
-                              textTransform: 'uppercase',
-                              color: '#4945FF',
-                            }}
-                          >
-                            — Specialized
-                          </div>
-
-                          {/* International USDT card */}
-                          <Link
-                            to="/solutions/international-usdt"
-                            onClick={() => setActiveDropdown(null)}
-                            className="block bg-white rounded-xl p-5 border border-[#4945FF]/15 mb-4 hover:border-[#4945FF]/40 hover:shadow-sm transition-all group"
-                          >
-                            <div className="flex items-start gap-3">
-                              <div
-                                className="w-11 h-11 rounded-lg flex items-center justify-center flex-shrink-0"
-                                style={{ backgroundColor: 'rgba(73,69,255,0.10)' }}
-                              >
-                                <Globe2 className="w-[22px] h-[22px] text-[#4945FF]" strokeWidth={1.6} />
-                              </div>
-                              <div className="flex-1">
-                                <div className="text-[18px] font-bold text-[#041E42] group-hover:text-[#4945FF] transition-colors leading-tight mb-1">
-                                  Same-Day International Payments
-                                </div>
-                                <div className="text-[15px] text-[#475569] leading-snug">
-                                  Pay suppliers abroad instantly — no wire delays, no bank fees.
-                                </div>
-                                <div className="text-[14px] font-semibold text-[#4945FF] mt-2 inline-flex items-center gap-1">
-                                  Learn more <span>→</span>
-                                </div>
-                              </div>
-                            </div>
-                          </Link>
-
-                          {/* High Risk card */}
-                          <Link
-                            to="/solutions/high-risk-processing"
-                            onClick={() => setActiveDropdown(null)}
-                            className="block bg-white rounded-xl p-5 border border-[#4945FF]/15 hover:border-[#4945FF]/40 hover:shadow-sm transition-all group"
-                          >
-                            <div className="flex items-start gap-3">
-                              <div
-                                className="w-11 h-11 rounded-lg flex items-center justify-center flex-shrink-0"
-                                style={{ backgroundColor: 'rgba(73,69,255,0.10)' }}
-                              >
-                                <ShieldAlert className="w-[22px] h-[22px] text-[#4945FF]" strokeWidth={1.6} />
-                              </div>
-                              <div className="flex-1">
-                                <div className="text-[18px] font-bold text-[#041E42] group-hover:text-[#4945FF] transition-colors leading-tight mb-1">
-                                  High Risk Processing
-                                </div>
-                                <div className="text-[15px] text-[#475569] leading-snug">
-                                  Shut down by your processor? We approve every high-risk vertical — custom rates, rate match, rate compare.
-                                </div>
-                                <div className="text-[14px] font-semibold text-[#4945FF] mt-2 inline-flex items-center gap-1">
-                                  Learn more <span>→</span>
-                                </div>
-                              </div>
-                            </div>
-                          </Link>
-                        </div>
-
-                        <Link
-                          to="/apply"
-                          className="inline-flex items-center gap-1.5 text-[17px] font-bold text-[#4945FF] hover:text-[#3933CC] transition-colors mt-5"
-                          onClick={() => setActiveDropdown(null)}
-                        >
-                          Get started for free <span>→</span>
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            <AnimatePresence>
-              {activeDropdown === 'resources' && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
-                  style={{ overflow: 'hidden' }}
-                  onMouseEnter={() => openDropdown('resources')}
-                  onMouseLeave={() => closeDropdown()}
-                >
-                  <div className="border-t border-[#F0F0F0]" />
-                  <div className="px-8 pt-7 pb-0">
-                    <div className="grid grid-cols-2 gap-2">
-
-                      {/* LEARN column */}
-                      <div className="pr-6 border-r border-[#F0F0F0]">
-                        <ColHeading>Learn</ColHeading>
-                        <div className="space-y-1">
-                          {resourcesLearn.map((item) => {
-                            const IconComp = item.icon;
-                            return (
-                              <Link
-                                key={item.label}
-                                to={item.href}
-                                className="flex items-start gap-3 px-2 py-2.5 rounded-xl hover:bg-[#F6F7FB] transition-colors group"
-                                onClick={() => setActiveDropdown(null)}
-                              >
-                                <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 bg-[#4945FF]/8 border border-[#4945FF]/15">
-                                  <IconComp className="w-[20px] h-[20px] text-[#4945FF]" strokeWidth={1.5} />
-                                </div>
-                                <div>
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-[18px] text-[#041E42] group-hover:text-[#4945FF] transition-colors leading-tight" style={{ fontWeight: 650 }}>
-                                      {item.label}
-                                    </span>
-                                    {'badge' in item && item.badge && (
-                                      <span className="text-[11px] font-bold px-1.5 py-0.5 rounded bg-[#4945FF] text-white" style={{ letterSpacing: '0.04em' }}>
-                                        {item.badge}
-                                      </span>
-                                    )}
-                                  </div>
-                                  <div className="text-[15px] text-[#475569] leading-snug mt-1">{item.description}</div>
-                                </div>
-                              </Link>
-                            );
-                          })}
-                        </div>
-                      </div>
-
-                      {/* SUPPORT column */}
-                      <div className="pl-6">
-                        <ColHeading>Support</ColHeading>
-                        <div className="space-y-1">
-                          {resourcesSupport.map((item) => {
-                            const IconComp = item.icon;
-                            return (
-                              <Link
-                                key={item.label}
-                                to={item.href}
-                                className="flex items-start gap-3 px-2 py-2.5 rounded-xl hover:bg-[#F6F7FB] transition-colors group"
-                                onClick={() => setActiveDropdown(null)}
-                              >
-                                <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 bg-[#4945FF]/8 border border-[#4945FF]/15">
-                                  <IconComp className="w-[20px] h-[20px] text-[#4945FF]" strokeWidth={1.5} />
-                                </div>
-                                <div>
-                                  <div className="text-[18px] text-[#041E42] group-hover:text-[#4945FF] transition-colors leading-tight" style={{ fontWeight: 650 }}>
-                                    {item.label}
-                                  </div>
-                                  <div className="text-[15px] text-[#475569] leading-snug mt-1">{item.description}</div>
-                                </div>
-                              </Link>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Bottom CTA strip */}
-                  <div className="mt-5 border-t border-[#F0F0F0] grid grid-cols-2">
-                    {resourcesCTAs.map((item, i) => {
-                      const IconComp = item.icon;
-                      return (
-                        <Link
-                          key={item.label}
-                          to={item.href}
-                          className={`flex items-center gap-3 px-8 py-4 hover:bg-[#F6F7FB] transition-colors group ${i === 0 ? 'border-r border-[#F0F0F0]' : ''}`}
-                          onClick={() => setActiveDropdown(null)}
-                        >
-                          <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 bg-[#4945FF]">
-                            <IconComp className="w-[22px] h-[22px] text-white" strokeWidth={1.5} />
-                          </div>
-                          <div className="flex-1">
-                            <div className="text-[18px] text-[#041E42] group-hover:text-[#4945FF] transition-colors leading-tight" style={{ fontWeight: 650 }}>
-                              {item.label}
-                            </div>
-                            <div className="text-[15px] text-[#475569] leading-snug mt-1">{item.description}</div>
-                          </div>
-                          <ChevronRight className="w-5 h-5 text-[#C4C4C4] group-hover:text-[#4945FF] transition-colors flex-shrink-0" />
-                        </Link>
-                      );
-                    })}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-          </div>
+    <header className="dc-nav-header">
+      {/* ─── Top ticker bar ─────────────────────────── */}
+      <div className="dc-ticker-bar">
+        <div className="dc-ticker-track">
+          {[...TICKER, ...TICKER].map((t, i) => (
+            <span key={i} className="dc-ticker-item">
+              <span className="dc-ticker-name">{t.name}</span>
+              <span className="dc-ticker-amt">{t.amt}</span>
+              <span className="dc-ticker-x">{t.x}</span>
+              <span className="dc-ticker-dot">●</span>
+              <span className={`dc-ticker-state dc-ticker-state--${t.state.toLowerCase()}`}>{t.state}</span>
+            </span>
+          ))}
         </div>
       </div>
 
-      {/* ── Mobile Menu Drawer ── */}
-      <AnimatePresence>
-        {mobileMenuOpen && (
-          <>
-            {/* Overlay */}
-            <motion.div
-              className="fixed inset-0 bg-black/50 z-[100] lg:hidden"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setMobileMenuOpen(false)}
-            />
+      {/* ─── Main nav row ──────────────────────────── */}
+      <div className="dc-nav-row">
+        <div className="dc-nav-inner">
+          {/* Logo */}
+          <Link to="/" className="dc-logo" aria-label="Delt home">
+            <span className="dc-logo-mark" aria-hidden>
+              <span className="dc-logo-bar dc-logo-bar--cream" />
+              <span className="dc-logo-bar dc-logo-bar--indigo" />
+            </span>
+            <span className="dc-logo-text">
+              <span className="dc-logo-text-light">Delt</span>
+              <span className="dc-logo-text-indigo">Pay</span>
+            </span>
+          </Link>
 
-            {/* Drawer */}
-            <motion.div
-              className="fixed top-0 right-0 bottom-0 w-full max-w-[380px] bg-white z-[101] overflow-y-auto lg:hidden"
-              initial={{ x: '100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+          {/* Center nav */}
+          <nav className="dc-nav-center" aria-label="Primary">
+            {/* Solutions dropdown */}
+            <div
+              className="dc-nav-dropdown-wrap"
+              onMouseEnter={openSolutions}
+              onMouseLeave={scheduleClose}
             >
-              {/* Header */}
-              <div className="flex items-center justify-between p-6 border-b border-gray-200">
-                <img src={logoDark} alt="Delt" className="h-[60px]" />
-                <button
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="p-2 hover:bg-[#F6F7FB] rounded-lg transition-colors"
-                >
-                  <X size={24} className="text-[#475569]" />
-                </button>
-              </div>
+              <button
+                type="button"
+                className="dc-nav-link"
+                onFocus={openSolutions}
+                onBlur={scheduleClose}
+                aria-expanded={solutionsOpen}
+                aria-haspopup="true"
+              >
+                Solutions
+                <ChevronDown size={14} className="dc-chevron" />
+              </button>
 
-              {/* Menu Items */}
-              <div className="p-6">
-                {/* Solutions Section */}
-                <div className="mb-4">
-                  <button
-                    onClick={() => setMobileExpandedSection(mobileExpandedSection === 'solutions' ? null : 'solutions')}
-                    className="w-full flex items-center justify-between py-3 text-lg font-semibold text-[#041E42]"
+              <AnimatePresence>
+                {solutionsOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    transition={{ duration: 0.15 }}
+                    className="dc-dropdown"
+                    onMouseEnter={openSolutions}
+                    onMouseLeave={scheduleClose}
                   >
-                    Solutions
-                    <ChevronDown
-                      size={20}
-                      className={`transition-transform ${mobileExpandedSection === 'solutions' ? 'rotate-180' : ''}`}
-                    />
-                  </button>
-                  <AnimatePresence>
-                    {mobileExpandedSection === 'solutions' && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.2 }}
-                        className="overflow-hidden"
-                      >
-                        <div className="pl-4 py-2 space-y-1">
-                          {solutionsStartGrow.map((item) => {
-                            const Icon = item.icon;
-                            return (
-                              <Link
-                                key={item.href}
-                                to={item.href}
-                                onClick={() => setMobileMenuOpen(false)}
-                                className="flex items-start gap-3 p-3 rounded-lg hover:bg-[#F6F7FB] transition-colors"
-                              >
-                                <Icon size={20} className="text-[#4945FF] mt-0.5 flex-shrink-0" />
-                                <div>
-                                  <div className="font-medium text-[#041E42]">{item.label}</div>
-                                  <div className="text-sm text-[#475569]">{item.description}</div>
-                                </div>
-                              </Link>
-                            );
-                          })}
-                          <div className="pt-2 mt-2 border-t border-gray-200 space-y-1">
-                            <Link
-                              to="/solutions/international-usdt"
-                              onClick={() => setMobileMenuOpen(false)}
-                              className="flex items-start gap-3 p-3 rounded-lg hover:bg-[#F6F7FB] transition-colors"
-                            >
-                              <Globe2 size={20} className="text-[#4945FF] mt-0.5 flex-shrink-0" />
-                              <div>
-                                <div className="font-medium text-[#041E42]">Same-Day International Payments</div>
-                                <div className="text-sm text-[#475569]">Pay suppliers abroad instantly — no wire delays, no bank fees</div>
-                              </div>
-                            </Link>
-                            <Link
-                              to="/solutions/high-risk-processing"
-                              onClick={() => setMobileMenuOpen(false)}
-                              className="flex items-start gap-3 p-3 rounded-lg hover:bg-[#F6F7FB] transition-colors"
-                            >
-                              <ShieldAlert size={20} className="text-[#4945FF] mt-0.5 flex-shrink-0" />
-                              <div>
-                                <div className="font-medium text-[#041E42]">High Risk Processing</div>
-                                <div className="text-sm text-[#475569]">Custom rates for every high-risk vertical</div>
-                              </div>
-                            </Link>
-                          </div>
-                          <div className="pt-2 mt-2 border-t border-gray-200">
-                            {solutionsSecondary.map((item) => (
-                              <Link
-                                key={item.href}
-                                to={item.href}
-                                onClick={() => setMobileMenuOpen(false)}
-                                className="block py-2 px-3 text-sm text-[#475569] hover:text-[#4945FF] transition-colors"
-                              >
-                                {item.label}
-                              </Link>
-                            ))}
-                          </div>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
+                    <div className="dc-dropdown-eyebrow">— FOUR PRODUCTS · ONE STACK</div>
+                    <div className="dc-dropdown-grid">
+                      {SOLUTIONS.map((s, i) => (
+                        <Link key={s.href} to={s.href} className="dc-dropdown-item">
+                          <span className="dc-dropdown-num">0{i + 1}</span>
+                          <span className="dc-dropdown-body">
+                            <span className="dc-dropdown-label">{s.label}</span>
+                            <span className="dc-dropdown-blurb">{s.blurb}</span>
+                          </span>
+                          <ArrowRight size={14} className="dc-dropdown-arrow" />
+                        </Link>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
 
-                {/* Pricing Link */}
-                <Link
-                  to="/pricing"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="block py-3 text-lg font-semibold text-[#041E42] hover:text-[#4945FF] transition-colors"
-                >
-                  Pricing
-                </Link>
+            {NAV_LINKS.map((l) => (
+              <Link key={l.href} to={l.href} className="dc-nav-link">
+                {l.label}
+              </Link>
+            ))}
+          </nav>
 
-                {/* Resources Section */}
-                <div className="mb-4">
-                  <button
-                    onClick={() => setMobileExpandedSection(mobileExpandedSection === 'resources' ? null : 'resources')}
-                    className="w-full flex items-center justify-between py-3 text-lg font-semibold text-[#041E42]"
-                  >
-                    Resources
-                    <ChevronDown
-                      size={20}
-                      className={`transition-transform ${mobileExpandedSection === 'resources' ? 'rotate-180' : ''}`}
-                    />
-                  </button>
-                  <AnimatePresence>
-                    {mobileExpandedSection === 'resources' && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.2 }}
-                        className="overflow-hidden"
-                      >
-                        <div className="pl-4 py-2 space-y-1">
-                          {resourcesLearn.map((item) => {
-                            const Icon = item.icon;
-                            return (
-                              <Link
-                                key={item.href}
-                                to={item.href}
-                                onClick={() => setMobileMenuOpen(false)}
-                                className="flex items-start gap-3 p-3 rounded-lg hover:bg-[#F6F7FB] transition-colors"
-                              >
-                                <Icon size={20} className="text-[#4945FF] mt-0.5 flex-shrink-0" />
-                                <div>
-                                  <div className="font-medium text-[#041E42]">{item.label}</div>
-                                  <div className="text-sm text-[#475569]">{item.description}</div>
-                                </div>
-                              </Link>
-                            );
-                          })}
-                          <div className="pt-2 mt-2 border-t border-gray-200">
-                            {resourcesSupport.map((item) => {
-                              const Icon = item.icon;
-                              return (
-                                <Link
-                                  key={item.href}
-                                  to={item.href}
-                                  onClick={() => setMobileMenuOpen(false)}
-                                  className="flex items-start gap-3 p-3 rounded-lg hover:bg-[#F6F7FB] transition-colors"
-                                >
-                                  <Icon size={20} className="text-[#4945FF] mt-0.5 flex-shrink-0" />
-                                  <div>
-                                    <div className="font-medium text-[#041E42]">{item.label}</div>
-                                    <div className="text-sm text-[#475569]">{item.description}</div>
-                                  </div>
-                                </Link>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
+          {/* Right cluster */}
+          <div className="dc-nav-right">
+            <button className="dc-nav-icon" aria-label="Search" onClick={() => navigate('/help-center')}>
+              <Search size={16} />
+            </button>
+            <Link to="/sign-in" className="dc-nav-link dc-nav-link--quiet">
+              Login
+            </Link>
+            <Link to="/apply" className="dc-cta">
+              Get Funded
+              <ArrowRight size={14} />
+            </Link>
+          </div>
 
-                {/* Action Buttons */}
-                <div className="mt-6 pt-6 border-t border-gray-200 space-y-3">
-                  <Link
-                    to="/signin"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="block w-full text-center py-3 px-5 text-[14px] font-medium text-[#041E42] border border-[rgba(4,30,66,0.15)] rounded-md hover:bg-[#F7F5F0] transition-colors"
-                  >
-                    Sign in
-                  </Link>
-                  <Link
-                    to="/contact-sales"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center justify-center gap-2 w-full py-3 px-5 text-[14px] font-medium text-white bg-[#4945FF] rounded-md hover:bg-[#3730A3] transition-colors"
-                  >
-                    Contact sales
-                    <ArrowRight size={16} strokeWidth={1.6} />
-                  </Link>
-                </div>
-              </div>
-            </motion.div>
-          </>
+          {/* Mobile toggle */}
+          <button
+            className="dc-mobile-toggle"
+            onClick={() => setMobileOpen(!mobileOpen)}
+            aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+          >
+            {mobileOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
+        </div>
+      </div>
+
+      {/* ─── Mobile drawer ─────────────────────────── */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.2 }}
+            className="dc-mobile-drawer"
+          >
+            <div className="dc-mobile-eyebrow">— SOLUTIONS</div>
+            {SOLUTIONS.map((s) => (
+              <Link key={s.href} to={s.href} className="dc-mobile-link">
+                {s.label}
+              </Link>
+            ))}
+            <div className="dc-mobile-eyebrow" style={{ marginTop: 24 }}>— LEARN</div>
+            {NAV_LINKS.map((l) => (
+              <Link key={l.href} to={l.href} className="dc-mobile-link">
+                {l.label}
+              </Link>
+            ))}
+            <Link to="/apply" className="dc-cta dc-cta--mobile">
+              Get Funded
+              <ArrowRight size={14} />
+            </Link>
+          </motion.div>
         )}
       </AnimatePresence>
 
-      {/* ── Apple Spotlight Search ── */}
-      <AnimatePresence>
-      {showSearch && (
-        <motion.div
-          className="fixed inset-0 z-[60]"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.18 }}
-          onClick={() => { setShowSearch(false); setSearchQuery(''); }}
-        >
-          {/* Frosted backdrop */}
-          <motion.div
-            className="absolute inset-0"
-            style={{ backgroundColor: 'rgba(0,0,0,0.35)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' }}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.22 }}
-          />
+      <style>{`
+        .dc-nav-header {
+          position: sticky;
+          top: 0;
+          z-index: 50;
+          background: ${NAVY};
+          border-bottom: 1px solid rgba(247, 245, 240, 0.08);
+        }
 
-          {/* Spotlight container */}
-          <div className="relative flex items-start justify-center pt-[min(20vh,160px)] px-4">
-            <motion.div
-              className="w-full max-w-[680px]"
-              initial={{
-                opacity: 0,
-                scale: 0.35,
-                y: searchOrigin.y - 160 || -60,
-                x: 0,
-                filter: 'blur(8px)',
-              }}
-              animate={{
-                opacity: 1,
-                scale: 1,
-                y: 0,
-                x: 0,
-                filter: 'blur(0px)',
-              }}
-              exit={{
-                opacity: 0,
-                scale: 0.5,
-                y: -30,
-                filter: 'blur(6px)',
-              }}
-              transition={{
-                type: 'spring',
-                stiffness: 420,
-                damping: 32,
-                mass: 0.8,
-              }}
-              onClick={(e: React.MouseEvent) => e.stopPropagation()}
-            >
-              <div
-                className="overflow-hidden"
-                style={{
-                  borderRadius: 16,
-                  background: 'rgba(255,255,255,0.92)',
-                  backdropFilter: 'saturate(180%) blur(24px)',
-                  WebkitBackdropFilter: 'saturate(180%) blur(24px)',
-                  boxShadow: '0 24px 80px rgba(0,0,0,0.28), 0 0 0 0.5px rgba(0,0,0,0.08), inset 0 0.5px 0 rgba(255,255,255,0.5)',
-                }}
-              >
-                {/* Search input row */}
-                <div className="flex items-center gap-3 px-5 py-4 border-b border-black/[0.06]">
-                  <motion.div
-                    initial={{ rotate: -90, scale: 0 }}
-                    animate={{ rotate: 0, scale: 1 }}
-                    transition={{ type: 'spring', stiffness: 500, damping: 22, delay: 0.05 }}
-                  >
-                    <Search className="h-5 w-5 text-[#94A3B8] flex-shrink-0" />
-                  </motion.div>
-                  <input
-                    ref={searchInputRef}
-                    type="text"
-                    placeholder="Search Delt..."
-                    value={searchQuery}
-                    onChange={(e) => { setSearchQuery(e.target.value); setSelectedIndex(0); }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'ArrowDown') {
-                        e.preventDefault();
-                        setSelectedIndex(i => Math.min(i + 1, filteredSearches.length - 1));
-                      } else if (e.key === 'ArrowUp') {
-                        e.preventDefault();
-                        setSelectedIndex(i => Math.max(i - 1, 0));
-                      } else if (e.key === 'Enter' && filteredSearches.length > 0) {
-                        handleSearch(filteredSearches[selectedIndex].text, filteredSearches[selectedIndex].link);
-                      } else if (e.key === 'Escape') {
-                        setShowSearch(false);
-                        setSearchQuery('');
-                      }
-                    }}
-                    className="flex-1 text-[17px] text-[#1D1D1F] placeholder-[#94A3B8] bg-transparent focus:outline-none"
-                    style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif' }}
-                  />
-                  {searchQuery && (
-                    <button
-                      onClick={() => setSearchQuery('')}
-                      className="p-1 rounded-full hover:bg-black/[0.06] transition-colors"
-                    >
-                      <X className="h-4 w-4 text-[#94A3B8]" />
-                    </button>
-                  )}
-                  <kbd className="hidden sm:flex items-center gap-0.5 px-2 py-1 rounded-md bg-black/[0.06] text-[12px] text-[#94A3B8]" style={{ fontFamily: 'monospace' }}>
-                    esc
-                  </kbd>
-                </div>
+        /* ─── Ticker ─── */
+        .dc-ticker-bar {
+          background: ${NAVY_DEEP};
+          border-bottom: 1px solid rgba(247, 245, 240, 0.06);
+          overflow: hidden;
+          height: 26px;
+          position: relative;
+        }
+        .dc-ticker-track {
+          display: flex;
+          align-items: center;
+          gap: 28px;
+          height: 100%;
+          width: max-content;
+          animation: dc-ticker-scroll 100s linear infinite;
+          padding-left: 0;
+        }
+        @keyframes dc-ticker-scroll {
+          0%   { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+        .dc-ticker-item {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          font-family: 'JetBrains Mono', ui-monospace, monospace;
+          font-size: 10.5px;
+          letter-spacing: 0.06em;
+          color: rgba(247, 245, 240, 0.55);
+          white-space: nowrap;
+        }
+        .dc-ticker-name { color: rgba(247, 245, 240, 0.85); font-weight: 500; }
+        .dc-ticker-amt  { color: rgba(247, 245, 240, 0.95); font-weight: 600; }
+        .dc-ticker-x    { color: ${INDIGO_SOFT}; font-weight: 500; }
+        .dc-ticker-dot  { color: ${SUCCESS}; font-size: 7px; }
+        .dc-ticker-state--wired  { color: ${INDIGO_SOFT}; }
+        .dc-ticker-state--funded { color: #6EE7B7; }
+        .dc-ticker-state--closed { color: rgba(247, 245, 240, 0.55); }
 
-                {/* Results */}
-                <div className="py-3 max-h-[380px] overflow-y-auto">
-                  <div className="px-4 pb-2">
-                    <span className="text-[11px] font-semibold text-[#94A3B8] uppercase tracking-widest">
-                      {searchQuery ? 'Results' : 'Frequent searches'}
-                    </span>
-                  </div>
-                  {filteredSearches.length > 0 ? (
-                    filteredSearches.map((item, index) => (
-                      <motion.button
-                        key={item.text}
-                        className={`w-full flex items-center gap-3.5 px-4 py-2.5 text-left transition-colors ${
-                          index === selectedIndex ? 'bg-[#4945FF]/[0.06]' : 'hover:bg-black/[0.03]'
-                        }`}
-                        onClick={() => handleSearch(item.text, item.link)}
-                        onMouseEnter={() => setSelectedIndex(index)}
-                        initial={{ opacity: 0, x: -8 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: index * 0.03, duration: 0.2 }}
-                      >
-                        <span className="text-[20px] w-8 text-center flex-shrink-0">{item.icon}</span>
-                        <span className="text-[15px] text-[#1D1D1F]" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif' }}>
-                          {item.text}
-                        </span>
-                        <ArrowRight className="ml-auto h-4 w-4 text-[#C7C7CC] flex-shrink-0" />
-                      </motion.button>
-                    ))
-                  ) : (
-                    <div className="px-4 py-8 text-center text-[15px] text-[#94A3B8]">
-                      No results for "{searchQuery}"
-                    </div>
-                  )}
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        </motion.div>
-      )}
-      </AnimatePresence>
-    </>
+        /* ─── Main row ─── */
+        .dc-nav-row {
+          background: ${NAVY};
+          padding: 16px 0;
+        }
+        .dc-nav-inner {
+          max-width: 1280px;
+          margin: 0 auto;
+          padding: 0 24px;
+          display: flex;
+          align-items: center;
+          gap: 32px;
+        }
+
+        /* Logo */
+        .dc-logo {
+          display: inline-flex;
+          align-items: center;
+          gap: 10px;
+          text-decoration: none;
+          flex-shrink: 0;
+        }
+        .dc-logo-mark {
+          display: inline-flex;
+          align-items: flex-end;
+          gap: 3px;
+          height: 20px;
+        }
+        .dc-logo-bar {
+          width: 4px;
+          border-radius: 1px;
+        }
+        .dc-logo-bar--cream  { height: 12px; background: ${CREAM}; }
+        .dc-logo-bar--indigo { height: 20px; background: ${INDIGO}; }
+        .dc-logo-text {
+          font-family: 'Manrope', 'Inter Tight', sans-serif;
+          font-size: 22px;
+          font-weight: 600;
+          letter-spacing: -0.025em;
+          line-height: 1;
+          display: inline-flex;
+          gap: 4px;
+        }
+        .dc-logo-text-light  { color: ${CREAM}; }
+        .dc-logo-text-indigo { color: ${INDIGO_SOFT}; }
+
+        /* Center nav */
+        .dc-nav-center {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          flex: 1;
+          justify-content: center;
+        }
+
+        .dc-nav-link {
+          font-family: 'Inter', sans-serif;
+          font-size: 14px;
+          font-weight: 500;
+          color: rgba(247, 245, 240, 0.78);
+          padding: 8px 14px;
+          background: transparent;
+          border: 0;
+          cursor: pointer;
+          text-decoration: none;
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          transition: color 150ms ease-out;
+          letter-spacing: -0.005em;
+          position: relative;
+        }
+        .dc-nav-link::after {
+          content: "";
+          position: absolute;
+          left: 14px; right: 14px;
+          bottom: 4px;
+          height: 1px;
+          background: ${INDIGO_SOFT};
+          transform: scaleX(0);
+          transform-origin: left center;
+          transition: transform 150ms ease-out;
+        }
+        .dc-nav-link:hover { color: ${CREAM}; }
+        .dc-nav-link:hover::after { transform: scaleX(1); }
+        .dc-nav-link--quiet { font-weight: 500; }
+
+        .dc-chevron {
+          opacity: 0.6;
+          transition: transform 150ms ease-out;
+        }
+        .dc-nav-dropdown-wrap:hover .dc-chevron { transform: rotate(180deg); }
+
+        /* Dropdown */
+        .dc-nav-dropdown-wrap {
+          position: relative;
+        }
+        .dc-dropdown {
+          position: absolute;
+          top: calc(100% + 8px);
+          left: 50%;
+          transform: translateX(-50%);
+          background: ${NAVY};
+          border: 1px solid rgba(247, 245, 240, 0.10);
+          border-radius: 6px;
+          padding: 20px;
+          min-width: 480px;
+          box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+        }
+        .dc-dropdown-eyebrow {
+          font-family: 'JetBrains Mono', monospace;
+          font-size: 10.5px;
+          letter-spacing: 0.16em;
+          color: ${INDIGO_SOFT};
+          margin-bottom: 16px;
+          text-transform: uppercase;
+        }
+        .dc-dropdown-grid {
+          display: grid;
+          gap: 4px;
+        }
+        .dc-dropdown-item {
+          display: grid;
+          grid-template-columns: 36px 1fr 16px;
+          gap: 12px;
+          align-items: center;
+          padding: 12px 14px;
+          border-radius: 4px;
+          text-decoration: none;
+          color: ${CREAM};
+          transition: background 120ms ease-out;
+        }
+        .dc-dropdown-item:hover { background: rgba(247, 245, 240, 0.05); }
+        .dc-dropdown-num {
+          font-family: 'JetBrains Mono', monospace;
+          font-size: 11px;
+          color: rgba(247, 245, 240, 0.45);
+        }
+        .dc-dropdown-body { display: flex; flex-direction: column; gap: 2px; }
+        .dc-dropdown-label {
+          font-family: 'Manrope', sans-serif;
+          font-size: 15px;
+          font-weight: 600;
+          letter-spacing: -0.02em;
+        }
+        .dc-dropdown-blurb {
+          font-family: 'Inter', sans-serif;
+          font-size: 12.5px;
+          color: rgba(247, 245, 240, 0.6);
+          line-height: 1.4;
+        }
+        .dc-dropdown-arrow { color: ${INDIGO_SOFT}; opacity: 0.7; }
+
+        /* Right cluster */
+        .dc-nav-right {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          flex-shrink: 0;
+        }
+        .dc-nav-icon {
+          background: transparent;
+          border: 0;
+          color: rgba(247, 245, 240, 0.6);
+          cursor: pointer;
+          padding: 8px;
+          border-radius: 4px;
+          transition: color 150ms ease-out, background 150ms ease-out;
+        }
+        .dc-nav-icon:hover { color: ${CREAM}; background: rgba(247, 245, 240, 0.06); }
+
+        .dc-cta {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          background: ${INDIGO};
+          color: #FFFFFF;
+          font-family: 'Inter', sans-serif;
+          font-size: 13.5px;
+          font-weight: 600;
+          letter-spacing: -0.005em;
+          padding: 9px 16px;
+          border-radius: 6px;
+          text-decoration: none;
+          transition: filter 150ms ease-out, transform 100ms ease-out;
+        }
+        .dc-cta:hover { filter: brightness(1.1); }
+        .dc-cta:active { transform: translateY(0.5px); }
+
+        /* Mobile */
+        .dc-mobile-toggle {
+          display: none;
+          background: transparent;
+          border: 0;
+          color: ${CREAM};
+          cursor: pointer;
+          padding: 8px;
+        }
+        .dc-mobile-drawer {
+          background: ${NAVY_DEEP};
+          padding: 20px 24px 28px;
+          border-top: 1px solid rgba(247, 245, 240, 0.08);
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+          overflow: hidden;
+        }
+        .dc-mobile-eyebrow {
+          font-family: 'JetBrains Mono', monospace;
+          font-size: 10.5px;
+          letter-spacing: 0.18em;
+          text-transform: uppercase;
+          color: ${INDIGO_SOFT};
+          margin-bottom: 8px;
+        }
+        .dc-mobile-link {
+          color: ${CREAM};
+          text-decoration: none;
+          font-family: 'Manrope', sans-serif;
+          font-size: 17px;
+          font-weight: 500;
+          padding: 10px 0;
+          border-bottom: 1px solid rgba(247, 245, 240, 0.06);
+        }
+        .dc-cta--mobile {
+          margin-top: 20px;
+          justify-content: center;
+          padding: 14px 16px;
+          font-size: 15px;
+        }
+
+        @media (max-width: 980px) {
+          .dc-nav-center { display: none; }
+          .dc-nav-right .dc-nav-link,
+          .dc-nav-right .dc-nav-icon { display: none; }
+          .dc-mobile-toggle { display: inline-flex; }
+        }
+
+        @media (max-width: 640px) {
+          .dc-cta { display: none; }
+          .dc-ticker-bar { height: 24px; }
+        }
+      `}</style>
+    </header>
   );
 }
+
+export default Navigation;

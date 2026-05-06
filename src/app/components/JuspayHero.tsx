@@ -1,628 +1,253 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
-import { motion, useScroll, useTransform } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { DashboardPreview } from './DashboardPreview';
 
-/* ── Mesh Gradient Blob ── */
-interface Blob {
-  cx: number; cy: number; // orbit center (normalized 0-1)
-  orbitRx: number; orbitRy: number; // orbit radii (normalized)
-  speed: number; phase: number; // orbit speed & phase offset
-  radius: number; // blob radius (normalized to w)
-  color: [number, number, number, number]; // rgba
-  breathSpeed: number; breathAmp: number; // pulsing
-}
+/* ──────────────────────────────────────────────────────────────
+   JuspayHero — Delt Capital style
+   Navy canvas. Mono volume eyebrow. Large display H1 with
+   italic-serif rotating word. Stats strip + bottom hairline +
+   meta strip ("SCROLL — THE NUMBERS ↓" · ledger line).
+   ────────────────────────────────────────────────────────────── */
 
-/* ── Animated Mesh Gradient Canvas ── */
-function MeshGradientCanvas() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const raf = useRef(0);
-  const mouse = useRef({ x: 0.5, y: 0.5, tx: 0.5, ty: 0.5 });
-
-  const handleMove = useCallback((e: MouseEvent) => {
-    const z = 0.8;
-    mouse.current.tx = (e.clientX / z) / window.innerWidth;
-    mouse.current.ty = (e.clientY / z) / window.innerHeight;
-  }, []);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d')!;
-    let w = 0, h = 0;
-
-    const resize = () => {
-      const dpr = Math.min(window.devicePixelRatio, 1.5);
-      w = canvas.clientWidth;
-      h = canvas.clientHeight;
-      canvas.width = w * dpr;
-      canvas.height = h * dpr;
-      ctx.scale(dpr, dpr);
-    };
-
-    // Each blob orbits around its center point with different speeds/phases
-    const blobs: Blob[] = [
-      // Main large purple glow — slow wide orbit bottom-left
-      { cx: 0.25, cy: 0.72, orbitRx: 0.15, orbitRy: 0.12, speed: 0.3, phase: 0, radius: 0.65, color: [73, 69, 255, 0.75], breathSpeed: 1.2, breathAmp: 0.1 },
-      // Secondary purple — orbits center-left
-      { cx: 0.35, cy: 0.55, orbitRx: 0.2, orbitRy: 0.18, speed: 0.45, phase: 1.8, radius: 0.45, color: [90, 80, 255, 0.55], breathSpeed: 0.9, breathAmp: 0.12 },
-      // Bright purple hotspot — tighter orbit
-      { cx: 0.2, cy: 0.65, orbitRx: 0.08, orbitRy: 0.1, speed: 0.7, phase: 3.2, radius: 0.22, color: [120, 100, 255, 0.7], breathSpeed: 1.6, breathAmp: 0.15 },
-      // Upper atmosphere blue-purple
-      { cx: 0.4, cy: 0.25, orbitRx: 0.18, orbitRy: 0.1, speed: 0.25, phase: 0.9, radius: 0.5, color: [50, 45, 200, 0.35], breathSpeed: 0.7, breathAmp: 0.08 },
-      // Right-side deep navy shadow
-      { cx: 0.78, cy: 0.4, orbitRx: 0.12, orbitRy: 0.2, speed: 0.2, phase: 2.5, radius: 0.55, color: [4, 15, 40, 0.85], breathSpeed: 0.5, breathAmp: 0.06 },
-      // Bottom purple wash
-      { cx: 0.45, cy: 0.95, orbitRx: 0.25, orbitRy: 0.08, speed: 0.35, phase: 4.1, radius: 0.55, color: [73, 69, 255, 0.5], breathSpeed: 1.0, breathAmp: 0.1 },
-      // Subtle teal shimmer
-      { cx: 0.3, cy: 0.5, orbitRx: 0.12, orbitRy: 0.15, speed: 0.55, phase: 5.0, radius: 0.2, color: [22, 180, 160, 0.1], breathSpeed: 1.3, breathAmp: 0.2 },
-      // Top-right darkness
-      { cx: 0.7, cy: 0.1, orbitRx: 0.1, orbitRy: 0.08, speed: 0.15, phase: 1.2, radius: 0.5, color: [3, 10, 28, 0.7], breathSpeed: 0.4, breathAmp: 0.05 },
-      // Wandering bright accent — fast orbit
-      { cx: 0.15, cy: 0.8, orbitRx: 0.22, orbitRy: 0.25, speed: 0.6, phase: 2.0, radius: 0.18, color: [140, 120, 255, 0.65], breathSpeed: 2.0, breathAmp: 0.18 },
-    ];
-
-    resize();
-    window.addEventListener('resize', resize);
-    window.addEventListener('mousemove', handleMove);
-
-    let t = 0;
-    let running = false;
-    const draw = () => {
-      t += 0.008; // 2x faster time progression
-      mouse.current.x += (mouse.current.tx - mouse.current.x) * 0.03;
-      mouse.current.y += (mouse.current.ty - mouse.current.y) * 0.03;
-
-      // Deep navy base
-      ctx.fillStyle = '#041E42';
-      ctx.fillRect(0, 0, w, h);
-
-      // Animate & draw each blob
-      for (const blob of blobs) {
-        // Orbital position
-        const bx = (blob.cx + Math.sin(t * blob.speed + blob.phase) * blob.orbitRx) * w;
-        const by = (blob.cy + Math.cos(t * blob.speed * 0.7 + blob.phase + 1.5) * blob.orbitRy) * h;
-
-        // Mouse repulsion for depth feel
-        const mx = mouse.current.x * w;
-        const my = mouse.current.y * h;
-        const dx = bx - mx;
-        const dy = by - my;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        const repel = Math.max(0, 1 - dist / (w * 0.4)) * 30;
-        const fx = dist > 0 ? (dx / dist) * repel : 0;
-        const fy = dist > 0 ? (dy / dist) * repel : 0;
-
-        const finalX = bx + fx;
-        const finalY = by + fy;
-
-        // Breathing radius
-        const breathe = 1 + Math.sin(t * blob.breathSpeed + blob.phase * 2) * blob.breathAmp;
-        const rad = blob.radius * w * breathe;
-
-        // Draw
-        const [r, g, b, a] = blob.color;
-        const grad = ctx.createRadialGradient(finalX, finalY, 0, finalX, finalY, rad);
-        grad.addColorStop(0, `rgba(${r},${g},${b},${a})`);
-        grad.addColorStop(0.3, `rgba(${r},${g},${b},${a * 0.7})`);
-        grad.addColorStop(0.6, `rgba(${r},${g},${b},${a * 0.25})`);
-        grad.addColorStop(1, `rgba(${r},${g},${b},0)`);
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, 0, w, h);
-      }
-
-      // Soft center darkening for text readability
-      const contentGlow = ctx.createRadialGradient(w * 0.5, h * 0.42, 0, w * 0.5, h * 0.42, w * 0.22);
-      contentGlow.addColorStop(0, 'rgba(4,30,66,0.25)');
-      contentGlow.addColorStop(1, 'rgba(0,0,0,0)');
-      ctx.fillStyle = contentGlow;
-      ctx.fillRect(0, 0, w, h);
-
-      // Bottom fade into section below
-      const botV = ctx.createLinearGradient(0, h * 0.78, 0, h);
-      botV.addColorStop(0, 'rgba(4,30,66,0)');
-      botV.addColorStop(1, 'rgba(4,30,66,1)');
-      ctx.fillStyle = botV;
-      ctx.fillRect(0, h * 0.78, w, h * 0.22);
-
-      if (running) {
-        raf.current = requestAnimationFrame(draw);
-      }
-    };
-
-    const start = () => {
-      if (running) return;
-      running = true;
-      raf.current = requestAnimationFrame(draw);
-    };
-    const stop = () => {
-      running = false;
-      cancelAnimationFrame(raf.current);
-    };
-
-    // Only animate while the hero canvas is in the viewport
-    const io = new IntersectionObserver(
-      ([entry]) => (entry.isIntersecting ? start() : stop()),
-      { threshold: 0 }
-    );
-    io.observe(canvas);
-
-    return () => {
-      io.disconnect();
-      stop();
-      window.removeEventListener('resize', resize);
-      window.removeEventListener('mousemove', handleMove);
-    };
-  }, [handleMove]);
-
-  return (
-    <canvas
-      ref={canvasRef}
-      className="absolute inset-0 w-full h-full"
-      style={{ zIndex: 0 }}
-    />
-  );
-}
+const ROTATING_WORDS = ['back', 'wire', 'fund', 'fuel'];
 
 export function JuspayHero() {
-  const [loaded, setLoaded] = useState(false);
-  const sectionRef = useRef<HTMLDivElement>(null);
-  useEffect(() => { setTimeout(() => setLoaded(true), 100); }, []);
+  const [wordIdx, setWordIdx] = useState(0);
 
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ['start start', 'end start'],
-  });
-
-  const titleY = useTransform(scrollYProgress, [0, 0.5], [0, -100]);
-  const titleOpacity = useTransform(scrollYProgress, [0, 0.4], [1, 0]);
-  const titleScale = useTransform(scrollYProgress, [0, 0.5], [1, 0.92]);
-  const subY = useTransform(scrollYProgress, [0.05, 0.5], [0, -60]);
-  const subOpacity = useTransform(scrollYProgress, [0.05, 0.35], [1, 0]);
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      setWordIdx((i) => (i + 1) % ROTATING_WORDS.length);
+    }, 2400);
+    return () => window.clearInterval(id);
+  }, []);
 
   return (
-    <>
-      <section ref={sectionRef} className="ih-section">
-        <MeshGradientCanvas />
+    <section
+      className="relative w-full overflow-hidden"
+      style={{ background: 'var(--dc-bg-navy)', color: 'var(--dc-on-dark)' }}
+    >
+      {/* Soft radial glow only — no heavy mesh, matches deltcapital tone */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            'radial-gradient(900px 600px at 78% 38%, rgba(73,69,255,0.22), transparent 60%), radial-gradient(700px 500px at 18% 82%, rgba(73,69,255,0.10), transparent 60%)',
+        }}
+      />
 
-        {/* Noise overlay */}
-        <div className="ih-noise" />
-
-        <div className="ih-container">
-          <motion.div
-            className="ih-content"
-            initial={{ opacity: 0, y: 36 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+      <div className="relative mx-auto w-full max-w-[1320px] px-6 lg:px-10 pt-10 lg:pt-14 pb-0">
+        {/* Top centered mono volume eyebrow */}
+        <div className="flex justify-center">
+          <div
+            className="flex items-center gap-3 text-[11px] tracking-[0.18em]"
+            style={{
+              fontFamily: 'var(--dc-font-mono)',
+              color: 'var(--dc-on-dark-muted)',
+              textTransform: 'uppercase',
+            }}
           >
-            {/* Left column */}
-            <div className="ih-left">
-              <motion.div
-                className="ih-eyebrow"
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.1 }}
-              >
-                — VOL. I · 2026 · RUN · GROW · FUND
-              </motion.div>
-              <motion.h1
-                className="ih-title"
-                style={{ y: titleY, opacity: titleOpacity, scale: titleScale }}
-              >
-                <motion.span
-                  className="ih-title-line"
-                  initial={{ opacity: 0, y: 28, filter: 'blur(6px)' }}
-                  animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-                  transition={{ duration: 0.7, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                >
-                  Your business,
-                </motion.span>
-                <motion.span
-                  className="ih-title-line ih-title-accent"
-                  initial={{ opacity: 0, y: 28, filter: 'blur(6px)' }}
-                  animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-                  transition={{ duration: 0.7, delay: 0.35, ease: [0.16, 1, 0.3, 1] }}
-                >
-                  instantly <em className="ih-italic-accent">paid.</em>
-                </motion.span>
-              </motion.h1>
-
-              <motion.p className="ih-subtitle" style={{ y: subY, opacity: subOpacity }}>
-                Launch your site, accept payments,<br />
-                and access capital — all from one platform.
-              </motion.p>
-              <motion.p className="ih-subtitle-ai" style={{ y: subY, opacity: subOpacity }}>
-                Powered by AI that learns your business.
-              </motion.p>
-
-              <motion.div className="ih-ctas" style={{ y: subY, opacity: subOpacity }}>
-                <Link to="/apply" className="ih-btn-primary">
-                  Get Started <span className="ih-btn-arrow">›</span>
-                </Link>
-                <Link to="/sandbox" className="ih-btn-ghost">
-                  See the demo <span className="ih-btn-arrow">›</span>
-                </Link>
-              </motion.div>
-
-              <motion.p className="ih-social-proof" style={{ y: subY, opacity: subOpacity }}>
-                <span className="ih-social-proof-dot" />
-                Join 200+ merchants who went live this month
-              </motion.p>
-            </div>
-
-            {/* Right column — dashboard graphic */}
-            <motion.div
-              className="ih-right"
-              initial={{ opacity: 0, y: 40 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
-            >
-              <DashboardPreview />
-            </motion.div>
-          </motion.div>
+            <span>VOL. VII</span>
+            <span style={{ color: 'var(--dc-on-dark-faint)' }}>·</span>
+            <span>Q2 2026</span>
+            <span style={{ color: 'var(--dc-on-dark-faint)' }}>·</span>
+            <span>DIRECT FUNDING</span>
+            <span style={{ color: 'var(--dc-on-dark-faint)' }}>·</span>
+            <span>EST. 2019</span>
+            <span style={{ color: 'var(--dc-on-dark-faint)' }}>·</span>
+            <span className="inline-flex items-center gap-2" style={{ color: '#A5B4FC' }}>
+              <span
+                className="inline-block h-1.5 w-1.5 rounded-full"
+                style={{ background: '#A5B4FC', boxShadow: '0 0 8px #A5B4FC' }}
+              />
+              QUOTING NOW
+            </span>
+          </div>
         </div>
 
-        {/* Bottom transition band */}
-        <div className="ih-transition" />
-      </section>
+        {/* Main 2-col split */}
+        <div className="mt-12 lg:mt-16 grid grid-cols-1 lg:grid-cols-[1.05fr_1fr] gap-10 lg:gap-14 items-start">
+          {/* LEFT: copy */}
+          <div className="relative">
+            <h1
+              className="dc-display"
+              style={{
+                color: 'var(--dc-on-dark)',
+                fontSize: 'clamp(48px, 7vw, 92px)',
+                lineHeight: 0.96,
+                fontWeight: 600,
+                letterSpacing: '-0.045em',
+              }}
+            >
+              You built the<br />
+              business.<br />
+              We{' '}
+              <span className="relative inline-block align-baseline" style={{ minWidth: '2ch' }}>
+                <AnimatePresence mode="wait">
+                  <motion.span
+                    key={wordIdx}
+                    initial={{ y: 18, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={{ y: -18, opacity: 0 }}
+                    transition={{ duration: 0.45, ease: [0.2, 0.8, 0.2, 1] }}
+                    className="inline-block"
+                    style={{
+                      fontFamily: 'var(--dc-font-serif-italic)',
+                      fontStyle: 'italic',
+                      fontWeight: 400,
+                      color: '#A5B4FC',
+                    }}
+                  >
+                    {ROTATING_WORDS[wordIdx]}
+                  </motion.span>
+                </AnimatePresence>
+              </span>
+              {' '}it.
+            </h1>
 
-      {/* Trust bar */}
-      <section className="ih-trust">
-        <div className="ih-trust-inner">
-          <span className="ih-trust-label">Trusted by growing businesses nationwide</span>
-          <div className="ih-trust-marquee">
-            <div className="ih-trust-track">
-              {[...Array(2)].map((_, setIdx) => (
-                ['Bloom & Co.', 'Ember Kitchen', 'Atlas Fitness', 'Pinecone Roasters', 'Riverwalk Retail', 'Basecamp Outdoors', 'Lumen Salon', 'Horizon Brewing', 'Crestview Dental', 'Sage & Vine', 'Northpoint Auto', 'Tidal Wave Surf', 'Copper Lane Café', 'Sterling Home Services', 'Jade Wellness Studio', 'Oakbridge Supply', 'Moonrise Bakery', 'Ironclad Barber', 'Verdant Gardens', 'Summit Cycle Co.', 'Harborview Deli', 'Foxglove Florals', 'Ridgeline Gear', 'Prism Optometry', 'Kindling Coffee'].map((name) => (
-                  <span key={`${setIdx}-${name}`} className="ih-trust-item">{name}</span>
-                ))
-              ))}
+            <p
+              className="mt-8 max-w-[460px] text-[16px] leading-[1.55]"
+              style={{ color: 'var(--dc-on-dark-muted)', fontFamily: 'var(--dc-font-body)' }}
+            >
+              Payments + revenue-based capital, in one stack. Process from{' '}
+              <strong style={{ color: 'var(--dc-on-dark)', fontWeight: 600 }}>
+                $5,000 to $500,000+
+              </strong>{' '}
+              monthly and unlock funding underwritten off your deposits — not your FICO,
+              not your collateral, not a call center's script. Median factor{' '}
+              <strong style={{ color: 'var(--dc-on-dark)', fontWeight: 600 }}>1.18×</strong>.
+              Median time to funds,{' '}
+              <strong style={{ color: 'var(--dc-on-dark)', fontWeight: 600 }}>24 hours</strong>.
+            </p>
+
+            <div className="mt-9 flex items-center gap-3 flex-wrap">
+              <Link to="/apply" className="dc-btn-primary dc-lg">
+                Get Funded
+                <span aria-hidden style={{ marginLeft: 2 }}>→</span>
+              </Link>
+              <Link to="/calculator" className="dc-btn-secondary dc-on-dark dc-lg">
+                See how pricing works
+              </Link>
+            </div>
+
+            {/* Stats strip */}
+            <div
+              className="mt-12 pt-7 grid grid-cols-3 gap-6 max-w-[480px]"
+              style={{ borderTop: '1px solid var(--dc-rule-on-dark)' }}
+            >
+              <Stat label="TODAY'S MEDIAN" big="1.18×" unit="factor" />
+              <Stat label="TIME TO FUNDS" big="24h" unit="median" />
+              <Stat label="SOFT-PULL" big="Yes" unit="only" />
+            </div>
+          </div>
+
+          {/* RIGHT: dashboard preview, framed */}
+          <div className="relative lg:pt-2">
+            <div
+              className="relative rounded-[12px] overflow-hidden flex items-center justify-center"
+              style={{
+                border: '1px solid var(--dc-rule-on-dark)',
+                background: 'rgba(247, 245, 240, 0.02)',
+                aspectRatio: '4 / 3',
+                minHeight: 380,
+                padding: '40px 32px',
+              }}
+            >
+              <div
+                style={{ width: '100%', maxWidth: 480 }}
+                className="jh-dp-fit"
+              >
+                <DashboardPreview />
+              </div>
+              <style>{`.jh-dp-fit .dp-wrapper { transform: none !important; }`}</style>
+            </div>
+            {/* Caption */}
+            <div className="mt-4 flex justify-end">
+              <span
+                className="text-[11px] tracking-[0.14em]"
+                style={{
+                  fontFamily: 'var(--dc-font-mono)',
+                  color: 'var(--dc-on-dark-faint)',
+                  textTransform: 'uppercase',
+                }}
+              >
+                FIG. 01 — THE OFFER, IN MOTION
+              </span>
             </div>
           </div>
         </div>
-      </section>
 
-      <style>{`
-        .ih-section {
-          background: #041E42;
-          position: relative;
-          overflow: hidden;
-          min-height: 110vh;
-          display: flex;
-          flex-direction: column;
-        }
-
-        .ih-noise {
-          position: absolute;
-          inset: 0;
-          z-index: 1;
-          opacity: 0.03;
-          pointer-events: none;
-          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-          background-size: 128px 128px;
-        }
-
-        .ih-container {
-          max-width: 1300px;
-          margin: 0 auto;
-          padding: 220px 48px 160px;
-          flex: 1;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          position: relative;
-          z-index: 2;
-        }
-
-        .ih-content {
-          text-align: left;
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 250px;
-          align-items: center;
-          width: 100%;
-          position: relative;
-          z-index: 2;
-        }
-
-        .ih-left {
-          display: flex;
-          flex-direction: column;
-          align-items: flex-start;
-        }
-
-        .ih-right {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          align-self: center;
-        }
-
-        .ih-dash-img {
-          width: 100%;
-          max-width: 580px;
-          height: auto;
-          border-radius: 16px;
-          box-shadow: 0 25px 80px rgba(0,0,0,0.5), 0 0 100px rgba(73,69,255,0.15);
-          transform: perspective(1200px) rotateY(-8deg) rotateX(2deg);
-          transition: transform 0.4s ease;
-        }
-
-        .ih-dash-img:hover {
-          transform: perspective(1200px) rotateY(-4deg) rotateX(1deg);
-        }
-
-        .ih-badge {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          font-family: 'Plus Jakarta Sans', sans-serif;
-          font-size: 11px;
-          font-weight: 700;
-          color: #4945FF;
-          background: rgba(73,69,255,0.08);
-          border: 1px solid rgba(73,69,255,0.18);
-          padding: 7px 18px;
-          border-radius: 100px;
-          letter-spacing: 0.1em;
-          text-transform: uppercase;
-          margin-bottom: 40px;
-          backdrop-filter: blur(12px);
-        }
-
-        .ih-badge-dot {
-          width: 6px;
-          height: 6px;
-          border-radius: 50%;
-          background: #4945FF;
-          box-shadow: 0 0 8px rgba(73,69,255,0.6);
-          animation: ih-pulse 2s ease-in-out infinite;
-        }
-
-        @keyframes ih-pulse {
-          0%, 100% { opacity: 1; box-shadow: 0 0 8px rgba(73,69,255,0.6); }
-          50% { opacity: 0.5; box-shadow: 0 0 16px rgba(73,69,255,0.9); }
-        }
-
-        .ih-eyebrow {
-          font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
-          font-size: 12px;
-          font-weight: 500;
-          letter-spacing: 0.06em;
-          line-height: 1.4;
-          text-transform: uppercase;
-          color: rgba(247,245,240,0.45);
-          margin-bottom: 24px;
-        }
-
-        .ih-title {
-          font-family: 'Manrope', 'Inter Tight', sans-serif;
-          font-size: clamp(2.8rem, 6.4vw, 5.7rem);
-          font-weight: 600;
-          line-height: 0.95;
-          letter-spacing: -0.045em;
-          color: #F7F5F0;
-          margin: 0 0 28px;
-        }
-
-        .ih-title-line {
-          display: block;
-        }
-
-        .ih-cycling-wrapper {
-          display: inline-block;
-          position: relative;
-          overflow: hidden;
-          vertical-align: bottom;
-          height: 1.55em;
-          padding-top: 0.1em;
-          -webkit-mask-image: linear-gradient(
-            to bottom,
-            transparent 0%,
-            black 8%,
-            black 90%,
-            transparent 100%
-          );
-          mask-image: linear-gradient(
-            to bottom,
-            transparent 0%,
-            black 8%,
-            black 90%,
-            transparent 100%
-          );
-        }
-
-        .ih-cycling-wrapper .ih-title-accent {
-          display: inline-block;
-        }
-
-        .ih-title-accent {
-          color: #F7F5F0;
-          -webkit-text-fill-color: #F7F5F0;
-          background: none;
-          -webkit-background-clip: unset;
-          background-clip: unset;
-          background-size: unset;
-          animation: none;
-        }
-
-        .ih-italic-accent {
-          font-family: 'Source Serif Pro', Georgia, serif;
-          font-style: italic;
-          font-weight: 400;
-          color: #F7F5F0;
-        }
-
-        .ih-subtitle {
-          font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
-          font-size: 18px;
-          line-height: 1.55;
-          color: rgba(247,245,240,0.75);
-          max-width: 480px;
-          margin: 0 0 0;
-          text-align: left;
-        }
-
-        .ih-subtitle-ai {
-          font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
-          font-size: 18px;
-          line-height: 1.55;
-          color: rgba(247,245,240,0.75);
-          max-width: 480px;
-          margin: 16px 0 40px;
-          text-align: left;
-        }
-
-        .ih-br { display: block; }
-
-        .ih-ctas {
-          display: flex;
-          align-items: center;
-          gap: 16px;
-        }
-
-        .ih-btn-primary {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          padding: 13px 20px;
-          border-radius: 6px;
-          background: #4945FF;
-          color: #FFFFFF;
-          font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
-          font-size: 13px;
-          font-weight: 500;
-          text-decoration: none;
-          transition: background 150ms ease-out;
-        }
-        .ih-btn-primary:hover { background: #3730A3; }
-
-        .ih-btn-ghost {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          padding: 13px 20px;
-          border-radius: 6px;
-          background: transparent;
-          border: 1px solid rgba(247,245,240,0.25);
-          color: #F7F5F0;
-          font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
-          font-size: 13px;
-          font-weight: 500;
-          text-decoration: none;
-          transition: background 150ms ease-out, border-color 150ms ease-out;
-        }
-        .ih-btn-ghost:hover {
-          background: rgba(247,245,240,0.06);
-          border-color: rgba(247,245,240,0.40);
-        }
-
-        .ih-btn-arrow {
-          font-size: 18px;
-          transition: transform 0.2s;
-        }
-        .ih-btn-primary:hover .ih-btn-arrow,
-        .ih-btn-ghost:hover .ih-btn-arrow {
-          transform: translateX(2px);
-        }
-
-        .ih-social-proof {
-          font-family: 'Plus Jakarta Sans', sans-serif;
-          font-size: 16px;
-          line-height: 1.5;
-          color: rgba(255,255,255,0.72);
-          max-width: 480px;
-          margin: 24px 0 0;
-          text-align: left;
-          font-weight: 500;
-        }
-
-        .ih-social-proof-dot {
-          display: inline-block;
-          width: 6px;
-          height: 6px;
-          border-radius: 50%;
-          background: #4945FF;
-          box-shadow: 0 0 8px rgba(73,69,255,0.6);
-          animation: ih-pulse 2s ease-in-out infinite;
-          margin-right: 8px;
-        }
-
-        /* Bottom transition */
-        .ih-transition {
-          position: absolute;
-          bottom: 0;
-          left: 0;
-          right: 0;
-          height: 120px;
-          background: linear-gradient(to bottom, rgba(4,30,66,0), #041E42);
-          z-index: 3;
-          pointer-events: none;
-        }
-
-        /* Trust section */
-        .ih-trust {
-          background: #041E42;
-          padding: 40px 0 40px;
-          width: 100%;
-        }
-
-        .ih-trust-inner {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 24px;
-        }
-
-        .ih-trust-label {
-          font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
-          font-size: 12px;
-          font-weight: 500;
-          color: rgba(247,245,240,0.55);
-          letter-spacing: 0.06em;
-          text-transform: uppercase;
-        }
-        .ih-trust-label::before { content: "— "; }
-
-        .ih-trust-marquee {
-          overflow: hidden;
-          width: 100%;
-          mask-image: linear-gradient(90deg, transparent, black 5%, black 95%, transparent);
-          -webkit-mask-image: linear-gradient(90deg, transparent, black 5%, black 95%, transparent);
-        }
-
-        .ih-trust-track {
-          display: flex;
-          animation: ih-marquee 32s linear infinite;
-        }
-
-        .ih-trust-item {
-          font-family: 'Manrope', 'Inter Tight', sans-serif;
-          font-size: 18px;
-          font-weight: 600;
-          color: rgba(247,245,240,0.45);
-          letter-spacing: -0.02em;
-          white-space: nowrap;
-          padding: 0 32px;
-          flex-shrink: 0;
-          transition: color 0.3s;
-        }
-
-        @keyframes ih-marquee {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
-        }
-
-        @media (max-width: 900px) {
-          .ih-container { padding: 160px 24px 100px; }
-          .ih-content { grid-template-columns: 1fr; gap: 48px; text-align: center; }
-          .ih-left { align-items: center; }
-          .ih-right { display: none; }
-          .ih-subtitle { text-align: center; }
-          .ih-trust { padding: 80px 24px 60px; }
-          .ih-br { display: none; }
-        }
-      `}</style>
-    </>
+        {/* Bottom hairline + meta strip */}
+        <div
+          className="mt-14 pt-5 pb-7 flex items-center justify-between gap-4 flex-wrap"
+          style={{ borderTop: '1px solid var(--dc-rule-on-dark)' }}
+        >
+          <span
+            className="text-[11px] tracking-[0.18em]"
+            style={{
+              fontFamily: 'var(--dc-font-mono)',
+              color: 'var(--dc-on-dark-faint)',
+              textTransform: 'uppercase',
+            }}
+          >
+            SCROLL — THE NUMBERS ↓
+          </span>
+          <span
+            className="text-[11px] tracking-[0.18em]"
+            style={{
+              fontFamily: 'var(--dc-font-mono)',
+              color: 'var(--dc-on-dark-muted)',
+              textTransform: 'uppercase',
+            }}
+          >
+            $200M+ DEPLOYED · 2,850+ FUNDED · SINCE 2019
+          </span>
+        </div>
+      </div>
+    </section>
   );
 }
+
+function Stat({ label, big, unit }: { label: string; big: string; unit: string }) {
+  return (
+    <div>
+      <div
+        className="text-[10px] tracking-[0.14em] mb-2"
+        style={{
+          fontFamily: 'var(--dc-font-mono)',
+          color: 'var(--dc-on-dark-faint)',
+          textTransform: 'uppercase',
+        }}
+      >
+        {label}
+      </div>
+      <div className="flex items-baseline gap-1.5">
+        <span
+          style={{
+            fontFamily: 'var(--dc-font-display)',
+            fontWeight: 600,
+            fontSize: 32,
+            letterSpacing: '-0.025em',
+            color: 'var(--dc-on-dark)',
+            lineHeight: 1,
+          }}
+        >
+          {big}
+        </span>
+        <span
+          style={{
+            fontFamily: 'var(--dc-font-mono)',
+            fontSize: 11,
+            color: 'var(--dc-on-dark-faint)',
+            letterSpacing: '0.04em',
+          }}
+        >
+          {unit}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+export default JuspayHero;

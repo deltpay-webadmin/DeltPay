@@ -1,360 +1,329 @@
-import Earth from '@/app/components/ui/globe';
-import { Sparkles } from '@/app/components/ui/sparkles';
-import { useRef } from 'react';
-import { motion, useInView } from 'motion/react';
-import { Link } from 'react-router';
+/* ──────────────────────────────────────────────────────────────
+   ByTheNumbers — Delt Capital "Why Delt beats the bank" pattern
+   Paper background. Mono eyebrow. Navy H2. 2-column layout.
+   Comparison table with mono numbered rows + trait pills.
+   ────────────────────────────────────────────────────────────── */
 
-const stats = [
-  { label: 'Go Live', value: '<1 Day', trait: 'Speed' },
-  { label: 'Avg. monthly savings', value: '$847', trait: 'Savings' },
-  { label: 'Capital deployed', value: '$50M', trait: 'Scale' },
-  { label: 'Merchant retention rate', value: '97%', trait: 'Reliability' },
+interface Row {
+  num: string;
+  metric: string;
+  legacy: string;
+  delt: string;
+  pill?: string;
+}
+
+const ROWS: Row[] = [
+  { num: '01', metric: 'Time to first dollar',  legacy: '2–6 weeks',          delt: '24 hours',         pill: '20× FASTER' },
+  { num: '02', metric: 'Effective factor',       legacy: '1.35–1.49×',        delt: '1.18×',            pill: '19% CHEAPER' },
+  { num: '03', metric: 'Paperwork',              legacy: '3 mo statements + returns', delt: 'Plaid link', pill: 'ZERO FILES' },
+  { num: '04', metric: 'Credit pull',            legacy: 'Hard pull',         delt: 'Soft inquiry',     pill: 'NO FICO HIT' },
+  { num: '05', metric: 'Collateral',             legacy: 'PG + UCC',          delt: 'None',             pill: 'UNENCUMBERED' },
+  { num: '06', metric: 'Prepayment penalty',     legacy: 'Full factor owed',  delt: 'None',             pill: 'EARLY PAYS SAVE' },
 ];
 
-const MARKERS = [
-  { location: [38.9072, -77.0369], size: 0.015, color: [0.286, 0.271, 1] },
-  { location: [51.5074, -0.1278], size: 0.015, color: [0.286, 0.271, 1] },
-  { location: [48.8566, 2.3522], size: 0.015, color: [0.286, 0.271, 1] },
-  { location: [52.52, 13.405], size: 0.015, color: [0.286, 0.271, 1] },
-  { location: [41.9028, 12.4964], size: 0.015, color: [0.286, 0.271, 1] },
-  { location: [40.4168, -3.7038], size: 0.015, color: [0.286, 0.271, 1] },
-  { location: [55.7558, 37.6173], size: 0.015, color: [0.286, 0.271, 1] },
-  { location: [39.9042, 116.4074], size: 0.015, color: [0.286, 0.271, 1] },
-  { location: [35.6762, 139.6503], size: 0.015, color: [0.286, 0.271, 1] },
-  { location: [37.5665, 126.978], size: 0.015, color: [0.286, 0.271, 1] },
-  { location: [28.6139, 77.209], size: 0.015, color: [0.286, 0.271, 1] },
-  { location: [-33.8688, 151.2093], size: 0.015, color: [0.286, 0.271, 1] },
-  { location: [-15.7975, -47.8919], size: 0.015, color: [0.286, 0.271, 1] },
-  { location: [19.4326, -99.1332], size: 0.015, color: [0.286, 0.271, 1] },
-  { location: [45.4215, -75.6972], size: 0.015, color: [0.286, 0.271, 1] },
-  { location: [-34.6037, -58.3816], size: 0.015, color: [0.286, 0.271, 1] },
-  { location: [30.0444, 31.2357], size: 0.015, color: [0.286, 0.271, 1] },
-  { location: [-1.2921, 36.8219], size: 0.015, color: [0.286, 0.271, 1] },
-  { location: [-33.9249, 18.4241], size: 0.015, color: [0.286, 0.271, 1] },
-  { location: [6.5244, 3.3792], size: 0.015, color: [0.286, 0.271, 1] },
-  { location: [1.3521, 103.8198], size: 0.015, color: [0.286, 0.271, 1] },
-  { location: [13.7563, 100.5018], size: 0.015, color: [0.286, 0.271, 1] },
-  { location: [3.139, 101.6869], size: 0.015, color: [0.286, 0.271, 1] },
-  { location: [-6.2088, 106.8456], size: 0.015, color: [0.286, 0.271, 1] },
-  { location: [14.5995, 120.9842], size: 0.015, color: [0.286, 0.271, 1] },
-  { location: [41.0082, 28.9784], size: 0.015, color: [0.286, 0.271, 1] },
-  { location: [59.3293, 18.0686], size: 0.015, color: [0.286, 0.271, 1] },
-  { location: [60.1699, 24.9384], size: 0.015, color: [0.286, 0.271, 1] },
-  { location: [50.0755, 14.4378], size: 0.015, color: [0.286, 0.271, 1] },
-  { location: [52.2297, 21.0122], size: 0.015, color: [0.286, 0.271, 1] },
-  { location: [-22.9068, -43.1729], size: 0.015, color: [0.286, 0.271, 1] },
-  { location: [-33.4489, -70.6693], size: 0.015, color: [0.286, 0.271, 1] },
-  { location: [4.711, -74.0721], size: 0.015, color: [0.286, 0.271, 1] },
-  { location: [-12.0464, -77.0428], size: 0.015, color: [0.286, 0.271, 1] },
-  { location: [24.7136, 46.6753], size: 0.015, color: [0.286, 0.271, 1] },
-  { location: [25.2048, 55.2708], size: 0.015, color: [0.286, 0.271, 1] },
-  { location: [35.6892, 51.389], size: 0.015, color: [0.286, 0.271, 1] },
-  { location: [33.3152, 44.3661], size: 0.015, color: [0.286, 0.271, 1] },
-  { location: [31.7683, 35.2137], size: 0.015, color: [0.286, 0.271, 1] },
-] as { location: [number, number]; size: number; color: [number, number, number] }[];
+const HIGHLIGHTS: { label: string; value: string; sub: string; icon: string; color: string }[] = [
+  { label: 'MEDIAN TIME TO FUNDS', value: '24h',  sub: 'vs 2–6 weeks at a bank',     icon: '↯', color: '#F5B400' },
+  { label: 'AVG SAVINGS VS SBA',    value: '19%',  sub: 'on total cost of capital',  icon: '–', color: '#697386' },
+  { label: 'PAPERWORK REQUIRED',    value: '0',    sub: 'Plaid replaces the file box', icon: '⌀', color: '#697386' },
+];
 
 export function ByTheNumbers() {
-  const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { once: true, amount: 0.1 });
-
   return (
-    <>
-      <section className="btn-section" ref={ref}>
-        <div className="btn-card">
-          <div className="btn-eyebrow">— BY THE NUMBERS</div>
-          {/* Stats row — top of section, no badge */}
-          <div className="btn-stats">
-            {stats.map((stat, i) => (
-              <motion.div
-                key={stat.label}
-                className="btn-stat"
-                initial={{ opacity: 0, y: 30 }}
-                animate={inView ? { opacity: 1, y: 0 } : {}}
-                transition={{ delay: i * 0.12, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-              >
-                <span className="btn-stat-label">{stat.label}</span>
-                <span className="btn-stat-value">{stat.value}</span>
-                <span className="btn-stat-trait">{stat.trait}</span>
-              </motion.div>
-            ))}
-          </div>
-
-          {/* Globe area */}
-          <div className="btn-globe-area">
-            <div className="btn-globe-text">
-              <motion.h2
-                className="btn-globe-heading"
-                initial={{ opacity: 0, y: 20 }}
-                animate={inView ? { opacity: 1, y: 0 } : {}}
-                transition={{ delay: 0.5, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-              >
-                Fewer tools. More money.<br />Less <em className="btn-italic-accent">stress.</em>
-              </motion.h2>
-              <motion.p
-                className="btn-globe-sub"
-                initial={{ opacity: 0, y: 12 }}
-                animate={inView ? { opacity: 1, y: 0 } : {}}
-                transition={{ delay: 0.65, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-              >
-                Trusted by 10,000+ businesses worldwide.
-              </motion.p>
-              <motion.div
-                initial={{ opacity: 0, y: 12 }}
-                animate={inView ? { opacity: 1, y: 0 } : {}}
-                transition={{ delay: 0.8, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                style={{ marginTop: 28 }}
-              >
-                <Link to="/contact" className="btn-schedule-btn">
-                  Schedule a call <span className="btn-schedule-arrow">›</span>
-                </Link>
-              </motion.div>
+    <section
+      className="relative w-full py-24 lg:py-28"
+      style={{ background: 'var(--dc-bg-paper)', color: 'var(--dc-on-light)' }}
+    >
+      <div className="mx-auto w-full max-w-[1200px] px-6 lg:px-10">
+        {/* Header — 2 col */}
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-10 items-end">
+          <div>
+            <div className="dc-eyebrow dc-on-light" style={{ color: 'var(--dc-indigo)' }}>
+              BANKS VS DELT
             </div>
-
-            {/* Globe — large enough to fill the section width, bottom third clipped */}
-            <motion.div
-              className="btn-globe-wrap"
-              initial={{ opacity: 0 }}
-              animate={inView ? { opacity: 1 } : {}}
-              transition={{ delay: 0.6, duration: 1.5 }}
+            <h2
+              className="mt-4 dc-h2"
+              style={{
+                color: 'var(--dc-on-light)',
+                fontSize: 'clamp(36px, 5vw, 56px)',
+                lineHeight: 1.05,
+                fontWeight: 600,
+                letterSpacing: '-0.035em',
+              }}
             >
-              <Earth
-                dark={1}
-                scale={1.1}
-                baseColor={[0.4, 0.6509, 1]}
-                glowColor={[0.2745, 0.5765, 0.898]}
-                markerColor={[0.3, 0.5, 1]}
-                mapBrightness={6}
-                mapSamples={16000}
-                diffuse={1.2}
-                className="w-full h-full"
-                markerElevation={0}
-                markers={MARKERS}
-              />
-            </motion.div>
-
-            {/* Gradient fade — bottom of globe dissolves into navy */}
-            <div className="btn-globe-fade" />
-
-            {/* Sparkles */}
-            <div className="btn-sparkles-wrap">
-              <Sparkles
-                density={600}
-                speed={0.8}
-                size={1}
-                direction="top"
-                opacitySpeed={1.5}
-                color="#4A7BFF"
-                className="absolute inset-0 w-full h-full"
-              />
-              <div className="btn-sparkles-glow" />
-            </div>
+              Why Delt beats<br />the bank.
+            </h2>
+          </div>
+          <div>
+            <p
+              className="text-[15px] leading-[1.6]"
+              style={{ color: 'var(--dc-on-light-muted)', fontFamily: 'var(--dc-font-body)' }}
+            >
+              Every row is a median across the last 12 months of our book, measured
+              against publicly-reported bank SBA 7(a) averages. Updated quarterly.
+            </p>
           </div>
         </div>
-      </section>
 
-      <style>{`
-        .btn-section {
-          background: #041E42;
-          padding: 0 48px 0;
-          position: relative;
-          overflow: hidden;
-        }
+        {/* Comparison table */}
+        <div
+          className="mt-12 rounded-[12px] overflow-hidden"
+          style={{
+            background: 'var(--dc-bg-white)',
+            border: '1px solid rgba(4, 30, 66, 0.08)',
+            boxShadow: 'var(--dc-shadow-card)',
+          }}
+        >
+          {/* Header row */}
+          <div
+            className="grid items-center"
+            style={{
+              gridTemplateColumns: '160px 1fr 1fr',
+              borderBottom: '1px solid rgba(4, 30, 66, 0.08)',
+            }}
+          >
+            <div
+              className="px-5 py-5 text-[11px] tracking-[0.14em]"
+              style={{
+                fontFamily: 'var(--dc-font-mono)',
+                color: 'var(--dc-on-light-subtle)',
+                textTransform: 'uppercase',
+              }}
+            >
+              — METRIC
+            </div>
+            <div
+              className="px-5 py-5 flex items-center gap-3"
+              style={{ borderLeft: '1px solid rgba(4, 30, 66, 0.06)' }}
+            >
+              <div
+                className="h-7 w-7 rounded-full flex items-center justify-center"
+                style={{ background: 'rgba(4, 30, 66, 0.06)' }}
+              >
+                <span style={{ fontSize: 12, color: 'var(--dc-on-light-subtle)' }}>⌂</span>
+              </div>
+              <div>
+                <div
+                  style={{
+                    fontFamily: 'var(--dc-font-display)',
+                    fontWeight: 600,
+                    fontSize: 15,
+                    color: 'var(--dc-on-light)',
+                  }}
+                >
+                  Traditional bank
+                </div>
+                <div
+                  className="text-[10px] tracking-[0.14em] mt-0.5"
+                  style={{
+                    fontFamily: 'var(--dc-font-mono)',
+                    color: 'var(--dc-on-light-subtle)',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  SBA 7(A) MEDIAN
+                </div>
+              </div>
+            </div>
+            <div
+              className="px-5 py-5 flex items-center gap-3"
+              style={{
+                borderLeft: '1px solid rgba(4, 30, 66, 0.06)',
+                background: 'rgba(73, 69, 255, 0.04)',
+              }}
+            >
+              <div
+                className="h-7 w-7 rounded-md flex items-center justify-center"
+                style={{ background: 'var(--dc-indigo)' }}
+              >
+                <span style={{ fontSize: 14, color: '#fff', fontWeight: 600 }}>+</span>
+              </div>
+              <div>
+                <div
+                  style={{
+                    fontFamily: 'var(--dc-font-display)',
+                    fontWeight: 600,
+                    fontSize: 15,
+                    color: 'var(--dc-on-light)',
+                  }}
+                >
+                  Delt.
+                </div>
+                <div
+                  className="text-[10px] tracking-[0.14em] mt-0.5"
+                  style={{
+                    fontFamily: 'var(--dc-font-mono)',
+                    color: 'var(--dc-indigo)',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  LIVE BOOK · Q1 TRAILING
+                </div>
+              </div>
+            </div>
+          </div>
 
-        .btn-card {
-          max-width: 1600px;
-          margin: 0 auto;
-          background: transparent;
-          border: none;
-          border-radius: 0;
-          padding: 48px 64px 0;
-          position: relative;
-        }
+          {/* Body rows */}
+          {ROWS.map((row, i) => (
+            <div
+              key={row.num}
+              className="grid items-center"
+              style={{
+                gridTemplateColumns: '160px 1fr 1fr',
+                borderBottom:
+                  i === ROWS.length - 1 ? 'none' : '1px solid rgba(4, 30, 66, 0.06)',
+              }}
+            >
+              <div className="px-5 py-5">
+                <div
+                  className="text-[10px] tracking-[0.14em] mb-1"
+                  style={{
+                    fontFamily: 'var(--dc-font-mono)',
+                    color: 'var(--dc-on-light-subtle)',
+                  }}
+                >
+                  {row.num}
+                </div>
+                <div
+                  style={{
+                    fontFamily: 'var(--dc-font-display)',
+                    fontWeight: 600,
+                    fontSize: 14,
+                    color: 'var(--dc-on-light)',
+                    letterSpacing: '-0.01em',
+                  }}
+                >
+                  {row.metric}
+                </div>
+              </div>
+              <div
+                className="px-5 py-5 flex items-center gap-3"
+                style={{ borderLeft: '1px solid rgba(4, 30, 66, 0.06)' }}
+              >
+                <span
+                  className="h-5 w-5 rounded-full flex items-center justify-center text-[11px]"
+                  style={{
+                    background: 'rgba(4, 30, 66, 0.06)',
+                    color: 'var(--dc-on-light-subtle)',
+                  }}
+                >
+                  ×
+                </span>
+                <span
+                  style={{
+                    fontFamily: 'var(--dc-font-body)',
+                    fontSize: 14,
+                    color: 'var(--dc-on-light-muted)',
+                  }}
+                >
+                  {row.legacy}
+                </span>
+              </div>
+              <div
+                className="px-5 py-5 flex items-center justify-between gap-3"
+                style={{ borderLeft: '1px solid rgba(4, 30, 66, 0.06)' }}
+              >
+                <div className="flex items-center gap-3">
+                  <span
+                    className="h-5 w-5 rounded-full flex items-center justify-center text-[11px]"
+                    style={{
+                      background: 'rgba(73, 69, 255, 0.12)',
+                      color: 'var(--dc-indigo)',
+                    }}
+                  >
+                    ✓
+                  </span>
+                  <span
+                    style={{
+                      fontFamily: 'var(--dc-font-body)',
+                      fontSize: 14,
+                      fontWeight: 500,
+                      color: 'var(--dc-on-light)',
+                    }}
+                  >
+                    {row.delt}
+                  </span>
+                </div>
+                {row.pill && (
+                  <span
+                    className="px-2.5 py-1 rounded-md"
+                    style={{
+                      fontFamily: 'var(--dc-font-mono)',
+                      fontSize: 10,
+                      letterSpacing: '0.14em',
+                      background: 'rgba(73, 69, 255, 0.10)',
+                      color: 'var(--dc-indigo-deep)',
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    {row.pill}
+                  </span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
 
-        .btn-stats {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-          margin: 0 0 72px;
-          padding: 0 8%;
-        }
-        .btn-stat {
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-          flex: 0 0 auto;
-        }
-        .btn-stat:last-child {
-          align-items: flex-end;
-          text-align: right;
-        }
-        .btn-stat:nth-child(2),
-        .btn-stat:nth-child(3) {
-          align-items: center;
-          text-align: center;
-        }
-        .btn-eyebrow {
-          font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
-          font-size: 12px;
-          font-weight: 500;
-          letter-spacing: 0.06em;
-          line-height: 1.4;
-          text-transform: uppercase;
-          color: rgba(247,245,240,0.55);
-          margin: 0 0 32px 8%;
-        }
-        .btn-stat-label {
-          font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
-          font-size: 11px;
-          font-weight: 500;
-          letter-spacing: 0.06em;
-          text-transform: uppercase;
-          color: rgba(247,245,240,0.45);
-          margin-bottom: 6px;
-        }
-        .btn-stat-value {
-          font-family: 'Manrope', 'Inter Tight', sans-serif;
-          font-size: clamp(2.5rem, 5vw, 4rem);
-          font-weight: 600;
-          color: #F7F5F0;
-          letter-spacing: -0.035em;
-          line-height: 1;
-        }
-        .btn-stat-trait {
-          font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
-          font-size: 11px;
-          font-weight: 500;
-          letter-spacing: 0.06em;
-          text-transform: uppercase;
-          color: #1F845A;
-          margin-top: 4px;
-        }
-        .btn-stat-trait::before { content: "● "; }
-        .btn-italic-accent {
-          font-family: 'Source Serif Pro', Georgia, serif;
-          font-style: italic;
-          font-weight: 400;
-          color: #F7F5F0;
-        }
-
-        /* Globe layout */
-        .btn-globe-area {
-          position: relative;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-        }
-        .btn-globe-text {
-          position: relative;
-          text-align: center;
-          z-index: 5;
-          padding-bottom: 32px;
-        }
-
-        /*
-         * Globe is 90vw wide so it fills the section nicely — clearly readable as a sphere.
-         * Bottom ~30% is hidden by negative margin + clipped by section overflow:hidden.
-         * Gradient fade softens the cut.
-         */
-        .btn-globe-wrap {
-          width: 90vw;
-          height: 90vw;
-          max-width: 1200px;
-          max-height: 1200px;
-          margin-top: 16px;
-          /* Hide roughly the bottom 30% */
-          margin-bottom: -28vw;
-          position: relative;
-          z-index: 2;
-          flex-shrink: 0;
-        }
-
-        /* Smooth bottom fade */
-        .btn-globe-fade {
-          position: absolute;
-          bottom: 0;
-          left: -48px;
-          right: -48px;
-          height: 22vw;
-          background: linear-gradient(to bottom, rgba(4,30,66,0) 0%, rgba(4,30,66,0.75) 60%, #041E42 90%);
-          pointer-events: none;
-          z-index: 3;
-        }
-
-        .btn-globe-heading {
-          font-family: 'Manrope', 'Inter Tight', sans-serif;
-          font-size: clamp(2rem, 4vw, 3.5rem);
-          font-weight: 600;
-          color: #F7F5F0;
-          letter-spacing: -0.035em;
-          line-height: 1.05;
-          margin: 0 0 16px;
-        }
-        .btn-globe-sub {
-          font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
-          font-size: 16px;
-          color: rgba(247,245,240,0.55);
-          margin: 0;
-        }
-        .btn-schedule-btn {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
-          font-size: 13px;
-          font-weight: 500;
-          color: #F7F5F0;
-          background: transparent;
-          border: 1px solid rgba(247,245,240,0.25);
-          padding: 12px 18px;
-          border-radius: 6px;
-          text-decoration: none;
-          transition: background 150ms ease-out, border-color 150ms ease-out;
-        }
-        .btn-schedule-btn:hover {
-          background: rgba(247,245,240,0.06);
-          border-color: rgba(247,245,240,0.40);
-        }
-        .btn-schedule-arrow {
-          font-size: 18px;
-          transition: transform 0.2s;
-        }
-        .btn-schedule-btn:hover .btn-schedule-arrow {
-          transform: translateX(2px);
-        }
-
-        /* Sparkles */
-        .btn-sparkles-wrap {
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          pointer-events: none;
-          z-index: 1;
-        }
-        .btn-sparkles-glow {
-          position: absolute;
-          bottom: 0;
-          left: 0;
-          width: 100%;
-          height: 60%;
-          background: radial-gradient(ellipse 80% 60% at 50% 100%, rgba(74,123,255,0.15), transparent 70%);
-          pointer-events: none;
-          filter: blur(40px);
-        }
-
-        @media (max-width: 900px) {
-          .btn-section { padding: 0 16px; }
-          .btn-card { padding: 40px 24px 0; }
-          .btn-stats { flex-wrap: wrap; gap: 32px; margin-bottom: 60px; }
-          .btn-globe-wrap {
-            width: 96vw;
-            height: 96vw;
-            margin-bottom: -32vw;
-          }
-          .btn-globe-fade { height: 28vw; left: -16px; right: -16px; }
-        }
-      `}</style>
-    </>
+        {/* Highlight stat cards */}
+        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+          {HIGHLIGHTS.map((h) => (
+            <div
+              key={h.label}
+              className="rounded-[12px] p-6 flex items-center justify-between"
+              style={{
+                background: 'var(--dc-bg-white)',
+                border: '1px solid rgba(4, 30, 66, 0.08)',
+                boxShadow: 'var(--dc-shadow-card)',
+              }}
+            >
+              <div>
+                <div
+                  className="text-[10px] tracking-[0.14em] mb-2"
+                  style={{
+                    fontFamily: 'var(--dc-font-mono)',
+                    color: 'var(--dc-on-light-subtle)',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  {h.label}
+                </div>
+                <div
+                  style={{
+                    fontFamily: 'var(--dc-font-display)',
+                    fontWeight: 600,
+                    fontSize: 36,
+                    letterSpacing: '-0.03em',
+                    color: 'var(--dc-on-light)',
+                    lineHeight: 1,
+                  }}
+                >
+                  {h.value}
+                </div>
+                <div
+                  className="mt-2 text-[12px]"
+                  style={{
+                    fontFamily: 'var(--dc-font-body)',
+                    color: 'var(--dc-on-light-subtle)',
+                  }}
+                >
+                  {h.sub}
+                </div>
+              </div>
+              <div
+                className="h-9 w-9 rounded-full flex items-center justify-center text-[14px]"
+                style={{
+                  background: 'rgba(4, 30, 66, 0.05)',
+                  color: h.color,
+                  fontWeight: 600,
+                }}
+              >
+                {h.icon}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }
+
+export default ByTheNumbers;
