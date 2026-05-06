@@ -40,25 +40,35 @@ export function CalculatorPage() {
   return (
     <div className="min-h-screen bg-[#F6F7FB]">
       {/* Hero */}
-      <div className="pt-32 pb-16 text-center">
+      <div className="pt-28 pb-12 text-center px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#4945FF] text-white rounded-full text-sm mb-4" style={{ fontWeight: 600 }}>
-            <CheckCircle className="w-4 h-4" />
-            Free processing on first $5K in sales*
-          </div>
-          <p className="text-xs text-[#475569] mt-2 mb-4">*Applies to new accounts on the Free plan. Subject to eligibility. See <Link to="/terms" className="underline">Terms</Link>.</p>
+          <div className="mb-4" style={{
+            fontFamily: "'JetBrains Mono', ui-monospace, monospace",
+            fontSize: 11,
+            fontWeight: 600,
+            letterSpacing: '0.18em',
+            textTransform: 'uppercase',
+            color: '#475569',
+          }}>— Savings Calculator</div>
 
-          <h1 className="text-5xl md:text-6xl text-[#041E42] mb-4" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 800 }}>
+          <h1 className="text-5xl md:text-6xl text-[#041E42] mb-4" style={{ fontFamily: "'Manrope', system-ui, sans-serif", fontWeight: 800, letterSpacing: '-0.035em', lineHeight: 1.02 }}>
             Calculate your{' '}
-            <span className="italic text-[#4945FF]" style={{ fontFamily: "'Playfair Display', serif" }}>
-              savings
+            <span className="italic text-[#4945FF]" style={{ fontFamily: "'Source Serif Pro', Georgia, serif", fontWeight: 500 }}>
+              savings.
             </span>
           </h1>
-          <p className="text-[#475569] text-lg">Calculate your savings with Delt</p>
+          <p className="text-[#475569] text-base max-w-xl mx-auto">See exactly how much you'd keep on Delt vs. your current processor. Real numbers, no fine print.</p>
+          <div className="mt-5">
+            <span className="inline-flex items-center gap-2 px-4 py-2 bg-[#EEF1FF] text-[#4945FF] rounded-md text-sm" style={{ fontWeight: 600 }}>
+              <CheckCircle className="w-4 h-4" />
+              Free processing on first $5K in sales*
+            </span>
+            <p className="text-xs text-[#475569] mt-2">*Applies to new accounts on the Free plan. See <Link to="/terms" className="underline">Terms</Link>.</p>
+          </div>
         </motion.div>
       </div>
 

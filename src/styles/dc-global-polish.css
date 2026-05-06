@@ -1,0 +1,112 @@
+/* ============================================================
+   DELT CAPITAL GLOBAL POLISH
+   Retrofits editorial typography + button rhythm across every
+   page of deltpay-site. Designed to be additive — only changes
+   what makes the most visible difference.
+   ============================================================ */
+
+/* ---- Editorial font for all display headings site-wide ---- */
+h1, h2, h3 {
+  font-family: var(--dc-font-display) !important;
+  letter-spacing: -0.025em;
+}
+h1 { letter-spacing: -0.045em; line-height: 1.02; }
+h2 { letter-spacing: -0.035em; line-height: 1.06; }
+h3 { letter-spacing: -0.025em; line-height: 1.15; }
+
+/* The italic-serif "accent word" pattern — drop it inline on any page */
+.dc-accent {
+  font-family: var(--dc-font-serif-italic) !important;
+  font-style: italic;
+  font-weight: 400;
+  color: var(--dc-indigo-soft);
+}
+
+/* ---- Tighten button radii globally to match deltcapital 6px ---- */
+button,
+.btn,
+[class*='rounded-full'][class*='bg-'][class*='4945FF'],
+a[class*='rounded-full'][class*='bg-'][class*='4945FF'] {
+  /* don't blast pill nav avatars — only large CTA buttons w/ explicit indigo bg */
+}
+
+/* Override on any element that uses the canonical indigo:
+   - Tailwind arbitrary class .bg-[#4945FF]
+   - Inline style backgroundColor set to the indigo
+   This pulls every CTA into 6px + no glow. */
+[class*='bg-[#4945FF]'],
+[class*='bg-[#4945ff]'],
+.bg-purple-600,
+.bg-indigo-600 {
+  border-radius: 6px !important;
+  box-shadow: none !important;
+}
+[class*='bg-[#4945FF]']:hover,
+[class*='bg-[#4945ff]']:hover {
+  background-color: var(--dc-indigo-deep) !important;
+}
+
+/* Soften Toast/old-style 28px+ pill buttons */
+[class*='rounded-[28px]'],
+[class*='rounded-[24px]'],
+[class*='rounded-[20px]'],
+[class*='rounded-[16px]'][class*='bg-[#4945FF]'] {
+  border-radius: 6px !important;
+}
+
+/* ---- Standardise the body font ---- */
+body {
+  font-family: var(--dc-font-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ---- Mono eyebrow utility for any page that opts in ---- */
+.dc-page-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--dc-font-mono);
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--dc-indigo);
+}
+.dc-page-eyebrow::before { content: "— "; }
+
+/* ---- Page background — paper instead of pure white for warmth ---- */
+.dc-paper-bg {
+  background: var(--dc-bg-paper);
+}
+
+/* ---- Hairline rule helpers ---- */
+.dc-hairline {
+  border-top: 1px solid rgba(4, 30, 66, 0.08);
+}
+
+/* ---- Section eyebrow shorthand: any UPPERCASE-text + tracking pattern
+   inside .dc-section gets the mono treatment ---- */
+.dc-section .text-xs.tracking-widest,
+.dc-section [data-eyebrow] {
+  font-family: var(--dc-font-mono);
+}
+
+/* ---- Soften card shadows globally — replace heavy drops with the
+   subtle deltcapital pair ---- */
+[class*='shadow-2xl'],
+[class*='shadow-xl'] {
+  box-shadow: 0 1px 2px rgba(4, 30, 66, 0.04), 0 12px 36px rgba(4, 30, 66, 0.08) !important;
+}
+
+/* ---- "Powered by Delt Capital" stamp utility ---- */
+.dc-powered-by {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--dc-font-mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--dc-on-light-subtle);
+}
+.dc-powered-by::before { content: "—"; opacity: 0.6; }

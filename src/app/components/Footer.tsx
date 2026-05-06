@@ -12,12 +12,23 @@ const INDIGO = '#4945FF';
 const INDIGO_SOFT = '#A5B4FC';
 
 const PRODUCT = [
-  { label: 'Payments',   href: '/payments' },
-  { label: 'Capital',    href: '/capital' },
-  { label: 'Websites',   href: '/website-examples' },
-  { label: 'Lens AI',    href: '/lens-ai' },
-  { label: 'Pricing',    href: '/pricing' },
-  { label: 'Calculator', href: '/calculator' },
+  { label: 'Payments',           href: '/payments' },
+  { label: 'Capital',            href: '/capital' },
+  { label: 'Websites',           href: '/website-examples' },
+  { label: 'Lens AI',            href: '/lens-ai' },
+  { label: 'International / USDT', href: '/solutions/international-usdt' },
+  { label: 'High Risk',          href: '/solutions/high-risk-processing' },
+  { label: 'Pricing',            href: '/pricing' },
+  { label: 'Calculator',         href: '/calculator' },
+];
+
+const BUSINESS = [
+  { label: 'Restaurants',           href: '/industries/restaurants' },
+  { label: 'Retail & E-commerce',   href: '/industries/retail' },
+  { label: 'Professional Services', href: '/industries/professional-services' },
+  { label: 'Salon & Barber',        href: '/industries/salon-barber' },
+  { label: 'Health & Wellness',     href: '/industries/health-wellness' },
+  { label: 'See all',               href: '/business-types' },
 ];
 
 const COMPANY = [
@@ -30,12 +41,12 @@ const COMPANY = [
 ];
 
 const RESOURCES = [
-  { label: 'Help Center', href: '/help-center' },
-  { label: 'Blog',        href: '/blog' },
-  { label: 'How it works',href: '/how-it-works' },
-  { label: 'Apply',       href: '/apply' },
-  { label: 'Get a quote', href: '/get-a-quote' },
-  { label: 'Support',     href: '/support' },
+  { label: 'Help Center',  href: '/help-center' },
+  { label: 'Blog',         href: '/blog' },
+  { label: 'How it works', href: '/how-it-works' },
+  { label: 'Apply',        href: '/apply' },
+  { label: 'Get a quote',  href: '/get-a-quote' },
+  { label: 'Support',      href: '/support' },
 ];
 
 export function Footer() {
@@ -72,6 +83,17 @@ export function Footer() {
             <div className="dc-footer-eyebrow">— PRODUCT</div>
             <ul className="dc-footer-list">
               {PRODUCT.map((l) => (
+                <li key={l.href}>
+                  <Link to={l.href} className="dc-footer-link">{l.label}</Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="dc-footer-col">
+            <div className="dc-footer-eyebrow">— BY BUSINESS</div>
+            <ul className="dc-footer-list">
+              {BUSINESS.map((l) => (
                 <li key={l.href}>
                   <Link to={l.href} className="dc-footer-link">{l.label}</Link>
                 </li>
@@ -131,9 +153,16 @@ export function Footer() {
         }
         .dc-footer-grid {
           display: grid;
-          grid-template-columns: 1.4fr 1fr 1fr 1fr;
-          gap: 56px;
+          grid-template-columns: 1.4fr 1fr 1fr 1fr 1fr;
+          gap: 44px;
           margin-bottom: 64px;
+        }
+        @media (max-width: 1100px) {
+          .dc-footer-grid {
+            grid-template-columns: 1fr 1fr;
+            gap: 36px;
+          }
+          .dc-footer-brand { grid-column: span 2; max-width: 600px; }
         }
 
         /* Brand block */

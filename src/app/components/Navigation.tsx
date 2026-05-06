@@ -1,509 +1,717 @@
 import { useState, useRef, useEffect } from 'react';
-import { ArrowRight, ChevronDown, Menu, X, Search } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
+import {
+  Search, X, ArrowRight, Globe, CreditCard, DollarSign, BarChart3,
+  Star, User, AlignLeft, HelpCircle, LayoutDashboard, Calculator,
+  ChevronDown, Menu, Globe2, ShieldAlert,
+} from 'lucide-react';
 
-/* ════════════════════════════════════════════════════════════
-   NAVIGATION — Delt Capital editorial style
-   Navy bar, mono ticker on top, simple text nav, indigo CTA.
-   Ported from deltcapital.com layout.
-   ════════════════════════════════════════════════════════════ */
+/* ──────────────────────────────────────────────────────────────
+   Navigation — Delt Capital chrome + full DeltPay mega-menus
+   ────────────────────────────────────────────────────────────── */
 
-const NAVY = '#041E42';
-const NAVY_DEEP = '#020E22';
-const CREAM = '#F7F5F0';
-const INDIGO = '#4945FF';
-const INDIGO_SOFT = '#A5B4FC';
-const SUCCESS = '#1F845A';
-
-/* ─── Ticker entries (mono) ──────────────────────────── */
+/* Top ticker entries */
 const TICKER = [
-  { name: 'ROSARIO CON.', amt: '$180K', x: '1.14×', state: 'WIRED' },
-  { name: 'BLOOM BTY.',   amt: '$65K',  x: '1.19×', state: 'FUNDED' },
-  { name: 'WILLIAMS LOG.',amt: '$80K',  x: '1.17×', state: 'CLOSED' },
-  { name: 'WARD MKT.',    amt: '$50K',  x: '1.18×', state: 'WIRED' },
-  { name: 'ROBERTS AUTO', amt: '$95K',  x: '1.15×', state: 'CLOSED' },
-  { name: 'DELT REST.',   amt: '$110K', x: '1.16×', state: 'CLOSED' },
-  { name: 'ALPINE CAFE',  amt: '$42K',  x: '1.20×', state: 'FUNDED' },
-  { name: 'KENT SUPPLY',  amt: '$140K', x: '1.13×', state: 'WIRED' },
-  { name: 'NORA BAKERY',  amt: '$28K',  x: '1.21×', state: 'FUNDED' },
+  '$110K  1.16×  • CLOSED',
+  'ROSARIO CON.   $180K  1.14×  • WIRED',
+  'BLOOM BTY.    $65K   1.19×  • FUNDED',
+  'WILLIAMS LOG.  $80K   1.17×  • CLOSED',
+  'WARD MKT.     $50K   1.18×  • WIRED',
+  'ROBERTS AUTO  $95K   1.15×  • CLOSED',
+  'DELT REST.    $110K  1.16×  • CLOSED',
+  'ALPINE CAFE   $42K   1.20×  • FUNDED',
+  'KENT SUPPLY   $140K  1.13×  • WIRED',
 ];
 
-/* ─── Primary nav items (mirrors deltcapital) ───────── */
-const NAV_LINKS = [
-  { label: 'How it works', href: '/how-it-works' },
-  { label: 'Pricing',       href: '/pricing' },
+/* ── Solutions / Products mega-menu ── */
+const productsCore = [
+  { label: 'Payments',  description: 'In-store, online & mobile payment processing',  href: '/payments',         icon: CreditCard },
+  { label: 'Capital',   description: 'Revenue-based funding with fast approvals',     href: '/capital',          icon: DollarSign },
+  { label: 'Websites',  description: 'Professional websites built and managed for you', href: '/website-examples', icon: Globe },
+  { label: 'Lens AI',   description: 'Ask your business questions in plain English',  href: '/lens-ai',          icon: BarChart3 },
+];
+
+const productsSecondary = [
+  { label: 'How it works',  href: '/how-it-works' },
+  { label: 'Compare plans', href: '/pricing' },
+  { label: 'See a demo',    href: '/sandbox' },
   { label: 'Calculator',    href: '/calculator' },
-  { label: 'About',         href: '/about' },
-  { label: 'FAQ',           href: '/help-center' },
-  { label: 'Talk',          href: '/contact' },
 ];
 
-/* ─── Solutions dropdown content (preserved) ────────── */
-const SOLUTIONS = [
-  { label: 'Payments',   href: '/payments',          blurb: 'Card processing with transparent rates.' },
-  { label: 'Capital',    href: '/capital',           blurb: 'Revenue-based funding, fast approvals.' },
-  { label: 'Websites',   href: '/website-examples',  blurb: 'Built for you in five days.' },
-  { label: 'Lens AI',    href: '/lens-ai',           blurb: 'Ask your business in plain English.' },
+/* ── By Business Type mega-menu ── */
+const businessTypes = [
+  { label: 'Restaurants & Food Service', description: 'POS, online ordering, table management',  href: '/industries/restaurants' },
+  { label: 'Retail & E-commerce',        description: 'Inventory, checkout, multi-channel',      href: '/industries/retail' },
+  { label: 'Professional Services',      description: 'Invoicing, scheduling, client management', href: '/industries/professional-services' },
+  { label: 'Salon & Barber',             description: 'Appointments, memberships, tipping',       href: '/industries/salon-barber' },
+  { label: 'Health & Wellness',          description: 'Bookings, memberships, HIPAA-ready',       href: '/industries/health-wellness' },
 ];
+
+const specialized = [
+  { label: 'International / USDT',   description: 'Same-day cross-border, settle in stablecoin',  href: '/solutions/international-usdt',   icon: Globe2 },
+  { label: 'High Risk Processing',   description: 'Custom rates for every high-risk vertical',    href: '/solutions/high-risk-processing', icon: ShieldAlert },
+];
+
+/* ── Learn mega-menu ── */
+const learnLinks = [
+  { label: "What's New",   description: 'Product updates & releases',          href: '/whats-new',     icon: Star,         badge: 'LATEST' },
+  { label: 'About Us',     description: 'Our story, team & mission',           href: '/about',         icon: User },
+  { label: 'Blog',         description: 'Insights for growing businesses',     href: '/blog',          icon: AlignLeft },
+  { label: 'Reviews',      description: 'What merchants are saying',           href: '/reviews',       icon: Star },
+  { label: 'Case Studies', description: 'Real stories. Real numbers.',         href: '/case-studies',  icon: AlignLeft },
+  { label: 'Careers',      description: 'Join the team',                       href: '/careers',       icon: User },
+];
+
+/* ── Support dropdown ── */
+const supportLinks = [
+  { label: 'Help Center',        description: 'Common questions answered',     href: '/help-center', icon: HelpCircle },
+  { label: 'Contact & Support',  description: 'Sales, support, partnerships',  href: '/contact',     icon: CreditCard },
+];
+
+/* Mono eyebrow */
+function MonoEyebrow({ children }: { children: React.ReactNode }) {
+  return (
+    <div
+      className="text-[10px] tracking-[0.18em] mb-3 pl-0.5"
+      style={{
+        fontFamily: 'var(--dc-font-mono)',
+        color: 'var(--dc-on-light-subtle)',
+        textTransform: 'uppercase',
+      }}
+    >
+      — {children}
+    </div>
+  );
+}
+
+/* ── Logo ── */
+function DeltPayLogo({ onDark = true }: { onDark?: boolean }) {
+  const cream = '#F7F5F0';
+  const indigo = '#4945FF';
+  return (
+    <div className="flex items-center gap-2.5">
+      {/* Two-bar mark */}
+      <div className="flex items-end gap-[3px]" aria-hidden>
+        <span
+          className="block rounded-[1px]"
+          style={{
+            width: 4, height: 16,
+            background: onDark ? cream : '#041E42',
+          }}
+        />
+        <span
+          className="block rounded-[1px]"
+          style={{ width: 4, height: 22, background: indigo }}
+        />
+      </div>
+      <span
+        className="font-semibold tracking-[-0.02em] text-[20px]"
+        style={{
+          fontFamily: 'var(--dc-font-display)',
+          color: onDark ? cream : '#041E42',
+        }}
+      >
+        Delt<span style={{ color: indigo }}>Pay</span>
+      </span>
+    </div>
+  );
+}
+
+/* ── Mega-menu container ── */
+function MegaPanel({ children, width = 920 }: { children: React.ReactNode; width?: number }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 10 }}
+      transition={{ duration: 0.2, ease: [0.2, 0.8, 0.2, 1] }}
+      className="absolute left-1/2 -translate-x-1/2 top-full mt-3 z-[60]"
+      style={{ width }}
+    >
+      <div
+        className="rounded-[10px] overflow-hidden"
+        style={{
+          background: '#FFFFFF',
+          border: '1px solid rgba(4, 30, 66, 0.10)',
+          boxShadow: '0 24px 72px rgba(4, 30, 66, 0.18), 0 4px 12px rgba(4, 30, 66, 0.06)',
+        }}
+      >
+        {children}
+      </div>
+    </motion.div>
+  );
+}
+
+/* ── Mega item link ── */
+function MegaItem({
+  label, description, href, icon: Icon, badge,
+}: {
+  label: string;
+  description?: string;
+  href: string;
+  icon?: any;
+  badge?: string;
+}) {
+  return (
+    <Link
+      to={href}
+      className="group flex items-start gap-3 p-3 -m-1 rounded-[6px] transition-colors"
+      style={{ }}
+      onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(73, 69, 255, 0.05)')}
+      onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+    >
+      {Icon && (
+        <div
+          className="flex-shrink-0 mt-0.5 h-8 w-8 rounded-[6px] flex items-center justify-center"
+          style={{ background: 'rgba(4, 30, 66, 0.05)' }}
+        >
+          <Icon size={16} color="#041E42" strokeWidth={1.75} />
+        </div>
+      )}
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <div
+            className="text-[14px] font-semibold leading-tight"
+            style={{ color: '#041E42', fontFamily: 'var(--dc-font-display)' }}
+          >
+            {label}
+          </div>
+          {badge && (
+            <span
+              className="px-1.5 py-0.5 rounded-[4px] text-[9px] tracking-[0.14em]"
+              style={{
+                fontFamily: 'var(--dc-font-mono)',
+                background: 'rgba(73, 69, 255, 0.10)',
+                color: '#3730A3',
+              }}
+            >
+              {badge}
+            </span>
+          )}
+        </div>
+        {description && (
+          <div
+            className="mt-1 text-[12px] leading-[1.45]"
+            style={{ color: '#697386', fontFamily: 'var(--dc-font-body)' }}
+          >
+            {description}
+          </div>
+        )}
+      </div>
+    </Link>
+  );
+}
+
+/* ── Top-level dropdown trigger button ── */
+function NavTrigger({
+  label, open, onEnter, onLeave,
+}: {
+  label: string;
+  open: boolean;
+  onEnter: () => void;
+  onLeave: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onMouseEnter={onEnter}
+      onMouseLeave={onLeave}
+      className="inline-flex items-center gap-1 text-[13px] font-medium tracking-[-0.005em] transition-colors px-1 py-2"
+      style={{
+        color: open ? '#FFFFFF' : 'rgba(247, 245, 240, 0.78)',
+        fontFamily: 'var(--dc-font-body)',
+      }}
+    >
+      {label}
+      <ChevronDown
+        size={12}
+        style={{
+          transition: 'transform 200ms',
+          transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
+          opacity: 0.6,
+        }}
+      />
+    </button>
+  );
+}
 
 export function Navigation() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [solutionsOpen, setSolutionsOpen] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Close menus on route change
+  const [openMenu, setOpenMenu] = useState<null | 'products' | 'biz' | 'learn' | 'support'>(null);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const closeTimer = useRef<number | null>(null);
+
+  const openWithCancel = (m: typeof openMenu) => {
+    if (closeTimer.current) window.clearTimeout(closeTimer.current);
+    setOpenMenu(m);
+  };
+  const scheduleClose = () => {
+    if (closeTimer.current) window.clearTimeout(closeTimer.current);
+    closeTimer.current = window.setTimeout(() => setOpenMenu(null), 140);
+  };
+
+  // Close on route change
   useEffect(() => {
-    setSolutionsOpen(false);
+    setOpenMenu(null);
     setMobileOpen(false);
   }, [location.pathname]);
 
-  const openSolutions = () => {
-    if (closeTimer.current) clearTimeout(closeTimer.current);
-    setSolutionsOpen(true);
-  };
-  const scheduleClose = () => {
-    if (closeTimer.current) clearTimeout(closeTimer.current);
-    closeTimer.current = setTimeout(() => setSolutionsOpen(false), 150);
-  };
-
   return (
-    <header className="dc-nav-header">
-      {/* ─── Top ticker bar ─────────────────────────── */}
-      <div className="dc-ticker-bar">
-        <div className="dc-ticker-track">
-          {[...TICKER, ...TICKER].map((t, i) => (
-            <span key={i} className="dc-ticker-item">
-              <span className="dc-ticker-name">{t.name}</span>
-              <span className="dc-ticker-amt">{t.amt}</span>
-              <span className="dc-ticker-x">{t.x}</span>
-              <span className="dc-ticker-dot">●</span>
-              <span className={`dc-ticker-state dc-ticker-state--${t.state.toLowerCase()}`}>{t.state}</span>
+    <header
+      className="dc-nav-header sticky top-0 z-50"
+      style={{ background: 'var(--dc-bg-navy)' }}
+    >
+      {/* Top ticker bar */}
+      <div
+        className="dc-ticker"
+        style={{
+          background: '#020E22',
+          borderBottom: '1px solid rgba(247, 245, 240, 0.08)',
+          height: 32,
+          overflow: 'hidden',
+          position: 'relative',
+        }}
+      >
+        <div
+          className="flex whitespace-nowrap"
+          style={{
+            fontFamily: 'var(--dc-font-mono)',
+            color: 'rgba(247, 245, 240, 0.55)',
+            fontSize: 11,
+            letterSpacing: '0.06em',
+            textTransform: 'uppercase',
+            animation: 'dc-ticker-scroll 90s linear infinite',
+            paddingTop: 10,
+            gap: 40,
+          }}
+        >
+          {[...TICKER, ...TICKER, ...TICKER].map((t, i) => (
+            <span key={i} className="inline-flex items-center gap-2">
+              <span style={{ color: 'rgba(247, 245, 240, 0.8)', fontWeight: 500 }}>
+                {t.split('  ')[0]}
+              </span>
+              <span style={{ color: 'rgba(247, 245, 240, 0.4)' }}>
+                {t.split('  ').slice(1).join(' ')}
+              </span>
+              <span style={{ color: 'rgba(247, 245, 240, 0.25)' }}>·</span>
             </span>
           ))}
         </div>
+        <style>{`@keyframes dc-ticker-scroll { from { transform: translateX(0) } to { transform: translateX(-33.333%) } }`}</style>
       </div>
 
-      {/* ─── Main nav row ──────────────────────────── */}
-      <div className="dc-nav-row">
-        <div className="dc-nav-inner">
+      {/* Main nav row */}
+      <nav
+        className="relative"
+        style={{
+          borderBottom: '1px solid rgba(247, 245, 240, 0.08)',
+          height: 64,
+        }}
+      >
+        <div className="mx-auto h-full flex items-center justify-between gap-6 px-6 lg:px-10 max-w-[1400px]">
           {/* Logo */}
-          <Link to="/" className="dc-logo" aria-label="Delt home">
-            <span className="dc-logo-mark" aria-hidden>
-              <span className="dc-logo-bar dc-logo-bar--cream" />
-              <span className="dc-logo-bar dc-logo-bar--indigo" />
-            </span>
-            <span className="dc-logo-text">
-              <span className="dc-logo-text-light">Delt</span>
-              <span className="dc-logo-text-indigo">Pay</span>
-            </span>
+          <Link to="/" className="flex items-center" aria-label="DeltPay home">
+            <DeltPayLogo onDark />
           </Link>
 
-          {/* Center nav */}
-          <nav className="dc-nav-center" aria-label="Primary">
-            {/* Solutions dropdown */}
+          {/* Center menu (desktop) */}
+          <div
+            className="hidden lg:flex items-center gap-7 relative"
+            onMouseLeave={scheduleClose}
+          >
+            {/* PRODUCTS */}
             <div
-              className="dc-nav-dropdown-wrap"
-              onMouseEnter={openSolutions}
-              onMouseLeave={scheduleClose}
+              className="relative"
+              onMouseEnter={() => openWithCancel('products')}
             >
-              <button
-                type="button"
-                className="dc-nav-link"
-                onFocus={openSolutions}
-                onBlur={scheduleClose}
-                aria-expanded={solutionsOpen}
-                aria-haspopup="true"
-              >
-                Solutions
-                <ChevronDown size={14} className="dc-chevron" />
-              </button>
-
+              <NavTrigger
+                label="Products"
+                open={openMenu === 'products'}
+                onEnter={() => openWithCancel('products')}
+                onLeave={() => {}}
+              />
               <AnimatePresence>
-                {solutionsOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -6 }}
-                    transition={{ duration: 0.15 }}
-                    className="dc-dropdown"
-                    onMouseEnter={openSolutions}
-                    onMouseLeave={scheduleClose}
-                  >
-                    <div className="dc-dropdown-eyebrow">— FOUR PRODUCTS · ONE STACK</div>
-                    <div className="dc-dropdown-grid">
-                      {SOLUTIONS.map((s, i) => (
-                        <Link key={s.href} to={s.href} className="dc-dropdown-item">
-                          <span className="dc-dropdown-num">0{i + 1}</span>
-                          <span className="dc-dropdown-body">
-                            <span className="dc-dropdown-label">{s.label}</span>
-                            <span className="dc-dropdown-blurb">{s.blurb}</span>
-                          </span>
-                          <ArrowRight size={14} className="dc-dropdown-arrow" />
-                        </Link>
-                      ))}
+                {openMenu === 'products' && (
+                  <MegaPanel width={760}>
+                    <div className="grid grid-cols-2 gap-x-8 gap-y-2 p-6">
+                      <div>
+                        <MonoEyebrow>CORE PRODUCTS</MonoEyebrow>
+                        <div className="space-y-1.5">
+                          {productsCore.map((it) => (
+                            <MegaItem key={it.label} {...it} />
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <MonoEyebrow>EXPLORE</MonoEyebrow>
+                        <div className="space-y-1">
+                          {productsSecondary.map((it) => (
+                            <Link
+                              key={it.label}
+                              to={it.href}
+                              className="group flex items-center justify-between p-3 -m-1 rounded-[6px] transition-colors"
+                              onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(73, 69, 255, 0.05)')}
+                              onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                            >
+                              <span
+                                className="text-[14px] font-medium"
+                                style={{ color: '#041E42', fontFamily: 'var(--dc-font-display)' }}
+                              >
+                                {it.label}
+                              </span>
+                              <ArrowRight size={14} color="#4945FF" style={{ opacity: 0.5 }} />
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
                     </div>
-                  </motion.div>
+                    <div
+                      className="px-6 py-4 flex items-center justify-between"
+                      style={{
+                        background: 'rgba(73, 69, 255, 0.05)',
+                        borderTop: '1px solid rgba(4, 30, 66, 0.06)',
+                      }}
+                    >
+                      <span
+                        className="text-[11px] tracking-[0.14em]"
+                        style={{
+                          fontFamily: 'var(--dc-font-mono)',
+                          color: 'var(--dc-on-light-subtle)',
+                          textTransform: 'uppercase',
+                        }}
+                      >
+                        — NEW · Median time to funds 24h
+                      </span>
+                      <Link
+                        to="/apply"
+                        className="dc-btn-primary"
+                      >
+                        Get Funded
+                        <ArrowRight size={12} />
+                      </Link>
+                    </div>
+                  </MegaPanel>
                 )}
               </AnimatePresence>
             </div>
 
-            {NAV_LINKS.map((l) => (
-              <Link key={l.href} to={l.href} className="dc-nav-link">
-                {l.label}
-              </Link>
-            ))}
-          </nav>
+            {/* BY BUSINESS TYPE */}
+            <div
+              className="relative"
+              onMouseEnter={() => openWithCancel('biz')}
+            >
+              <NavTrigger
+                label="By business"
+                open={openMenu === 'biz'}
+                onEnter={() => openWithCancel('biz')}
+                onLeave={() => {}}
+              />
+              <AnimatePresence>
+                {openMenu === 'biz' && (
+                  <MegaPanel width={860}>
+                    <div className="grid grid-cols-[1.3fr_1fr] gap-8 p-6">
+                      <div>
+                        <MonoEyebrow>BY INDUSTRY</MonoEyebrow>
+                        <div className="space-y-1.5">
+                          {businessTypes.map((it) => (
+                            <MegaItem key={it.label} {...it} />
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <MonoEyebrow>SPECIALIZED</MonoEyebrow>
+                        <div className="space-y-1.5">
+                          {specialized.map((it) => (
+                            <MegaItem key={it.label} {...it} />
+                          ))}
+                        </div>
+                        <div
+                          className="mt-5 pt-5"
+                          style={{ borderTop: '1px solid rgba(4, 30, 66, 0.08)' }}
+                        >
+                          <Link
+                            to="/business-types"
+                            className="inline-flex items-center gap-1.5 text-[13px] font-medium"
+                            style={{ color: '#4945FF', fontFamily: 'var(--dc-font-body)' }}
+                          >
+                            See all business types
+                            <ArrowRight size={12} />
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+                  </MegaPanel>
+                )}
+              </AnimatePresence>
+            </div>
 
-          {/* Right cluster */}
-          <div className="dc-nav-right">
-            <button className="dc-nav-icon" aria-label="Search" onClick={() => navigate('/help-center')}>
+            {/* LEARN */}
+            <div
+              className="relative"
+              onMouseEnter={() => openWithCancel('learn')}
+            >
+              <NavTrigger
+                label="Learn"
+                open={openMenu === 'learn'}
+                onEnter={() => openWithCancel('learn')}
+                onLeave={() => {}}
+              />
+              <AnimatePresence>
+                {openMenu === 'learn' && (
+                  <MegaPanel width={760}>
+                    <div className="p-6">
+                      <MonoEyebrow>RESOURCES</MonoEyebrow>
+                      <div className="grid grid-cols-2 gap-x-6 gap-y-2">
+                        {learnLinks.map((it) => (
+                          <MegaItem key={it.label} {...it} />
+                        ))}
+                      </div>
+                    </div>
+                    <div
+                      className="px-6 py-4 flex items-center justify-between"
+                      style={{
+                        background: 'rgba(73, 69, 255, 0.05)',
+                        borderTop: '1px solid rgba(4, 30, 66, 0.06)',
+                      }}
+                    >
+                      <span
+                        className="text-[11px] tracking-[0.14em]"
+                        style={{
+                          fontFamily: 'var(--dc-font-mono)',
+                          color: 'var(--dc-on-light-subtle)',
+                          textTransform: 'uppercase',
+                        }}
+                      >
+                        — VOL. VII · Q2 2026
+                      </span>
+                      <Link to="/calculator" className="dc-btn-secondary">
+                        Run the calculator
+                      </Link>
+                    </div>
+                  </MegaPanel>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* SUPPORT */}
+            <div
+              className="relative"
+              onMouseEnter={() => openWithCancel('support')}
+            >
+              <NavTrigger
+                label="Support"
+                open={openMenu === 'support'}
+                onEnter={() => openWithCancel('support')}
+                onLeave={() => {}}
+              />
+              <AnimatePresence>
+                {openMenu === 'support' && (
+                  <MegaPanel width={520}>
+                    <div className="p-6">
+                      <MonoEyebrow>HELP &amp; CONTACT</MonoEyebrow>
+                      <div className="space-y-1.5">
+                        {supportLinks.map((it) => (
+                          <MegaItem key={it.label} {...it} />
+                        ))}
+                      </div>
+                    </div>
+                  </MegaPanel>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* PRICING (plain link) */}
+            <Link
+              to="/pricing"
+              className="text-[13px] font-medium tracking-[-0.005em] px-1 py-2 transition-colors"
+              style={{
+                color: 'rgba(247, 245, 240, 0.78)',
+                fontFamily: 'var(--dc-font-body)',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = '#FFFFFF')}
+              onMouseLeave={(e) => (e.currentTarget.style.color = 'rgba(247, 245, 240, 0.78)')}
+            >
+              Pricing
+            </Link>
+          </div>
+
+          {/* Right side */}
+          <div className="hidden lg:flex items-center gap-3">
+            <button
+              type="button"
+              aria-label="Search"
+              onClick={() => setSearchOpen(true)}
+              className="h-9 w-9 rounded-full flex items-center justify-center transition-colors"
+              style={{ color: 'rgba(247, 245, 240, 0.7)' }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(247, 245, 240, 0.06)')}
+              onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+            >
               <Search size={16} />
             </button>
-            <Link to="/sign-in" className="dc-nav-link dc-nav-link--quiet">
+            <Link
+              to="/signin"
+              className="text-[13px] font-medium px-3 py-2 transition-colors"
+              style={{
+                color: 'rgba(247, 245, 240, 0.78)',
+                fontFamily: 'var(--dc-font-body)',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = '#FFFFFF')}
+              onMouseLeave={(e) => (e.currentTarget.style.color = 'rgba(247, 245, 240, 0.78)')}
+            >
               Login
             </Link>
-            <Link to="/apply" className="dc-cta">
+            <Link to="/apply" className="dc-btn-primary">
               Get Funded
-              <ArrowRight size={14} />
+              <ArrowRight size={12} />
             </Link>
           </div>
 
           {/* Mobile toggle */}
           <button
-            className="dc-mobile-toggle"
-            onClick={() => setMobileOpen(!mobileOpen)}
-            aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+            type="button"
+            className="lg:hidden h-10 w-10 rounded-md flex items-center justify-center"
+            style={{ color: '#F7F5F0' }}
+            onClick={() => setMobileOpen((v) => !v)}
+            aria-label="Toggle menu"
           >
             {mobileOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
         </div>
-      </div>
+      </nav>
 
-      {/* ─── Mobile drawer ─────────────────────────── */}
+      {/* Mobile drawer */}
       <AnimatePresence>
         {mobileOpen && (
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.2 }}
-            className="dc-mobile-drawer"
+            className="lg:hidden"
+            style={{
+              background: '#041E42',
+              borderTop: '1px solid rgba(247, 245, 240, 0.08)',
+            }}
           >
-            <div className="dc-mobile-eyebrow">— SOLUTIONS</div>
-            {SOLUTIONS.map((s) => (
-              <Link key={s.href} to={s.href} className="dc-mobile-link">
-                {s.label}
-              </Link>
-            ))}
-            <div className="dc-mobile-eyebrow" style={{ marginTop: 24 }}>— LEARN</div>
-            {NAV_LINKS.map((l) => (
-              <Link key={l.href} to={l.href} className="dc-mobile-link">
-                {l.label}
-              </Link>
-            ))}
-            <Link to="/apply" className="dc-cta dc-cta--mobile">
-              Get Funded
-              <ArrowRight size={14} />
-            </Link>
+            <div className="px-6 py-6 space-y-6 max-h-[80vh] overflow-y-auto">
+              <MobileSection title="PRODUCTS" links={productsCore.map((p) => ({ label: p.label, href: p.href }))} />
+              <MobileSection title="BY BUSINESS"
+                links={[
+                  ...businessTypes.map((b) => ({ label: b.label, href: b.href })),
+                  ...specialized.map((s) => ({ label: s.label, href: s.href })),
+                  { label: 'See all business types', href: '/business-types' },
+                ]}
+              />
+              <MobileSection title="LEARN" links={learnLinks.map((l) => ({ label: l.label, href: l.href }))} />
+              <MobileSection title="SUPPORT" links={supportLinks.map((s) => ({ label: s.label, href: s.href }))} />
+              <MobileSection title="MORE"
+                links={[
+                  { label: 'Pricing',     href: '/pricing' },
+                  { label: 'Calculator',  href: '/calculator' },
+                  { label: 'How it works',href: '/how-it-works' },
+                  { label: 'See a demo',  href: '/sandbox' },
+                ]}
+              />
+              <div className="pt-4 flex flex-col gap-3" style={{ borderTop: '1px solid rgba(247, 245, 240, 0.08)' }}>
+                <Link to="/signin" className="dc-btn-secondary dc-on-dark dc-lg w-full justify-center">Login</Link>
+                <Link to="/apply" className="dc-btn-primary dc-lg w-full justify-center">
+                  Get Funded <ArrowRight size={14} />
+                </Link>
+              </div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      <style>{`
-        .dc-nav-header {
-          position: sticky;
-          top: 0;
-          z-index: 50;
-          background: ${NAVY};
-          border-bottom: 1px solid rgba(247, 245, 240, 0.08);
-        }
-
-        /* ─── Ticker ─── */
-        .dc-ticker-bar {
-          background: ${NAVY_DEEP};
-          border-bottom: 1px solid rgba(247, 245, 240, 0.06);
-          overflow: hidden;
-          height: 26px;
-          position: relative;
-        }
-        .dc-ticker-track {
-          display: flex;
-          align-items: center;
-          gap: 28px;
-          height: 100%;
-          width: max-content;
-          animation: dc-ticker-scroll 100s linear infinite;
-          padding-left: 0;
-        }
-        @keyframes dc-ticker-scroll {
-          0%   { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
-        }
-        .dc-ticker-item {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          font-family: 'JetBrains Mono', ui-monospace, monospace;
-          font-size: 10.5px;
-          letter-spacing: 0.06em;
-          color: rgba(247, 245, 240, 0.55);
-          white-space: nowrap;
-        }
-        .dc-ticker-name { color: rgba(247, 245, 240, 0.85); font-weight: 500; }
-        .dc-ticker-amt  { color: rgba(247, 245, 240, 0.95); font-weight: 600; }
-        .dc-ticker-x    { color: ${INDIGO_SOFT}; font-weight: 500; }
-        .dc-ticker-dot  { color: ${SUCCESS}; font-size: 7px; }
-        .dc-ticker-state--wired  { color: ${INDIGO_SOFT}; }
-        .dc-ticker-state--funded { color: #6EE7B7; }
-        .dc-ticker-state--closed { color: rgba(247, 245, 240, 0.55); }
-
-        /* ─── Main row ─── */
-        .dc-nav-row {
-          background: ${NAVY};
-          padding: 16px 0;
-        }
-        .dc-nav-inner {
-          max-width: 1280px;
-          margin: 0 auto;
-          padding: 0 24px;
-          display: flex;
-          align-items: center;
-          gap: 32px;
-        }
-
-        /* Logo */
-        .dc-logo {
-          display: inline-flex;
-          align-items: center;
-          gap: 10px;
-          text-decoration: none;
-          flex-shrink: 0;
-        }
-        .dc-logo-mark {
-          display: inline-flex;
-          align-items: flex-end;
-          gap: 3px;
-          height: 20px;
-        }
-        .dc-logo-bar {
-          width: 4px;
-          border-radius: 1px;
-        }
-        .dc-logo-bar--cream  { height: 12px; background: ${CREAM}; }
-        .dc-logo-bar--indigo { height: 20px; background: ${INDIGO}; }
-        .dc-logo-text {
-          font-family: 'Manrope', 'Inter Tight', sans-serif;
-          font-size: 22px;
-          font-weight: 600;
-          letter-spacing: -0.025em;
-          line-height: 1;
-          display: inline-flex;
-          gap: 4px;
-        }
-        .dc-logo-text-light  { color: ${CREAM}; }
-        .dc-logo-text-indigo { color: ${INDIGO_SOFT}; }
-
-        /* Center nav */
-        .dc-nav-center {
-          display: flex;
-          align-items: center;
-          gap: 4px;
-          flex: 1;
-          justify-content: center;
-        }
-
-        .dc-nav-link {
-          font-family: 'Inter', sans-serif;
-          font-size: 14px;
-          font-weight: 500;
-          color: rgba(247, 245, 240, 0.78);
-          padding: 8px 14px;
-          background: transparent;
-          border: 0;
-          cursor: pointer;
-          text-decoration: none;
-          display: inline-flex;
-          align-items: center;
-          gap: 4px;
-          transition: color 150ms ease-out;
-          letter-spacing: -0.005em;
-          position: relative;
-        }
-        .dc-nav-link::after {
-          content: "";
-          position: absolute;
-          left: 14px; right: 14px;
-          bottom: 4px;
-          height: 1px;
-          background: ${INDIGO_SOFT};
-          transform: scaleX(0);
-          transform-origin: left center;
-          transition: transform 150ms ease-out;
-        }
-        .dc-nav-link:hover { color: ${CREAM}; }
-        .dc-nav-link:hover::after { transform: scaleX(1); }
-        .dc-nav-link--quiet { font-weight: 500; }
-
-        .dc-chevron {
-          opacity: 0.6;
-          transition: transform 150ms ease-out;
-        }
-        .dc-nav-dropdown-wrap:hover .dc-chevron { transform: rotate(180deg); }
-
-        /* Dropdown */
-        .dc-nav-dropdown-wrap {
-          position: relative;
-        }
-        .dc-dropdown {
-          position: absolute;
-          top: calc(100% + 8px);
-          left: 50%;
-          transform: translateX(-50%);
-          background: ${NAVY};
-          border: 1px solid rgba(247, 245, 240, 0.10);
-          border-radius: 6px;
-          padding: 20px;
-          min-width: 480px;
-          box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
-        }
-        .dc-dropdown-eyebrow {
-          font-family: 'JetBrains Mono', monospace;
-          font-size: 10.5px;
-          letter-spacing: 0.16em;
-          color: ${INDIGO_SOFT};
-          margin-bottom: 16px;
-          text-transform: uppercase;
-        }
-        .dc-dropdown-grid {
-          display: grid;
-          gap: 4px;
-        }
-        .dc-dropdown-item {
-          display: grid;
-          grid-template-columns: 36px 1fr 16px;
-          gap: 12px;
-          align-items: center;
-          padding: 12px 14px;
-          border-radius: 4px;
-          text-decoration: none;
-          color: ${CREAM};
-          transition: background 120ms ease-out;
-        }
-        .dc-dropdown-item:hover { background: rgba(247, 245, 240, 0.05); }
-        .dc-dropdown-num {
-          font-family: 'JetBrains Mono', monospace;
-          font-size: 11px;
-          color: rgba(247, 245, 240, 0.45);
-        }
-        .dc-dropdown-body { display: flex; flex-direction: column; gap: 2px; }
-        .dc-dropdown-label {
-          font-family: 'Manrope', sans-serif;
-          font-size: 15px;
-          font-weight: 600;
-          letter-spacing: -0.02em;
-        }
-        .dc-dropdown-blurb {
-          font-family: 'Inter', sans-serif;
-          font-size: 12.5px;
-          color: rgba(247, 245, 240, 0.6);
-          line-height: 1.4;
-        }
-        .dc-dropdown-arrow { color: ${INDIGO_SOFT}; opacity: 0.7; }
-
-        /* Right cluster */
-        .dc-nav-right {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          flex-shrink: 0;
-        }
-        .dc-nav-icon {
-          background: transparent;
-          border: 0;
-          color: rgba(247, 245, 240, 0.6);
-          cursor: pointer;
-          padding: 8px;
-          border-radius: 4px;
-          transition: color 150ms ease-out, background 150ms ease-out;
-        }
-        .dc-nav-icon:hover { color: ${CREAM}; background: rgba(247, 245, 240, 0.06); }
-
-        .dc-cta {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          background: ${INDIGO};
-          color: #FFFFFF;
-          font-family: 'Inter', sans-serif;
-          font-size: 13.5px;
-          font-weight: 600;
-          letter-spacing: -0.005em;
-          padding: 9px 16px;
-          border-radius: 6px;
-          text-decoration: none;
-          transition: filter 150ms ease-out, transform 100ms ease-out;
-        }
-        .dc-cta:hover { filter: brightness(1.1); }
-        .dc-cta:active { transform: translateY(0.5px); }
-
-        /* Mobile */
-        .dc-mobile-toggle {
-          display: none;
-          background: transparent;
-          border: 0;
-          color: ${CREAM};
-          cursor: pointer;
-          padding: 8px;
-        }
-        .dc-mobile-drawer {
-          background: ${NAVY_DEEP};
-          padding: 20px 24px 28px;
-          border-top: 1px solid rgba(247, 245, 240, 0.08);
-          display: flex;
-          flex-direction: column;
-          gap: 4px;
-          overflow: hidden;
-        }
-        .dc-mobile-eyebrow {
-          font-family: 'JetBrains Mono', monospace;
-          font-size: 10.5px;
-          letter-spacing: 0.18em;
-          text-transform: uppercase;
-          color: ${INDIGO_SOFT};
-          margin-bottom: 8px;
-        }
-        .dc-mobile-link {
-          color: ${CREAM};
-          text-decoration: none;
-          font-family: 'Manrope', sans-serif;
-          font-size: 17px;
-          font-weight: 500;
-          padding: 10px 0;
-          border-bottom: 1px solid rgba(247, 245, 240, 0.06);
-        }
-        .dc-cta--mobile {
-          margin-top: 20px;
-          justify-content: center;
-          padding: 14px 16px;
-          font-size: 15px;
-        }
-
-        @media (max-width: 980px) {
-          .dc-nav-center { display: none; }
-          .dc-nav-right .dc-nav-link,
-          .dc-nav-right .dc-nav-icon { display: none; }
-          .dc-mobile-toggle { display: inline-flex; }
-        }
-
-        @media (max-width: 640px) {
-          .dc-cta { display: none; }
-          .dc-ticker-bar { height: 24px; }
-        }
-      `}</style>
+      {/* Search overlay */}
+      <AnimatePresence>
+        {searchOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="fixed inset-0 z-[80] flex items-start justify-center pt-24 px-6"
+            style={{ background: 'rgba(2, 14, 34, 0.85)', backdropFilter: 'blur(8px)' }}
+            onClick={() => setSearchOpen(false)}
+          >
+            <div
+              className="w-full max-w-[640px] rounded-[10px] p-2"
+              style={{ background: '#FFFFFF', boxShadow: '0 30px 80px rgba(0,0,0,0.4)' }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center gap-3 px-4 py-3">
+                <Search size={18} color="#697386" />
+                <input
+                  autoFocus
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && searchQuery.trim()) {
+                      navigate(`/help-center?q=${encodeURIComponent(searchQuery)}`);
+                      setSearchOpen(false);
+                    }
+                    if (e.key === 'Escape') setSearchOpen(false);
+                  }}
+                  placeholder="Search products, industries, help…"
+                  className="flex-1 outline-none text-[15px]"
+                  style={{ fontFamily: 'var(--dc-font-body)', color: '#041E42' }}
+                />
+                <span
+                  className="text-[10px] tracking-[0.14em] px-2 py-1 rounded"
+                  style={{
+                    fontFamily: 'var(--dc-font-mono)',
+                    color: '#697386',
+                    background: 'rgba(4,30,66,0.05)',
+                  }}
+                >
+                  ESC
+                </span>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </header>
+  );
+}
+
+function MobileSection({
+  title, links,
+}: {
+  title: string;
+  links: { label: string; href: string }[];
+}) {
+  return (
+    <div>
+      <div
+        className="text-[10px] tracking-[0.18em] mb-3"
+        style={{
+          fontFamily: 'var(--dc-font-mono)',
+          color: 'rgba(247, 245, 240, 0.5)',
+        }}
+      >
+        — {title}
+      </div>
+      <div className="flex flex-col">
+        {links.map((l) => (
+          <Link
+            key={l.label}
+            to={l.href}
+            className="py-2 text-[15px]"
+            style={{ color: '#F7F5F0', fontFamily: 'var(--dc-font-display)', fontWeight: 500 }}
+          >
+            {l.label}
+          </Link>
+        ))}
+      </div>
+    </div>
   );
 }
 

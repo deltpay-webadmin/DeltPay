@@ -245,41 +245,51 @@ export function PricingPage() {
         minHeight: "auto",
         background: COLORS.white,
         fontFamily: fonts.heading,
-        padding: "180px 24px 80px",
+        padding: "112px 24px 64px",
+        borderBottom: "1px solid #E6E8EC",
       }}>
       <div style={{ maxWidth: 1080, margin: "0 auto" }}>
-        {/* Breadcrumb */}
-        <div style={{ textAlign: "center", marginBottom: 20 }}>
+        {/* DC-style mono eyebrow */}
+        <div style={{ textAlign: "center", marginBottom: 18 }}>
           <span style={{
             display: 'inline-block',
-            fontSize: 12,
-            fontWeight: 700,
+            fontFamily: "'JetBrains Mono', ui-monospace, monospace",
+            fontSize: 11,
+            fontWeight: 600,
             letterSpacing: '0.18em',
             textTransform: 'uppercase',
-            color: PURPLE,
-            background: LAVENDER,
-            padding: '6px 14px',
-            borderRadius: 999,
-          }}>• Pricing · All plans</span>
+            color: COLORS.gray600,
+          }}>— Pricing · All plans</span>
+        </div>
+
+        {/* DC-style display headline */}
+        <div style={{ textAlign: "center", marginBottom: 14 }}>
+          <h1 style={{
+            fontFamily: "'Manrope', system-ui, sans-serif",
+            fontSize: "clamp(40px, 6vw, 72px)",
+            fontWeight: 800,
+            color: COLORS.navy,
+            letterSpacing: "-0.035em",
+            lineHeight: 1.02,
+            margin: 0,
+          }}>
+            Simple pricing. <em style={{ fontFamily: "'Source Serif Pro', Georgia, serif", fontStyle: "italic", fontWeight: 500, color: COLORS.indigo }}>Real results.</em>
+          </h1>
         </div>
 
         {/* Section header */}
-        <div style={{ textAlign: "center", marginBottom: 48 }}>
-          <h2 className="pricing-header" style={{
-            fontSize: 42,
-            fontWeight: 800,
-            color: COLORS.navy,
-            letterSpacing: "-0.025em",
-            margin: 0,
-            lineHeight: 1.15,
-          }}>Pick a plan. See results this week.</h2>
+        <div style={{ textAlign: "center", marginBottom: 40 }}>
           <p style={{
             fontSize: 17,
             color: COLORS.gray600,
-            marginTop: 12,
+            margin: 0,
             fontWeight: 400,
-          }}>Every plan includes $0 processing with Delt Zero.</p>
-          <p style={{ fontSize: 13, color: COLORS.gray600, marginTop: 10 }}>
+            maxWidth: 620,
+            marginLeft: "auto",
+            marginRight: "auto",
+            lineHeight: 1.5,
+          }}>Pick a plan. See results this week. Every plan includes $0 processing with Delt Zero.</p>
+          <p style={{ fontSize: 13, color: COLORS.gray600, marginTop: 12 }}>
             Questions? <Link to="/support" style={{ color: COLORS.indigo, textDecoration: 'underline' }}>Chat with us</Link>
           </p>
         </div>
