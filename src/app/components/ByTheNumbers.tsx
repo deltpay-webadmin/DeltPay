@@ -1,5 +1,5 @@
 /* ──────────────────────────────────────────────────────────────
-   ByTheNumbers — Delt Capital "Why Delt beats the bank" pattern
+   ByTheNumbers — "Why Delt beats your legacy processor" pattern
    Paper background. Mono eyebrow. Navy H2. 2-column layout.
    Comparison table with mono numbered rows + trait pills.
    ────────────────────────────────────────────────────────────── */
@@ -13,18 +13,19 @@ interface Row {
 }
 
 const ROWS: Row[] = [
-  { num: '01', metric: 'Time to first dollar',  legacy: '2–6 weeks',          delt: '24 hours',         pill: '20× FASTER' },
-  { num: '02', metric: 'Effective factor',       legacy: '1.35–1.49×',        delt: '1.18×',            pill: '19% CHEAPER' },
-  { num: '03', metric: 'Paperwork',              legacy: '3 mo statements + returns', delt: 'Plaid link', pill: 'ZERO FILES' },
-  { num: '04', metric: 'Credit pull',            legacy: 'Hard pull',         delt: 'Soft inquiry',     pill: 'NO FICO HIT' },
-  { num: '05', metric: 'Collateral',             legacy: 'PG + UCC',          delt: 'None',             pill: 'UNENCUMBERED' },
-  { num: '06', metric: 'Prepayment penalty',     legacy: 'Full factor owed',  delt: 'None',             pill: 'EARLY PAYS SAVE' },
+  { num: '01', metric: 'Effective rate',         legacy: '2.9% + $0.30',      delt: '2.6% + $0.10',     pill: '$847 / MO SAVED' },
+  { num: '02', metric: 'Time to go live',        legacy: '3–10 business days', delt: 'Under 1 day',     pill: 'SAME-DAY ONBOARD' },
+  { num: '03', metric: 'Settlement',             legacy: 'T+2 standard',      delt: 'Next-day · same-day eligible', pill: 'FASTER FUNDS' },
+  { num: '04', metric: 'Hardware & POS',         legacy: 'Sold separately',   delt: 'Included',         pill: 'NO LEASE' },
+  { num: '05', metric: 'Chargeback help',        legacy: 'Self-serve portal', delt: 'Live dispute team',pill: 'WE FIGHT FOR YOU' },
+  { num: '06', metric: 'Capital access',         legacy: 'Third-party',       delt: 'Built-in',         pill: 'ONE LOGIN' },
+  { num: '07', metric: 'Contract',               legacy: '36-mo + early-term', delt: 'Month-to-month',  pill: 'NO LOCK-IN' },
 ];
 
 const HIGHLIGHTS: { label: string; value: string; sub: string; icon: string; color: string }[] = [
-  { label: 'MEDIAN TIME TO FUNDS', value: '24h',  sub: 'vs 2–6 weeks at a bank',     icon: '↯', color: '#F5B400' },
-  { label: 'AVG SAVINGS VS SBA',    value: '19%',  sub: 'on total cost of capital',  icon: '–', color: '#697386' },
-  { label: 'PAPERWORK REQUIRED',    value: '0',    sub: 'Plaid replaces the file box', icon: '⌀', color: '#697386' },
+  { label: 'AVG MONTHLY SAVINGS',  value: '$847', sub: 'vs Stripe / Square baseline', icon: '↯', color: '#F5B400' },
+  { label: 'TIME TO FIRST CHARGE', value: '<1 Day', sub: 'from sign-up to live POS',   icon: '–', color: '#697386' },
+  { label: 'MERCHANT RETENTION',   value: '97%',  sub: 'twelve-month, all verticals',  icon: '✓', color: '#697386' },
 ];
 
 export function ByTheNumbers() {
@@ -38,7 +39,7 @@ export function ByTheNumbers() {
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-10 items-end">
           <div>
             <div className="dc-eyebrow dc-on-light" style={{ color: 'var(--dc-indigo)' }}>
-              BANKS VS DELT
+              LEGACY PROCESSOR VS DELT
             </div>
             <h2
               className="mt-4 dc-h2"
@@ -50,7 +51,7 @@ export function ByTheNumbers() {
                 letterSpacing: '-0.035em',
               }}
             >
-              Why Delt beats<br />the bank.
+              Why merchants leave<br />legacy processors.
             </h2>
           </div>
           <div>
@@ -59,7 +60,8 @@ export function ByTheNumbers() {
               style={{ color: 'var(--dc-on-light-muted)', fontFamily: 'var(--dc-font-body)' }}
             >
               Every row is a median across the last 12 months of our book, measured
-              against publicly-reported bank SBA 7(a) averages. Updated quarterly.
+              against the published rates and onboarding times of leading legacy
+              processors. Updated quarterly.
             </p>
           </div>
         </div>
@@ -110,7 +112,7 @@ export function ByTheNumbers() {
                     color: 'var(--dc-on-light)',
                   }}
                 >
-                  Traditional bank
+                  Legacy processor
                 </div>
                 <div
                   className="text-[10px] tracking-[0.14em] mt-0.5"
@@ -120,7 +122,7 @@ export function ByTheNumbers() {
                     textTransform: 'uppercase',
                   }}
                 >
-                  SBA 7(A) MEDIAN
+                  PUBLISHED RATE CARD
                 </div>
               </div>
             </div>
