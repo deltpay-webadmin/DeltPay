@@ -265,15 +265,15 @@ export function Navigation() {
     <header
       className="dc-nav-header sticky top-0 z-50"
       style={{
-        // Liquid-glass header: translucent navy with a soft backdrop blur so the
-        // hero shader gradient bleeds through and the chrome no longer reads as
-        // a flat slab against the colored canvas.
+        // Liquid glass: nearly clear, the backdrop blur does the work. Just
+        // a whisper of tint to keep text legible over the bright shader
+        // peaks, plus a hairline divider so the bar separates from content.
         background:
-          'linear-gradient(180deg, rgba(4, 30, 66, 0.62) 0%, rgba(4, 30, 66, 0.42) 100%)',
-        backdropFilter: 'blur(18px) saturate(140%)',
-        WebkitBackdropFilter: 'blur(18px) saturate(140%)',
-        borderBottom: '1px solid rgba(247, 245, 240, 0.10)',
-        boxShadow: 'inset 0 1px 0 rgba(247, 245, 240, 0.06)',
+          'linear-gradient(180deg, rgba(4, 30, 66, 0.18) 0%, rgba(4, 30, 66, 0.08) 100%)',
+        backdropFilter: 'blur(22px) saturate(160%)',
+        WebkitBackdropFilter: 'blur(22px) saturate(160%)',
+        borderBottom: '1px solid rgba(247, 245, 240, 0.06)',
+        boxShadow: 'inset 0 1px 0 rgba(247, 245, 240, 0.05)',
       }}
     >
       {/* Main nav row */}
