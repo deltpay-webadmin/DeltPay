@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
 import { DashboardPreview } from './DashboardPreview';
+import { HeroShaderBackground } from './HeroShaderBackground';
 
 /* ──────────────────────────────────────────────────────────────
    JuspayHero — Delt Capital style
@@ -27,17 +28,10 @@ export function JuspayHero() {
       className="relative w-full overflow-hidden"
       style={{ background: 'var(--dc-bg-navy)', color: 'var(--dc-on-dark)' }}
     >
-      {/* Soft radial glow only — no heavy mesh, matches deltcapital tone */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background:
-            'radial-gradient(900px 600px at 78% 38%, rgba(73,69,255,0.22), transparent 60%), radial-gradient(700px 500px at 18% 82%, rgba(73,69,255,0.10), transparent 60%)',
-        }}
-      />
+      {/* Live shader gradient — Delt indigo, animated */}
+      <HeroShaderBackground />
 
-      <div className="relative mx-auto w-full max-w-[1320px] px-6 lg:px-10 pt-10 lg:pt-14 pb-0">
+      <div className="relative z-[1] mx-auto w-full max-w-[1320px] px-6 lg:px-10 pt-10 lg:pt-14 pb-0">
         {/* Top centered mono volume eyebrow */}
         <div className="flex justify-center">
           <div
