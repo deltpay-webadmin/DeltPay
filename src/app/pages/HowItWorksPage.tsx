@@ -6,40 +6,26 @@ import { ImageWithFallback } from '../components/figma/ImageWithFallback';
 import websiteImg from 'figma:asset/6371f372d9648e34936d619f0240fb4443da5f92.png';
 import capitalImg from 'figma:asset/294c7fbb10dd1c373bff0764a9c07ba072be56f8.png';
 import lensAiImg from 'figma:asset/78721b9b7179a89090d323016aa6b043d0dda27d.png';
+import paymentsImg from 'figma:asset/deltpay_payments_terminal.png';
 
 /* ── Product Data ── */
 const products = [
-  {
-    id: 'website',
-    title: 'Website',
-    headline: 'A site that sells — from day one.',
-    description:
-      'We design and build your entire digital storefront: brand-aligned, mobile-optimized, and conversion-focused. No templates. No drag-and-drop. A real site, built by real designers, live in under two weeks.',
-    bullets: [
-      'Custom design tailored to your brand and audience',
-      'Mobile-first, blazing-fast performance',
-      'Hosting, SSL, and infrastructure fully managed',
-      'SEO-ready architecture out of the box',
-    ],
-    icon: Globe,
-    image: websiteImg,
-    color: '#4945FF',
-    stat: { value: '<14 days', label: 'Design to launch' },
-  },
+  /* Order: Payments first (core merchant services product), then Capital,
+     Website, and Lens. Reflects payments-forward positioning. */
   {
     id: 'payments',
     title: 'Payments',
-    headline: 'Accept payments everywhere. Keep more.',
+    headline: 'Accept payments everywhere. Keep more of every sale.',
     description:
-      'Delt Payments is built directly into your site — no plugins, no third-party processors. Accept cards, contactless, and online payments with transparent pricing and instant settlement to your Delt balance; standard bank transfers in 1\u20132 business days.',
+      "Delt is, first and foremost, a merchant services company. Take cards in person, online, on the phone, and on the go — with transparent flat pricing, next-day funding, and hardware that works on day one. No call-center quotes, no junk fees, no surprise statements.",
     bullets: [
-      'Integrated checkout — minimal configuration — works out of the box for standard setups',
-      'In-person POS and contactless tap-to-pay',
-      'Real-time transaction monitoring & analytics',
-      'PCI-compliant, encrypted by default',
+      'Flat 2.6% + $0.10 — or 0% with our Cash Discount program',
+      'In-person POS, contactless tap-to-pay, and online checkout',
+      'Next-day funding standard; same-day available',
+      'PCI-compliant, end-to-end encrypted, with real-time monitoring',
     ],
     icon: CreditCard,
-    image: 'https://images.unsplash.com/photo-1715635845732-b52d2f408a40?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjb250YWN0bGVzcyUyMHBheW1lbnQlMjBjYXJkJTIwdGVybWluYWwlMjBwcm9mZXNzaW9uYWx8ZW58MXx8fHwxNzc1MTM3MTczfDA&ixlib=rb-4.1.0&q=80&w=1080',
+    image: paymentsImg,
     color: '#4945FF',
     stat: { value: '2.6%', label: 'Flat processing rate' },
   },
@@ -48,11 +34,11 @@ const products = [
     title: 'Capital',
     headline: 'Funding matched to your momentum.',
     description:
-      'Because Delt already processes your payments and tracks your performance, we can underwrite rapidly — typically within hours using your Delt data. Revenue-based funding with no equity dilution, no personal guarantees, and average 48-hour disbursement.',
+      "Because Delt already processes your payments, we underwrite off the deposits we see — not your FICO, not your collateral. Revenue-based funding from $5,000 to $500,000+, no equity dilution, no personal guarantees, average 48-hour disbursement.",
     bullets: [
       'Revenue-based — repay as a % of daily sales',
       'No equity, no personal guarantee required',
-      'Pre-qualified offers based on your Delt data',
+      'Pre-qualified offers based on your processing volume',
       'Funds available in as little as 48 hours',
     ],
     icon: TrendingUp,
@@ -61,15 +47,33 @@ const products = [
     stat: { value: '48 hrs', label: 'Average disbursement' },
   },
   {
-    id: 'ai',
-    title: 'Lens AI',
+    id: 'website',
+    title: 'Website',
+    headline: 'A site that sells — from day one.',
+    description:
+      "We design and build your entire digital storefront: brand-aligned, mobile-optimized, and ready to take payments the moment it goes live. No templates. No drag-and-drop. A real site, built by real designers, live in under two weeks.",
+    bullets: [
+      'Custom design tailored to your brand and audience',
+      'Mobile-first, blazing-fast performance',
+      'Delt Payments wired in — checkout works on day one',
+      'Hosting, SSL, SEO, and infrastructure fully managed',
+    ],
+    icon: Globe,
+    image: websiteImg,
+    color: '#4945FF',
+    stat: { value: '<14 days', label: 'Design to launch' },
+  },
+  {
+    id: 'lens',
+    title: 'Lens',
+    eyebrow: 'by Delt',
     headline: 'Your business brain. Available around the clock.',
     description:
-      'Lens is Delt\'s AI layer — a conversational analytics engine that watches your sales, traffic, and cash flow 24/7. Ask questions in plain English, get anomaly alerts before problems escalate, and surface opportunities you\'d otherwise miss.',
+      "Lens is the intelligence layer that sits on top of your Delt processing data — a conversational engine that watches your sales, traffic, and cash flow 24/7. Ask questions in plain English, get anomaly alerts before problems escalate, and surface opportunities you’d otherwise miss.",
     bullets: [
-      'Natural language queries — "How did Tuesday compare to last week?"',
+      'Natural language queries — “How did Tuesday compare to last week?”',
       'Proactive anomaly detection & trend alerts',
-      'Cross-product insights: site traffic → sales → cash flow',
+      'Cross-product insights: payments → traffic → cash flow',
       'Actionable recommendations, not just dashboards',
     ],
     icon: Sparkles,
@@ -119,7 +123,22 @@ function ProductCard({ i, product, progress, range, targetScale }: CardProps) {
             <div className="hiw-card-icon" style={{ background: `${product.color}15`, border: `1px solid ${product.color}30` }}>
               <Icon size={20} style={{ color: product.color }} />
             </div>
-            <div className="hiw-card-label" style={{ color: product.color }}>{product.title}</div>
+            <div className="hiw-card-label" style={{ color: product.color }}>
+              {product.title}
+              {('eyebrow' in product && (product as any).eyebrow) ? (
+                <span
+                  style={{
+                    marginLeft: 8,
+                    fontWeight: 400,
+                    color: 'rgba(71,85,105,0.85)',
+                    fontSize: '0.78em',
+                    letterSpacing: '0.06em',
+                  }}
+                >
+                  {(product as any).eyebrow}
+                </span>
+              ) : null}
+            </div>
             <h2 className="hiw-card-headline">{product.headline}</h2>
             <p className="hiw-card-desc">{product.description}</p>
 
@@ -135,7 +154,7 @@ function ProductCard({ i, product, progress, range, targetScale }: CardProps) {
             <div className="hiw-card-stat">
               <span className="hiw-card-stat-value" style={{ color: product.color }}>{product.stat.value}</span>
               <span className="hiw-card-stat-label">{product.stat.label}</span>
-              {product.id === 'ai' && <p style={{ fontSize: '0.75rem', color: '#475569', marginTop: 4 }}>*Subject to service availability.</p>}
+              {product.id === 'lens' && <p style={{ fontSize: '0.75rem', color: '#475569', marginTop: 4 }}>*Subject to service availability.</p>}
             </div>
           </div>
 
@@ -187,8 +206,9 @@ export function HowItWorksPage() {
             <span className="hiw-hero-title-accent">One platform.</span>
           </h1>
           <p className="hiw-hero-sub">
-            Every Delt merchant starts with a site. Then payments flow in, capital unlocks,
-            and Lens AI connects it all — giving you a business operating system, not just another tool.
+            Payments come first — it's what we do. Then capital unlocks off the deposits we already
+            see, your website starts selling on day one, and Lens connects it all into a single
+            operating system for your business.
           </p>
           <div className="hiw-hero-scroll-hint">
             <motion.div
@@ -239,8 +259,8 @@ export function HowItWorksPage() {
             All four products.<br />One login. Zero friction.
           </h2>
           <p className="hiw-bottom-cta-sub">
-            Every product feeds the next. Your site generates traffic, payments capture revenue,
-            Capital fuels growth, and Lens keeps you ahead of it all.
+            Every product feeds the next. Payments capture revenue, Capital fuels growth,
+            your site keeps customers coming, and Lens keeps you ahead of it all.
           </p>
           <div className="hiw-bottom-cta-buttons">
             <Link to="/apply" className="hiw-cta-primary">

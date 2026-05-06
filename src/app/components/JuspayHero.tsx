@@ -10,7 +10,7 @@ import { DashboardPreview } from './DashboardPreview';
    meta strip ("SCROLL — THE NUMBERS ↓" · ledger line).
    ────────────────────────────────────────────────────────────── */
 
-const ROTATING_WORDS = ['back', 'wire', 'fund', 'fuel'];
+const ROTATING_WORDS = ['process', 'settle', 'route', 'capture'];
 
 export function JuspayHero() {
   const [wordIdx, setWordIdx] = useState(0);
@@ -52,7 +52,7 @@ export function JuspayHero() {
             <span style={{ color: 'var(--dc-on-dark-faint)' }}>·</span>
             <span>Q2 2026</span>
             <span style={{ color: 'var(--dc-on-dark-faint)' }}>·</span>
-            <span>DIRECT FUNDING</span>
+            <span>MERCHANT PROCESSING</span>
             <span style={{ color: 'var(--dc-on-dark-faint)' }}>·</span>
             <span>EST. 2019</span>
             <span style={{ color: 'var(--dc-on-dark-faint)' }}>·</span>
@@ -61,7 +61,7 @@ export function JuspayHero() {
                 className="inline-block h-1.5 w-1.5 rounded-full"
                 style={{ background: '#A5B4FC', boxShadow: '0 0 8px #A5B4FC' }}
               />
-              QUOTING NOW
+              ONBOARDING NOW
             </span>
           </div>
         </div>
@@ -80,10 +80,10 @@ export function JuspayHero() {
                 letterSpacing: '-0.045em',
               }}
             >
-              You built the<br />
-              business.<br />
+              Every payment.<br />
+              Every channel.<br />
               We{' '}
-              <span className="relative inline-block align-baseline" style={{ minWidth: '2ch' }}>
+              <span className="relative inline-block align-baseline" style={{ minWidth: '5ch' }}>
                 <AnimatePresence mode="wait">
                   <motion.span
                     key={wordIdx}
@@ -107,27 +107,25 @@ export function JuspayHero() {
             </h1>
 
             <p
-              className="mt-8 max-w-[460px] text-[16px] leading-[1.55]"
+              className="mt-8 max-w-[480px] text-[16px] leading-[1.55]"
               style={{ color: 'var(--dc-on-dark-muted)', fontFamily: 'var(--dc-font-body)' }}
             >
-              Payments + revenue-based capital, in one stack. Process from{' '}
-              <strong style={{ color: 'var(--dc-on-dark)', fontWeight: 600 }}>
-                $5,000 to $500,000+
-              </strong>{' '}
-              monthly and unlock funding underwritten off your deposits — not your FICO,
-              not your collateral, not a call center's script. Median factor{' '}
-              <strong style={{ color: 'var(--dc-on-dark)', fontWeight: 600 }}>1.18×</strong>.
-              Median time to funds,{' '}
-              <strong style={{ color: 'var(--dc-on-dark)', fontWeight: 600 }}>24 hours</strong>.
+              Modern merchant services for U.S. small business — in-person, online,
+              and on the go. Flat{' '}
+              <strong style={{ color: 'var(--dc-on-dark)', fontWeight: 600 }}>2.6% + $0.10</strong>{' '}
+              processing or{' '}
+              <strong style={{ color: 'var(--dc-on-dark)', fontWeight: 600 }}>0% with cash discount</strong>,
+              next-day funding, and a dashboard that actually makes sense. Capital
+              when you're ready — underwritten off the deposits we already see.
             </p>
 
             <div className="mt-9 flex items-center gap-3 flex-wrap">
               <Link to="/apply" className="dc-btn-primary dc-lg">
-                Get Funded
+                Start Processing
                 <span aria-hidden style={{ marginLeft: 2 }}>→</span>
               </Link>
               <Link to="/calculator" className="dc-btn-secondary dc-on-dark dc-lg">
-                See how pricing works
+                See your rate
               </Link>
             </div>
 
@@ -136,9 +134,9 @@ export function JuspayHero() {
               className="mt-12 pt-7 grid grid-cols-3 gap-6 max-w-[480px]"
               style={{ borderTop: '1px solid var(--dc-rule-on-dark)' }}
             >
-              <Stat label="TODAY'S MEDIAN" big="1.18×" unit="factor" />
-              <Stat label="TIME TO FUNDS" big="24h" unit="median" />
-              <Stat label="SOFT-PULL" big="Yes" unit="only" />
+              <Stat label="PROCESSING RATE" big="2.6%" unit="+ $0.10" />
+              <Stat label="FUNDING" big="Next-day" unit="standard" />
+              <Stat label="CASH DISCOUNT" big="0%" unit="available" />
             </div>
           </div>
 
@@ -191,7 +189,7 @@ export function JuspayHero() {
               textTransform: 'uppercase',
             }}
           >
-            SCROLL — THE NUMBERS ↓
+            SCROLL — THE STACK ↓
           </span>
           <span
             className="text-[11px] tracking-[0.18em]"
@@ -201,7 +199,7 @@ export function JuspayHero() {
               textTransform: 'uppercase',
             }}
           >
-            $200M+ DEPLOYED · 2,850+ FUNDED · SINCE 2019
+            $200M+ PROCESSED · 2,850+ MERCHANTS · SINCE 2019
           </span>
         </div>
       </div>
