@@ -474,6 +474,7 @@ export function HowItWorksPage() {
         .hiw-bottom-cta {
           padding: 100px 24px 120px;
           text-align: center;
+          background: #4945FF;
         }
         .hiw-bottom-cta-inner {
           max-width: 640px;
@@ -492,7 +493,7 @@ export function HowItWorksPage() {
           font-family: 'Plus Jakarta Sans', sans-serif;
           font-size: 16px;
           line-height: 1.75;
-          color: rgba(255,255,255,0.45);
+          color: rgba(255,255,255,0.85);
           margin: 0 0 40px;
         }
         .hiw-bottom-cta-buttons {
@@ -507,19 +508,19 @@ export function HowItWorksPage() {
           gap: 8px;
           padding: 15px 34px;
           border-radius: 12px;
-          background: #4945FF;
-          color: #fff;
+          background: #FFFFFF;
+          color: #4945FF;
           font-family: 'Plus Jakarta Sans', sans-serif;
           font-size: 15px;
           font-weight: 700;
           text-decoration: none;
           transition: background 0.2s, transform 0.15s, box-shadow 0.3s;
-          box-shadow: 0 0 28px rgba(73,69,255,0.25), 0 4px 14px rgba(0,0,0,0.2);
+          box-shadow: 0 4px 14px rgba(0,0,0,0.18);
         }
         .hiw-cta-primary:hover {
-          background: #4945FF;
+          background: #F6F7FB;
           transform: translateY(-1px);
-          box-shadow: 0 0 44px rgba(73,69,255,0.4), 0 8px 24px rgba(0,0,0,0.3);
+          box-shadow: 0 8px 24px rgba(0,0,0,0.25);
         }
         .hiw-cta-secondary {
           display: inline-flex;
@@ -527,9 +528,9 @@ export function HowItWorksPage() {
           gap: 6px;
           padding: 15px 30px;
           border-radius: 12px;
-          background: rgba(255,255,255,0.04);
-          border: 1px solid rgba(255,255,255,0.12);
-          color: rgba(255,255,255,0.75);
+          background: transparent;
+          border: 1px solid rgba(255,255,255,0.4);
+          color: #FFFFFF;
           font-family: 'Plus Jakarta Sans', sans-serif;
           font-size: 15px;
           font-weight: 600;
@@ -537,8 +538,8 @@ export function HowItWorksPage() {
           transition: background 0.2s, border-color 0.2s;
         }
         .hiw-cta-secondary:hover {
-          background: rgba(255,255,255,0.08);
-          border-color: rgba(255,255,255,0.22);
+          background: rgba(255,255,255,0.1);
+          border-color: rgba(255,255,255,0.6);
         }
 
         /* Responsive */

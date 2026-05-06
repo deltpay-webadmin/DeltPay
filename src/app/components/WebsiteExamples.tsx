@@ -1661,28 +1661,28 @@ function FinalCTA() {
   return (
     <section style={{
       position: 'relative',
-      background: T.bg,
+      // Solid brand purple to standardise the pre-footer CTA across pages.
+      background: T.accent,
       padding: '110px 24px 130px',
       textAlign: 'center',
-      borderTop: `1px solid ${T.border}`,
       overflow: 'hidden',
     }}>
-      {/* Ambient background glow */}
+      {/* Subtle white glow centered behind the card */}
       <div style={{
         position: 'absolute',
         top: '50%', left: '50%',
         transform: 'translate(-50%, -50%)',
         width: 720, height: 360,
         borderRadius: '50%',
-        background: 'radial-gradient(ellipse, rgba(73,69,255,0.18) 0%, rgba(73,69,255,0) 65%)',
+        background: 'radial-gradient(ellipse, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0) 65%)',
         filter: 'blur(8px)',
         pointerEvents: 'none',
       }} />
-      {/* Faint grid */}
+      {/* Faint grid (white-tinted on purple) */}
       <div style={{
         position: 'absolute', inset: 0,
         backgroundImage:
-          'linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px)',
+          'linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px)',
         backgroundSize: '40px 40px',
         maskImage: 'radial-gradient(ellipse at center, #000 25%, transparent 75%)',
         WebkitMaskImage: 'radial-gradient(ellipse at center, #000 25%, transparent 75%)',
@@ -1696,16 +1696,16 @@ function FinalCTA() {
           margin: '0 auto',
           padding: '56px 32px 52px',
           borderRadius: 24,
-          background: 'linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.015) 100%)',
-          border: '1px solid rgba(255,255,255,0.08)',
-          boxShadow: '0 50px 120px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.06)',
+          background: 'rgba(255,255,255,0.06)',
+          border: '1px solid rgba(255,255,255,0.16)',
+          boxShadow: '0 50px 120px rgba(4,30,66,0.28), inset 0 1px 0 rgba(255,255,255,0.10)',
           backdropFilter: 'blur(8px)',
         }}>
           {/* Top sheen */}
           <div style={{
             position: 'absolute', top: 0, left: '15%', right: '15%',
             height: 1,
-            background: 'linear-gradient(90deg, transparent, rgba(108,105,255,0.6), transparent)',
+            background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.55), transparent)',
           }} />
 
           {/* Eyebrow */}
@@ -1713,20 +1713,20 @@ function FinalCTA() {
             display: 'inline-flex', alignItems: 'center', gap: 8,
             padding: '6px 14px',
             borderRadius: 999,
-            background: 'rgba(73,69,255,0.10)',
-            border: '1px solid rgba(73,69,255,0.28)',
+            background: 'rgba(255,255,255,0.14)',
+            border: '1px solid rgba(255,255,255,0.30)',
             fontFamily: T.sans,
             fontSize: 11,
             fontWeight: 700,
             letterSpacing: '0.18em',
             textTransform: 'uppercase',
-            color: T.accentLight,
+            color: '#FFFFFF',
             marginBottom: 22,
           }}>
             <span style={{
               width: 6, height: 6, borderRadius: '50%',
-              background: T.accentLight,
-              boxShadow: '0 0 10px rgba(108,105,255,0.8)',
+              background: '#FFFFFF',
+              boxShadow: '0 0 10px rgba(255,255,255,0.8)',
             }} />
             Ready when you are
           </div>
@@ -1743,18 +1743,16 @@ function FinalCTA() {
           }}>
             Your site.{' '}
             <span style={{
-              background: 'linear-gradient(90deg, #6C69FF 0%, #4945FF 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
+              color: '#FFFFFF',
               fontFamily: T.serif,
               fontStyle: 'italic',
               fontWeight: 500,
+              opacity: 0.95,
             }}>Live in days.</span>
           </h2>
           <p style={{
             fontSize: 16,
-            color: T.gray1,
+            color: 'rgba(255,255,255,0.85)',
             maxWidth: 480,
             margin: '0 auto 36px',
             lineHeight: 1.65,
@@ -1764,16 +1762,16 @@ function FinalCTA() {
             capital access, and AI insights. All connected.
           </p>
 
-          {/* THE button — solid brand purple, real CTA energy */}
+          {/* White pill button to pop against the solid purple section */}
           <Link
             to="/apply"
             className="we-final-cta-btn"
             style={{
               padding: '17px 36px',
               borderRadius: 14,
-              border: '1px solid rgba(108,105,255,0.6)',
-              background: T.accent,
-              color: '#fff',
+              border: '1px solid rgba(255,255,255,0.6)',
+              background: '#FFFFFF',
+              color: T.accent,
               fontSize: 16,
               fontWeight: 700,
               cursor: 'pointer',
@@ -1783,7 +1781,7 @@ function FinalCTA() {
               alignItems: 'center',
               gap: 10,
               boxShadow:
-                '0 14px 38px rgba(73,69,255,0.45), 0 4px 12px rgba(73,69,255,0.30), inset 0 1px 0 rgba(255,255,255,0.18)',
+                '0 14px 38px rgba(4,30,66,0.25), 0 4px 12px rgba(4,30,66,0.15), inset 0 1px 0 rgba(255,255,255,0.5)',
               letterSpacing: '-0.005em',
               transition: 'transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease',
             }}
@@ -1794,7 +1792,7 @@ function FinalCTA() {
           <div style={{
             marginTop: 18,
             fontSize: 13,
-            color: T.gray2,
+            color: 'rgba(255,255,255,0.80)',
             fontFamily: T.sans,
             display: 'flex',
             justifyContent: 'center',
@@ -1803,15 +1801,15 @@ function FinalCTA() {
             flexWrap: 'wrap',
           }}>
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-              <Check size={13} style={{ color: T.green }} /> No contracts
+              <Check size={13} style={{ color: '#FFFFFF' }} /> No contracts
             </span>
-            <span style={{ width: 3, height: 3, borderRadius: '50%', background: T.gray3 }} />
+            <span style={{ width: 3, height: 3, borderRadius: '50%', background: 'rgba(255,255,255,0.45)' }} />
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-              <Check size={13} style={{ color: T.green }} /> No cancellation fees
+              <Check size={13} style={{ color: '#FFFFFF' }} /> No cancellation fees
             </span>
-            <span style={{ width: 3, height: 3, borderRadius: '50%', background: T.gray3 }} />
+            <span style={{ width: 3, height: 3, borderRadius: '50%', background: 'rgba(255,255,255,0.45)' }} />
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-              <Check size={13} style={{ color: T.green }} /> Live in under a week
+              <Check size={13} style={{ color: '#FFFFFF' }} /> Live in under a week
             </span>
           </div>
         </div>
@@ -1820,11 +1818,11 @@ function FinalCTA() {
       <style>{`
         .we-final-cta-btn:hover {
           transform: translateY(-2px);
-          background: #5754FF !important;
+          background: #F4F4F8 !important;
           box-shadow:
-            0 22px 50px rgba(73,69,255,0.55),
-            0 6px 16px rgba(73,69,255,0.40),
-            inset 0 1px 0 rgba(255,255,255,0.22) !important;
+            0 22px 50px rgba(4,30,66,0.32),
+            0 6px 16px rgba(4,30,66,0.20),
+            inset 0 1px 0 rgba(255,255,255,0.6) !important;
         }
         .we-final-cta-btn:active {
           transform: translateY(0);
@@ -1844,8 +1842,8 @@ export function WebsiteExamples() {
       <FeatureWalkthrough />
       <HowItWorksStrip />
       <ShowcaseGrid />
-      <Testimonials />
       <FinalCTA />
+      <Testimonials />
     </div>
   );
 }

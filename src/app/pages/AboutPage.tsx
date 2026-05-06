@@ -224,13 +224,13 @@ export function AboutPage() {
       </section>
 
       {/* ══ CTA ═══════════════════════════════════════════════════ */}
-      <section className="py-32 px-6">
+      <section className="py-32 px-6" style={{ background: '#4945FF' }}>
         <div className="max-w-3xl mx-auto text-center">
           <FadeIn>
             <h2 style={{
               fontSize: 'clamp(2rem, 5vw, 3.5rem)',
               fontWeight: 800,
-              color: COLORS.navy,
+              color: COLORS.white,
               lineHeight: 1.2,
               letterSpacing: '-0.02em',
               marginBottom: 24
@@ -242,7 +242,7 @@ export function AboutPage() {
             <p style={{
               fontSize: 18,
               lineHeight: 1.6,
-              color: COLORS.gray600,
+              color: 'rgba(255,255,255,0.85)',
               marginBottom: 40
             }}>
               Join thousands of businesses building their future on our platform.
@@ -257,16 +257,16 @@ export function AboutPage() {
                   alignItems: 'center',
                   gap: 8,
                   padding: '16px 32px',
-                  backgroundColor: COLORS.indigo,
-                  color: COLORS.white,
+                  backgroundColor: COLORS.white,
+                  color: COLORS.indigo,
                   borderRadius: 12,
                   fontSize: 16,
                   fontWeight: 700,
                   textDecoration: 'none',
                   transition: 'all 0.2s'
                 }}
-                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#3933CC'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = COLORS.indigo; }}
+                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#F6F7FB'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = COLORS.white; }}
               >
                 Get Started
                 <ArrowRight className="w-5 h-5" />
@@ -278,8 +278,8 @@ export function AboutPage() {
                   alignItems: 'center',
                   gap: 8,
                   padding: '16px 32px',
-                  border: `2px solid ${COLORS.navy}`,
-                  color: COLORS.navy,
+                  border: '2px solid rgba(255,255,255,0.4)',
+                  color: COLORS.white,
                   borderRadius: 12,
                   fontSize: 16,
                   fontWeight: 700,
@@ -287,7 +287,7 @@ export function AboutPage() {
                   transition: 'all 0.2s'
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = COLORS.gray50;
+                  e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)';
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.backgroundColor = 'transparent';

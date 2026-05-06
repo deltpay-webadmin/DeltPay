@@ -536,11 +536,11 @@ export function DeltAiPage() {
         >
           <div style={{
             borderRadius: 28,
-            border: '1px solid rgba(79,70,255,0.22)',
-            background: 'linear-gradient(160deg, rgba(79,70,255,0.2) 0%, rgba(4,30,66,0.9) 55%, rgba(3,21,46,1) 100%)',
+            border: '1px solid rgba(255,255,255,0.18)',
+            background: '#4945FF',
             padding: 'clamp(40px, 6vw, 64px)',
             textAlign: 'center',
-            boxShadow: '0 0 0 1px rgba(255,255,255,0.04) inset, 0 40px 100px rgba(0,0,0,0.5)',
+            boxShadow: '0 0 0 1px rgba(255,255,255,0.06) inset, 0 40px 100px rgba(0,0,0,0.5)',
             position: 'relative',
             overflow: 'hidden',
           }}>
@@ -557,13 +557,13 @@ export function DeltAiPage() {
             <div style={{
               display: 'inline-flex', alignItems: 'center', gap: 8,
               padding: '7px 14px', borderRadius: 999,
-              border: `1px solid rgba(79,70,255,0.3)`,
-              background: 'rgba(79,70,255,0.12)',
-              color: C.indigoLight, fontSize: 12, fontWeight: 700,
+              border: '1px solid rgba(255,255,255,0.3)',
+              background: 'rgba(255,255,255,0.12)',
+              color: '#FFFFFF', fontSize: 12, fontWeight: 700,
               letterSpacing: '0.18em', textTransform: 'uppercase',
               marginBottom: 24, fontFamily: FONT_SANS,
             }}>
-              <span style={{ width: 6, height: 6, borderRadius: '50%', background: C.indigoLight, display: 'inline-block', animation: 'pulse 2s ease infinite' }} />
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#FFFFFF', display: 'inline-block', animation: 'pulse 2s ease infinite' }} />
               Now available
             </div>
 
@@ -592,9 +592,9 @@ export function DeltAiPage() {
                 style={{
                   display: 'inline-flex', alignItems: 'center', gap: 8,
                   padding: '14px 32px', borderRadius: 999,
-                  background: C.indigo,
-                  boxShadow: `0 8px 32px rgba(79,70,255,0.4)`,
-                  color: C.white, fontSize: 16, fontWeight: 600,
+                  background: '#FFFFFF',
+                  boxShadow: '0 8px 32px rgba(0,0,0,0.25)',
+                  color: '#4945FF', fontSize: 16, fontWeight: 600,
                   textDecoration: 'none', fontFamily: FONT_SANS,
                   transition: 'filter 0.2s',
                 }}
@@ -611,9 +611,9 @@ export function DeltAiPage() {
                 style={{
                   display: 'inline-flex', alignItems: 'center', gap: 8,
                   padding: '14px 28px', borderRadius: 999,
-                  border: `1px solid ${C.border}`,
-                  background: 'rgba(255,255,255,0.04)',
-                  color: C.white70, fontSize: 16, fontWeight: 500,
+                  border: '1px solid rgba(255,255,255,0.3)',
+                  background: 'rgba(255,255,255,0.08)',
+                  color: '#FFFFFF', fontSize: 16, fontWeight: 500,
                   cursor: 'pointer', fontFamily: FONT_SANS,
                   transition: 'background 0.2s',
                 }}

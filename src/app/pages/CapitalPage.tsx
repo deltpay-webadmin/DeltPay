@@ -324,16 +324,22 @@ function SpeedVisual() {
 }
 
 function RepaymentMiniVisual() {
-  // Simplified daily-sales-vs-repayment mini card
-  const days = [
-    { d: 'M', sales: 45, cap: 7 },
-    { d: 'T', sales: 60, cap: 9 },
-    { d: 'W', sales: 38, cap: 6 },
-    { d: 'T', sales: 72, cap: 11 },
-    { d: 'F', sales: 88, cap: 13 },
-    { d: 'S', sales: 95, cap: 14 },
-    { d: 'S', sales: 55, cap: 8 },
+  // Three example days illustrating the fixed-share mechanic literally.
+  // Same percentage applied to every day's card sales — busy days remit
+  // more, quiet days remit less. No duplicate bar chart with the big one.
+  const SHARE = 0.12; // 12% — illustrative only
+  const examples = [
+    { day: 'Quiet Tuesday', sales: 1240, mood: 'low' as const },
+    { day: 'Steady Thursday', sales: 2180, mood: 'mid' as const },
+    { day: 'Busy Saturday', sales: 4560, mood: 'high' as const },
   ];
+  const moodFill: Record<'low' | 'mid' | 'high', number> = {
+    low: 0.32,
+    mid: 0.58,
+    high: 0.92,
+  };
+  const fmt = (n: number) =>
+    `$${n.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
   return (
     <div
       className="rounded-2xl p-6 md:p-7"
@@ -345,44 +351,104 @@ function RepaymentMiniVisual() {
     >
       <div className="flex items-center justify-between mb-5">
         <div>
-          <div className="text-[11px] font-bold uppercase" style={{ color: MICRO, letterSpacing: '0.14em' }}>
-            This week
+          <div
+            className="text-[11px] font-bold uppercase"
+            style={{ color: MICRO, letterSpacing: '0.14em' }}
+          >
+            How it works
           </div>
           <div className="font-bold text-lg mt-1" style={{ color: NAVY }}>
-            Sales → repayment
+            One fixed share, every day
           </div>
         </div>
-        <div className="flex items-center gap-1.5 text-xs" style={{ color: PURPLE, fontWeight: 600 }}>
-          <span
-            className="inline-block rounded-full"
-            style={{ width: 8, height: 8, background: PURPLE }}
-          />
-          Daily repayment
+        <div
+          className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md"
+          style={{
+            color: PURPLE,
+            fontWeight: 700,
+            background: `${PURPLE}10`,
+            letterSpacing: '0.06em',
+          }}
+        >
+          {(SHARE * 100).toFixed(0)}% of card sales
         </div>
       </div>
-      <div className="flex items-end justify-between gap-2" style={{ height: 140 }}>
-        {days.map((d, i) => (
-          <div key={i} className="flex flex-col items-center gap-2 flex-1">
-            <div className="w-full flex flex-col justify-end" style={{ height: 120 }}>
+
+      <div className="flex flex-col gap-3">
+        {examples.map((ex) => {
+          const payment = Math.round(ex.sales * SHARE);
+          const fill = moodFill[ex.mood];
+          return (
+            <div
+              key={ex.day}
+              className="rounded-xl px-4 py-3.5"
+              style={{
+                background: '#F8FAFD',
+                border: `1px solid ${HAIRLINE}`,
+              }}
+            >
+              <div className="flex items-center justify-between mb-2.5">
+                <span
+                  className="text-[12.5px] font-semibold"
+                  style={{ color: NAVY }}
+                >
+                  {ex.day}
+                </span>
+                <span
+                  className="text-[12px] font-semibold tabular-nums"
+                  style={{ color: MUTED }}
+                >
+                  {fmt(ex.sales)} sales
+                </span>
+              </div>
+
+              {/* Proportional sales meter with the 12% slice highlighted */}
               <div
-                className="w-full rounded-t-md"
-                style={{
-                  height: `${d.cap}%`,
-                  background: PURPLE,
-                }}
-              />
-              <div
-                className="w-full"
-                style={{
-                  height: `${d.sales - d.cap}%`,
-                  background: NAVY,
-                  opacity: 0.92,
-                }}
-              />
+                className="relative w-full rounded-full overflow-hidden"
+                style={{ height: 8, background: `${NAVY}10` }}
+              >
+                <div
+                  className="absolute inset-y-0 left-0 rounded-full"
+                  style={{
+                    width: `${fill * 100}%`,
+                    background: NAVY,
+                    opacity: 0.85,
+                  }}
+                />
+                <div
+                  className="absolute inset-y-0 left-0 rounded-full"
+                  style={{
+                    width: `${fill * SHARE * 100}%`,
+                    background: PURPLE,
+                  }}
+                />
+              </div>
+
+              <div className="flex items-center justify-between mt-2.5">
+                <span
+                  className="text-[11px] font-semibold uppercase"
+                  style={{ color: MICRO, letterSpacing: '0.12em' }}
+                >
+                  Repayment
+                </span>
+                <span
+                  className="text-[13px] font-bold tabular-nums"
+                  style={{ color: PURPLE }}
+                >
+                  {fmt(payment)}
+                </span>
+              </div>
             </div>
-            <span className="text-[10px]" style={{ color: MICRO, fontWeight: 600 }}>{d.d}</span>
-          </div>
-        ))}
+          );
+        })}
+      </div>
+
+      <div
+        className="mt-5 pt-4 text-[11px] leading-relaxed"
+        style={{ color: MICRO, borderTop: `1px solid ${HAIRLINE}` }}
+      >
+        Illustrative only. Your actual share is fixed at funding and never
+        changes — only the dollar amount moves with your sales.
       </div>
     </div>
   );
@@ -988,13 +1054,13 @@ export function CapitalPage() {
       <ProductCrossSell currentProduct="capital" variant="light" />
 
       {/* ═══ 10. SMALL CENTERED FINAL CTA (white, no navy slab) ═══ */}
-      <section className="px-6 py-20 md:py-24 text-center" style={{ background: '#FFFFFF' }}>
+      <section className="px-6 py-20 md:py-24 text-center" style={{ background: '#4945FF' }}>
         <div style={{ maxWidth: 620, margin: '0 auto' }}>
           <h2
             className="font-bold mb-4 leading-[1.1]"
             style={{
               fontSize: 'clamp(28px, 3.4vw, 40px)',
-              color: NAVY,
+              color: '#FFFFFF',
               letterSpacing: '-0.025em',
             }}
           >
@@ -1002,18 +1068,19 @@ export function CapitalPage() {
           </h2>
           <p
             className="mb-8 leading-relaxed mx-auto"
-            style={{ fontSize: 'clamp(15px, 1.2vw, 17px)', color: MUTED, maxWidth: 460 }}
+            style={{ fontSize: 'clamp(15px, 1.2vw, 17px)', color: 'rgba(255,255,255,0.85)', maxWidth: 460 }}
           >
             Talk to a specialist and see how Delt Capital can help your business.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4">
             <Link
               to="/demo"
-              className="inline-flex items-center gap-2 rounded-full px-7 py-3.5 font-semibold text-white transition-all duration-200 hover:brightness-110"
+              className="inline-flex items-center gap-2 rounded-full px-7 py-3.5 font-semibold transition-all duration-200 hover:brightness-105"
               style={{
-                background: PURPLE,
+                background: '#FFFFFF',
+                color: '#4945FF',
                 fontSize: 15,
-                boxShadow: `0 4px 18px ${PURPLE}40`,
+                boxShadow: '0 4px 18px rgba(0,0,0,0.18)',
               }}
             >
               Schedule a demo
@@ -1022,7 +1089,7 @@ export function CapitalPage() {
             <Link
               to="/help-center"
               className="inline-flex items-center gap-2 font-semibold"
-              style={{ color: PURPLE, fontSize: 15 }}
+              style={{ color: '#FFFFFF', fontSize: 15 }}
             >
               Visit the Help Center
               <ArrowRight size={14} />

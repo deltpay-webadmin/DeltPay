@@ -53,18 +53,16 @@ function InteractiveDots({
           const dist = Math.sqrt(dx * dx + dy * dy);
           const influence = Math.max(0, 1 - dist / hoverRadius);
 
-          const baseAlpha = 0.15;
-          const alpha = baseAlpha + influence * 0.55;
+          // White-tinted dots so they read against the solid purple
+          // background. Hovered dots brighten further toward pure white.
+          const baseAlpha = 0.18;
+          const alpha = baseAlpha + influence * 0.6;
           const baseSize = 1.5;
           const size = baseSize + influence * 3.5;
 
-          const r = Math.round(73 + influence * 150);
-          const g = Math.round(69 + influence * 150);
-          const b = 255;
-
           ctx.beginPath();
           ctx.arc(x, y, size, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(${r},${g},${b},${alpha})`;
+          ctx.fillStyle = `rgba(255,255,255,${alpha})`;
           ctx.fill();
 
           if (influence > 0.15) {
@@ -82,11 +80,11 @@ function InteractiveDots({
               const ndist = Math.sqrt(ndx * ndx + ndy * ndy);
               const nInfluence = Math.max(0, 1 - ndist / hoverRadius);
               if (nInfluence > 0.15) {
-                const lineAlpha = Math.min(influence, nInfluence) * 0.3;
+                const lineAlpha = Math.min(influence, nInfluence) * 0.32;
                 ctx.beginPath();
                 ctx.moveTo(x, y);
                 ctx.lineTo(nx, ny);
-                ctx.strokeStyle = `rgba(73,69,255,${lineAlpha})`;
+                ctx.strokeStyle = `rgba(255,255,255,${lineAlpha})`;
                 ctx.lineWidth = 0.8;
                 ctx.stroke();
               }
@@ -128,7 +126,7 @@ function GlowOrb({ top, left, right, bottom, size, opacity }: { top?: number; le
       style={{
         top, left, right, bottom,
         width: size, height: size,
-        background: `radial-gradient(circle, rgba(73,69,255,${opacity}) 0%, rgba(0,0,0,0) 70%)`,
+        background: `radial-gradient(circle, rgba(255,255,255,${opacity}) 0%, rgba(255,255,255,0) 70%)`,
       }}
     />
   );
@@ -172,7 +170,7 @@ export function FinalCTA() {
     <section
       ref={sectionRef}
       className="relative overflow-hidden"
-      style={{ background: NAVY, cursor: 'default', minHeight: '60vh', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}
+      style={{ background: PURPLE, cursor: 'default', minHeight: '60vh', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
     >
@@ -216,7 +214,7 @@ export function FinalCTA() {
           style={{
             fontFamily: JAKARTA,
             fontSize: 'clamp(1rem, 1.3vw, 1.15rem)',
-            color: 'rgba(255,255,255,0.50)',
+            color: 'rgba(255,255,255,0.85)',
             lineHeight: 1.7,
             marginBottom: 44,
             maxWidth: 560,
@@ -239,18 +237,18 @@ export function FinalCTA() {
             className="inline-flex items-center no-underline"
             style={{
               gap: 10,
-              background: PURPLE,
-              color: WHITE,
+              background: WHITE,
+              color: PURPLE,
               fontFamily: JAKARTA,
               fontSize: 15,
               fontWeight: 700,
               padding: '14px 36px',
               borderRadius: 12,
-              boxShadow: '0 8px 32px rgba(73,69,255,0.3)',
+              boxShadow: '0 8px 32px rgba(4,30,66,0.18)',
               transition: 'transform 0.2s, box-shadow 0.2s',
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 12px 40px rgba(73,69,255,0.4)'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(73,69,255,0.3)'; }}
+            onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 12px 40px rgba(4,30,66,0.28)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(4,30,66,0.18)'; }}
           >
             Get started <ArrowRight size={16} />
           </Link>

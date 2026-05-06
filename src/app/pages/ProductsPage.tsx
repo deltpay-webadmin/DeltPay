@@ -503,13 +503,13 @@ export function ProductsPage() {
       <ProductCrossSell variant="light" />
 
       {/* ═══ 7. SMALL CENTERED FINAL CTA (white) ═══════════════════ */}
-      <section className="px-6 py-20 md:py-24 text-center" style={{ background: '#FFFFFF' }}>
+      <section className="px-6 py-20 md:py-24 text-center" style={{ background: '#4945FF' }}>
         <div style={{ maxWidth: 620, margin: '0 auto' }}>
           <h2
             className="font-bold mb-4 leading-[1.1]"
             style={{
               fontSize: 'clamp(28px, 3.4vw, 40px)',
-              color: NAVY,
+              color: '#FFFFFF',
               letterSpacing: '-0.025em',
             }}
           >
@@ -517,15 +517,15 @@ export function ProductsPage() {
           </h2>
           <p
             className="mb-8 leading-relaxed mx-auto"
-            style={{ fontSize: 'clamp(15px, 1.2vw, 17px)', color: MUTED, maxWidth: 480 }}
+            style={{ fontSize: 'clamp(15px, 1.2vw, 17px)', color: 'rgba(255,255,255,0.85)', maxWidth: 480 }}
           >
             Join thousands of businesses running on Delt. Free to start, no contracts.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4">
             <Link
               to="/pricing"
-              className="inline-flex items-center gap-2 rounded-full px-7 py-3.5 font-semibold text-white transition-all duration-200 hover:brightness-110"
-              style={{ background: PURPLE, fontSize: 15, boxShadow: `0 4px 18px ${PURPLE}40` }}
+              className="inline-flex items-center gap-2 rounded-full px-7 py-3.5 font-semibold transition-all duration-200 hover:brightness-105"
+              style={{ background: '#FFFFFF', color: '#4945FF', fontSize: 15, boxShadow: '0 4px 18px rgba(0,0,0,0.18)' }}
             >
               View pricing
               <ArrowRight size={16} />
@@ -533,7 +533,7 @@ export function ProductsPage() {
             <Link
               to="/contact-sales"
               className="inline-flex items-center gap-2 font-semibold"
-              style={{ color: PURPLE, fontSize: 15 }}
+              style={{ color: '#FFFFFF', fontSize: 15 }}
             >
               Talk to sales
               <ArrowRight size={14} />

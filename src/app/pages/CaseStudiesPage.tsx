@@ -208,25 +208,25 @@ export function CaseStudiesPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-[#041E42]">
+      <section className="py-20 bg-[#4945FF]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-4xl font-bold text-white mb-6">
               Ready to write your success story?
             </h2>
-            <p className="text-xl text-white/80 mb-8">
+            <p className="text-xl text-white/85 mb-8">
               Join thousands of businesses that trust Delt to power their growth.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
                 to="/apply"
-                className="px-8 py-4 bg-[#4945FF] text-white rounded-lg hover:bg-[#3730FF] transition-colors font-semibold"
+                className="px-8 py-4 bg-white text-[#4945FF] rounded-lg hover:bg-[#F6F7FB] transition-colors font-semibold"
               >
                 Get Started Free
               </Link>
               <Link
                 to="/contact"
-                className="px-8 py-4 bg-white text-[#041E42] rounded-lg hover:bg-[#F6F7FB] transition-colors font-semibold"
+                className="px-8 py-4 bg-transparent text-white border border-white/40 rounded-lg hover:bg-white/10 transition-colors font-semibold"
               >
                 Contact Sales
               </Link>

@@ -583,31 +583,31 @@ export function ReviewsPage() {
       <section
         className="py-28 px-6 text-center relative overflow-hidden"
         style={{
-          background: `radial-gradient(ellipse 70% 80% at 50% 110%, ${PURPLE}30 0%, transparent 65%), ${NAVY}`,
+          background: `radial-gradient(ellipse 70% 80% at 50% 110%, rgba(255,255,255,0.18) 0%, transparent 65%), ${PURPLE}`,
         }}
       >
         <div className="max-w-2xl mx-auto relative">
-          <p className="text-xs font-bold tracking-[0.18em] uppercase mb-4" style={{ color: '#9DA8FF' }}>
+          <p className="text-xs font-bold tracking-[0.18em] uppercase mb-4" style={{ color: 'rgba(255,255,255,0.85)' }}>
             Your story could be next
           </p>
           <h2 className="text-5xl font-bold tracking-tight mb-5" style={{ color: WHITE, letterSpacing: '-0.025em', lineHeight: 1.05 }}>
             Join them.
           </h2>
-          <p className="mb-10 text-lg" style={{ color: 'rgba(255,255,255,0.75)' }}>
+          <p className="mb-10 text-lg" style={{ color: 'rgba(255,255,255,0.85)' }}>
             Create a free account and see why 10,000+ businesses run on Delt.
           </p>
           <div className="flex items-center justify-center gap-3 flex-wrap">
             <a
               href="#"
               className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl text-sm font-semibold"
-              style={{ background: PURPLE, color: WHITE, boxShadow: '0 8px 24px rgba(73,69,255,0.45)' }}
+              style={{ background: WHITE, color: PURPLE, boxShadow: '0 8px 24px rgba(4,30,66,0.20)' }}
             >
               Create a free account <ArrowRight size={14} />
             </a>
             <a
               href="#"
               className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl text-sm font-semibold border"
-              style={{ borderColor: 'rgba(255,255,255,0.25)', color: WHITE, background: 'rgba(255,255,255,0.05)' }}
+              style={{ borderColor: 'rgba(255,255,255,0.45)', color: WHITE, background: 'rgba(255,255,255,0.10)' }}
             >
               Talk to sales
             </a>

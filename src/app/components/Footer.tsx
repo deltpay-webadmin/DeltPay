@@ -28,7 +28,20 @@ const DARK_FOOTER_ROUTES = new Set<string>([
   '/how-it-works',
   '/delt-ai',
   '/reviews',
+  // Pages whose pre-footer CTA is now the standardized PURPLE block:
+  '/payments',
+  '/products',
+  '/capital',
+  '/pricing',
+  '/about',
+  '/about-legacy',
+  '/careers',
+  '/solutions/international-usdt',
+  '/solutions/high-risk-processing',
 ]);
+
+/** Path prefixes (dynamic routes) whose pages also end on a dark CTA. */
+const DARK_FOOTER_PREFIXES = ['/industries/'];
 
 const socialIcons = [
   { icon: Facebook, label: 'Facebook', href: 'https://www.facebook.com/' },
@@ -45,7 +58,8 @@ export function Footer() {
   // Drive theme from an explicit route map — see DARK_FOOTER_ROUTES above.
   const isDark = useMemo(() => {
     const path = (location.pathname || '/').replace(/\/$/, '') || '/';
-    return DARK_FOOTER_ROUTES.has(path);
+    if (DARK_FOOTER_ROUTES.has(path)) return true;
+    return DARK_FOOTER_PREFIXES.some((p) => path.startsWith(p));
   }, [location.pathname]);
 
   /* Themed tokens */

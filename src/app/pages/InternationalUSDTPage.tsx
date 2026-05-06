@@ -590,19 +590,18 @@ export function InternationalUSDTPage() {
           <div
             className="rounded-3xl p-10 lg:p-14 text-center"
             style={{
-              background: `linear-gradient(135deg, ${LAVENDER} 0%, #FFFFFF 100%)`,
-              border: `1px solid ${HAIRLINE}`,
+              background: '#4945FF',
             }}
           >
             <h2
               className="text-[32px] lg:text-[44px] font-extrabold leading-[1.1] mb-4"
-              style={{ color: NAVY, letterSpacing: '-0.02em' }}
+              style={{ color: '#FFFFFF', letterSpacing: '-0.02em' }}
             >
               Ready to settle international invoices today instead of next week?
             </h2>
             <p
               className="text-[17px] leading-relaxed mb-8 max-w-[640px] mx-auto"
-              style={{ color: MUTED }}
+              style={{ color: 'rgba(255,255,255,0.85)' }}
             >
               Tell us about your volume and corridors — we'll get you set up with
               Shield rails inside your Delt merchant account.
@@ -611,13 +610,13 @@ export function InternationalUSDTPage() {
               <Link
                 to="/contact-sales"
                 className="inline-flex items-center gap-2 px-7 py-4 rounded-full text-[15px] font-bold transition-all"
-                style={{ background: PURPLE, color: '#FFFFFF' }}
+                style={{ background: '#FFFFFF', color: '#4945FF' }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = '#3933CC';
+                  e.currentTarget.style.background = '#F6F7FB';
                   e.currentTarget.style.transform = 'translateY(-1px)';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = PURPLE;
+                  e.currentTarget.style.background = '#FFFFFF';
                   e.currentTarget.style.transform = 'translateY(0)';
                 }}
               >
@@ -627,15 +626,15 @@ export function InternationalUSDTPage() {
                 to="/apply"
                 className="inline-flex items-center gap-2 px-7 py-4 rounded-full text-[15px] font-bold transition-all"
                 style={{
-                  background: '#FFFFFF',
-                  color: NAVY,
-                  border: `1px solid ${HAIRLINE}`,
+                  background: 'transparent',
+                  color: '#FFFFFF',
+                  border: '1px solid rgba(255,255,255,0.4)',
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = IVORY;
+                  e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = '#FFFFFF';
+                  e.currentTarget.style.background = 'transparent';
                 }}
               >
                 Apply now <ArrowRight size={16} />

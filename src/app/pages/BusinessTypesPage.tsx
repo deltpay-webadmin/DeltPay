@@ -295,23 +295,23 @@ export function BusinessTypesPage() {
         </div>
       </section>
 
-      {/* ════════ Final CTA ════════ */}
+      {/* ════════ Final CTA (brand purple before navy footer) ════════ */}
       <section className="pb-28 pt-24 px-6">
         <div className="max-w-[1100px] mx-auto">
           <div
             className="rounded-3xl p-12 md:p-16 relative overflow-hidden"
-            style={{ background: '#041E42' }}
+            style={{ background: '#4945FF' }}
           >
             <div
               className="absolute inset-0 pointer-events-none"
               style={{
                 background:
-                  'radial-gradient(circle at 85% 15%, rgba(73,69,255,0.35) 0%, transparent 50%)',
+                  'radial-gradient(circle at 85% 15%, rgba(255,255,255,0.18) 0%, transparent 50%)',
               }}
             />
             <div className="relative grid md:grid-cols-[1.2fr_1fr] gap-10 items-center">
               <div>
-                <div className="text-[12px] font-bold uppercase tracking-[0.2em] text-[#4945FF] mb-4">
+                <div className="text-[12px] font-bold uppercase tracking-[0.2em] mb-4" style={{ color: 'rgba(255,255,255,0.9)' }}>
                   Ready when you are
                 </div>
                 <h2
@@ -323,7 +323,7 @@ export function BusinessTypesPage() {
                 >
                   One platform. Priced flat. Built for your business.
                 </h2>
-                <p className="text-[16.5px] text-white/70 leading-relaxed max-w-[520px]">
+                <p className="text-[16.5px] text-white/80 leading-relaxed max-w-[520px]">
                   Website, Payments, Lens AI, and Capital — one account, one
                   price, one concierge onboarding.
                 </p>
@@ -331,13 +331,13 @@ export function BusinessTypesPage() {
               <div className="flex flex-col gap-3">
                 <Link
                   to="/apply"
-                  className="inline-flex items-center justify-center gap-2 px-6 py-4 rounded-full bg-[#4945FF] text-white text-[15px] font-semibold hover:bg-[#3933CC] transition-colors"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-4 rounded-full bg-white text-[#4945FF] text-[15px] font-semibold hover:bg-[#F4F4F8] transition-colors"
                 >
                   Start your free trial <ArrowRight className="w-4 h-4" />
                 </Link>
                 <Link
                   to="/contact-sales"
-                  className="inline-flex items-center justify-center gap-2 px-6 py-4 rounded-full bg-white/10 text-white text-[15px] font-semibold hover:bg-white/15 transition-colors border border-white/15 backdrop-blur-sm"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-4 rounded-full bg-white/10 text-white text-[15px] font-semibold hover:bg-white/20 transition-colors border border-white/30 backdrop-blur-sm"
                 >
                   Book a 20-minute demo
                 </Link>
