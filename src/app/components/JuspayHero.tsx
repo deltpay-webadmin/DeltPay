@@ -25,13 +25,22 @@ export function JuspayHero() {
 
   return (
     <section
-      className="relative w-full overflow-hidden"
-      style={{ background: 'var(--dc-bg-navy)', color: 'var(--dc-on-dark)' }}
+      className="relative w-full overflow-hidden flex flex-col"
+      style={{
+        background: 'var(--dc-bg-navy)',
+        color: 'var(--dc-on-dark)',
+        // Fill the viewport on load so the email-capture / next section sits below the fold.
+        // Account for: (1) the 64px global top nav, and (2) the site-wide CSS `zoom`
+        // applied at the body level — because `vh` is evaluated in the un-zoomed
+        // coordinate space, dividing by --site-zoom keeps the hero exactly one
+        // physical viewport tall regardless of the active zoom factor.
+        minHeight: 'calc((100vh - 64px) / var(--site-zoom, 1))',
+      }}
     >
       {/* Live shader gradient — Delt indigo, animated */}
       <HeroShaderBackground />
 
-      <div className="relative z-[1] mx-auto w-full max-w-[1320px] px-6 lg:px-10 pt-10 lg:pt-14 pb-0">
+      <div className="relative z-[1] mx-auto w-full max-w-[1320px] px-6 lg:px-10 pt-8 lg:pt-10 pb-0 flex-1 flex flex-col">
         {/* Top centered mono volume eyebrow */}
         <div className="flex justify-center">
           <div
@@ -61,7 +70,7 @@ export function JuspayHero() {
         </div>
 
         {/* Main 2-col split */}
-        <div className="mt-12 lg:mt-16 grid grid-cols-1 lg:grid-cols-[1.05fr_1fr] gap-10 lg:gap-14 items-start">
+        <div className="mt-8 lg:mt-10 grid grid-cols-1 lg:grid-cols-[1.05fr_1fr] gap-10 lg:gap-14 items-start">
           {/* LEFT: copy */}
           <div className="relative">
             <h1
@@ -172,9 +181,10 @@ export function JuspayHero() {
           </div>
         </div>
 
-        {/* Bottom hairline + meta strip */}
+        {/* Bottom hairline + meta strip — pinned to the bottom of the viewport so the
+            hero owns the first fold and the email-capture bar lives below it. */}
         <div
-          className="mt-14 pt-5 pb-7 flex items-center justify-between gap-4 flex-wrap"
+          className="mt-auto pt-5 pb-6 flex items-center justify-between gap-4 flex-wrap"
           style={{ borderTop: '1px solid var(--dc-rule-on-dark)' }}
         >
           <span

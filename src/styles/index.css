@@ -3,3 +3,32 @@
 @import './theme.css';
 @import './delt-capital.css';
 @import './dc-global-polish.css';
+
+/* ----------------------------------------------------------------
+   Site-wide visual zoom (matches Chrome 125% — easier to read).
+   Implemented as a body-level CSS `zoom` so every section scales
+   uniformly without re-tuning individual pixel values.
+
+   We expose the factor as `--site-zoom` so layout that depends on
+   the viewport (e.g. hero `min-height: 100vh`) can divide by the
+   zoom factor to compensate — because `vh` units are evaluated in
+   the un-zoomed coordinate space.
+---------------------------------------------------------------- */
+:root {
+  --site-zoom: 1.25;
+}
+
+body {
+  zoom: var(--site-zoom);
+}
+
+/* Firefox <126 fallback (older Firefox does not support `zoom`).
+   Modern Firefox (126+, May 2024), Chrome, Edge, and Safari all
+   honor the rule above. */
+@supports not (zoom: 1) {
+  body {
+    transform: scale(var(--site-zoom));
+    transform-origin: top left;
+    width: calc(100% / var(--site-zoom));
+  }
+}
