@@ -56,7 +56,7 @@ function RepeatBuyerFunnel() {
         ))}
       </div>
       <div className="flex items-center gap-1.5 mt-3" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 11, color: '#6C63FF', fontWeight: 600 }}>
-        <Brain size={12} color="#4945FF" /> Lens AI recovering 1,200+ customers/mo
+        <Brain size={12} color="#4945FF" /> Lens recovering 1,200+ customers/mo
       </div>
     </div>
   );

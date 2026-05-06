@@ -50,7 +50,7 @@ export function Pricing() {
               </li>
               <li className="flex items-start">
                 <Check className="w-5 h-5 text-[#6366f1] mr-3 flex-shrink-0 mt-0.5" />
-                <span className="text-[#041E42]">Basic Lens AI dashboard</span>
+                <span className="text-[#041E42]">Basic Lens dashboard</span>
               </li>
             </ul>
 
@@ -91,7 +91,7 @@ export function Pricing() {
               </li>
               <li className="flex items-start">
                 <Check className="w-5 h-5 text-[#6366f1] mr-3 flex-shrink-0 mt-0.5" />
-                <span className="text-[#041E42]">Full Lens AI suite — analytics, forecasting & Ask Lens</span>
+                <span className="text-[#041E42]">Full Lens suite — analytics, forecasting & Ask Lens</span>
               </li>
               <li className="flex items-start">
                 <Check className="w-5 h-5 text-[#6366f1] mr-3 flex-shrink-0 mt-0.5" />
@@ -168,9 +168,9 @@ export function Pricing() {
                     <td className="p-6 text-center bg-[#6366f1]/5"><Check className="w-5 h-5 text-[#6366f1] mx-auto" /></td>
                   </tr>
                   
-                  {/* Lens AI */}
+                  {/* Lens */}
                   <tr>
-                    <td className="p-6 font-semibold text-[#041E42]" colSpan={3}>Lens AI</td>
+                    <td className="p-6 font-semibold text-[#041E42]" colSpan={3}>Lens</td>
                   </tr>
                   <tr>
                     <td className="p-6 text-[#6B7280] pl-10">Analytics dashboard</td>

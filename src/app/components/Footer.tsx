@@ -15,7 +15,7 @@ const PRODUCT = [
   { label: 'Payments',           href: '/payments' },
   { label: 'Capital',            href: '/capital' },
   { label: 'Websites',           href: '/website-examples' },
-  { label: 'Lens AI',            href: '/lens-ai' },
+  { label: 'Lens',               href: '/lens-ai' },
   { label: 'International / USDT', href: '/solutions/international-usdt' },
   { label: 'High Risk',          href: '/solutions/high-risk-processing' },
   { label: 'Pricing',            href: '/pricing' },

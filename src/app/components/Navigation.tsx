@@ -29,7 +29,7 @@ const productsCore = [
   { label: 'Payments',  description: 'In-store, online & mobile payment processing',  href: '/payments',         icon: CreditCard },
   { label: 'Capital',   description: 'Revenue-based funding with fast approvals',     href: '/capital',          icon: DollarSign },
   { label: 'Websites',  description: 'Professional websites built and managed for you', href: '/website-examples', icon: Globe },
-  { label: 'Lens AI',   description: 'Ask your business questions in plain English',  href: '/lens-ai',          icon: BarChart3 },
+  { label: 'Lens',      description: 'Ask your business questions in plain English (by Delt)',  href: '/lens-ai',          icon: BarChart3 },
 ];
 
 const productsSecondary = [
