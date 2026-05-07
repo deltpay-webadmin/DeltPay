@@ -3,9 +3,10 @@ import { Link } from 'react-router';
 import { motion, useScroll, useTransform, MotionValue } from 'motion/react';
 import { Globe, CreditCard, TrendingUp, Sparkles, ArrowRight, Check } from 'lucide-react';
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';
-import websiteImg from 'figma:asset/6371f372d9648e34936d619f0240fb4443da5f92.png';
-import capitalImg from 'figma:asset/294c7fbb10dd1c373bff0764a9c07ba072be56f8.png';
-import lensAiImg from 'figma:asset/78721b9b7179a89090d323016aa6b043d0dda27d.png';
+import websiteImg from '@/assets/6371f372d9648e34936d619f0240fb4443da5f92.png';
+import paymentsImg from '@/assets/payments_panel.png';
+import capitalImg from '@/assets/294c7fbb10dd1c373bff0764a9c07ba072be56f8.png';
+import lensAiImg from '@/assets/78721b9b7179a89090d323016aa6b043d0dda27d.png';
 
 /* ── Product Data ── */
 const products = [
@@ -39,7 +40,7 @@ const products = [
       'PCI-compliant, encrypted by default',
     ],
     icon: CreditCard,
-    image: 'https://images.unsplash.com/photo-1715635845732-b52d2f408a40?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjb250YWN0bGVzcyUyMHBheW1lbnQlMjBjYXJkJTIwdGVybWluYWwlMjBwcm9mZXNzaW9uYWx8ZW58MXx8fHwxNzc1MTM3MTczfDA&ixlib=rb-4.1.0&q=80&w=1080',
+    image: paymentsImg,
     color: '#4945FF',
     stat: { value: '2.6%', label: 'Flat processing rate' },
   },
@@ -95,7 +96,10 @@ function ProductCard({ i, product, progress, range, targetScale }: CardProps) {
     offset: ['start end', 'start start'],
   });
 
-  const imageScale = useTransform(scrollYProgress, [0, 1], [1.5, 1]);
+  // Subtle settle (1.06 → 1) instead of a 1.5x zoom — keeps the
+  // hero image cleanly framed inside the right column without
+  // bleeding past the rounded card edge during scroll.
+  const imageScale = useTransform(scrollYProgress, [0, 1], [1.06, 1]);
   const scale = useTransform(progress, range, [1, targetScale]);
   const Icon = product.icon;
 
@@ -443,15 +447,29 @@ export function HowItWorksPage() {
         .hiw-card-right {
           width: 45%;
           position: relative;
-          overflow: hidden;
           flex-shrink: 0;
+          padding: 28px 28px 28px 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
         }
         .hiw-card-img-wrap {
-          width: 100%; height: 100%;
+          width: 100%;
+          height: 100%;
+          border-radius: 16px;
+          overflow: hidden;
+          background: linear-gradient(135deg, rgba(73,69,255,0.10) 0%, rgba(255,255,255,0.04) 100%);
+          border: 1px solid rgba(255,255,255,0.06);
+          box-shadow: 0 16px 40px rgba(0,0,0,0.25), inset 0 0 0 1px rgba(255,255,255,0.03);
+          display: flex;
+          align-items: center;
+          justify-content: center;
         }
         .hiw-card-img {
-          width: 100%; height: 100%;
+          width: 100%;
+          height: 100%;
           object-fit: cover;
+          display: block;
         }
 
         .hiw-card-step {
@@ -542,6 +560,16 @@ export function HowItWorksPage() {
         }
 
         /* Responsive */
+        @media (max-width: 900px) {
+          .hiw-card-right {
+            padding: 0 20px 20px;
+            min-height: 280px;
+          }
+          .hiw-card-img-wrap {
+            aspect-ratio: 4 / 3;
+            height: auto;
+          }
+        }
         @media (max-width: 768px) {
           .hiw-card { width: 92vw; min-height: auto; }
           .hiw-card-inner {
@@ -552,6 +580,7 @@ export function HowItWorksPage() {
             width: 100%;
             flex: 1;
             min-height: 0;
+            padding: 0 20px 20px;
           }
           .hiw-card-left {
             flex: 1;
