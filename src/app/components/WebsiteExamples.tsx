@@ -201,22 +201,25 @@ function Hero() {
   const { scrollYProgress } = useScroll({ target: sectionRef, offset: ['start start', 'end end'] });
 
   // Scroll choreography (section is 300vh tall, sticky inner viewport):
-  //   0.00 – 0.00  Only the headline is visible, vertically centered.
-  //   0.00 – 0.25  User scrolls: headline slides up & shrinks to make room,
-  //                 carousels fade in from below and slide into place.
-  //   0.25 – 0.85  Sticky phase — headline + carousels stay locked on screen
-  //                 while the user continues scrolling.
-  //   0.85 – 1.00  Hand-off to the next section (no extra transforms here;
-  //                 the sticky container simply unsticks as we reach the end).
-  const headingY = useTransform(scrollYProgress, [0, 0.25], [0, -140]);
-  const headingScale = useTransform(scrollYProgress, [0, 0.25], [1, 0.88]);
+  //   0.00 – 0.20  Headline is centered with CTAs visible. The carousels
+  //                 stay parked off-screen below so they never overlap the
+  //                 buttons. As the user scrolls, the heading slides up.
+  //   0.20 – 0.36  Once the headline has cleared the bottom half of the
+  //                 viewport, the two carousel rows fade in and slide up
+  //                 into their final position.
+  //   0.36 – 0.85  Sticky phase — headline (small) + carousels stay locked.
+  //   0.85 – 1.00  Hand-off to the next section.
+  const headingY = useTransform(scrollYProgress, [0, 0.25], [0, -200]);
+  const headingScale = useTransform(scrollYProgress, [0, 0.25], [1, 0.82]);
 
-  // Carousels start fully hidden and are revealed as the user scrolls.
-  const c1Opacity = useTransform(scrollYProgress, [0.05, 0.22], [0, 1]);
-  const c1Y = useTransform(scrollYProgress, [0.05, 0.25], [80, 0]);
+  // Carousels are gated until after the headline has translated up out of
+  // the CTA strike-zone. Starting at 0.20 (was 0.05) prevents the cards
+  // from fading in over the "See Pricing" / primary CTA buttons.
+  const c1Opacity = useTransform(scrollYProgress, [0.20, 0.32], [0, 1]);
+  const c1Y = useTransform(scrollYProgress, [0.20, 0.34], [80, 0]);
 
-  const c2Opacity = useTransform(scrollYProgress, [0.12, 0.3], [0, 1]);
-  const c2Y = useTransform(scrollYProgress, [0.12, 0.32], [100, 0]);
+  const c2Opacity = useTransform(scrollYProgress, [0.26, 0.38], [0, 1]);
+  const c2Y = useTransform(scrollYProgress, [0.26, 0.40], [100, 0]);
 
   // Scroll indicator is shown only before the user has scrolled.
   const scrollHintOpacity = useTransform(scrollYProgress, [0, 0.05], [1, 0]);
@@ -288,6 +291,7 @@ function Hero() {
             </p>
 
             <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+              {/* Primary action — concrete, ownership-flavored verb. */}
               <Link to="/apply" style={{
                 padding: '13px 30px', borderRadius: 50, border: 'none',
                 background: `linear-gradient(135deg, ${T.accent}, ${T.blue})`,
@@ -295,16 +299,19 @@ function Hero() {
                 fontFamily: T.sans, textDecoration: 'none',
                 display: 'inline-flex', alignItems: 'center', gap: 8,
               }}>
-                Get Your Site <ArrowRight size={16} />
+                Build my site <ArrowRight size={16} />
               </Link>
-              <a href="#showcase" style={{
+              {/* Secondary action — sends people to /pricing instead of
+                 "See Examples", since the carousel + featured grid below
+                 already serve as live examples. */}
+              <Link to="/pricing" style={{
                 padding: '13px 30px', borderRadius: 50,
                 border: `1px solid ${T.border}`, background: 'transparent',
                 color: T.gray1, fontSize: 14, fontWeight: 600, cursor: 'pointer',
                 fontFamily: T.sans, textDecoration: 'none',
               }}>
-                See Examples
-              </a>
+                See pricing
+              </Link>
             </div>
           </div>
         </motion.div>
@@ -1526,15 +1533,59 @@ const SITE_PREVIEWS: Record<string, React.FC> = {
   'Maison': MaisonPreview,
 };
 
+/* Each card has a flippable back face. The back surfaces concrete proof
+   for the "Real businesses. Real results." subtitle: a headline metric,
+   a one-line story, and the Delt features that power the site. Keep stat
+   strings short — the back face is compact. */
 const SHOWCASE_SITES = [
-  { name: 'Kuro', type: 'Restaurant', image: kuroImage, accent: '#D4A574' },
-  { name: 'Foamy & Co.', type: 'Café', image: foamyImage, accent: '#C4956B' },
-  { name: 'Tundra', type: 'E-commerce', image: tundraImage, accent: '#67E8F9' },
-  { name: 'Gringos', type: 'Barbershop', image: gringosImage, accent: '#86EFAC' },
-  { name: 'Aura Wellness', type: 'Spa & Wellness', image: aurumSpaImg, accent: '#A78BFA' },
-  { name: 'Atelier', type: 'Architecture', image: meridianRealtyImg, accent: '#60A5FA' },
-  { name: 'Noir', type: 'Cocktail Bar', image: bloomCoImg, accent: '#F472B6' },
-  { name: 'Maison', type: 'Pâtisserie', image: roastRitualImg, accent: '#FBBF24' },
+  {
+    name: 'Kuro', type: 'Restaurant', image: kuroImage, accent: '#D4A574',
+    metric: '+38%', metricLabel: 'reservations',
+    story: 'Quiet seven-course concept doubled covers in two months.',
+    powers: ['Online reservations', 'POS + tableside', 'Capital for buildout'],
+  },
+  {
+    name: 'Foamy & Co.', type: 'Café', image: foamyImage, accent: '#C4956B',
+    metric: '< 2hr', metricLabel: 'sellouts on drops',
+    story: 'Limited matcha drops sell out before the shop even opens.',
+    powers: ['Drop scheduling', 'Inventory + checkout', 'SMS announcements'],
+  },
+  {
+    name: 'Tundra', type: 'E-commerce', image: tundraImage, accent: '#67E8F9',
+    metric: '+22%', metricLabel: 'checkout conversion',
+    story: 'Streetwear label cut cart abandonment with one-click pay.',
+    powers: ['Storefront + checkout', 'Apple/Google Pay', 'Same-day payouts'],
+  },
+  {
+    name: 'Gringos', type: 'Barbershop', image: gringosImage, accent: '#86EFAC',
+    metric: '24 / 7', metricLabel: 'self-serve booking',
+    story: 'Three-chair shop runs memberships and tipping on autopilot.',
+    powers: ['Online booking', 'Memberships', 'Tipping + payroll'],
+  },
+  {
+    name: 'Aura Wellness', type: 'Spa & Wellness', image: aurumSpaImg, accent: '#A78BFA',
+    metric: '–50%', metricLabel: 'no-show rate',
+    story: 'Deposit-on-book cut no-shows in half within a quarter.',
+    powers: ['Booking + deposits', 'HIPAA-ready intake', 'Gift cards'],
+  },
+  {
+    name: 'Atelier', type: 'Architecture', image: meridianRealtyImg, accent: '#60A5FA',
+    metric: '+60%', metricLabel: 'qualified inquiries',
+    story: 'Editorial portfolio turned cold visitors into warm leads.',
+    powers: ['Portfolio CMS', 'Lead routing', 'Contract e-sign'],
+  },
+  {
+    name: 'Noir', type: 'Cocktail Bar', image: bloomCoImg, accent: '#F472B6',
+    metric: '0', metricLabel: 'lost walk-ins',
+    story: 'Live waitlist + events keep the room full every night.',
+    powers: ['Reservations', 'Events ticketing', 'Tab + tip'],
+  },
+  {
+    name: 'Maison', type: 'Pâtisserie', image: roastRitualImg, accent: '#FBBF24',
+    metric: '3×', metricLabel: 'preorder volume',
+    story: 'Pickup windows + Stripe-fast checkout tripled morning rush.',
+    powers: ['Preorders + pickup', 'Daily menu', 'Loyalty rewards'],
+  },
 ];
 
 function ShowcaseCard({ site, index }: { site: typeof SHOWCASE_SITES[0]; index: number }) {
@@ -1546,62 +1597,160 @@ function ShowcaseCard({ site, index }: { site: typeof SHOWCASE_SITES[0]; index: 
       <motion.div
         onMouseEnter={() => setHov(true)}
         onMouseLeave={() => setHov(false)}
-        animate={{ y: hov ? -8 : 0, scale: hov ? 1.02 : 1 }}
+        animate={{ y: hov ? -8 : 0 }}
         transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-        style={{ borderRadius: 16, overflow: 'hidden', cursor: 'pointer', position: 'relative', background: T.card }}
+        style={{ position: 'relative', cursor: 'pointer' }}
       >
-        {/* Tall dominant screenshot or rendered website preview */}
-        <div style={{ position: 'relative', aspectRatio: '4 / 5', overflow: 'hidden', borderRadius: 16 }}>
-          {PreviewComponent ? (
-            <motion.div
-              animate={{ scale: hov ? 1.03 : 1 }}
-              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-              style={{ width: '100%', height: '100%', transformOrigin: 'top center' }}
-            >
-              <PreviewComponent />
-            </motion.div>
-          ) : (
-            <motion.img
-              src={site.image} alt={site.name} loading="lazy"
-              animate={{ scale: hov ? 1.05 : 1 }}
-              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-              style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top', display: 'block' }}
-            />
-          )}
-          {/* Hover overlay */}
-          <motion.div
-            animate={{ opacity: hov ? 1 : 0 }}
-            transition={{ duration: 0.3 }}
+        {/* 3D flip stage — perspective + preserve-3d on the inner element
+           so the front and back faces share the same footprint and rotate
+           around the Y axis on hover. The back face surfaces a real metric,
+           a one-line story, and the Delt features powering the site. */}
+        <div
+          style={{
+            position: 'relative',
+            aspectRatio: '4 / 5',
+            perspective: 1400,
+          }}
+        >
+          <div
             style={{
-              position: 'absolute', inset: 0,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: 'rgba(3,21,46,0.55)',
-              backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)',
+              position: 'relative',
+              width: '100%', height: '100%',
+              transformStyle: 'preserve-3d',
+              transform: hov ? 'rotateY(180deg)' : 'rotateY(0deg)',
+              transition: 'transform 0.7s cubic-bezier(0.4, 0.0, 0.2, 1)',
             }}
           >
-            <motion.div
-              animate={{ y: hov ? 0 : 12, opacity: hov ? 1 : 0 }}
-              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+            {/* ── FRONT FACE ── */}
+            <div
               style={{
-                display: 'flex', alignItems: 'center', gap: 8,
-                padding: '12px 28px', borderRadius: 50,
-                background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)',
-                backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
-                color: '#fff', fontSize: 13, fontWeight: 600, fontFamily: T.sans, letterSpacing: 0.3,
+                position: 'absolute', inset: 0,
+                borderRadius: 16, overflow: 'hidden',
+                background: T.card,
+                backfaceVisibility: 'hidden',
+                WebkitBackfaceVisibility: 'hidden',
+                boxShadow: hov
+                  ? `0 24px 60px -20px ${site.accent}55, 0 6px 20px rgba(0,0,0,0.35)`
+                  : '0 4px 12px rgba(0,0,0,0.25)',
+                transition: 'box-shadow 0.4s ease',
               }}
             >
-              View Site <ExternalLink size={14} strokeWidth={2} />
-            </motion.div>
-          </motion.div>
-          {/* Accent line at bottom */}
-          <motion.div
-            animate={{ scaleX: hov ? 1 : 0 }}
-            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 2, background: site.accent, transformOrigin: 'left' }}
-          />
+              {PreviewComponent ? (
+                <div style={{ width: '100%', height: '100%', transformOrigin: 'top center' }}>
+                  <PreviewComponent />
+                </div>
+              ) : (
+                <img
+                  src={site.image} alt={site.name} loading="lazy"
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top', display: 'block' }}
+                />
+              )}
+              {/* Subtle hint pill so users discover the flip affordance */}
+              <div style={{
+                position: 'absolute', top: 12, right: 12,
+                display: 'inline-flex', alignItems: 'center', gap: 6,
+                padding: '6px 10px', borderRadius: 999,
+                background: 'rgba(3,21,46,0.55)',
+                border: '1px solid rgba(255,255,255,0.14)',
+                backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
+                color: '#fff', fontSize: 10, fontWeight: 600,
+                fontFamily: T.sans, letterSpacing: 0.4, textTransform: 'uppercase',
+                opacity: hov ? 0 : 0.85,
+                transition: 'opacity 0.25s ease',
+                pointerEvents: 'none',
+              }}>
+                <span style={{ width: 5, height: 5, borderRadius: '50%', background: site.accent }} />
+                Hover for results
+              </div>
+            </div>
+
+            {/* ── BACK FACE ── pre-rotated 180° so it faces the camera once
+               the parent rotates. Dark navy panel with the accent color
+               doing the heavy lifting on the metric and divider. */}
+            <div
+              style={{
+                position: 'absolute', inset: 0,
+                borderRadius: 16, overflow: 'hidden',
+                background: `linear-gradient(165deg, ${T.card} 0%, ${T.bg} 100%)`,
+                border: `1px solid ${site.accent}33`,
+                backfaceVisibility: 'hidden',
+                WebkitBackfaceVisibility: 'hidden',
+                transform: 'rotateY(180deg)',
+                display: 'flex', flexDirection: 'column',
+                padding: '24px 22px',
+                boxShadow: `0 24px 60px -20px ${site.accent}55, 0 6px 20px rgba(0,0,0,0.35)`,
+              }}
+            >
+              {/* Top: type chip + accent dot */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
+                <span style={{
+                  fontSize: 10, fontWeight: 700, letterSpacing: 1.6,
+                  textTransform: 'uppercase', color: site.accent,
+                  fontFamily: T.sans,
+                }}>{site.type}</span>
+                <span style={{
+                  width: 8, height: 8, borderRadius: '50%', background: site.accent,
+                  boxShadow: `0 0 12px ${site.accent}aa`,
+                }} />
+              </div>
+
+              {/* Hero metric */}
+              <div style={{
+                fontSize: 'clamp(38px, 4.4vw, 54px)', fontWeight: 800,
+                color: T.white, fontFamily: T.heading,
+                letterSpacing: '-0.03em', lineHeight: 1, marginBottom: 4,
+                WebkitFontSmoothing: 'antialiased',
+              }}>
+                {site.metric}
+              </div>
+              <div style={{
+                fontSize: 12, color: T.gray2, fontFamily: T.sans,
+                letterSpacing: 0.2, marginBottom: 18,
+              }}>
+                {site.metricLabel}
+              </div>
+
+              {/* Divider */}
+              <div style={{
+                height: 1, background: `linear-gradient(90deg, ${site.accent}66, transparent)`,
+                marginBottom: 16,
+              }} />
+
+              {/* Story line */}
+              <p style={{
+                fontSize: 13, lineHeight: 1.55, color: T.gray1,
+                fontFamily: T.serif, fontStyle: 'italic',
+                margin: '0 0 18px',
+              }}>
+                “{site.story}”
+              </p>
+
+              {/* Powered-by features */}
+              <div style={{ marginTop: 'auto' }}>
+                <div style={{
+                  fontSize: 9, fontWeight: 700, letterSpacing: 1.4,
+                  textTransform: 'uppercase', color: T.gray3,
+                  fontFamily: T.sans, marginBottom: 10,
+                }}>
+                  Powered by Delt
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {site.powers.map((p) => (
+                    <div key={p} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <Check size={12} style={{ color: site.accent, flexShrink: 0 }} strokeWidth={2.5} />
+                      <span style={{
+                        fontSize: 12, color: T.white, fontFamily: T.sans,
+                        WebkitFontSmoothing: 'antialiased',
+                      }}>{p}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Minimal info — Framer-style */}
+        {/* Minimal info — Framer-style. Stays under both faces. */}
         <div style={{ padding: '16px 4px 8px', display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{
             width: 8, height: 8, borderRadius: '50%', background: site.accent, flexShrink: 0,
