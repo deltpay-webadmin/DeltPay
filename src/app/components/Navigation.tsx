@@ -439,22 +439,13 @@ export function Navigation() {
                       </div>
                     </div>
                     <div
-                      className="px-6 py-4 flex items-center justify-between"
+                      className="px-6 py-4 flex items-center justify-end"
                       style={{
                         background: 'rgba(73, 69, 255, 0.05)',
                         borderTop: '1px solid rgba(4, 30, 66, 0.06)',
                       }}
                     >
-                      <span
-                        className="text-[11px] tracking-[0.14em]"
-                        style={{
-                          fontFamily: 'var(--dc-font-mono)',
-                          color: 'var(--dc-on-light-subtle)',
-                          textTransform: 'uppercase',
-                        }}
-                      >
-                        — VOL. VII · Q2 2026
-                      </span>
+                      {/* VOL. VII · Q2 2026 dateline removed per user request. */}
                       <Link to="/calculator" className="dc-btn-secondary">
                         Run the calculator
                       </Link>

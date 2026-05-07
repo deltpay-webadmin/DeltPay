@@ -48,33 +48,8 @@ export function JuspayHero() {
       <HeroShaderBackground />
 
       <div className="relative z-[1] mx-auto w-full max-w-[1320px] px-6 lg:px-10 pt-8 lg:pt-10 pb-0 flex-1 flex flex-col">
-        {/* Top centered mono volume eyebrow */}
-        <div className="flex justify-center">
-          <div
-            className="flex items-center gap-3 text-[11px] tracking-[0.18em]"
-            style={{
-              fontFamily: 'var(--dc-font-mono)',
-              color: 'var(--dc-on-dark-muted)',
-              textTransform: 'uppercase',
-            }}
-          >
-            <span>VOL. VII</span>
-            <span style={{ color: 'var(--dc-on-dark-faint)' }}>·</span>
-            <span>Q2 2026</span>
-            <span style={{ color: 'var(--dc-on-dark-faint)' }}>·</span>
-            <span>DIRECT FUNDING</span>
-            <span style={{ color: 'var(--dc-on-dark-faint)' }}>·</span>
-            <span>EST. 2019</span>
-            <span style={{ color: 'var(--dc-on-dark-faint)' }}>·</span>
-            <span className="inline-flex items-center gap-2" style={{ color: '#A5B4FC' }}>
-              <span
-                className="inline-block h-1.5 w-1.5 rounded-full"
-                style={{ background: '#A5B4FC', boxShadow: '0 0 8px #A5B4FC' }}
-              />
-              QUOTING NOW
-            </span>
-          </div>
-        </div>
+        {/* Top centered mono volume eyebrow removed per user request
+            (was: VOL. VII · Q2 2026 · DIRECT FUNDING · EST. 2019 · QUOTING NOW). */}
 
         {/* Single-column copy block — the right-side visual was removed
             (no dashboard, no hero image). The animated shader gradient is
