@@ -37,6 +37,7 @@ import { HelpCenterPage } from '@/app/pages/HelpCenterPage';
 import { WebsiteExamples } from '@/app/components/WebsiteExamples';
 import { CustomCursor } from '@/app/components/CustomCursor';
 import { CapitalPage } from '@/app/pages/CapitalPage';
+import { ResourcePage } from '@/app/pages/ResourcePage';
 import { CalculatorPage } from '@/app/pages/CalculatorPage';
 import { GetAQuotePage } from '@/app/pages/GetAQuotePage';
 import { IndustryPage } from '@/app/pages/IndustryPage';
@@ -105,6 +106,9 @@ export default function App() {
                 <Route path="/lens-demo" element={<LensDemoPage />} />
                 <Route path="/solutions/international-usdt" element={<InternationalUSDTPage />} />
                 <Route path="/solutions/high-risk-processing" element={<HighRiskProcessingPage />} />
+                {/* Capital "More for your business" cards — each links to a
+                    full editorial article rendered by ResourcePage. */}
+                <Route path="/resources/:slug" element={<ResourcePage />} />
               </Routes>
               <Footer />
               {/* DeltMarquee renders BELOW the footer, on the home page only

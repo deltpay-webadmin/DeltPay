@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Sparkles, ChevronDown, Check, Plus, Mic, ArrowUp, Info } from 'lucide-react';
 import { LensScrollRevealText } from '../components/LensScrollRevealText';
 import { LensStackingPanels } from '../components/LensStackingPanels';
+import { Sparkles as SparkleField } from '../components/Sparkles';
 import deltLogoImg from 'figma:asset/ba16007295b082bbfe774b1ba0c31a403b5502d6.png';
 
 /* ─────────────────────────────────────────────────────────────
@@ -666,11 +667,43 @@ export function LensAIPage() {
         position: 'relative',
         overflow: 'hidden',
       }}>
+        {/* Base indigo wash from the bottom — anchors the glow before
+            sparkles paint on top. */}
         <div aria-hidden style={{
           position: 'absolute', inset: 0, pointerEvents: 'none',
           background: `radial-gradient(ellipse 60% 50% at 50% 100%, ${C.purple}25 0%, transparent 70%)`,
         }} />
-        <div style={{ position: 'relative', maxWidth: 640, margin: '0 auto' }}>
+
+        {/* Sparkle field — confined to the lower half, masked with a
+            radial fade so density peaks at the bottom-center under the
+            glow and dies off near the top. Mirrors the reference
+            snippet's mask + radial-glow combo, just retuned for our
+            navy/indigo palette instead of the blue-on-black original. */}
+        <div
+          aria-hidden
+          className="lens-cta-sparkles"
+          style={{
+            position: 'absolute',
+            inset: 0,
+            pointerEvents: 'none',
+            zIndex: 0,
+            overflow: 'hidden',
+            WebkitMaskImage:
+              'radial-gradient(120% 70% at 50% 100%, #000 0%, rgba(0,0,0,0.6) 45%, transparent 80%)',
+            maskImage:
+              'radial-gradient(120% 70% at 50% 100%, #000 0%, rgba(0,0,0,0.6) 45%, transparent 80%)',
+          }}
+        >
+          <SparkleField
+            density={1800}
+            speed={1.0}
+            color="#7FB6FF"
+            direction="top"
+            className="lens-cta-sparkles__canvas"
+          />
+        </div>
+
+        <div style={{ position: 'relative', zIndex: 1, maxWidth: 640, margin: '0 auto' }}>
           <h2 style={{
             margin: '0 0 16px',
             fontSize: 'clamp(2rem, 5vw, 3.5rem)',
@@ -827,6 +860,15 @@ export function LensAIPage() {
         @media (prefers-reduced-motion: reduce) {
           .lens-chat-card { animation: none; }
           .lens-chat-shimmer::before { animation: none; opacity: 0; }
+        }
+
+        /* Sparkle canvas should fill its wrapper exactly. */
+        .lens-cta-sparkles__canvas {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          display: block;
         }
 
         /* Blinking caret for the JS typewriter placeholder */
