@@ -298,7 +298,14 @@ export function PaymentsPage() {
                 <div
                   className="font-black leading-[0.88] mb-4"
                   style={{
-                    fontSize: 'clamp(120px, 16vw, 200px)',
+                    /* Toned down — site-wide body { zoom: 1.08 } visually
+                       inflates this ~8% over the original calibration, so
+                       the 200px upper bound was rendering closer to 215px
+                       and dominating the card. The new clamp lands the
+                       glyph in a confident-but-not-shouting 90–145px
+                       range, which still anchors the card without
+                       overwhelming the supporting copy. */
+                    fontSize: 'clamp(88px, 11vw, 144px)',
                     letterSpacing: '-0.04em',
                     color: NAVY,
                   }}
