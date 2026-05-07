@@ -216,32 +216,38 @@ function DigestMockup() {
 
 /* ── Panel data ─────────────────────────────────────────────── */
 
+/* Panel copy is framed around the Brian Tracy idea that customers
+   buy outcomes, transformations, and improvements — not features.
+   So each panel leads with the outcome (a calmer week, fewer
+   blind spots, more time back) instead of describing the
+   underlying capability. The capability is still there, but it
+   now sits in service of the transformation. */
 const PANELS = [
   {
     counter: '01 / 04',
-    title: 'Ask in plain English',
-    body: 'Tell Lens what you want to know and get a clear answer in seconds. No SQL, no dashboards, no reports to build. Just ask.',
+    title: 'Stop guessing. Start knowing.',
+    body: 'You stop digging through dashboards and start getting straight answers. Ask in plain English and have what you need in seconds — the kind of clarity that turns a hunch into a decision you can stand behind.',
     cta: 'Start asking',
     mockup: <ChatMockup />,
   },
   {
     counter: '02 / 04',
-    title: 'Answers grounded in your data',
-    body: 'Every answer is wired to your real Payments, POS, and bank feed — with the source cited, so you can verify and trust it.',
+    title: 'Trust every number you act on.',
+    body: 'You replace gut calls with answers you can verify. Every reply is wired to your real Payments, POS, and bank feed and shows its source — so when you change a price, cut a shift, or call a supplier, you know the move is grounded in truth, not in a report.',
     cta: 'See how grounding works',
     mockup: <AnswerMockup />,
   },
   {
     counter: '03 / 04',
-    title: 'Acts on your behalf',
-    body: 'Ask Lens to pause a discount, reorder inventory, or nudge your team — and it does it. You approve, Lens executes.',
+    title: 'Get hours back every week.',
+    body: 'You go from running the busywork to running the business. Tell Lens to pause a discount, reorder stock, or nudge a teammate and it does it for you — you stay in control, you stop being the bottleneck, you get your evenings back.',
     cta: 'Explore actions',
     mockup: <ActionMockup />,
   },
   {
     counter: '04 / 04',
-    title: 'Always on, always learning',
-    body: 'Lens quietly watches your business and surfaces what matters — weekly digests, anomaly alerts, and proactive suggestions.',
+    title: 'Spot the problem before it costs you.',
+    body: 'You stop finding out about the bad week on Sunday. Lens watches the business with you — surfacing the slow shift, the missed reorder, the small leak — so you fix what matters early instead of paying for it at month-end.',
     cta: 'Get started with Lens',
     mockup: <DigestMockup />,
   },
@@ -362,7 +368,7 @@ function StackIntro() {
           marginBottom: 20,
         }}
       >
-        How Lens shows up for you
+What you actually get
       </div>
       <h2
         style={{
@@ -375,7 +381,7 @@ function StackIntro() {
           margin: '0 0 18px',
         }}
       >
-        You don’t buy software. You buy a better business.
+You’re not buying software. You’re buying a better business.
       </h2>
       <p
         style={{
@@ -386,9 +392,7 @@ function StackIntro() {
           margin: 0,
         }}
       >
-        Lens isn’t a dashboard or a feature list. It’s the outcome
-        underneath — clearer answers, faster decisions, a calmer
-        week. Here’s how that shows up, day to day.
+Owners don’t buy features — they buy outcomes, improvements, and transformations. Lens is the transformation: fewer blind spots, faster decisions, hours back in your week, and a business that runs steadier than it did last month.
       </p>
     </div>
   );

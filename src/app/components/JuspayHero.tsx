@@ -10,7 +10,7 @@ import { HeroShaderBackground } from './HeroShaderBackground';
    meta strip ("SCROLL — THE NUMBERS ↓" · ledger line).
    ────────────────────────────────────────────────────────────── */
 
-const ROTATING_WORDS = ['back', 'wire', 'fund', 'fuel'];
+const ROTATING_WORDS = ['fund', 'back', 'build', 'power'];
 
 export function JuspayHero() {
   const [wordIdx, setWordIdx] = useState(0);

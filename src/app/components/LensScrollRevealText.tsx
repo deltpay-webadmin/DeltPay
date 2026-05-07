@@ -124,10 +124,22 @@ export function LensScrollRevealText() {
            We compensate by sizing in terms of 125vh on desktop
            (100 / 0.8 = 125) so the sticky frame visually fills the
            entire viewport. Mobile has no zoom and uses 100vh directly. */
+        /* Match the lavender wash of the section above (Lens chat hero) and
+           the section below (stacking panels) so this scroll-tall block no
+           longer renders as a giant white slab between two purple-tinted
+           sections. The moving sunset still rises through it; the soft
+           lavender base just removes the visible white gap at the top of
+           the section before the gradient saturates the bottom. */
         .lsrt-outer {
           position: relative;
           height: 320vh;
-          background: #FFFFFF;
+          background:
+            linear-gradient(180deg,
+              #EDEBFF 0%,
+              #F4F2FF 18%,
+              #FFFFFF 50%,
+              #F4F2FF 82%,
+              #EDEBFF 100%);
         }
 
         /* Sticky layer pins the headline AND contains the moving sunset.
