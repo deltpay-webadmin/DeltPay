@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router';
 import { Sparkles, ChevronDown, Check, Plus, Mic, ArrowUp, Info } from 'lucide-react';
 import { LensScrollRevealText } from '../components/LensScrollRevealText';
 import { LensStackingPanels } from '../components/LensStackingPanels';
@@ -145,11 +146,23 @@ function FaqItem({ q, a, open, onToggle }: { q: string; a: string; open: boolean
    MAIN PAGE
    ───────────────────────────────────────────────────────────── */
 export function LensAIPage() {
+  const navigate = useNavigate();
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const [planMode, setPlanMode] = useState(false);
   const [input, setInput] = useState('');
   const [inputFocused, setInputFocused] = useState(false);
   const typedText = useTypewriter(TYPE_PROMPTS, !input && !inputFocused);
+
+  const openChat = (q: string) => {
+    const trimmed = q.trim();
+    if (!trimmed) return;
+    navigate(`/lens-ai/chat?q=${encodeURIComponent(trimmed)}`);
+  };
+
+  const handleHeroSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    openChat(input);
+  };
 
   return (
     <div style={{ fontFamily: FONT, color: C.navy, background: C.white }}>
@@ -304,7 +317,7 @@ export function LensAIPage() {
           }} />
 
           {/* Liquid-glass card — layered gradients + inner highlight */}
-          <div className="lens-chat-card" style={{
+          <form onSubmit={handleHeroSubmit} className="lens-chat-card" style={{
             position: 'relative', zIndex: 1,
             background: 'linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(255,255,255,0.82) 100%)',
             backdropFilter: 'blur(20px) saturate(140%)',
@@ -453,21 +466,22 @@ export function LensAIPage() {
 
               {/* Send — flat dark circle when empty, indigo when typed */}
               <button
-                type="button"
+                type="submit"
                 aria-label="Ask Lens"
+                disabled={!input.trim()}
                 style={{
                   width: 36, height: 36, borderRadius: '50%',
                   border: 'none',
                   background: input.trim() ? C.purple : '#475569',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  cursor: 'pointer', color: C.white,
+                  cursor: input.trim() ? 'pointer' : 'not-allowed', color: C.white,
                   transition: 'background 0.2s',
                 }}
               >
                 <ArrowUp size={16} strokeWidth={2.5} />
               </button>
             </div>
-          </div>
+          </form>
         </div>
 
         {/* Label */}
@@ -480,7 +494,7 @@ export function LensAIPage() {
           {SUGGESTIONS.map(s => (
             <button
               key={s}
-              onClick={() => setInput(s)}
+              onClick={() => openChat(s)}
               style={{
                 background: C.white, border: `1.5px solid ${C.line}`,
                 borderRadius: 999, padding: '8px 16px',

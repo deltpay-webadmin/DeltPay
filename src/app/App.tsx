@@ -23,6 +23,7 @@ import { WhatsNewPage } from '@/app/pages/WhatsNewPage';
 import { AboutUsPage } from '@/app/pages/AboutUsPage';
 import { ReviewsPage } from '@/app/pages/ReviewsPage';
 import { LensAIPage } from '@/app/pages/LensAIPage';
+import { LensAIChatPage } from '@/app/pages/LensAIChatPage';
 import { WebsiteBuilderDemo } from '@/app/pages/WebsiteBuilderDemo';
 import { ApplicationPage } from '@/app/pages/ApplicationPage';
 import { AboutPage } from '@/app/pages/AboutPage';
@@ -59,6 +60,7 @@ export default function App() {
           <Route path="/cart" element={<ShoppingCartPage />} />
           <Route path="/delt-ai-chat" element={<DeltAI />} />
           <Route path="/lens-chat" element={<LensChatPage />} />
+          <Route path="/lens-ai/chat" element={<LensAIChatPage />} />
           <Route path="/website-builder" element={<WebsiteBuilderDemo />} />
           <Route path="*" element={
             <div className="min-h-screen bg-white relative">
