@@ -503,7 +503,7 @@ export function CapitalPage() {
 
             <div className="mt-9 flex flex-wrap items-center gap-4">
               <Link
-                to="/sign-up"
+                to="/onboarding"
                 className="inline-flex items-center gap-2 rounded-full px-7 py-3.5 font-semibold text-white transition-all duration-200 hover:brightness-110"
                 style={{
                   background: PURPLE,
@@ -1024,7 +1024,7 @@ export function CapitalPage() {
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4">
             <Link
-              to="/demo"
+              to="/onboarding"
               className="inline-flex items-center gap-2 px-7 py-3.5 text-white transition-all duration-200 hover:brightness-110"
               style={{
                 borderRadius: '6px',
@@ -1034,7 +1034,7 @@ export function CapitalPage() {
                 fontWeight: 600,
               }}
             >
-              Schedule a demo
+              Get started
               <ArrowRight size={16} />
             </Link>
             <Link

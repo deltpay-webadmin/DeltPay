@@ -688,7 +688,7 @@ export function LensAIPage() {
             typically appear within a few days of your first transactions.
           </p>
           <a
-            href="/sign-up"
+            href="#/onboarding"
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 8,
               background: C.white, color: C.navy,

@@ -26,6 +26,7 @@ import { ReviewsPage } from '@/app/pages/ReviewsPage';
 import { LensAIPage } from '@/app/pages/LensAIPage';
 import { WebsiteBuilderDemo } from '@/app/pages/WebsiteBuilderDemo';
 import { ApplicationPage } from '@/app/pages/ApplicationPage';
+import { OnboardingPage } from '@/app/pages/OnboardingPage';
 import { AboutPage } from '@/app/pages/AboutPage';
 import { CareersPage } from '@/app/pages/CareersPage';
 import { PrivacyPolicyPage } from '@/app/pages/PrivacyPolicyPage';
@@ -70,6 +71,7 @@ export default function App() {
           <Route path="/delt-ai-chat" element={<DeltAI />} />
           <Route path="/lens-chat" element={<LensChatPage />} />
           <Route path="/website-builder" element={<WebsiteBuilderDemo />} />
+          <Route path="/onboarding" element={<OnboardingPage />} />
           <Route path="*" element={
             <div className="min-h-screen bg-white relative">
               <Navigation />

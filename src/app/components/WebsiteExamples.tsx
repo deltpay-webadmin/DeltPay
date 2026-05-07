@@ -200,26 +200,17 @@ function Hero() {
   const sectionRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: sectionRef, offset: ['start start', 'end end'] });
 
-  // Scroll choreography (section is 300vh tall, sticky inner viewport):
-  //   0.00 – 0.20  Headline is centered with CTAs visible. The carousels
-  //                 stay parked off-screen below so they never overlap the
-  //                 buttons. As the user scrolls, the heading slides up.
-  //   0.20 – 0.36  Once the headline has cleared the bottom half of the
-  //                 viewport, the two carousel rows fade in and slide up
-  //                 into their final position.
-  //   0.36 – 0.85  Sticky phase — headline (small) + carousels stay locked.
-  //   0.85 – 1.00  Hand-off to the next section.
-  const headingY = useTransform(scrollYProgress, [0, 0.25], [0, -200]);
-  const headingScale = useTransform(scrollYProgress, [0, 0.25], [1, 0.82]);
+  // Scroll choreography (section is 300vh tall, sticky inner viewport).
+  // The hero no longer has CTAs in the strike-zone, so the carousels
+  // can fade in early and continuously alongside the heading.
+  const headingY = useTransform(scrollYProgress, [0, 0.30], [0, -180]);
+  const headingScale = useTransform(scrollYProgress, [0, 0.30], [1, 0.85]);
 
-  // Carousels are gated until after the headline has translated up out of
-  // the CTA strike-zone. Starting at 0.20 (was 0.05) prevents the cards
-  // from fading in over the "See Pricing" / primary CTA buttons.
-  const c1Opacity = useTransform(scrollYProgress, [0.20, 0.32], [0, 1]);
-  const c1Y = useTransform(scrollYProgress, [0.20, 0.34], [80, 0]);
+  const c1Opacity = useTransform(scrollYProgress, [0.05, 0.22], [0, 1]);
+  const c1Y = useTransform(scrollYProgress, [0.05, 0.24], [80, 0]);
 
-  const c2Opacity = useTransform(scrollYProgress, [0.26, 0.38], [0, 1]);
-  const c2Y = useTransform(scrollYProgress, [0.26, 0.40], [100, 0]);
+  const c2Opacity = useTransform(scrollYProgress, [0.12, 0.30], [0, 1]);
+  const c2Y = useTransform(scrollYProgress, [0.12, 0.32], [100, 0]);
 
   // Scroll indicator is shown only before the user has scrolled.
   const scrollHintOpacity = useTransform(scrollYProgress, [0, 0.05], [1, 0]);
@@ -290,29 +281,10 @@ function Hero() {
               Your business makes a great first impression in person. Your website should too.
             </p>
 
-            <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-              {/* Primary action — concrete, ownership-flavored verb. */}
-              <Link to="/apply" style={{
-                padding: '13px 30px', borderRadius: 50, border: 'none',
-                background: `linear-gradient(135deg, ${T.accent}, ${T.blue})`,
-                color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer',
-                fontFamily: T.sans, textDecoration: 'none',
-                display: 'inline-flex', alignItems: 'center', gap: 8,
-              }}>
-                Build my site <ArrowRight size={16} />
-              </Link>
-              {/* Secondary action — sends people to /pricing instead of
-                 "See Examples", since the carousel + featured grid below
-                 already serve as live examples. */}
-              <Link to="/pricing" style={{
-                padding: '13px 30px', borderRadius: 50,
-                border: `1px solid ${T.border}`, background: 'transparent',
-                color: T.gray1, fontSize: 14, fontWeight: 600, cursor: 'pointer',
-                fontFamily: T.sans, textDecoration: 'none',
-              }}>
-                See pricing
-              </Link>
-            </div>
+            {/* CTAs intentionally removed from the hero — the carousels
+               below serve as the visual proof, and a dedicated CTA strip
+               lives between the feature walkthrough and the showcase grid.
+               (See <MidPageCTA /> in this file.) */}
           </div>
         </motion.div>
 
@@ -1915,7 +1887,7 @@ function FinalCTA() {
 
           {/* THE button — solid brand purple, real CTA energy */}
           <Link
-            to="/apply"
+            to="/onboarding"
             className="we-final-cta-btn"
             style={{
               padding: '17px 36px',
@@ -1984,6 +1956,128 @@ function FinalCTA() {
 }
 
 /* ═══════════════════════════════════════════════════════════
+   SECTION 4.5: MID-PAGE CTA STRIP
+   — Replaces the buttons that used to live in the hero. Sits between
+   the feature walkthrough and the showcase grid as a clean break.
+   ═══════════════════════════════════════════════════════════ */
+function MidPageCTA() {
+  return (
+    <section
+      style={{
+        position: 'relative',
+        background: T.bg,
+        padding: '72px 24px',
+        borderTop: `1px solid ${T.border}`,
+        borderBottom: `1px solid ${T.border}`,
+      }}
+    >
+      <Reveal>
+        <div
+          style={{
+            maxWidth: 1080,
+            margin: '0 auto',
+            padding: '36px 40px',
+            borderRadius: 20,
+            background:
+              'linear-gradient(135deg, rgba(73,69,255,0.16) 0%, rgba(108,105,255,0.06) 100%)',
+            border: '1px solid rgba(108,105,255,0.28)',
+            boxShadow:
+              '0 30px 70px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.05)',
+            display: 'grid',
+            gridTemplateColumns: 'minmax(0, 1fr) auto',
+            gap: 28,
+            alignItems: 'center',
+          }}
+          className="we-midcta"
+        >
+          <div>
+            <div
+              style={{
+                fontFamily: T.sans,
+                fontSize: 11,
+                letterSpacing: '0.20em',
+                textTransform: 'uppercase',
+                color: T.accentLight,
+                fontWeight: 700,
+                marginBottom: 10,
+              }}
+            >
+              Ready when you are
+            </div>
+            <h3
+              style={{
+                margin: 0,
+                fontSize: 'clamp(26px, 3.4vw, 36px)',
+                fontWeight: 800,
+                color: T.white,
+                fontFamily: T.heading,
+                lineHeight: 1.15,
+                letterSpacing: '-0.025em',
+              }}
+            >
+              See it on your own domain.{' '}
+              <span
+                style={{
+                  fontFamily: T.serif,
+                  fontStyle: 'italic',
+                  fontWeight: 500,
+                  color: T.accentLight,
+                }}
+              >
+                In days, not months.
+              </span>
+            </h3>
+            <p
+              style={{
+                margin: '10px 0 0',
+                fontSize: 15,
+                color: T.gray1,
+                lineHeight: 1.6,
+                fontFamily: T.sans,
+                maxWidth: 580,
+              }}
+            >
+              Five quick questions about your business, then we build the site, hook up payments,
+              and ship the hardware. One onboarding, one platform.
+            </p>
+          </div>
+          <Link
+            to="/onboarding"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 10,
+              padding: '15px 28px',
+              borderRadius: 14,
+              background: T.accent,
+              border: '1px solid rgba(108,105,255,0.6)',
+              color: '#fff',
+              fontSize: 15,
+              fontWeight: 700,
+              fontFamily: T.sans,
+              textDecoration: 'none',
+              boxShadow:
+                '0 12px 30px rgba(73,69,255,0.40), inset 0 1px 0 rgba(255,255,255,0.18)',
+              whiteSpace: 'nowrap',
+              transition: 'transform 0.2s ease, background 0.2s ease',
+            }}
+            className="we-midcta-btn"
+          >
+            Start onboarding <ArrowRight size={17} />
+          </Link>
+        </div>
+      </Reveal>
+      <style>{`
+        .we-midcta-btn:hover { transform: translateY(-2px); background: #5754FF; }
+        @media (max-width: 720px) {
+          .we-midcta { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
+    </section>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════
    MAIN PAGE EXPORT
    ═══════════════════════════════════════════════════════════ */
 export function WebsiteExamples() {
@@ -1991,6 +2085,7 @@ export function WebsiteExamples() {
     <div style={{ fontFamily: T.sans, color: T.white, background: T.bg, position: 'relative' }}>
       <Hero />
       <FeatureWalkthrough />
+      <MidPageCTA />
       <HowItWorksStrip />
       <ShowcaseGrid />
       <Testimonials />
