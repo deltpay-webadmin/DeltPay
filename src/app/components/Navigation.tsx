@@ -6,6 +6,8 @@ import {
   Star, User, AlignLeft, HelpCircle, LayoutDashboard, Calculator,
   ChevronDown, Menu, Globe2, ShieldAlert,
 } from 'lucide-react';
+import deltLogoOnDark from '@/assets/delt-logo-on-dark.svg';
+import deltLogoOnLight from '@/assets/delt-logo-on-light.svg';
 
 /* ──────────────────────────────────────────────────────────────
    Navigation — Delt Capital chrome + full DeltPay mega-menus
@@ -85,36 +87,30 @@ function MonoEyebrow({ children }: { children: React.ReactNode }) {
   );
 }
 
-/* ── Logo ── */
+/* ── Logo ──
+   Single Delt wordmark SVG (the only brand logo on the site). Two
+   variants: white-on-dark for navy/hero surfaces, navy-on-light for
+   light surfaces. The asset itself includes the indigo accent bar +
+   dot, so we just render it as <img>. Height is the only knob: 28px
+   in the 64px header keeps it legible without dominating the row. */
 function DeltPayLogo({ onDark = true }: { onDark?: boolean }) {
-  const cream = '#F7F5F0';
-  const indigo = '#4945FF';
   return (
-    <div className="flex items-center gap-2.5">
-      {/* Two-bar mark */}
-      <div className="flex items-end gap-[3px]" aria-hidden>
-        <span
-          className="block rounded-[1px]"
-          style={{
-            width: 4, height: 16,
-            background: onDark ? cream : '#041E42',
-          }}
-        />
-        <span
-          className="block rounded-[1px]"
-          style={{ width: 4, height: 22, background: indigo }}
-        />
-      </div>
-      <span
-        className="font-semibold tracking-[-0.02em] text-[20px]"
-        style={{
-          fontFamily: 'var(--dc-font-display)',
-          color: onDark ? cream : '#041E42',
-        }}
-      >
-        Delt<span style={{ color: indigo }}>Pay</span>
-      </span>
-    </div>
+    <img
+      src={onDark ? deltLogoOnDark : deltLogoOnLight}
+      alt="Delt"
+      width={undefined}
+      height={28}
+      style={{
+        display: 'block',
+        height: 28,
+        width: 'auto',
+        // Slight optical adjust: the mark sits with generous internal
+        // top-padding in the SVG; pull it up a hair so it visually
+        // aligns with the nav row baseline.
+        marginTop: -1,
+      }}
+      draggable={false}
+    />
   );
 }
 
