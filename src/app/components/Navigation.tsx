@@ -257,19 +257,72 @@ export function Navigation() {
     setMobileOpen(false);
   }, [location.pathname]);
 
+  /* ── Liquid-glass mode: ON only while a hero section sits behind the nav.
+     We watch every [data-hero-section] element. As long as any of them is
+     still overlapping the top 80px of the viewport (where the sticky nav
+     lives), we render the translucent glass. Once the hero scrolls out, we
+     flip to solid #041E42. Re-runs on every route change so newly-mounted
+     hero sections (or pages without one) are picked up immediately. */
+  const [overHero, setOverHero] = useState(true);
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    let frame = 0;
+    const computeOverHero = () => {
+      frame = 0;
+      const heroes = document.querySelectorAll<HTMLElement>('[data-hero-section]');
+      if (heroes.length === 0) {
+        setOverHero(false);
+        return;
+      }
+      // Glass while any hero still covers the top 80px slab the nav occupies.
+      let anyBehind = false;
+      heroes.forEach((el) => {
+        const r = el.getBoundingClientRect();
+        if (r.top < 80 && r.bottom > 0) anyBehind = true;
+      });
+      setOverHero(anyBehind);
+    };
+    const onScrollOrResize = () => {
+      if (frame) return;
+      frame = window.requestAnimationFrame(computeOverHero);
+    };
+    // Initial check after the page settles (hero may mount one frame later).
+    const initial = window.requestAnimationFrame(computeOverHero);
+    window.addEventListener('scroll', onScrollOrResize, { passive: true });
+    window.addEventListener('resize', onScrollOrResize);
+    return () => {
+      window.cancelAnimationFrame(initial);
+      if (frame) window.cancelAnimationFrame(frame);
+      window.removeEventListener('scroll', onScrollOrResize);
+      window.removeEventListener('resize', onScrollOrResize);
+    };
+  }, [location.pathname]);
+
+  const glassStyle: React.CSSProperties = {
+    // Liquid glass: nearly clear, the backdrop blur does the work. Just
+    // a whisper of tint to keep text legible over the bright shader
+    // peaks, plus a hairline divider so the bar separates from content.
+    background:
+      'linear-gradient(180deg, rgba(4, 30, 66, 0.18) 0%, rgba(4, 30, 66, 0.08) 100%)',
+    backdropFilter: 'blur(22px) saturate(160%)',
+    WebkitBackdropFilter: 'blur(22px) saturate(160%)',
+    borderBottom: '1px solid rgba(247, 245, 240, 0.06)',
+    boxShadow: 'inset 0 1px 0 rgba(247, 245, 240, 0.05)',
+  };
+  const solidStyle: React.CSSProperties = {
+    background: '#041E42',
+    backdropFilter: 'none',
+    WebkitBackdropFilter: 'none',
+    borderBottom: '1px solid rgba(247, 245, 240, 0.08)',
+    boxShadow: 'none',
+  };
+
   return (
     <header
       className="dc-nav-header sticky top-0 z-50"
       style={{
-        // Liquid glass: nearly clear, the backdrop blur does the work. Just
-        // a whisper of tint to keep text legible over the bright shader
-        // peaks, plus a hairline divider so the bar separates from content.
-        background:
-          'linear-gradient(180deg, rgba(4, 30, 66, 0.18) 0%, rgba(4, 30, 66, 0.08) 100%)',
-        backdropFilter: 'blur(22px) saturate(160%)',
-        WebkitBackdropFilter: 'blur(22px) saturate(160%)',
-        borderBottom: '1px solid rgba(247, 245, 240, 0.06)',
-        boxShadow: 'inset 0 1px 0 rgba(247, 245, 240, 0.05)',
+        ...(overHero ? glassStyle : solidStyle),
+        transition: 'background 220ms ease, backdrop-filter 220ms ease, border-color 220ms ease, box-shadow 220ms ease',
       }}
     >
       {/* Main nav row */}

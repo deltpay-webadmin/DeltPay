@@ -24,6 +24,7 @@ export function JuspayHero() {
 
   return (
     <section
+      data-hero-section
       className="relative w-full overflow-hidden flex flex-col"
       style={{
         background: 'var(--dc-bg-navy)',
