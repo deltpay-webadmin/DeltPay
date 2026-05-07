@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
-import { DashboardPreview } from './DashboardPreview';
 import { HeroShaderBackground } from './HeroShaderBackground';
 
 /* ──────────────────────────────────────────────────────────────
@@ -29,12 +28,20 @@ export function JuspayHero() {
       style={{
         background: 'var(--dc-bg-navy)',
         color: 'var(--dc-on-dark)',
-        // Fill the viewport on load so the email-capture / next section sits below the fold.
-        // Account for: (1) the 64px global top nav, and (2) the site-wide CSS `zoom`
-        // applied at the body level — because `vh` is evaluated in the un-zoomed
-        // coordinate space, dividing by --site-zoom keeps the hero exactly one
-        // physical viewport tall regardless of the active zoom factor.
-        minHeight: 'calc((100vh - 64px) / var(--site-zoom, 1))',
+        // Bleed the hero (and its animated shader) UP behind the sticky 64px
+        // global nav so the liquid-glass header has the gradient behind it
+        // from the first paint instead of the white body. The negative top
+        // margin pulls the section under the nav; the matching padding-top
+        // keeps inner content visually anchored where it was before.
+        marginTop: -64,
+        paddingTop: 64,
+        // Fill the viewport on load so the email-capture / next section sits
+        // below the fold. Account for the site-wide CSS `zoom` applied at the
+        // body level — `vh` is evaluated in the un-zoomed coordinate space,
+        // so dividing by --site-zoom keeps the hero exactly one physical
+        // viewport tall regardless of the active zoom factor. We no longer
+        // subtract 64px (the nav) because the hero now extends behind it.
+        minHeight: 'calc(100vh / var(--site-zoom, 1))',
       }}
     >
       {/* Live shader gradient — Delt indigo, animated */}
@@ -69,9 +76,10 @@ export function JuspayHero() {
           </div>
         </div>
 
-        {/* Main 2-col split */}
-        <div className="mt-8 lg:mt-10 grid grid-cols-1 lg:grid-cols-[1.05fr_1fr] gap-10 lg:gap-14 items-start">
-          {/* LEFT: copy */}
+        {/* Single-column copy block — the right-side visual was removed
+            (no dashboard, no hero image). The animated shader gradient is
+            the visual; the typography carries the fold. */}
+        <div className="mt-8 lg:mt-10">
           <div className="relative">
             <h1
               className="dc-display"
@@ -145,40 +153,6 @@ export function JuspayHero() {
             </div>
           </div>
 
-          {/* RIGHT: dashboard preview, framed */}
-          <div className="relative lg:pt-2">
-            <div
-              className="relative rounded-[12px] overflow-hidden flex items-center justify-center"
-              style={{
-                border: '1px solid var(--dc-rule-on-dark)',
-                background: 'rgba(247, 245, 240, 0.02)',
-                aspectRatio: '4 / 3',
-                minHeight: 380,
-                padding: '40px 32px',
-              }}
-            >
-              <div
-                style={{ width: '100%', maxWidth: 480 }}
-                className="jh-dp-fit"
-              >
-                <DashboardPreview />
-              </div>
-              <style>{`.jh-dp-fit .dp-wrapper { transform: none !important; }`}</style>
-            </div>
-            {/* Caption */}
-            <div className="mt-4 flex justify-end">
-              <span
-                className="text-[11px] tracking-[0.14em]"
-                style={{
-                  fontFamily: 'var(--dc-font-mono)',
-                  color: 'var(--dc-on-dark-faint)',
-                  textTransform: 'uppercase',
-                }}
-              >
-                FIG. 01 — THE OFFER, IN MOTION
-              </span>
-            </div>
-          </div>
         </div>
 
         {/* Bottom hairline + meta strip — pinned to the bottom of the viewport so the
