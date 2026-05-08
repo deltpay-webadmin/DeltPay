@@ -4,7 +4,7 @@ import { Sparkles, ChevronDown, Check, Plus, Mic, ArrowUp, Info } from 'lucide-r
 import { LensScrollRevealText } from '../components/LensScrollRevealText';
 import { LensStackingPanels } from '../components/LensStackingPanels';
 import { Sparkles as SparkleField } from '../components/Sparkles';
-import deltLogoImg from 'figma:asset/ba16007295b082bbfe774b1ba0c31a403b5502d6.png';
+import deltLogoImg from '@/assets/delt-logo-on-light.svg';
 
 /* ─────────────────────────────────────────────────────────────
    PALETTE — strictly #FFFFFF / #041E42 / #4945FF
@@ -244,6 +244,7 @@ export function LensAIPage() {
           }}
         >
           <h1
+            className="lens-hero-wordmark"
             style={{
               margin: 0,
               fontFamily: "'Cormorant Garamond', 'Playfair Display', Georgia, serif",
@@ -813,6 +814,13 @@ export function LensAIPage() {
         @keyframes lensWordUp {
           from { transform: translateY(110%); }
           to   { transform: translateY(0); }
+        }
+        /* Override global h1 font-family !important from dc-global-polish.css */
+        h1.lens-hero-wordmark,
+        h1.lens-hero-wordmark .lens-word-char {
+          font-family: 'Cormorant Garamond', 'Playfair Display', Georgia, serif !important;
+          font-style: italic !important;
+          font-weight: 500 !important;
         }
         .lens-word-gradient {
           background: linear-gradient(

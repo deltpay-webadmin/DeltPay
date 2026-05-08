@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router';
 import { ArrowUp, Plus, Mic, Sparkles, ChevronLeft, Copy, RefreshCcw, ThumbsUp, ThumbsDown } from 'lucide-react';
-import deltLogoImg from 'figma:asset/ba16007295b082bbfe774b1ba0c31a403b5502d6.png';
+import deltLogoImg from '@/assets/delt-logo-on-light.svg';
 
 /* ─────────────────────────────────────────────────────────────
    PALETTE — matches LensAIPage
