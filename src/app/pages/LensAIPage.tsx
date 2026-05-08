@@ -274,7 +274,7 @@ export function LensAIPage() {
             <img
               src={deltLogoImg}
               alt="Delt"
-              style={{ objectFit: 'contain', height: 26, width: 'auto' }}
+              style={{ objectFit: 'contain', height: 18, width: 'auto' }}
             />
           </div>
         </div>

@@ -406,7 +406,7 @@ export function LensAIChatPage() {
               Lens
             </span>
             <span style={{ color: C.muted, fontSize: 13, fontWeight: 500 }}>by</span>
-            <img src={deltLogoImg} alt="Delt" style={{ height: 16, width: 'auto', objectFit: 'contain', transform: 'translateY(2px)' }} />
+            <img src={deltLogoImg} alt="Delt" style={{ height: 12, width: 'auto', objectFit: 'contain', transform: 'translateY(1px)' }} />
           </Link>
         </div>
 
