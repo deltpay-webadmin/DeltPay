@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Rss, ArrowRight, ChevronRight, Sparkles, Zap, Shield, FileCheck, Package } from 'lucide-react';
+import { Rss, ArrowRight, ChevronRight, Sparkles, Shield, FileCheck, Package } from 'lucide-react';
 
 /* ─── Palette ────────────────────────────────────────── */
 const NAVY      = '#041E42';
@@ -12,7 +12,7 @@ const MUTED     = '#475569';
 const HAIRLINE  = 'rgba(4,30,66,0.08)';
 
 /* ─── Data ───────────────────────────────────────────── */
-type Tag = 'All' | 'Product' | 'API' | 'Security' | 'Compliance';
+type Tag = 'All' | 'Product' | 'Security' | 'Compliance';
 
 interface ChangelogItem {
   date: string;
@@ -26,88 +26,101 @@ interface ChangelogItem {
 
 const ITEMS: ChangelogItem[] = [
   {
-    date: 'Apr 18, 2026',
+    date: 'May 06, 2026',
+    monthLabel: 'May 2026',
+    tag: 'Product',
+    title: 'Lens — ask your business anything, in plain English.',
+    description:
+      'Lens, our in-product AI, is now live for every Delt merchant. Ask things like "Why were Tuesdays slow last month?" or "Which products had the lowest margin?" and get a real answer in seconds — grounded in your live Payments, Capital, and POS data.',
+    highlight: true,
+  },
+  {
+    date: 'Apr 28, 2026',
     monthLabel: 'April 2026',
     tag: 'Product',
-    version: 'v2026.04.18',
-    title: 'Lens AI now writes your weekly recap.',
+    title: '0% Cash Discount program — turn on in one click.',
     description:
-      "Every Monday morning, Lens AI automatically compiles your week's key metrics — revenue, top-selling items, and outstanding tasks — into a crisp, one-page summary. Customise the format or ask follow-up questions directly in the chat.",
-    highlight: true,
+      'Eligible merchants can now enable the 0% Cash Discount program directly from the dashboard. A compliant service fee is added at checkout for card payments, cash-paying customers receive the discount, and your effective processing cost drops to zero. Receipts and signage update automatically.',
+  },
+  {
+    date: 'Apr 21, 2026',
+    monthLabel: 'April 2026',
+    tag: 'Product',
+    title: 'Same-day international payments — powered by USDT.',
+    description:
+      'Send money to suppliers and contractors in 40+ countries the same business day. We handle the on/off-ramp, FX, and compliance — you see a single USD-denominated transaction. Available on the International Payments page.',
   },
   {
     date: 'Apr 14, 2026',
     monthLabel: 'April 2026',
-    tag: 'API',
-    version: 'v2.14',
-    title: 'New /v2/payouts/schedule endpoint.',
+    tag: 'Product',
+    title: 'Capital — pre-qualified offers on the home dashboard.',
     description:
-      'Merchants and developers can programmatically retrieve and update payout schedule preferences. Supports daily, weekly, and monthly cadences and returns ISO 8601 next-payout timestamps.',
+      'Merchants processing $2k+/month now see their pre-qualified Capital offer on the dashboard home, with a one-click path to apply. Offers refresh nightly based on processing volume and deposit history — no hard credit pull to view.',
   },
   {
-    date: 'Apr 09, 2026',
-    monthLabel: 'April 2026',
-    tag: 'Security',
-    title: 'SOC 2 Type II report refreshed for FY26.',
-    description:
-      'Our annual SOC 2 Type II audit covering the full FY2026 period is complete and available to enterprise customers under NDA. Covers security, availability, and confidentiality trust-service criteria across all Delt infrastructure.',
-  },
-  {
-    date: 'Apr 02, 2026',
+    date: 'Apr 07, 2026',
     monthLabel: 'April 2026',
     tag: 'Product',
-    title: 'Auto-save drafts in Websites Builder.',
+    title: 'Chargeback Management — automated responses with Disputifier.',
     description:
-      'No more lost work. Websites Builder now saves your changes automatically every 10 seconds and maintains a 30-day version history. Restore any prior save from the new "History" panel in the editor toolbar.',
+      'Our new Chargeback Management add-on (powered by Disputifier) automatically pulls transaction evidence, drafts a compelling-evidence response, and submits within the network deadline. Merchants are seeing recovery rates roughly 2× the industry average on representment-eligible cases.',
   },
   {
-    date: 'Mar 28, 2026',
-    monthLabel: 'March 2026',
-    tag: 'Compliance',
-    title: 'PCI DSS 4.0 certification complete.',
-    description:
-      'Delt has achieved full PCI DSS 4.0 compliance across all card-processing infrastructure. Merchants no longer need to complete their own SAQ-A questionnaire for standard integrations.',
-  },
-  {
-    date: 'Mar 21, 2026',
+    date: 'Mar 31, 2026',
     monthLabel: 'March 2026',
     tag: 'Product',
-    title: 'Capital pre-qualified offers, on your dashboard.',
+    title: 'High-risk merchant onboarding — now self-serve.',
     description:
-      'Eligible merchants now see their pre-qualified Capital offer on the dashboard home screen, with a one-click path to apply. Offers are recalculated nightly based on processing volume and are available to businesses processing $2k+ per month.',
+      'CBD, nutra, firearms accessories, and other high-risk verticals can now complete the full underwriting application online. Direct relationships with high-risk-friendly acquirers mean approvals in 3–5 business days instead of weeks of back-and-forth.',
   },
   {
-    date: 'Mar 14, 2026',
-    monthLabel: 'March 2026',
-    tag: 'API',
-    version: 'v3.0',
-    title: 'Webhooks v3: signed, versioned, rotatable keys.',
-    description:
-      'Webhooks v3 introduces HMAC-SHA256 request signing, versioned event schemas, and the ability to rotate signing keys without downtime. All existing webhooks were migrated automatically.',
-  },
-  {
-    date: 'Mar 07, 2026',
+    date: 'Mar 24, 2026',
     monthLabel: 'March 2026',
     tag: 'Product',
-    title: 'Inventory low-stock alerts by SMS.',
+    title: 'Next-day funding — now standard on every Delt account.',
     description:
-      'Set per-product stock thresholds and receive an SMS the moment inventory dips below your chosen level. Configured per location — especially useful for multi-site merchants.',
+      'All US merchants now receive next-business-day funding by default at no extra cost. Batches close at 8 PM ET and land in your linked bank account the following business morning. No tier upgrade, no hidden fee.',
   },
   {
-    date: 'Feb 28, 2026',
-    monthLabel: 'February 2026',
-    tag: 'Security',
-    title: 'Passkey support for all admins.',
+    date: 'Mar 17, 2026',
+    monthLabel: 'March 2026',
+    tag: 'Product',
+    title: 'Websites — flippable showcase cards + new industry templates.',
     description:
-      'All admin accounts can now register a passkey (Face ID, Touch ID, or hardware key) as a primary or secondary authentication method. Passkeys are phishing-resistant and eliminate reliance on SMS codes.',
+      'The Website Builder ships with five new industry-specific templates (restaurants, salon, retail, health & wellness, professional services) and a redesigned showcase page with flippable cards so you can preview both the live site and the dashboard view side-by-side.',
   },
   {
-    date: 'Feb 21, 2026',
-    monthLabel: 'February 2026',
+    date: 'Mar 10, 2026',
+    monthLabel: 'March 2026',
     tag: 'Product',
     title: 'Apple Tap to Pay on iPhone — generally available.',
     description:
-      'Accept contactless payments directly on any iPhone XS or later — no card reader required. Now generally available to all US merchants on Delt Payments, with support for credit, debit, and digital wallets.',
+      'Accept contactless cards and digital wallets directly on any iPhone XS or later — no card reader required. Now live for all US merchants on Delt Payments, including merchants on the 0% Cash Discount program.',
+  },
+  {
+    date: 'Feb 24, 2026',
+    monthLabel: 'February 2026',
+    tag: 'Compliance',
+    title: 'PCI DSS 4.0 certification complete.',
+    description:
+      'Delt has achieved full PCI DSS 4.0 compliance across all card-processing infrastructure. Merchants on standard integrations no longer need to complete their own SAQ-A questionnaire — Delt covers it.',
+  },
+  {
+    date: 'Feb 17, 2026',
+    monthLabel: 'February 2026',
+    tag: 'Security',
+    title: 'Passkey support for all admin accounts.',
+    description:
+      'All admin accounts can register a passkey (Face ID, Touch ID, or hardware key) as a primary or secondary authentication method. Passkeys are phishing-resistant and remove the need for SMS-based codes.',
+  },
+  {
+    date: 'Feb 10, 2026',
+    monthLabel: 'February 2026',
+    tag: 'Product',
+    title: 'Dual pricing programs on every quote.',
+    description:
+      'Every quote and pricing page now presents both programs side-by-side: flat-rate at 2.6% + $0.10 and the 0% Cash Discount alternative. Merchants can model their projected effective rate before they ever sign.',
   },
 ];
 
@@ -117,7 +130,6 @@ const TAG_META: Record<
   { icon: React.ElementType; accent: string; label: string }
 > = {
   Product:    { icon: Sparkles,  accent: PURPLE,    label: 'Product' },
-  API:        { icon: Zap,       accent: '#0B6CF0', label: 'API' },
   Security:   { icon: Shield,    accent: '#0E8A5F', label: 'Security' },
   Compliance: { icon: FileCheck, accent: '#B45309', label: 'Compliance' },
 };
@@ -253,7 +265,7 @@ export function WhatsNewPage() {
     return Array.from(map.entries());
   }, [filtered]);
 
-  const tabs: Tag[] = ['All', 'Product', 'API', 'Security', 'Compliance'];
+  const tabs: Tag[] = ['All', 'Product', 'Security', 'Compliance'];
 
   return (
     <div style={{ background: WHITE, color: INK, fontFamily: 'system-ui, -apple-system, sans-serif' }}>

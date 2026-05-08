@@ -390,21 +390,23 @@ export function LensAIChatPage() {
 
           <div style={{ width: 1, height: 24, background: C.line }} />
 
-          <Link to="/lens-ai" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Link to="/lens-ai" style={{ textDecoration: 'none', display: 'flex', alignItems: 'baseline', gap: 8 }}>
             <span
               style={{
-                fontFamily: "'Playfair Display', Georgia, serif",
-                fontSize: 22, fontWeight: 500, lineHeight: 1,
+                fontFamily: "'Cormorant Garamond', 'Playfair Display', Georgia, serif",
+                fontStyle: 'italic',
+                fontSize: 30, fontWeight: 500, lineHeight: 1,
                 background: `linear-gradient(135deg, ${C.purple} 0%, ${C.navy} 100%)`,
                 WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text',
-                letterSpacing: '0.01em',
+                letterSpacing: '0.005em',
+                paddingRight: '0.06em',
               }}
             >
               Lens
             </span>
             <span style={{ color: C.muted, fontSize: 13, fontWeight: 500 }}>by</span>
-            <img src={deltLogoImg} alt="Delt" style={{ height: 16, width: 'auto', objectFit: 'contain' }} />
+            <img src={deltLogoImg} alt="Delt" style={{ height: 16, width: 'auto', objectFit: 'contain', transform: 'translateY(2px)' }} />
           </Link>
         </div>
 

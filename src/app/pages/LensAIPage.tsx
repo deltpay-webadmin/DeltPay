@@ -287,7 +287,14 @@ export function LensAIPage() {
           padding: '0 20px',
         }}>
           Turn your sales data into{' '}
-          <span style={{ color: C.purple }}>answers.</span>
+          <span style={{
+            fontFamily: "'Cormorant Garamond', 'Playfair Display', Georgia, serif",
+            fontStyle: 'italic',
+            fontWeight: 500,
+            color: C.purple,
+            letterSpacing: '0.005em',
+            paddingRight: '0.04em',
+          }}>answers.</span>
         </h2>
 
         {/* Subhead */}
@@ -541,7 +548,14 @@ export function LensAIPage() {
             fontSize: 'clamp(1.75rem, 4vw, 3rem)',
             fontWeight: 800, letterSpacing: '-0.03em', color: C.navy,
           }}>
-            Pricing built for every business.
+            Pricing built for{' '}
+            <span style={{
+              fontFamily: "'Cormorant Garamond', 'Playfair Display', Georgia, serif",
+              fontStyle: 'italic',
+              fontWeight: 500,
+              color: C.purple,
+              letterSpacing: '0.005em',
+            }}>every business.</span>
           </h2>
           <p style={{ margin: 0, fontSize: 17, color: C.body, lineHeight: 1.6 }}>
             Scale as you go with plans that match your operations.
@@ -655,7 +669,14 @@ export function LensAIPage() {
             fontSize: 'clamp(1.75rem, 4vw, 2.75rem)',
             fontWeight: 800, letterSpacing: '-0.03em', color: C.navy,
           }}>
-            Frequently asked questions
+            Frequently asked{' '}
+            <span style={{
+              fontFamily: "'Cormorant Garamond', 'Playfair Display', Georgia, serif",
+              fontStyle: 'italic',
+              fontWeight: 500,
+              color: C.purple,
+              letterSpacing: '0.005em',
+            }}>questions.</span>
           </h2>
           <div style={{ borderTop: `1px solid ${C.line}` }}>
             {FAQS.map((faq, i) => (
@@ -724,7 +745,14 @@ export function LensAIPage() {
             fontWeight: 800, letterSpacing: '-0.04em',
             color: C.white, lineHeight: 1.1,
           }}>
-            Ready to stop guessing?
+            Ready to stop{' '}
+            <span style={{
+              fontFamily: "'Cormorant Garamond', 'Playfair Display', Georgia, serif",
+              fontStyle: 'italic',
+              fontWeight: 500,
+              color: '#C5C3EE',
+              letterSpacing: '0.005em',
+            }}>guessing?</span>
           </h2>
           <p style={{
             margin: '0 auto 40px', maxWidth: 480,

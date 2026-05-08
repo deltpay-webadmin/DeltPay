@@ -1,4 +1,9 @@
+import { useState } from 'react';
 import { Heart, Compass, ShieldCheck, Rocket, ArrowRight, MapPin, Users, Building2 } from 'lucide-react';
+import pillarOxygen     from '@/app/assets/about/pillar-01_oxygen.jpg';
+import pillarMainStreet from '@/app/assets/about/pillar-02_mainstreet.jpg';
+import pillarBanks      from '@/app/assets/about/pillar-03_banks.jpg';
+import pillarAccess     from '@/app/assets/about/pillar-04_access.jpg';
 
 /* ─── Palette ────────────────────────────────────────── */
 const NAVY      = '#041E42';
@@ -35,6 +40,160 @@ const VALUES = [
 ];
 
 const PRESS = ['Forbes', 'TechCrunch', 'The Information', 'Axios', 'Bloomberg', 'Inc.'];
+
+const PILLARS = [
+  {
+    k: '01',
+    t: 'Capital is the operator’s oxygen',
+    d: 'Small businesses run on timing. The right capital at the right week is the difference between hiring, opening a second location, or stalling out. Speed isn’t a luxury — it’s the product.',
+    img: pillarOxygen,
+    tags: ['Speed', 'Cash flow', 'Growth'],
+  },
+  {
+    k: '02',
+    t: 'Main Street is the engine of the economy',
+    d: 'Small businesses generate roughly half of US private-sector GDP and create the majority of net new jobs. Every dollar that lands in an operator’s account multiplies through payroll, suppliers, and local communities.',
+    img: pillarMainStreet,
+    tags: ['SMB', 'Jobs', 'GDP'],
+  },
+  {
+    k: '03',
+    t: 'Banks were never built for this',
+    d: 'Legacy underwriting was designed for collateral and decade-long relationships, not for a roofer who needs a truck by Friday. A modern processor has to read live cash flow, not a paper file.',
+    img: pillarBanks,
+    tags: ['Legacy', 'Friction', 'Collateral'],
+  },
+  {
+    k: '04',
+    t: 'Closing the access gap is the work',
+    d: 'Most credit-worthy operators in this country still get a “no” from the bank — usually for reasons that have nothing to do with their actual business. Our job is to give those operators a real, fairly-priced answer in hours.',
+    img: pillarAccess,
+    tags: ['Access', 'Fair pricing', 'Operators'],
+  },
+];
+
+function PillarGallery() {
+  const [active, setActive] = useState(0);
+  return (
+    <div className="flex flex-row gap-2.5 w-full" style={{ height: 460 }}>
+      {PILLARS.map((p, i) => {
+        const isActive = i === active;
+        return (
+          <div
+            key={p.k}
+            role="button"
+            tabIndex={0}
+            aria-pressed={isActive}
+            onMouseEnter={() => setActive(i)}
+            onFocus={() => setActive(i)}
+            onClick={() => setActive(i)}
+            style={{
+              position: 'relative',
+              flex: isActive ? '1 1 0' : '0 0 88px',
+              minWidth: 88,
+              borderRadius: 18,
+              overflow: 'hidden',
+              cursor: 'pointer',
+              outline: 'none',
+              transition: 'flex 520ms cubic-bezier(0.22,1,0.36,1)',
+              boxShadow: isActive
+                ? '0 18px 40px rgba(4,30,66,0.22)'
+                : '0 6px 14px rgba(4,30,66,0.10)',
+            }}
+          >
+            <img
+              src={p.img}
+              alt=""
+              style={{
+                position: 'absolute', inset: 0, width: '100%', height: '100%',
+                objectFit: 'cover',
+                filter: isActive ? 'none' : 'saturate(0.85) brightness(0.9)',
+                transition: 'filter 520ms ease',
+              }}
+            />
+            <div
+              style={{
+                position: 'absolute', inset: 0,
+                background: isActive
+                  ? 'linear-gradient(180deg, rgba(4,30,66,0.08) 0%, rgba(4,30,66,0.18) 45%, rgba(4,30,66,0.82) 100%)'
+                  : 'linear-gradient(180deg, rgba(4,30,66,0.45) 0%, rgba(4,30,66,0.78) 100%)',
+                transition: 'background 520ms ease',
+              }}
+            />
+            {!isActive && (
+              <div style={{
+                position: 'absolute', inset: 0,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <div style={{
+                  writingMode: 'vertical-rl',
+                  transform: 'rotate(180deg)',
+                  fontSize: 15, fontWeight: 600,
+                  color: WHITE,
+                  letterSpacing: '-0.01em',
+                  textShadow: '0 1px 2px rgba(0,0,0,0.35)',
+                  display: 'flex', alignItems: 'center', gap: 14,
+                }}>
+                  <span style={{
+                    fontFamily: "'JetBrains Mono', ui-monospace, monospace",
+                    fontSize: 11, fontWeight: 600,
+                    letterSpacing: '0.18em', color: '#C5C3EE',
+                  }}>{p.k}</span>
+                  <span style={{
+                    overflow: 'hidden', textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap', maxHeight: 320,
+                  }}>{p.t}</span>
+                </div>
+              </div>
+            )}
+            <div style={{
+              position: 'absolute', left: 0, right: 0, bottom: 0,
+              padding: '24px 28px 28px',
+              opacity: isActive ? 1 : 0,
+              transform: isActive ? 'translateY(0)' : 'translateY(8px)',
+              transition: 'opacity 360ms ease 120ms, transform 360ms ease 120ms',
+              pointerEvents: isActive ? 'auto' : 'none',
+            }}>
+              <div style={{
+                fontFamily: "'JetBrains Mono', ui-monospace, monospace",
+                fontSize: 11, fontWeight: 600,
+                letterSpacing: '0.18em', textTransform: 'uppercase',
+                color: '#C5C3EE', marginBottom: 8,
+              }}>{p.k} · Pillar</div>
+              <h3 style={{
+                margin: '0 0 10px',
+                fontSize: 26, fontWeight: 700,
+                color: WHITE, letterSpacing: '-0.02em', lineHeight: 1.2,
+                maxWidth: 540,
+              }}>{p.t}</h3>
+              <p style={{
+                margin: '0 0 14px',
+                fontSize: 15, lineHeight: 1.55,
+                color: 'rgba(255,255,255,0.88)',
+                maxWidth: 560,
+              }}>{p.d}</p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                {p.tags.map((tag) => (
+                  <span key={tag} style={{
+                    fontFamily: "'JetBrains Mono', ui-monospace, monospace",
+                    fontSize: 11, fontWeight: 500,
+                    letterSpacing: '0.08em', textTransform: 'uppercase',
+                    color: WHITE,
+                    padding: '6px 10px',
+                    borderRadius: 999,
+                    background: 'rgba(255,255,255,0.14)',
+                    border: '1px solid rgba(255,255,255,0.22)',
+                    backdropFilter: 'blur(4px)',
+                  }}>{tag}</span>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 const COMPANY_FACTS = [
   { icon: Building2, label: 'Headquartered',   value: 'New York City' },
@@ -401,7 +560,32 @@ export function AboutUsPage() {
         </div>
       </section>
 
-      {/* ══ VALUES — dark panel ══════════════════════════════ */}
+      {/* PILLARS — hover-accordion gallery with images */}
+      <section className="relative py-24 px-6" style={{ background: WHITE }}>
+        <div className="max-w-6xl mx-auto">
+          <div className="max-w-2xl mb-12">
+            <p className="text-[11px] font-bold uppercase tracking-[0.2em] mb-3" style={{ color: PURPLE }}>
+              Why business lending
+            </p>
+            <h2
+              className="font-bold tracking-[-0.015em]"
+              style={{ color: NAVY, fontSize: 'clamp(1.75rem, 3.2vw, 2.75rem)', lineHeight: 1.08 }}
+            >
+              Capital is what turns small
+              <br />
+              businesses into big ones.
+            </h2>
+            <p className="mt-5 text-base leading-relaxed" style={{ color: MUTED, maxWidth: 620 }}>
+              Small businesses are the economy. They employ nearly half of America, create most of
+              its new jobs, and keep main streets standing. Modern, fairly-priced merchant services
+              and lending are how those operators turn a good week into a growth year.
+            </p>
+          </div>
+          <PillarGallery />
+        </div>
+      </section>
+
+      {/* VALUES — dark panel */}
       <section
         className="relative overflow-hidden py-24 px-6"
         style={{ background: NAVY, color: WHITE }}
