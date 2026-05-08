@@ -276,7 +276,7 @@ export function BlogPostPage() {
               `radial-gradient(45% 75% at 90% 30%, ${PURPLE_HI}33 0%, transparent 60%)`,
           }}
         />
-        <div className="relative max-w-3xl mx-auto px-6 pt-28 md:pt-36 pb-12">
+        <div className="relative max-w-3xl mx-auto px-6 pt-28 md:pt-36 pb-32 md:pb-40">
           <Link
             to="/blog"
             className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.18em] mb-8 no-underline"
@@ -310,9 +310,12 @@ export function BlogPostPage() {
         </div>
       </section>
 
-      {/* ══ HERO IMAGE ══ */}
+      {/* ══ HERO IMAGE ══
+           Pulled up to overlap the dark header bottom edge — header padding
+           below is sized to give the title + meta full breathing room above
+           the image, so they never collide. */}
       <section className="px-6">
-        <div className="max-w-4xl mx-auto -mt-10 md:-mt-14 relative z-10">
+        <div className="max-w-4xl mx-auto -mt-20 md:-mt-24 relative z-10">
           <div
             className="rounded-2xl overflow-hidden"
             style={{
