@@ -95,14 +95,62 @@ const FEATURES = [
   },
 ];
 
-/* Step 2 — Business type */
-const BIZ_TYPES = [
-  { id: 'restaurant', label: 'Restaurant / Café', icon: '🍽️' },
-  { id: 'retail', label: 'Retail Shop', icon: '🛍️' },
-  { id: 'health', label: 'Health & Beauty', icon: '💆' },
-  { id: 'services', label: 'Service Business', icon: '🔧' },
-  { id: 'fitness', label: 'Fitness / Wellness', icon: '🏋️' },
-  { id: 'other', label: 'Other', icon: '📦' },
+/* Step 2 — Business type (line-icon set, matches Step 1 style) */
+const BIZ_TYPES: Array<{ id: string; label: string; icon: React.ReactNode }> = [
+  {
+    id: 'restaurant',
+    label: 'Restaurant / Café',
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 2v7a3 3 0 0 0 3 3v10"/><path d="M9 2v20"/><path d="M9 9V2"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3z"/>
+      </svg>
+    ),
+  },
+  {
+    id: 'retail',
+    label: 'Retail Shop',
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M6 2 3 6v2a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 6 0V6l-3-4Z"/><path d="M3 8v12a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8"/><path d="M10 22v-6a2 2 0 0 1 2-2 2 2 0 0 1 2 2v6"/>
+      </svg>
+    ),
+  },
+  {
+    id: 'health',
+    label: 'Health & Beauty',
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78Z"/>
+      </svg>
+    ),
+  },
+  {
+    id: 'services',
+    label: 'Service Business',
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+      </svg>
+    ),
+  },
+  {
+    id: 'fitness',
+    label: 'Fitness / Wellness',
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+        <path d="m6.5 6.5 11 11"/><path d="m21 21-1-1"/><path d="m3 3 1 1"/><path d="m18 22 4-4"/><path d="m2 6 4-4"/><path d="m3 10 7-7"/><path d="m14 21 7-7"/>
+      </svg>
+    ),
+  },
+  {
+    id: 'other',
+    label: 'Other',
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+        <path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/>
+      </svg>
+    ),
+  },
 ];
 
 /* Step 3 — Monthly volume */
@@ -220,7 +268,7 @@ function FeatureCard({ item, selected, onToggle }: { item: typeof FEATURES[0]; s
 }
 
 /* ── Radio card ── */
-function RadioCard({ label, sub, selected, icon, onClick }: { label: string; sub?: string; selected: boolean; icon?: string; onClick: () => void }) {
+function RadioCard({ label, sub, selected, icon, onClick }: { label: string; sub?: string; selected: boolean; icon?: React.ReactNode; onClick: () => void }) {
   return (
     <motion.button
       whileHover={{ y: -2 }}
@@ -234,7 +282,24 @@ function RadioCard({ label, sub, selected, icon, onClick }: { label: string; sub
         transition: 'border-color 0.2s, background 0.2s', width: '100%',
       }}
     >
-      {icon && <span style={{ fontSize: 28 }}>{icon}</span>}
+      {icon && (
+        <span
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: 40,
+            height: 40,
+            borderRadius: 10,
+            background: selected ? 'rgba(73,69,255,0.10)' : '#F4F5F8',
+            color: selected ? INDIGO : '#475569',
+            transition: 'color 0.2s, background 0.2s',
+            flexShrink: 0,
+          }}
+        >
+          {icon}
+        </span>
+      )}
       <div style={{ flex: 1 }}>
         <div style={{ fontFamily: JAK, fontSize: 16, fontWeight: 700, color: selected ? NAVY : '#374151' }}>{label}</div>
         {sub && <div style={{ fontFamily: JAK, fontSize: 13.5, color: '#94A3B8', marginTop: 3 }}>{sub}</div>}

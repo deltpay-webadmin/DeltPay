@@ -11,9 +11,10 @@ function Word({ word, progress, charStart, charEnd, totalChars }: {
   charEnd: number;
   totalChars: number;
 }) {
-  // Reveal all text within 0.05–0.55 of scroll so it finishes well before sticky unpins
-  const s = 0.05 + (charStart / totalChars) * 0.45;
-  const e = Math.min(0.05 + ((charEnd + 4) / totalChars) * 0.45, 0.55);
+  // Reveal all text within 0.10–0.85 of scroll so it stretches across most of the
+  // sticky pin (no long empty scroll tail after the last word lights up).
+  const s = 0.10 + (charStart / totalChars) * 0.75;
+  const e = Math.min(0.10 + ((charEnd + 4) / totalChars) * 0.75, 0.92);
   const mid = s + (e - s) * 0.35;
   const color = useTransform(progress, [s, mid, e], ['#B8B8E8', '#4945FF', '#041E42']);
   return (
@@ -73,14 +74,18 @@ export function ScrollRevealText() {
       <style>{`
         .srt-outer {
           position: relative;
-          height: 400vh;
+          /* 220vh of scroll track keeps the reveal lively without an empty tail.
+             Divide by --site-zoom so the track measures correctly under the
+             body-level CSS zoom. */
+          height: calc(220vh / var(--site-zoom, 1));
           background: linear-gradient(180deg, #f4f5f7 0%, #f8f9fb 15%, #f8f9fb 85%, #f4f5f7 100%);
         }
         .srt-sticky {
           position: sticky;
           top: 0;
           width: 100%;
-          height: 100vh;
+          /* Match a single physical viewport regardless of zoom. */
+          height: calc(100vh / var(--site-zoom, 1));
           display: flex;
           align-items: center;
           justify-content: center;

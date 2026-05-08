@@ -124,10 +124,22 @@ export function LensScrollRevealText() {
            We compensate by sizing in terms of 125vh on desktop
            (100 / 0.8 = 125) so the sticky frame visually fills the
            entire viewport. Mobile has no zoom and uses 100vh directly. */
+        /* Match the lavender wash of the section above (Lens chat hero) and
+           the section below (stacking panels) so this scroll-tall block no
+           longer renders as a giant white slab between two purple-tinted
+           sections. The moving sunset still rises through it; the soft
+           lavender base just removes the visible white gap at the top of
+           the section before the gradient saturates the bottom. */
         .lsrt-outer {
           position: relative;
           height: 320vh;
-          background: #FFFFFF;
+          background:
+            linear-gradient(180deg,
+              #EDEBFF 0%,
+              #F4F2FF 18%,
+              #FFFFFF 50%,
+              #F4F2FF 82%,
+              #EDEBFF 100%);
         }
 
         /* Sticky layer pins the headline AND contains the moving sunset.
@@ -154,9 +166,15 @@ export function LensScrollRevealText() {
         /* The sunset: a tall vertical gradient strip positioned to start
            below the viewport. As scroll progresses, Framer Motion translates
            it upward so the saturated bottom glow enters, fills the frame,
-           then exits the top leaving a soft residue. Much more saturated
-           than Base44's original (indigo reads softer than orange) so the
-           horizon is unmistakable. */
+           then exits the top leaving a soft residue.
+
+           BANDING FIX: Many subtly-spaced color stops in a low-saturation
+           lavender gradient produce visible horizontal bands on most
+           displays (8-bit panels can't smoothly resolve 0.04 → 0.10 →
+           0.18 alpha steps in a single hue). We replace the multi-stop
+           ramp with TWO smooth stops + a tiny SVG noise mask layered on
+           top to dither the transition. The result is an unmistakable
+           horizon glow with no perceptible bands. */
         .lsrt-sunset {
           position: absolute;
           left: 0;
@@ -170,18 +188,26 @@ export function LensScrollRevealText() {
           height: 400vh;
           pointer-events: none;
           will-change: transform;
+          /* Single smooth ramp from transparent → saturated indigo.
+             Two stops, one ease — no plateaus, no banding. */
           background:
             linear-gradient(180deg,
-              rgba(255,255,255,0)      0%,
-              rgba(73,69,255,0.04)     5%,
-              rgba(73,69,255,0.10)    12%,
-              rgba(73,69,255,0.18)    20%,
-              rgba(73,69,255,0.28)    30%,
-              rgba(73,69,255,0.38)    42%,
-              rgba(73,69,255,0.46)    55%,
-              rgba(73,69,255,0.52)    70%,
-              rgba(73,69,255,0.58)    85%,
-              rgba(73,69,255,0.58)   100%);
+              rgba(255,255,255,0)   0%,
+              rgba(73,69,255,0.58) 100%);
+        }
+        /* Fine-grain noise dither breaks any residual quantization
+           bands on 8-bit displays. Inline SVG so no asset request,
+           tiled small for grain rather than blotches, very low alpha
+           so it reads as texture not noise. */
+        .lsrt-sunset::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+          opacity: 0.5;
+          mix-blend-mode: overlay;
+          background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.55 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+          background-size: 160px 160px;
         }
 
         .lsrt-body {
@@ -193,11 +219,20 @@ export function LensScrollRevealText() {
         }
         .lsrt-text {
           font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-          font-size: clamp(2.75rem, 7vw, 5.5rem);
+          /* Tuned down — site-wide body { zoom: 1.08 } visually inflates
+             everything ~8% beyond what the prior 0.8-zoom calibration
+             expected, which was making the headline overflow on narrow
+             desktops and crowd the gradient. Slightly smaller clamp +
+             tighter line-height keeps the two-line headline comfortably
+             inside a single screen at all widths. */
+          font-size: clamp(2.25rem, 5.6vw, 4.25rem);
           font-weight: 800;
-          line-height: 1.05;
-          letter-spacing: -0.045em;
+          line-height: 1.08;
+          letter-spacing: -0.04em;
           margin: 0;
+          max-width: 18ch;
+          margin-left: auto;
+          margin-right: auto;
         }
       `}</style>
     </>

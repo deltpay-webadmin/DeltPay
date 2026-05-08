@@ -1,5 +1,6 @@
 import { JuspayHero } from '@/app/components/JuspayHero';
 import { ByTheNumbers } from '@/app/components/ByTheNumbers';
+import { GlobeStats } from '@/app/components/GlobeStats';
 import { ResultsBento } from '@/app/components/ResultsBento';
 import { FeatureShowcase } from '@/app/components/FeatureShowcase';
 import { SeeItInAction } from '@/app/components/SeeItInAction';
@@ -8,8 +9,9 @@ import { ScrollRevealText } from '@/app/components/ScrollRevealText';
 import { SpotlightTestimonial } from '@/app/components/SpotlightTestimonial';
 import { IndustryPanel } from '@/app/components/IndustryPanel';
 import { EmailCaptureBar } from '@/app/components/EmailCaptureBar';
-import DeltMarquee from '@/app/components/DeltMarquee';
 import { CapitalCrossSell } from '@/app/components/CapitalCrossSell';
+// DeltMarquee was previously rendered here; it now lives in App.tsx
+// AFTER <Footer /> so the animation sits below the footer.
 
 export function HomePage() {
   return (
@@ -17,11 +19,13 @@ export function HomePage() {
       <JuspayHero />
       {/* Wave 5 — email capture beneath hero */}
       <EmailCaptureBar />
-      <ByTheNumbers />
-      <div style={{ height: '160px', background: '#041E42' }} />
+      {/* Globe + headline stats (restored from original homepage) */}
+      <GlobeStats />
       <SeeItInAction />
       <ScrollRevealText />
       <FeatureShowcase />
+      {/* Legacy processor vs Delt comparison — moved here, after the product showcase */}
+      <ByTheNumbers />
       {/* Merchant Services → Capital value loop */}
       <CapitalCrossSell variant="full" theme="light" />
       {/* Wave 2 — Made for how you actually work (industry panel) */}
@@ -29,7 +33,6 @@ export function HomePage() {
       <ResultsBento />
       <SpotlightTestimonial />
       <FinalCTA />
-      <DeltMarquee />
     </div>
   );
 }

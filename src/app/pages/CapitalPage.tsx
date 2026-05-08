@@ -388,57 +388,229 @@ function RepaymentMiniVisual() {
   );
 }
 
-/* ─── Resource card (Toast-style, lavender/ivory bg) ─────────── */
-function ResourceCard({
-  title,
-  tag,
-  cta,
-  icon: Icon,
-  bg,
-}: {
-  title: string;
-  tag: string;
-  cta: 'Download' | 'Read';
-  icon: React.ComponentType<{ size?: number; color?: string; className?: string }>;
-  bg: string;
-}) {
+/* ─── Resource visuals (subject-specific glyph illustrations) ── */
+function ChecklistVisual() {
+  const rows = [
+    { label: 'Validate new market demand', done: true },
+    { label: 'Secure expansion capital',   done: true },
+    { label: 'Hire & onboard local team',  done: false },
+    { label: 'Launch & measure',           done: false },
+  ];
   return (
     <div
-      className="group rounded-2xl p-7 flex flex-col gap-5 cursor-pointer transition-all duration-200"
-      style={{
-        background: bg,
-        minHeight: 240,
-      }}
-      onMouseEnter={(e) => {
-        (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-3px)';
-      }}
-      onMouseLeave={(e) => {
-        (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)';
-      }}
+      aria-hidden="true"
+      className="absolute inset-0 flex items-center justify-center px-6"
     >
       <div
-        className="w-10 h-10 rounded-xl flex items-center justify-center"
-        style={{ background: '#FFFFFF' }}
+        className="w-full rounded-xl p-4 flex flex-col gap-2"
+        style={{
+          background: '#FFFFFF',
+          border: `1px solid ${HAIRLINE}`,
+          boxShadow: '0 8px 24px rgba(4,30,66,0.06)',
+        }}
       >
-        <Icon size={18} color={PURPLE} />
-      </div>
-      <div
-        className="text-[11px] font-bold uppercase"
-        style={{ color: PURPLE, letterSpacing: '0.14em' }}
-      >
-        {tag}
-      </div>
-      <p
-        className="font-bold text-lg leading-snug flex-1"
-        style={{ color: NAVY, fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-      >
-        {title}
-      </p>
-      <div className="flex items-center gap-1.5" style={{ color: PURPLE }}>
-        <span className="text-sm font-semibold">{cta}</span>
-        <ArrowRight size={14} />
+        {rows.map((r, i) => (
+          <div key={i} className="flex items-center gap-2">
+            <div
+              className="w-4 h-4 rounded flex items-center justify-center flex-shrink-0"
+              style={{
+                background: r.done ? PURPLE : '#FFFFFF',
+                border: r.done ? 'none' : `1.5px solid ${MICRO}`,
+              }}
+            >
+              {r.done && <Check size={11} color="#FFFFFF" strokeWidth={3} />}
+            </div>
+            <div
+              className="h-1.5 rounded-full flex-1"
+              style={{
+                background: r.done ? 'rgba(73,69,255,0.18)' : 'rgba(148,163,184,0.25)',
+                width: `${[88, 76, 92, 70][i]}%`,
+              }}
+            />
+          </div>
+        ))}
       </div>
     </div>
+  );
+}
+
+function RevenueChartVisual() {
+  // Mini bar chart: 2024 / 2025 / 2026 revenue brackets
+  const bars = [
+    { h: 38, label: '2024' },
+    { h: 58, label: '2025' },
+    { h: 84, label: '2026' },
+  ];
+  return (
+    <div
+      aria-hidden="true"
+      className="absolute inset-0 flex items-end justify-center gap-3 px-8 pb-5"
+    >
+      {bars.map((b, i) => (
+        <div key={i} className="flex flex-col items-center gap-1.5" style={{ width: 40 }}>
+          <div
+            className="w-full rounded-t-md"
+            style={{
+              height: b.h,
+              background: i === bars.length - 1
+                ? `linear-gradient(180deg, ${PURPLE} 0%, #6E6BFF 100%)`
+                : 'rgba(73,69,255,0.32)',
+            }}
+          />
+          <span className="text-[9px] font-bold" style={{ color: NAVY, letterSpacing: '0.04em' }}>
+            {b.label}
+          </span>
+        </div>
+      ))}
+      {/* axis hairline */}
+      <div
+        className="absolute left-6 right-6"
+        style={{ bottom: 22, height: 1, background: HAIRLINE }}
+      />
+    </div>
+  );
+}
+
+function LoanStepsVisual() {
+  const steps = ['Apply', 'Review', 'Funded'];
+  return (
+    <div
+      aria-hidden="true"
+      className="absolute inset-0 flex items-center justify-center px-5"
+    >
+      <div className="flex items-center gap-2 w-full">
+        {steps.map((s, i) => (
+          <div key={i} className="flex items-center gap-2 flex-1">
+            <div
+              className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold flex-shrink-0"
+              style={{
+                background: i === steps.length - 1 ? PURPLE : '#FFFFFF',
+                color: i === steps.length - 1 ? '#FFFFFF' : NAVY,
+                border: i === steps.length - 1 ? 'none' : `1.5px solid ${HAIRLINE}`,
+              }}
+            >
+              {i + 1}
+            </div>
+            <div className="flex flex-col gap-0.5 min-w-0">
+              <span className="text-[10px] font-bold" style={{ color: NAVY, letterSpacing: '0.02em' }}>
+                {s}
+              </span>
+              {i < steps.length - 1 && (
+                <div
+                  className="h-[2px] rounded-full"
+                  style={{
+                    background: i === 0 ? PURPLE : 'rgba(73,69,255,0.32)',
+                    width: i === 0 ? '100%' : '60%',
+                  }}
+                />
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ─── Resource card (developed: visual band + meta + footer CTA) */
+function ResourceCard({
+  to,
+  title,
+  excerpt,
+  tag,
+  cta,
+  readTime,
+  visualBg,
+  visual,
+}: {
+  to: string;
+  title: string;
+  excerpt: string;
+  tag: string;
+  cta: 'Download' | 'Read';
+  readTime: string;
+  visualBg: string;
+  visual: React.ReactNode;
+}) {
+  return (
+    <Link
+      to={to}
+      className="group rounded-2xl flex flex-col overflow-hidden transition-all duration-200"
+      style={{
+        background: '#FFFFFF',
+        border: `1px solid ${HAIRLINE}`,
+        boxShadow: '0 1px 2px rgba(4,30,66,0.04)',
+      }}
+      onMouseEnter={(e) => {
+        const el = e.currentTarget as HTMLAnchorElement;
+        el.style.transform = 'translateY(-3px)';
+        el.style.boxShadow = '0 18px 40px rgba(4,30,66,0.10)';
+        el.style.borderColor = 'rgba(73,69,255,0.32)';
+      }}
+      onMouseLeave={(e) => {
+        const el = e.currentTarget as HTMLAnchorElement;
+        el.style.transform = 'translateY(0)';
+        el.style.boxShadow = '0 1px 2px rgba(4,30,66,0.04)';
+        el.style.borderColor = HAIRLINE;
+      }}
+    >
+      {/* Visual band */}
+      <div
+        className="relative w-full"
+        style={{
+          height: 152,
+          background: visualBg,
+          borderBottom: `1px solid ${HAIRLINE}`,
+        }}
+      >
+        {visual}
+      </div>
+
+      {/* Body */}
+      <div className="flex flex-col gap-3 p-6 flex-1">
+        <div className="flex items-center gap-2">
+          <span
+            className="text-[10px] font-bold uppercase px-2 py-1 rounded"
+            style={{
+              color: PURPLE,
+              background: 'rgba(73,69,255,0.10)',
+              letterSpacing: '0.14em',
+            }}
+          >
+            {tag}
+          </span>
+          <span className="text-[11px] font-medium" style={{ color: MICRO }}>
+            · {readTime} read
+          </span>
+        </div>
+
+        <h3
+          className="font-bold text-[17px] leading-snug"
+          style={{ color: NAVY, fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: '-0.01em' }}
+        >
+          {title}
+        </h3>
+
+        <p className="text-[13.5px] leading-relaxed flex-1" style={{ color: MUTED }}>
+          {excerpt}
+        </p>
+
+        {/* Footer CTA bar */}
+        <div
+          className="flex items-center justify-between pt-3 mt-1"
+          style={{ borderTop: `1px solid ${HAIRLINE}` }}
+        >
+          <span className="text-[13px] font-semibold" style={{ color: PURPLE }}>
+            {cta}
+          </span>
+          <ArrowRight
+            size={14}
+            color={PURPLE}
+            className="transition-transform duration-200 group-hover:translate-x-1"
+          />
+        </div>
+      </div>
+    </Link>
   );
 }
 
@@ -503,7 +675,7 @@ export function CapitalPage() {
 
             <div className="mt-9 flex flex-wrap items-center gap-4">
               <Link
-                to="/sign-up"
+                to="/onboarding"
                 className="inline-flex items-center gap-2 rounded-full px-7 py-3.5 font-semibold text-white transition-all duration-200 hover:brightness-110"
                 style={{
                   background: PURPLE,
@@ -887,25 +1059,34 @@ export function CapitalPage() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             <ResourceCard
+              to="/resources/expansion-checklist"
               title="The small-business expansion checklist"
+              excerpt="Eight things every owner needs ready before opening a second location — from market signals to capital readiness."
               tag="Template"
               cta="Download"
-              icon={Download}
-              bg={LAVENDER}
+              readTime="8 min"
+              visualBg={LAVENDER}
+              visual={<ChecklistVisual />}
             />
             <ResourceCard
+              to="/resources/sb-revenue-2026"
               title="How much do small businesses actually make? (2026 data)"
+              excerpt="Median revenue, margin, and growth benchmarks across retail, food, and services — with the data you can compare against."
               tag="Research"
               cta="Read"
-              icon={BookOpen}
-              bg={IVORY}
+              readTime="12 min"
+              visualBg={IVORY}
+              visual={<RevenueChartVisual />}
             />
             <ResourceCard
+              to="/resources/loans-101"
               title="Loans 101: everything about the application"
+              excerpt="What lenders actually look at, the documents to prepare, and how Delt funds in days instead of weeks."
               tag="Guide"
               cta="Read"
-              icon={BookOpen}
-              bg={LAVENDER}
+              readTime="10 min"
+              visualBg={LAVENDER}
+              visual={<LoanStepsVisual />}
             />
           </div>
         </div>
@@ -1024,7 +1205,7 @@ export function CapitalPage() {
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4">
             <Link
-              to="/demo"
+              to="/onboarding"
               className="inline-flex items-center gap-2 px-7 py-3.5 text-white transition-all duration-200 hover:brightness-110"
               style={{
                 borderRadius: '6px',
@@ -1034,7 +1215,7 @@ export function CapitalPage() {
                 fontWeight: 600,
               }}
             >
-              Schedule a demo
+              Get started
               <ArrowRight size={16} />
             </Link>
             <Link

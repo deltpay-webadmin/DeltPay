@@ -13,6 +13,9 @@ import imgAurumUpdated from 'figma:asset/d641c9f161f97e6f6f646d087e1e1efce846b76
 import imgAurumLatest from 'figma:asset/c4b3cdf48f36fa1787d6955c5ba5dd79cb8e9909.png';
 import imgWebsiteGrid from 'figma:asset/bcbe34cc6e2d318e712bbd3f5af8fbedacda7cff.png';
 import imgWebsiteGridV2 from 'figma:asset/bfa4c4f29954906f890043902a1ea6d43149fa05.png';
+// Nano Banana refreshed feature imagery — restored after revert
+import imgWebsiteDevices from '@/assets/feature-website-devices.png';
+import imgLensDashboard from '@/assets/feature-lens-dashboard.png';
 
 const features = [
   {
@@ -21,7 +24,7 @@ const features = [
     accentWord: 'stunning',
     desc: 'Tell us about your business. We build the rest — and it\'s live before the week is out.',
     bullets: ['Looks great on every phone, tablet, and screen', 'Customers find you — and trust you — on Google', 'Start taking orders the same day you launch'],
-    img: imgWebsiteGridV2,
+    img: imgWebsiteDevices,
     href: '/website-examples',
   },
   {
@@ -30,7 +33,7 @@ const features = [
     accentWord: 'every',
     desc: 'No spreadsheets. No guessing. Just a clear picture of what\'s working — and what to fix.',
     bullets: ['See which days, products, and customers drive profit', 'Know when a cash shortfall is coming before it hits', 'Get told what to do next — not just what happened'],
-    img: img2,
+    img: imgLensDashboard,
     href: '/delt-ai',
   },
   {

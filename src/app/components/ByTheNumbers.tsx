@@ -1,5 +1,5 @@
 /* ──────────────────────────────────────────────────────────────
-   ByTheNumbers — Delt Capital "Why Delt beats the bank" pattern
+   ByTheNumbers — "Why Delt beats your legacy processor" pattern
    Paper background. Mono eyebrow. Navy H2. 2-column layout.
    Comparison table with mono numbered rows + trait pills.
    ────────────────────────────────────────────────────────────── */
@@ -13,18 +13,19 @@ interface Row {
 }
 
 const ROWS: Row[] = [
-  { num: '01', metric: 'Time to first dollar',  legacy: '2–6 weeks',          delt: '24 hours',         pill: '20× FASTER' },
-  { num: '02', metric: 'Effective factor',       legacy: '1.35–1.49×',        delt: '1.18×',            pill: '19% CHEAPER' },
-  { num: '03', metric: 'Paperwork',              legacy: '3 mo statements + returns', delt: 'Plaid link', pill: 'ZERO FILES' },
-  { num: '04', metric: 'Credit pull',            legacy: 'Hard pull',         delt: 'Soft inquiry',     pill: 'NO FICO HIT' },
-  { num: '05', metric: 'Collateral',             legacy: 'PG + UCC',          delt: 'None',             pill: 'UNENCUMBERED' },
-  { num: '06', metric: 'Prepayment penalty',     legacy: 'Full factor owed',  delt: 'None',             pill: 'EARLY PAYS SAVE' },
+  { num: '01', metric: 'Effective rate',         legacy: '2.9% + $0.30',      delt: '2.6% + $0.10',     pill: '$847 / MO SAVED' },
+  { num: '02', metric: 'Time to go live',        legacy: '3–10 business days', delt: 'Under 1 day',     pill: 'SAME-DAY ONBOARD' },
+  { num: '03', metric: 'Settlement',             legacy: 'T+2 standard',      delt: 'Next-day · same-day eligible', pill: 'FASTER FUNDS' },
+  { num: '04', metric: 'Hardware & POS',         legacy: 'Sold separately',   delt: 'Included',         pill: 'NO LEASE' },
+  { num: '05', metric: 'Chargeback help',        legacy: 'Self-serve portal', delt: 'Live dispute team',pill: 'WE FIGHT FOR YOU' },
+  { num: '06', metric: 'Capital access',         legacy: 'Third-party',       delt: 'Built-in',         pill: 'ONE LOGIN' },
+  { num: '07', metric: 'Contract',               legacy: '36-mo + early-term', delt: 'Month-to-month',  pill: 'NO LOCK-IN' },
 ];
 
 const HIGHLIGHTS: { label: string; value: string; sub: string; icon: string; color: string }[] = [
-  { label: 'MEDIAN TIME TO FUNDS', value: '24h',  sub: 'vs 2–6 weeks at a bank',     icon: '↯', color: '#F5B400' },
-  { label: 'AVG SAVINGS VS SBA',    value: '19%',  sub: 'on total cost of capital',  icon: '–', color: '#697386' },
-  { label: 'PAPERWORK REQUIRED',    value: '0',    sub: 'Plaid replaces the file box', icon: '⌀', color: '#697386' },
+  { label: 'AVG MONTHLY SAVINGS',  value: '$847', sub: 'vs Stripe / Square baseline', icon: '↯', color: '#F5B400' },
+  { label: 'TIME TO FIRST CHARGE', value: '<1 Day', sub: 'from sign-up to live POS',   icon: '–', color: '#697386' },
+  { label: 'MERCHANT RETENTION',   value: '97%',  sub: 'twelve-month, all verticals',  icon: '✓', color: '#697386' },
 ];
 
 export function ByTheNumbers() {
@@ -38,7 +39,7 @@ export function ByTheNumbers() {
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-10 items-end">
           <div>
             <div className="dc-eyebrow dc-on-light" style={{ color: 'var(--dc-indigo)' }}>
-              BANKS VS DELT
+              LEGACY PROCESSOR VS DELT
             </div>
             <h2
               className="mt-4 dc-h2"
@@ -50,7 +51,7 @@ export function ByTheNumbers() {
                 letterSpacing: '-0.035em',
               }}
             >
-              Why Delt beats<br />the bank.
+              Why merchants leave<br />legacy processors.
             </h2>
           </div>
           <div>
@@ -59,7 +60,8 @@ export function ByTheNumbers() {
               style={{ color: 'var(--dc-on-light-muted)', fontFamily: 'var(--dc-font-body)' }}
             >
               Every row is a median across the last 12 months of our book, measured
-              against publicly-reported bank SBA 7(a) averages. Updated quarterly.
+              against the published rates and onboarding times of leading legacy
+              processors. Updated quarterly.
             </p>
           </div>
         </div>
@@ -77,12 +79,12 @@ export function ByTheNumbers() {
           <div
             className="grid items-center"
             style={{
-              gridTemplateColumns: '160px 1fr 1fr',
+              gridTemplateColumns: '180px 1fr 1fr',
               borderBottom: '1px solid rgba(4, 30, 66, 0.08)',
             }}
           >
             <div
-              className="px-5 py-5 text-[11px] tracking-[0.14em]"
+              className="px-5 py-5 text-[13px] tracking-[0.14em]"
               style={{
                 fontFamily: 'var(--dc-font-mono)',
                 color: 'var(--dc-on-light-subtle)',
@@ -96,31 +98,31 @@ export function ByTheNumbers() {
               style={{ borderLeft: '1px solid rgba(4, 30, 66, 0.06)' }}
             >
               <div
-                className="h-7 w-7 rounded-full flex items-center justify-center"
+                className="h-8 w-8 rounded-full flex items-center justify-center"
                 style={{ background: 'rgba(4, 30, 66, 0.06)' }}
               >
-                <span style={{ fontSize: 12, color: 'var(--dc-on-light-subtle)' }}>⌂</span>
+                <span style={{ fontSize: 14, color: 'var(--dc-on-light-subtle)' }}>⌂</span>
               </div>
               <div>
                 <div
                   style={{
                     fontFamily: 'var(--dc-font-display)',
                     fontWeight: 600,
-                    fontSize: 15,
+                    fontSize: 17,
                     color: 'var(--dc-on-light)',
                   }}
                 >
-                  Traditional bank
+                  Legacy processor
                 </div>
                 <div
-                  className="text-[10px] tracking-[0.14em] mt-0.5"
+                  className="text-[12px] tracking-[0.14em] mt-1"
                   style={{
                     fontFamily: 'var(--dc-font-mono)',
                     color: 'var(--dc-on-light-subtle)',
                     textTransform: 'uppercase',
                   }}
                 >
-                  SBA 7(A) MEDIAN
+                  PUBLISHED RATE CARD
                 </div>
               </div>
             </div>
@@ -132,24 +134,24 @@ export function ByTheNumbers() {
               }}
             >
               <div
-                className="h-7 w-7 rounded-md flex items-center justify-center"
+                className="h-8 w-8 rounded-md flex items-center justify-center"
                 style={{ background: 'var(--dc-indigo)' }}
               >
-                <span style={{ fontSize: 14, color: '#fff', fontWeight: 600 }}>+</span>
+                <span style={{ fontSize: 16, color: '#fff', fontWeight: 600 }}>+</span>
               </div>
               <div>
                 <div
                   style={{
                     fontFamily: 'var(--dc-font-display)',
                     fontWeight: 600,
-                    fontSize: 15,
+                    fontSize: 17,
                     color: 'var(--dc-on-light)',
                   }}
                 >
                   Delt.
                 </div>
                 <div
-                  className="text-[10px] tracking-[0.14em] mt-0.5"
+                  className="text-[12px] tracking-[0.14em] mt-1"
                   style={{
                     fontFamily: 'var(--dc-font-mono)',
                     color: 'var(--dc-indigo)',
@@ -168,14 +170,14 @@ export function ByTheNumbers() {
               key={row.num}
               className="grid items-center"
               style={{
-                gridTemplateColumns: '160px 1fr 1fr',
+                gridTemplateColumns: '180px 1fr 1fr',
                 borderBottom:
                   i === ROWS.length - 1 ? 'none' : '1px solid rgba(4, 30, 66, 0.06)',
               }}
             >
-              <div className="px-5 py-5">
+              <div className="px-5 py-6">
                 <div
-                  className="text-[10px] tracking-[0.14em] mb-1"
+                  className="text-[12px] tracking-[0.14em] mb-1.5"
                   style={{
                     fontFamily: 'var(--dc-font-mono)',
                     color: 'var(--dc-on-light-subtle)',
@@ -187,7 +189,7 @@ export function ByTheNumbers() {
                   style={{
                     fontFamily: 'var(--dc-font-display)',
                     fontWeight: 600,
-                    fontSize: 14,
+                    fontSize: 17,
                     color: 'var(--dc-on-light)',
                     letterSpacing: '-0.01em',
                   }}
@@ -196,11 +198,11 @@ export function ByTheNumbers() {
                 </div>
               </div>
               <div
-                className="px-5 py-5 flex items-center gap-3"
+                className="px-5 py-6 flex items-center gap-3"
                 style={{ borderLeft: '1px solid rgba(4, 30, 66, 0.06)' }}
               >
                 <span
-                  className="h-5 w-5 rounded-full flex items-center justify-center text-[11px]"
+                  className="h-6 w-6 rounded-full flex items-center justify-center text-[13px]"
                   style={{
                     background: 'rgba(4, 30, 66, 0.06)',
                     color: 'var(--dc-on-light-subtle)',
@@ -211,7 +213,7 @@ export function ByTheNumbers() {
                 <span
                   style={{
                     fontFamily: 'var(--dc-font-body)',
-                    fontSize: 14,
+                    fontSize: 16,
                     color: 'var(--dc-on-light-muted)',
                   }}
                 >
@@ -219,12 +221,12 @@ export function ByTheNumbers() {
                 </span>
               </div>
               <div
-                className="px-5 py-5 flex items-center justify-between gap-3"
+                className="px-5 py-6 flex items-center justify-between gap-3"
                 style={{ borderLeft: '1px solid rgba(4, 30, 66, 0.06)' }}
               >
                 <div className="flex items-center gap-3">
                   <span
-                    className="h-5 w-5 rounded-full flex items-center justify-center text-[11px]"
+                    className="h-6 w-6 rounded-full flex items-center justify-center text-[13px]"
                     style={{
                       background: 'rgba(73, 69, 255, 0.12)',
                       color: 'var(--dc-indigo)',
@@ -235,7 +237,7 @@ export function ByTheNumbers() {
                   <span
                     style={{
                       fontFamily: 'var(--dc-font-body)',
-                      fontSize: 14,
+                      fontSize: 16,
                       fontWeight: 500,
                       color: 'var(--dc-on-light)',
                     }}
@@ -245,10 +247,10 @@ export function ByTheNumbers() {
                 </div>
                 {row.pill && (
                   <span
-                    className="px-2.5 py-1 rounded-md"
+                    className="px-3 py-1.5 rounded-md"
                     style={{
                       fontFamily: 'var(--dc-font-mono)',
-                      fontSize: 10,
+                      fontSize: 12,
                       letterSpacing: '0.14em',
                       background: 'rgba(73, 69, 255, 0.10)',
                       color: 'var(--dc-indigo-deep)',
@@ -277,7 +279,7 @@ export function ByTheNumbers() {
             >
               <div>
                 <div
-                  className="text-[10px] tracking-[0.14em] mb-2"
+                  className="text-[12px] tracking-[0.14em] mb-2"
                   style={{
                     fontFamily: 'var(--dc-font-mono)',
                     color: 'var(--dc-on-light-subtle)',
@@ -290,7 +292,7 @@ export function ByTheNumbers() {
                   style={{
                     fontFamily: 'var(--dc-font-display)',
                     fontWeight: 600,
-                    fontSize: 36,
+                    fontSize: 40,
                     letterSpacing: '-0.03em',
                     color: 'var(--dc-on-light)',
                     lineHeight: 1,
@@ -299,7 +301,7 @@ export function ByTheNumbers() {
                   {h.value}
                 </div>
                 <div
-                  className="mt-2 text-[12px]"
+                  className="mt-2 text-[14px]"
                   style={{
                     fontFamily: 'var(--dc-font-body)',
                     color: 'var(--dc-on-light-subtle)',

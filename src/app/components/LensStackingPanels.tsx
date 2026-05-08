@@ -216,32 +216,38 @@ function DigestMockup() {
 
 /* ── Panel data ─────────────────────────────────────────────── */
 
+/* Panel copy is framed around the Brian Tracy idea that customers
+   buy outcomes, transformations, and improvements — not features.
+   So each panel leads with the outcome (a calmer week, fewer
+   blind spots, more time back) instead of describing the
+   underlying capability. The capability is still there, but it
+   now sits in service of the transformation. */
 const PANELS = [
   {
     counter: '01 / 04',
-    title: 'Ask in plain English',
-    body: 'Tell Lens what you want to know and get a clear answer in seconds. No SQL, no dashboards, no reports to build. Just ask.',
+    title: 'Stop guessing. Start knowing.',
+    body: 'Straight answers in seconds. In plain English. No dashboards required.',
     cta: 'Start asking',
     mockup: <ChatMockup />,
   },
   {
     counter: '02 / 04',
-    title: 'Answers grounded in your data',
-    body: 'Every answer is wired to your real Payments, POS, and bank feed — with the source cited, so you can verify and trust it.',
+    title: 'Trust every number you act on.',
+    body: 'Trade gut calls for answers you can verify — every move grounded in truth.',
     cta: 'See how grounding works',
     mockup: <AnswerMockup />,
   },
   {
     counter: '03 / 04',
-    title: 'Acts on your behalf',
-    body: 'Ask Lens to pause a discount, reorder inventory, or nudge your team — and it does it. You approve, Lens executes.',
+    title: 'Get hours back every week.',
+    body: 'Stop running the busywork. Start running the business — and get your evenings back.',
     cta: 'Explore actions',
     mockup: <ActionMockup />,
   },
   {
     counter: '04 / 04',
-    title: 'Always on, always learning',
-    body: 'Lens quietly watches your business and surfaces what matters — weekly digests, anomaly alerts, and proactive suggestions.',
+    title: 'Spot the problem before it costs you.',
+    body: 'Catch the small leaks before they cost you — so the bad week never happens.',
     cta: 'Get started with Lens',
     mockup: <DigestMockup />,
   },
@@ -334,6 +340,64 @@ function Panel({
   );
 }
 
+/* ── Section intro ───────────────────────────────────────────
+   Reframes the stack around the outcome philosophy: customers
+   buy the result, not the tool. Kept intentionally plain — a
+   short eyebrow, one strong sentence, one supporting line — so
+   the cards underneath feel like the proof, not a brochure list.
+   ─────────────────────────────────────────────────────────── */
+function StackIntro() {
+  return (
+    <div
+      style={{
+        position: 'relative',
+        maxWidth: 880,
+        margin: '0 auto',
+        padding: '0 clamp(20px, 4vw, 48px) clamp(48px, 7vw, 96px)',
+        textAlign: 'center',
+      }}
+    >
+      <div
+        style={{
+          fontFamily: FONT,
+          fontSize: 12,
+          fontWeight: 700,
+          letterSpacing: '0.16em',
+          textTransform: 'uppercase',
+          color: C.purple,
+          marginBottom: 20,
+        }}
+      >
+What you actually get
+      </div>
+      <h2
+        style={{
+          fontFamily: FONT,
+          fontSize: 'clamp(1.75rem, 4vw, 3rem)',
+          fontWeight: 800,
+          letterSpacing: '-0.03em',
+          lineHeight: 1.1,
+          color: C.navy,
+          margin: '0 0 18px',
+        }}
+      >
+You’re not buying software. You’re buying a better business.
+      </h2>
+      <p
+        style={{
+          fontFamily: FONT,
+          fontSize: 'clamp(15px, 1.4vw, 18px)',
+          lineHeight: 1.65,
+          color: C.body,
+          margin: 0,
+        }}
+      >
+Owners don’t buy features — they buy outcomes, improvements, and transformations. Lens is the transformation: fewer blind spots, faster decisions, hours back in your week, and a business that runs steadier than it did last month.
+      </p>
+    </div>
+  );
+}
+
 export function LensStackingPanels() {
   return (
     <section style={{
@@ -350,6 +414,7 @@ export function LensStackingPanels() {
           'radial-gradient(ellipse 60% 40% at 20% 30%, rgba(73,69,255,0.10) 0%, transparent 60%),' +
           'radial-gradient(ellipse 50% 35% at 85% 75%, rgba(73,69,255,0.10) 0%, transparent 60%)',
       }} />
+      <StackIntro />
       {PANELS.map((p, i) => (
         <Panel key={p.counter} index={i} {...p} />
       ))}

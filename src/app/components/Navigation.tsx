@@ -6,6 +6,8 @@ import {
   Star, User, AlignLeft, HelpCircle, LayoutDashboard, Calculator,
   ChevronDown, Menu, Globe2, ShieldAlert,
 } from 'lucide-react';
+import deltLogoOnDark from '@/assets/delt-logo-on-dark.svg';
+import deltLogoOnLight from '@/assets/delt-logo-on-light.svg';
 
 /* ──────────────────────────────────────────────────────────────
    Navigation — Delt Capital chrome + full DeltPay mega-menus
@@ -85,36 +87,30 @@ function MonoEyebrow({ children }: { children: React.ReactNode }) {
   );
 }
 
-/* ── Logo ── */
+/* ── Logo ──
+   Single Delt wordmark SVG (the only brand logo on the site). Two
+   variants: white-on-dark for navy/hero surfaces, navy-on-light for
+   light surfaces. The asset itself includes the indigo accent bar +
+   dot, so we just render it as <img>. Height is the only knob: 28px
+   in the 64px header keeps it legible without dominating the row. */
 function DeltPayLogo({ onDark = true }: { onDark?: boolean }) {
-  const cream = '#F7F5F0';
-  const indigo = '#4945FF';
   return (
-    <div className="flex items-center gap-2.5">
-      {/* Two-bar mark */}
-      <div className="flex items-end gap-[3px]" aria-hidden>
-        <span
-          className="block rounded-[1px]"
-          style={{
-            width: 4, height: 16,
-            background: onDark ? cream : '#041E42',
-          }}
-        />
-        <span
-          className="block rounded-[1px]"
-          style={{ width: 4, height: 22, background: indigo }}
-        />
-      </div>
-      <span
-        className="font-semibold tracking-[-0.02em] text-[20px]"
-        style={{
-          fontFamily: 'var(--dc-font-display)',
-          color: onDark ? cream : '#041E42',
-        }}
-      >
-        Delt<span style={{ color: indigo }}>Pay</span>
-      </span>
-    </div>
+    <img
+      src={onDark ? deltLogoOnDark : deltLogoOnLight}
+      alt="Delt"
+      width={undefined}
+      height={28}
+      style={{
+        display: 'block',
+        height: 28,
+        width: 'auto',
+        // Slight optical adjust: the mark sits with generous internal
+        // top-padding in the SVG; pull it up a hair so it visually
+        // aligns with the nav row baseline.
+        marginTop: -1,
+      }}
+      draggable={false}
+    />
   );
 }
 
@@ -261,55 +257,78 @@ export function Navigation() {
     setMobileOpen(false);
   }, [location.pathname]);
 
+  /* ── Liquid-glass mode: ON only while a hero section sits behind the nav.
+     We watch every [data-hero-section] element. As long as any of them is
+     still overlapping the top 80px of the viewport (where the sticky nav
+     lives), we render the translucent glass. Once the hero scrolls out, we
+     flip to solid #041E42. Re-runs on every route change so newly-mounted
+     hero sections (or pages without one) are picked up immediately. */
+  const [overHero, setOverHero] = useState(true);
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    let frame = 0;
+    const computeOverHero = () => {
+      frame = 0;
+      const heroes = document.querySelectorAll<HTMLElement>('[data-hero-section]');
+      if (heroes.length === 0) {
+        setOverHero(false);
+        return;
+      }
+      // Glass while any hero still covers the top 80px slab the nav occupies.
+      let anyBehind = false;
+      heroes.forEach((el) => {
+        const r = el.getBoundingClientRect();
+        if (r.top < 80 && r.bottom > 0) anyBehind = true;
+      });
+      setOverHero(anyBehind);
+    };
+    const onScrollOrResize = () => {
+      if (frame) return;
+      frame = window.requestAnimationFrame(computeOverHero);
+    };
+    // Initial check after the page settles (hero may mount one frame later).
+    const initial = window.requestAnimationFrame(computeOverHero);
+    window.addEventListener('scroll', onScrollOrResize, { passive: true });
+    window.addEventListener('resize', onScrollOrResize);
+    return () => {
+      window.cancelAnimationFrame(initial);
+      if (frame) window.cancelAnimationFrame(frame);
+      window.removeEventListener('scroll', onScrollOrResize);
+      window.removeEventListener('resize', onScrollOrResize);
+    };
+  }, [location.pathname]);
+
+  const glassStyle: React.CSSProperties = {
+    // Liquid glass: nearly clear, the backdrop blur does the work. Just
+    // a whisper of tint to keep text legible over the bright shader
+    // peaks, plus a hairline divider so the bar separates from content.
+    background:
+      'linear-gradient(180deg, rgba(4, 30, 66, 0.18) 0%, rgba(4, 30, 66, 0.08) 100%)',
+    backdropFilter: 'blur(22px) saturate(160%)',
+    WebkitBackdropFilter: 'blur(22px) saturate(160%)',
+    borderBottom: '1px solid rgba(247, 245, 240, 0.06)',
+    boxShadow: 'inset 0 1px 0 rgba(247, 245, 240, 0.05)',
+  };
+  const solidStyle: React.CSSProperties = {
+    background: '#041E42',
+    backdropFilter: 'none',
+    WebkitBackdropFilter: 'none',
+    borderBottom: '1px solid rgba(247, 245, 240, 0.08)',
+    boxShadow: 'none',
+  };
+
   return (
     <header
       className="dc-nav-header sticky top-0 z-50"
-      style={{ background: 'var(--dc-bg-navy)' }}
+      style={{
+        ...(overHero ? glassStyle : solidStyle),
+        transition: 'background 220ms ease, backdrop-filter 220ms ease, border-color 220ms ease, box-shadow 220ms ease',
+      }}
     >
-      {/* Top ticker bar */}
-      <div
-        className="dc-ticker"
-        style={{
-          background: '#020E22',
-          borderBottom: '1px solid rgba(247, 245, 240, 0.08)',
-          height: 32,
-          overflow: 'hidden',
-          position: 'relative',
-        }}
-      >
-        <div
-          className="flex whitespace-nowrap"
-          style={{
-            fontFamily: 'var(--dc-font-mono)',
-            color: 'rgba(247, 245, 240, 0.55)',
-            fontSize: 11,
-            letterSpacing: '0.06em',
-            textTransform: 'uppercase',
-            animation: 'dc-ticker-scroll 90s linear infinite',
-            paddingTop: 10,
-            gap: 40,
-          }}
-        >
-          {[...TICKER, ...TICKER, ...TICKER].map((t, i) => (
-            <span key={i} className="inline-flex items-center gap-2">
-              <span style={{ color: 'rgba(247, 245, 240, 0.8)', fontWeight: 500 }}>
-                {t.split('  ')[0]}
-              </span>
-              <span style={{ color: 'rgba(247, 245, 240, 0.4)' }}>
-                {t.split('  ').slice(1).join(' ')}
-              </span>
-              <span style={{ color: 'rgba(247, 245, 240, 0.25)' }}>·</span>
-            </span>
-          ))}
-        </div>
-        <style>{`@keyframes dc-ticker-scroll { from { transform: translateX(0) } to { transform: translateX(-33.333%) } }`}</style>
-      </div>
-
       {/* Main nav row */}
       <nav
         className="relative"
         style={{
-          borderBottom: '1px solid rgba(247, 245, 240, 0.08)',
           height: 64,
         }}
       >
@@ -473,22 +492,13 @@ export function Navigation() {
                       </div>
                     </div>
                     <div
-                      className="px-6 py-4 flex items-center justify-between"
+                      className="px-6 py-4 flex items-center justify-end"
                       style={{
                         background: 'rgba(73, 69, 255, 0.05)',
                         borderTop: '1px solid rgba(4, 30, 66, 0.06)',
                       }}
                     >
-                      <span
-                        className="text-[11px] tracking-[0.14em]"
-                        style={{
-                          fontFamily: 'var(--dc-font-mono)',
-                          color: 'var(--dc-on-light-subtle)',
-                          textTransform: 'uppercase',
-                        }}
-                      >
-                        — VOL. VII · Q2 2026
-                      </span>
+                      {/* VOL. VII · Q2 2026 dateline removed per user request. */}
                       <Link to="/calculator" className="dc-btn-secondary">
                         Run the calculator
                       </Link>
@@ -565,8 +575,8 @@ export function Navigation() {
             >
               Login
             </Link>
-            <Link to="/apply" className="dc-btn-primary">
-              Get Funded
+            <Link to="/get-a-quote" className="dc-btn-primary">
+              Get Started
               <ArrowRight size={12} />
             </Link>
           </div>
@@ -619,8 +629,8 @@ export function Navigation() {
               />
               <div className="pt-4 flex flex-col gap-3" style={{ borderTop: '1px solid rgba(247, 245, 240, 0.08)' }}>
                 <Link to="/signin" className="dc-btn-secondary dc-on-dark dc-lg w-full justify-center">Login</Link>
-                <Link to="/apply" className="dc-btn-primary dc-lg w-full justify-center">
-                  Get Funded <ArrowRight size={14} />
+                <Link to="/get-a-quote" className="dc-btn-primary dc-lg w-full justify-center">
+                  Get Started <ArrowRight size={14} />
                 </Link>
               </div>
             </div>
