@@ -23,15 +23,6 @@ const STATS = [
   { value: '97%',     label: 'Merchant retention',         sub: 'Twelve-month' },
 ];
 
-const LEADERS = [
-  { name: 'Avery Chen',      title: 'Chief Executive Officer',  initials: 'AC', bio: 'Former founder of two SMB fintechs; ran ops at Block.' },
-  { name: 'Priya Patel',     title: 'Chief Financial Officer',  initials: 'PP', bio: 'Finance lead at Plaid and Robinhood; CPA.' },
-  { name: 'Marcus Webb',     title: 'Chief Technology Officer', initials: 'MW', bio: 'Payments infra at Stripe; built risk & ledger stacks.' },
-  { name: 'Elena Rodriguez', title: 'Chief Operating Officer',  initials: 'ER', bio: 'Scaled ops teams at DoorDash and Toast.' },
-  { name: 'Daniel Kim',      title: 'Chief Product Officer',    initials: 'DK', bio: 'Designed Lens AI; ex-Figma, ex-Linear.' },
-  { name: 'Zara Okafor',     title: 'Chief Marketing Officer',  initials: 'ZO', bio: 'Brand lead at Shopify merchant & small-biz orgs.' },
-];
-
 const VALUES = [
   { icon: Heart,       title: 'Operators first.',     description: 'Every product decision starts with one question: does this make running a business easier?' },
   { icon: Compass,     title: 'Honest by default.',   description: 'We tell merchants the truth about fees, terms, and eligibility — even when it costs us the deal.' },
@@ -223,45 +214,6 @@ function StatTile({ value, label, sub }: { value: string; label: string; sub: st
       <p className="text-[11px] font-medium uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.5)' }}>
         {sub}
       </p>
-    </div>
-  );
-}
-
-function LeaderCard({ name, title, initials, bio }: { name: string; title: string; initials: string; bio: string }) {
-  return (
-    <div
-      className="group relative rounded-2xl p-6 transition-all duration-200 bg-white"
-      style={{
-        boxShadow: `inset 0 0 0 1px ${HAIRLINE}, 0 1px 0 rgba(4,30,66,0.02)`,
-      }}
-      onMouseEnter={e => {
-        (e.currentTarget as HTMLDivElement).style.boxShadow =
-          `inset 0 0 0 1px ${PURPLE}4D, 0 12px 30px -16px rgba(73,69,255,0.35)`;
-        (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)';
-      }}
-      onMouseLeave={e => {
-        (e.currentTarget as HTMLDivElement).style.boxShadow =
-          `inset 0 0 0 1px ${HAIRLINE}, 0 1px 0 rgba(4,30,66,0.02)`;
-        (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)';
-      }}
-    >
-      <div className="flex items-start gap-4">
-        <div
-          className="flex-shrink-0 w-14 h-14 rounded-full flex items-center justify-center text-sm font-bold tracking-wide"
-          style={{
-            background: `linear-gradient(135deg, ${NAVY} 0%, ${PURPLE} 100%)`,
-            color: WHITE,
-            boxShadow: 'inset 0 0 0 3px rgba(255,255,255,0.08), 0 6px 16px -6px rgba(73,69,255,0.5)',
-          }}
-        >
-          {initials}
-        </div>
-        <div className="min-w-0">
-          <p className="font-semibold text-[15px] tracking-tight truncate" style={{ color: NAVY }}>{name}</p>
-          <p className="text-xs font-medium mt-0.5" style={{ color: PURPLE }}>{title}</p>
-        </div>
-      </div>
-      <p className="mt-4 text-sm leading-relaxed" style={{ color: MUTED }}>{bio}</p>
     </div>
   );
 }
@@ -524,38 +476,6 @@ export function AboutUsPage() {
             <p>
               We&rsquo;ve expanded from payments into working capital, a website builder, an AI business advisor (Lens), and a full point-of-sale stack. The surface area has grown; the mission hasn&rsquo;t changed. Make the back office disappear so operators can focus on the work they actually love.
             </p>
-          </div>
-        </div>
-      </section>
-
-      {/* ══ LEADERSHIP ════════════════════════════════════════ */}
-      <section
-        className="relative py-24 px-6 border-y"
-        style={{
-          borderColor: HAIRLINE,
-          background: `radial-gradient(80% 100% at 50% 0%, #F7F6FF 0%, ${WHITE} 70%)`,
-        }}
-      >
-        <div className="max-w-6xl mx-auto">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
-            <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.2em] mb-3" style={{ color: PURPLE }}>
-                Leadership
-              </p>
-              <h2
-                className="font-bold tracking-[-0.015em]"
-                style={{ color: NAVY, fontSize: 'clamp(1.75rem, 3vw, 2.5rem)', lineHeight: 1.1 }}
-              >
-                The team building Delt.
-              </h2>
-            </div>
-            <p className="text-sm max-w-md" style={{ color: MUTED }}>
-              Operators, engineers, and designers who&rsquo;ve scaled consumer fintech, payments infra, and merchant tools.
-            </p>
-          </div>
-
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {LEADERS.map(l => <LeaderCard key={l.name} {...l} />)}
           </div>
         </div>
       </section>
