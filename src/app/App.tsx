@@ -20,6 +20,7 @@ import { ProductsPage } from '@/app/pages/ProductsPage';
 import { ShoppingCartPage } from '@/app/pages/ShoppingCartPage';
 import { BlogPage } from '@/app/pages/BlogPage';
 import { NewBlogPage } from '@/app/pages/NewBlogPage';
+import { BlogPostPage } from '@/app/pages/BlogPostPage';
 import { WhatsNewPage } from '@/app/pages/WhatsNewPage';
 import { AboutUsPage } from '@/app/pages/AboutUsPage';
 import { ReviewsPage } from '@/app/pages/ReviewsPage';
@@ -85,6 +86,7 @@ export default function App() {
                 <Route path="/apply" element={<ApplicationPage />} />
                 <Route path="/whats-new" element={<WhatsNewPage />} />
                 <Route path="/blog" element={<NewBlogPage />} />
+                <Route path="/blog/:slug" element={<BlogPostPage />} />
                 <Route path="/contact" element={<ContactPage />} />
                 <Route path="/contact-sales" element={<ContactSalesPage />} />
                 <Route path="/support" element={<SupportPage />} />

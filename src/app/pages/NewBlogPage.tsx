@@ -1,16 +1,7 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { ArrowRight, ArrowLeft, Clock, Mail } from 'lucide-react';
 
-import featuredImg     from '../assets/blog/blog_0_featured_capital.png';
-import coffeeImg       from '../assets/blog/blog_1_lens_ai.png';
-import floristImg      from '../assets/blog/blog_2_transactions.png';
-import romaImg         from '../assets/blog/blog_3_roma_trattoria.png';
-import bookstoreImg    from '../assets/blog/blog_4_write_before_code.png';
-import butcherImg      from '../assets/blog/blog_5_lending_disclosures.png';
-import foodTruckImg    from '../assets/blog/blog_6_distracted_operators.png';
-import yogaImg         from '../assets/blog/blog_7_zero_downtime.png';
-import salonImg        from '../assets/blog/blog_8_bloom_salon.png';
-import gelatoImg       from '../assets/blog/blog_9_against_dashboards.png';
+import { FEATURED, POSTS, SITE_RECOMMENDATIONS, type Post, type Category } from '../blog/blogData';
 
 /* ─── Palette ────────────────────────────────────────── */
 const NAVY      = '#041E42';
@@ -21,137 +12,6 @@ const WHITE     = '#FFFFFF';
 const INK       = '#0F172A';
 const MUTED     = '#475569';
 const HAIRLINE  = 'rgba(4,30,66,0.08)';
-
-/* ─── Types ──────────────────────────────────────────── */
-type Category = 'All' | 'Product' | 'Engineering' | 'Culture' | 'Customers' | 'Policy';
-
-interface Post {
-  id: number;
-  category: Exclude<Category, 'All'>;
-  title: string;
-  excerpt: string;
-  author: string;
-  date: string;
-  readMin: number;
-  image: string;
-  imageAlt: string;
-}
-
-/* ─── Data ───────────────────────────────────────────── */
-const FEATURED: Post = {
-  id: 0,
-  category: 'Customers',
-  title: 'How Hearth Bakery used $42K in capital to open a second location.',
-  excerpt:
-    "Funded in 24 hours off two years of deposits — not a credit score. Here's how a London sourdough shop went from one storefront to two without ever filling out a bank form.",
-  author: 'Avery Chen',
-  date: 'Apr 18, 2026',
-  readMin: 12,
-  image: featuredImg,
-  imageAlt: 'Bakery owner reviewing capital offer on tablet beside sourdough loaves',
-};
-
-const POSTS: Post[] = [
-  {
-    id: 1,
-    category: 'Customers',
-    title: "Why North End Coffee replaced their old POS in a weekend.",
-    excerpt: 'A two-location specialty coffee shop on what finally made tap-to-pay feel native.',
-    author: 'Daniel Kim',
-    date: 'Apr 11, 2026',
-    readMin: 9,
-    image: coffeeImg,
-    imageAlt: 'Barista handing payment terminal to customer in a brick-walled coffee shop',
-  },
-  {
-    id: 2,
-    category: 'Customers',
-    title: 'How Camellia Florals doubled wedding-season revenue.',
-    excerpt: "A Brooklyn florist on using Delt Capital to pre-buy stems before peak season — and pay it back as orders cleared.",
-    author: 'Marcus Webb',
-    date: 'Apr 04, 2026',
-    readMin: 14,
-    image: floristImg,
-    imageAlt: 'Florist wrapping a bouquet in kraft paper at a sunlit workbench',
-  },
-  {
-    id: 3,
-    category: 'Customers',
-    title: "Inside Roma Trattoria's 3× sales year.",
-    excerpt: 'How a family-run Italian restaurant tripled revenue with Delt Payments and Capital.',
-    author: 'Zara Okafor',
-    date: 'Mar 28, 2026',
-    readMin: 7,
-    image: romaImg,
-    imageAlt: 'Italian restaurant owner pouring wine for a guest in a warmly lit trattoria',
-  },
-  {
-    id: 4,
-    category: 'Customers',
-    title: "How Page & Press Books survived their slowest winter.",
-    excerpt: "An indie bookstore-cafe on bridging six quiet weeks with revenue-based capital — and paying it back the moment foot traffic returned.",
-    author: 'Elena Rodriguez',
-    date: 'Mar 21, 2026',
-    readMin: 6,
-    image: bookstoreImg,
-    imageAlt: 'Bookstore owner smiling with a book and coffee in a cozy bookstore-cafe',
-  },
-  {
-    id: 5,
-    category: 'Customers',
-    title: "Why Marlowe & Sons Butchers switched processors after 22 years.",
-    excerpt: 'A neighborhood butcher on getting funded for a new walk-in cooler in a single afternoon.',
-    author: 'Priya Patel',
-    date: 'Mar 14, 2026',
-    readMin: 8,
-    image: butcherImg,
-    imageAlt: 'Butcher handing a wrapped paper package across the counter to a customer',
-  },
-  {
-    id: 6,
-    category: 'Customers',
-    title: "How Mei's Dumpling Truck doubled stops in one summer.",
-    excerpt: "A solo food-truck operator on using Delt Capital to add a second truck — and Delt Payments to never lose a sale to a dead reader.",
-    author: 'Daniel Kim',
-    date: 'Mar 07, 2026',
-    readMin: 10,
-    image: foodTruckImg,
-    imageAlt: 'Food truck owner smiling as she hands food to a customer at golden hour',
-  },
-  {
-    id: 7,
-    category: 'Customers',
-    title: 'How Anjali Yoga grew a single studio into three.',
-    excerpt: "A boutique yoga studio on financing two expansions on deposit history alone — no personal guarantee, no collateral.",
-    author: 'Marcus Webb',
-    date: 'Feb 28, 2026',
-    readMin: 11,
-    image: yogaImg,
-    imageAlt: 'Yoga studio owner sitting cross-legged near sunlit windows with a tablet',
-  },
-  {
-    id: 8,
-    category: 'Customers',
-    title: 'How Bloom Salon cut no-shows by 40%.',
-    excerpt: "A beauty studio in Portland used Delt's SMS reminders to transform its booking rate.",
-    author: 'Zara Okafor',
-    date: 'Feb 21, 2026',
-    readMin: 5,
-    image: salonImg,
-    imageAlt: 'Salon owner working on a tablet next to a styling chair and round mirror',
-  },
-  {
-    id: 9,
-    category: 'Customers',
-    title: "How Tessa & Tom turned their gelato shop into a 4-store chain.",
-    excerpt: 'A father-daughter team on what it took to scale from one counter in Boston to four — funded entirely off card sales.',
-    author: 'Avery Chen',
-    date: 'Feb 14, 2026',
-    readMin: 8,
-    image: gelatoImg,
-    imageAlt: 'Father and daughter laughing together as they hand a gelato cone across the counter',
-  },
-];
 
 const CATEGORIES: Category[] = ['All', 'Product', 'Engineering', 'Culture', 'Customers', 'Policy'];
 
@@ -181,7 +41,6 @@ function PostCover({ post, className = '' }: { post: Post; className?: string })
         onMouseEnter={e => { (e.currentTarget as HTMLImageElement).style.transform = 'scale(1.04)'; }}
         onMouseLeave={e => { (e.currentTarget as HTMLImageElement).style.transform = 'scale(1)'; }}
       />
-      {/* Subtle bottom shadow so the category pill always reads cleanly */}
       <div
         aria-hidden
         style={{
@@ -193,7 +52,6 @@ function PostCover({ post, className = '' }: { post: Post; className?: string })
     </div>
   );
 }
-
 
 function CategoryPill({ category, small = false, onDark = false }: {
   category: Exclude<Category, 'All'>;
@@ -247,8 +105,9 @@ function AuthorRow({ author, date, readMin, muted = false }: {
 
 function ArticleCard({ post }: { post: Post }) {
   return (
-    <article
-      className="group rounded-2xl flex flex-col overflow-hidden transition-all duration-200 cursor-pointer bg-white"
+    <a
+      href={`#/blog/${post.slug}`}
+      className="group rounded-2xl flex flex-col overflow-hidden transition-all duration-200 cursor-pointer bg-white no-underline"
       style={{
         boxShadow: `inset 0 0 0 1px ${HAIRLINE}, 0 1px 0 rgba(4,30,66,0.02)`,
       }}
@@ -270,7 +129,7 @@ function ArticleCard({ post }: { post: Post }) {
           className="text-[17px] font-bold tracking-tight leading-snug transition-colors"
           style={{ color: NAVY }}
         >
-          {post.title}
+          {post.h1}
         </h3>
         <p className="text-sm leading-relaxed flex-1" style={{ color: MUTED }}>
           {post.excerpt}
@@ -279,7 +138,7 @@ function ArticleCard({ post }: { post: Post }) {
           <AuthorRow author={post.author} date={post.date} readMin={post.readMin} />
         </div>
       </div>
-    </article>
+    </a>
   );
 }
 
@@ -291,6 +150,28 @@ export function NewBlogPage() {
     () => (activeCategory === 'All' ? POSTS : POSTS.filter(p => p.category === activeCategory)),
     [activeCategory],
   );
+
+  /* Set page-level title + meta description for the blog index. */
+  useEffect(() => {
+    const prevTitle = document.title;
+    document.title = SITE_RECOMMENDATIONS?.title ?? 'Delt Blog';
+
+    const setMeta = (name: string, content: string) => {
+      let el = document.querySelector(`meta[name="${name}"]`) as HTMLMetaElement | null;
+      if (!el) {
+        el = document.createElement('meta');
+        el.setAttribute('name', name);
+        document.head.appendChild(el);
+      }
+      el.setAttribute('content', content);
+    };
+
+    if (SITE_RECOMMENDATIONS?.meta_description) {
+      setMeta('description', SITE_RECOMMENDATIONS.meta_description);
+    }
+
+    return () => { document.title = prevTitle; };
+  }, []);
 
   return (
     <div style={{ background: WHITE, color: INK, fontFamily: 'system-ui, -apple-system, sans-serif' }}>
@@ -363,7 +244,7 @@ export function NewBlogPage() {
           </p>
         </div>
 
-        {/* ── Featured article — dark card that lives inside the hero ── */}
+        {/* ── Featured article ── */}
         <div className="relative max-w-6xl mx-auto px-6 pb-24">
           <p
             className="text-[10px] font-bold uppercase tracking-[0.22em] mb-5"
@@ -372,15 +253,14 @@ export function NewBlogPage() {
             Editor&rsquo;s pick
           </p>
           <a
-            href="#"
-            className="group block rounded-3xl overflow-hidden transition-all duration-300 grid md:grid-cols-[1.1fr_1fr]"
+            href={`#/blog/${FEATURED.slug}`}
+            className="group block rounded-3xl overflow-hidden transition-all duration-300 grid md:grid-cols-[1.1fr_1fr] no-underline"
             style={{
               background: 'linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.03) 100%)',
               boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.1), 0 40px 80px -30px rgba(0,0,0,0.6)',
               backdropFilter: 'blur(10px)',
             }}
           >
-            {/* Left: featured customer photo */}
             <div
               className="relative min-h-72 md:min-h-0 overflow-hidden"
               style={{ background: NAVY_DEEP }}
@@ -404,13 +284,11 @@ export function NewBlogPage() {
                   background: 'linear-gradient(180deg, rgba(2,14,34,0) 55%, rgba(2,14,34,0.55) 100%)',
                 }}
               />
-              {/* Floor tag */}
               <div className="absolute left-6 bottom-6">
                 <CategoryPill category={FEATURED.category} onDark />
               </div>
             </div>
 
-            {/* Right: text */}
             <div className="p-8 md:p-10 flex flex-col gap-5">
               <h2
                 className="font-bold tracking-[-0.015em]"
@@ -420,7 +298,7 @@ export function NewBlogPage() {
                   lineHeight: 1.15,
                 }}
               >
-                {FEATURED.title}
+                {FEATURED.h1}
               </h2>
               <p className="text-[15px] leading-relaxed" style={{ color: 'rgba(255,255,255,0.72)' }}>
                 {FEATURED.excerpt}
