@@ -4,6 +4,8 @@
    Comparison table with mono numbered rows + trait pills.
    ────────────────────────────────────────────────────────────── */
 
+import deltLogoOnLight from '@/assets/delt-logo-on-light.svg';
+
 interface Row {
   num: string;
   metric: string;
@@ -129,40 +131,17 @@ export function ByTheNumbers() {
               </div>
             </div>
             <div
-              className="px-5 py-5 flex items-center gap-3"
+              className="px-5 py-5 flex items-center"
               style={{
                 borderLeft: '1px solid rgba(4, 30, 66, 0.06)',
                 background: 'rgba(73, 69, 255, 0.04)',
               }}
             >
-              <div
-                className="h-8 w-8 rounded-md flex items-center justify-center"
-                style={{ background: 'var(--dc-indigo)' }}
-              >
-                <span style={{ fontSize: 16, color: '#fff', fontWeight: 600 }}>+</span>
-              </div>
-              <div>
-                <div
-                  style={{
-                    fontFamily: 'var(--dc-font-display)',
-                    fontWeight: 600,
-                    fontSize: 17,
-                    color: 'var(--dc-on-light)',
-                  }}
-                >
-                  Delt.
-                </div>
-                <div
-                  className="text-[12px] tracking-[0.14em] mt-1"
-                  style={{
-                    fontFamily: 'var(--dc-font-mono)',
-                    color: 'var(--dc-indigo)',
-                    textTransform: 'uppercase',
-                  }}
-                >
-                  LIVE BOOK
-                </div>
-              </div>
+              <img
+                src={deltLogoOnLight}
+                alt="Delt"
+                style={{ display: 'block', height: 22, width: 'auto' }}
+              />
             </div>
           </div>
 
