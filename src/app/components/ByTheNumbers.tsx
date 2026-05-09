@@ -13,13 +13,15 @@ interface Row {
 }
 
 const ROWS: Row[] = [
-  { num: '01', metric: 'Effective rate',         legacy: '2.9% + $0.30',      delt: '2.6% + $0.10',     pill: '$847 / MO SAVED' },
-  { num: '02', metric: 'Time to go live',        legacy: '3–10 business days', delt: 'Under 1 day',     pill: 'SAME-DAY ONBOARD' },
-  { num: '03', metric: 'Settlement',             legacy: 'T+2 standard',      delt: 'Next-day · same-day eligible', pill: 'FASTER FUNDS' },
-  { num: '04', metric: 'Hardware & POS',         legacy: 'Sold separately',   delt: 'Included',         pill: 'NO LEASE' },
-  { num: '05', metric: 'Chargeback help',        legacy: 'Self-serve portal', delt: 'Live dispute team',pill: 'WE FIGHT FOR YOU' },
-  { num: '06', metric: 'Capital access',         legacy: 'Third-party',       delt: 'Built-in',         pill: 'ONE LOGIN' },
-  { num: '07', metric: 'Contract',               legacy: '36-mo + early-term', delt: 'Month-to-month',  pill: 'NO LOCK-IN' },
+  { num: '01', metric: 'Processing cost',        legacy: '2.6% + $0.15 per transaction', delt: '0% with cash discount',           pill: 'MERCHANT PAYS NOTHING' },
+  { num: '02', metric: 'Time to go live',        legacy: '3–10 business days',           delt: 'Under 1 day',                     pill: 'SAME-DAY ONBOARD' },
+  { num: '03', metric: 'Settlement',             legacy: 'T+2 standard',                 delt: 'Next-day · same-day eligible',    pill: 'FASTER FUNDS' },
+  { num: '04', metric: 'Hardware & POS',         legacy: 'Sold separately',              delt: 'Included',                        pill: 'NO LEASE' },
+  { num: '05', metric: 'Chargeback support',     legacy: 'Self-serve portal only',       delt: 'Live dispute team',               pill: 'WE FIGHT FOR YOU' },
+  { num: '06', metric: 'Capital access',         legacy: 'Requires third-party lender',  delt: 'Built-in · underwritten off deposits', pill: 'ONE LOGIN' },
+  { num: '07', metric: 'Contract',               legacy: '36-month + early termination fee', delt: 'Month-to-month',              pill: 'NO LOCK-IN' },
+  { num: '08', metric: 'Business intelligence',  legacy: 'Basic reports only',           delt: 'Lens AI · revenue + cash flow',   pill: 'ONLY AT DELT' },
+  { num: '09', metric: 'Website',                legacy: 'Not included',                 delt: 'Custom site, built and managed',  pill: 'ONLY AT DELT' },
 ];
 
 const HIGHLIGHTS: { label: string; value: string; sub: string; icon: string; color: string }[] = [
@@ -112,7 +114,7 @@ export function ByTheNumbers() {
                     color: 'var(--dc-on-light)',
                   }}
                 >
-                  Legacy processor
+                  Flat-rate processor
                 </div>
                 <div
                   className="text-[12px] tracking-[0.14em] mt-1"
@@ -158,7 +160,7 @@ export function ByTheNumbers() {
                     textTransform: 'uppercase',
                   }}
                 >
-                  LIVE BOOK · Q1 TRAILING
+                  LIVE BOOK
                 </div>
               </div>
             </div>
