@@ -134,7 +134,6 @@ export function ByTheNumbers() {
               className="px-5 py-5 flex items-center"
               style={{
                 borderLeft: '1px solid rgba(4, 30, 66, 0.06)',
-                background: 'rgba(73, 69, 255, 0.04)',
               }}
             >
               <img
