@@ -28,16 +28,14 @@ export function HeroShaderBackground() {
           shader="defaults"
           // Timing — start the loop in the dark phase where color3 (deep
           // navy/near-black) dominates and color1 (brand indigo) reads as
-          // a glow rather than a wash. Lower uSpeed slows the cycle so the
-          // dark phase reads on screen longer; the offset rangeStart picks
-          // a frame where the indigo is concentrated to one edge instead
-          // of filling the canvas.
+          // a directional glow rather than a full wash. Lower uSpeed slows
+          // the cycle so the dark phase reads on screen longer.
           range="enabled"
-          rangeStart={210}
+          rangeStart={180}
           rangeEnd={9999}
-          uTime={210}
-          uSpeed={0.14}
-          uStrength={0.22}
+          uTime={180}
+          uSpeed={0.18}
+          uStrength={0.28}
           uDensity={0.8}
           uFrequency={5.5}
           uAmplitude={3.2}
@@ -59,10 +57,11 @@ export function HeroShaderBackground() {
           cPolarAngle={180}
           cDistance={0.5}
           cameraZoom={15.1}
-          // Lighting — dimmer so the indigo highlights don't bloom across
-          // the whole canvas; the dark anchor stays visible.
+          // Lighting — slightly dimmer than original so the indigo
+          // highlights don't bloom across the whole canvas, but bright
+          // enough that the glow still reads.
           lightType="env"
-          brightness={0.55}
+          brightness={0.7}
           envPreset="city"
           grain="on"
           // Misc
@@ -74,14 +73,14 @@ export function HeroShaderBackground() {
       </ShaderGradientCanvas>
 
       {/* Dark wash so the indigo reads as a directional glow rather than
-          a full-canvas blue. Heavier at the top/bottom edges and pulled
-          toward near-black; the shader's indigo still punches through in
-          the mid-band but the overall surface stays black-dominant. */}
+          a full-canvas blue. Heavier at top/bottom edges; the shader's
+          indigo still punches through in the mid-band so the surface
+          stays black-dominant without going entirely flat black. */}
       <div
         className="absolute inset-0"
         style={{
           background:
-            'linear-gradient(180deg, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.55) 35%, rgba(0,0,0,0.5) 60%, rgba(0,0,0,0.82) 100%)',
+            'linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.2) 40%, rgba(0,0,0,0.2) 60%, rgba(0,0,0,0.6) 100%)',
         }}
       />
     </div>
