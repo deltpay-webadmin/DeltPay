@@ -68,10 +68,24 @@ export function FinalCTA() {
           }}
         >
           Transparent pricing. Next-day deposits. Hardware that works on day one.{' '}
-          <strong style={{ color: 'var(--dc-on-dark)', fontWeight: 600 }}>2.6% + $0.10</strong>{' '}
-          flat on the Free plan — no surprise markups, no statement fees. Underwriting in{' '}
-          <strong style={{ color: 'var(--dc-on-dark)', fontWeight: 600 }}>24 hours</strong>,
+          <strong style={{ color: 'var(--dc-on-dark)', fontWeight: 600 }}>0% net processing fees</strong>{' '}
+          with cash discount — no surprise markups, no statement fees.{' '}
+          <strong style={{ color: 'var(--dc-on-dark)', fontWeight: 600 }}>Instant onboarding</strong>,
           and a real person on the phone every time you call.
+        </p>
+
+        {/* Disclaimer */}
+        <p
+          className="mt-3 max-w-[620px] text-[12px] leading-[1.55]"
+          style={{
+            color: 'var(--dc-on-dark-faint)',
+            fontFamily: 'var(--dc-font-body)',
+          }}
+        >
+          Instant onboarding is subject to underwriting approval and is not
+          available to all merchants. Eligibility depends on business type,
+          processing history, and risk profile; some accounts require standard
+          review (typically 24–48 hours).
         </p>
 
         {/* CTAs */}
@@ -108,7 +122,7 @@ export function FinalCTA() {
               textTransform: 'uppercase',
             }}
           >
-            FLAT 2.6% + $0.10 · NEXT-DAY DEPOSITS · NO STATEMENT FEES
+            0% NET PROCESSING · NEXT-DAY DEPOSITS · INSTANT ONBOARDING
           </span>
         </div>
       </div>
