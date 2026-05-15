@@ -12,7 +12,7 @@ function BrowserMockup() {
   return (
     <div className="w-full rounded-2xl overflow-hidden shadow-2xl border border-white/10">
       {/* Chrome bar */}
-      <div className="bg-[#041E42] border-b border-white/10 px-4 py-3 flex items-center gap-3">
+      <div className="bg-[#080A28] border-b border-white/10 px-4 py-3 flex items-center gap-3">
         {/* Traffic-light dots — white opacity variants only */}
         <span className="w-3 h-3 rounded-full bg-white/20 block" />
         <span className="w-3 h-3 rounded-full bg-white/30 block" />
@@ -26,7 +26,7 @@ function BrowserMockup() {
       {/* Site preview */}
       <div className="bg-white">
         {/* Fake site nav */}
-        <div className="bg-[#041E42] px-6 py-3 flex items-center justify-between">
+        <div className="bg-[#080A28] px-6 py-3 flex items-center justify-between">
           <span className="text-white font-bold text-sm tracking-wide">PRESTO KITCHEN</span>
           <div className="hidden sm:flex items-center gap-5 text-white/70 text-xs">
             <span>Menu</span><span>Hours</span><span>Reserve</span>
@@ -101,7 +101,7 @@ function BuilderMockup() {
       <div className="flex-1 p-4 min-h-[220px] sm:min-h-0">
         {/* Canvas site preview */}
         <div className="w-full rounded-xl border-2 border-[#4945FF]/30 overflow-hidden">
-          <div className="bg-[#041E42] px-4 py-2 flex items-center justify-between">
+          <div className="bg-[#080A28] px-4 py-2 flex items-center justify-between">
             <span className="text-white text-xs font-bold">PRESTO KITCHEN</span>
             <button className="bg-[#4945FF] text-white text-[10px] px-2.5 py-1 rounded-full font-semibold">
               Order
@@ -194,7 +194,7 @@ export function WebsiteBuilderDemo() {
     <div className="bg-white" style={{ fontFamily: JAKARTA }}>
 
       {/* ════════ 1. HERO ════════ */}
-      <section className="relative overflow-hidden bg-[#041E42] text-white pt-32 pb-24 px-6">
+      <section className="relative overflow-hidden bg-[#080A28] text-white pt-32 pb-24 px-6">
         {/* Glow accents */}
         <div className="absolute -top-48 left-1/2 -translate-x-1/2 w-[640px] h-[640px] rounded-full bg-[#4945FF]/25 blur-[160px] pointer-events-none" />
         <div className="absolute top-20 right-0 w-[360px] h-[360px] rounded-full bg-[#4945FF]/15 blur-[120px] pointer-events-none" />
@@ -323,7 +323,7 @@ export function WebsiteBuilderDemo() {
       </section>
 
       {/* ════════ 4. DIGITAL STOREFRONT SUITE ════════ */}
-      <section className="bg-[#041E42] py-24 px-6">
+      <section className="bg-[#080A28] py-24 px-6">
         <div className="max-w-[1240px] mx-auto">
           {/* NEW pill */}
           <div className="flex justify-center mb-6">
@@ -384,7 +384,7 @@ export function WebsiteBuilderDemo() {
       </section>
 
       {/* ════════ 6. FINAL CTA BANNER ════════ */}
-      <section className="bg-[#041E42] py-24 px-6 text-center relative overflow-hidden">
+      <section className="bg-[#080A28] py-24 px-6 text-center relative overflow-hidden">
         {/* Glow */}
         <div className="absolute left-1/2 -translate-x-1/2 w-[500px] h-[300px] rounded-full bg-[#4945FF]/20 blur-[120px] pointer-events-none" />
         <div className="relative max-w-[640px] mx-auto">

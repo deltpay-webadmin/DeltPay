@@ -101,7 +101,7 @@ export function BusinessTypesPage() {
       {/* ════════ Hero ════════ */}
       <section
         className="relative overflow-hidden pt-28 pb-20 px-6"
-        style={{ background: '#041E42' }}
+        style={{ background: '#080A28' }}
       >
         <div
           className="absolute inset-0 pointer-events-none"
@@ -175,7 +175,7 @@ export function BusinessTypesPage() {
                       className="absolute inset-0 pointer-events-none"
                       style={{
                         background:
-                          'linear-gradient(180deg, rgba(4,30,66,0) 50%, rgba(4,30,66,0.55) 100%)',
+                          'linear-gradient(180deg, rgba(4,30,66,0) 50%, rgba(8,10,40,0.55) 100%)',
                       }}
                     />
                     <div
@@ -300,7 +300,7 @@ export function BusinessTypesPage() {
         <div className="max-w-[1100px] mx-auto">
           <div
             className="rounded-3xl p-12 md:p-16 relative overflow-hidden"
-            style={{ background: '#041E42' }}
+            style={{ background: '#080A28' }}
           >
             <div
               className="absolute inset-0 pointer-events-none"

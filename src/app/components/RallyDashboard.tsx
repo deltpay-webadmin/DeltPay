@@ -414,7 +414,7 @@ function AssignmentsView() {
             onClick={() => setTab('mine')}
             className={`px-5 py-2 text-sm transition-colors ${
               tab === 'mine'
-                ? 'bg-[#041E42] text-white'
+                ? 'bg-[#080A28] text-white'
                 : 'bg-white text-[#041E42]/60 hover:text-[#041E42]'
             }`}
           >
@@ -424,7 +424,7 @@ function AssignmentsView() {
             onClick={() => setTab('assigned')}
             className={`px-5 py-2 text-sm transition-colors ${
               tab === 'assigned'
-                ? 'bg-[#041E42] text-white'
+                ? 'bg-[#080A28] text-white'
                 : 'bg-white text-[#041E42]/60 hover:text-[#041E42]'
             }`}
           >

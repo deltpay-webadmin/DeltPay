@@ -55,7 +55,7 @@ export function InvestorRelationsPage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
-      <section className="py-20 lg:py-32 bg-[#041E42]">
+      <section className="py-20 lg:py-32 bg-[#080A28]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl">
             <div className="inline-block px-4 py-2 bg-[#4945FF]/20 text-[#4945FF] rounded-full text-sm font-semibold mb-6">
@@ -314,7 +314,7 @@ export function InvestorRelationsPage() {
       </section>
 
       {/* Investor Contact */}
-      <section className="py-20 bg-[#041E42]">
+      <section className="py-20 bg-[#080A28]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-2 gap-12">
             <div>

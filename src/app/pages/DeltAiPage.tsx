@@ -19,9 +19,9 @@ const C = {
   indigo:      '#4f46ff',
   indigoLight: '#7b61ff',
   green:       'rgba(73,69,255,0.9)',
-  red:         'rgba(4,30,66,0.55)',
+  red:         'rgba(8,10,40,0.55)',
   amber:       'rgba(73,69,255,0.6)',
-  blue:        'rgba(4,30,66,0.7)',
+  blue:        'rgba(8,10,40,0.7)',
 };
 
 const FONT_SERIF = "'Playfair Display', Georgia, serif";
@@ -537,7 +537,7 @@ export function DeltAiPage() {
           <div style={{
             borderRadius: 28,
             border: '1px solid rgba(79,70,255,0.22)',
-            background: 'linear-gradient(160deg, rgba(79,70,255,0.2) 0%, rgba(4,30,66,0.9) 55%, rgba(3,21,46,1) 100%)',
+            background: 'linear-gradient(160deg, rgba(79,70,255,0.2) 0%, rgba(8,10,40,0.9) 55%, rgba(3,21,46,1) 100%)',
             padding: 'clamp(40px, 6vw, 64px)',
             textAlign: 'center',
             boxShadow: '0 0 0 1px rgba(255,255,255,0.04) inset, 0 40px 100px rgba(0,0,0,0.5)',

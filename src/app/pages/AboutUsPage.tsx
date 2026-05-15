@@ -106,8 +106,8 @@ function PillarGallery() {
               style={{
                 position: 'absolute', inset: 0,
                 background: isActive
-                  ? 'linear-gradient(180deg, rgba(4,30,66,0.08) 0%, rgba(4,30,66,0.18) 45%, rgba(4,30,66,0.82) 100%)'
-                  : 'linear-gradient(180deg, rgba(4,30,66,0.45) 0%, rgba(4,30,66,0.78) 100%)',
+                  ? 'linear-gradient(180deg, rgba(4,30,66,0.08) 0%, rgba(4,30,66,0.18) 45%, rgba(8,10,40,0.82) 100%)'
+                  : 'linear-gradient(180deg, rgba(8,10,40,0.45) 0%, rgba(8,10,40,0.78) 100%)',
                 transition: 'background 520ms ease',
               }}
             />

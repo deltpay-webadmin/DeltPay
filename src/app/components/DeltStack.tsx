@@ -12,8 +12,8 @@ const C = {
   amber: '#16C784',
   blue: '#16C784',
   indigo: '#4945FF',
-  navy90: 'rgba(4,30,66,0.90)',
-  navy75: 'rgba(4,30,66,0.75)',
+  navy90: 'rgba(8,10,40,0.90)',
+  navy75: 'rgba(8,10,40,0.75)',
   w90: 'rgba(242,242,247,0.90)',
   w75: 'rgba(242,242,247,0.75)',
   w50: 'rgba(242,242,247,0.50)',
@@ -198,7 +198,7 @@ export function DeltStack() {
                   }}
                   style={{
                     borderColor: isActive ? C.w15 : C.w08,
-                    boxShadow: isActive ? `0 0 60px -20px rgba(4,30,66,0.4)` : 'none',
+                    boxShadow: isActive ? `0 0 60px -20px rgba(8,10,40,0.4)` : 'none',
                   }}
                 >
                   {/* Background - solid navy for non-image area */}
@@ -214,7 +214,7 @@ export function DeltStack() {
                   <div className="ds-panel-content">
                     {/* Frosted glass text section */}
                     <div className="ds-frost" style={{
-                      background: isActive ? 'rgba(4,30,66,0.98)' : 'rgba(4,30,66,0.95)',
+                      background: isActive ? 'rgba(8,10,40,0.98)' : 'rgba(8,10,40,0.95)',
                     }}>
                       <div className="ds-panel-icon" style={{
                         background: C.w08,
@@ -288,7 +288,7 @@ export function DeltStack() {
         .ds-experience {
           position: relative;
           height: 450vh;
-          background: #041E42;
+          background: #080A28;
         }
 
         .ds-sticky {
@@ -386,7 +386,7 @@ export function DeltStack() {
           position: absolute;
           inset: 0;
           z-index: 0;
-          background: #041E42;
+          background: #080A28;
           transition: opacity 0.5s;
         }
 

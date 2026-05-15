@@ -4,13 +4,17 @@ import { motion, AnimatePresence } from 'motion/react';
 import { HeroShaderBackground } from './HeroShaderBackground';
 
 /* ──────────────────────────────────────────────────────────────
-   JuspayHero — Delt Capital style
-   Navy canvas. Mono volume eyebrow. Large display H1 with
-   italic-serif rotating word. Stats strip + bottom hairline +
-   meta strip ("SCROLL — THE NUMBERS ↓" · ledger line).
+   JuspayHero — Delt Pay (merchant services) home hero.
+   Navy canvas. Large display H1 with italic-serif rotating verb.
+   Body copy is Payments + AI focused (not Capital/lending — that
+   pitch lives in the dedicated CapitalCrossSell section further
+   down the page). Stats strip + bottom mono ledger line.
    ────────────────────────────────────────────────────────────── */
 
-const ROTATING_WORDS = ['fund', 'scale', 'power', 'grow'];
+// Payments + AI flavored verbs. 'fund' was the previous (Capital) word
+// and has been removed — the merchant→Capital cross-sell lives lower on
+// the page in its own section.
+const ROTATING_WORDS = ['process', 'automate', 'grow', 'power'];
 
 export function JuspayHero() {
   const [wordIdx, setWordIdx] = useState(0);
@@ -97,20 +101,29 @@ export function JuspayHero() {
               className="mt-8 max-w-[460px] text-[16px] leading-[1.55]"
               style={{ color: 'var(--dc-on-dark-muted)', fontFamily: 'var(--dc-font-body)' }}
             >
-              Payments + revenue-based capital, in one stack. Process from{' '}
+              Payments + AI intelligence, in one stack.{' '}
               <strong style={{ color: 'var(--dc-on-dark)', fontWeight: 600 }}>
-                $5,000 to $500,000+
+                0% net processing fees
               </strong>{' '}
-              monthly and unlock funding underwritten off your deposits — not your FICO,
-              not your collateral, not a call center's script. Median factor{' '}
-              <strong style={{ color: 'var(--dc-on-dark)', fontWeight: 600 }}>1.18×</strong>.
-              Median time to funds,{' '}
-              <strong style={{ color: 'var(--dc-on-dark)', fontWeight: 600 }}>24 hours</strong>.
+              with cash discount.{' '}
+              <strong style={{ color: 'var(--dc-on-dark)', fontWeight: 600 }}>Same-day deposits</strong>{' '}
+              and{' '}
+              <strong style={{ color: 'var(--dc-on-dark)', fontWeight: 600 }}>instant onboarding</strong>{' '}
+              — not a call center's script. Delt Lens tells you what's working, what's not,
+              and what to do next. Hardware that works on day one.
+            </p>
+
+            <p
+              className="mt-3 max-w-[460px] text-[11px] leading-[1.55]"
+              style={{ color: 'var(--dc-on-dark-faint)', fontFamily: 'var(--dc-font-body)' }}
+            >
+              Instant onboarding and same-day deposits are subject to underwriting approval
+              and not available to all merchants.
             </p>
 
             <div className="mt-9 flex items-center gap-3 flex-wrap">
-              <Link to="/apply" className="dc-btn-primary dc-lg">
-                Get Funded
+              <Link to="/get-a-quote" className="dc-btn-primary dc-lg">
+                Get a quote
                 <span aria-hidden style={{ marginLeft: 2 }}>→</span>
               </Link>
               <Link to="/calculator" className="dc-btn-secondary dc-on-dark dc-lg">
@@ -123,9 +136,9 @@ export function JuspayHero() {
               className="mt-12 pt-7 grid grid-cols-3 gap-6 max-w-[480px]"
               style={{ borderTop: '1px solid var(--dc-rule-on-dark)' }}
             >
-              <Stat label="TODAY'S MEDIAN" big="1.18×" unit="factor" />
-              <Stat label="TIME TO FUNDS" big="24h" unit="median" />
-              <Stat label="SOFT-PULL" big="Yes" unit="only" />
+              <Stat label="NET PROCESSING" big="0%" unit="with cash discount" />
+              <Stat label="DEPOSITS" big="Same-day" unit="eligible accts" />
+              <Stat label="ONBOARDING" big="Instant" unit="approval-based" />
             </div>
           </div>
 
@@ -155,7 +168,7 @@ export function JuspayHero() {
               textTransform: 'uppercase',
             }}
           >
-            $200M+ DEPLOYED · 2,850+ FUNDED · SINCE 2019
+            0% NET PROCESSING · SAME-DAY DEPOSITS · SINCE 2019
           </span>
         </div>
       </div>

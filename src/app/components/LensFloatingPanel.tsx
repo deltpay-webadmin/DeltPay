@@ -232,7 +232,7 @@ export function LensFloatingPanel({ activeTab, visible, pinnedChats = [], onPinC
         {open && (
           <motion.div
             className="fixed bottom-6 right-6 z-[100] flex flex-col rounded-2xl overflow-hidden"
-            style={{ width: 400, height: 560, backgroundColor: PANEL_BG, boxShadow: '0 24px 80px rgba(0,0,0,0.3), 0 0 0 1px rgba(4,30,66,0.6)' }}
+            style={{ width: 400, height: 560, backgroundColor: PANEL_BG, boxShadow: '0 24px 80px rgba(0,0,0,0.3), 0 0 0 1px rgba(8,10,40,0.6)' }}
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}

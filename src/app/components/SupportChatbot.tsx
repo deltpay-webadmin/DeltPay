@@ -185,7 +185,7 @@ export function SupportChatbot({ isOpen, onClose }: SupportChatbotProps) {
               <div
                 className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
                   message.sender === 'user'
-                    ? 'bg-[#041E42]'
+                    ? 'bg-[#080A28]'
                     : 'bg-[#4945FF]'
                 }`}
               >
@@ -198,7 +198,7 @@ export function SupportChatbot({ isOpen, onClose }: SupportChatbotProps) {
               <div
                 className={`max-w-[75%] rounded-2xl px-4 py-3 ${
                   message.sender === 'user'
-                    ? 'bg-[#041E42] text-white'
+                    ? 'bg-[#080A28] text-white'
                     : 'bg-white text-[#041E42] shadow-sm border border-[#E5E7EB]'
                 }`}
               >

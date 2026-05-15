@@ -22,7 +22,7 @@ export function DeltPanelHero() {
     <>
       <section
         ref={sectionRef}
-        style={{ background: '#041E42', position: 'relative', height: '140vh' }}
+        style={{ background: '#080A28', position: 'relative', height: '140vh' }}
       >
         {/* Sticky viewport */}
         <div style={{
@@ -82,7 +82,7 @@ export function DeltPanelHero() {
         .dph-hero-bg {
           position: absolute;
           inset: 0;
-          background: #041E42;
+          background: #080A28;
           z-index: 0;
           pointer-events: none;
         }

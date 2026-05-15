@@ -103,7 +103,7 @@ export function BlogPage() {
     <div style={{ backgroundColor: BG, fontFamily: JAKARTA, minHeight: '100vh' }}>
 
       {/* ── Page header ───────────────────────────────── */}
-      <div style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', backgroundColor: 'rgba(4,30,66,0.4)' }}>
+      <div style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', backgroundColor: 'rgba(8,10,40,0.4)' }}>
         <div className="max-w-[900px] mx-auto px-6 lg:px-12 py-5 flex items-center justify-between">
           <button
             onClick={() => navigate(-1)}

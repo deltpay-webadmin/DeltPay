@@ -159,7 +159,7 @@ export function GlobeStats() {
 
       <style>{`
         .gs-section {
-          background: #041E42;
+          background: #080A28;
           padding: 0 48px 0;
           position: relative;
           overflow: hidden;
@@ -256,7 +256,7 @@ export function GlobeStats() {
           left: -48px;
           right: -48px;
           height: 22vw;
-          background: linear-gradient(to bottom, rgba(4,30,66,0) 0%, rgba(4,30,66,0.75) 60%, #041E42 90%);
+          background: linear-gradient(to bottom, rgba(8,10,40,0) 0%, rgba(8,10,40,0.75) 60%, #080A28 90%);
           pointer-events: none;
           z-index: 3;
         }

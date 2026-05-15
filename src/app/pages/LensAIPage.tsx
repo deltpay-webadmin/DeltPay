@@ -830,7 +830,7 @@ export function LensAIPage() {
             #4945FF 45%,
             #2E2AC7 68%,
             #1B2A6B 86%,
-            #041E42 100%
+            #080A28 100%
           );
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;

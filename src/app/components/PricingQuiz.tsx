@@ -144,7 +144,7 @@ export function PricingQuiz() {
         price: 'FREE',
         description: 'Great for getting started with zero monthly fees',
         badge: 'BEST FOR BEGINNERS',
-        badgeColor: 'bg-[#041E42]',
+        badgeColor: 'bg-[#080A28]',
         benefits: [
           'Zero monthly fees',
           'Mobile card reader included',

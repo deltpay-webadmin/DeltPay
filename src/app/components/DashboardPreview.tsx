@@ -266,7 +266,7 @@ export function DashboardPreview() {
           position: absolute;
           bottom: -16px;
           right: -16px;
-          background: #041E42;
+          background: #080A28;
           border: 1px solid rgba(73,69,255,0.3);
           border-radius: 14px;
           padding: 14px 18px;

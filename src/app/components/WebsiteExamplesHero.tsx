@@ -126,7 +126,7 @@ function AnimatedCounter({
 
 export function WebsiteExamplesHero() {
   return (
-    <section className="relative bg-[#041E42] text-white py-20 lg:py-28 overflow-hidden">
+    <section className="relative bg-[#080A28] text-white py-20 lg:py-28 overflow-hidden">
       {/* BuildModeGrid removed */}
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">

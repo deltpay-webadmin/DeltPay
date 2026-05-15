@@ -259,7 +259,7 @@ export function HowItWorksPage() {
 
       <style>{`
         .hiw-page {
-          background: #041E42;
+          background: #080A28;
           min-height: 100vh;
         }
 
@@ -350,7 +350,7 @@ export function HowItWorksPage() {
           height: auto;
           min-height: 480px;
           border-radius: 20px;
-          background: #041E42;
+          background: #080A28;
           border: 1px solid rgba(255,255,255,0.06);
           overflow: hidden;
           box-shadow: 0 20px 60px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.04) inset;

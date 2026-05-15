@@ -341,7 +341,7 @@ export function DeltAI({ embedded = false, externalQuestion = null, externalQues
             <button className="px-5 py-2.5 text-base font-medium text-[#041E42] hover:bg-[#F8FAFC] rounded-lg transition-colors">
               Log in
             </button>
-            <button className="px-5 py-2.5 text-base font-medium text-white bg-[#4945FF] hover:bg-[#041E42] rounded-lg transition-colors">
+            <button className="px-5 py-2.5 text-base font-medium text-white bg-[#4945FF] hover:bg-[#080A28] rounded-lg transition-colors">
               Sign up for free
             </button>
           </div>
@@ -470,7 +470,7 @@ export function DeltAI({ embedded = false, externalQuestion = null, externalQues
                     </p>
                   </div>
                   {message.role === 'user' && (
-                    <div className={`flex-shrink-0 rounded-full bg-[#041E42] flex items-center justify-center text-white font-semibold ${embedded ? 'w-8 h-8 text-xs' : 'w-8 h-8 text-sm'}`}>
+                    <div className={`flex-shrink-0 rounded-full bg-[#080A28] flex items-center justify-center text-white font-semibold ${embedded ? 'w-8 h-8 text-xs' : 'w-8 h-8 text-sm'}`}>
                       You
                     </div>
                   )}
@@ -615,7 +615,7 @@ export function DeltAI({ embedded = false, externalQuestion = null, externalQues
                 {inputValue.trim() ? (
                   <button
                     onClick={handleSendMessage}
-                    className={`bg-[#4945FF] text-white hover:bg-[#041E42] rounded-lg transition-colors ${embedded ? 'p-1.5' : 'p-2'}`}
+                    className={`bg-[#4945FF] text-white hover:bg-[#080A28] rounded-lg transition-colors ${embedded ? 'p-1.5' : 'p-2'}`}
                   >
                     <Send className={embedded ? 'w-4 h-4' : 'w-5 h-5'} />
                   </button>

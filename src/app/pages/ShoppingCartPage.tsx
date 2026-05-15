@@ -203,7 +203,7 @@ export function ShoppingCartPage() {
                     />
                     <button
                       onClick={applyPromoCode}
-                      className="px-6 py-3 bg-[#041E42] text-white rounded-lg font-semibold hover:bg-[#062A5C] transition-all"
+                      className="px-6 py-3 bg-[#080A28] text-white rounded-lg font-semibold hover:bg-[#062A5C] transition-all"
                     >
                       Apply
                     </button>

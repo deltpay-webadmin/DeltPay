@@ -43,7 +43,7 @@ export function DeltStackIntro() {
     <section
       ref={sectionRef}
       style={{
-        background: '#041E42',
+        background: '#080A28',
         padding: '120px 24px',
         display: 'flex',
         alignItems: 'center',

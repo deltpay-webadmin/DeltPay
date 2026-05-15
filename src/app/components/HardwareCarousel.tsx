@@ -170,7 +170,7 @@ export function HardwareCarousel({ items }: HardwareCarouselProps) {
                     
                     <motion.p 
                       className="text-base mb-5" 
-                      style={{ color: 'rgba(4,30,66,0.6)' }}
+                      style={{ color: 'rgba(8,10,40,0.6)' }}
                       initial={false}
                       animate={{
                         opacity: isCurrent ? 1 : 0.3,
@@ -185,7 +185,7 @@ export function HardwareCarousel({ items }: HardwareCarouselProps) {
                         <motion.li 
                           key={idx} 
                           className="flex items-center gap-2.5 text-sm" 
-                          style={{ color: 'rgba(4,30,66,0.7)' }}
+                          style={{ color: 'rgba(8,10,40,0.7)' }}
                           initial={false}
                           animate={{
                             opacity: isCurrent ? 1 : 0.3,

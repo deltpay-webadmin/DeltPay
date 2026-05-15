@@ -13,7 +13,14 @@
 
 :root {
   /* Surfaces */
-  --dc-bg-navy:        #041E42;
+  /* --dc-bg-navy was #041E42 (the brand navy). The home-page hero has a
+     shader background with a dark indigo wash on top, which renders at
+     an effective color near rgb(8,10,40) (#080A28). The flat navy on
+     subsequent sections looked noticeably lighter than the hero. We
+     deepen the surface token to match the hero's effective tone so the
+     site has one consistent dark surface end-to-end. Brand-navy TEXT on
+     light surfaces is a separate token (--dc-on-light) and is unchanged. */
+  --dc-bg-navy:        #080A28;
   --dc-bg-ink:         #0F0E17;
   --dc-bg-cream:       #F7F5F0;
   --dc-bg-cream-2:     #E9E7DF;

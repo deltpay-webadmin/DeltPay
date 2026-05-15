@@ -255,7 +255,7 @@ export function SandboxPage() {
       {/* ═══ Branded demo banner (navy, not purple) ═══ */}
       <div
         className="sandbox-top-banner flex items-center justify-center gap-4 px-8 py-2.5 flex-shrink-0 relative"
-        style={{ backgroundColor: '#041E42' }}
+        style={{ backgroundColor: '#080A28' }}
       >
         <p className="text-white text-sm">
           <strong style={{ fontWeight: 600 }}>Live demo.</strong>
@@ -544,7 +544,7 @@ export function SandboxPage() {
                 style={{
                   /* Soft navy wash instead of blurry white — reads as 'intentional' not 'broken' */
                   background:
-                    'radial-gradient(ellipse at center, rgba(4,30,66,0.78) 0%, rgba(4,30,66,0.92) 70%)',
+                    'radial-gradient(ellipse at center, rgba(8,10,40,0.78) 0%, rgba(8,10,40,0.92) 70%)',
                   backdropFilter: 'blur(6px) saturate(140%)',
                   WebkitBackdropFilter: 'blur(6px) saturate(140%)',
                 }}
@@ -556,7 +556,7 @@ export function SandboxPage() {
                 <motion.div
                   className="relative flex flex-col items-center gap-5 text-center rounded-2xl px-10 py-9 overflow-hidden"
                   style={{
-                    background: '#041E42',
+                    background: '#080A28',
                     boxShadow:
                       '0 32px 80px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.08)',
                     border: '1px solid rgba(73,69,255,0.22)',

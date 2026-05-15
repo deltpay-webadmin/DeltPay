@@ -131,7 +131,7 @@ export function IndustryPanel() {
                   className="absolute inset-0 pointer-events-none"
                   style={{
                     background:
-                      'linear-gradient(180deg, rgba(4,30,66,0) 40%, rgba(4,30,66,0.55) 75%, rgba(4,30,66,0.9) 100%)',
+                      'linear-gradient(180deg, rgba(4,30,66,0) 40%, rgba(8,10,40,0.55) 75%, rgba(8,10,40,0.9) 100%)',
                   }}
                 />
 

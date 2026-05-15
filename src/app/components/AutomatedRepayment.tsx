@@ -158,7 +158,7 @@ export function AutomatedRepayment({ hideTitle = false }: { hideTitle?: boolean 
                         <div
                           style={{
                             flex: 1,
-                            background: '#041E42',
+                            background: '#080A28',
                           }}
                         />
                       </motion.div>
@@ -210,7 +210,7 @@ export function AutomatedRepayment({ hideTitle = false }: { hideTitle?: boolean 
           {/* Axis line */}
           <div
             className="relative mt-[6px]"
-            style={{ height: 1, background: 'rgba(4,30,66,0.4)' }}
+            style={{ height: 1, background: 'rgba(8,10,40,0.4)' }}
           />
 
           {/* Day labels */}
@@ -221,7 +221,7 @@ export function AutomatedRepayment({ hideTitle = false }: { hideTitle?: boolean 
                 className="flex-1 text-center"
                 style={{
                   fontSize: 'clamp(11px, 1.1vw, 14px)',
-                  color: d.closed ? 'rgba(4,30,66,0.5)' : '#041E42',
+                  color: d.closed ? 'rgba(8,10,40,0.5)' : '#041E42',
                   fontWeight: d.closed ? 500 : 600,
                   letterSpacing: '-0.01em',
                 }}
@@ -230,7 +230,7 @@ export function AutomatedRepayment({ hideTitle = false }: { hideTitle?: boolean 
                 {d.closed && (
                   <div
                     className="text-[10px] font-medium mt-0.5"
-                    style={{ color: 'rgba(4,30,66,0.4)', letterSpacing: '0.05em' }}
+                    style={{ color: 'rgba(8,10,40,0.4)', letterSpacing: '0.05em' }}
                   >
                     CLOSED
                   </div>
@@ -245,7 +245,7 @@ export function AutomatedRepayment({ hideTitle = false }: { hideTitle?: boolean 
           <div className="flex items-center gap-2.5">
             <div
               className="rounded"
-              style={{ width: 14, height: 14, background: '#041E42' }}
+              style={{ width: 14, height: 14, background: '#080A28' }}
             />
             <span className="text-[14px] text-[#041E42] font-medium">Daily sales</span>
           </div>

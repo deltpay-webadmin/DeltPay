@@ -727,7 +727,7 @@ function EcoFlipCard({ item, index }: { item: typeof ECO_ITEMS[0]; index: number
             backfaceVisibility: 'hidden',
             WebkitBackfaceVisibility: 'hidden',
             transform: 'rotateY(180deg)',
-            background: `linear-gradient(160deg, ${T.card} 0%, #041E42 100%)`,
+            background: `linear-gradient(160deg, ${T.card} 0%, #080A28 100%)`,
             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
             padding: '16px 14px', gap: 0, overflow: 'hidden',
           }}>

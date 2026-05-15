@@ -27,7 +27,7 @@ export function SeeItInAction() {
 
       <style>{`
         .siia-section {
-          background: #041E42;
+          background: #080A28;
           padding: 100px 60px 120px;
           position: relative;
         }

@@ -63,7 +63,7 @@ export function ProductCrossSell({
 
   return (
     <section
-      className={`relative overflow-hidden py-20 lg:py-28 ${isLight ? 'bg-white' : 'bg-[#041E42] text-white'}`}
+      className={`relative overflow-hidden py-20 lg:py-28 ${isLight ? 'bg-white' : 'bg-[#080A28] text-white'}`}
     >
       {/* Soft purple radial glow (grid removed for cleaner background) */}
       <div

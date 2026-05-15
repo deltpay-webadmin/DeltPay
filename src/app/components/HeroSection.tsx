@@ -282,7 +282,7 @@ export function HeroSection() {
   return (
     <section
       ref={containerRef}
-      className="relative pt-32 lg:pt-40 pb-20 lg:pb-32 overflow-hidden bg-[#041E42]"
+      className="relative pt-32 lg:pt-40 pb-20 lg:pb-32 overflow-hidden bg-[#080A28]"
       onMouseMove={handleMouseMove}
     >
       {/* Subtle radial glow for depth */}

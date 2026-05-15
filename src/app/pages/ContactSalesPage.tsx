@@ -64,7 +64,7 @@ export function ContactSalesPage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Hero — navy on-palette */}
-      <section className="relative overflow-hidden bg-[#041E42] text-white">
+      <section className="relative overflow-hidden bg-[#080A28] text-white">
         {/* Glow accent */}
         <div className="absolute -top-32 -right-32 w-[480px] h-[480px] rounded-full bg-[#4945FF]/25 blur-[120px] pointer-events-none" />
         <div className="absolute -bottom-32 -left-32 w-[420px] h-[420px] rounded-full bg-[#4945FF]/15 blur-[120px] pointer-events-none" />
@@ -100,7 +100,7 @@ export function ContactSalesPage() {
           <div className="grid md:grid-cols-3 gap-6">
             {/* Schedule a call */}
             <div className="group bg-white rounded-2xl p-8 border border-[#041E42]/10 hover:border-[#4945FF]/40 hover:shadow-[0_24px_60px_-24px_rgba(73,69,255,0.35)] transition-all duration-300">
-              <div className="w-14 h-14 bg-[#041E42] rounded-xl flex items-center justify-center mb-6 group-hover:bg-[#4945FF] transition-colors">
+              <div className="w-14 h-14 bg-[#080A28] rounded-xl flex items-center justify-center mb-6 group-hover:bg-[#4945FF] transition-colors">
                 <Phone className="w-7 h-7 text-white" />
               </div>
               <h3 className="text-2xl font-bold text-[#041E42] mb-2">Schedule a call</h3>
@@ -112,7 +112,7 @@ export function ContactSalesPage() {
             </div>
 
             {/* Book a demo */}
-            <div className="group bg-[#041E42] rounded-2xl p-8 text-white border border-[#041E42] hover:shadow-[0_24px_60px_-24px_rgba(4,30,66,0.6)] transition-all duration-300">
+            <div className="group bg-[#080A28] rounded-2xl p-8 text-white border border-[#080A28] hover:shadow-[0_24px_60px_-24px_rgba(8,10,40,0.6)] transition-all duration-300">
               <div className="w-14 h-14 bg-[#4945FF] rounded-xl flex items-center justify-center mb-6">
                 <MessageCircle className="w-7 h-7 text-white" />
               </div>
@@ -130,7 +130,7 @@ export function ContactSalesPage() {
               onClick={() => setIsChatOpen(true)}
               className="group bg-white rounded-2xl p-8 border border-[#041E42]/10 hover:border-[#4945FF]/40 hover:shadow-[0_24px_60px_-24px_rgba(73,69,255,0.35)] transition-all duration-300 text-left"
             >
-              <div className="w-14 h-14 bg-[#041E42] rounded-xl flex items-center justify-center mb-6 group-hover:bg-[#4945FF] transition-colors">
+              <div className="w-14 h-14 bg-[#080A28] rounded-xl flex items-center justify-center mb-6 group-hover:bg-[#4945FF] transition-colors">
                 <MessagesSquare className="w-7 h-7 text-white" />
               </div>
               <h3 className="text-2xl font-bold text-[#041E42] mb-2">Chat now</h3>

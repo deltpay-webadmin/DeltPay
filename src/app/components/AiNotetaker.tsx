@@ -386,7 +386,7 @@ export function AiNotetaker() {
             <button
               onClick={() => setSidebarFilter('all')}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                sidebarFilter === 'all' ? 'bg-[#041E42] text-white' : 'text-[#041E42]/50 hover:bg-[#041E42]/5'
+                sidebarFilter === 'all' ? 'bg-[#080A28] text-white' : 'text-[#041E42]/50 hover:bg-[#041E42]/5'
               }`}
             >
               All meetings
@@ -394,7 +394,7 @@ export function AiNotetaker() {
             <button
               onClick={() => setSidebarFilter('starred')}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1 ${
-                sidebarFilter === 'starred' ? 'bg-[#041E42] text-white' : 'text-[#041E42]/50 hover:bg-[#041E42]/5'
+                sidebarFilter === 'starred' ? 'bg-[#080A28] text-white' : 'text-[#041E42]/50 hover:bg-[#041E42]/5'
               }`}
             >
               <Star className="w-3 h-3" />
@@ -575,7 +575,7 @@ export function AiNotetaker() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm transition-colors ${
                   activeTab === tab.id
-                    ? 'bg-[#041E42] text-white'
+                    ? 'bg-[#080A28] text-white'
                     : 'text-[#041E42]/50 hover:bg-[#041E42]/5 hover:text-[#041E42]'
                 }`}
                 style={{ fontWeight: activeTab === tab.id ? 600 : 500 }}

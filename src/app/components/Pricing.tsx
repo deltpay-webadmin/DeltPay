@@ -54,7 +54,7 @@ export function Pricing() {
               </li>
             </ul>
 
-            <button className="w-full py-4 px-6 rounded-xl border-2 border-[#041E42] text-[#041E42] font-semibold text-base hover:bg-[#041E42] hover:text-white transition-all">
+            <button className="w-full py-4 px-6 rounded-xl border-2 border-[#041E42] text-[#041E42] font-semibold text-base hover:bg-[#080A28] hover:text-white transition-all">
               Get Started — Free
             </button>
           </div>

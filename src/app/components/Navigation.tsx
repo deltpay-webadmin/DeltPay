@@ -310,7 +310,7 @@ export function Navigation() {
     boxShadow: 'inset 0 1px 0 rgba(247, 245, 240, 0.05)',
   };
   const solidStyle: React.CSSProperties = {
-    background: '#041E42',
+    background: '#080A28',
     backdropFilter: 'none',
     WebkitBackdropFilter: 'none',
     borderBottom: '1px solid rgba(247, 245, 240, 0.08)',
@@ -604,7 +604,7 @@ export function Navigation() {
             transition={{ duration: 0.2 }}
             className="lg:hidden"
             style={{
-              background: '#041E42',
+              background: '#080A28',
               borderTop: '1px solid rgba(247, 245, 240, 0.08)',
             }}
           >

@@ -162,7 +162,7 @@ const LensOverhaul = () => {
       <header className="sticky top-0 z-50 border-b border-[#041E42]/8 bg-[#f3f4f6]/90 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-10">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#041E42] text-white shadow-sm">
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#080A28] text-white shadow-sm">
               <Sparkles size={18} />
             </div>
             <div>
@@ -197,7 +197,7 @@ const LensOverhaul = () => {
               Lens helps merchants understand payment activity, setup progress, and reporting signals through a single intelligent interface designed to feel calm, premium, and immediately useful.
             </p>
             <div className="mt-10 flex flex-wrap items-center gap-4">
-              <button className="inline-flex items-center gap-2 rounded-2xl bg-[#041E42] px-6 py-3.5 text-base font-semibold text-white shadow-[0_18px_40px_rgba(4,30,66,.18)] transition hover:-translate-y-0.5">
+              <button className="inline-flex items-center gap-2 rounded-2xl bg-[#080A28] px-6 py-3.5 text-base font-semibold text-white shadow-[0_18px_40px_rgba(4,30,66,.18)] transition hover:-translate-y-0.5">
                 See Lens in action
                 <ArrowRight size={18} />
               </button>
@@ -263,7 +263,7 @@ const LensOverhaul = () => {
                     </div>
                     <p className="mt-3 text-sm text-[#041E42]/70">Almost complete. Lens grouped the final actions for review.</p>
                   </div>
-                  <div className="rounded-[1.4rem] border border-[#041E42]/8 bg-[#041E42] p-4 text-white shadow-sm">
+                  <div className="rounded-[1.4rem] border border-[#041E42]/8 bg-[#080A28] p-4 text-white shadow-sm">
                     <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/55">Weekly report</p>
                     <div className="mt-4 grid grid-cols-2 gap-3">
                       <div>
@@ -323,7 +323,7 @@ const LensOverhaul = () => {
                           </div>
                         ))}
                       </div>
-                      <div className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#041E42] px-4 py-2 text-sm font-medium text-white transition group-hover:translate-x-0.5">
+                      <div className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#080A28] px-4 py-2 text-sm font-medium text-white transition group-hover:translate-x-0.5">
                         {card.cta}
                         <span>→</span>
                       </div>
@@ -374,7 +374,7 @@ const LensOverhaul = () => {
                     Hover or click a focus area
                   </div>
 
-                  <div className="absolute bottom-8 left-1/2 w-[88%] max-w-xl -translate-x-1/2 rounded-[1.65rem] border border-white/50 bg-[#041E42] p-5 shadow-[0_24px_60px_rgba(4,30,66,.18)] backdrop-blur-xl">
+                  <div className="absolute bottom-8 left-1/2 w-[88%] max-w-xl -translate-x-1/2 rounded-[1.65rem] border border-white/50 bg-[#080A28] p-5 shadow-[0_24px_60px_rgba(4,30,66,.18)] backdrop-blur-xl">
                     <div className="mb-3 flex items-center justify-between gap-4">
                       <div>
                         <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/45">Lens Status</p>
@@ -423,7 +423,7 @@ const LensOverhaul = () => {
                           </div>
                         ))}
                       </div>
-                      <div className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#041E42] px-4 py-2 text-sm font-medium text-white transition group-hover:translate-x-0.5">
+                      <div className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#080A28] px-4 py-2 text-sm font-medium text-white transition group-hover:translate-x-0.5">
                         {card.cta}
                         <span>→</span>
                       </div>
@@ -496,7 +496,7 @@ const LensOverhaul = () => {
           <div className="grid gap-6 lg:grid-cols-3">
             {merchantStories.map((story) => (
               <div key={story.title} className="rounded-[2rem] border border-[#041E42]/8 bg-white p-7 shadow-[0_18px_40px_rgba(4,30,66,.05)] transition hover:-translate-y-1.5">
-                <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#041E42] text-white">
+                <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#080A28] text-white">
                   {story.icon}
                 </div>
                 <h3 className="text-2xl font-bold tracking-tight">{story.title}</h3>

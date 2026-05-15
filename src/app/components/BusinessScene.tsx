@@ -93,10 +93,10 @@ export function BusinessScene({
       : 'aspect-square';
 
   const gradient = variant === 'purple'
-    ? `linear-gradient(160deg, rgba(73,69,255,0.55) 0%, rgba(4,30,66,0.85) 100%)`
+    ? `linear-gradient(160deg, rgba(73,69,255,0.55) 0%, rgba(8,10,40,0.85) 100%)`
     : variant === 'cream'
-      ? `linear-gradient(160deg, rgba(246,247,251,0.1) 0%, rgba(4,30,66,0.75) 100%)`
-      : `linear-gradient(160deg, rgba(4,30,66,0.45) 0%, rgba(4,30,66,0.9) 100%)`;
+      ? `linear-gradient(160deg, rgba(246,247,251,0.1) 0%, rgba(8,10,40,0.75) 100%)`
+      : `linear-gradient(160deg, rgba(8,10,40,0.45) 0%, rgba(8,10,40,0.9) 100%)`;
 
   return (
     <div

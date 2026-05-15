@@ -3,7 +3,7 @@ import hardwareImage from 'figma:asset/3e6a8b46e2ef1e6f1bad36c41d265aaf35d2f402.
 
 export default function HardwareCarousel() {
   return (
-    <section className="py-20 lg:py-28 relative overflow-hidden" style={{ backgroundColor: '#041E42' }}>
+    <section className="py-20 lg:py-28 relative overflow-hidden" style={{ backgroundColor: '#080A28' }}>
       <div className="max-w-7xl mx-auto px-6 lg:px-12 text-center">
         
         {/* Header */}

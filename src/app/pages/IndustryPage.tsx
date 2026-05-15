@@ -553,7 +553,7 @@ export function IndustryPage() {
       {/* ════════ Hero ════════ */}
       <section
         className="relative overflow-hidden pt-32 pb-24 px-6"
-        style={{ background: '#041E42' }}
+        style={{ background: '#080A28' }}
       >
         <div
           className="absolute inset-0 pointer-events-none"
@@ -620,7 +620,7 @@ export function IndustryPage() {
               className="absolute inset-0 pointer-events-none"
               style={{
                 background:
-                  'linear-gradient(180deg, rgba(4,30,66,0) 55%, rgba(4,30,66,0.55) 100%)',
+                  'linear-gradient(180deg, rgba(4,30,66,0) 55%, rgba(8,10,40,0.55) 100%)',
               }}
             />
             <div
@@ -752,7 +752,7 @@ export function IndustryPage() {
                     transition={{ duration: 0.4, delay: i * 0.05 }}
                     className={`${span} p-7 rounded-2xl transition-colors ${
                       isDark
-                        ? 'bg-[#041E42] text-white hover:bg-[#0a2850]'
+                        ? 'bg-[#080A28] text-white hover:bg-[#0a2850]'
                         : 'border border-[#EEF0F4] bg-white hover:border-[#4945FF]/40'
                     }`}
                   >
@@ -891,7 +891,7 @@ export function IndustryPage() {
                   transition={{ duration: 0.4, delay: i * 0.05 }}
                   className={`p-6 rounded-2xl transition-colors ${
                     i === 0
-                      ? 'bg-[#041E42] text-white md:row-span-2'
+                      ? 'bg-[#080A28] text-white md:row-span-2'
                       : 'bg-white border border-[#EEF0F4]'
                   }`}
                 >
@@ -937,7 +937,7 @@ export function IndustryPage() {
             viewport={{ once: true }}
             transition={{ duration: 0.55 }}
             className="relative p-12 md:p-16 rounded-3xl overflow-hidden"
-            style={{ background: '#041E42' }}
+            style={{ background: '#080A28' }}
           >
             <div
               className="absolute inset-0 pointer-events-none"

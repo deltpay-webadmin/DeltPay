@@ -112,7 +112,7 @@ export function ApplicationPage() {
               </button>
               <button
                 onClick={() => navigate('/')}
-                className="flex-1 border-2 border-[#041E42] text-[#041E42] px-8 py-3 rounded-md font-semibold hover:bg-[#041E42] hover:text-white transition-all"
+                className="flex-1 border-2 border-[#041E42] text-[#041E42] px-8 py-3 rounded-md font-semibold hover:bg-[#080A28] hover:text-white transition-all"
               >
                 Return to Home
               </button>

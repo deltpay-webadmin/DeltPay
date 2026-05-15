@@ -169,7 +169,7 @@ export function LoadingScreen() {
 
   return (
     <div
-      className={`fixed inset-0 z-[9999] bg-[#041E42] flex items-center justify-center transition-opacity duration-700 ${
+      className={`fixed inset-0 z-[9999] bg-[#080A28] flex items-center justify-center transition-opacity duration-700 ${
         isAnimatingOut ? 'opacity-0' : 'opacity-100'
       }`}
     >
