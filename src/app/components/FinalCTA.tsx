@@ -1,8 +1,14 @@
 import { Link } from 'react-router';
 
 /* ──────────────────────────────────────────────────────────────
-   FinalCTA — Delt Capital "Ready when your business is." style
-   Massive cream H2 on navy. Editorial mono eyebrow. Two CTAs.
+   FinalCTA — Delt Pay (merchant services) closing CTA.
+   Editorial navy surface. Mono eyebrow, massive H2 with italic
+   accent, body copy, two CTAs (Get a quote / Run the savings
+   calculator), mono stat row.
+
+   Copy is payments-focused — NOT lending. The merchant→Capital
+   cross-sell lives in <CapitalCrossSell /> higher up the page,
+   so this final close stays on the core processing pitch.
    ────────────────────────────────────────────────────────────── */
 
 export function FinalCTA() {
@@ -24,7 +30,7 @@ export function FinalCTA() {
       <div className="relative mx-auto w-full max-w-[1200px] px-6 lg:px-10 py-28 lg:py-36">
         {/* Eyebrow */}
         <div className="dc-eyebrow" style={{ color: '#A5B4FC' }}>
-          THE OFFER STANDS
+          — READY WHEN YOU ARE
         </div>
 
         {/* Massive H2 */}
@@ -39,7 +45,7 @@ export function FinalCTA() {
             maxWidth: 920,
           }}
         >
-          Ready when your{' '}
+          Start taking{' '}
           <span
             style={{
               fontFamily: 'var(--dc-font-serif-italic)',
@@ -48,34 +54,34 @@ export function FinalCTA() {
               color: '#A5B4FC',
             }}
           >
-            business
+            payments
           </span>{' '}
-          is.
+          this week.
         </h2>
 
         {/* Body */}
         <p
-          className="mt-7 max-w-[560px] text-[16px] leading-[1.6]"
+          className="mt-7 max-w-[620px] text-[16px] leading-[1.6]"
           style={{
             color: 'var(--dc-on-dark-muted)',
             fontFamily: 'var(--dc-font-body)',
           }}
         >
-          One application. Soft-pull only. A median{' '}
-          <strong style={{ color: 'var(--dc-on-dark)', fontWeight: 600 }}>1.18×</strong>{' '}
-          factor and{' '}
-          <strong style={{ color: 'var(--dc-on-dark)', fontWeight: 600 }}>24-hour</strong>{' '}
-          time to funds. We answer in under an hour, every hour we're open.
+          Transparent pricing. Next-day deposits. Hardware that works on day one.{' '}
+          <strong style={{ color: 'var(--dc-on-dark)', fontWeight: 600 }}>2.6% + $0.10</strong>{' '}
+          flat on the Free plan — no surprise markups, no statement fees. Underwriting in{' '}
+          <strong style={{ color: 'var(--dc-on-dark)', fontWeight: 600 }}>24 hours</strong>,
+          and a real person on the phone every time you call.
         </p>
 
         {/* CTAs */}
         <div className="mt-10 flex items-center gap-3 flex-wrap">
-          <Link to="/apply" className="dc-btn-primary dc-lg">
-            Get Funded
+          <Link to="/get-a-quote" className="dc-btn-primary dc-lg">
+            Get a quote
             <span aria-hidden style={{ marginLeft: 2 }}>→</span>
           </Link>
           <Link to="/calculator" className="dc-btn-secondary dc-on-dark dc-lg">
-            Run the calculator
+            Run the savings calculator
           </Link>
         </div>
 
@@ -102,7 +108,7 @@ export function FinalCTA() {
               textTransform: 'uppercase',
             }}
           >
-            $200M+ DEPLOYED · 2,850+ FUNDED · SOFT-PULL ONLY
+            FLAT 2.6% + $0.10 · NEXT-DAY DEPOSITS · NO STATEMENT FEES
           </span>
         </div>
       </div>

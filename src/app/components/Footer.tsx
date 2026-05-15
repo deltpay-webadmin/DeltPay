@@ -269,12 +269,13 @@ export function Footer() {
         /* Instagram QR — home page only.
            Transparent PNG, white marks on the navy surface. No container,
            no caption (the @delt.finance wordmark is baked into the image).
-           Subtle hover lift only. */
+           Sized for reliable phone scanning (~160px on desktop, ~140px on
+           mobile) — below ~140px most phone cameras struggle. */
         .dc-footer-qr {
           display: inline-block;
           line-height: 0;
-          margin: 0 0 24px;
-          opacity: 0.92;
+          margin: 0 0 28px;
+          opacity: 0.95;
           transition: opacity 200ms ease-out, transform 200ms ease-out;
         }
         .dc-footer-qr:hover {
@@ -283,10 +284,13 @@ export function Footer() {
         }
         .dc-footer-qr-img {
           display: block;
-          width: 88px;
+          width: 160px;
           height: auto;
           /* Keeps marks crisp on Retina without smoothing the QR squares. */
           image-rendering: -webkit-optimize-contrast;
+        }
+        @media (max-width: 600px) {
+          .dc-footer-qr-img { width: 140px; }
         }
 
         /* Bottom row */
