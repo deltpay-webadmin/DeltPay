@@ -8,7 +8,7 @@ import deltInstagramQR from '@/assets/delt-instagram-qr.png';
    thin hairline rule, legal row at the bottom.
    ════════════════════════════════════════════════════════════ */
 
-const NAVY = '#041E42';
+const NAVY = '#080A28';
 const CREAM = '#F7F5F0';
 const INDIGO_SOFT = '#A5B4FC';
 
