@@ -29,8 +29,8 @@ const features = [
   },
   {
     badge: 'AI Intelligence',
-    title: 'Know where every\ndollar goes.',
-    accentWord: 'every',
+    title: 'The business brain you\ndidn\'t have to hire.',
+    accentWord: 'brain',
     desc: 'No spreadsheets. No guessing. Just a clear picture of what\'s working — and what to fix.',
     bullets: ['See which days, products, and customers drive profit', 'Know when a cash shortfall is coming before it hits', 'Get told what to do next — not just what happened'],
     img: imgLensDashboard,

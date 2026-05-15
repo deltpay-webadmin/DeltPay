@@ -1,5 +1,6 @@
-import { Link } from 'react-router';
+import { Link, useLocation } from 'react-router';
 import deltLogoOnDark from '@/assets/delt-logo-on-dark.svg';
+import deltInstagramQR from '@/assets/delt-instagram-qr.jpg';
 
 /* ════════════════════════════════════════════════════════════
    FOOTER — Delt Capital editorial style.
@@ -50,6 +51,8 @@ const RESOURCES = [
 ];
 
 export function Footer() {
+  const { pathname } = useLocation();
+  const isHome = pathname === '/';
   return (
     <footer className="dc-footer">
       <div className="dc-footer-inner">
@@ -127,10 +130,34 @@ export function Footer() {
         {/* Hairline */}
         <div className="dc-footer-rule" />
 
+        {/* Instagram QR — main page only */}
+        {isHome && (
+          <div className="dc-footer-qr">
+            <a
+              href="https://instagram.com/delt.finance"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="dc-footer-qr-link"
+              aria-label="Follow Delt on Instagram (@delt.finance)"
+            >
+              <img
+                src={deltInstagramQR}
+                alt="Scan to follow @delt.finance on Instagram"
+                className="dc-footer-qr-img"
+                draggable={false}
+              />
+            </a>
+            <span className="dc-footer-qr-caption">
+              Follow us on Instagram
+              <span className="dc-footer-qr-handle">@delt.finance</span>
+            </span>
+          </div>
+        )}
+
         {/* Bottom row */}
         <div className="dc-footer-bottom">
           <span className="dc-footer-copy">
-            © 2026 Delt, Inc. NMLS #—. California Finance Lender License #—.
+            © 2026 Delt, Inc.
           </span>
           <div className="dc-footer-legal">
             <Link to="/terms" className="dc-footer-link">Terms of Use</Link>
@@ -241,6 +268,47 @@ export function Footer() {
           height: 1px;
           background: rgba(247, 245, 240, 0.10);
           margin-bottom: 24px;
+        }
+
+        /* Instagram QR block — home page only */
+        .dc-footer-qr {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          margin: -8px 0 24px;
+        }
+        .dc-footer-qr-link {
+          display: inline-block;
+          line-height: 0;
+          background: ${CREAM};
+          padding: 8px;
+          border-radius: 10px;
+          transition: transform 200ms ease-out, box-shadow 200ms ease-out;
+        }
+        .dc-footer-qr-link:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+        }
+        .dc-footer-qr-img {
+          display: block;
+          width: 72px;
+          height: 72px;
+          object-fit: contain;
+        }
+        .dc-footer-qr-caption {
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+          font-family: 'Inter', sans-serif;
+          font-size: 13px;
+          color: rgba(247, 245, 240, 0.7);
+          letter-spacing: -0.005em;
+        }
+        .dc-footer-qr-handle {
+          font-family: 'JetBrains Mono', ui-monospace, monospace;
+          font-size: 12px;
+          color: ${INDIGO_SOFT};
+          letter-spacing: 0.02em;
         }
 
         /* Bottom row */
