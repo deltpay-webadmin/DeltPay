@@ -67,7 +67,9 @@ export function FinalCTA() {
             fontFamily: 'var(--dc-font-body)',
           }}
         >
-          Transparent pricing. Next-day deposits. Hardware that works on day one.{' '}
+          Transparent pricing.{' '}
+          <strong style={{ color: 'var(--dc-on-dark)', fontWeight: 600 }}>Same-day deposits</strong>.{' '}
+          Hardware that works on day one.{' '}
           <strong style={{ color: 'var(--dc-on-dark)', fontWeight: 600 }}>0% net processing fees</strong>{' '}
           with cash discount — no surprise markups, no statement fees.{' '}
           <strong style={{ color: 'var(--dc-on-dark)', fontWeight: 600 }}>Instant onboarding</strong>,
@@ -82,10 +84,11 @@ export function FinalCTA() {
             fontFamily: 'var(--dc-font-body)',
           }}
         >
-          Instant onboarding is subject to underwriting approval and is not
-          available to all merchants. Eligibility depends on business type,
-          processing history, and risk profile; some accounts require standard
-          review (typically 24–48 hours).
+          Instant onboarding and same-day deposits are subject to underwriting
+          approval and are not available to all merchants. Eligibility depends
+          on business type, processing history, risk profile, batch cut-off
+          time, and bank availability; some accounts require standard review
+          (typically 24–48 hours) and standard next-business-day funding.
         </p>
 
         {/* CTAs */}
@@ -122,7 +125,7 @@ export function FinalCTA() {
               textTransform: 'uppercase',
             }}
           >
-            0% NET PROCESSING · NEXT-DAY DEPOSITS · INSTANT ONBOARDING
+            0% NET PROCESSING · SAME-DAY DEPOSITS · INSTANT ONBOARDING
           </span>
         </div>
       </div>
