@@ -131,23 +131,106 @@ export function JuspayHero() {
               </Link>
             </div>
 
-            {/* Stats strip */}
+            {/* Stats strip — desktop / tablet (3-col) */}
             <div
-              className="mt-12 pt-7 grid grid-cols-3 gap-6 max-w-[480px]"
+              className="hidden md:grid mt-12 pt-7 grid-cols-3 gap-6 max-w-[480px]"
               style={{ borderTop: '1px solid var(--dc-rule-on-dark)' }}
             >
               <Stat label="NET PROCESSING" big="0%" unit="with cash discount" />
               <Stat label="DEPOSITS" big="Same-day" unit="eligible accts" />
               <Stat label="ONBOARDING" big="Instant" unit="approval-based" />
             </div>
+
+            {/* Stats strip — mobile (stacked, no overlap) */}
+            <div
+              className="md:hidden mt-10 pt-6 space-y-5"
+              style={{ borderTop: '1px solid var(--dc-rule-on-dark)' }}
+            >
+              <div>
+                <div
+                  className="text-[10px] tracking-[0.14em] mb-1.5 uppercase"
+                  style={{ fontFamily: 'var(--dc-font-mono)', color: 'var(--dc-on-dark-faint)' }}
+                >
+                  NET PROCESSING
+                </div>
+                <div
+                  className="text-3xl font-semibold"
+                  style={{
+                    fontFamily: 'var(--dc-font-display)',
+                    letterSpacing: '-0.025em',
+                    color: 'var(--dc-on-dark)',
+                    lineHeight: 1,
+                  }}
+                >
+                  0%
+                  <span
+                    className="ml-2 text-xs font-normal"
+                    style={{ fontFamily: 'var(--dc-font-mono)', color: 'var(--dc-on-dark-faint)', letterSpacing: '0.04em' }}
+                  >
+                    with cash discount
+                  </span>
+                </div>
+              </div>
+              <div>
+                <div
+                  className="text-[10px] tracking-[0.14em] mb-1.5 uppercase"
+                  style={{ fontFamily: 'var(--dc-font-mono)', color: 'var(--dc-on-dark-faint)' }}
+                >
+                  DEPOSITS
+                </div>
+                <div
+                  className="text-3xl font-semibold"
+                  style={{
+                    fontFamily: 'var(--dc-font-display)',
+                    letterSpacing: '-0.025em',
+                    color: 'var(--dc-on-dark)',
+                    lineHeight: 1,
+                  }}
+                >
+                  Same-day
+                  <span
+                    className="ml-2 text-xs font-normal"
+                    style={{ fontFamily: 'var(--dc-font-mono)', color: 'var(--dc-on-dark-faint)', letterSpacing: '0.04em' }}
+                  >
+                    eligible accts
+                  </span>
+                </div>
+              </div>
+              <div>
+                <div
+                  className="text-[10px] tracking-[0.14em] mb-1.5 uppercase"
+                  style={{ fontFamily: 'var(--dc-font-mono)', color: 'var(--dc-on-dark-faint)' }}
+                >
+                  ONBOARDING
+                </div>
+                <div
+                  className="text-3xl font-semibold"
+                  style={{
+                    fontFamily: 'var(--dc-font-display)',
+                    letterSpacing: '-0.025em',
+                    color: 'var(--dc-on-dark)',
+                    lineHeight: 1,
+                  }}
+                >
+                  Instant
+                  <span
+                    className="ml-2 text-xs font-normal"
+                    style={{ fontFamily: 'var(--dc-font-mono)', color: 'var(--dc-on-dark-faint)', letterSpacing: '0.04em' }}
+                  >
+                    approval-based
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
 
         </div>
 
         {/* Bottom hairline + meta strip — pinned to the bottom of the viewport so the
-            hero owns the first fold and the email-capture bar lives below it. */}
+            hero owns the first fold and the email-capture bar lives below it.
+            Hidden on mobile — the decorative "SCROLL" / mono ledger line is noise on phone. */}
         <div
-          className="mt-auto pt-5 pb-6 flex items-center justify-between gap-4 flex-wrap"
+          className="hidden md:flex mt-auto pt-5 pb-6 items-center justify-between gap-4 flex-wrap"
           style={{ borderTop: '1px solid var(--dc-rule-on-dark)' }}
         >
           <span
