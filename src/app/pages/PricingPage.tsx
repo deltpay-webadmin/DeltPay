@@ -212,7 +212,7 @@ export function PricingPage() {
   ];
 
   return (
-    <>
+    <div className="pricing-page-root">
       <style>{`
         @media (max-width: 768px) {
           .pricing-grid {
@@ -237,11 +237,20 @@ export function PricingPage() {
           .pricing-header {
             font-size: 32px !important;
           }
+          .pricing-page-hero {
+            padding: 112px 16px 48px !important;
+          }
+          .pricing-tier-card {
+            padding: 24px 18px !important;
+          }
+        }
+        .pricing-page-root {
+          overflow-x: hidden;
         }
       `}</style>
 
       {/* ═══ 1. HERO + BUNDLE + TIER CARDS (kept) ═══════════════════ */}
-      <div style={{
+      <div className="pricing-page-hero" style={{
         minHeight: "auto",
         background: COLORS.white,
         fontFamily: fonts.heading,
@@ -933,6 +942,6 @@ export function PricingPage() {
           </p>
         </div>
       </section>
-    </>
+    </div>
   );
 }

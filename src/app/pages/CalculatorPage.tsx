@@ -73,9 +73,9 @@ export function CalculatorPage() {
       </div>
 
       {/* Calculator Card */}
-      <div className="max-w-[960px] mx-auto px-6 pb-24">
+      <div className="max-w-[960px] mx-auto px-4 sm:px-6 pb-24">
         <motion.div
-          className="bg-white rounded-2xl shadow-lg border border-[#E5E7EB]/60 overflow-hidden"
+          className="bg-white rounded-2xl shadow-xl border border-[#E5E7EB] overflow-hidden"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.15 }}
@@ -168,7 +168,7 @@ export function CalculatorPage() {
             </div>
 
             {/* Right - Results */}
-            <div className="p-8 md:p-10 bg-[#FAFBFC] border-l border-[#E5E7EB]/60 flex flex-col items-center justify-center">
+            <div className="p-8 md:p-10 bg-[#F3F4FF] border-t md:border-t-0 md:border-l border-[#E5E7EB] flex flex-col items-center justify-center">
               {!calculated ? (
                 <div className="text-center">
                   <div className="w-16 h-16 bg-[#F0EDFF] rounded-2xl flex items-center justify-center mx-auto mb-4">

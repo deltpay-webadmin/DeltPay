@@ -278,7 +278,7 @@ function ValueCard({
 /* ─── Page ───────────────────────────────────────────── */
 export function AboutUsPage() {
   return (
-    <div style={{ background: WHITE, color: INK, fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+    <div style={{ background: WHITE, color: INK, fontFamily: 'system-ui, -apple-system, sans-serif', overflowX: 'hidden' }}>
 
       {/* ══ HERO — dark manifesto ═════════════════════════════ */}
       <section
@@ -432,7 +432,7 @@ export function AboutUsPage() {
             </p>
             <h2
               className="font-bold tracking-[-0.015em] sticky top-28"
-              style={{ color: NAVY, fontSize: 'clamp(2rem, 4vw, 3.25rem)', lineHeight: 1.05 }}
+              style={{ color: NAVY, fontSize: 'clamp(1.5rem, 4vw, 3.25rem)', lineHeight: 1.1, overflowWrap: 'break-word', wordBreak: 'break-word' }}
             >
               We started with payments.
               <br />

@@ -237,13 +237,13 @@ function FeatureCard({ item, selected, onToggle }: { item: typeof FEATURES[0]; s
       style={{
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
         gap: 12, padding: '28px 18px', borderRadius: 14, cursor: 'pointer', textAlign: 'center',
-        border: `2px solid ${selected ? INDIGO : '#E2E6ED'}`,
-        background: selected ? 'rgba(73,69,255,0.05)' : '#FFFFFF',
+        border: `2px solid ${selected ? INDIGO : '#C8CDD6'}`,
+        background: selected ? 'rgba(73,69,255,0.06)' : '#FFFFFF',
         transition: 'border-color 0.2s, background 0.2s',
         position: 'relative', minHeight: 148,
       }}
     >
-      <div style={{ color: selected ? INDIGO : '#94A3B8', transition: 'color 0.2s', transform: 'scale(1.15)' }}>{item.icon}</div>
+      <div style={{ color: selected ? INDIGO : '#4B5563', transition: 'color 0.2s', transform: 'scale(1.15)' }}>{item.icon}</div>
       <div>
         <div style={{ fontFamily: JAK, fontSize: 15, fontWeight: 700, color: selected ? NAVY : '#374151', lineHeight: 1.3 }}>{item.label}</div>
         <div style={{ fontFamily: JAK, fontSize: 13, color: '#94A3B8', marginTop: 4, lineHeight: 1.4 }}>{item.sub}</div>
@@ -389,8 +389,14 @@ export function GetAQuotePage() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#F6F7FB', fontFamily: JAK }}>
+      <style>{`
+        @media (max-width: 640px) {
+          .gaq-content { padding: 40px 16px 80px !important; }
+          .gaq-step4-grid { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
       {/* Header */}
-      <div style={{ background: NAVY, padding: '0 40px', height: 72, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div style={{ background: NAVY, padding: '0 16px', height: 72, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <button onClick={() => navigate('/')} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
           <img src={logoWhite} alt="Delt" style={{ height: 64, objectFit: 'contain' }} />
         </button>
@@ -404,7 +410,7 @@ export function GetAQuotePage() {
       </div>
 
       {/* Content */}
-      <div style={{ maxWidth: 960, margin: '0 auto', padding: '64px 32px 100px' }}>
+      <div className="gaq-content" style={{ maxWidth: 960, margin: '0 auto', padding: '64px 32px 100px' }}>
         <ProgressBar step={step} />
 
         <AnimatePresence mode="wait">
@@ -514,7 +520,7 @@ export function GetAQuotePage() {
                 </p>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28, alignItems: 'start' }}>
+              <div className="gaq-step4-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28, alignItems: 'start' }}>
 
                 {/* Form */}
                 <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>

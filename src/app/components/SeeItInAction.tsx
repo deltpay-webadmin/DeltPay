@@ -88,6 +88,16 @@ export function SeeItInAction() {
           .siia-header { margin-bottom: 36px; }
           .siia-subtitle { font-size: 16px; }
         }
+
+        @media (max-width: 700px) {
+          .siia-preview-wrap {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+          }
+          .siia-preview-wrap > * {
+            min-width: 680px;
+          }
+        }
       `}</style>
     </section>
   );
