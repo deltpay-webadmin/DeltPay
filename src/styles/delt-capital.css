@@ -131,7 +131,7 @@
   white-space: nowrap;
 }
 .dc-btn-primary:hover { background: var(--dc-indigo-deep); }
-.dc-btn-primary.dc-lg { font-size: 14px; padding: 14px 22px; }
+.dc-btn-primary.dc-lg { font-size: 14px; padding: 15px 22px; min-height: 44px; }
 
 .dc-btn-secondary {
   display: inline-flex;
@@ -151,6 +151,7 @@
   white-space: nowrap;
 }
 .dc-btn-secondary:hover { background: var(--dc-indigo-tint-08); }
+.dc-btn-secondary.dc-lg { font-size: 14px; padding: 15px 22px; min-height: 44px; }
 
 .dc-btn-secondary.dc-on-dark {
   color: var(--dc-on-dark);

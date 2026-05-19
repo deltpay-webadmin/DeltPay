@@ -71,8 +71,9 @@ export function ByTheNumbers() {
         </div>
 
         {/* Comparison table */}
+        <div className="mt-12 overflow-x-auto -mx-2 px-2">
         <div
-          className="mt-12 rounded-[12px] overflow-hidden"
+          className="rounded-[12px] overflow-hidden min-w-[600px]"
           style={{
             background: 'var(--dc-bg-white)',
             border: '1px solid rgba(4, 30, 66, 0.08)',
@@ -243,6 +244,7 @@ export function ByTheNumbers() {
               </div>
             </div>
           ))}
+        </div>
         </div>
 
         {/* Highlight stat cards */}

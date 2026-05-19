@@ -256,8 +256,21 @@ export function Footer() {
           text-decoration: none;
           transition: color 150ms ease-out;
           letter-spacing: -0.005em;
+          display: block;
+          padding: 5px 0;
         }
         .dc-footer-link:hover { color: ${CREAM}; }
+        @media (max-width: 600px) {
+          .dc-footer-link {
+            padding: 8px 0;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+          }
+          .dc-footer-list {
+            gap: 2px;
+          }
+        }
 
         /* Rule */
         .dc-footer-rule {
