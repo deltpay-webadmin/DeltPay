@@ -19,18 +19,67 @@ export function HomePage() {
       <JuspayHero />
       {/* Wave 5 — email capture beneath hero */}
       <EmailCaptureBar />
-      {/* Globe + headline stats (restored from original homepage) */}
-      <GlobeStats />
-      <SeeItInAction />
-      <ScrollRevealText />
-      <FeatureShowcase />
-      {/* Legacy processor vs Delt comparison — moved here, after the product showcase */}
+
+      {/* Mobile-only tight trust line (replaces decorative globe section on mobile) */}
+      <div
+        className="md:hidden px-6 py-10 text-center"
+        style={{ background: '#080A28', color: '#fff' }}
+      >
+        <div
+          className="text-[11px] tracking-[0.18em] uppercase"
+          style={{
+            fontFamily: 'var(--dc-font-mono)',
+            color: 'rgba(255,255,255,0.55)',
+          }}
+        >
+          — TRUSTED WORLDWIDE
+        </div>
+        <div
+          className="mt-3 text-2xl font-semibold"
+          style={{
+            fontFamily: 'var(--dc-font-display)',
+            letterSpacing: '-0.02em',
+            color: '#fff',
+          }}
+        >
+          10,000+ merchants run on Delt.
+        </div>
+      </div>
+
+      {/* Globe + headline stats — desktop only (heavy decorative globe) */}
+      <div className="hidden md:block">
+        <GlobeStats />
+      </div>
+
+      {/* Desktop dashboard preview — hidden on mobile (unreadable when shrunk) */}
+      <div className="hidden md:block">
+        <SeeItInAction />
+      </div>
+
+      {/* Scroll-reveal headline — desktop only (purely decorative on mobile) */}
+      <div className="hidden md:block">
+        <ScrollRevealText />
+      </div>
+
+      {/* Feature showcase (website mockups, dashboards) — desktop only */}
+      <div className="hidden md:block">
+        <FeatureShowcase />
+      </div>
+
+      {/* Legacy processor vs Delt comparison — has mobile-stacked alt inside */}
       <ByTheNumbers />
+
       {/* Merchant Services → Capital value loop */}
       <CapitalCrossSell variant="full" theme="light" />
+
       {/* Wave 2 — Made for how you actually work (industry panel) */}
       <IndustryPanel />
-      <ResultsBento />
+
+      {/* Bento of fake dashboard tiles — desktop only (decorative) */}
+      <div className="hidden md:block">
+        <ResultsBento />
+      </div>
+
       <SpotlightTestimonial />
       <FinalCTA />
     </div>

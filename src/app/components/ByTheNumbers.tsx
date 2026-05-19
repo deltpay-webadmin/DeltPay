@@ -70,8 +70,8 @@ export function ByTheNumbers() {
           </div>
         </div>
 
-        {/* Comparison table */}
-        <div className="mt-12 overflow-x-auto -mx-2 px-2">
+        {/* Comparison table — desktop only (replaced by stacked cards on mobile) */}
+        <div className="hidden md:block mt-12 overflow-x-auto -mx-2 px-2">
         <div
           className="rounded-[12px] overflow-hidden min-w-[600px]"
           style={{
@@ -245,6 +245,66 @@ export function ByTheNumbers() {
             </div>
           ))}
         </div>
+        </div>
+
+        {/* Comparison — mobile stacked cards */}
+        <div className="md:hidden mt-10 space-y-3">
+          {ROWS.map((row) => (
+            <div
+              key={row.num}
+              className="rounded-[14px] p-4"
+              style={{
+                background: 'var(--dc-bg-white)',
+                border: '1px solid rgba(4, 30, 66, 0.10)',
+                boxShadow: 'var(--dc-shadow-card)',
+              }}
+            >
+              <div
+                className="text-[11px] tracking-[0.14em] mb-2 uppercase"
+                style={{
+                  fontFamily: 'var(--dc-font-mono)',
+                  color: 'var(--dc-on-light-subtle)',
+                }}
+              >
+                {row.num} — {row.metric}
+              </div>
+              <div className="flex justify-between items-baseline gap-3">
+                <span
+                  className="text-sm line-through"
+                  style={{
+                    fontFamily: 'var(--dc-font-body)',
+                    color: 'var(--dc-on-light-subtle)',
+                  }}
+                >
+                  {row.legacy}
+                </span>
+                <span
+                  className="text-base font-semibold text-right"
+                  style={{
+                    fontFamily: 'var(--dc-font-body)',
+                    color: 'var(--dc-on-light)',
+                  }}
+                >
+                  {row.delt}
+                </span>
+              </div>
+              {row.pill && (
+                <span
+                  className="inline-block mt-3 px-2.5 py-1 rounded-full"
+                  style={{
+                    fontFamily: 'var(--dc-font-mono)',
+                    fontSize: 11,
+                    letterSpacing: '0.12em',
+                    background: 'rgba(73, 69, 255, 0.10)',
+                    color: 'var(--dc-indigo-deep)',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  {row.pill}
+                </span>
+              )}
+            </div>
+          ))}
         </div>
 
         {/* Highlight stat cards */}
