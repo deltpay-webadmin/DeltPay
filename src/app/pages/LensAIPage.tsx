@@ -173,24 +173,29 @@ export function LensAIPage() {
       ══════════════════════════════════════════════════════════ */}
       <section style={{
         position: 'relative', overflow: 'hidden',
-        minHeight: 'calc(100vh - 72px)',
+        /* Let the hero size to its content (eyebrow + wordmark +
+           input + pills). The old `minHeight: calc(100vh - 72px)`
+           forced a tall section even when content ended at ~70vh,
+           creating an awkward empty band between the suggestion
+           pills and the next section. A modest min-height keeps
+           the hero feeling generous without inventing dead space. */
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'flex-start',
         paddingTop: 'clamp(72px, 9vw, 128px)',
-        paddingBottom: 'clamp(56px, 7vw, 96px)',
+        paddingBottom: 'clamp(72px, 9vw, 120px)',
         textAlign: 'center',
-        /* Base44-style large horizontal-band hero gradient — a
-           generous purple wash at the top softens to white through
-           the middle and settles on a warm, on-palette off-white
-           at the bottom. Layered radial accent keeps the top lively. */
+        /* Base44-style horizontal-band hero gradient. Top gets the
+           generous purple wash; we then resolve fully to #FFFFFF by
+           the bottom so the seam against LensScrollRevealText
+           (which starts on pure white) is invisible. */
         background: `
           linear-gradient(180deg,
             rgba(73,69,255,0.38) 0%,
             rgba(73,69,255,0.22) 16%,
             rgba(73,69,255,0.10) 32%,
-            rgba(255,255,255,1)  60%,
-            rgba(246,247,251,1)  100%)
+            rgba(255,255,255,1)  62%,
+            rgba(255,255,255,1)  100%)
         `,
       }}>
         {/* Top radial depth accent — adds the “sky” feel from Base44 */}
@@ -499,7 +504,9 @@ export function LensAIPage() {
           Not sure where to start? Try one of these:
         </p>
 
-        {/* Suggestion pills */}
+        {/* Suggestion pills. The section's own paddingBottom controls
+           the gap to the next section so we don't double-stack space
+           and create a dead band. */}
         <div style={{ position: 'relative', display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 8, padding: '0 20px', maxWidth: 900, margin: '0 auto' }}>
           {SUGGESTIONS.map(s => (
             <button
