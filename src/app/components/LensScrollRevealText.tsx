@@ -29,9 +29,14 @@ function Word({
   charEnd: number;
   totalChars: number;
 }) {
-  // Letter animation happens in the 0.20–0.65 slice of scroll progress
-  const animStart = 0.2;
-  const animEnd = 0.65;
+  // Letter animation happens in the 0.05–0.55 slice of scroll progress.
+  // Was 0.20–0.65, which left the first ~20% of the section visually dead:
+  // the headline was a dim grey blob over a flat lavender wash, reading
+  // as an empty band between the hero pills and the next section. Starting
+  // at 0.05 means the first word is already lighting up the moment the
+  // section enters the viewport, so there's always live content on screen.
+  const animStart = 0.05;
+  const animEnd = 0.55;
   const span = animEnd - animStart;
   const s = animStart + (charStart / totalChars) * span;
   const e = Math.min(animStart + ((charEnd + 4) / totalChars) * span, animEnd);
@@ -62,14 +67,16 @@ export function LensScrollRevealText() {
     offset: ['start start', 'end end'],
   });
 
-  // Base44-style sunset: gradient strip starts BELOW the viewport (only bottom
-  // glow peeking), then rises UP through the viewport as you scroll. At the
-  // end, the saturated bottom has passed the top — a soft top-glow remains.
-  // IMPORTANT: the gradient strip is 320vh tall and we translate between
-  // +20vh and -220vh, which keeps its bottom edge ALWAYS at or below the
-  // bottom of the 100vh sticky viewport (320 - 220 = 100vh), so the blue
-  // wash always reaches the bottom of the visual area — no hard edge.
-  const gradientY = useTransform(scrollYProgress, [0, 1], ['20vh', '-220vh']);
+  // Base44-style sunset: gradient strip starts with its saturated bottom
+  // already poking into the lower third of the viewport (so the section
+  // never reads as a flat empty band), then rises UP through the viewport
+  // as you scroll. At the end, the saturated bottom has passed the top —
+  // a soft top-glow remains.
+  //
+  // Was starting at +20vh (sunset entirely BELOW the viewport — first
+  // chunk of scroll showed no gradient at all). Now starts at -30vh so
+  // the bottom ⅔ of the viewport already shows indigo glow on entry.
+  const gradientY = useTransform(scrollYProgress, [0, 1], ['-30vh', '-220vh']);
 
   const words = TEXT.split(' ');
   let ci = 0;
@@ -130,9 +137,15 @@ export function LensScrollRevealText() {
            sections. The moving sunset still rises through it; the soft
            lavender base just removes the visible white gap at the top of
            the section before the gradient saturates the bottom. */
+        /* Shorter outer (was 320vh / 400vh) — with the headline now
+           lighting up immediately and the sunset glow already in view
+           on entry, we no longer need the long lead-in to reach the
+           interesting state. Shorter = the dead-band feel goes away
+           because the visible portion is always populated, AND the
+           viewer reaches the stacking-panels section faster. */
         .lsrt-outer {
           position: relative;
-          height: 320vh;
+          height: 240vh;
           background:
             linear-gradient(180deg,
               #EDEBFF 0%,
@@ -158,8 +171,9 @@ export function LensScrollRevealText() {
         @media (min-width: 1024px) {
           /* Desktop has body { zoom: 0.8 } — size everything at 125%
              so the sticky frame fills the full visible viewport and
-             the outer section scrolls proportionally. */
-          .lsrt-outer { height: 400vh; }
+             the outer section scrolls proportionally. Outer trimmed
+             from 400vh to 300vh to remove the empty lead-in band. */
+          .lsrt-outer { height: 300vh; }
           .lsrt-sticky { height: 125vh; }
         }
 
