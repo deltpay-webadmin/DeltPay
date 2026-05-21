@@ -233,7 +233,7 @@ const PANELS = [
   {
     counter: '02 / 04',
     title: 'Trust every number you act on.',
-    body: 'Trade gut calls for answers you can verify — every move grounded in truth.',
+    body: 'Walk into every meeting, every call, every decision — with the numbers behind you.',
     cta: 'See how grounding works',
     mockup: <AnswerMockup />,
   },
@@ -247,7 +247,7 @@ const PANELS = [
   {
     counter: '04 / 04',
     title: 'Spot the problem before it costs you.',
-    body: 'Catch the small leaks before they cost you — so the bad week never happens.',
+    body: 'End the month with no surprises. End the year ahead.',
     cta: 'Get started with Lens',
     mockup: <DigestMockup />,
   },
