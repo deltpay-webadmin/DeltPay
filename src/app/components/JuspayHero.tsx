@@ -11,10 +11,11 @@ import { HeroShaderBackground } from './HeroShaderBackground';
    down the page). Stats strip + bottom mono ledger line.
    ────────────────────────────────────────────────────────────── */
 
-// Payments + AI flavored verbs. 'fund' was the previous (Capital) word
-// and has been removed — the merchant→Capital cross-sell lives lower on
-// the page in its own section.
-const ROTATING_WORDS = ['process', 'automate', 'grow', 'power'];
+// Payments + AI flavored verbs. 'fund' is reserved for Capital, and
+// 'automate' was dropped — Delt doesn't automate the merchant's business,
+// it powers it. Every word here is something a payments + intelligence
+// stack actually does for the merchant.
+const ROTATING_WORDS = ['power', 'process', 'grow', 'scale'];
 
 export function JuspayHero() {
   const [wordIdx, setWordIdx] = useState(0);
@@ -103,14 +104,11 @@ export function JuspayHero() {
             >
               Payments + AI intelligence, in one stack.{' '}
               <strong style={{ color: 'var(--dc-on-dark)', fontWeight: 600 }}>
-                0% net processing fees
-              </strong>{' '}
-              with cash discount.{' '}
-              <strong style={{ color: 'var(--dc-on-dark)', fontWeight: 600 }}>Same-day deposits</strong>{' '}
+                0% net processing
+              </strong>,{' '}
+              <strong style={{ color: 'var(--dc-on-dark)', fontWeight: 600 }}>same-day deposits</strong>,
               and{' '}
-              <strong style={{ color: 'var(--dc-on-dark)', fontWeight: 600 }}>instant onboarding</strong>{' '}
-              — not a call center's script. Delt Lens tells you what's working, what's not,
-              and what to do next. Hardware that works on day one.
+              <strong style={{ color: 'var(--dc-on-dark)', fontWeight: 600 }}>instant onboarding</strong>.
             </p>
 
             <p
@@ -131,12 +129,16 @@ export function JuspayHero() {
               </Link>
             </div>
 
-            {/* Stats strip — desktop / tablet (3-col) */}
+            {/* Stats strip — desktop / tablet. Flex so each column hugs its
+                own content and the row reads as a single balanced ledger
+                line instead of three uneven grid cells (the old grid-cols-3
+                clipped "Same-day" onto two lines and threw the whole strip
+                off-axis). */}
             <div
-              className="hidden md:grid mt-12 pt-7 grid-cols-3 gap-6 max-w-[480px]"
+              className="hidden md:flex mt-12 pt-7 items-start gap-10 max-w-[640px]"
               style={{ borderTop: '1px solid var(--dc-rule-on-dark)' }}
             >
-              <Stat label="NET PROCESSING" big="0%" unit="with cash discount" />
+              <Stat label="NET PROCESSING" big="0%" unit="cash discount" />
               <Stat label="DEPOSITS" big="Same-day" unit="eligible accts" />
               <Stat label="ONBOARDING" big="Instant" unit="approval-based" />
             </div>
@@ -272,15 +274,16 @@ function Stat({ label, big, unit }: { label: string; big: string; unit: string }
       >
         {label}
       </div>
-      <div className="flex items-baseline gap-1.5">
+      <div className="flex items-baseline gap-2 whitespace-nowrap">
         <span
           style={{
             fontFamily: 'var(--dc-font-display)',
             fontWeight: 600,
-            fontSize: 32,
+            fontSize: 28,
             letterSpacing: '-0.025em',
             color: 'var(--dc-on-dark)',
             lineHeight: 1,
+            whiteSpace: 'nowrap',
           }}
         >
           {big}
@@ -291,6 +294,7 @@ function Stat({ label, big, unit }: { label: string; big: string; unit: string }
             fontSize: 11,
             color: 'var(--dc-on-dark-faint)',
             letterSpacing: '0.04em',
+            whiteSpace: 'nowrap',
           }}
         >
           {unit}
