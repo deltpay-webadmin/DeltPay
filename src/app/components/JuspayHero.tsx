@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
 import { HeroShaderBackground } from './HeroShaderBackground';
+import { ExploreFeaturesWithAI } from './ExploreFeaturesWithAI';
 
 /* ──────────────────────────────────────────────────────────────
    JuspayHero — Delt Pay (merchant services) home hero.
@@ -129,6 +130,12 @@ export function JuspayHero() {
               <Link to="/calculator" className="dc-btn-secondary dc-on-dark dc-lg">
                 See how pricing works
               </Link>
+              {/* Explore Features with AI — same mechanism as Robokiller's
+                  CTA: link to chatgpt.com with a ?prompt= parameter that
+                  pre-seeds a marketing summary request, opens in a new tab.
+                  Styled as an iridescent outlined pill so it reads as the
+                  "AI" CTA next to the two primary actions. */}
+              <ExploreFeaturesWithAI />
             </div>
 
             {/* Stats strip — desktop / tablet (3-col) */}
