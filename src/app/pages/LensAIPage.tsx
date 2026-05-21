@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router';
 import { Sparkles, ChevronDown, Check, Plus, Mic, ArrowUp, Info } from 'lucide-react';
 import { LensScrollRevealText } from '../components/LensScrollRevealText';
 import { LensStackingPanels } from '../components/LensStackingPanels';
-import { LensLoadingScreen } from '../components/LensLoadingScreen';
 import deltLogoImg from 'figma:asset/ba16007295b082bbfe774b1ba0c31a403b5502d6.png';
 
 /* ─────────────────────────────────────────────────────────────
@@ -167,9 +166,6 @@ export function LensAIPage() {
 
   return (
     <div style={{ fontFamily: FONT, color: C.navy, background: C.white }}>
-      {/* Original portal-style Lens splash. Shows once per session
-          on first hit of /lens-ai. Press Escape or click to skip. */}
-      <LensLoadingScreen />
 
       {/* ══════════════════════════════════════════════════════════
           1. HERO — Base44-style prominent chat
