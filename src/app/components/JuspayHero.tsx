@@ -122,19 +122,23 @@ export function JuspayHero() {
               and not available to all merchants.
             </p>
 
+            {/* Hero CTA row — two buttons only.
+
+                Pairing rationale: "Get a quote" is the actual conversion
+                action (non-negotiable), and "Explore Features with AI"
+                gives curious-but-not-ready visitors a self-serve path
+                that signals Delt's AI posture without leaking them to
+                a competitor's site. We dropped "See how pricing works"
+                from this row because it duplicated the Pricing nav link,
+                split attention from "Get a quote" (same intent, weaker
+                CTA), and made the row feel crowded — two CTAs read
+                cleaner and give the primary action more weight. The
+                /calculator route is still reachable from nav/footer. */}
             <div className="mt-9 flex items-center gap-3 flex-wrap">
               <Link to="/get-a-quote" className="dc-btn-primary dc-lg">
                 Get a quote
                 <span aria-hidden style={{ marginLeft: 2 }}>→</span>
               </Link>
-              <Link to="/calculator" className="dc-btn-secondary dc-on-dark dc-lg">
-                See how pricing works
-              </Link>
-              {/* Explore Features with AI — same mechanism as Robokiller's
-                  CTA: link to chatgpt.com with a ?prompt= parameter that
-                  pre-seeds a marketing summary request, opens in a new tab.
-                  Styled as an iridescent outlined pill so it reads as the
-                  "AI" CTA next to the two primary actions. */}
               <ExploreFeaturesWithAI />
             </div>
 
