@@ -1,20 +1,28 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router';
 import { ArrowUp, Plus, Mic, Sparkles, ChevronLeft, Copy, RefreshCcw, ThumbsUp, ThumbsDown } from 'lucide-react';
-import deltLogoImg from '@/assets/delt-logo-on-light.svg';
 
 /* ─────────────────────────────────────────────────────────────
-   PALETTE — matches LensAIPage
+   PALETTE — dark theme (ChatGPT / Claude inspired)
    ───────────────────────────────────────────────────────────── */
 const C = {
-  white:  '#FFFFFF',
-  navy:   '#041E42',
-  purple: '#4945FF',
-  body:   '#475569',
-  muted:  '#94A3B8',
-  grayBg: '#F6F7FB',
-  line:   '#E2E8F0',
-  faintPurple: 'rgba(73,69,255,0.06)',
+  // page + surfaces
+  bg:        '#212121',  // main page (ChatGPT app bg)
+  surface:   '#2F2F2F',  // input, table bg, hovers
+  surface2:  '#303030',  // alt surface
+  // text
+  text:      '#ECECEC',  // primary text
+  body:      '#B4B4B4',  // body / secondary
+  muted:     '#8E8E8E',  // tertiary / placeholder
+  // borders / dividers
+  line:      'rgba(255,255,255,0.10)',
+  lineSoft:  'rgba(255,255,255,0.06)',
+  // brand accent (kept from Delt for continuity, tuned for dark)
+  accent:    '#8B86FF',  // lighter Delt purple for dark bg legibility
+  accentDeep:'#4945FF',  // original for gradients
+  // misc
+  white:     '#FFFFFF',
+  faintAccent: 'rgba(139,134,255,0.10)',
 };
 
 const FONT = "'Plus Jakarta Sans', system-ui, sans-serif";
@@ -353,7 +361,7 @@ export function LensAIChatPage() {
       style={{
         position: 'fixed', inset: 0,
         display: 'flex', flexDirection: 'column',
-        background: C.white, fontFamily: FONT, color: C.navy,
+        background: C.bg, fontFamily: FONT, color: C.text,
       }}
     >
       {/* ───── TOP BAR ───── */}
@@ -363,7 +371,7 @@ export function LensAIChatPage() {
           height: 60,
           padding: '0 clamp(16px, 3vw, 32px)',
           borderBottom: `1px solid ${C.line}`,
-          background: 'rgba(255,255,255,0.85)',
+          background: 'rgba(33,33,33,0.85)',
           backdropFilter: 'blur(12px)',
           WebkitBackdropFilter: 'blur(12px)',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -381,7 +389,7 @@ export function LensAIChatPage() {
               background: 'transparent', border: 'none', cursor: 'pointer',
               color: C.body, fontSize: 14, fontWeight: 500, fontFamily: FONT,
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(4,30,66,0.05)'; e.currentTarget.style.color = C.navy; }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.color = C.text; }}
             onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = C.body; }}
           >
             <ChevronLeft size={16} />
@@ -396,17 +404,13 @@ export function LensAIChatPage() {
                 fontFamily: "'Cormorant Garamond', 'Playfair Display', Georgia, serif",
                 fontStyle: 'italic',
                 fontSize: 30, fontWeight: 500, lineHeight: 1,
-                background: `linear-gradient(135deg, ${C.purple} 0%, ${C.navy} 100%)`,
-                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
+                color: C.text,
                 letterSpacing: '0.005em',
                 paddingRight: '0.06em',
               }}
             >
               Lens
             </span>
-            <span style={{ color: C.muted, fontSize: 13, fontWeight: 500 }}>by</span>
-            <img src={deltLogoImg} alt="Delt" style={{ height: 12, width: 'auto', objectFit: 'contain', transform: 'translateY(1px)' }} />
           </Link>
         </div>
 
@@ -420,8 +424,8 @@ export function LensAIChatPage() {
             display: 'inline-flex', alignItems: 'center', gap: 6,
             transition: 'background 0.15s, border-color 0.15s, color 0.15s',
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.borderColor = C.purple; e.currentTarget.style.color = C.navy; }}
-          onMouseLeave={(e) => { e.currentTarget.style.borderColor = C.line; e.currentTarget.style.color = C.body; }}
+          onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.25)'; e.currentTarget.style.color = C.text; e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.borderColor = C.line; e.currentTarget.style.color = C.body; e.currentTarget.style.background = 'transparent'; }}
         >
           <Sparkles size={14} />
           New chat
@@ -455,7 +459,7 @@ export function LensAIChatPage() {
         style={{
           flexShrink: 0,
           padding: '12px clamp(16px, 4vw, 32px) clamp(16px, 3vw, 24px)',
-          background: 'linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,1) 30%)',
+          background: 'linear-gradient(180deg, rgba(33,33,33,0) 0%, rgba(33,33,33,1) 30%)',
         }}
       >
         <form
@@ -467,13 +471,13 @@ export function LensAIChatPage() {
               position: 'relative',
               display: 'flex', alignItems: 'center', gap: 8,
               padding: '10px 10px 10px 14px',
-              background: C.white,
-              border: `1.5px solid ${C.line}`,
+              background: C.surface,
+              border: `1px solid ${C.line}`,
               borderRadius: 18,
-              boxShadow: '0 8px 28px -8px rgba(4,30,66,0.12), 0 2px 6px rgba(4,30,66,0.04)',
+              boxShadow: '0 8px 24px rgba(0,0,0,0.35)',
               transition: 'border-color 0.15s, box-shadow 0.15s',
             }}
-            onFocus={(e) => { (e.currentTarget as HTMLDivElement).style.borderColor = C.purple; }}
+            onFocus={(e) => { (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(255,255,255,0.22)'; }}
             onBlur={(e) => { (e.currentTarget as HTMLDivElement).style.borderColor = C.line; }}
           >
             <button
@@ -483,7 +487,7 @@ export function LensAIChatPage() {
                 width: 34, height: 34, borderRadius: 10,
                 border: 'none', background: 'transparent', flexShrink: 0,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: 'pointer', color: '#64748B',
+                cursor: 'pointer', color: C.body,
               }}
             >
               <Plus size={18} />
@@ -498,7 +502,7 @@ export function LensAIChatPage() {
               style={{
                 flex: 1, minWidth: 0,
                 border: 'none', outline: 'none', background: 'transparent',
-                fontSize: 16, lineHeight: 1.5, color: C.navy,
+                fontSize: 16, lineHeight: 1.5, color: C.text,
                 fontFamily: FONT, padding: '6px 0',
               }}
             />
@@ -510,7 +514,7 @@ export function LensAIChatPage() {
                 width: 34, height: 34, borderRadius: '50%',
                 border: 'none', background: 'transparent', flexShrink: 0,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: 'pointer', color: '#64748B',
+                cursor: 'pointer', color: C.body,
               }}
             >
               <Mic size={17} />
@@ -523,11 +527,11 @@ export function LensAIChatPage() {
               style={{
                 width: 36, height: 36, borderRadius: '50%',
                 border: 'none', flexShrink: 0,
-                background: input.trim() && !isThinking ? C.purple : '#CBD5E1',
+                background: input.trim() && !isThinking ? C.white : 'rgba(255,255,255,0.18)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 cursor: input.trim() && !isThinking ? 'pointer' : 'not-allowed',
-                color: C.white,
-                transition: 'background 0.15s',
+                color: input.trim() && !isThinking ? C.bg : 'rgba(255,255,255,0.45)',
+                transition: 'background 0.15s, color 0.15s',
               }}
             >
               <ArrowUp size={16} strokeWidth={2.5} />
@@ -546,7 +550,7 @@ export function LensAIChatPage() {
         </form>
       </div>
 
-      {/* dot animation keyframes */}
+      {/* dot animation keyframes + input caret color */}
       <style>{`
         @keyframes lensDot {
           0%, 80%, 100% { transform: scale(0.7); opacity: 0.4; }
@@ -554,11 +558,12 @@ export function LensAIChatPage() {
         }
         .lens-thinking-dot {
           width: 6px; height: 6px; border-radius: 50%;
-          background: ${C.purple};
+          background: ${C.body};
           animation: lensDot 1.2s ease-in-out infinite;
         }
         .lens-thinking-dot:nth-child(2) { animation-delay: 0.18s; }
         .lens-thinking-dot:nth-child(3) { animation-delay: 0.36s; }
+        input::placeholder { color: ${C.muted}; }
       `}</style>
     </div>
   );
@@ -574,9 +579,9 @@ function EmptyState({ onPick }: { onPick: (s: string) => void }) {
         style={{
           display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
           width: 60, height: 60, borderRadius: 18,
-          background: `linear-gradient(135deg, ${C.purple} 0%, ${C.navy} 100%)`,
+          background: `linear-gradient(135deg, ${C.accent} 0%, ${C.accentDeep} 100%)`,
           color: C.white, marginBottom: 24,
-          boxShadow: '0 12px 30px -8px rgba(73,69,255,0.5)',
+          boxShadow: '0 12px 30px -8px rgba(73,69,255,0.45)',
         }}
       >
         <Sparkles size={26} strokeWidth={1.8} />
@@ -586,7 +591,7 @@ function EmptyState({ onPick }: { onPick: (s: string) => void }) {
           margin: 0,
           fontFamily: "'Playfair Display', Georgia, serif",
           fontSize: 'clamp(2rem, 4.5vw, 3rem)',
-          fontWeight: 500, lineHeight: 1.05, color: C.navy,
+          fontWeight: 500, lineHeight: 1.05, color: C.text,
           letterSpacing: '0.005em',
         }}
       >
@@ -602,20 +607,20 @@ function EmptyState({ onPick }: { onPick: (s: string) => void }) {
             type="button"
             onClick={() => onPick(s)}
             style={{
-              background: C.white, border: `1.5px solid ${C.line}`,
+              background: C.surface, border: `1px solid ${C.line}`,
               borderRadius: 999, padding: '9px 16px',
               fontSize: 13, color: C.body, cursor: 'pointer',
               fontFamily: FONT, transition: 'all 0.15s',
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = C.purple;
-              e.currentTarget.style.color = C.navy;
-              e.currentTarget.style.background = C.faintPurple;
+              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.22)';
+              e.currentTarget.style.color = C.text;
+              e.currentTarget.style.background = 'rgba(255,255,255,0.06)';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.borderColor = C.line;
               e.currentTarget.style.color = C.body;
-              e.currentTarget.style.background = C.white;
+              e.currentTarget.style.background = C.surface;
             }}
           >
             {s}
@@ -638,7 +643,7 @@ function MessageBlock({ message, onFollowup }: { message: Message; onFollowup: (
             margin: 0,
             fontSize: 'clamp(1.25rem, 2.4vw, 1.6rem)',
             fontWeight: 700, lineHeight: 1.3,
-            color: C.navy, letterSpacing: '-0.01em',
+            color: C.text, letterSpacing: '-0.01em',
           }}
         >
           {message.content}
@@ -656,18 +661,18 @@ function MessageBlock({ message, onFollowup }: { message: Message; onFollowup: (
         <div
           style={{
             width: 22, height: 22, borderRadius: 7,
-            background: `linear-gradient(135deg, ${C.purple} 0%, ${C.navy} 100%)`,
+            background: `linear-gradient(135deg, ${C.accent} 0%, ${C.accentDeep} 100%)`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             color: C.white, flexShrink: 0,
           }}
         >
           <Sparkles size={12} strokeWidth={2} />
         </div>
-        <span style={{ fontSize: 13, fontWeight: 600, color: C.navy }}>Lens</span>
+        <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>Lens</span>
       </div>
 
       {/* Body text */}
-      <p style={{ margin: 0, fontSize: 16, lineHeight: 1.7, color: C.navy }}>
+      <p style={{ margin: 0, fontSize: 16, lineHeight: 1.7, color: C.text }}>
         {message.content}
       </p>
 
@@ -686,19 +691,19 @@ function MessageBlock({ message, onFollowup }: { message: Message; onFollowup: (
           style={{
             marginTop: 18,
             border: `1px solid ${C.line}`, borderRadius: 12,
-            overflow: 'hidden', background: C.white,
+            overflow: 'hidden', background: C.surface,
           }}
         >
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
             <thead>
-              <tr style={{ background: C.grayBg }}>
+              <tr style={{ background: 'rgba(255,255,255,0.04)' }}>
                 {r.table.headers.map((h, i) => (
                   <th
                     key={i}
                     style={{
                       textAlign: i === 0 ? 'left' : 'right',
                       padding: '10px 14px',
-                      fontSize: 12, fontWeight: 700, color: C.body,
+                      fontSize: 12, fontWeight: 700, color: C.muted,
                       letterSpacing: '0.04em', textTransform: 'uppercase',
                       borderBottom: `1px solid ${C.line}`,
                     }}
@@ -710,14 +715,14 @@ function MessageBlock({ message, onFollowup }: { message: Message; onFollowup: (
             </thead>
             <tbody>
               {r.table.rows.map((row, ri) => (
-                <tr key={ri} style={{ borderTop: ri === 0 ? 'none' : `1px solid ${C.line}` }}>
+                <tr key={ri} style={{ borderTop: ri === 0 ? 'none' : `1px solid ${C.lineSoft}` }}>
                   {row.map((cell, ci) => (
                     <td
                       key={ci}
                       style={{
                         padding: '10px 14px',
                         textAlign: ci === 0 ? 'left' : 'right',
-                        color: ci === 0 ? C.navy : C.body,
+                        color: ci === 0 ? C.text : C.body,
                         fontWeight: ci === 0 ? 600 : 500,
                         fontVariantNumeric: 'tabular-nums',
                       }}
@@ -760,14 +765,14 @@ function MessageBlock({ message, onFollowup }: { message: Message; onFollowup: (
                 style={{
                   textAlign: 'left',
                   padding: '12px 0',
-                  borderTop: i === 0 ? 'none' : `1px solid ${C.line}`,
+                  borderTop: i === 0 ? 'none' : `1px solid ${C.lineSoft}`,
                   background: 'transparent', border: 'none', cursor: 'pointer',
-                  color: C.navy, fontSize: 15, fontFamily: FONT, fontWeight: 500,
+                  color: C.text, fontSize: 15, fontFamily: FONT, fontWeight: 500,
                   display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                   transition: 'color 0.15s',
                 }}
-                onMouseEnter={(e) => { e.currentTarget.style.color = C.purple; }}
-                onMouseLeave={(e) => { e.currentTarget.style.color = C.navy; }}
+                onMouseEnter={(e) => { e.currentTarget.style.color = C.accent; }}
+                onMouseLeave={(e) => { e.currentTarget.style.color = C.text; }}
               >
                 <span>{f}</span>
                 <span style={{ color: C.muted, fontSize: 18, lineHeight: 1 }}>+</span>
@@ -797,7 +802,7 @@ function IconAction({ icon, label, onClick }: { icon: React.ReactNode; label: st
         color: C.muted,
         transition: 'background 0.15s, color 0.15s',
       }}
-      onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(4,30,66,0.05)'; e.currentTarget.style.color = C.navy; }}
+      onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.color = C.text; }}
       onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = C.muted; }}
     >
       {icon}
@@ -815,14 +820,14 @@ function ThinkingBlock() {
         <div
           style={{
             width: 22, height: 22, borderRadius: 7,
-            background: `linear-gradient(135deg, ${C.purple} 0%, ${C.navy} 100%)`,
+            background: `linear-gradient(135deg, ${C.accent} 0%, ${C.accentDeep} 100%)`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             color: C.white, flexShrink: 0,
           }}
         >
           <Sparkles size={12} strokeWidth={2} />
         </div>
-        <span style={{ fontSize: 13, fontWeight: 600, color: C.navy }}>Lens</span>
+        <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>Lens</span>
       </div>
       <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 0' }}>
         <span className="lens-thinking-dot" />
