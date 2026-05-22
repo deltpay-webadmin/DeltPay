@@ -216,11 +216,12 @@ export function LensAIPage() {
           WebkitMaskImage: 'linear-gradient(180deg, #000 0%, transparent 80%)',
         }} />
 
-        {/* ───── GRADIENT “Lens” WORDMARK ─────
-           Matches the LensHero portal wordmark exactly — Playfair Display
-           regular, char-by-char rise reveal, glacial top-to-bottom
-           lavender→indigo gradient. Eyebrow pill and “by Delt” lockup were
-           removed to keep the hero clean. */}
+        {/* ───── “Lens” WORDMARK ─────
+           Cormorant Garamond italic in a deep indigo. The previous
+           white→lavender gradient clashed with the lavender hero bg
+           (top of letters bleached out). Solid deep-indigo keeps full
+           contrast on light backgrounds and rhymes visually with the
+           italic “answers.” glyph in the headline below. */}
         <div
           aria-label="Lens"
           style={{
@@ -235,16 +236,17 @@ export function LensAIPage() {
             className="lens-hero-wordmark"
             style={{
               margin: 0,
-              fontFamily: "'Playfair Display', Georgia, serif",
+              fontFamily: "'Cormorant Garamond', 'Playfair Display', Georgia, serif",
+              fontStyle: 'italic',
               fontSize: 'clamp(4.42rem, 10.3vw, 9.57rem)',
-              fontWeight: 400,
+              fontWeight: 500,
               lineHeight: 0.9,
-              letterSpacing: '0.02em',
+              letterSpacing: '0.005em',
             }}
           >
             {['L', 'e', 'n', 's'].map((ch, i) => (
               <span key={i} className="lens-word-wrap">
-                <span className={`lens-word-char lens-word-char-${i} lens-word-gradient`}>{ch}</span>
+                <span className={`lens-word-char lens-word-char-${i} lens-word-ink`}>{ch}</span>
               </span>
             ))}
           </h1>
@@ -793,24 +795,13 @@ export function LensAIPage() {
         /* Override global h1 font-family !important from dc-global-polish.css */
         h1.lens-hero-wordmark,
         h1.lens-hero-wordmark .lens-word-char {
-          font-family: 'Playfair Display', Georgia, serif !important;
-          font-style: normal !important;
-          font-weight: 400 !important;
+          font-family: 'Cormorant Garamond', 'Playfair Display', Georgia, serif !important;
+          font-style: italic !important;
+          font-weight: 500 !important;
         }
-        .lens-word-gradient {
-          background: linear-gradient(
-            180deg,
-            #FFFFFF 0%,
-            #D6DEFF 18%,
-            #A8B4E8 40%,
-            #7B8ADA 62%,
-            #5A6AC0 80%,
-            #3D4F9A 100%
-          );
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
-          color: transparent;
+        /* Solid deep-indigo ink — reads cleanly on the lavender hero bg. */
+        .lens-word-ink {
+          color: #2E2AC7;
         }
 
         @media (prefers-reduced-motion: reduce) {
