@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { ProductCrossSell } from '@/app/components/ProductCrossSell';
+import { KoronaPartnerBlock } from '@/app/components/KoronaPartnerBlock';
 
 /* ════════════════════════════════════════════════════════════
    Wave 3 — Industry page (data-driven)
@@ -927,6 +928,61 @@ export function IndustryPage() {
           )}
         </div>
       </section>
+
+      {/* ════════ KORONA POS partnership (retail only) ════════
+           Only the retail vertical aligns with KORONA's stated focus:
+           high-inventory retailers, liquor stores, c-stores, specialty
+           shops. Restaurants page intentionally omits KORONA — they
+           only serve QSRs explicitly, and Delt's restaurants page is
+           full-service-led. Salon/health/services are not a fit. */}
+      {slug === 'retail' && (
+        <section className="py-20 px-6" style={{ background: '#F6F7FB' }}>
+          <div className="max-w-[1240px] mx-auto">
+            <div
+              className="text-[12px] font-bold uppercase mb-4"
+              style={{ color: '#4945FF', letterSpacing: '0.2em' }}
+            >
+              Built with the right POS
+            </div>
+            <h2
+              className="font-extrabold leading-[1.05] mb-3"
+              style={{
+                color: '#041E42',
+                fontSize: 'clamp(32px, 4vw, 48px)',
+                letterSpacing: '-0.025em',
+                maxWidth: 820,
+              }}
+            >
+              For liquor, smoke, and high-SKU retail: Delt + KORONA POS.
+            </h2>
+            <p
+              className="text-[17px] leading-relaxed mb-10"
+              style={{ color: '#475569', maxWidth: 720 }}
+            >
+              Boutiques and general retailers run beautifully on Delt alone.
+              But if you carry thousands of SKUs, run a liquor or smoke shop,
+              or operate multiple stores, we pair Delt with KORONA POS — a
+              category-leading retail POS we vetted and chose because it
+              handles the depth these operators need.
+            </p>
+            <KoronaPartnerBlock
+              title="The POS we picked for high-inventory retail."
+              body={
+                "Delt handles payments, capital, your website, and Lens AI. "
+                + "KORONA POS handles the register, inventory, vendor relationships, "
+                + "and multi-location operations. Two specialists, one merchant "
+                + "relationship \u2014 you call Delt, we coordinate the rest."
+              }
+              testimonial={{
+                quote:
+                  "Switching to KORONA POS was the best decision we made for our liquor store. The inventory management system makes it so easy to track our stock and reorder products before we run out. Highly recommend it.",
+                name: 'Kristen L.',
+                role: 'Pine and Peoria Liquor Store',
+              }}
+            />
+          </div>
+        </section>
+      )}
 
       {/* ════════ Testimonial ════════ */}
       <section className="py-24 px-6">

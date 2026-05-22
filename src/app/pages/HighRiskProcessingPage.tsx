@@ -417,6 +417,52 @@ export function HighRiskProcessingPage() {
         </div>
       </section>
 
+      {/* ═══ 4b. KORONA POS PARTNERSHIP ═══════════════════════════
+           Smoke/vape/CBD + liquor + c-stores sit in our high-risk
+           processing book AND in KORONA's strongest POS verticals.
+           This module pairs the two stories: Delt handles the payments
+           that aggregators reject, KORONA handles the high-SKU /
+           age-verified retail POS. Frames Delt as the lead brand. */}
+      <section className="py-20 lg:py-24" style={{ background: '#FFFFFF' }}>
+        <div className="max-w-[1240px] mx-auto px-6 lg:px-12">
+          <KoronaPartnerBlock
+            title="For smoke shops, liquor stores, and c-stores: pair Delt's high-risk payments with KORONA POS."
+            body={
+              "Most aggregators won't touch tobacco, vape, CBD, or liquor. "
+              + "Most modern POS systems aren't built for high-SKU, age-verified, "
+              + "compliance-heavy retail. We solved both halves: Delt underwrites "
+              + "the payment processing other shops were shut off from, and our "
+              + "POS partner KORONA brings the inventory depth, age-verification, "
+              + "and multi-location tooling these categories actually need."
+            }
+            bullets={[
+              {
+                title: 'Age verification & compliance',
+                body: "Built-in age prompts, restricted-item rules, and audit trails for tobacco, vape, CBD, and alcohol. Compliance is in the workflow, not a sticky note.",
+              },
+              {
+                title: 'High-SKU inventory mastery',
+                body: 'Reorder points, vendor tracking, stock alerts, and deep custom reports for operators carrying thousands of items.',
+              },
+              {
+                title: 'Multi-location & franchise ready',
+                body: "From a single neighborhood shop to a multi-state chain. Add locations without rebuilding your stack.",
+              },
+              {
+                title: 'Award-winning 24/7 support',
+                body: "In-house team by phone, chat, email, or manual \u2014 recognized across G2, Capterra, and Software Advice.",
+              },
+            ]}
+            testimonial={{
+              quote:
+                "Don't think you can find a better value for the money out there. The inventory management aspect is great and the customer service is outstanding. If I am out of town, my employees have been able to call the support line, and the KORONA POS staff has been able to help night or day.",
+              name: 'Jake H.',
+              role: 'Elite Smoke and Vape',
+            }}
+          />
+        </div>
+      </section>
+
       {/* ═══ 5. RATE COMPARE BANNER ══════════════════════════════ */}
       <section className="py-20 lg:py-24" style={{ background: IVORY }}>
         <div className="max-w-[1240px] mx-auto px-6 lg:px-12">

@@ -150,6 +150,26 @@ export function Footer() {
           </a>
         )}
 
+        {/* Partner strip — site-wide trust signal for our POS partner.
+            Kept extremely low-key (small caps eyebrow, muted text, no
+            CTA), so it reads as "this is the company we picked" rather
+            than an ad. Sits above the legal row, below the columns. */}
+        <div className="dc-footer-partners">
+          <span className="dc-footer-partners-label">POS partner</span>
+          <a
+            href="https://koronapos.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="dc-footer-partners-link"
+            aria-label="KORONA POS — visit koronapos.com"
+          >
+            KORONA POS
+          </a>
+          <span className="dc-footer-partners-meta">
+            4.8/5 · 2,000+ North American merchants
+          </span>
+        </div>
+
         {/* Bottom row */}
         <div className="dc-footer-bottom">
           <span className="dc-footer-copy">
@@ -304,6 +324,47 @@ export function Footer() {
         }
         @media (max-width: 600px) {
           .dc-footer-qr-img { width: 140px; }
+        }
+
+        /* Partner strip — thin separator, muted typography. */
+        .dc-footer-partners {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: baseline;
+          gap: 14px;
+          padding: 18px 0;
+          margin-bottom: 18px;
+          border-top: 1px solid rgba(247, 245, 240, 0.08);
+          border-bottom: 1px solid rgba(247, 245, 240, 0.08);
+        }
+        .dc-footer-partners-label {
+          font-family: 'Inter', sans-serif;
+          font-size: 11px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.18em;
+          color: rgba(247, 245, 240, 0.45);
+        }
+        .dc-footer-partners-link {
+          font-family: 'Inter', sans-serif;
+          font-size: 14px;
+          font-weight: 700;
+          color: rgba(247, 245, 240, 0.9);
+          text-decoration: none;
+          letter-spacing: 0.02em;
+          transition: color 160ms ease;
+        }
+        .dc-footer-partners-link:hover {
+          color: ${INDIGO_SOFT};
+        }
+        .dc-footer-partners-meta {
+          font-family: 'Inter', sans-serif;
+          font-size: 12.5px;
+          color: rgba(247, 245, 240, 0.5);
+        }
+        @media (max-width: 600px) {
+          .dc-footer-partners { gap: 8px 14px; }
+          .dc-footer-partners-meta { flex-basis: 100%; }
         }
 
         /* Bottom row */
