@@ -8,28 +8,27 @@ import {
 import deltLogoImg from '@/assets/delt-logo-on-dark.svg';
 
 /* ─────────────────────────────────────────────────────────────
-   PALETTE — dark chat surface
-   Modeled after ChatGPT / Claude / Gemini:
-     - app bg     ~#212121  (ChatGPT main column)
-     - sidebar    ~#171717  (one step darker)
-     - text       off-white  (#ECECF1 primary, #B4B4B4 secondary)
-     - accent     Delt brand purple #7C6BFF (lifted for dark contrast)
+   PALETTE — deep-navy chat surface
+   Matched to the marketing site's “Fewer tools. More money. Less
+   stress.” GlobeStats section (#080A28) so the chat reads as one
+   continuous brand surface. Lifted variants are used for the
+   sidebar, cards / tables, and the composer.
    ───────────────────────────────────────────────────────────── */
 const C = {
-  bg:          '#212121',
-  bgRaised:    '#2A2A2A',
-  sidebar:     '#171717',
-  sidebarHov:  '#252525',
-  border:      '#3A3A3A',
-  borderSoft:  '#2E2E2E',
+  bg:          '#080A28',  // matches GlobeStats hero bg
+  bgRaised:    '#10133A',  // cards / tables / composer
+  sidebar:     '#05071C',  // one step deeper than bg
+  sidebarHov:  '#10133A',
+  border:      '#252A55',
+  borderSoft:  '#181C42',
   text:        '#ECECF1',
-  textSoft:    '#B4B4B4',
-  textMute:    '#8E8E93',
-  bubble:      '#2F2F2F',   // user message bubble
-  bubbleBd:    '#3A3A3A',
+  textSoft:    '#B4B7D0',
+  textMute:    '#8086A8',
+  bubble:      '#161A40',   // user message bubble
+  bubbleBd:    '#252A55',
   accent:      '#7C6BFF',
   accentDeep:  '#4945FF',
-  accentSoft:  'rgba(124,107,255,0.14)',
+  accentSoft:  'rgba(124,107,255,0.16)',
   danger:      '#F87171',
 };
 
@@ -451,15 +450,16 @@ export function LensAIChatPage() {
             <Link
               to="/lens-ai"
               style={{
-                display: 'inline-flex', alignItems: 'baseline', gap: 8,
+                display: 'inline-flex', alignItems: 'baseline',
                 padding: '6px 8px', borderRadius: 8, textDecoration: 'none',
               }}
+              aria-label="Lens home"
             >
               <span
                 style={{
                   fontFamily: "'Cormorant Garamond', 'Playfair Display', Georgia, serif",
                   fontStyle: 'italic',
-                  fontSize: 26, fontWeight: 500, lineHeight: 1,
+                  fontSize: 28, fontWeight: 500, lineHeight: 1,
                   color: C.text,
                   letterSpacing: '0.005em',
                   paddingRight: '0.06em',
@@ -467,12 +467,6 @@ export function LensAIChatPage() {
               >
                 Lens
               </span>
-              <span style={{ color: C.textMute, fontSize: 12, fontWeight: 500 }}>by</span>
-              <img
-                src={deltLogoImg}
-                alt="Delt"
-                style={{ height: 11, width: 'auto', objectFit: 'contain', transform: 'translateY(1px)' }}
-              />
             </Link>
 
             <IconButton
@@ -571,15 +565,39 @@ export function LensAIChatPage() {
             })}
           </nav>
 
-          {/* Sidebar bottom */}
+          {/* Sidebar bottom — preview status + Delt brand lockup */}
           <div
             style={{
-              padding: '12px',
+              padding: '12px 14px 14px',
               borderTop: `1px solid ${C.borderSoft}`,
-              fontSize: 12, color: C.textMute, lineHeight: 1.5,
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              gap: 12,
             }}
           >
-            Preview mode · sample data
+            <div style={{ fontSize: 12, color: C.textMute, lineHeight: 1.4 }}>
+              Preview mode
+              <br />
+              <span style={{ fontSize: 11 }}>Sample data</span>
+            </div>
+            <a
+              href="https://delt.com"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Delt"
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 6,
+                opacity: 0.85, transition: 'opacity 120ms',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.opacity = '1'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.opacity = '0.85'; }}
+            >
+              <span style={{ fontSize: 11, color: C.textMute, fontWeight: 500 }}>by</span>
+              <img
+                src={deltLogoImg}
+                alt="Delt"
+                style={{ height: 12, width: 'auto', objectFit: 'contain' }}
+              />
+            </a>
           </div>
         </div>
       </aside>
@@ -799,21 +817,98 @@ function IconButton({
 }
 
 /* ─────────────────────────────────────────────────────────────
+   LENS MARK — custom premium avatar (camera-aperture / iris)
+   Replaces the generic Sparkles glyph. Six iridescent iris blades
+   rotated around a glowing inner pupil, set in a soft indigo halo.
+   Reads as both "lens" (optical) and "AI" (luminous gradient orb).
+   Sizes 22 (assistant message label) and 44 (empty-state hero).
+   ───────────────────────────────────────────────────────────── */
+function LensMark({
+  size = 26,
+  glow = true,
+}: { size?: number; glow?: boolean }) {
+  // Unique IDs so multiple <LensMark>s on a page don't collide on gradient ids.
+  const id = useMemo(() => Math.random().toString(36).slice(2, 9), []);
+  const blades = [0, 60, 120, 180, 240, 300];
+  return (
+    <div
+      aria-hidden="true"
+      style={{
+        width: size, height: size, flexShrink: 0,
+        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+        position: 'relative',
+        filter: glow ? `drop-shadow(0 4px 14px rgba(124,107,255,0.45))` : 'none',
+      }}
+    >
+      <svg
+        viewBox="0 0 64 64"
+        width={size}
+        height={size}
+        xmlns="http://www.w3.org/2000/svg"
+        style={{ display: 'block' }}
+      >
+        <defs>
+          {/* Outer body — deep indigo orb */}
+          <radialGradient id={`lm-body-${id}`} cx="35%" cy="30%" r="75%">
+            <stop offset="0%"  stopColor="#A097FF" />
+            <stop offset="45%" stopColor="#5A52E8" />
+            <stop offset="100%" stopColor="#1B1857" />
+          </radialGradient>
+          {/* Iris blade gradient — violet to teal sweep for an iridescent feel */}
+          <linearGradient id={`lm-blade-${id}`} x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%"   stopColor="#C9C2FF" stopOpacity="0.95" />
+            <stop offset="55%"  stopColor="#7C6BFF" stopOpacity="0.7" />
+            <stop offset="100%" stopColor="#3B2EB8" stopOpacity="0" />
+          </linearGradient>
+          {/* Bright pupil */}
+          <radialGradient id={`lm-pupil-${id}`} cx="50%" cy="50%" r="50%">
+            <stop offset="0%"  stopColor="#FFFFFF" stopOpacity="1" />
+            <stop offset="40%" stopColor="#E4DEFF" stopOpacity="0.95" />
+            <stop offset="100%" stopColor="#9C8FFF" stopOpacity="0" />
+          </radialGradient>
+          {/* Specular top highlight */}
+          <radialGradient id={`lm-spec-${id}`} cx="38%" cy="22%" r="32%">
+            <stop offset="0%"  stopColor="#FFFFFF" stopOpacity="0.85" />
+            <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0" />
+          </radialGradient>
+        </defs>
+
+        {/* Outer ring + body */}
+        <circle cx="32" cy="32" r="30" fill={`url(#lm-body-${id})`} />
+        <circle cx="32" cy="32" r="30" fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth="1" />
+
+        {/* Iris blades — 6 elongated wedges rotated around the center */}
+        <g transform="translate(32 32)">
+          {blades.map((deg) => (
+            <path
+              key={deg}
+              d="M 0 -22 L 8 -6 L 0 0 L -8 -6 Z"
+              fill={`url(#lm-blade-${id})`}
+              transform={`rotate(${deg})`}
+              opacity="0.92"
+            />
+          ))}
+        </g>
+
+        {/* Inner pupil with bright core */}
+        <circle cx="32" cy="32" r="8.5" fill="#0B0830" />
+        <circle cx="32" cy="32" r="8.5" fill={`url(#lm-pupil-${id})`} />
+
+        {/* Specular sheen */}
+        <circle cx="32" cy="32" r="30" fill={`url(#lm-spec-${id})`} />
+      </svg>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────
    EMPTY STATE
    ───────────────────────────────────────────────────────────── */
 function EmptyState({ onPick }: { onPick: (s: string) => void }) {
   return (
     <div style={{ textAlign: 'center', paddingTop: 'clamp(40px, 10vh, 100px)' }}>
-      <div
-        style={{
-          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-          width: 52, height: 52, borderRadius: 14,
-          background: `linear-gradient(135deg, ${C.accent} 0%, ${C.accentDeep} 100%)`,
-          color: '#FFFFFF', marginBottom: 22,
-          boxShadow: '0 10px 30px -10px rgba(124,107,255,0.6)',
-        }}
-      >
-        <Sparkles size={22} strokeWidth={1.8} />
+      <div style={{ display: 'inline-flex', marginBottom: 22 }}>
+        <LensMark size={56} />
       </div>
       <h1
         style={{
@@ -897,17 +992,7 @@ function MessageBlock({ message, onFollowup }: { message: Message; onFollowup: (
     <div style={{ marginBottom: 36 }}>
       {/* Lens label */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-        <div
-          style={{
-            width: 26, height: 26, borderRadius: 8,
-            background: `linear-gradient(135deg, ${C.accent} 0%, ${C.accentDeep} 100%)`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: '#FFFFFF', flexShrink: 0,
-            boxShadow: '0 4px 14px -4px rgba(124,107,255,0.55)',
-          }}
-        >
-          <Sparkles size={13} strokeWidth={2} />
-        </div>
+        <LensMark size={26} />
         <span style={{ fontSize: 13.5, fontWeight: 600, color: C.text }}>Lens</span>
       </div>
 
@@ -1057,17 +1142,7 @@ function ThinkingBlock() {
   return (
     <div style={{ marginBottom: 36 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-        <div
-          style={{
-            width: 26, height: 26, borderRadius: 8,
-            background: `linear-gradient(135deg, ${C.accent} 0%, ${C.accentDeep} 100%)`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: '#FFFFFF', flexShrink: 0,
-            boxShadow: '0 4px 14px -4px rgba(124,107,255,0.55)',
-          }}
-        >
-          <Sparkles size={13} strokeWidth={2} />
-        </div>
+        <LensMark size={26} />
         <span style={{ fontSize: 13.5, fontWeight: 600, color: C.text }}>Lens</span>
       </div>
       <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 0' }}>
