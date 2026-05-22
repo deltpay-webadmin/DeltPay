@@ -1,26 +1,43 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router';
-import { ArrowUp, Plus, Mic, Sparkles, ChevronLeft, Copy, RefreshCcw, ThumbsUp, ThumbsDown } from 'lucide-react';
-import deltLogoImg from '@/assets/delt-logo-on-light.svg';
+import {
+  ArrowUp, Paperclip, Mic, Sparkles, ChevronLeft, Copy, RefreshCcw,
+  ThumbsUp, ThumbsDown, MessageSquarePlus, PanelLeftClose, PanelLeftOpen,
+  MessageSquare,
+} from 'lucide-react';
+import deltLogoImg from '@/assets/delt-logo-on-dark.svg';
 
 /* ─────────────────────────────────────────────────────────────
-   PALETTE — matches LensAIPage
+   PALETTE — dark chat surface
+   Modeled after ChatGPT / Claude / Gemini:
+     - app bg     ~#212121  (ChatGPT main column)
+     - sidebar    ~#171717  (one step darker)
+     - text       off-white  (#ECECF1 primary, #B4B4B4 secondary)
+     - accent     Delt brand purple #7C6BFF (lifted for dark contrast)
    ───────────────────────────────────────────────────────────── */
 const C = {
-  white:  '#FFFFFF',
-  navy:   '#041E42',
-  purple: '#4945FF',
-  body:   '#475569',
-  muted:  '#94A3B8',
-  grayBg: '#F6F7FB',
-  line:   '#E2E8F0',
-  faintPurple: 'rgba(73,69,255,0.06)',
+  bg:          '#212121',
+  bgRaised:    '#2A2A2A',
+  sidebar:     '#171717',
+  sidebarHov:  '#252525',
+  border:      '#3A3A3A',
+  borderSoft:  '#2E2E2E',
+  text:        '#ECECF1',
+  textSoft:    '#B4B4B4',
+  textMute:    '#8E8E93',
+  bubble:      '#2F2F2F',   // user message bubble
+  bubbleBd:    '#3A3A3A',
+  accent:      '#7C6BFF',
+  accentDeep:  '#4945FF',
+  accentSoft:  'rgba(124,107,255,0.14)',
+  danger:      '#F87171',
 };
 
 const FONT = "'Plus Jakarta Sans', system-ui, sans-serif";
 
 /* ─────────────────────────────────────────────────────────────
    REPLY ENGINE — keyword matching with hardcoded sample data
+   (unchanged — visual layer only redesign)
    ───────────────────────────────────────────────────────────── */
 type Reply = {
   text: string;
@@ -32,7 +49,6 @@ type Reply = {
 function getLensReply(question: string): Reply {
   const q = question.toLowerCase().trim();
 
-  // Greetings
   if (/^(hi|hey|hello|yo|sup|howdy)\b/.test(q)) {
     return {
       text: "Hey — I'm Lens. Ask me anything about your sales, customers, inventory, or payouts. Here are a few things people ask first:",
@@ -44,7 +60,6 @@ function getLensReply(question: string): Reply {
     };
   }
 
-  // What is Lens
   if (/(what|who) (is|are) lens|tell me about lens|what can you do|capabilities|how do you work/.test(q)) {
     return {
       text: "I'm Lens, an AI built into Delt. I read your live data from Delt POS, Payments, and Capital — then answer plain-English questions in seconds with a citation back to the underlying numbers.",
@@ -62,7 +77,6 @@ function getLensReply(question: string): Reply {
     };
   }
 
-  // Top products
   if (/(top|best|most|highest).*(product|sku|item|seller|sold)|which products|what.*sells/.test(q)) {
     return {
       text: 'Your top 5 products by gross profit last month — Apr 1 to Apr 30, 2026:',
@@ -84,7 +98,6 @@ function getLensReply(question: string): Reply {
     };
   }
 
-  // Promos / when to run
   if (/(when|should i).*(promo|discount|sale|offer)|run a promo|best time.*promo/.test(q)) {
     return {
       text: 'Tuesdays from 3–5 PM are your weakest revenue window — 38% below your weekly average. A 2-hour promo there typically lifts ticket count without cannibalizing weekend sales.',
@@ -101,7 +114,6 @@ function getLensReply(question: string): Reply {
     };
   }
 
-  // Slow days / why slow
   if (/(slow|slowest|down|low).*(day|tuesday|monday|wednesday|thursday|friday|week)|why.*(down|slow|low)/.test(q)) {
     return {
       text: 'Tuesdays were 22% below your 4-week average last month. Three drivers stand out:',
@@ -118,7 +130,6 @@ function getLensReply(question: string): Reply {
     };
   }
 
-  // Tips down
   if (/tips?.*(down|low|drop|fall)|why.*tips/.test(q)) {
     return {
       text: 'Tip percentage dropped from 18.4% to 15.7% over the last 3 weeks. Two likely causes:',
@@ -134,7 +145,6 @@ function getLensReply(question: string): Reply {
     };
   }
 
-  // Top customers
   if (/(top|best|biggest).*customer|who.*spend|loyal customer|vip|whales?/.test(q)) {
     return {
       text: 'Your top 10 customers by 12-month spend:',
@@ -161,7 +171,6 @@ function getLensReply(question: string): Reply {
     };
   }
 
-  // Slowest hour
   if (/slow(est)? hour|dead hour|when.*(empty|quiet|slow)/.test(q)) {
     return {
       text: 'Your slowest hour, averaged across the last 4 weeks: Tuesday 3–4 PM ($142 avg revenue, vs $612 weekly hourly average).',
@@ -178,7 +187,6 @@ function getLensReply(question: string): Reply {
     };
   }
 
-  // Cashflow / deposits
   if (/(cash ?flow|deposit|payout|when.*paid|next deposit)/.test(q)) {
     return {
       text: 'Your next Delt Payments deposit lands tomorrow (May 8) for $4,217.84 — settles next-day on weekdays.',
@@ -195,7 +203,6 @@ function getLensReply(question: string): Reply {
     };
   }
 
-  // Capital / loan
   if (/(capital|loan|advance|funding|borrow|credit line)/.test(q)) {
     return {
       text: "Based on your last 90 days of processing, you pre-qualify for up to $42,000 in Delt Capital. Repaid as a small % of daily card sales — no fixed monthly payment.",
@@ -212,7 +219,6 @@ function getLensReply(question: string): Reply {
     };
   }
 
-  // Pricing / fees
   if (/(pricing|fee|rate|cost|how much|charge).*(delt|payment|process|card)|interchange/.test(q)) {
     return {
       text: 'Your effective rate last month was 2.41% — 0.18% below the SMB benchmark. Breakdown:',
@@ -230,7 +236,6 @@ function getLensReply(question: string): Reply {
     };
   }
 
-  // Reorder / inventory
   if (/(reorder|restock|inventory|out of stock|low stock|running low)/.test(q)) {
     return {
       text: 'Five items are within 7 days of stockout based on current sell-through:',
@@ -252,7 +257,6 @@ function getLensReply(question: string): Reply {
     };
   }
 
-  // Default fallback — echoes question, sets expectation, suggests prompts
   return {
     text: `I'd answer that against your live Delt POS, Payments, and Capital data — once you're connected I can pull exact numbers. For "${question.trim()}", I'd typically look at the last 30–90 days, segment by location and product mix, and flag anomalies. Try one of these to see how Lens responds today:`,
     followups: [
@@ -265,13 +269,19 @@ function getLensReply(question: string): Reply {
 }
 
 /* ─────────────────────────────────────────────────────────────
-   MESSAGE TYPE
+   TYPES
    ───────────────────────────────────────────────────────────── */
 type Message = {
   id: string;
   role: 'user' | 'assistant';
   content: string;
   reply?: Reply;
+};
+
+type Thread = {
+  id: string;
+  title: string;
+  createdAt: number;
 };
 
 const SUGGESTIONS_EMPTY = [
@@ -293,7 +303,19 @@ export function LensAIChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isThinking, setIsThinking] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  // Recent threads (sample — backed by in-memory state for the preview)
+  const [threads, setThreads] = useState<Thread[]>(() => [
+    { id: 't-1', title: 'When should I run a promo?',         createdAt: Date.now() - 1000 * 60 * 32 },
+    { id: 't-2', title: 'Top products by gross profit',       createdAt: Date.now() - 1000 * 60 * 60 * 5 },
+    { id: 't-3', title: 'Why are tips down this month?',      createdAt: Date.now() - 1000 * 60 * 60 * 26 },
+    { id: 't-4', title: 'Slowest hour — staffing impact',     createdAt: Date.now() - 1000 * 60 * 60 * 72 },
+  ]);
+  const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
+
   const scrollRef = useRef<HTMLDivElement | null>(null);
+  const inputRef = useRef<HTMLTextAreaElement | null>(null);
   const seededRef = useRef(false);
 
   // Auto-scroll on new content
@@ -308,12 +330,28 @@ export function LensAIChatPage() {
     if (seededRef.current) return;
     seededRef.current = true;
     if (initialQ.trim()) {
-      // strip ?q= from URL after consuming it so refresh doesn't re-fire
       setSearchParams({}, { replace: true });
       sendMessage(initialQ);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Collapse sidebar by default on narrow screens
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 880px)');
+    const apply = () => setSidebarOpen(!mq.matches);
+    apply();
+    mq.addEventListener('change', apply);
+    return () => mq.removeEventListener('change', apply);
+  }, []);
+
+  // Auto-grow textarea
+  useEffect(() => {
+    const el = inputRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 200) + 'px';
+  }, [input]);
 
   function sendMessage(text: string) {
     const trimmed = text.trim();
@@ -323,6 +361,17 @@ export function LensAIChatPage() {
       role: 'user',
       content: trimmed,
     };
+
+    // If this is the first message of the session, create a thread entry
+    if (messages.length === 0 && !activeThreadId) {
+      const id = `t-${Date.now()}`;
+      setActiveThreadId(id);
+      setThreads((prev) => [
+        { id, title: trimmed.length > 48 ? trimmed.slice(0, 48) + '…' : trimmed, createdAt: Date.now() },
+        ...prev,
+      ]);
+    }
+
     setMessages((prev) => [...prev, userMsg]);
     setInput('');
     setIsThinking(true);
@@ -341,212 +390,361 @@ export function LensAIChatPage() {
     }, delay);
   }
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    sendMessage(input);
+  function newChat() {
+    setMessages([]);
+    setInput('');
+    setActiveThreadId(null);
+    inputRef.current?.focus();
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage(input);
+    }
   }
 
   const empty = messages.length === 0 && !isThinking;
+
+  const groupedThreads = useMemo(() => {
+    const now = Date.now();
+    const buckets: Record<string, Thread[]> = { Today: [], Yesterday: [], 'Previous 7 days': [], Older: [] };
+    for (const t of threads) {
+      const ageHrs = (now - t.createdAt) / 36e5;
+      if (ageHrs < 24)       buckets.Today.push(t);
+      else if (ageHrs < 48)  buckets.Yesterday.push(t);
+      else if (ageHrs < 168) buckets['Previous 7 days'].push(t);
+      else                   buckets.Older.push(t);
+    }
+    return buckets;
+  }, [threads]);
 
   return (
     <div
       style={{
         position: 'fixed', inset: 0,
-        display: 'flex', flexDirection: 'column',
-        background: C.white, fontFamily: FONT, color: C.navy,
+        display: 'flex',
+        background: C.bg, fontFamily: FONT, color: C.text,
       }}
     >
-      {/* ───── TOP BAR ───── */}
-      <header
+      {/* ───── SIDEBAR ───── */}
+      <aside
         style={{
+          width: sidebarOpen ? 264 : 0,
           flexShrink: 0,
-          height: 60,
-          padding: '0 clamp(16px, 3vw, 32px)',
-          borderBottom: `1px solid ${C.line}`,
-          background: 'rgba(255,255,255,0.85)',
-          backdropFilter: 'blur(12px)',
-          WebkitBackdropFilter: 'blur(12px)',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          zIndex: 5,
+          background: C.sidebar,
+          borderRight: sidebarOpen ? `1px solid ${C.borderSoft}` : 'none',
+          display: 'flex', flexDirection: 'column',
+          transition: 'width 220ms cubic-bezier(0.4, 0, 0.2, 1)',
+          overflow: 'hidden',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          <button
-            type="button"
-            onClick={() => navigate('/lens-ai')}
-            aria-label="Back to Lens"
-            style={{
-              display: 'inline-flex', alignItems: 'center', gap: 6,
-              padding: '6px 10px', borderRadius: 8,
-              background: 'transparent', border: 'none', cursor: 'pointer',
-              color: C.body, fontSize: 14, fontWeight: 500, fontFamily: FONT,
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(4,30,66,0.05)'; e.currentTarget.style.color = C.navy; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = C.body; }}
-          >
-            <ChevronLeft size={16} />
-            Back
-          </button>
-
-          <div style={{ width: 1, height: 24, background: C.line }} />
-
-          <Link to="/lens-ai" style={{ textDecoration: 'none', display: 'flex', alignItems: 'baseline', gap: 8 }}>
-            <span
-              style={{
-                fontFamily: "'Cormorant Garamond', 'Playfair Display', Georgia, serif",
-                fontStyle: 'italic',
-                fontSize: 30, fontWeight: 500, lineHeight: 1,
-                background: `linear-gradient(135deg, ${C.purple} 0%, ${C.navy} 100%)`,
-                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-                letterSpacing: '0.005em',
-                paddingRight: '0.06em',
-              }}
-            >
-              Lens
-            </span>
-            <span style={{ color: C.muted, fontSize: 13, fontWeight: 500 }}>by</span>
-            <img src={deltLogoImg} alt="Delt" style={{ height: 12, width: 'auto', objectFit: 'contain', transform: 'translateY(1px)' }} />
-          </Link>
-        </div>
-
-        <button
-          type="button"
-          onClick={() => { setMessages([]); setInput(''); }}
-          style={{
-            padding: '8px 14px', borderRadius: 8,
-            background: 'transparent', border: `1px solid ${C.line}`, cursor: 'pointer',
-            color: C.body, fontSize: 13, fontWeight: 600, fontFamily: FONT,
-            display: 'inline-flex', alignItems: 'center', gap: 6,
-            transition: 'background 0.15s, border-color 0.15s, color 0.15s',
-          }}
-          onMouseEnter={(e) => { e.currentTarget.style.borderColor = C.purple; e.currentTarget.style.color = C.navy; }}
-          onMouseLeave={(e) => { e.currentTarget.style.borderColor = C.line; e.currentTarget.style.color = C.body; }}
-        >
-          <Sparkles size={14} />
-          New chat
-        </button>
-      </header>
-
-      {/* ───── SCROLLABLE THREAD ───── */}
-      <div
-        ref={scrollRef}
-        style={{
-          flex: 1,
-          overflowY: 'auto',
-          padding: 'clamp(24px, 4vw, 48px) clamp(16px, 4vw, 32px) 24px',
-        }}
-      >
-        <div style={{ maxWidth: 760, margin: '0 auto' }}>
-          {empty && (
-            <EmptyState onPick={(s) => sendMessage(s)} />
-          )}
-
-          {messages.map((m) => (
-            <MessageBlock key={m.id} message={m} onFollowup={(q) => sendMessage(q)} />
-          ))}
-
-          {isThinking && <ThinkingBlock />}
-        </div>
-      </div>
-
-      {/* ───── INPUT BAR (sticky bottom) ───── */}
-      <div
-        style={{
-          flexShrink: 0,
-          padding: '12px clamp(16px, 4vw, 32px) clamp(16px, 3vw, 24px)',
-          background: 'linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,1) 30%)',
-        }}
-      >
-        <form
-          onSubmit={handleSubmit}
-          style={{ maxWidth: 760, margin: '0 auto' }}
-        >
+        <div style={{ width: 264, display: 'flex', flexDirection: 'column', height: '100%' }}>
+          {/* Sidebar top: collapse + logo */}
           <div
             style={{
-              position: 'relative',
-              display: 'flex', alignItems: 'center', gap: 8,
-              padding: '10px 10px 10px 14px',
-              background: C.white,
-              border: `1.5px solid ${C.line}`,
-              borderRadius: 18,
-              boxShadow: '0 8px 28px -8px rgba(4,30,66,0.12), 0 2px 6px rgba(4,30,66,0.04)',
-              transition: 'border-color 0.15s, box-shadow 0.15s',
+              height: 56, flexShrink: 0,
+              padding: '0 12px',
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             }}
-            onFocus={(e) => { (e.currentTarget as HTMLDivElement).style.borderColor = C.purple; }}
-            onBlur={(e) => { (e.currentTarget as HTMLDivElement).style.borderColor = C.line; }}
           >
+            <Link
+              to="/lens-ai"
+              style={{
+                display: 'inline-flex', alignItems: 'baseline', gap: 8,
+                padding: '6px 8px', borderRadius: 8, textDecoration: 'none',
+              }}
+            >
+              <span
+                style={{
+                  fontFamily: "'Cormorant Garamond', 'Playfair Display', Georgia, serif",
+                  fontStyle: 'italic',
+                  fontSize: 26, fontWeight: 500, lineHeight: 1,
+                  color: C.text,
+                  letterSpacing: '0.005em',
+                  paddingRight: '0.06em',
+                }}
+              >
+                Lens
+              </span>
+              <span style={{ color: C.textMute, fontSize: 12, fontWeight: 500 }}>by</span>
+              <img
+                src={deltLogoImg}
+                alt="Delt"
+                style={{ height: 11, width: 'auto', objectFit: 'contain', transform: 'translateY(1px)' }}
+              />
+            </Link>
+
+            <IconButton
+              onClick={() => setSidebarOpen(false)}
+              aria-label="Collapse sidebar"
+              title="Collapse sidebar"
+            >
+              <PanelLeftClose size={18} />
+            </IconButton>
+          </div>
+
+          {/* New chat */}
+          <div style={{ padding: '4px 8px 8px' }}>
             <button
               type="button"
-              aria-label="Add context"
+              onClick={newChat}
               style={{
-                width: 34, height: 34, borderRadius: 10,
-                border: 'none', background: 'transparent', flexShrink: 0,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: 'pointer', color: '#64748B',
+                width: '100%',
+                display: 'flex', alignItems: 'center', gap: 10,
+                padding: '10px 12px', borderRadius: 10,
+                background: 'transparent', border: `1px solid ${C.border}`,
+                color: C.text, fontSize: 14, fontWeight: 500, fontFamily: FONT,
+                cursor: 'pointer',
+                transition: 'background 120ms',
               }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = C.sidebarHov; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
             >
-              <Plus size={18} />
-            </button>
-
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask Lens about your business…"
-              autoFocus
-              style={{
-                flex: 1, minWidth: 0,
-                border: 'none', outline: 'none', background: 'transparent',
-                fontSize: 16, lineHeight: 1.5, color: C.navy,
-                fontFamily: FONT, padding: '6px 0',
-              }}
-            />
-
-            <button
-              type="button"
-              aria-label="Voice input"
-              style={{
-                width: 34, height: 34, borderRadius: '50%',
-                border: 'none', background: 'transparent', flexShrink: 0,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: 'pointer', color: '#64748B',
-              }}
-            >
-              <Mic size={17} />
-            </button>
-
-            <button
-              type="submit"
-              aria-label="Send"
-              disabled={!input.trim() || isThinking}
-              style={{
-                width: 36, height: 36, borderRadius: '50%',
-                border: 'none', flexShrink: 0,
-                background: input.trim() && !isThinking ? C.purple : '#CBD5E1',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: input.trim() && !isThinking ? 'pointer' : 'not-allowed',
-                color: C.white,
-                transition: 'background 0.15s',
-              }}
-            >
-              <ArrowUp size={16} strokeWidth={2.5} />
+              <MessageSquarePlus size={16} />
+              New chat
             </button>
           </div>
 
-          <p
+          {/* Thread list */}
+          <nav
             style={{
-              margin: '10px 0 0',
-              textAlign: 'center',
-              fontSize: 12, color: C.muted, lineHeight: 1.5,
+              flex: 1, overflowY: 'auto',
+              padding: '4px 8px 12px',
             }}
           >
-            Lens uses sample data in this preview. Sign in to ask against your live Delt account.
-          </p>
-        </form>
-      </div>
+            {(['Today', 'Yesterday', 'Previous 7 days', 'Older'] as const).map((label) => {
+              const list = groupedThreads[label];
+              if (!list || list.length === 0) return null;
+              return (
+                <div key={label} style={{ marginTop: 12 }}>
+                  <div
+                    style={{
+                      padding: '6px 12px',
+                      fontSize: 11, fontWeight: 600,
+                      letterSpacing: '0.04em',
+                      color: C.textMute,
+                    }}
+                  >
+                    {label}
+                  </div>
+                  {list.map((t) => {
+                    const active = t.id === activeThreadId;
+                    return (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() => {
+                          // Sample preview behaviour — selecting a stored thread just opens a fresh chat.
+                          setActiveThreadId(t.id);
+                          setMessages([]);
+                          setInput('');
+                        }}
+                        style={{
+                          width: '100%',
+                          display: 'flex', alignItems: 'center', gap: 10,
+                          padding: '8px 12px', borderRadius: 8,
+                          background: active ? C.sidebarHov : 'transparent',
+                          border: 'none', cursor: 'pointer',
+                          color: C.text, fontFamily: FONT,
+                          fontSize: 13.5, fontWeight: 400,
+                          textAlign: 'left',
+                          transition: 'background 120ms',
+                        }}
+                        onMouseEnter={(e) => { if (!active) e.currentTarget.style.background = C.sidebarHov; }}
+                        onMouseLeave={(e) => { if (!active) e.currentTarget.style.background = 'transparent'; }}
+                      >
+                        <MessageSquare size={14} style={{ color: C.textSoft, flexShrink: 0 }} />
+                        <span
+                          style={{
+                            overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis',
+                            flex: 1,
+                          }}
+                        >
+                          {t.title}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              );
+            })}
+          </nav>
 
-      {/* dot animation keyframes */}
+          {/* Sidebar bottom */}
+          <div
+            style={{
+              padding: '12px',
+              borderTop: `1px solid ${C.borderSoft}`,
+              fontSize: 12, color: C.textMute, lineHeight: 1.5,
+            }}
+          >
+            Preview mode · sample data
+          </div>
+        </div>
+      </aside>
+
+      {/* ───── MAIN COLUMN ───── */}
+      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+        {/* TOP BAR */}
+        <header
+          style={{
+            flexShrink: 0,
+            height: 56,
+            padding: '0 16px',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            background: C.bg,
+            borderBottom: `1px solid ${C.borderSoft}`,
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {!sidebarOpen && (
+              <IconButton
+                onClick={() => setSidebarOpen(true)}
+                aria-label="Open sidebar"
+                title="Open sidebar"
+              >
+                <PanelLeftOpen size={18} />
+              </IconButton>
+            )}
+            <button
+              type="button"
+              onClick={() => navigate('/lens-ai')}
+              aria-label="Back to Lens"
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 6,
+                padding: '6px 10px', borderRadius: 8,
+                background: 'transparent', border: 'none', cursor: 'pointer',
+                color: C.textSoft, fontSize: 13.5, fontWeight: 500, fontFamily: FONT,
+                transition: 'background 120ms, color 120ms',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = C.bgRaised; e.currentTarget.style.color = C.text; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = C.textSoft; }}
+            >
+              <ChevronLeft size={15} />
+              Back
+            </button>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span
+              style={{
+                fontSize: 12, color: C.textMute,
+                padding: '4px 10px',
+                borderRadius: 999,
+                border: `1px solid ${C.border}`,
+                background: C.bgRaised,
+              }}
+            >
+              Sample data
+            </span>
+          </div>
+        </header>
+
+        {/* ───── SCROLLABLE THREAD ───── */}
+        <div
+          ref={scrollRef}
+          style={{
+            flex: 1,
+            overflowY: 'auto',
+            padding: '24px 16px 16px',
+          }}
+        >
+          <div style={{ maxWidth: 768, margin: '0 auto' }}>
+            {empty && <EmptyState onPick={(s) => sendMessage(s)} />}
+
+            {messages.map((m) => (
+              <MessageBlock key={m.id} message={m} onFollowup={(q) => sendMessage(q)} />
+            ))}
+
+            {isThinking && <ThinkingBlock />}
+          </div>
+        </div>
+
+        {/* ───── INPUT BAR (sticky bottom) ───── */}
+        <div
+          style={{
+            flexShrink: 0,
+            padding: '8px 16px 16px',
+            background: `linear-gradient(180deg, rgba(33,33,33,0) 0%, ${C.bg} 35%)`,
+          }}
+        >
+          <form
+            onSubmit={(e) => { e.preventDefault(); sendMessage(input); }}
+            style={{ maxWidth: 768, margin: '0 auto' }}
+          >
+            <div
+              className="lens-composer"
+              style={{
+                position: 'relative',
+                display: 'flex', alignItems: 'flex-end', gap: 8,
+                padding: '10px 10px 10px 14px',
+                background: C.bgRaised,
+                border: `1px solid ${C.border}`,
+                borderRadius: 24,
+                boxShadow: '0 4px 24px -8px rgba(0,0,0,0.5)',
+                transition: 'border-color 120ms',
+              }}
+            >
+              <IconButton aria-label="Attach" title="Attach">
+                <Paperclip size={18} />
+              </IconButton>
+
+              <textarea
+                ref={inputRef}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Ask Lens about your business…"
+                rows={1}
+                autoFocus
+                style={{
+                  flex: 1, minWidth: 0,
+                  resize: 'none',
+                  border: 'none', outline: 'none', background: 'transparent',
+                  fontSize: 15.5, lineHeight: 1.55, color: C.text,
+                  fontFamily: FONT,
+                  padding: '8px 0',
+                  maxHeight: 200,
+                }}
+              />
+
+              <IconButton aria-label="Voice input" title="Voice input">
+                <Mic size={18} />
+              </IconButton>
+
+              <button
+                type="submit"
+                aria-label="Send"
+                disabled={!input.trim() || isThinking}
+                style={{
+                  width: 34, height: 34, borderRadius: '50%',
+                  border: 'none', flexShrink: 0,
+                  background: input.trim() && !isThinking ? C.text : '#4A4A4A',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: input.trim() && !isThinking ? 'pointer' : 'not-allowed',
+                  color: input.trim() && !isThinking ? C.bg : C.textMute,
+                  transition: 'background 120ms',
+                }}
+              >
+                <ArrowUp size={16} strokeWidth={2.5} />
+              </button>
+            </div>
+
+            <p
+              style={{
+                margin: '10px 0 0',
+                textAlign: 'center',
+                fontSize: 12, color: C.textMute, lineHeight: 1.5,
+              }}
+            >
+              Lens uses sample data in this preview. Sign in to ask against your live Delt account.
+            </p>
+          </form>
+        </div>
+      </main>
+
+      {/* keyframes + scoped focus styles */}
       <style>{`
         @keyframes lensDot {
           0%, 80%, 100% { transform: scale(0.7); opacity: 0.4; }
@@ -554,13 +752,49 @@ export function LensAIChatPage() {
         }
         .lens-thinking-dot {
           width: 6px; height: 6px; border-radius: 50%;
-          background: ${C.purple};
+          background: ${C.textSoft};
           animation: lensDot 1.2s ease-in-out infinite;
         }
         .lens-thinking-dot:nth-child(2) { animation-delay: 0.18s; }
         .lens-thinking-dot:nth-child(3) { animation-delay: 0.36s; }
+
+        .lens-composer:focus-within {
+          border-color: ${C.accent} !important;
+          box-shadow: 0 0 0 3px ${C.accentSoft}, 0 4px 24px -8px rgba(0,0,0,0.5) !important;
+        }
+
+        /* Dark-themed scrollbar inside the chat */
+        .lens-chat-scroll::-webkit-scrollbar { width: 10px; }
+        .lens-chat-scroll::-webkit-scrollbar-thumb { background: ${C.border}; border-radius: 10px; }
+        .lens-chat-scroll::-webkit-scrollbar-thumb:hover { background: #4A4A4A; }
       `}</style>
     </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────
+   ICON BUTTON — flat hover, monochrome, ChatGPT-style
+   ───────────────────────────────────────────────────────────── */
+function IconButton({
+  children, onClick, ...rest
+}: React.ButtonHTMLAttributes<HTMLButtonElement> & { children: React.ReactNode }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      {...rest}
+      style={{
+        width: 34, height: 34, borderRadius: 8,
+        border: 'none', background: 'transparent',
+        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+        cursor: 'pointer', color: C.textSoft, flexShrink: 0,
+        transition: 'background 120ms, color 120ms',
+      }}
+      onMouseEnter={(e) => { e.currentTarget.style.background = C.bgRaised; e.currentTarget.style.color = C.text; }}
+      onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = C.textSoft; }}
+    >
+      {children}
+    </button>
   );
 }
 
@@ -569,31 +803,37 @@ export function LensAIChatPage() {
    ───────────────────────────────────────────────────────────── */
 function EmptyState({ onPick }: { onPick: (s: string) => void }) {
   return (
-    <div style={{ textAlign: 'center', paddingTop: 'clamp(40px, 8vh, 80px)' }}>
+    <div style={{ textAlign: 'center', paddingTop: 'clamp(40px, 10vh, 100px)' }}>
       <div
         style={{
           display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-          width: 60, height: 60, borderRadius: 18,
-          background: `linear-gradient(135deg, ${C.purple} 0%, ${C.navy} 100%)`,
-          color: C.white, marginBottom: 24,
-          boxShadow: '0 12px 30px -8px rgba(73,69,255,0.5)',
+          width: 52, height: 52, borderRadius: 14,
+          background: `linear-gradient(135deg, ${C.accent} 0%, ${C.accentDeep} 100%)`,
+          color: '#FFFFFF', marginBottom: 22,
+          boxShadow: '0 10px 30px -10px rgba(124,107,255,0.6)',
         }}
       >
-        <Sparkles size={26} strokeWidth={1.8} />
+        <Sparkles size={22} strokeWidth={1.8} />
       </div>
       <h1
         style={{
           margin: 0,
-          fontFamily: "'Playfair Display', Georgia, serif",
-          fontSize: 'clamp(2rem, 4.5vw, 3rem)',
-          fontWeight: 500, lineHeight: 1.05, color: C.navy,
+          fontFamily: "'Cormorant Garamond', 'Playfair Display', Georgia, serif",
+          fontStyle: 'italic',
+          fontSize: 'clamp(1.85rem, 4vw, 2.6rem)',
+          fontWeight: 500, lineHeight: 1.1, color: C.text,
           letterSpacing: '0.005em',
         }}
       >
         What can I help you find?
       </h1>
-      <p style={{ margin: '14px auto 36px', maxWidth: 480, color: C.body, fontSize: 16, lineHeight: 1.6 }}>
-        Ask Lens anything about your sales, customers, inventory, or payouts. Try one of these to start:
+      <p
+        style={{
+          margin: '12px auto 32px', maxWidth: 460,
+          color: C.textSoft, fontSize: 15, lineHeight: 1.6,
+        }}
+      >
+        Ask anything about your sales, customers, inventory, or payouts.
       </p>
       <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 8 }}>
         {SUGGESTIONS_EMPTY.map((s) => (
@@ -602,20 +842,18 @@ function EmptyState({ onPick }: { onPick: (s: string) => void }) {
             type="button"
             onClick={() => onPick(s)}
             style={{
-              background: C.white, border: `1.5px solid ${C.line}`,
+              background: C.bgRaised, border: `1px solid ${C.border}`,
               borderRadius: 999, padding: '9px 16px',
-              fontSize: 13, color: C.body, cursor: 'pointer',
-              fontFamily: FONT, transition: 'all 0.15s',
+              fontSize: 13, color: C.text, cursor: 'pointer',
+              fontFamily: FONT, transition: 'all 120ms',
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = C.purple;
-              e.currentTarget.style.color = C.navy;
-              e.currentTarget.style.background = C.faintPurple;
+              e.currentTarget.style.borderColor = C.accent;
+              e.currentTarget.style.background = C.sidebarHov;
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = C.line;
-              e.currentTarget.style.color = C.body;
-              e.currentTarget.style.background = C.white;
+              e.currentTarget.style.borderColor = C.border;
+              e.currentTarget.style.background = C.bgRaised;
             }}
           >
             {s}
@@ -628,21 +866,27 @@ function EmptyState({ onPick }: { onPick: (s: string) => void }) {
 
 /* ─────────────────────────────────────────────────────────────
    MESSAGE BLOCK
+     - user:      right-aligned soft bubble (Claude/Gemini style)
+     - assistant: full-width flush-left with small Lens avatar
    ───────────────────────────────────────────────────────────── */
 function MessageBlock({ message, onFollowup }: { message: Message; onFollowup: (q: string) => void }) {
   if (message.role === 'user') {
     return (
-      <div style={{ marginBottom: 28 }}>
-        <h2
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 24 }}>
+        <div
           style={{
-            margin: 0,
-            fontSize: 'clamp(1.25rem, 2.4vw, 1.6rem)',
-            fontWeight: 700, lineHeight: 1.3,
-            color: C.navy, letterSpacing: '-0.01em',
+            maxWidth: '80%',
+            padding: '11px 16px',
+            borderRadius: 18,
+            background: C.bubble,
+            border: `1px solid ${C.bubbleBd}`,
+            color: C.text,
+            fontSize: 15.5, lineHeight: 1.55,
+            whiteSpace: 'pre-wrap', wordBreak: 'break-word',
           }}
         >
           {message.content}
-        </h2>
+        </div>
       </div>
     );
   }
@@ -650,30 +894,31 @@ function MessageBlock({ message, onFollowup }: { message: Message; onFollowup: (
   // assistant
   const r = message.reply;
   return (
-    <div style={{ marginBottom: 40 }}>
+    <div style={{ marginBottom: 36 }}>
       {/* Lens label */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
         <div
           style={{
-            width: 22, height: 22, borderRadius: 7,
-            background: `linear-gradient(135deg, ${C.purple} 0%, ${C.navy} 100%)`,
+            width: 26, height: 26, borderRadius: 8,
+            background: `linear-gradient(135deg, ${C.accent} 0%, ${C.accentDeep} 100%)`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: C.white, flexShrink: 0,
+            color: '#FFFFFF', flexShrink: 0,
+            boxShadow: '0 4px 14px -4px rgba(124,107,255,0.55)',
           }}
         >
-          <Sparkles size={12} strokeWidth={2} />
+          <Sparkles size={13} strokeWidth={2} />
         </div>
-        <span style={{ fontSize: 13, fontWeight: 600, color: C.navy }}>Lens</span>
+        <span style={{ fontSize: 13.5, fontWeight: 600, color: C.text }}>Lens</span>
       </div>
 
       {/* Body text */}
-      <p style={{ margin: 0, fontSize: 16, lineHeight: 1.7, color: C.navy }}>
+      <p style={{ margin: 0, fontSize: 15.5, lineHeight: 1.7, color: C.text }}>
         {message.content}
       </p>
 
       {/* Bullets */}
       {r?.bullets && r.bullets.length > 0 && (
-        <ul style={{ margin: '14px 0 0', paddingLeft: 18, color: C.body, fontSize: 15, lineHeight: 1.75 }}>
+        <ul style={{ margin: '12px 0 0', paddingLeft: 18, color: C.textSoft, fontSize: 15, lineHeight: 1.75 }}>
           {r.bullets.map((b, i) => (
             <li key={i} style={{ marginBottom: 4 }}>{b}</li>
           ))}
@@ -684,23 +929,23 @@ function MessageBlock({ message, onFollowup }: { message: Message; onFollowup: (
       {r?.table && (
         <div
           style={{
-            marginTop: 18,
-            border: `1px solid ${C.line}`, borderRadius: 12,
-            overflow: 'hidden', background: C.white,
+            marginTop: 16,
+            border: `1px solid ${C.border}`, borderRadius: 12,
+            overflow: 'hidden', background: C.bgRaised,
           }}
         >
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
             <thead>
-              <tr style={{ background: C.grayBg }}>
+              <tr style={{ background: C.sidebar }}>
                 {r.table.headers.map((h, i) => (
                   <th
                     key={i}
                     style={{
                       textAlign: i === 0 ? 'left' : 'right',
                       padding: '10px 14px',
-                      fontSize: 12, fontWeight: 700, color: C.body,
+                      fontSize: 11.5, fontWeight: 700, color: C.textSoft,
                       letterSpacing: '0.04em', textTransform: 'uppercase',
-                      borderBottom: `1px solid ${C.line}`,
+                      borderBottom: `1px solid ${C.border}`,
                     }}
                   >
                     {h}
@@ -710,14 +955,14 @@ function MessageBlock({ message, onFollowup }: { message: Message; onFollowup: (
             </thead>
             <tbody>
               {r.table.rows.map((row, ri) => (
-                <tr key={ri} style={{ borderTop: ri === 0 ? 'none' : `1px solid ${C.line}` }}>
+                <tr key={ri} style={{ borderTop: ri === 0 ? 'none' : `1px solid ${C.borderSoft}` }}>
                   {row.map((cell, ci) => (
                     <td
                       key={ci}
                       style={{
                         padding: '10px 14px',
                         textAlign: ci === 0 ? 'left' : 'right',
-                        color: ci === 0 ? C.navy : C.body,
+                        color: ci === 0 ? C.text : C.textSoft,
                         fontWeight: ci === 0 ? 600 : 500,
                         fontVariantNumeric: 'tabular-nums',
                       }}
@@ -733,7 +978,7 @@ function MessageBlock({ message, onFollowup }: { message: Message; onFollowup: (
       )}
 
       {/* Action row */}
-      <div style={{ display: 'flex', gap: 4, marginTop: 14 }}>
+      <div style={{ display: 'flex', gap: 2, marginTop: 12 }}>
         <IconAction icon={<Copy size={14} />} label="Copy" onClick={() => navigator.clipboard?.writeText(message.content)} />
         <IconAction icon={<RefreshCcw size={14} />} label="Regenerate" onClick={() => onFollowup(message.reply?.followups?.[0] ?? '')} />
         <IconAction icon={<ThumbsUp size={14} />} label="Good" />
@@ -742,10 +987,10 @@ function MessageBlock({ message, onFollowup }: { message: Message; onFollowup: (
 
       {/* Followups */}
       {r?.followups && r.followups.length > 0 && (
-        <div style={{ marginTop: 22, paddingTop: 18, borderTop: `1px solid ${C.line}` }}>
+        <div style={{ marginTop: 22, paddingTop: 18, borderTop: `1px solid ${C.borderSoft}` }}>
           <p
             style={{
-              margin: '0 0 10px', fontSize: 11, fontWeight: 700, color: C.muted,
+              margin: '0 0 8px', fontSize: 11, fontWeight: 700, color: C.textMute,
               letterSpacing: '0.1em', textTransform: 'uppercase',
             }}
           >
@@ -759,18 +1004,18 @@ function MessageBlock({ message, onFollowup }: { message: Message; onFollowup: (
                 onClick={() => onFollowup(f)}
                 style={{
                   textAlign: 'left',
-                  padding: '12px 0',
-                  borderTop: i === 0 ? 'none' : `1px solid ${C.line}`,
+                  padding: '11px 0',
+                  borderTop: i === 0 ? 'none' : `1px solid ${C.borderSoft}`,
                   background: 'transparent', border: 'none', cursor: 'pointer',
-                  color: C.navy, fontSize: 15, fontFamily: FONT, fontWeight: 500,
+                  color: C.text, fontSize: 14.5, fontFamily: FONT, fontWeight: 500,
                   display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                  transition: 'color 0.15s',
+                  transition: 'color 120ms',
                 }}
-                onMouseEnter={(e) => { e.currentTarget.style.color = C.purple; }}
-                onMouseLeave={(e) => { e.currentTarget.style.color = C.navy; }}
+                onMouseEnter={(e) => { e.currentTarget.style.color = C.accent; }}
+                onMouseLeave={(e) => { e.currentTarget.style.color = C.text; }}
               >
                 <span>{f}</span>
-                <span style={{ color: C.muted, fontSize: 18, lineHeight: 1 }}>+</span>
+                <span style={{ color: C.textMute, fontSize: 18, lineHeight: 1 }}>+</span>
               </button>
             ))}
           </div>
@@ -781,7 +1026,7 @@ function MessageBlock({ message, onFollowup }: { message: Message; onFollowup: (
 }
 
 /* ─────────────────────────────────────────────────────────────
-   ICON ACTION BUTTON
+   ICON ACTION BUTTON (under assistant messages)
    ───────────────────────────────────────────────────────────── */
 function IconAction({ icon, label, onClick }: { icon: React.ReactNode; label: string; onClick?: () => void }) {
   return (
@@ -792,13 +1037,13 @@ function IconAction({ icon, label, onClick }: { icon: React.ReactNode; label: st
       title={label}
       style={{
         display: 'inline-flex', alignItems: 'center', gap: 6,
-        padding: '6px 10px', borderRadius: 8,
+        padding: '6px 8px', borderRadius: 6,
         background: 'transparent', border: 'none', cursor: 'pointer',
-        color: C.muted,
-        transition: 'background 0.15s, color 0.15s',
+        color: C.textMute,
+        transition: 'background 120ms, color 120ms',
       }}
-      onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(4,30,66,0.05)'; e.currentTarget.style.color = C.navy; }}
-      onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = C.muted; }}
+      onMouseEnter={(e) => { e.currentTarget.style.background = C.bgRaised; e.currentTarget.style.color = C.text; }}
+      onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = C.textMute; }}
     >
       {icon}
     </button>
@@ -810,19 +1055,20 @@ function IconAction({ icon, label, onClick }: { icon: React.ReactNode; label: st
    ───────────────────────────────────────────────────────────── */
 function ThinkingBlock() {
   return (
-    <div style={{ marginBottom: 40 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+    <div style={{ marginBottom: 36 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
         <div
           style={{
-            width: 22, height: 22, borderRadius: 7,
-            background: `linear-gradient(135deg, ${C.purple} 0%, ${C.navy} 100%)`,
+            width: 26, height: 26, borderRadius: 8,
+            background: `linear-gradient(135deg, ${C.accent} 0%, ${C.accentDeep} 100%)`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: C.white, flexShrink: 0,
+            color: '#FFFFFF', flexShrink: 0,
+            boxShadow: '0 4px 14px -4px rgba(124,107,255,0.55)',
           }}
         >
-          <Sparkles size={12} strokeWidth={2} />
+          <Sparkles size={13} strokeWidth={2} />
         </div>
-        <span style={{ fontSize: 13, fontWeight: 600, color: C.navy }}>Lens</span>
+        <span style={{ fontSize: 13.5, fontWeight: 600, color: C.text }}>Lens</span>
       </div>
       <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 0' }}>
         <span className="lens-thinking-dot" />
