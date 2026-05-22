@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router';
 import { Sparkles, ChevronDown, Check, Plus, Mic, ArrowUp, Info } from 'lucide-react';
 import { LensScrollRevealText } from '../components/LensScrollRevealText';
 import { LensStackingPanels } from '../components/LensStackingPanels';
+import { LensMarkMorph } from '../components/LensMarkMorph';
 import { Sparkles as SparkleField } from '../components/Sparkles';
 
 /* ─────────────────────────────────────────────────────────────
@@ -215,6 +216,30 @@ export function LensAIPage() {
           maskImage: 'linear-gradient(180deg, #000 0%, transparent 80%)',
           WebkitMaskImage: 'linear-gradient(180deg, #000 0%, transparent 80%)',
         }} />
+
+        {/* ───── DOT-MORPH MARK ─────
+           Premium canvas animation: particles bloom from center and
+           resolve into the LensMark aperture. Square-style brand reveal,
+           Delt-tuned. Sits on a soft dark stage so the indigo dots read
+           cleanly on the lavender hero. */}
+        <div
+          aria-hidden
+          style={{
+            position: 'relative',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: 18,
+            width: 132,
+            height: 132,
+            borderRadius: '50%',
+            // Soft dark stage — gives the morph the contrast it needs on the
+            // lavender hero without feeling like a hard chip.
+            background: 'radial-gradient(circle at 50% 45%, rgba(11,8,48,0.92) 0%, rgba(11,8,48,0.78) 45%, rgba(11,8,48,0) 78%)',
+          }}
+        >
+          <LensMarkMorph size={112} loop loopDelayMs={5500} />
+        </div>
 
         {/* ───── “Lens” WORDMARK ─────
            Cormorant Garamond italic in a deep indigo. The previous
