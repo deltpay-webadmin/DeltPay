@@ -7,13 +7,14 @@ import {
   RefreshCw,
   ArrowRight,
   ChevronDown,
-  Download,
-  BookOpen,
   Check,
   ChevronLeft,
   ChevronRight,
-  Quote,
   TrendingUp,
+  FileText,
+  Wallet,
+  Clock,
+  ShieldCheck,
 } from 'lucide-react';
 import { AutomatedRepayment } from '../components/AutomatedRepayment';
 import { ProductCrossSell } from '../components/ProductCrossSell';
@@ -22,41 +23,54 @@ import { BusinessScene } from '../components/BusinessScene';
 /* ─── Design tokens ─────────────────────────────────────────── */
 const NAVY      = '#041E42';
 const PURPLE    = '#4945FF';
-const LAVENDER  = '#EDEBFF'; // Toast peach equivalent for full-bleed data bands
-const IVORY     = '#F6F7FB'; // Toast ivory equivalent for testimonial band
+const PURPLE_DK = '#3730A3';
+const LAVENDER  = '#EDEBFF';
+const IVORY     = '#F6F7FB';
 const MUTED     = '#475569';
 const MICRO     = '#94A3B8';
 const HAIRLINE  = 'rgba(4,30,66,0.10)';
 
-/* ─── FAQ data ──────────────────────────────────────────────── */
+/* ─── FAQ data — modeled on Square Loans Q&A, in Delt voice ──── */
 const FAQS = [
   {
-    q: "How do I know if I'm eligible?",
-    a: 'Eligibility is based on your card processing volume, time on Delt, and status of any bankruptcy filings. Check your Delt dashboard for pre-qualified offers.',
+    q: "How do I become eligible for Delt Capital?",
+    a: "Eligibility is based on your business — not a credit score. We look at how long you've been processing with Delt, your daily card volume, the mix of repeat vs. new customers, and your typical seasonality. We re-evaluate eligibility daily, so the longer you process with us, the better your offer tends to get.",
   },
   {
-    q: "Does applying affect my credit?",
-    a: 'No. Applying for a Delt Capital loan does not affect your personal or business credit score, and there\'s no credit score requirement to apply.',
+    q: "How do I request an offer?",
+    a: "If you're pre-qualified, you'll see your offer right in your Delt dashboard and you'll get an email letting you know. From there, requesting funding takes about two minutes — no long forms, no paperwork uploads.",
+  },
+  {
+    q: "How do you determine my offer amount?",
+    a: "We size offers to your real cash flow. Inputs include your time on Delt, your processing volume and frequency, your customer mix, and your industry's typical seasonality. Offers currently range from $1,000 to $300,000.",
   },
   {
     q: "How does repayment work?",
-    a: 'Repayment is a fixed percentage of daily card transactions processed through Delt. When sales are slower, you pay less. Target terms range from 90 to 360 days.',
+    a: "Repayment is automatic — a fixed percentage of each day's card sales is held back until the advance is repaid. If you have a busy day, you pay a little more. If you have a slow day, you pay less. There's nothing to schedule, no invoices, no ACH to set up.",
   },
   {
-    q: "What are the fees?",
-    a: 'Delt Capital loans have a fixed fee that will not change regardless of how long it takes to repay. No compounding interest, no application fees, no prepayment fees, no late fees.',
+    q: "Is there interest?",
+    a: "No. Delt Capital uses a single flat fee, disclosed upfront. Your balance never grows — what you owe on day one is what you owe at the end. No compounding interest, ever.",
   },
   {
-    q: "What can I use the loan for?",
-    a: 'Anything your business needs — short-term cash flow, hiring, inventory, equipment, refinancing debt, renovation, or opening a new location.',
+    q: "Can I prepay?",
+    a: "Yes — at any time, with no prepayment penalty and no additional cost. The total amount you owe doesn't change because you paid early.",
   },
   {
-    q: "How fast will I get funded?",
-    a: 'Funds arrive in your account as soon as the next business day after approval, subject to processing time and completion of your loan agreement.',
+    q: "What happens if I have a slow week?",
+    a: "Repayment flexes with your sales. If your card volume drops, your hold-back drops with it. There's a small minimum payment over each 60-day window so the advance stays on track — your dashboard always shows where you stand.",
+  },
+  {
+    q: "Are there late fees?",
+    a: "No. There are no late fees added to your balance, ever.",
+  },
+  {
+    q: "Does applying affect my credit?",
+    a: "No. Checking your offer and requesting funding does not affect your personal or business credit score. There's no personal guarantee required either.",
   },
 ];
 
-/* ─── Testimonial data ──────────────────────────────────────── */
+/* ─── Testimonials (kept from previous page) ─────────────────── */
 const TESTIMONIALS = [
   {
     quote:
@@ -101,29 +115,26 @@ function FaqItem({ q, a, initialOpen = false }: { q: string; a: string; initialO
   const [open, setOpen] = useState(initialOpen);
   return (
     <div
-      className="rounded-2xl border overflow-hidden"
-      style={{ borderColor: HAIRLINE }}
+      className="rounded-2xl overflow-hidden"
+      style={{
+        background: open ? IVORY : '#FFFFFF',
+        border: `1px solid ${HAIRLINE}`,
+        transition: 'background 0.2s ease',
+      }}
     >
       <button
-        onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between gap-4 px-6 py-5 text-left transition-colors"
-        style={{ background: open ? IVORY : '#FFFFFF' }}
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center justify-between gap-4 px-6 py-5 text-left"
+        style={{ color: NAVY }}
       >
-        <span
-          className="font-semibold text-base"
-          style={{ color: NAVY, fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+        <span className="font-semibold" style={{ fontSize: 16, lineHeight: 1.4 }}>{q}</span>
+        <motion.span
+          animate={{ rotate: open ? 180 : 0 }}
+          transition={{ duration: 0.2 }}
+          style={{ display: 'inline-flex', color: PURPLE, flexShrink: 0 }}
         >
-          {q}
-        </span>
-        <ChevronDown
-          size={20}
-          style={{
-            color: PURPLE,
-            flexShrink: 0,
-            transition: 'transform 0.25s ease',
-            transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
-          }}
-        />
+          <ChevronDown size={20} />
+        </motion.span>
       </button>
       <AnimatePresence initial={false}>
         {open && (
@@ -134,10 +145,7 @@ function FaqItem({ q, a, initialOpen = false }: { q: string; a: string; initialO
             transition={{ duration: 0.25, ease: 'easeInOut' }}
             style={{ overflow: 'hidden' }}
           >
-            <p
-              className="px-6 pb-5 text-sm leading-relaxed"
-              style={{ color: MUTED }}
-            >
+            <p className="px-6 pb-5 text-sm leading-relaxed" style={{ color: MUTED }}>
               {a}
             </p>
           </motion.div>
@@ -147,99 +155,146 @@ function FaqItem({ q, a, initialOpen = false }: { q: string; a: string; initialO
   );
 }
 
-/* ─── Feature block (alternating two-column) ────────────────── */
-type FeatureBlockProps = {
-  eyebrow: string;
+/* ─── Pillar card (3-up value props) ─────────────────────────── */
+function PillarCard({
+  icon,
+  title,
+  body,
+}: {
+  icon: React.ReactNode;
   title: string;
   body: string;
-  bullets: string[];
-  reverse?: boolean;
-  visual: React.ReactNode;
-};
-
-function FeatureBlock({ eyebrow, title, body, bullets, reverse, visual }: FeatureBlockProps) {
+}) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 items-center">
-      {/* Visual side */}
-      <div className={reverse ? 'md:order-2' : ''}>{visual}</div>
-      {/* Copy side */}
-      <div className={reverse ? 'md:order-1' : ''}>
-        <div
-          className="text-[12px] font-bold uppercase mb-3"
-          style={{ color: PURPLE, letterSpacing: '0.18em' }}
+    <div
+      className="rounded-2xl p-7 h-full flex flex-col"
+      style={{
+        background: '#FFFFFF',
+        border: `1px solid ${HAIRLINE}`,
+        boxShadow: '0 8px 24px rgba(4,30,66,0.04)',
+      }}
+    >
+      <div
+        className="w-12 h-12 rounded-xl flex items-center justify-center mb-5"
+        style={{ background: `${PURPLE}14` }}
+      >
+        {icon}
+      </div>
+      <h3
+        className="font-bold mb-2"
+        style={{ color: NAVY, fontSize: 19, letterSpacing: '-0.01em', lineHeight: 1.25 }}
+      >
+        {title}
+      </h3>
+      <p style={{ color: MUTED, fontSize: 14.5, lineHeight: 1.55 }}>{body}</p>
+    </div>
+  );
+}
+
+/* ─── Hero offer card (right side of split hero) ─────────────── */
+function HeroOfferCard() {
+  return (
+    <div
+      className="relative rounded-3xl overflow-hidden"
+      style={{
+        background: '#FFFFFF',
+        border: `1px solid ${HAIRLINE}`,
+        boxShadow: '0 30px 60px rgba(4,30,66,0.10)',
+      }}
+    >
+      {/* Top bar — fake browser chrome */}
+      <div
+        className="px-5 py-3.5 flex items-center gap-2"
+        style={{ borderBottom: `1px solid ${HAIRLINE}`, background: IVORY }}
+      >
+        <span className="inline-block rounded-full" style={{ width: 9, height: 9, background: '#E5E7EB' }} />
+        <span className="inline-block rounded-full" style={{ width: 9, height: 9, background: '#E5E7EB' }} />
+        <span className="inline-block rounded-full" style={{ width: 9, height: 9, background: '#E5E7EB' }} />
+        <span
+          className="ml-3 text-[11px] font-semibold uppercase"
+          style={{ color: MICRO, letterSpacing: '0.12em' }}
         >
-          {eyebrow}
+          Delt Dashboard · Capital
+        </span>
+      </div>
+
+      <div className="p-7 md:p-8">
+        <div
+          className="text-[11px] font-bold uppercase mb-3"
+          style={{ color: PURPLE, letterSpacing: '0.16em' }}
+        >
+          Pre-qualified offer
         </div>
-        <h3
-          className="font-bold leading-[1.15] mb-4"
+        <div
+          className="font-bold leading-none mb-1"
           style={{
-            fontSize: 'clamp(24px, 2.4vw, 32px)',
             color: NAVY,
-            letterSpacing: '-0.02em',
+            fontSize: 'clamp(48px, 5.4vw, 68px)',
+            letterSpacing: '-0.04em',
+            fontVariantNumeric: 'tabular-nums',
           }}
         >
-          {title}
-        </h3>
-        <p
-          className="leading-relaxed mb-6"
-          style={{ color: MUTED, fontSize: 16 }}
-        >
-          {body}
-        </p>
-        <ul className="flex flex-col gap-3">
-          {bullets.map((b) => (
-            <li key={b} className="flex items-start gap-3">
-              <span
-                className="inline-flex items-center justify-center rounded-full flex-shrink-0"
-                style={{
-                  width: 20,
-                  height: 20,
-                  background: `${PURPLE}15`,
-                  marginTop: 2,
-                }}
-              >
-                <Check size={12} color={PURPLE} strokeWidth={3} />
-              </span>
-              <span style={{ color: NAVY, fontSize: 15, lineHeight: 1.55 }}>{b}</span>
-            </li>
+          $82,000
+        </div>
+        <div style={{ color: MUTED, fontSize: 13.5 }}>
+          One flat fee · no interest · no personal guarantee
+        </div>
+
+        <div className="mt-6">
+          <div
+            className="w-full h-2 rounded-full overflow-hidden"
+            style={{ background: `${PURPLE}18` }}
+          >
+            <motion.div
+              className="h-full rounded-full"
+              style={{ background: PURPLE }}
+              initial={{ width: 0 }}
+              animate={{ width: '62%' }}
+              transition={{ duration: 1.2, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
+            />
+          </div>
+          <div className="flex items-center justify-between mt-2 text-xs" style={{ color: MUTED }}>
+            <span>Available now</span>
+            <span style={{ color: NAVY, fontWeight: 600 }}>$82,000</span>
+          </div>
+        </div>
+
+        <div className="mt-6 grid grid-cols-3 gap-3">
+          {[
+            ['Approval', 'Same day'],
+            ['Funding', 'Next day'],
+            ['Fee', 'Flat, upfront'],
+          ].map(([k, v]) => (
+            <div
+              key={k}
+              className="rounded-xl p-3"
+              style={{ background: IVORY, border: `1px solid ${HAIRLINE}` }}
+            >
+              <div className="text-[10px] font-bold uppercase" style={{ color: MICRO, letterSpacing: '0.12em' }}>{k}</div>
+              <div className="font-semibold text-sm mt-1" style={{ color: NAVY }}>{v}</div>
+            </div>
           ))}
-        </ul>
+        </div>
+
+        <div
+          className="mt-6 pt-5 flex items-center gap-2 text-[12px]"
+          style={{ borderTop: `1px solid ${HAIRLINE}`, color: MUTED }}
+        >
+          <ShieldCheck size={14} color={PURPLE} />
+          <span>Checking eligibility doesn't affect your credit</span>
+        </div>
       </div>
     </div>
   );
 }
 
-/* ─── Visuals for feature blocks ─────────────────────────────── */
-function IndustryVisual() {
-  // Underwriting "signals we read" card — concrete, Square-style
-  // ("we take into account your time using Square, processing volume,
-  // customer mix, and more."). Pairs with copy about how we actually
-  // underwrite vs. a generic credit formula.
-  const signals = [
-    {
-      label: 'Time on Delt',
-      detail: '14 mo · steady',
-      strength: 88,
-      icon: <Briefcase size={14} color={PURPLE} />,
-    },
-    {
-      label: 'Daily card volume',
-      detail: '$4.8K avg · last 90 days',
-      strength: 76,
-      icon: <TrendingUp size={14} color={PURPLE} />,
-    },
-    {
-      label: 'Customer mix',
-      detail: '62% repeat · 38% new',
-      strength: 70,
-      icon: <RefreshCw size={14} color={PURPLE} />,
-    },
-    {
-      label: 'Seasonality fit',
-      detail: 'Q4 lift · pre-funded',
-      strength: 82,
-      icon: <Zap size={14} color={PURPLE} />,
-    },
+/* ─── Offer factors card (right side of custom-offer section) ── */
+function OfferFactorsCard() {
+  const factors = [
+    { label: 'Time on Delt',       detail: '14 mo · steady',         strength: 88, icon: <Briefcase size={14} color={PURPLE} /> },
+    { label: 'Daily card volume',  detail: '$4.8K avg · last 90d',   strength: 76, icon: <TrendingUp size={14} color={PURPLE} /> },
+    { label: 'Customer mix',       detail: '62% repeat · 38% new',   strength: 70, icon: <RefreshCw size={14} color={PURPLE} /> },
+    { label: 'Seasonality fit',    detail: 'Q4 lift · pre-funded',   strength: 82, icon: <Zap size={14} color={PURPLE} /> },
   ];
   return (
     <div
@@ -253,10 +308,10 @@ function IndustryVisual() {
       <div className="flex items-center justify-between mb-5">
         <div>
           <div className="text-[11px] font-bold uppercase" style={{ color: MICRO, letterSpacing: '0.14em' }}>
-            Underwriting signals
+            What we read
           </div>
           <div className="font-bold text-lg mt-1" style={{ color: NAVY }}>
-            Read from your business — not a bureau
+            Your offer factors
           </div>
         </div>
         <div
@@ -267,7 +322,7 @@ function IndustryVisual() {
         </div>
       </div>
       <div className="flex flex-col gap-2.5">
-        {signals.map((s) => (
+        {factors.map((s) => (
           <div
             key={s.label}
             className="flex items-center gap-3 px-3.5 py-3 rounded-xl"
@@ -305,394 +360,86 @@ function IndustryVisual() {
   );
 }
 
-function SpeedVisual() {
-  return (
-    <div
-      className="rounded-2xl p-6 md:p-7"
-      style={{
-        background: '#FFFFFF',
-        border: `1px solid ${HAIRLINE}`,
-        boxShadow: '0 20px 40px rgba(4,30,66,0.06)',
-      }}
-    >
-      <div className="flex items-baseline gap-2 mb-4">
-        <span
-          className="font-bold"
-          style={{
-            fontSize: 'clamp(48px, 5vw, 72px)',
-            color: NAVY,
-            letterSpacing: '-0.04em',
-            lineHeight: 1,
-          }}
-        >
-          $82,000
-        </span>
-      </div>
-      <div
-        className="text-[11px] font-bold uppercase mb-6"
-        style={{ color: PURPLE, letterSpacing: '0.16em' }}
-      >
-        Pre-qualified offer
-      </div>
-      <div className="flex flex-col gap-2.5">
-        {[
-          ['Apply', 'under 2 min', true],
-          ['Approval', 'same day', true],
-          ['Funds arrive', 'next business day', true],
-        ].map(([label, value, done]) => (
-          <div
-            key={label as string}
-            className="flex items-center justify-between px-4 py-3 rounded-xl"
-            style={{ background: done ? `${PURPLE}08` : IVORY }}
-          >
-            <div className="flex items-center gap-3">
-              <span
-                className="inline-flex items-center justify-center rounded-full"
-                style={{ width: 18, height: 18, background: PURPLE }}
-              >
-                <Check size={10} color="#FFFFFF" strokeWidth={3} />
-              </span>
-              <span style={{ color: NAVY, fontSize: 14, fontWeight: 600 }}>{label}</span>
-            </div>
-            <span style={{ color: MUTED, fontSize: 13 }}>{value}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function RepaymentTermsVisual() {
-  // Non-chart visual — deliberately different from the AutomatedRepayment
-  // chart in the lavender band directly below this section. Frames the
-  // offer as a clean "terms at a glance" receipt: principal, flat fee,
-  // hold rate, term — the way an operator actually thinks about a deal.
-  const terms: Array<{ k: string; v: string; sub?: string }> = [
-    { k: 'Advance amount',  v: '$50,000',  sub: 'wired to your bank' },
-    { k: 'One flat fee',    v: '$5,500',   sub: 'no interest, never grows' },
-    { k: 'Daily hold rate', v: '8.0%',     sub: 'of each day’s card volume' },
-    { k: 'Target term',     v: '~9 months', sub: '90 – 360 days typical' },
-  ];
-  return (
-    <div
-      className="rounded-2xl p-6 md:p-7"
-      style={{
-        background: '#FFFFFF',
-        border: `1px solid ${HAIRLINE}`,
-        boxShadow: '0 20px 40px rgba(4,30,66,0.06)',
-      }}
-    >
-      <div className="flex items-center justify-between mb-5">
-        <div>
-          <div className="text-[11px] font-bold uppercase" style={{ color: MICRO, letterSpacing: '0.14em' }}>
-            Your offer
-          </div>
-          <div className="font-bold text-lg mt-1" style={{ color: NAVY }}>
-            Terms at a glance
-          </div>
-        </div>
-        <div
-          className="text-[10px] font-bold uppercase px-2.5 py-1 rounded-full"
-          style={{
-            background: `${PURPLE}12`,
-            color: PURPLE,
-            letterSpacing: '0.14em',
-          }}
-        >
-          Pre-qualified
-        </div>
-      </div>
-
-      <div
-        className="flex flex-col"
-        style={{ border: `1px solid ${HAIRLINE}`, borderRadius: 14, overflow: 'hidden' }}
-      >
-        {terms.map((t, i) => (
-          <div
-            key={t.k}
-            className="flex items-center justify-between px-4 py-3.5"
-            style={{
-              background: i % 2 === 0 ? IVORY : '#FFFFFF',
-              borderTop: i === 0 ? 'none' : `1px solid ${HAIRLINE}`,
-            }}
-          >
-            <div className="min-w-0">
-              <div
-                className="text-[11px] font-bold uppercase"
-                style={{ color: MICRO, letterSpacing: '0.12em' }}
-              >
-                {t.k}
-              </div>
-              {t.sub && (
-                <div style={{ color: MUTED, fontSize: 12, marginTop: 2 }}>{t.sub}</div>
-              )}
-            </div>
-            <div
-              className="font-bold"
-              style={{
-                color: NAVY,
-                fontSize: 18,
-                letterSpacing: '-0.01em',
-                fontVariantNumeric: 'tabular-nums',
-              }}
-            >
-              {t.v}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="mt-4 flex items-center gap-2 text-[11.5px]" style={{ color: MUTED }}>
-        <Check size={12} color={PURPLE} strokeWidth={3} />
-        <span>No late fees · no prepayment penalty · pay it off any time</span>
-      </div>
-    </div>
-  );
-}
-
-/* ─── Resource visuals (subject-specific glyph illustrations) ── */
-function ChecklistVisual() {
-  const rows = [
-    { label: 'Validate new market demand', done: true },
-    { label: 'Secure expansion capital',   done: true },
-    { label: 'Hire & onboard local team',  done: false },
-    { label: 'Launch & measure',           done: false },
-  ];
-  return (
-    <div
-      aria-hidden="true"
-      className="absolute inset-0 flex items-center justify-center px-6"
-    >
-      <div
-        className="w-full rounded-xl p-4 flex flex-col gap-2"
-        style={{
-          background: '#FFFFFF',
-          border: `1px solid ${HAIRLINE}`,
-          boxShadow: '0 8px 24px rgba(4,30,66,0.06)',
-        }}
-      >
-        {rows.map((r, i) => (
-          <div key={i} className="flex items-center gap-2">
-            <div
-              className="w-4 h-4 rounded flex items-center justify-center flex-shrink-0"
-              style={{
-                background: r.done ? PURPLE : '#FFFFFF',
-                border: r.done ? 'none' : `1.5px solid ${MICRO}`,
-              }}
-            >
-              {r.done && <Check size={11} color="#FFFFFF" strokeWidth={3} />}
-            </div>
-            <div
-              className="h-1.5 rounded-full flex-1"
-              style={{
-                background: r.done ? 'rgba(73,69,255,0.18)' : 'rgba(148,163,184,0.25)',
-                width: `${[88, 76, 92, 70][i]}%`,
-              }}
-            />
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function RevenueChartVisual() {
-  // Mini bar chart: 2024 / 2025 / 2026 revenue brackets
-  const bars = [
-    { h: 38, label: '2024' },
-    { h: 58, label: '2025' },
-    { h: 84, label: '2026' },
-  ];
-  return (
-    <div
-      aria-hidden="true"
-      className="absolute inset-0 flex items-end justify-center gap-3 px-8 pb-5"
-    >
-      {bars.map((b, i) => (
-        <div key={i} className="flex flex-col items-center gap-1.5" style={{ width: 40 }}>
-          <div
-            className="w-full rounded-t-md"
-            style={{
-              height: b.h,
-              background: i === bars.length - 1
-                ? `linear-gradient(180deg, ${PURPLE} 0%, #6E6BFF 100%)`
-                : 'rgba(73,69,255,0.32)',
-            }}
-          />
-          <span className="text-[9px] font-bold" style={{ color: NAVY, letterSpacing: '0.04em' }}>
-            {b.label}
-          </span>
-        </div>
-      ))}
-      {/* axis hairline */}
-      <div
-        className="absolute left-6 right-6"
-        style={{ bottom: 22, height: 1, background: HAIRLINE }}
-      />
-    </div>
-  );
-}
-
-function LoanStepsVisual() {
-  const steps = ['Apply', 'Review', 'Funded'];
-  return (
-    <div
-      aria-hidden="true"
-      className="absolute inset-0 flex items-center justify-center px-5"
-    >
-      <div className="flex items-center gap-2 w-full">
-        {steps.map((s, i) => (
-          <div key={i} className="flex items-center gap-2 flex-1">
-            <div
-              className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold flex-shrink-0"
-              style={{
-                background: i === steps.length - 1 ? PURPLE : '#FFFFFF',
-                color: i === steps.length - 1 ? '#FFFFFF' : NAVY,
-                border: i === steps.length - 1 ? 'none' : `1.5px solid ${HAIRLINE}`,
-              }}
-            >
-              {i + 1}
-            </div>
-            <div className="flex flex-col gap-0.5 min-w-0">
-              <span className="text-[10px] font-bold" style={{ color: NAVY, letterSpacing: '0.02em' }}>
-                {s}
-              </span>
-              {i < steps.length - 1 && (
-                <div
-                  className="h-[2px] rounded-full"
-                  style={{
-                    background: i === 0 ? PURPLE : 'rgba(73,69,255,0.32)',
-                    width: i === 0 ? '100%' : '60%',
-                  }}
-                />
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-/* ─── Resource card (developed: visual band + meta + footer CTA) */
-function ResourceCard({
-  to,
+/* ─── Two-up speed cards (Easy application / Fast deposit) ───── */
+function SpeedCard({
+  eyebrow,
   title,
-  excerpt,
-  tag,
-  cta,
-  readTime,
-  visualBg,
-  visual,
+  body,
+  bullets,
+  icon,
 }: {
-  to: string;
+  eyebrow: string;
   title: string;
-  excerpt: string;
-  tag: string;
-  cta: 'Download' | 'Read';
-  readTime: string;
-  visualBg: string;
-  visual: React.ReactNode;
+  body: string;
+  bullets: string[];
+  icon: React.ReactNode;
 }) {
   return (
-    <Link
-      to={to}
-      className="group rounded-2xl flex flex-col overflow-hidden transition-all duration-200"
+    <div
+      className="rounded-2xl p-7 md:p-8 h-full flex flex-col"
       style={{
         background: '#FFFFFF',
         border: `1px solid ${HAIRLINE}`,
-        boxShadow: '0 1px 2px rgba(4,30,66,0.04)',
-      }}
-      onMouseEnter={(e) => {
-        const el = e.currentTarget as HTMLAnchorElement;
-        el.style.transform = 'translateY(-3px)';
-        el.style.boxShadow = '0 18px 40px rgba(4,30,66,0.10)';
-        el.style.borderColor = 'rgba(73,69,255,0.32)';
-      }}
-      onMouseLeave={(e) => {
-        const el = e.currentTarget as HTMLAnchorElement;
-        el.style.transform = 'translateY(0)';
-        el.style.boxShadow = '0 1px 2px rgba(4,30,66,0.04)';
-        el.style.borderColor = HAIRLINE;
+        boxShadow: '0 8px 24px rgba(4,30,66,0.04)',
       }}
     >
-      {/* Visual band */}
       <div
-        className="relative w-full"
-        style={{
-          height: 152,
-          background: visualBg,
-          borderBottom: `1px solid ${HAIRLINE}`,
-        }}
+        className="w-12 h-12 rounded-xl flex items-center justify-center mb-5"
+        style={{ background: `${PURPLE}14` }}
       >
-        {visual}
+        {icon}
       </div>
-
-      {/* Body */}
-      <div className="flex flex-col gap-3 p-6 flex-1">
-        <div className="flex items-center gap-2">
-          <span
-            className="text-[10px] font-bold uppercase px-2 py-1 rounded"
-            style={{
-              color: PURPLE,
-              background: 'rgba(73,69,255,0.10)',
-              letterSpacing: '0.14em',
-            }}
-          >
-            {tag}
-          </span>
-          <span className="text-[11px] font-medium" style={{ color: MICRO }}>
-            · {readTime} read
-          </span>
-        </div>
-
-        <h3
-          className="font-bold text-[17px] leading-snug"
-          style={{ color: NAVY, fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: '-0.01em' }}
-        >
-          {title}
-        </h3>
-
-        <p className="text-[13.5px] leading-relaxed flex-1" style={{ color: MUTED }}>
-          {excerpt}
-        </p>
-
-        {/* Footer CTA bar */}
-        <div
-          className="flex items-center justify-between pt-3 mt-1"
-          style={{ borderTop: `1px solid ${HAIRLINE}` }}
-        >
-          <span className="text-[13px] font-semibold" style={{ color: PURPLE }}>
-            {cta}
-          </span>
-          <ArrowRight
-            size={14}
-            color={PURPLE}
-            className="transition-transform duration-200 group-hover:translate-x-1"
-          />
-        </div>
+      <div
+        className="text-[11px] font-bold uppercase mb-2"
+        style={{ color: PURPLE, letterSpacing: '0.16em' }}
+      >
+        {eyebrow}
       </div>
-    </Link>
+      <h3
+        className="font-bold mb-3"
+        style={{ color: NAVY, fontSize: 'clamp(22px, 2vw, 26px)', letterSpacing: '-0.015em', lineHeight: 1.2 }}
+      >
+        {title}
+      </h3>
+      <p className="leading-relaxed mb-5" style={{ color: MUTED, fontSize: 15 }}>{body}</p>
+      <ul className="flex flex-col gap-2.5 mt-auto">
+        {bullets.map((b) => (
+          <li key={b} className="flex items-start gap-2.5">
+            <span
+              className="inline-flex items-center justify-center rounded-full flex-shrink-0"
+              style={{ width: 18, height: 18, background: `${PURPLE}15`, marginTop: 2 }}
+            >
+              <Check size={11} color={PURPLE} strokeWidth={3} />
+            </span>
+            <span style={{ color: NAVY, fontSize: 14, lineHeight: 1.55 }}>{b}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
-/* ─── Main page ──────────────────────────────────────────────── */
+/* ─── Page ───────────────────────────────────────────────────── */
 export function CapitalPage() {
   const [activeTestimonial, setActiveTestimonial] = useState(0);
   const t = TESTIMONIALS[activeTestimonial];
 
+  const heroChips = [
+    'Apply in minutes, no long forms',
+    'No interest — one flat fee',
+    'Funded as soon as the next business day',
+  ];
+
   return (
     <div style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", background: '#FFFFFF' }}>
 
-      {/* ═══ 1. WHITE SPLIT HERO (Toast pattern) ════════════════════ */}
+      {/* ═══ 1. HERO — split, three value chips, dashboard offer card ═══ */}
       <section className="px-6 pt-32 pb-20 md:pt-40 md:pb-28" style={{ background: '#FFFFFF' }}>
         <div
           style={{ maxWidth: 1200, margin: '0 auto' }}
           className="grid grid-cols-1 md:grid-cols-[1.05fr_0.95fr] gap-10 md:gap-16 items-center"
         >
-          {/* Copy side */}
           <div>
-            {/* Breadcrumb chip */}
             <div className="flex items-center gap-2 mb-6">
               <span
                 className="inline-block rounded-full"
@@ -715,27 +462,41 @@ export function CapitalPage() {
             </div>
 
             <h1
-              className="font-bold leading-[1.05]"
+              className="font-bold leading-[1.03]"
               style={{
-                fontSize: 'clamp(40px, 5.5vw, 68px)',
-                letterSpacing: '-0.03em',
+                fontSize: 'clamp(40px, 5.6vw, 72px)',
+                letterSpacing: '-0.035em',
                 color: NAVY,
               }}
             >
-              Fast, easy, and flexible funding from a partner who gets it.
+              Quick, easy funding for every stage of business.
             </h1>
 
             <p
               className="mt-6 max-w-xl leading-relaxed"
               style={{ fontSize: 'clamp(16px, 1.2vw, 18px)', color: MUTED }}
             >
-              Access loans ranging from{' '}
-              <strong style={{ color: NAVY }}>$1,000 to $300,000</strong> with Delt Capital.
-              Repayment flexes with your daily card sales — nothing to schedule, nothing to
-              remember.
+              Delt Capital advances range from <strong style={{ color: NAVY }}>$1,000 to $300,000</strong>{' '}
+              and repay as a small share of your daily card sales. No long forms, no compounding interest,
+              no personal guarantee.
             </p>
 
-            <div className="mt-9 flex flex-wrap items-center gap-4">
+            {/* Value chips */}
+            <ul className="mt-8 flex flex-col gap-2.5">
+              {heroChips.map((c) => (
+                <li key={c} className="flex items-center gap-3">
+                  <span
+                    className="inline-flex items-center justify-center rounded-full flex-shrink-0"
+                    style={{ width: 22, height: 22, background: `${PURPLE}18` }}
+                  >
+                    <Check size={13} color={PURPLE} strokeWidth={3} />
+                  </span>
+                  <span style={{ color: NAVY, fontSize: 15.5, fontWeight: 500 }}>{c}</span>
+                </li>
+              ))}
+            </ul>
+
+            <div className="mt-10 flex flex-wrap items-center gap-4">
               <Link
                 to="/onboarding"
                 className="inline-flex items-center gap-2 rounded-full px-7 py-3.5 font-semibold text-white transition-all duration-200 hover:brightness-110"
@@ -745,7 +506,7 @@ export function CapitalPage() {
                   boxShadow: `0 4px 18px ${PURPLE}40`,
                 }}
               >
-                See if you're pre-qualified
+                Check your eligibility
                 <ArrowRight size={16} />
               </Link>
               <Link
@@ -753,202 +514,157 @@ export function CapitalPage() {
                 className="inline-flex items-center gap-2 font-semibold transition-colors"
                 style={{ color: PURPLE, fontSize: 15 }}
               >
-                Schedule a demo
+                Talk to a specialist
                 <ArrowRight size={14} />
               </Link>
             </div>
           </div>
 
-          {/* Visual side — floating dashboard card */}
           <div className="relative">
-            <div
-              className="relative rounded-3xl overflow-hidden"
-              style={{
-                background: '#FFFFFF',
-                border: `1px solid ${HAIRLINE}`,
-                boxShadow: '0 30px 60px rgba(4,30,66,0.10)',
-              }}
-            >
-              {/* Top bar */}
-              <div
-                className="px-6 py-4 flex items-center gap-3"
-                style={{ borderBottom: `1px solid ${HAIRLINE}` }}
-              >
-                <div className="flex items-center gap-1.5">
-                  <span className="inline-block rounded-full" style={{ width: 10, height: 10, background: '#E5E7EB' }} />
-                  <span className="inline-block rounded-full" style={{ width: 10, height: 10, background: '#E5E7EB' }} />
-                  <span className="inline-block rounded-full" style={{ width: 10, height: 10, background: '#E5E7EB' }} />
-                </div>
-                <div
-                  className="ml-3 text-xs font-semibold"
-                  style={{ color: NAVY }}
-                >
-                  Delt Capital · Pre-qualified offer
-                </div>
-              </div>
-              {/* Body */}
-              <div className="p-6 md:p-8" style={{ background: IVORY }}>
-                <div
-                  className="text-[11px] font-bold uppercase mb-2"
-                  style={{ color: PURPLE, letterSpacing: '0.18em' }}
-                >
-                  You qualify for up to
-                </div>
-                <div
-                  className="font-bold mb-1"
-                  style={{
-                    fontSize: 'clamp(44px, 6vw, 72px)',
-                    color: NAVY,
-                    letterSpacing: '-0.04em',
-                    lineHeight: 1,
-                  }}
-                >
-                  $82,000
-                </div>
-                <div className="text-sm" style={{ color: MUTED }}>
-                  at <strong style={{ color: NAVY }}>8% flat fee</strong> · repay from daily card sales
-                </div>
-
-                {/* Progress rail */}
-                <div className="mt-7">
-                  <div
-                    className="flex items-center justify-between text-[11px] font-semibold mb-2"
-                    style={{ color: MICRO, letterSpacing: '0.1em' }}
-                  >
-                    <span>$1,000</span>
-                    <span>$300,000</span>
-                  </div>
-                  <div
-                    className="w-full h-2 rounded-full overflow-hidden"
-                    style={{ background: `${PURPLE}18` }}
-                  >
-                    <motion.div
-                      className="h-full rounded-full"
-                      style={{ background: PURPLE }}
-                      initial={{ width: 0 }}
-                      animate={{ width: '62%' }}
-                      transition={{ duration: 1.2, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
-                    />
-                  </div>
-                </div>
-
-                {/* Stats grid */}
-                <div
-                  className="mt-6 grid grid-cols-3 gap-3"
-                >
-                  {[
-                    ['Approval', 'Same day'],
-                    ['Funding', 'Next day'],
-                    ['Fees', '$0 upfront'],
-                  ].map(([k, v]) => (
-                    <div
-                      key={k}
-                      className="rounded-xl p-3"
-                      style={{ background: '#FFFFFF', border: `1px solid ${HAIRLINE}` }}
-                    >
-                      <div className="text-[10px] font-bold uppercase" style={{ color: MICRO, letterSpacing: '0.12em' }}>{k}</div>
-                      <div className="font-semibold text-sm mt-1" style={{ color: NAVY }}>{v}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+            <HeroOfferCard />
           </div>
         </div>
       </section>
 
-      {/* ═══ 2. SECTION HEADLINE (white) ═══════════════════════════ */}
-      <section className="px-6 pt-10 pb-4" style={{ background: '#FFFFFF' }}>
-        <div style={{ maxWidth: 900, margin: '0 auto' }} className="text-center">
-          <h2
-            className="font-bold mb-4 leading-[1.1]"
-            style={{
-              fontSize: 'clamp(32px, 4vw, 48px)',
-              color: NAVY,
-              letterSpacing: '-0.025em',
-            }}
-          >
-            A financial partner like no other
-          </h2>
-          <p
-            className="mx-auto leading-relaxed"
-            style={{ color: MUTED, fontSize: 'clamp(15px, 1.2vw, 17px)', maxWidth: 640 }}
-          >
-            We've been building alongside small-business owners for years, which means
-            industry-specific nuances like seasonality don't scare us one bit.
-          </p>
+      {/* ═══ 2. THREE-UP VALUE PILLARS (lavender band) ═══════════════ */}
+      <section className="px-6 py-20 md:py-24" style={{ background: LAVENDER }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <PillarCard
+              icon={<FileText size={22} color={PURPLE} />}
+              title="Apply in minutes, no long forms."
+              body="If you process with Delt, we already have what we need. Most owners finish in under two minutes — no tax returns, no bank statements to upload, no waiting on a loan officer to call back."
+            />
+            <PillarCard
+              icon={<Wallet size={22} color={PURPLE} />}
+              title="No interest. Just one flat fee."
+              body="What you owe on day one is what you owe at the end. No compounding interest, no late fees, no prepayment penalty — your balance never grows."
+            />
+            <PillarCard
+              icon={<Clock size={22} color={PURPLE} />}
+              title="Get money as soon as tomorrow."
+              body="Most approvals land same-day. Funds arrive in your linked account the next business day — or instantly with a Delt Checking account."
+            />
+          </div>
         </div>
       </section>
 
-      {/* ═══ 3. ALTERNATING FEATURE BLOCKS (white) ══════════════════ */}
-      <section className="px-6 py-12 md:py-16" style={{ background: '#FFFFFF' }}>
-        <div style={{ maxWidth: 1120, margin: '0 auto' }} className="flex flex-col gap-20 md:gap-28">
-          <FeatureBlock
-            eyebrow="Built around your business"
-            title="We know how your business actually works."
-            body="We don't underwrite on a credit score and a tax return. We read the signals your business already gives off — daily card volume, time on Delt, customer mix, seasonality — and size an offer to your real cash flow. The longer you process with us, the better the offer gets."
-            bullets={[
-              'Sized to your processing volume — not a generic credit formula',
-              'Offers re-evaluated daily as your sales evolve',
-              'No tax returns, no collateral, no personal guarantee',
-              'Funded retail, restaurants, salons, services, fitness & e-commerce',
-            ]}
-            visual={<IndustryVisual />}
-          />
-          <FeatureBlock
-            reverse
-            eyebrow="Fast & flexible"
-            title="From $1K to $300K — funded as soon as tomorrow."
-            body="Apply in minutes from your Delt dashboard. Most approvals land same-day and funds arrive in your account the next business day, subject to eligibility."
-            bullets={[
-              'Loan amounts from $1,000 to $300,000',
-              'Fixed fee — no compounding interest or hidden charges',
-              'No prepayment penalty, no late fees',
-            ]}
-            visual={<SpeedVisual />}
-          />
-          <FeatureBlock
-            eyebrow="Easy repayment"
-            title="One flat fee. No interest. No surprises."
-            body="Your repayment is a fixed percentage of each day's card volume — quiet day, pay less; busy day, pay a little more. There's no compounding interest, no late fees, and no penalty if you pay it off early."
-            bullets={[
-              'One flat fee disclosed upfront — your balance never grows',
-              'Automatic from daily card sales — no invoices, no transfers',
-              'No late fees, no prepayment penalty',
-              'Typical target terms of 90 to 360 days',
-            ]}
-            visual={<RepaymentTermsVisual />}
-          />
-        </div>
-      </section>
-
-      {/* ═══ 4. LAVENDER FULL-BLEED DATA BAND ═════════════════════ */}
-      <section className="px-6 py-20 md:py-28" style={{ background: LAVENDER }}>
-        <div style={{ maxWidth: 1120, margin: '0 auto' }}>
-          <div className="text-center mb-10">
+      {/* ═══ 3. CUSTOM OFFER — split, copy left, offer factors right ═══ */}
+      <section className="px-6 py-20 md:py-28" style={{ background: '#FFFFFF' }}>
+        <div
+          style={{ maxWidth: 1120, margin: '0 auto' }}
+          className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 items-center"
+        >
+          <div>
             <div
               className="text-[12px] font-bold uppercase mb-3"
               style={{ color: PURPLE, letterSpacing: '0.18em' }}
             >
-              Automated daily repayment
+              A custom offer, built for your business
             </div>
             <h2
-              className="font-bold leading-[1.1] mb-4"
+              className="font-bold leading-[1.1] mb-5"
               style={{
-                fontSize: 'clamp(32px, 4vw, 48px)',
+                fontSize: 'clamp(30px, 3.6vw, 46px)',
                 color: NAVY,
                 letterSpacing: '-0.025em',
               }}
             >
-              A rhythm that matches your week.
+              Process with Delt to get an offer sized to your real cash flow.
             </h2>
-            <p
-              className="mx-auto leading-relaxed"
-              style={{ fontSize: 'clamp(15px, 1.2vw, 17px)', color: MUTED, maxWidth: 620 }}
-            >
-              In small business, unpredictability is predictable. Delt Capital repayment flexes
-              with your cash flow — automatically.
+            <p className="leading-relaxed mb-6" style={{ color: MUTED, fontSize: 16.5 }}>
+              We don't underwrite on a credit score and a tax return. We read the signals your business
+              already gives off — how long you've been processing with us, your daily card volume, your
+              customer mix, and your typical seasonality — and size an offer to your real cash flow.
+              The longer you process with Delt, the better the offer tends to get.
             </p>
+            <ul className="flex flex-col gap-3 mb-7">
+              {[
+                'Offers from $1,000 up to $300,000',
+                'Re-evaluated daily as your sales evolve',
+                'No tax returns, no collateral, no personal guarantee',
+                'Checking your offer never affects your credit score',
+              ].map((b) => (
+                <li key={b} className="flex items-start gap-3">
+                  <span
+                    className="inline-flex items-center justify-center rounded-full flex-shrink-0"
+                    style={{ width: 20, height: 20, background: `${PURPLE}15`, marginTop: 2 }}
+                  >
+                    <Check size={12} color={PURPLE} strokeWidth={3} />
+                  </span>
+                  <span style={{ color: NAVY, fontSize: 15, lineHeight: 1.55 }}>{b}</span>
+                </li>
+              ))}
+            </ul>
+            <Link
+              to="/onboarding"
+              className="inline-flex items-center gap-2 font-semibold"
+              style={{ color: PURPLE, fontSize: 15 }}
+            >
+              Check your eligibility
+              <ArrowRight size={16} />
+            </Link>
+          </div>
+
+          <OfferFactorsCard />
+        </div>
+      </section>
+
+      {/* ═══ 4. AUTOMATED REPAYMENT — lavender full-bleed band ═════════ */}
+      <section className="px-6 py-20 md:py-28" style={{ background: LAVENDER }}>
+        <div style={{ maxWidth: 1120, margin: '0 auto' }}>
+          <div
+            className="grid grid-cols-1 md:grid-cols-[1fr_1.2fr] gap-10 md:gap-16 items-center mb-12"
+          >
+            <div>
+              <div
+                className="text-[12px] font-bold uppercase mb-3"
+                style={{ color: PURPLE, letterSpacing: '0.18em' }}
+              >
+                Simplify your to-do list
+              </div>
+              <h2
+                className="font-bold leading-[1.1] mb-4"
+                style={{
+                  fontSize: 'clamp(30px, 3.6vw, 46px)',
+                  color: NAVY,
+                  letterSpacing: '-0.025em',
+                }}
+              >
+                Automated repayments that flex with your week.
+              </h2>
+              <p className="leading-relaxed" style={{ fontSize: 16.5, color: MUTED }}>
+                Repayments happen automatically through your daily Delt card sales — so you have one
+                less thing to think about. The percentage you pay stays the same; the dollar amount
+                adjusts to match your cash flow. Quiet day, you pay less. Busy day, you pay a little
+                more. Nothing to schedule. No invoices. And no interest, so your balance never grows.
+              </p>
+            </div>
+            <ul className="flex flex-col gap-3">
+              {[
+                { k: 'Fixed share of card sales',  v: 'not a flat monthly bill' },
+                { k: 'Automatic from Delt',         v: 'no invoices, no transfers' },
+                { k: 'No late fees',                v: 'no prepayment penalty' },
+                { k: 'Typical target terms',        v: '90 to 360 days' },
+              ].map((item) => (
+                <li
+                  key={item.k}
+                  className="flex items-center justify-between px-5 py-4 rounded-2xl"
+                  style={{ background: '#FFFFFF', border: `1px solid ${HAIRLINE}` }}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span
+                      className="inline-flex items-center justify-center rounded-full flex-shrink-0"
+                      style={{ width: 22, height: 22, background: `${PURPLE}18` }}
+                    >
+                      <Check size={13} color={PURPLE} strokeWidth={3} />
+                    </span>
+                    <span style={{ color: NAVY, fontSize: 15, fontWeight: 600 }}>{item.k}</span>
+                  </div>
+                  <span style={{ color: MUTED, fontSize: 13.5 }}>{item.v}</span>
+                </li>
+              ))}
+            </ul>
           </div>
 
           <div
@@ -966,13 +682,102 @@ export function CapitalPage() {
             className="text-center mt-8 text-xs"
             style={{ color: MICRO, maxWidth: 560, margin: '2rem auto 0' }}
           >
-            On days when your sales are higher, you'll pay a little more. On days your sales are
-            lower, you'll pay less. Illustrative only — actual terms vary by offer.
+            Illustrative only — actual hold rate and term vary by offer. Your dashboard always shows
+            current balance, hold rate, and projected payoff date.
           </p>
         </div>
       </section>
 
-      {/* ═══ 5. TESTIMONIAL (ivory, photo + quote, pagination) ═════ */}
+      {/* ═══ 5. FASTER ACCESS — 2-up (Easy application / Fast deposit) ═ */}
+      <section className="px-6 py-20 md:py-28" style={{ background: '#FFFFFF' }}>
+        <div style={{ maxWidth: 1120, margin: '0 auto' }}>
+          <div className="text-center mb-12">
+            <div
+              className="text-[12px] font-bold uppercase mb-3"
+              style={{ color: PURPLE, letterSpacing: '0.18em' }}
+            >
+              Faster access to funds
+            </div>
+            <h2
+              className="font-bold leading-[1.1]"
+              style={{
+                fontSize: 'clamp(30px, 3.6vw, 46px)',
+                color: NAVY,
+                letterSpacing: '-0.025em',
+              }}
+            >
+              From click to cash in your account — same week.
+            </h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <SpeedCard
+              icon={<FileText size={22} color={PURPLE} />}
+              eyebrow="Easy application"
+              title="A few clicks. No paperwork."
+              body="If you're pre-qualified, you'll see your offer in your Delt dashboard and we'll email you. Requesting funding takes about two minutes — no tax returns, no statements to upload, no loan officer to call."
+              bullets={[
+                'Pre-qualified offers visible in your dashboard',
+                'No documents to upload, no hard pull',
+                'Notified by email the moment you become eligible',
+              ]}
+            />
+            <SpeedCard
+              icon={<Wallet size={22} color={PURPLE} />}
+              eyebrow="Fast deposit"
+              title="Money in your account, next day."
+              body="Once approved, funds wire to your linked account on the next business day — or land instantly if you bank with a Delt Checking account. There's no waiting around for an underwriter to circle back."
+              bullets={[
+                'Next-business-day deposit by default',
+                'Instant deposit with Delt Checking',
+                'No origination fees, no upfront costs',
+              ]}
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ 6. FUNDING-RANGE STATS BAND (navy) ════════════════════════ */}
+      <section
+        className="px-6 py-16 md:py-20"
+        style={{
+          background: NAVY,
+          backgroundImage: `radial-gradient(ellipse at 20% 0%, ${PURPLE}33 0%, transparent 55%), radial-gradient(ellipse at 90% 100%, ${PURPLE}22 0%, transparent 60%)`,
+        }}
+      >
+        <div style={{ maxWidth: 1120, margin: '0 auto' }}>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-y-10 gap-x-6 text-left md:text-left">
+            {[
+              { v: '$1K–$300K', l: 'Offer range, sized to your cash flow' },
+              { v: 'Same day',  l: 'Most approvals land the day you apply' },
+              { v: 'Next day',  l: 'Funds in your account, business days' },
+              { v: '$0',        l: 'Origination fees, late fees, prepay fees' },
+            ].map((s) => (
+              <div key={s.l}>
+                <div
+                  className="font-bold"
+                  style={{
+                    color: '#FFFFFF',
+                    fontSize: 'clamp(28px, 3vw, 40px)',
+                    letterSpacing: '-0.025em',
+                    lineHeight: 1.05,
+                    fontVariantNumeric: 'tabular-nums',
+                  }}
+                >
+                  {s.v}
+                </div>
+                <div
+                  className="mt-2 max-w-[220px]"
+                  style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13.5, lineHeight: 1.5 }}
+                >
+                  {s.l}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ 7. TESTIMONIAL (ivory) ════════════════════════════════════ */}
       <section className="px-6 py-20 md:py-28" style={{ background: IVORY }}>
         <div style={{ maxWidth: 1040, margin: '0 auto' }}>
           <div className="text-center mb-12">
@@ -980,7 +785,7 @@ export function CapitalPage() {
               className="text-[12px] font-bold uppercase mb-3"
               style={{ color: PURPLE, letterSpacing: '0.18em' }}
             >
-              Trusted by owners like you
+              Owners who funded with Delt
             </div>
             <h2
               className="font-bold leading-[1.1]"
@@ -990,7 +795,7 @@ export function CapitalPage() {
                 letterSpacing: '-0.025em',
               }}
             >
-              Real merchants, real stories.
+              Real businesses. Real card sales. Real repayment.
             </h2>
           </div>
 
@@ -1003,7 +808,6 @@ export function CapitalPage() {
               transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
               className="grid grid-cols-1 md:grid-cols-[1fr_1.3fr] gap-8 md:gap-12 items-center"
             >
-              {/* Photo / scene panel */}
               <BusinessScene
                 theme={t.theme}
                 initials={t.initials}
@@ -1013,8 +817,6 @@ export function CapitalPage() {
                 aspect="portrait"
                 variant={t.accent === '#4945FF' ? 'purple' : 'navy'}
               />
-
-              {/* Quote side */}
               <div>
                 <p
                   className="italic leading-[1.35] mb-7"
@@ -1040,7 +842,6 @@ export function CapitalPage() {
             </motion.div>
           </AnimatePresence>
 
-          {/* Pagination controls */}
           <div className="mt-10 flex items-center justify-center gap-4">
             <button
               onClick={() =>
@@ -1079,162 +880,51 @@ export function CapitalPage() {
         </div>
       </section>
 
-      {/* ═══ 6. FAQ (white) ════════════════════════════════════════ */}
+      {/* ═══ 8. FAQ ════════════════════════════════════════════════════ */}
       <section className="px-6 py-20 md:py-28" style={{ background: '#FFFFFF' }}>
         <div style={{ maxWidth: 820, margin: '0 auto' }}>
-          <h2
-            className="font-bold mb-10 text-center leading-[1.1]"
-            style={{
-              fontSize: 'clamp(28px, 3.5vw, 42px)',
-              color: NAVY,
-              letterSpacing: '-0.025em',
-            }}
-          >
-            Frequently asked questions
-          </h2>
+          <div className="text-center mb-10">
+            <div
+              className="text-[12px] font-bold uppercase mb-3"
+              style={{ color: PURPLE, letterSpacing: '0.18em' }}
+            >
+              Talking money
+            </div>
+            <h2
+              className="font-bold leading-[1.1]"
+              style={{
+                fontSize: 'clamp(28px, 3.5vw, 42px)',
+                color: NAVY,
+                letterSpacing: '-0.025em',
+              }}
+            >
+              Common questions, answered.
+            </h2>
+          </div>
           <div className="flex flex-col gap-3">
             {FAQS.map((item, i) => (
               <FaqItem key={item.q} q={item.q} a={item.a} initialOpen={i === 0} />
             ))}
           </div>
-        </div>
-      </section>
-
-      {/* ═══ 7. RESOURCES 3-UP (white, lavender/ivory cards) ═══════ */}
-      <section className="px-6 py-20 md:py-24" style={{ background: '#FFFFFF' }}>
-        <div style={{ maxWidth: 1120, margin: '0 auto' }}>
-          <div className="text-center mb-12">
-            <div
-              className="text-[12px] font-bold uppercase mb-3"
-              style={{ color: PURPLE, letterSpacing: '0.18em' }}
+          <div className="text-center mt-10">
+            <Link
+              to="/help-center"
+              className="inline-flex items-center gap-2 font-semibold"
+              style={{ color: PURPLE, fontSize: 14.5 }}
             >
-              More for your business
-            </div>
-            <h2
-              className="font-bold leading-[1.1]"
-              style={{
-                fontSize: 'clamp(28px, 3.4vw, 40px)',
-                color: NAVY,
-                letterSpacing: '-0.025em',
-              }}
-            >
-              Guides, templates, and playbooks.
-            </h2>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            <ResourceCard
-              to="/resources/expansion-checklist"
-              title="The small-business expansion checklist"
-              excerpt="Eight things every owner needs ready before opening a second location — from market signals to capital readiness."
-              tag="Template"
-              cta="Download"
-              readTime="8 min"
-              visualBg={LAVENDER}
-              visual={<ChecklistVisual />}
-            />
-            <ResourceCard
-              to="/resources/sb-revenue-2026"
-              title="How much do small businesses actually make? (2026 data)"
-              excerpt="Median revenue, margin, and growth benchmarks across retail, food, and services — with the data you can compare against."
-              tag="Research"
-              cta="Read"
-              readTime="12 min"
-              visualBg={IVORY}
-              visual={<RevenueChartVisual />}
-            />
-            <ResourceCard
-              to="/resources/loans-101"
-              title="Loans 101: everything about the application"
-              excerpt="What lenders actually look at, the documents to prepare, and how Delt funds in days instead of weeks."
-              tag="Guide"
-              cta="Read"
-              readTime="10 min"
-              visualBg={LAVENDER}
-              visual={<LoanStepsVisual />}
-            />
+              Visit the Help Center for more
+              <ArrowRight size={14} />
+            </Link>
           </div>
         </div>
       </section>
 
-      {/* ═══ 8. EXISTING-CUSTOMER CROSS-SELL PANEL (ivory rounded) ═ */}
-      <section className="px-6 pb-20" style={{ background: '#FFFFFF' }}>
-        <div style={{ maxWidth: 1120, margin: '0 auto' }}>
-          <div
-            className="relative rounded-3xl overflow-hidden grid grid-cols-1 md:grid-cols-[1.2fr_1fr] gap-8 items-center p-8 md:p-12"
-            style={{ background: IVORY, border: `1px solid ${HAIRLINE}` }}
-          >
-            <div>
-              <div
-                className="text-[12px] font-bold uppercase mb-3"
-                style={{ color: PURPLE, letterSpacing: '0.18em' }}
-              >
-                Already a Delt customer?
-              </div>
-              <h3
-                className="font-bold leading-[1.15] mb-4"
-                style={{
-                  fontSize: 'clamp(24px, 2.6vw, 34px)',
-                  color: NAVY,
-                  letterSpacing: '-0.02em',
-                }}
-              >
-                Check your personalized Capital dashboard to see if you're pre-qualified.
-              </h3>
-              <Link
-                to="/login"
-                className="inline-flex items-center gap-2 font-semibold transition-colors"
-                style={{ color: PURPLE, fontSize: 15 }}
-              >
-                Check eligibility
-                <ArrowRight size={16} />
-              </Link>
-            </div>
-            {/* Mini dashboard mock */}
-            <div
-              className="rounded-2xl p-5"
-              style={{
-                background: '#FFFFFF',
-                border: `1px solid ${HAIRLINE}`,
-                boxShadow: '0 12px 30px rgba(4,30,66,0.06)',
-              }}
-            >
-              <div className="flex items-center gap-3 mb-4">
-                <div
-                  className="w-9 h-9 rounded-xl flex items-center justify-center"
-                  style={{ background: `${PURPLE}12` }}
-                >
-                  <TrendingUp size={16} color={PURPLE} />
-                </div>
-                <div>
-                  <div className="text-[10px] font-bold uppercase" style={{ color: MICRO, letterSpacing: '0.12em' }}>
-                    Your offer
-                  </div>
-                  <div className="font-bold" style={{ color: NAVY, fontSize: 16 }}>
-                    $82,000 available
-                  </div>
-                </div>
-              </div>
-              <div
-                className="w-full h-2 rounded-full overflow-hidden mb-3"
-                style={{ background: `${PURPLE}18` }}
-              >
-                <div className="h-full rounded-full" style={{ width: '62%', background: PURPLE }} />
-              </div>
-              <div className="flex items-center justify-between text-xs">
-                <span style={{ color: MUTED }}>Used $0</span>
-                <span style={{ color: MUTED }}>Remaining $82,000</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ═══ 9. PRODUCT CROSS-SELL (existing component, light) ═════ */}
+      {/* ═══ 9. PRODUCT CROSS-SELL (existing) ════════════════════════ */}
       <ProductCrossSell currentProduct="capital" variant="light" />
 
-      {/* ═══ 10. SMALL CENTERED FINAL CTA (white, no navy slab) ═══ */}
+      {/* ═══ 10. FINAL CTA ═══════════════════════════════════════════ */}
       <section className="px-6 py-20 md:py-24 text-center" style={{ background: '#FFFFFF' }}>
-        <div style={{ maxWidth: 620, margin: '0 auto' }}>
+        <div style={{ maxWidth: 640, margin: '0 auto' }}>
           <div
             className="mb-5"
             style={{
@@ -1250,7 +940,7 @@ export function CapitalPage() {
           <h2
             className="mb-4"
             style={{
-              fontSize: 'clamp(28px, 3.4vw, 40px)',
+              fontSize: 'clamp(30px, 3.6vw, 46px)',
               color: NAVY,
               fontFamily: "'Manrope', 'Inter Tight', sans-serif",
               fontWeight: 600,
@@ -1258,28 +948,29 @@ export function CapitalPage() {
               lineHeight: 1.05,
             }}
           >
-            Get started{' '}
-            <em style={{ fontFamily: "'Source Serif Pro', Georgia, serif", fontStyle: 'italic', fontWeight: 400, color: '#3730A3' }}>today.</em>
+            Get a custom offer{' '}
+            <em style={{ fontFamily: "'Source Serif Pro', Georgia, serif", fontStyle: 'italic', fontWeight: 400, color: PURPLE_DK }}>
+              in minutes.
+            </em>
           </h2>
           <p
             className="mb-8 leading-relaxed mx-auto"
-            style={{ fontSize: 'clamp(15px, 1.2vw, 17px)', color: MUTED, maxWidth: 460, fontFamily: "'Inter', sans-serif" }}
+            style={{ fontSize: 'clamp(15px, 1.2vw, 17px)', color: MUTED, maxWidth: 480 }}
           >
-            Talk to a specialist and see how Delt Capital can help your business.
+            Check your eligibility from your Delt dashboard — no paperwork, no hard pull, no obligation.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4">
             <Link
               to="/onboarding"
-              className="inline-flex items-center gap-2 px-7 py-3.5 text-white transition-all duration-200 hover:brightness-110"
+              className="inline-flex items-center gap-2 rounded-full px-7 py-3.5 text-white transition-all duration-200 hover:brightness-110"
               style={{
-                borderRadius: '6px',
                 background: PURPLE,
                 fontSize: 15,
-                fontFamily: "'Inter', sans-serif",
                 fontWeight: 600,
+                boxShadow: `0 4px 18px ${PURPLE}40`,
               }}
             >
-              Get started
+              Check your eligibility
               <ArrowRight size={16} />
             </Link>
             <Link
@@ -1294,7 +985,7 @@ export function CapitalPage() {
         </div>
       </section>
 
-      {/* ═══ 11. SMALL-PRINT LEGAL BLOCK (soft gradient, no hard band) ═ */}
+      {/* ═══ 11. SMALL-PRINT LEGAL ═══════════════════════════════════ */}
       <div
         className="px-6 pt-9 pb-11"
         style={{ background: '#FFFFFF', borderTop: `1px solid ${HAIRLINE}` }}
@@ -1304,13 +995,15 @@ export function CapitalPage() {
           style={{ color: MICRO, fontSize: 11, lineHeight: 1.7 }}
         >
           <p>
-            Delt Capital loans are issued by Delt Banking Partners, member FDIC. Loans are
-            subject to credit approval and may not be available in certain jurisdictions.
+            Delt Capital advances are issued by Delt Banking Partners, member FDIC. All advances are subject
+            to credit approval and may not be available in every jurisdiction. Actual fees depend on payment
+            card processing history, advance amount, and other eligibility factors.
           </p>
           <p>
-            Pre-qualified offers are based on information about your business and your account
-            history with Delt. All loans subject to credit approval. Illustrative figures shown on
-            this page are for demonstration only.
+            Pre-qualified offers are based on information about your business and your processing history
+            with Delt. Checking your offer does not affect your personal or business credit score. A
+            minimum payment is required and must be repaid as specified in the advance terms. Illustrative
+            figures shown on this page are for demonstration only.
           </p>
         </div>
       </div>
