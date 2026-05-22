@@ -15,6 +15,11 @@ import {
 import { motion } from 'motion/react';
 import { ProductCrossSell } from '@/app/components/ProductCrossSell';
 import { KoronaPartnerBlock } from '@/app/components/KoronaPartnerBlock';
+import industryRestaurants from '@/assets/industries/industry-restaurants.jpg';
+import industryRetail from '@/assets/industries/industry-retail.jpg';
+import industryServices from '@/assets/industries/industry-services.jpg';
+import industrySalon from '@/assets/industries/industry-salon.jpg';
+import industryWellness from '@/assets/industries/industry-wellness.jpg';
 
 /* ════════════════════════════════════════════════════════════
    Wave 3 — Industry page (data-driven)
@@ -62,9 +67,8 @@ const INDUSTRIES: Record<string, Industry> = {
     heroTagline: 'One platform for the dining room, the kitchen, and the line out the door.',
     heroLede:
       'From the first tap on the menu to the last payout of the night, Delt runs front-of-house, back-of-house, and your books on one brain — so your team stops juggling five tools and gets back to the food.',
-    image:
-      'https://images.unsplash.com/photo-1504940892017-d23b9053d5d4?auto=format&fit=crop&w=1600&q=80',
-    imageAlt: 'A chef plating a dish in a busy restaurant kitchen',
+    image: industryRestaurants,
+    imageAlt: 'A guest tapping their card on a payment terminal at a modern restaurant counter',
     featureHeadline: 'Everything a restaurant actually needs — in one spot.',
     features: [
       {
@@ -127,9 +131,8 @@ const INDUSTRIES: Record<string, Industry> = {
     heroTagline: 'Sell in-store, online, and anywhere in between — all running on one brain.',
     heroLede:
       'Your register, your storefront, and your stockroom talk to each other — so a sale in Aisle 3 updates the website in a second, and a refund online doesn’t blow up your inventory.',
-    image:
-      'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1600&q=80',
-    imageAlt: 'A bright modern retail boutique interior with racks of clothing',
+    image: industryRetail,
+    imageAlt: 'A clean modern retail boutique with curated merchandise on a light oak display table',
     featureHeadline: 'One source of truth for every channel.',
     features: [
       {
@@ -192,9 +195,8 @@ const INDUSTRIES: Record<string, Industry> = {
     heroTagline: 'Get paid faster. Spend less time chasing invoices and more on clients.',
     heroLede:
       'Delt turns a patchwork of invoicing, accounting, and billing tools into one clean system — so revenue recognition, ACH, and project profitability aren’t three separate conversations anymore.',
-    image:
-      'https://images.unsplash.com/photo-1664575601711-67110e027b9b?auto=format&fit=crop&w=1600&q=80',
-    imageAlt: 'A professional consultant working at a laptop in a modern office',
+    image: industryServices,
+    imageAlt: 'A consultant working at a laptop in a calm modern office with natural daylight',
     featureHeadline: 'Billing, payments, and profitability — in one place.',
     features: [
       {
@@ -257,9 +259,8 @@ const INDUSTRIES: Record<string, Industry> = {
     heroTagline: 'Booking, payments, and tipping — made for the chair.',
     heroLede:
       'From the chair rental to the retail shelf, Delt handles the whole day: online booking, check-ins, tips, memberships, and the text that cuts your no-shows in half.',
-    image:
-      'https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=1600&q=80',
-    imageAlt: 'A stylish modern salon interior with mirrors and stations',
+    image: industrySalon,
+    imageAlt: 'A premium modern salon chair with brass mirror, marble counter and tools on a styling station',
     featureHeadline: 'Built for how chairs actually get filled.',
     features: [
       {
@@ -322,9 +323,8 @@ const INDUSTRIES: Record<string, Industry> = {
     heroTagline: 'From the front desk to the follow-up, every touchpoint covered.',
     heroLede:
       'Delt keeps class packs, memberships, intake, and follow-up care running on one system — with HIPAA-ready workflows for practices that need them and flexible scheduling for studios that don’t.',
-    image:
-      'https://images.unsplash.com/photo-1651077837628-52b3247550ae?auto=format&fit=crop&w=1600&q=80',
-    imageAlt: 'A bright modern fitness studio with equipment and windows',
+    image: industryWellness,
+    imageAlt: 'A serene minimalist wellness studio with a yoga mat, plant and soft natural light',
     featureHeadline: 'One system from the first visit to the hundredth.',
     features: [
       {
@@ -675,24 +675,27 @@ export function IndustryPage() {
       </section>
 
       {/* ════════ Unified honest-stats ribbon (cross-site cohesion) ════════ */}
-      <section className="px-6 py-10 bg-[#F7F7FB]">
+      <section className="px-6 py-16 bg-white">
         <div className="max-w-[1240px] mx-auto">
-          <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#4945FF] mb-4 text-center">
+          <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#4945FF] mb-6 text-center">
             Delt by the numbers
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-[#EEF0F4] border-y border-[#EEF0F4]">
             {[
               { big: '<1 Day', small: 'Go live', sub: 'Speed' },
               { big: '$847', small: 'Avg. monthly savings', sub: 'Savings' },
               { big: '$50M', small: 'Capital deployed', sub: 'Scale' },
               { big: '97%', small: 'Merchant retention', sub: 'Reliability' },
             ].map((s) => (
-              <div key={s.small} className="text-center">
-                <div className="text-[26px] md:text-[32px] font-bold text-[#4945FF] leading-none mb-1">
+              <div key={s.small} className="text-center py-6 md:py-4 px-4">
+                <div
+                  className="text-[#041E42] font-bold leading-none mb-2"
+                  style={{ fontSize: 'clamp(28px, 3vw, 38px)', letterSpacing: '-0.02em' }}
+                >
                   {s.big}
                 </div>
-                <div className="text-[13px] text-[#041E42] font-semibold">{s.small}</div>
-                <div className="text-[10px] text-[#94A3B8] uppercase tracking-[0.16em] mt-0.5">
+                <div className="text-[13px] text-[#475569]">{s.small}</div>
+                <div className="text-[10px] text-[#4945FF] font-semibold uppercase tracking-[0.18em] mt-2">
                   {s.sub}
                 </div>
               </div>
