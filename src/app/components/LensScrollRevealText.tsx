@@ -156,12 +156,20 @@ export function LensScrollRevealText() {
         }
 
         /* Sticky layer pins the headline AND contains the moving sunset.
-           Both gradient and text scroll-track together. */
+           Both gradient and text scroll-track together.
+
+           The site applies body { zoom: 1.08 } (see styles/index.css), so
+           100vh evaluates to 108% of the *physical* viewport. If we left
+           the sticky frame at a raw 100vh (or worse, 125vh on desktop), its
+           vertical center would sit well below the physical viewport center
+           and the headline would appear to lock too low on the page.
+           Dividing by --site-zoom keeps the sticky frame exactly one physical
+           viewport tall so the centered headline lands at true screen center. */
         .lsrt-sticky {
           position: sticky;
           top: 0;
           width: 100%;
-          height: 100vh;
+          height: calc(100vh / var(--site-zoom, 1));
           display: flex;
           align-items: center;
           justify-content: center;
@@ -169,12 +177,12 @@ export function LensScrollRevealText() {
         }
 
         @media (min-width: 1024px) {
-          /* Desktop has body { zoom: 0.8 } — size everything at 125%
-             so the sticky frame fills the full visible viewport and
-             the outer section scrolls proportionally. Outer trimmed
-             from 400vh to 300vh to remove the empty lead-in band. */
+          /* Outer scroll length stays comfortably tall so the sunset has
+             room to rise; the sticky frame is sized to a single physical
+             viewport (compensating for body { zoom: 1.08 }) so the
+             headline locks visually centered. */
           .lsrt-outer { height: 300vh; }
-          .lsrt-sticky { height: 125vh; }
+          .lsrt-sticky { height: calc(100vh / var(--site-zoom, 1)); }
         }
 
         /* The sunset: a tall vertical gradient strip positioned to start

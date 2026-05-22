@@ -4,7 +4,6 @@ import { Sparkles, ChevronDown, Check, Plus, Mic, ArrowUp, Info } from 'lucide-r
 import { LensScrollRevealText } from '../components/LensScrollRevealText';
 import { LensStackingPanels } from '../components/LensStackingPanels';
 import { Sparkles as SparkleField } from '../components/Sparkles';
-import deltLogoImg from '@/assets/delt-logo-on-light.svg';
 
 /* ─────────────────────────────────────────────────────────────
    PALETTE — strictly #FFFFFF / #041E42 / #4945FF
@@ -217,29 +216,13 @@ export function LensAIPage() {
           WebkitMaskImage: 'linear-gradient(180deg, #000 0%, transparent 80%)',
         }} />
 
-        {/* Eyebrow pill */}
-        <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
-          <span style={{
-            display: 'inline-flex', alignItems: 'center', gap: 8,
-            padding: '8px 16px', borderRadius: 999,
-            border: '1.5px solid rgba(73,69,255,0.25)',
-            background: 'rgba(73,69,255,0.06)',
-            fontSize: 13, fontWeight: 600, color: C.purple,
-          }}>
-            <span style={{
-              width: 7, height: 7, borderRadius: '50%', background: C.purple,
-              animation: 'lensAIPulse 2s ease infinite',
-            }} />
-            Say hello to Lens
-          </span>
-        </div>
-
-        {/* ───── GRADIENT “Lens” WORDMARK + “by Delt” LOCKUP ─────
-           Matches the LensHero portal wordmark — Playfair Display serif,
-           char-by-char rise reveal, gradient that reads vibrant on a
-           light background (brand purple → deep navy). */}
+        {/* ───── GRADIENT “Lens” WORDMARK ─────
+           Matches the LensHero portal wordmark exactly — Playfair Display
+           regular, char-by-char rise reveal, glacial top-to-bottom
+           lavender→indigo gradient. Eyebrow pill and “by Delt” lockup were
+           removed to keep the hero clean. */}
         <div
-          aria-label="Lens by Delt"
+          aria-label="Lens"
           style={{
             position: 'relative',
             display: 'flex',
@@ -252,12 +235,11 @@ export function LensAIPage() {
             className="lens-hero-wordmark"
             style={{
               margin: 0,
-              fontFamily: "'Cormorant Garamond', 'Playfair Display', Georgia, serif",
-              fontStyle: 'italic',
-              fontSize: 'clamp(3.5rem, 8vw, 6.5rem)',
-              fontWeight: 500,
-              lineHeight: 0.95,
-              letterSpacing: '0.005em',
+              fontFamily: "'Playfair Display', Georgia, serif",
+              fontSize: 'clamp(4.42rem, 10.3vw, 9.57rem)',
+              fontWeight: 400,
+              lineHeight: 0.9,
+              letterSpacing: '0.02em',
             }}
           >
             {['L', 'e', 'n', 's'].map((ch, i) => (
@@ -266,22 +248,6 @@ export function LensAIPage() {
               </span>
             ))}
           </h1>
-          <div
-            className="lens-lockup-by"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 8,
-              marginTop: 10,
-            }}
-          >
-            <span style={{ color: C.muted, fontSize: '0.95rem', fontWeight: 500 }}>by</span>
-            <img
-              src={deltLogoImg}
-              alt="Delt"
-              style={{ objectFit: 'contain', height: 18, width: 'auto' }}
-            />
-          </div>
         </div>
 
         {/* Headline */}
@@ -802,13 +768,15 @@ export function LensAIPage() {
         }
 
         /* ── “Lens” wordmark ──
-           Playfair Display serif with a top-to-bottom gradient tuned
-           for a light background. Mirrors LensHero's char-by-char rise. */
+           Matches the LensHero portal wordmark identically — Playfair
+           Display regular at the same clamp sizing, with the glacial
+           top-to-bottom gradient (white → light lavender → deep indigo).
+           Char-by-char rise reveal is preserved. */
         .lens-word-wrap {
           display: inline-block;
           overflow: hidden;
           vertical-align: bottom;
-          line-height: 0.95;
+          line-height: 0.9;
         }
         .lens-word-char {
           display: inline-block;
@@ -825,19 +793,19 @@ export function LensAIPage() {
         /* Override global h1 font-family !important from dc-global-polish.css */
         h1.lens-hero-wordmark,
         h1.lens-hero-wordmark .lens-word-char {
-          font-family: 'Cormorant Garamond', 'Playfair Display', Georgia, serif !important;
-          font-style: italic !important;
-          font-weight: 500 !important;
+          font-family: 'Playfair Display', Georgia, serif !important;
+          font-style: normal !important;
+          font-weight: 400 !important;
         }
         .lens-word-gradient {
           background: linear-gradient(
             180deg,
-            #7B73FF 0%,
-            #5A52FF 22%,
-            #4945FF 45%,
-            #2E2AC7 68%,
-            #1B2A6B 86%,
-            #080A28 100%
+            #FFFFFF 0%,
+            #D6DEFF 18%,
+            #A8B4E8 40%,
+            #7B8ADA 62%,
+            #5A6AC0 80%,
+            #3D4F9A 100%
           );
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
@@ -845,18 +813,8 @@ export function LensAIPage() {
           color: transparent;
         }
 
-        /* “by Delt” lockup fades in after the wordmark finishes rising */
-        .lens-lockup-by {
-          opacity: 0;
-          animation: lensLockupIn 0.6s ease 0.65s forwards;
-        }
-        @keyframes lensLockupIn {
-          to { opacity: 1; }
-        }
-
         @media (prefers-reduced-motion: reduce) {
           .lens-word-char { animation: none; transform: none; }
-          .lens-lockup-by { animation: none; opacity: 1; }
         }
 
         /* ── Chat card entrance ───────────────────────────────────
