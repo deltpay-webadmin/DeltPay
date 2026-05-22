@@ -404,13 +404,13 @@ export function Navigation() {
                           textTransform: 'uppercase',
                         }}
                       >
-                        — NEW · Median time to funds 24h
+                        — NEW · 0% net processing with cash discount
                       </span>
                       <Link
-                        to="/apply"
+                        to="/get-a-quote"
                         className="dc-btn-primary"
                       >
-                        Get Funded
+                        Get a quote
                         <ArrowRight size={12} />
                       </Link>
                     </div>

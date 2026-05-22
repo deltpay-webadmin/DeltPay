@@ -62,7 +62,7 @@ const FAQS = [
   },
   {
     q: "Are there late fees?",
-    a: "No. There are no late fees added to your balance, ever.",
+    a: "No per-day late fees and no penalty interest — your balance never grows because you had a slow week. Each advance does carry a small rolling minimum (a 60-day target tied to your offer), so if collections fall behind that target your dashboard flags it and gives you a one-click ACH true-up. Pay it and you're back on track. No stacking fees, no calls from a collector.",
   },
   {
     q: "Does applying affect my credit?",
