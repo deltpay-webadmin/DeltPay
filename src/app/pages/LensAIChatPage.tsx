@@ -6,7 +6,6 @@ import {
   MessageSquare,
 } from 'lucide-react';
 import deltLogoImg from '@/assets/delt-logo-on-dark.svg';
-import { LensMarkMorph } from '../components/LensMarkMorph';
 
 /* ─────────────────────────────────────────────────────────────
    PALETTE — deep-navy chat surface
@@ -908,10 +907,8 @@ function LensMark({
 function EmptyState({ onPick }: { onPick: (s: string) => void }) {
   return (
     <div style={{ textAlign: 'center', paddingTop: 'clamp(40px, 10vh, 100px)' }}>
-      {/* Premium dot-morph: particles bloom from center and resolve into
-          the LensMark aperture. Loops gently so the page feels alive. */}
       <div style={{ display: 'inline-flex', marginBottom: 22 }}>
-        <LensMarkMorph size={96} loop loopDelayMs={6000} />
+        <LensMark size={56} />
       </div>
       <h1
         style={{
