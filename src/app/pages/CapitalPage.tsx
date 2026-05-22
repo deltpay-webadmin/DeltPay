@@ -211,11 +211,35 @@ function FeatureBlock({ eyebrow, title, body, bullets, reverse, visual }: Featur
 
 /* ─── Visuals for feature blocks ─────────────────────────────── */
 function IndustryVisual() {
-  // Card layout mimicking "funded businesses" tiles
-  const tiles = [
-    { industry: 'Coffee shop · Portland', amount: '$48,000', progress: 82 },
-    { industry: 'Salon · Austin', amount: '$22,500', progress: 55 },
-    { industry: 'Retail · Brooklyn', amount: '$110,000', progress: 38 },
+  // Underwriting "signals we read" card — concrete, Square-style
+  // ("we take into account your time using Square, processing volume,
+  // customer mix, and more."). Pairs with copy about how we actually
+  // underwrite vs. a generic credit formula.
+  const signals = [
+    {
+      label: 'Time on Delt',
+      detail: '14 mo · steady',
+      strength: 88,
+      icon: <Briefcase size={14} color={PURPLE} />,
+    },
+    {
+      label: 'Daily card volume',
+      detail: '$4.8K avg · last 90 days',
+      strength: 76,
+      icon: <TrendingUp size={14} color={PURPLE} />,
+    },
+    {
+      label: 'Customer mix',
+      detail: '62% repeat · 38% new',
+      strength: 70,
+      icon: <RefreshCw size={14} color={PURPLE} />,
+    },
+    {
+      label: 'Seasonality fit',
+      detail: 'Q4 lift · pre-funded',
+      strength: 82,
+      icon: <Zap size={14} color={PURPLE} />,
+    },
   ];
   return (
     <div
@@ -229,10 +253,10 @@ function IndustryVisual() {
       <div className="flex items-center justify-between mb-5">
         <div>
           <div className="text-[11px] font-bold uppercase" style={{ color: MICRO, letterSpacing: '0.14em' }}>
-            Funded this week
+            Underwriting signals
           </div>
           <div className="font-bold text-lg mt-1" style={{ color: NAVY }}>
-            Across 6 industries
+            Read from your business — not a bureau
           </div>
         </div>
         <div
@@ -242,25 +266,40 @@ function IndustryVisual() {
           <Briefcase size={18} color={PURPLE} />
         </div>
       </div>
-      <div className="flex flex-col gap-3">
-        {tiles.map((t) => (
+      <div className="flex flex-col gap-2.5">
+        {signals.map((s) => (
           <div
-            key={t.industry}
-            className="flex items-center gap-4 px-4 py-3 rounded-xl"
+            key={s.label}
+            className="flex items-center gap-3 px-3.5 py-3 rounded-xl"
             style={{ background: IVORY }}
           >
-            <div className="flex-1 min-w-0">
-              <div className="text-xs" style={{ color: MICRO }}>{t.industry}</div>
-              <div className="font-semibold" style={{ color: NAVY, fontSize: 15 }}>{t.amount}</div>
+            <div
+              className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+              style={{ background: `${PURPLE}14` }}
+            >
+              {s.icon}
             </div>
-            <div className="w-24 h-1.5 rounded-full overflow-hidden" style={{ background: `${PURPLE}18` }}>
+            <div className="flex-1 min-w-0">
+              <div className="font-semibold" style={{ color: NAVY, fontSize: 13.5 }}>
+                {s.label}
+              </div>
+              <div className="text-[11.5px]" style={{ color: MICRO }}>{s.detail}</div>
+            </div>
+            <div className="w-16 h-1.5 rounded-full overflow-hidden" style={{ background: `${PURPLE}18` }}>
               <div
                 className="h-full rounded-full"
-                style={{ width: `${t.progress}%`, background: PURPLE }}
+                style={{ width: `${s.strength}%`, background: PURPLE }}
               />
             </div>
           </div>
         ))}
+      </div>
+      <div
+        className="mt-5 pt-4 flex items-center justify-between text-[11px]"
+        style={{ borderTop: `1px solid ${HAIRLINE}`, color: MICRO, letterSpacing: '0.04em' }}
+      >
+        <span className="uppercase font-bold tracking-wider" style={{ color: PURPLE }}>No hard pull</span>
+        <span>Re-evaluated daily</span>
       </div>
     </div>
   );
@@ -323,16 +362,16 @@ function SpeedVisual() {
   );
 }
 
-function RepaymentMiniVisual() {
-  // Simplified daily-sales-vs-repayment mini card
-  const days = [
-    { d: 'M', sales: 45, cap: 7 },
-    { d: 'T', sales: 60, cap: 9 },
-    { d: 'W', sales: 38, cap: 6 },
-    { d: 'T', sales: 72, cap: 11 },
-    { d: 'F', sales: 88, cap: 13 },
-    { d: 'S', sales: 95, cap: 14 },
-    { d: 'S', sales: 55, cap: 8 },
+function RepaymentTermsVisual() {
+  // Non-chart visual — deliberately different from the AutomatedRepayment
+  // chart in the lavender band directly below this section. Frames the
+  // offer as a clean "terms at a glance" receipt: principal, flat fee,
+  // hold rate, term — the way an operator actually thinks about a deal.
+  const terms: Array<{ k: string; v: string; sub?: string }> = [
+    { k: 'Advance amount',  v: '$50,000',  sub: 'wired to your bank' },
+    { k: 'One flat fee',    v: '$5,500',   sub: 'no interest, never grows' },
+    { k: 'Daily hold rate', v: '8.0%',     sub: 'of each day’s card volume' },
+    { k: 'Target term',     v: '~9 months', sub: '90 – 360 days typical' },
   ];
   return (
     <div
@@ -346,43 +385,66 @@ function RepaymentMiniVisual() {
       <div className="flex items-center justify-between mb-5">
         <div>
           <div className="text-[11px] font-bold uppercase" style={{ color: MICRO, letterSpacing: '0.14em' }}>
-            This week
+            Your offer
           </div>
           <div className="font-bold text-lg mt-1" style={{ color: NAVY }}>
-            Sales → repayment
+            Terms at a glance
           </div>
         </div>
-        <div className="flex items-center gap-1.5 text-xs" style={{ color: PURPLE, fontWeight: 600 }}>
-          <span
-            className="inline-block rounded-full"
-            style={{ width: 8, height: 8, background: PURPLE }}
-          />
-          Daily repayment
+        <div
+          className="text-[10px] font-bold uppercase px-2.5 py-1 rounded-full"
+          style={{
+            background: `${PURPLE}12`,
+            color: PURPLE,
+            letterSpacing: '0.14em',
+          }}
+        >
+          Pre-qualified
         </div>
       </div>
-      <div className="flex items-end justify-between gap-2" style={{ height: 140 }}>
-        {days.map((d, i) => (
-          <div key={i} className="flex flex-col items-center gap-2 flex-1">
-            <div className="w-full flex flex-col justify-end" style={{ height: 120 }}>
+
+      <div
+        className="flex flex-col"
+        style={{ border: `1px solid ${HAIRLINE}`, borderRadius: 14, overflow: 'hidden' }}
+      >
+        {terms.map((t, i) => (
+          <div
+            key={t.k}
+            className="flex items-center justify-between px-4 py-3.5"
+            style={{
+              background: i % 2 === 0 ? IVORY : '#FFFFFF',
+              borderTop: i === 0 ? 'none' : `1px solid ${HAIRLINE}`,
+            }}
+          >
+            <div className="min-w-0">
               <div
-                className="w-full rounded-t-md"
-                style={{
-                  height: `${d.cap}%`,
-                  background: PURPLE,
-                }}
-              />
-              <div
-                className="w-full"
-                style={{
-                  height: `${d.sales - d.cap}%`,
-                  background: NAVY,
-                  opacity: 0.92,
-                }}
-              />
+                className="text-[11px] font-bold uppercase"
+                style={{ color: MICRO, letterSpacing: '0.12em' }}
+              >
+                {t.k}
+              </div>
+              {t.sub && (
+                <div style={{ color: MUTED, fontSize: 12, marginTop: 2 }}>{t.sub}</div>
+              )}
             </div>
-            <span className="text-[10px]" style={{ color: MICRO, fontWeight: 600 }}>{d.d}</span>
+            <div
+              className="font-bold"
+              style={{
+                color: NAVY,
+                fontSize: 18,
+                letterSpacing: '-0.01em',
+                fontVariantNumeric: 'tabular-nums',
+              }}
+            >
+              {t.v}
+            </div>
           </div>
         ))}
+      </div>
+
+      <div className="mt-4 flex items-center gap-2 text-[11.5px]" style={{ color: MUTED }}>
+        <Check size={12} color={PURPLE} strokeWidth={3} />
+        <span>No late fees · no prepayment penalty · pay it off any time</span>
       </div>
     </div>
   );
@@ -822,13 +884,14 @@ export function CapitalPage() {
       <section className="px-6 py-12 md:py-16" style={{ background: '#FFFFFF' }}>
         <div style={{ maxWidth: 1120, margin: '0 auto' }} className="flex flex-col gap-20 md:gap-28">
           <FeatureBlock
-            eyebrow="Industry expertise"
+            eyebrow="Built around your business"
             title="We know how your business actually works."
-            body="Retail, restaurants, salons, professional services — we've funded them all. Offers are sized to your real cash flow, not a generic credit formula."
+            body="We don't underwrite on a credit score and a tax return. We read the signals your business already gives off — daily card volume, time on Delt, customer mix, seasonality — and size an offer to your real cash flow. The longer you process with us, the better the offer gets."
             bullets={[
-              'Industry-aware underwriting across 6 verticals',
-              'Offers that match your typical sales seasonality',
-              'No collateral and no lengthy paperwork',
+              'Sized to your processing volume — not a generic credit formula',
+              'Offers re-evaluated daily as your sales evolve',
+              'No tax returns, no collateral, no personal guarantee',
+              'Funded retail, restaurants, salons, services, fitness & e-commerce',
             ]}
             visual={<IndustryVisual />}
           />
@@ -846,14 +909,15 @@ export function CapitalPage() {
           />
           <FeatureBlock
             eyebrow="Easy repayment"
-            title="Payments flex with your daily card sales."
-            body="Your repayment is a fixed percentage of each day's card volume. Quiet week? Pay less. Busy weekend? Pay a little more. Nothing to schedule."
+            title="One flat fee. No interest. No surprises."
+            body="Your repayment is a fixed percentage of each day's card volume — quiet day, pay less; busy day, pay a little more. There's no compounding interest, no late fees, and no penalty if you pay it off early."
             bullets={[
-              'A fixed share of each day\'s card sales — not a flat monthly bill',
-              'Automatic — no invoices, no manual transfers',
+              'One flat fee disclosed upfront — your balance never grows',
+              'Automatic from daily card sales — no invoices, no transfers',
+              'No late fees, no prepayment penalty',
               'Typical target terms of 90 to 360 days',
             ]}
-            visual={<RepaymentMiniVisual />}
+            visual={<RepaymentTermsVisual />}
           />
         </div>
       </section>
