@@ -37,6 +37,34 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router';
 
+// Real hardware photography — wired to data-image-slot IDs
+import imgRegister        from '@/app/assets/hardware/register.jpg';
+import imgHandheld        from '@/app/assets/hardware/handheld.jpg';
+import imgTerminal        from '@/app/assets/hardware/terminal.jpg';
+import imgStand           from '@/app/assets/hardware/stand.jpg';
+import imgKiosk           from '@/app/assets/hardware/kiosk.jpg';
+import imgReader          from '@/app/assets/hardware/reader-contactless.jpg';
+import imgTapToPay        from '@/app/assets/hardware/tap-to-pay.jpg';
+import imgKitAccessories  from '@/app/assets/hardware/kit-accessories.jpg';
+
+const SLOT_IMAGES: Record<string, string> = {
+  'hero-register':              imgRegister,
+  'product-handheld':           imgHandheld,
+  'product-terminal':           imgTerminal,
+  'product-stand':              imgStand,
+  'product-kiosk':              imgKiosk,
+  'product-reader-contactless': imgReader,
+  // Compare-row thumbnails reuse the same source assets
+  'compare-handheld':           imgHandheld,
+  'compare-terminal':           imgTerminal,
+  'compare-stand':              imgStand,
+  'compare-register':           imgRegister,
+  'compare-kiosk':              imgKiosk,
+  'compare-reader':             imgReader,
+  'tap-to-pay':                 imgTapToPay,
+  'kit-accessories':            imgKitAccessories,
+};
+
 /* ─── Design tokens (locked to Delt palette) ───────────────────── */
 const NAVY     = '#041E42';
 const PURPLE   = '#4945FF';
@@ -56,14 +84,38 @@ function ImageSlot({
   ratio = '4 / 3',
   label,
   tone = 'ivory',
+  fit = 'contain',
 }: {
   slot: string;
   ratio?: string;
   label: string;
   tone?: 'ivory' | 'lavender' | 'white';
+  fit?: 'contain' | 'cover';
 }) {
+  const src = SLOT_IMAGES[slot];
   const bg =
     tone === 'lavender' ? '#FFFFFF' : tone === 'white' ? IVORY : '#FFFFFF';
+
+  // Real photo wired in — render <img> with proper object-fit.
+  if (src) {
+    return (
+      <div
+        data-image-slot={slot}
+        className="w-full rounded-2xl overflow-hidden flex items-center justify-center relative"
+        style={{ aspectRatio: ratio, background: bg }}
+      >
+        <img
+          src={src}
+          alt={label}
+          loading="lazy"
+          className="w-full h-full"
+          style={{ objectFit: fit, display: 'block' }}
+        />
+      </div>
+    );
+  }
+
+  // Placeholder fallback for slots still awaiting art.
   return (
     <div
       data-image-slot={slot}
@@ -335,6 +387,7 @@ export function HardwarePage() {
                   ratio="4 / 3"
                   label="Delt Register hero photo (2 screens, on counter)"
                   tone="lavender"
+                  fit="cover"
                 />
               </div>
             </div>
@@ -542,6 +595,7 @@ export function HardwarePage() {
             ratio="4 / 5"
             label="Phone tap-to-pay (hand holding phone, card tapping)"
             tone="white"
+            fit="cover"
           />
         </div>
       </section>
