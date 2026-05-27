@@ -329,6 +329,16 @@ export function ProductsPage() {
             >
               Professional payment hardware designed for reliability and ease of use.
             </p>
+            <div className="mt-6">
+              <Link
+                to="/hardware"
+                className="inline-flex items-center gap-2 font-semibold"
+                style={{ color: PURPLE, fontSize: 15 }}
+              >
+                Shop all hardware
+                <ArrowRight size={14} />
+              </Link>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

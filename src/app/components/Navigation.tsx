@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import {
   Search, X, ArrowRight, Globe, CreditCard, DollarSign, BarChart3,
   Star, User, AlignLeft, HelpCircle, LayoutDashboard, Calculator,
-  ChevronDown, Menu, Globe2, ShieldAlert,
+  ChevronDown, Menu, Globe2, ShieldAlert, Monitor,
 } from 'lucide-react';
 import deltLogoOnDark from '@/assets/delt-logo-on-dark.svg';
 import deltLogoOnLight from '@/assets/delt-logo-on-light.svg';
@@ -30,6 +30,7 @@ const TICKER = [
 const productsCore = [
   { label: 'Payments',  description: 'In-store, online & mobile payment processing',  href: '/payments',         icon: CreditCard },
   { label: 'Capital',   description: 'Revenue-based funding with fast approvals',     href: '/capital',          icon: DollarSign },
+  { label: 'Hardware',  description: 'Terminals, registers, readers & POS hardware',  href: '/hardware',         icon: Monitor },
   { label: 'Websites',  description: 'Professional websites built and managed for you', href: '/website-examples', icon: Globe },
   { label: 'Lens AI',   description: 'Ask your business questions in plain English',  href: '/lens-ai',          icon: BarChart3 },
 ];
