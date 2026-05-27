@@ -39,6 +39,7 @@ import { Link } from 'react-router';
 
 // Real hardware photography — wired to data-image-slot IDs
 import imgRegister        from '@/app/assets/hardware/register.jpg';
+import imgRegisterDelt    from '@/app/assets/hardware/register-delt.jpg';
 import imgHandheld        from '@/app/assets/hardware/handheld.jpg';
 import imgTerminal        from '@/app/assets/hardware/terminal.jpg';
 import imgStand           from '@/app/assets/hardware/stand.jpg';
@@ -46,6 +47,7 @@ import imgKiosk           from '@/app/assets/hardware/kiosk.jpg';
 import imgReader          from '@/app/assets/hardware/reader-contactless.jpg';
 import imgTapToPay        from '@/app/assets/hardware/tap-to-pay.jpg';
 import imgKitAccessories  from '@/app/assets/hardware/kit-accessories.jpg';
+import imgUseServices     from '@/app/assets/hardware/use-services.jpg';
 
 const SLOT_IMAGES: Record<string, string> = {
   'hero-register':              imgRegister,
@@ -62,7 +64,13 @@ const SLOT_IMAGES: Record<string, string> = {
   'compare-kiosk':              imgKiosk,
   'compare-reader':             imgReader,
   'tap-to-pay':                 imgTapToPay,
+  // Customize-setup section
+  'kit-bundle':                 imgRegisterDelt,
   'kit-accessories':            imgKitAccessories,
+  // Use-case section
+  'use-restaurant':             imgRegisterDelt, // recolored Delt register on stand
+  'use-retail':                 imgTerminal,     // countertop terminal
+  'use-services':               imgUseServices,  // VT + contactless reader bundle
 };
 
 /* ─── Design tokens (locked to Delt palette) ───────────────────── */
@@ -198,13 +206,6 @@ export function HardwarePage() {
       price: '$59',
       finance: '',
     },
-    {
-      slot: 'product-reader-magstripe',
-      name: 'Delt Reader (Magstripe)',
-      blurb: 'The swipe reader that never needs a charge.',
-      price: 'First reader FREE',
-      finance: '',
-    },
   ];
 
   /* ─── Comparison matrix (mirrors Square's compare table) ───────── */
@@ -293,9 +294,21 @@ export function HardwarePage() {
 
   /* ─── Use-case trio ────────────────────────────────────────────── */
   const useCases = [
-    { slot: 'use-restaurant', title: 'Restaurants',         text: 'Turn tables, keep orders flowing, and run your restaurant smoothly.' },
-    { slot: 'use-retail',     title: 'Retail',              text: 'Simplify your day-to-day with a complete retail POS system.' },
-    { slot: 'use-services',   title: 'Salons & Services',   text: 'Manage staff, appointments, and payments with ease.' },
+    {
+      slot:  'use-restaurant',
+      title: 'Restaurants',
+      text:  'Turn tables, keep orders flowing, and run your restaurant smoothly with a full-counter register.',
+    },
+    {
+      slot:  'use-retail',
+      title: 'Retail',
+      text:  'Simplify your day-to-day with a complete countertop terminal built for fast checkout.',
+    },
+    {
+      slot:  'use-services',
+      title: 'Salons & Services',
+      text:  'Take payments anywhere with Delt Virtual Terminal plus a contactless reader — a service-business bundle for in-shop, by phone, or on-site.',
+    },
   ];
 
   /* ───────────────────────────────────────────────────────────────────────
