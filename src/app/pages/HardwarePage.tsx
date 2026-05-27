@@ -47,6 +47,7 @@ import imgKiosk           from '@/app/assets/hardware/kiosk.jpg';
 import imgReader          from '@/app/assets/hardware/reader-contactless.jpg';
 import imgTapToPay        from '@/app/assets/hardware/tap-to-pay.jpg';
 import imgKitAccessories  from '@/app/assets/hardware/kit-accessories.jpg';
+import imgKitBundle       from '@/app/assets/hardware/kit-bundle.jpg';
 import imgUseServices     from '@/app/assets/hardware/use-services.jpg';
 
 const SLOT_IMAGES: Record<string, string> = {
@@ -65,7 +66,7 @@ const SLOT_IMAGES: Record<string, string> = {
   'compare-reader':             imgReader,
   'tap-to-pay':                 imgTapToPay,
   // Customize-setup section
-  'kit-bundle':                 imgRegisterDelt,
+  'kit-bundle':                 imgKitBundle,
   'kit-accessories':            imgKitAccessories,
   // Use-case section
   'use-restaurant':             imgRegisterDelt, // recolored Delt register on stand
