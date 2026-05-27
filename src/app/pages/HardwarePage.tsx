@@ -53,7 +53,7 @@ import imgKiosk           from '@/app/assets/hardware/kiosk.png';
 import imgReader          from '@/app/assets/hardware/reader-contactless.png';
 import imgTapToPay        from '@/app/assets/hardware/tap-to-pay.jpg';
 import imgKitAccessories  from '@/app/assets/hardware/kit-accessories.jpg';
-import imgKitBundle       from '@/app/assets/hardware/kit-bundle.jpg';
+import imgKitBundle       from '@/app/assets/hardware/kit-bundle.png';
 import imgUseServices     from '@/app/assets/hardware/use-services.jpg';
 
 const SLOT_IMAGES: Record<string, string> = {
