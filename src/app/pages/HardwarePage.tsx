@@ -44,13 +44,13 @@ import { Link } from 'react-router';
 import { serverFetch } from '@/app/lib/supabase';
 
 // Real hardware photography — wired to data-image-slot IDs
-import imgRegister        from '@/app/assets/hardware/register.jpg';
+import imgRegister        from '@/app/assets/hardware/register.png';
 import imgRegisterDelt    from '@/app/assets/hardware/register-delt.jpg';
-import imgHandheld        from '@/app/assets/hardware/handheld.jpg';
-import imgTerminal        from '@/app/assets/hardware/terminal.jpg';
-import imgStand           from '@/app/assets/hardware/stand.jpg';
-import imgKiosk           from '@/app/assets/hardware/kiosk.jpg';
-import imgReader          from '@/app/assets/hardware/reader-contactless.jpg';
+import imgHandheld        from '@/app/assets/hardware/handheld.png';
+import imgTerminal        from '@/app/assets/hardware/terminal.png';
+import imgStand           from '@/app/assets/hardware/stand.png';
+import imgKiosk           from '@/app/assets/hardware/kiosk.png';
+import imgReader          from '@/app/assets/hardware/reader-contactless.png';
 import imgTapToPay        from '@/app/assets/hardware/tap-to-pay.jpg';
 import imgKitAccessories  from '@/app/assets/hardware/kit-accessories.jpg';
 import imgKitBundle       from '@/app/assets/hardware/kit-bundle.jpg';
