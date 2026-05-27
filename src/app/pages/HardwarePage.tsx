@@ -34,8 +34,14 @@ import {
   Wifi,
   MessageCircle,
   MapPin,
+  Lock,
+  Mail,
+  CheckCircle2,
+  FileText,
 } from 'lucide-react';
+import { useState } from 'react';
 import { Link } from 'react-router';
+import { serverFetch } from '@/app/lib/supabase';
 
 // Real hardware photography — wired to data-image-slot IDs
 import imgRegister        from '@/app/assets/hardware/register.jpg';
@@ -159,6 +165,247 @@ function ImageSlot({
   );
 }
 
+/* PricingGuideGate — email opt-in section between Compare and Tap-to-Pay. */
+function PricingGuideGate() {
+  const [email, setEmail]       = useState('');
+  const [business, setBusiness] = useState('');
+  const [status, setStatus]     = useState<'idle' | 'loading' | 'ok' | 'error'>('idle');
+  const [errorMsg, setErrorMsg] = useState('');
+
+  const PREVIEW_BULLETS = [
+    'Per-device retail price + financing terms (12 / 24 mo)',
+    'Bundle discounts for Restaurant, Retail, and Services kits',
+    'Accessories pricing — cash drawer, scanner, printer',
+    'Volume pricing for 5+ locations and ISO partners',
+  ];
+
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (status === 'loading') return;
+    setStatus('loading');
+    setErrorMsg('');
+    try {
+      const res = await serverFetch('/leads/pricing-guide', {
+        method: 'POST',
+        body: JSON.stringify({
+          email: email.trim(),
+          business: business.trim(),
+          source: 'hardware-pricing-guide',
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data?.ok === false) {
+        setStatus('error');
+        setErrorMsg(data?.error || 'Something went wrong. Please try again.');
+        return;
+      }
+      setStatus('ok');
+    } catch {
+      setStatus('error');
+      setErrorMsg('Network error. Please try again.');
+    }
+  }
+
+  return (
+    <section className="px-6 py-20 md:py-24" style={{ background: '#FFFFFF' }}>
+      <div
+        style={{ maxWidth: 1120, margin: '0 auto' }}
+        className="grid grid-cols-1 md:grid-cols-[1.05fr_1fr] gap-10 md:gap-14 items-stretch"
+      >
+        <div className="rounded-3xl p-8 md:p-10" style={{ background: LAVENDER }}>
+          <div
+            className="inline-flex items-center gap-2 text-[11px] font-bold uppercase mb-5"
+            style={{ color: PURPLE, letterSpacing: '0.18em' }}
+          >
+            <Lock size={12} strokeWidth={2.25} />
+            Pricing
+          </div>
+          <h2
+            className="font-bold leading-[1.1] mb-4"
+            style={{
+              fontSize: 'clamp(28px, 3.4vw, 40px)',
+              color: NAVY,
+              letterSpacing: '-0.025em',
+            }}
+          >
+            Get the Delt Hardware Pricing Guide.
+          </h2>
+          <p
+            className="mb-6 leading-relaxed"
+            style={{ color: MUTED, fontSize: 15, maxWidth: 460 }}
+          >
+            Full, itemized pricing for every Delt device, accessory, and
+            bundle — plus financing terms and volume discounts. Sent
+            straight to your inbox.
+          </p>
+          <ul className="space-y-2.5 mb-2">
+            {PREVIEW_BULLETS.map((b) => (
+              <li key={b} className="flex items-start gap-2.5">
+                <CheckCircle2
+                  size={16}
+                  color={PURPLE}
+                  strokeWidth={2.25}
+                  className="flex-shrink-0 mt-0.5"
+                />
+                <span style={{ color: NAVY, fontSize: 14, lineHeight: 1.5 }}>
+                  {b}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div
+          className="rounded-3xl p-8 md:p-10 flex flex-col"
+          style={{
+            background: '#FFFFFF',
+            border: `1px solid ${HAIRLINE}`,
+            boxShadow: '0 4px 22px rgba(4, 30, 66, 0.06)',
+          }}
+        >
+          {status === 'ok' ? (
+            <div className="flex flex-col items-start justify-center h-full">
+              <div
+                className="w-12 h-12 rounded-full flex items-center justify-center mb-5"
+                style={{ background: `${PURPLE}15` }}
+              >
+                <CheckCircle2 size={24} color={PURPLE} strokeWidth={2} />
+              </div>
+              <h3
+                className="font-bold mb-2 leading-tight"
+                style={{ color: NAVY, fontSize: 22, letterSpacing: '-0.015em' }}
+              >
+                Check your inbox.
+              </h3>
+              <p
+                className="leading-relaxed mb-6"
+                style={{ color: MUTED, fontSize: 14, maxWidth: 380 }}
+              >
+                We just sent the Delt Hardware Pricing Guide to{' '}
+                <span style={{ color: NAVY, fontWeight: 600 }}>{email}</span>.
+                Don't see it in a minute or two? Check your spam folder or
+                grab it directly below.
+              </p>
+              <a
+                href="/assets/delt-hardware-pricing-guide.pdf"
+                className="inline-flex items-center gap-2 rounded-full px-5 py-3 font-semibold text-white"
+                style={{ background: PURPLE, fontSize: 14 }}
+              >
+                <FileText size={14} />
+                Download the guide
+              </a>
+            </div>
+          ) : (
+            <form onSubmit={onSubmit} className="flex flex-col" noValidate>
+              <h3
+                className="font-bold mb-2 leading-tight"
+                style={{ color: NAVY, fontSize: 22, letterSpacing: '-0.015em' }}
+              >
+                Send me the guide
+              </h3>
+              <p
+                className="leading-relaxed mb-6"
+                style={{ color: MUTED, fontSize: 14 }}
+              >
+                We'll email you a copy. No spam, unsubscribe anytime.
+              </p>
+
+              <label
+                className="text-[11px] font-bold uppercase mb-1.5"
+                style={{ color: MICRO, letterSpacing: '0.12em' }}
+                htmlFor="pg-email"
+              >
+                Work email *
+              </label>
+              <div
+                className="flex items-center gap-2 rounded-xl px-3.5 mb-4"
+                style={{
+                  background: '#FFFFFF',
+                  border: `1px solid ${HAIRLINE}`,
+                  height: 46,
+                }}
+              >
+                <Mail size={16} color={MICRO} />
+                <input
+                  id="pg-email"
+                  type="email"
+                  required
+                  autoComplete="email"
+                  placeholder="you@yourbusiness.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="flex-1 bg-transparent outline-none"
+                  style={{ color: NAVY, fontSize: 14 }}
+                />
+              </div>
+
+              <label
+                className="text-[11px] font-bold uppercase mb-1.5"
+                style={{ color: MICRO, letterSpacing: '0.12em' }}
+                htmlFor="pg-business"
+              >
+                Business name (optional)
+              </label>
+              <input
+                id="pg-business"
+                type="text"
+                placeholder="Acme Cafe"
+                value={business}
+                onChange={(e) => setBusiness(e.target.value)}
+                className="rounded-xl px-3.5 mb-6 outline-none"
+                style={{
+                  background: '#FFFFFF',
+                  border: `1px solid ${HAIRLINE}`,
+                  height: 46,
+                  color: NAVY,
+                  fontSize: 14,
+                }}
+              />
+
+              {status === 'error' && (
+                <div
+                  className="rounded-lg px-3 py-2 mb-4 text-[13px]"
+                  style={{ background: '#FEF2F2', color: '#991B1B', border: '1px solid #FECACA' }}
+                >
+                  {errorMsg}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={status === 'loading'}
+                className="inline-flex items-center justify-center gap-2 rounded-full px-6 py-3.5 font-semibold text-white transition-all duration-200 hover:brightness-110 disabled:opacity-60 disabled:cursor-not-allowed"
+                style={{
+                  background: PURPLE,
+                  fontSize: 14,
+                  boxShadow: `0 4px 18px ${PURPLE}40`,
+                }}
+              >
+                {status === 'loading' ? 'Sending…' : (
+                  <>
+                    Email me the guide <ArrowRight size={14} />
+                  </>
+                )}
+              </button>
+
+              <p
+                className="mt-4 leading-relaxed"
+                style={{ color: MICRO, fontSize: 11 }}
+              >
+                By submitting, you agree to receive emails from Delt about
+                hardware and pricing. See our{' '}
+                <Link to="/privacy" style={{ color: PURPLE, textDecoration: 'underline' }}>
+                  Privacy Policy
+                </Link>.
+              </p>
+            </form>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export function HardwarePage() {
   /* ─── Product catalog (mirrors Square's hero grid order) ───────── */
   const heroProduct = {
@@ -182,8 +429,8 @@ export function HardwarePage() {
     },
     {
       slot: 'product-stand',
-      name: 'Delt Stand',
-      blurb: 'The intuitive, swiveling iPad POS.',
+      name: 'Delt Flip',
+      blurb: 'The swiveling countertop POS that flips to your customer for tap, sign, and tip.',
     },
     {
       slot: 'product-kiosk',
@@ -201,7 +448,7 @@ export function HardwarePage() {
   const compareDevices = [
     { key: 'handheld',  name: 'Delt Handheld',  slot: 'compare-handheld'  },
     { key: 'terminal',  name: 'Delt Terminal',  slot: 'compare-terminal'  },
-    { key: 'stand',     name: 'Delt Stand',     slot: 'compare-stand'     },
+    { key: 'stand',     name: 'Delt Flip',      slot: 'compare-stand'     },
     { key: 'register',  name: 'Delt Register',  slot: 'compare-register'  },
     { key: 'kiosk',     name: 'Delt Kiosk',     slot: 'compare-kiosk'     },
     { key: 'reader',    name: 'Delt Reader',    slot: 'compare-reader'    },
@@ -211,10 +458,10 @@ export function HardwarePage() {
     {
       label: 'Accepted payments',
       values: {
-        handheld: 'Tap, chip, magstripe*',
-        terminal: 'Tap, chip, magstripe',
-        stand:    'Tap, chip, magstripe',
-        register: 'Tap, chip, magstripe',
+        handheld: 'Tap, chip',
+        terminal: 'Tap, chip',
+        stand:    'Tap, chip',
+        register: 'Tap, chip',
         kiosk:    'Tap, chip',
         reader:   'Tap, chip',
       },
@@ -243,9 +490,9 @@ export function HardwarePage() {
       values: {
         handheld: 'None',
         terminal: 'None',
-        stand:    'iPad (sold separately)',
+        stand:    'None',
         register: 'None',
-        kiosk:    'iPad (sold separately)',
+        kiosk:    'None',
         reader:   'Phone or tablet',
       },
     },
@@ -254,7 +501,7 @@ export function HardwarePage() {
       values: {
         handheld: 'Delt POS — Restaurant, Retail, Services',
         terminal: 'Delt POS — Restaurant, Retail, Services',
-        stand:    'Delt POS — Retail, Services',
+        stand:    'Delt POS — Restaurant, Retail, Services',
         register: 'Delt POS — Restaurant, Retail, Services',
         kiosk:    'Delt POS — Self-serve',
         reader:   'Delt POS Mobile',
@@ -372,7 +619,7 @@ export function HardwarePage() {
                   ratio="4 / 3"
                   label="Delt Register hero photo (2 screens, on counter)"
                   tone="lavender"
-                  fit="cover"
+                  fit="contain"
                 />
               </div>
             </div>
@@ -523,11 +770,11 @@ export function HardwarePage() {
               </table>
             </div>
           </div>
-          <p className="text-[11px] mt-4" style={{ color: MICRO }}>
-            * Magstripe via Delt Reader for magstripe, sold separately.
-          </p>
         </div>
       </section>
+
+      {/* === 2b. PRICING GUIDE (email-gated) ===================== */}
+      <PricingGuideGate />
 
       {/* ═══ 3. TAP-TO-PAY ON PHONE ══════════════════════════════════ */}
       <section className="px-6 py-20 md:py-28" style={{ background: NAVY }}>
@@ -876,10 +1123,9 @@ export function HardwarePage() {
           style={{ color: MICRO, fontSize: 11, lineHeight: 1.7 }}
         >
           <p>
-            Hardware pricing and financing offers shown are illustrative
-            and subject to change. Financing terms require credit approval.
-            Magstripe support on Delt Handheld requires the optional Delt
-            Reader for magstripe, sold separately.
+            Hardware specifications and availability are subject to change.
+            Pricing is provided on request — request the Delt Hardware
+            Pricing Guide for current, itemized rates and bundle discounts.
           </p>
         </div>
       </div>
