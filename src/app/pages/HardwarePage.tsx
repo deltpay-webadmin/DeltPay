@@ -166,8 +166,6 @@ export function HardwarePage() {
     badge: 'NEW',
     name: 'Delt Register',
     blurb: 'Two responsive screens for lightning-fast checkout.',
-    price: '$899',
-    finance: 'or $44/mo over 24 months',
     href: '/contact-sales',
   };
 
@@ -176,36 +174,26 @@ export function HardwarePage() {
       slot: 'product-handheld',
       name: 'Delt Handheld',
       blurb: 'The powerful POS that moves with you.',
-      price: '$399',
-      finance: 'or $37/mo over 12 months',
     },
     {
       slot: 'product-terminal',
       name: 'Delt Terminal',
       blurb: 'The all-in-one POS with a receipt printer.',
-      price: '$299',
-      finance: 'or $27/mo over 12 months',
     },
     {
       slot: 'product-stand',
       name: 'Delt Stand',
       blurb: 'The intuitive, swiveling iPad POS.',
-      price: '$149',
-      finance: 'or $14/mo over 12 months',
     },
     {
       slot: 'product-kiosk',
       name: 'Delt Kiosk',
       blurb: 'The self-service iPad kiosk.',
-      price: '$149',
-      finance: 'or $14/mo over 12 months',
     },
     {
       slot: 'product-reader-contactless',
       name: 'Delt Reader (Contactless & Chip)',
       blurb: 'The portable reader for every tap and dip.',
-      price: '$59',
-      finance: '',
     },
   ];
 
@@ -272,24 +260,13 @@ export function HardwarePage() {
         reader:   'Delt POS Mobile',
       },
     },
-    {
-      label: 'Price',
-      values: {
-        handheld: '$399',
-        terminal: '$299',
-        stand:    '$149',
-        register: '$899',
-        kiosk:    '$149',
-        reader:   '$59',
-      },
-    },
   ];
 
   /* ─── Trust callouts ───────────────────────────────────────────── */
   const peaceOfMind = [
     { icon: Shield,    title: 'No surprise fees',       text: 'No long-term contracts. Cancel any time.' },
     { icon: RotateCcw, title: 'Free 30-day returns',    text: 'Limited warranty included on every device.' },
-    { icon: Truck,     title: 'Carbon-neutral shipping', text: 'Fast, free shipping on orders over $250.' },
+    { icon: Truck,     title: 'Carbon-neutral shipping', text: 'Fast, free shipping on every qualifying order.' },
     { icon: Wifi,      title: 'Secure offline payments', text: 'Keep taking payments even when the Wi-Fi drops.' },
   ];
 
@@ -382,17 +359,11 @@ export function HardwarePage() {
                 >
                   {heroProduct.blurb}
                 </p>
-                <div className="flex items-baseline gap-2 mb-7">
-                  <span className="font-bold" style={{ color: NAVY, fontSize: 28, letterSpacing: '-0.02em' }}>
-                    {heroProduct.price}
-                  </span>
-                  <span className="text-sm" style={{ color: MICRO }}>{heroProduct.finance}</span>
-                </div>
                 <span
                   className="inline-flex items-center gap-2 rounded-full px-6 py-3 font-semibold text-white"
                   style={{ background: PURPLE, fontSize: 14, boxShadow: `0 4px 18px ${PURPLE}40` }}
                 >
-                  Shop now <ArrowRight size={14} />
+                  Get a quote <ArrowRight size={14} />
                 </span>
               </div>
               <div className="p-8 md:p-10 order-1 md:order-2">
@@ -432,19 +403,12 @@ export function HardwarePage() {
                 >
                   {p.blurb}
                 </p>
-                <div className="flex items-baseline gap-2">
-                  <span
-                    className="font-bold"
-                    style={{ color: NAVY, fontSize: 18, letterSpacing: '-0.02em' }}
-                  >
-                    {p.price}
-                  </span>
-                  {p.finance && (
-                    <span className="text-xs" style={{ color: MICRO }}>
-                      {p.finance}
-                    </span>
-                  )}
-                </div>
+                <span
+                  className="inline-flex items-center gap-1.5 text-sm font-semibold"
+                  style={{ color: PURPLE }}
+                >
+                  Get a quote <ArrowRight size={12} />
+                </span>
               </Link>
             ))}
           </div>

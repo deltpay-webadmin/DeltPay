@@ -30,7 +30,6 @@ const TICKER = [
 const productsCore = [
   { label: 'Payments',  description: 'In-store, online & mobile payment processing',  href: '/payments',         icon: CreditCard },
   { label: 'Capital',   description: 'Revenue-based funding with fast approvals',     href: '/capital',          icon: DollarSign },
-  { label: 'Hardware',  description: 'Terminals, registers, readers & POS hardware',  href: '/hardware',         icon: Monitor },
   { label: 'Websites',  description: 'Professional websites built and managed for you', href: '/website-examples', icon: Globe },
   { label: 'Lens AI',   description: 'Ask your business questions in plain English',  href: '/lens-ai',          icon: BarChart3 },
 ];
@@ -470,6 +469,20 @@ export function Navigation() {
               </AnimatePresence>
             </div>
 
+            {/* HARDWARE (plain link — shoppable, kept separate from software products) */}
+            <Link
+              to="/hardware"
+              className="text-[13px] font-medium tracking-[-0.005em] px-1 py-2 transition-colors"
+              style={{
+                color: 'rgba(247, 245, 240, 0.78)',
+                fontFamily: 'var(--dc-font-body)',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = '#FFFFFF')}
+              onMouseLeave={(e) => (e.currentTarget.style.color = 'rgba(247, 245, 240, 0.78)')}
+            >
+              Hardware
+            </Link>
+
             {/* LEARN */}
             <div
               className="relative"
@@ -622,6 +635,7 @@ export function Navigation() {
               <MobileSection title="SUPPORT" links={supportLinks.map((s) => ({ label: s.label, href: s.href }))} />
               <MobileSection title="MORE"
                 links={[
+                  { label: 'Hardware',    href: '/hardware' },
                   { label: 'Pricing',     href: '/pricing' },
                   { label: 'Calculator',  href: '/calculator' },
                   { label: 'How it works',href: '/how-it-works' },
