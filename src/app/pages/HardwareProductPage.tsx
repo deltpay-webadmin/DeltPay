@@ -9,13 +9,13 @@ import { useParams, Link, Navigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import { ArrowRight, ArrowLeft, Check } from 'lucide-react';
 
-/* Asset imports — share with HardwarePage */
-import imgRegister     from '@/app/assets/hardware/register.jpg';
-import imgHandheld     from '@/app/assets/hardware/handheld.jpg';
-import imgTerminal     from '@/app/assets/hardware/terminal.jpg';
-import imgStand        from '@/app/assets/hardware/stand.jpg';
-import imgKiosk        from '@/app/assets/hardware/kiosk.jpg';
-import imgReader       from '@/app/assets/hardware/reader-contactless.jpg';
+/* Asset imports — transparent PNG versions for floating on navy */
+import imgRegister     from '@/app/assets/hardware/register.png';
+import imgHandheld     from '@/app/assets/hardware/handheld.png';
+import imgTerminal     from '@/app/assets/hardware/terminal.png';
+import imgStand        from '@/app/assets/hardware/stand.png';
+import imgKiosk        from '@/app/assets/hardware/kiosk.png';
+import imgReader       from '@/app/assets/hardware/reader-contactless.png';
 
 /* ─── Brand palette ────────────────────────────────────────────────── */
 const NAVY     = '#041E42';
@@ -488,31 +488,39 @@ export function HardwareProductPage() {
           </div>
         </div>
 
-        {/* Product image floating below text */}
+        {/* Product image floating directly on navy (no card) */}
         <div className="relative px-6 pb-20 md:pb-28">
-          <div style={{ maxWidth: 900, margin: '0 auto' }}>
+          <div style={{ maxWidth: 720, margin: '0 auto' }} className="relative">
+            {/* Soft purple glow beneath the device */}
             <div
-              className="rounded-3xl overflow-hidden"
+              aria-hidden
+              className="absolute inset-0 pointer-events-none"
               style={{
-                background: LAVENDER,
-                aspectRatio: '4 / 3',
-                boxShadow: '0 30px 80px rgba(0,0,0,0.35)',
+                background:
+                  'radial-gradient(ellipse 60% 35% at 50% 78%, rgba(73,69,255,0.32), transparent 70%)',
+                filter: 'blur(20px)',
+                transform: 'translateY(15%)',
               }}
-            >
-              <img
-                src={product.image}
-                alt={product.name}
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'contain',
-                  display: 'block',
-                }}
-              />
-            </div>
+            />
+            <img
+              src={product.image}
+              alt={product.name}
+              className="relative"
+              style={{
+                width: '100%',
+                height: 'auto',
+                maxHeight: 560,
+                objectFit: 'contain',
+                display: 'block',
+                margin: '0 auto',
+                filter: 'drop-shadow(0 30px 50px rgba(0,0,0,0.5))',
+              }}
+            />
+          </div>
 
-            {/* Quick highlights row */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-8">
+          {/* Quick highlights row */}
+          <div style={{ maxWidth: 1080, margin: '0 auto' }} className="mt-12">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {product.bullets.map((b) => (
                 <div
                   key={b}
@@ -541,19 +549,30 @@ export function HardwareProductPage() {
         <div className="relative px-6 py-24 md:py-32">
           <div style={{ maxWidth: 1200, margin: '0 auto' }}>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-              {/* Image */}
-              <div
-                className="rounded-3xl overflow-hidden order-2 lg:order-1"
-                style={{
-                  background: LAVENDER,
-                  aspectRatio: '4 / 5',
-                  maxHeight: 640,
-                }}
-              >
+              {/* Image — floats on navy, no card */}
+              <div className="relative order-2 lg:order-1">
+                <div
+                  aria-hidden
+                  className="absolute inset-0 pointer-events-none"
+                  style={{
+                    background:
+                      'radial-gradient(ellipse 55% 40% at 50% 70%, rgba(73,69,255,0.30), transparent 70%)',
+                    filter: 'blur(24px)',
+                  }}
+                />
                 <img
                   src={product.image}
                   alt={product.name}
-                  style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
+                  className="relative"
+                  style={{
+                    width: '100%',
+                    height: 'auto',
+                    maxHeight: 620,
+                    objectFit: 'contain',
+                    display: 'block',
+                    margin: '0 auto',
+                    filter: 'drop-shadow(0 25px 45px rgba(0,0,0,0.45))',
+                  }}
                 />
               </div>
 
