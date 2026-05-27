@@ -413,7 +413,7 @@ export function HardwarePage() {
     badge: 'NEW',
     name: 'Delt Register',
     blurb: 'Two responsive screens for lightning-fast checkout.',
-    href: '/contact-sales',
+    href: '/hardware/delt-register',
   };
 
   const lineup = [
@@ -421,26 +421,31 @@ export function HardwarePage() {
       slot: 'product-handheld',
       name: 'Delt Handheld',
       blurb: 'The powerful POS that moves with you.',
+      href: '/hardware/delt-handheld',
     },
     {
       slot: 'product-terminal',
       name: 'Delt Terminal',
       blurb: 'The all-in-one POS with a receipt printer.',
+      href: '/hardware/delt-terminal',
     },
     {
       slot: 'product-stand',
       name: 'Delt Flip',
       blurb: 'The swiveling countertop POS that flips to your customer for tap, sign, and tip.',
+      href: '/hardware/delt-flip',
     },
     {
       slot: 'product-kiosk',
       name: 'Delt Kiosk',
       blurb: 'The self-service iPad kiosk.',
+      href: '/hardware/delt-kiosk',
     },
     {
       slot: 'product-reader-contactless',
       name: 'Delt Reader',
       blurb: 'Portable contactless and chip reader — every tap and dip, anywhere.',
+      href: '/hardware/delt-reader',
     },
   ];
 
@@ -630,7 +635,7 @@ export function HardwarePage() {
             {lineup.map((p) => (
               <Link
                 key={p.slot}
-                to="/contact-sales"
+                to={p.href}
                 className="rounded-2xl p-6 flex flex-col transition-transform hover:-translate-y-0.5"
                 style={{
                   background: IVORY,

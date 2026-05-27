@@ -18,6 +18,7 @@ import { SupportPage } from '@/app/pages/SupportPage';
 import { BusinessTypesPage } from '@/app/pages/BusinessTypesPage';
 import { ProductsPage } from '@/app/pages/ProductsPage';
 import { HardwarePage } from '@/app/pages/HardwarePage';
+import { HardwareProductPage } from '@/app/pages/HardwareProductPage';
 import { ShoppingCartPage } from '@/app/pages/ShoppingCartPage';
 import { BlogPage } from '@/app/pages/BlogPage';
 import { NewBlogPage } from '@/app/pages/NewBlogPage';
@@ -92,6 +93,7 @@ export default function App() {
                 <Route path="/business-types" element={<BusinessTypesPage />} />
                 <Route path="/products" element={<ProductsPage />} />
                 <Route path="/hardware" element={<HardwarePage />} />
+                <Route path="/hardware/:slug" element={<HardwareProductPage />} />
                 <Route path="/about" element={<AboutUsPage />} />
                 <Route path="/about-legacy" element={<AboutPage />} />
                 <Route path="/reviews" element={<ReviewsPage />} />
