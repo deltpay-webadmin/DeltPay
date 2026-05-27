@@ -439,8 +439,8 @@ export function HardwarePage() {
     },
     {
       slot: 'product-reader-contactless',
-      name: 'Delt Reader (Contactless & Chip)',
-      blurb: 'The portable reader for every tap and dip.',
+      name: 'Delt Reader',
+      blurb: 'Portable contactless and chip reader — every tap and dip, anywhere.',
     },
   ];
 
