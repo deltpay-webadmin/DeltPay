@@ -266,8 +266,7 @@ export function PrivacyPolicyPage() {
               </p>
               <div className="bg-[#F6F7FB] p-6 rounded-xl">
                 <p className="text-[#041E42] mb-2"><strong>Email:</strong> privacy@delt.com</p>
-                <p className="text-[#041E42] mb-2"><strong>Phone:</strong> (864) 729-3358</p>
-                <p className="text-[#041E42]"><strong>Mail:</strong> Delt Pay LLC, Attn: Privacy, 2726 NW 72nd Ave, Miami, FL 33122</p>
+                <p className="text-[#041E42]"><strong>Phone:</strong> (864) 729-3358</p>
               </div>
             </div>
           </div>
