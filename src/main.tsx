@@ -5,8 +5,11 @@ import "./styles/index.css";
 createRoot(document.getElementById("root")!).render(<App />);
 
 /* ── Dismiss the initial loader (defined in index.html) ───────────
-   We wait one paint after mount so the first screen is ready behind
-   the overlay, then fade it out and remove it from the DOM. */
+   We keep it on screen for at least MIN_VISIBLE_MS so it doesn't just
+   flash by on fast loads, then fade it out and remove it. */
+const MIN_VISIBLE_MS = 1100;
+const startedAt = (window as any).__appLoaderStart ?? performance.now();
+
 function dismissAppLoader() {
   const loader = document.getElementById("app-loader");
   if (!loader) return;
@@ -15,4 +18,12 @@ function dismissAppLoader() {
   window.setTimeout(() => loader.remove(), 600);
 }
 
-requestAnimationFrame(() => requestAnimationFrame(dismissAppLoader));
+function scheduleDismiss() {
+  const elapsed = performance.now() - startedAt;
+  const wait = Math.max(0, MIN_VISIBLE_MS - elapsed);
+  window.setTimeout(dismissAppLoader, wait);
+}
+
+// Wait one paint after mount so the first screen is ready behind the
+// overlay, then honor the minimum visible time before dismissing.
+requestAnimationFrame(() => requestAnimationFrame(scheduleDismiss));

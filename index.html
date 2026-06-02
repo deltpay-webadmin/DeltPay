@@ -20,8 +20,9 @@
 
       /* ── Initial app loader ─────────────────────────────────────
          Inlined so it paints instantly, before any JS or images
-         load. Removed by main.tsx once React mounts (see #app-loader
-         handling there). Branded navy + indigo to match the site. */
+         load. Removed by main.tsx once React mounts AND a minimum
+         display time has elapsed (so it doesn't just flash by).
+         Uses the real Delt wordmark (public/delt-logo.svg). */
       #app-loader {
         position: fixed;
         inset: 0;
@@ -30,74 +31,79 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 28px;
+        gap: 30px;
         background: #041e42;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-          Helvetica, Arial, sans-serif;
-        transition: opacity 0.45s ease;
+        transition: opacity 0.5s ease;
       }
       #app-loader.app-loader--hidden {
         opacity: 0;
         pointer-events: none;
       }
 
-      .app-loader__mark {
-        display: flex;
-        align-items: flex-end;
-        gap: 5px;
-        height: 38px;
-      }
-      .app-loader__bar {
-        width: 9px;
-        border-radius: 3px;
-        background: #6e8bff;
-        animation: app-loader-bounce 1.1s ease-in-out infinite;
-      }
-      .app-loader__bar:nth-child(1) {
-        height: 16px;
-        animation-delay: 0s;
-        background: #4945ff;
-      }
-      .app-loader__bar:nth-child(2) {
-        height: 28px;
-        animation-delay: 0.15s;
-        background: #6e8bff;
-      }
-      .app-loader__bar:nth-child(3) {
-        height: 38px;
-        animation-delay: 0.3s;
-        background: #b47bff;
+      .app-loader__logo {
+        width: clamp(150px, 22vw, 210px);
+        height: auto;
+        opacity: 0;
+        transform: translateY(8px) scale(0.98);
+        animation: app-loader-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards,
+          app-loader-breathe 2.6s ease-in-out 0.7s infinite;
       }
 
-      .app-loader__word {
-        color: #fff;
-        font-size: 20px;
-        font-weight: 700;
-        letter-spacing: -0.01em;
+      /* Slim progress track + indeterminate sweep */
+      .app-loader__track {
+        position: relative;
+        width: clamp(160px, 24vw, 220px);
+        height: 3px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.12);
+        overflow: hidden;
       }
-      .app-loader__sub {
-        color: rgba(255, 255, 255, 0.55);
-        font-size: 13px;
-        font-weight: 500;
-        letter-spacing: 0.02em;
-        margin-top: -16px;
+      .app-loader__track::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        width: 42%;
+        border-radius: 999px;
+        background: linear-gradient(90deg, #4945ff, #6e8bff, #b47bff);
+        animation: app-loader-sweep 1.25s ease-in-out infinite;
       }
 
-      @keyframes app-loader-bounce {
+      @keyframes app-loader-in {
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+      @keyframes app-loader-breathe {
         0%,
         100% {
-          transform: scaleY(0.55);
-          opacity: 0.7;
+          transform: scale(1);
+          opacity: 1;
         }
         50% {
-          transform: scaleY(1);
-          opacity: 1;
+          transform: scale(1.035);
+          opacity: 0.92;
+        }
+      }
+      @keyframes app-loader-sweep {
+        0% {
+          left: -45%;
+        }
+        100% {
+          left: 100%;
         }
       }
 
       @media (prefers-reduced-motion: reduce) {
-        .app-loader__bar {
+        .app-loader__logo {
+          animation: app-loader-in 0.4s ease forwards;
+        }
+        .app-loader__track::after {
           animation: none;
+          width: 100%;
+          opacity: 0.6;
         }
         #app-loader {
           transition: none;
@@ -109,15 +115,16 @@
   <body>
     <div id="root"></div>
 
+    <!-- Record when the loader first paints so we can guarantee a
+         minimum visible time (handled in main.tsx). -->
+    <script>
+      window.__appLoaderStart = performance.now();
+    </script>
+
     <!-- Instant branded loader; React removes this once mounted. -->
     <div id="app-loader" role="status" aria-live="polite" aria-label="Loading Delt">
-      <div class="app-loader__mark" aria-hidden="true">
-        <span class="app-loader__bar"></span>
-        <span class="app-loader__bar"></span>
-        <span class="app-loader__bar"></span>
-      </div>
-      <div class="app-loader__word">Delt</div>
-      <div class="app-loader__sub">Loading your experience…</div>
+      <img class="app-loader__logo" src="/delt-logo.svg" alt="Delt" />
+      <div class="app-loader__track" aria-hidden="true"></div>
     </div>
 
     <script type="module" src="/src/main.tsx"></script>
