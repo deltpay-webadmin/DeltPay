@@ -1181,7 +1181,7 @@ export function CapitalPage() {
                 Check your personalized Capital dashboard to see if you're pre-qualified.
               </h3>
               <Link
-                to="/login"
+                to="/signin"
                 className="inline-flex items-center gap-2 font-semibold transition-colors"
                 style={{ color: PURPLE, fontSize: 15 }}
               >

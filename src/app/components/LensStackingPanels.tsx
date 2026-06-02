@@ -312,7 +312,7 @@ function Panel({
             </p>
           </div>
           <a
-            href="/sign-up"
+            href="#/signup"
             style={{
               alignSelf: 'flex-start',
               display: 'inline-flex', alignItems: 'center', gap: 10,

@@ -1,5 +1,6 @@
 import { motion } from 'motion/react';
 import { Link } from 'react-router';
+import { KoronaPartnerBlock } from '@/app/components/KoronaPartnerBlock';
 import {
   ArrowRight,
   Check,

@@ -43,6 +43,7 @@ import { CapitalPage } from '@/app/pages/CapitalPage';
 import { ResourcePage } from '@/app/pages/ResourcePage';
 import { CalculatorPage } from '@/app/pages/CalculatorPage';
 import { GetAQuotePage } from '@/app/pages/GetAQuotePage';
+import { NotFoundPage } from '@/app/pages/NotFoundPage';
 import { IndustryPage } from '@/app/pages/IndustryPage';
 import { LensDemoPage } from '@/app/pages/LensDemoPage';
 import { InternationalUSDTPage } from '@/app/pages/InternationalUSDTPage';
@@ -115,6 +116,9 @@ export default function App() {
                 {/* Capital "More for your business" cards — each links to a
                     full editorial article rendered by ResourcePage. */}
                 <Route path="/resources/:slug" element={<ResourcePage />} />
+                {/* Final fallback — branded 404 so unknown URLs degrade
+                    gracefully instead of rendering an empty body. */}
+                <Route path="*" element={<NotFoundPage />} />
               </Routes>
               <Footer />
               {/* DeltMarquee renders BELOW the footer, on the home page only
