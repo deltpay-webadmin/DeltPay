@@ -202,30 +202,35 @@ export function ExploreFeaturesWithAI({
           .efa-btn:hover { transform: none; }
         }
 
-        /* Quiet variant — static, subordinate. Kills the animated
-           gradient ring/glow so the adjacent primary CTA dominates.
-           Reads as a plain ghost link with a sparkle. */
+        /* Quiet variant — subordinate to the primary CTA but still clearly
+           visible. Keeps a static (non-animated) indigo gradient ring so it
+           reads as a real, tappable AI button, just without the loud moving
+           glow that competed with "Get a quote". A subtle indigo-tinted fill
+           + crisp label keep it legible on the navy hero. */
         .efa-quiet {
-          background: none;
           animation: none;
-          box-shadow: none;
-          padding: 0;
+          background:
+            linear-gradient(120deg, #4945FF 0%, #6E8BFF 45%, #B47BFF 100%);
+          box-shadow: 0 4px 18px -10px rgba(73, 69, 255, 0.55);
         }
-        .efa-quiet:hover { transform: none; box-shadow: none; }
-        .efa-quiet .efa-inner {
-          background: transparent;
-          backdrop-filter: none;
-          -webkit-backdrop-filter: none;
-          border: 1px solid var(--dc-rule-on-dark-strong, rgba(247,245,240,0.22));
-          padding: 14px 20px;
+        .efa-quiet:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 10px 26px -12px rgba(73, 69, 255, 0.7);
+        }
+        .efa-quiet.efa-dark .efa-inner {
+          background:
+            linear-gradient(180deg, rgba(20, 24, 60, 0.92) 0%, rgba(14, 18, 48, 0.96) 100%);
+          padding: 13px 20px;
+          backdrop-filter: blur(6px);
+          -webkit-backdrop-filter: blur(6px);
         }
         .efa-quiet.efa-dark .efa-inner,
-        .efa-quiet.efa-dark .efa-label { color: rgba(247, 245, 240, 0.82); }
+        .efa-quiet.efa-dark .efa-label { color: #FFFFFF; }
         .efa-quiet.efa-dark:hover .efa-inner {
-          background: rgba(247, 245, 240, 0.06);
-          border-color: rgba(247, 245, 240, 0.40);
+          background:
+            linear-gradient(180deg, rgba(26, 31, 72, 0.94) 0%, rgba(18, 22, 56, 0.97) 100%);
         }
-        .efa-quiet .efa-spark { opacity: 0.85; }
+        .efa-quiet .efa-spark { opacity: 1; }
 
         @media (max-width: 480px) {
           .efa-inner { padding: 10px 14px; }

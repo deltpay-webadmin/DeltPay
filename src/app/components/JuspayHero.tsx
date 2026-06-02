@@ -104,7 +104,7 @@ export function JuspayHero() {
             >
               Payments + AI in one stack —{' '}
               <strong style={{ color: 'var(--dc-on-dark)', fontWeight: 600 }}>
-                0% net processing fees
+                0% processing fees — yes really
               </strong>{' '}
               with cash discount.
             </p>
@@ -135,7 +135,7 @@ export function JuspayHero() {
 
             {/* Stats strip — desktop / tablet (3-col) */}
             <div
-              className="hidden md:grid mt-12 pt-7 grid-cols-3 gap-6 max-w-[480px]"
+              className="hidden md:grid mt-12 pt-7 grid-cols-3 gap-8 max-w-[540px]"
               style={{ borderTop: '1px solid var(--dc-rule-on-dark)' }}
             >
               <Stat label="NET PROCESSING" big="0%" unit="cash discount" />
@@ -243,7 +243,7 @@ export function JuspayHero() {
               textTransform: 'uppercase',
             }}
           >
-            0% NET PROCESSING · SAME-DAY DEPOSITS · SINCE 2019
+            0% NET PROCESSING · SAME-DAY DEPOSITS
           </span>
         </div>
       </div>
@@ -264,29 +264,33 @@ function Stat({ label, big, unit }: { label: string; big: string; unit: string }
       >
         {label}
       </div>
-      <div className="flex items-baseline gap-1.5">
-        <span
-          style={{
-            fontFamily: 'var(--dc-font-display)',
-            fontWeight: 600,
-            fontSize: 32,
-            letterSpacing: '-0.025em',
-            color: 'var(--dc-on-dark)',
-            lineHeight: 1,
-          }}
-        >
-          {big}
-        </span>
-        <span
-          style={{
-            fontFamily: 'var(--dc-font-mono)',
-            fontSize: 10,
-            color: 'rgba(247, 245, 240, 0.32)',
-            letterSpacing: '0.04em',
-          }}
-        >
-          {unit}
-        </span>
+      {/* Value + caveat stacked vertically so all three stats read with
+          identical visual weight regardless of token length. "Same-day"
+          no longer wraps next to its caveat, so 0% / Same-day / Instant
+          all sit on one line at the same size and weight. */}
+      <div
+        style={{
+          fontFamily: 'var(--dc-font-display)',
+          fontWeight: 600,
+          fontSize: 28,
+          letterSpacing: '-0.025em',
+          color: 'var(--dc-on-dark)',
+          lineHeight: 1.05,
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {big}
+      </div>
+      <div
+        className="mt-1.5"
+        style={{
+          fontFamily: 'var(--dc-font-mono)',
+          fontSize: 10,
+          color: 'rgba(247, 245, 240, 0.32)',
+          letterSpacing: '0.04em',
+        }}
+      >
+        {unit}
       </div>
     </div>
   );
