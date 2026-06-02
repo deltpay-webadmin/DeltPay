@@ -1,16 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Delt — Run, grow, and fund your business</title>
+    <meta
+      name="description"
+      content="Delt is the all-in-one platform to run, grow, and fund your business — payments, capital, hardware, websites, and Lens AI."
+    />
+    <style>
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+      }
+      #root {
+        height: 100%;
+      }
 
-  <!DOCTYPE html>
-  <html lang="en">
-    <head>
-      <meta charset="UTF-8" />
-      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      <title>Merchant Services Site (Dashboard Locked)</title>
-      <style>html, body { height: 100%; margin: 0; } #root { height: 100%; }</style>
-    </head>
+      /* ── Initial app loader ─────────────────────────────────────
+         Inlined so it paints instantly, before any JS or images
+         load. Removed by main.tsx once React mounts (see #app-loader
+         handling there). Branded navy + indigo to match the site. */
+      #app-loader {
+        position: fixed;
+        inset: 0;
+        z-index: 99999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 28px;
+        background: #041e42;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Helvetica, Arial, sans-serif;
+        transition: opacity 0.45s ease;
+      }
+      #app-loader.app-loader--hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
 
-    <body>
-      <div id="root"></div>
-      <script type="module" src="/src/main.tsx"></script>
-    </body>
-  </html>
-  
+      .app-loader__mark {
+        display: flex;
+        align-items: flex-end;
+        gap: 5px;
+        height: 38px;
+      }
+      .app-loader__bar {
+        width: 9px;
+        border-radius: 3px;
+        background: #6e8bff;
+        animation: app-loader-bounce 1.1s ease-in-out infinite;
+      }
+      .app-loader__bar:nth-child(1) {
+        height: 16px;
+        animation-delay: 0s;
+        background: #4945ff;
+      }
+      .app-loader__bar:nth-child(2) {
+        height: 28px;
+        animation-delay: 0.15s;
+        background: #6e8bff;
+      }
+      .app-loader__bar:nth-child(3) {
+        height: 38px;
+        animation-delay: 0.3s;
+        background: #b47bff;
+      }
+
+      .app-loader__word {
+        color: #fff;
+        font-size: 20px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+      }
+      .app-loader__sub {
+        color: rgba(255, 255, 255, 0.55);
+        font-size: 13px;
+        font-weight: 500;
+        letter-spacing: 0.02em;
+        margin-top: -16px;
+      }
+
+      @keyframes app-loader-bounce {
+        0%,
+        100% {
+          transform: scaleY(0.55);
+          opacity: 0.7;
+        }
+        50% {
+          transform: scaleY(1);
+          opacity: 1;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .app-loader__bar {
+          animation: none;
+        }
+        #app-loader {
+          transition: none;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="root"></div>
+
+    <!-- Instant branded loader; React removes this once mounted. -->
+    <div id="app-loader" role="status" aria-live="polite" aria-label="Loading Delt">
+      <div class="app-loader__mark" aria-hidden="true">
+        <span class="app-loader__bar"></span>
+        <span class="app-loader__bar"></span>
+        <span class="app-loader__bar"></span>
+      </div>
+      <div class="app-loader__word">Delt</div>
+      <div class="app-loader__sub">Loading your experience…</div>
+    </div>
+
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
