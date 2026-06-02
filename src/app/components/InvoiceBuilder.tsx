@@ -757,9 +757,9 @@ function EmailView({ invoiceNo, customer, total }: { invoiceNo: string; customer
               North Tonawanda, NY 14120-7034
             </div>
             <div className="mt-3 space-y-0.5">
-              <div className="text-xs text-[#4945FF]">patrick@paydelt.com</div>
+              <div className="text-xs text-[#4945FF]">hello@delt.com</div>
               <div className="text-xs text-[#4945FF]">+1 (305) 215-2199</div>
-              <div className="text-xs text-[#4945FF]">https://www.deltpay.com</div>
+              <div className="text-xs text-[#4945FF]">https://www.delt.com</div>
             </div>
           </div>
 
