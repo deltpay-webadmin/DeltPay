@@ -99,27 +99,14 @@ export function JuspayHero() {
             </h1>
 
             <p
-              className="mt-8 max-w-[460px] text-[16px] leading-[1.55]"
+              className="mt-8 max-w-[460px] text-[17px] leading-[1.55]"
               style={{ color: 'var(--dc-on-dark-muted)', fontFamily: 'var(--dc-font-body)' }}
             >
-              Payments + AI intelligence, in one stack.{' '}
+              Payments + AI in one stack —{' '}
               <strong style={{ color: 'var(--dc-on-dark)', fontWeight: 600 }}>
                 0% net processing fees
               </strong>{' '}
-              with cash discount.{' '}
-              <strong style={{ color: 'var(--dc-on-dark)', fontWeight: 600 }}>Same-day deposits</strong>{' '}
-              and{' '}
-              <strong style={{ color: 'var(--dc-on-dark)', fontWeight: 600 }}>instant onboarding</strong>{' '}
-              — not a call center's script. Delt Lens tells you what's working, what's not,
-              and what to do next. Hardware that works on day one.
-            </p>
-
-            <p
-              className="mt-3 max-w-[460px] text-[11px] leading-[1.55]"
-              style={{ color: 'var(--dc-on-dark-faint)', fontFamily: 'var(--dc-font-body)' }}
-            >
-              Instant onboarding and same-day deposits are subject to underwriting approval
-              and not available to all merchants.
+              with cash discount.
             </p>
 
             {/* Hero CTA row — two buttons only.
@@ -134,12 +121,16 @@ export function JuspayHero() {
                 CTA), and made the row feel crowded — two CTAs read
                 cleaner and give the primary action more weight. The
                 /calculator route is still reachable from nav/footer. */}
-            <div className="mt-9 flex items-center gap-3 flex-wrap">
-              <Link to="/get-a-quote" className="dc-btn-primary dc-lg">
+            <div className="mt-9 flex items-center gap-4 flex-wrap">
+              <Link
+                to="/get-a-quote"
+                className="dc-btn-primary dc-lg"
+                style={{ fontSize: 16, fontWeight: 600, padding: '18px 30px', minHeight: 52 }}
+              >
                 Get a quote
                 <span aria-hidden style={{ marginLeft: 2 }}>→</span>
               </Link>
-              <ExploreFeaturesWithAI />
+              <ExploreFeaturesWithAI quiet />
             </div>
 
             {/* Stats strip — desktop / tablet (3-col) */}
@@ -147,8 +138,8 @@ export function JuspayHero() {
               className="hidden md:grid mt-12 pt-7 grid-cols-3 gap-6 max-w-[480px]"
               style={{ borderTop: '1px solid var(--dc-rule-on-dark)' }}
             >
-              <Stat label="NET PROCESSING" big="0%" unit="with cash discount" />
-              <Stat label="DEPOSITS" big="Same-day" unit="eligible accts" />
+              <Stat label="NET PROCESSING" big="0%" unit="cash discount" />
+              <Stat label="DEPOSITS" big="Same-day" unit="eligible" />
               <Stat label="ONBOARDING" big="Instant" unit="approval-based" />
             </div>
 
@@ -175,8 +166,8 @@ export function JuspayHero() {
                 >
                   0%
                   <span
-                    className="ml-2 text-xs font-normal"
-                    style={{ fontFamily: 'var(--dc-font-mono)', color: 'var(--dc-on-dark-faint)', letterSpacing: '0.04em' }}
+                    className="ml-2 text-[10px] font-normal"
+                    style={{ fontFamily: 'var(--dc-font-mono)', color: 'rgba(247, 245, 240, 0.32)', letterSpacing: '0.04em' }}
                   >
                     with cash discount
                   </span>
@@ -200,8 +191,8 @@ export function JuspayHero() {
                 >
                   Same-day
                   <span
-                    className="ml-2 text-xs font-normal"
-                    style={{ fontFamily: 'var(--dc-font-mono)', color: 'var(--dc-on-dark-faint)', letterSpacing: '0.04em' }}
+                    className="ml-2 text-[10px] font-normal"
+                    style={{ fontFamily: 'var(--dc-font-mono)', color: 'rgba(247, 245, 240, 0.32)', letterSpacing: '0.04em' }}
                   >
                     eligible accts
                   </span>
@@ -225,8 +216,8 @@ export function JuspayHero() {
                 >
                   Instant
                   <span
-                    className="ml-2 text-xs font-normal"
-                    style={{ fontFamily: 'var(--dc-font-mono)', color: 'var(--dc-on-dark-faint)', letterSpacing: '0.04em' }}
+                    className="ml-2 text-[10px] font-normal"
+                    style={{ fontFamily: 'var(--dc-font-mono)', color: 'rgba(247, 245, 240, 0.32)', letterSpacing: '0.04em' }}
                   >
                     approval-based
                   </span>
@@ -241,19 +232,9 @@ export function JuspayHero() {
             hero owns the first fold and the email-capture bar lives below it.
             Hidden on mobile — the decorative "SCROLL" / mono ledger line is noise on phone. */}
         <div
-          className="hidden md:flex mt-auto pt-5 pb-6 items-center justify-between gap-4 flex-wrap"
+          className="hidden md:flex mt-auto pt-5 pb-6 items-center justify-start gap-4 flex-wrap"
           style={{ borderTop: '1px solid var(--dc-rule-on-dark)' }}
         >
-          <span
-            className="text-[11px] tracking-[0.18em]"
-            style={{
-              fontFamily: 'var(--dc-font-mono)',
-              color: 'var(--dc-on-dark-faint)',
-              textTransform: 'uppercase',
-            }}
-          >
-            SCROLL — THE NUMBERS ↓
-          </span>
           <span
             className="text-[11px] tracking-[0.18em]"
             style={{
@@ -299,8 +280,8 @@ function Stat({ label, big, unit }: { label: string; big: string; unit: string }
         <span
           style={{
             fontFamily: 'var(--dc-font-mono)',
-            fontSize: 11,
-            color: 'var(--dc-on-dark-faint)',
+            fontSize: 10,
+            color: 'rgba(247, 245, 240, 0.32)',
             letterSpacing: '0.04em',
           }}
         >

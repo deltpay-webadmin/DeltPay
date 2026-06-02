@@ -236,7 +236,7 @@ export function Navigation() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [openMenu, setOpenMenu] = useState<null | 'products' | 'biz' | 'learn' | 'support'>(null);
+  const [openMenu, setOpenMenu] = useState<null | 'products' | 'biz' | 'resources'>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -483,26 +483,38 @@ export function Navigation() {
               Hardware
             </Link>
 
-            {/* LEARN */}
+            {/* RESOURCES — merged Learn + Support into one menu to trim the
+                top-level bar from 6 items to 4. Two labeled columns: editorial
+                "Learn" links on the left, "Help & contact" on the right. */}
             <div
               className="relative"
-              onMouseEnter={() => openWithCancel('learn')}
+              onMouseEnter={() => openWithCancel('resources')}
             >
               <NavTrigger
-                label="Learn"
-                open={openMenu === 'learn'}
-                onEnter={() => openWithCancel('learn')}
+                label="Resources"
+                open={openMenu === 'resources'}
+                onEnter={() => openWithCancel('resources')}
                 onLeave={() => {}}
               />
               <AnimatePresence>
-                {openMenu === 'learn' && (
-                  <MegaPanel width={760}>
-                    <div className="p-6">
-                      <MonoEyebrow>RESOURCES</MonoEyebrow>
-                      <div className="grid grid-cols-2 gap-x-6 gap-y-2">
-                        {learnLinks.map((it) => (
-                          <MegaItem key={it.label} {...it} />
-                        ))}
+                {openMenu === 'resources' && (
+                  <MegaPanel width={820}>
+                    <div className="grid grid-cols-[1.35fr_1fr] gap-8 p-6">
+                      <div>
+                        <MonoEyebrow>LEARN</MonoEyebrow>
+                        <div className="grid grid-cols-2 gap-x-6 gap-y-2">
+                          {learnLinks.map((it) => (
+                            <MegaItem key={it.label} {...it} />
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <MonoEyebrow>HELP &amp; CONTACT</MonoEyebrow>
+                        <div className="space-y-1.5">
+                          {supportLinks.map((it) => (
+                            <MegaItem key={it.label} {...it} />
+                          ))}
+                        </div>
                       </div>
                     </div>
                     <div
@@ -512,7 +524,6 @@ export function Navigation() {
                         borderTop: '1px solid rgba(4, 30, 66, 0.06)',
                       }}
                     >
-                      {/* VOL. VII · Q2 2026 dateline removed per user request. */}
                       <Link to="/calculator" className="dc-btn-secondary">
                         Run the calculator
                       </Link>
@@ -521,47 +532,6 @@ export function Navigation() {
                 )}
               </AnimatePresence>
             </div>
-
-            {/* SUPPORT */}
-            <div
-              className="relative"
-              onMouseEnter={() => openWithCancel('support')}
-            >
-              <NavTrigger
-                label="Support"
-                open={openMenu === 'support'}
-                onEnter={() => openWithCancel('support')}
-                onLeave={() => {}}
-              />
-              <AnimatePresence>
-                {openMenu === 'support' && (
-                  <MegaPanel width={520}>
-                    <div className="p-6">
-                      <MonoEyebrow>HELP &amp; CONTACT</MonoEyebrow>
-                      <div className="space-y-1.5">
-                        {supportLinks.map((it) => (
-                          <MegaItem key={it.label} {...it} />
-                        ))}
-                      </div>
-                    </div>
-                  </MegaPanel>
-                )}
-              </AnimatePresence>
-            </div>
-
-            {/* PRICING (plain link) */}
-            <Link
-              to="/pricing"
-              className="text-[13px] font-medium tracking-[-0.005em] px-1 py-2 transition-colors"
-              style={{
-                color: 'rgba(247, 245, 240, 0.78)',
-                fontFamily: 'var(--dc-font-body)',
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = '#FFFFFF')}
-              onMouseLeave={(e) => (e.currentTarget.style.color = 'rgba(247, 245, 240, 0.78)')}
-            >
-              Pricing
-            </Link>
           </div>
 
           {/* Right side */}
@@ -577,6 +547,21 @@ export function Navigation() {
             >
               <Search size={16} />
             </button>
+            {/* Pricing moved out of the center menu to sit beside the CTA —
+                it's a high-intent, conversion-adjacent link, so it belongs
+                next to "Get Started" rather than buried among the browse menus. */}
+            <Link
+              to="/pricing"
+              className="text-[13px] font-medium px-3 py-2 transition-colors"
+              style={{
+                color: 'rgba(247, 245, 240, 0.78)',
+                fontFamily: 'var(--dc-font-body)',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = '#FFFFFF')}
+              onMouseLeave={(e) => (e.currentTarget.style.color = 'rgba(247, 245, 240, 0.78)')}
+            >
+              Pricing
+            </Link>
             <Link
               to="/signin"
               className="text-[13px] font-medium px-3 py-2 transition-colors"

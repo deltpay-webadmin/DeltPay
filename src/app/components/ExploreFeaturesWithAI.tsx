@@ -45,6 +45,13 @@ interface ExploreFeaturesWithAIProps {
   label?: string;
   /** Extra className to compose with the built-in styles. */
   className?: string;
+  /**
+   * Demote to a quiet, secondary treatment: no animated iridescent ring,
+   * just a subtle static outline + sparkle. Use when this button sits
+   * beside a primary CTA (e.g. the hero "Get a quote") so it stays
+   * visually subordinate. Default false (full iridescent pill).
+   */
+  quiet?: boolean;
 }
 
 export function ExploreFeaturesWithAI({
@@ -52,6 +59,7 @@ export function ExploreFeaturesWithAI({
   variant = 'dark',
   label = 'Explore Features with AI',
   className = '',
+  quiet = false,
 }: ExploreFeaturesWithAIProps) {
   const href = prompt
     ? `https://chatgpt.com/?prompt=${encodeURIComponent(prompt)}`
@@ -64,7 +72,7 @@ export function ExploreFeaturesWithAI({
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className={`efa-btn efa-${variant} ${className}`.trim()}
+      className={`efa-btn efa-${variant}${quiet ? ' efa-quiet' : ''} ${className}`.trim()}
       aria-label={label}
     >
       {/* Gradient outline ring (sits under the inner fill) */}
@@ -193,6 +201,31 @@ export function ExploreFeaturesWithAI({
           .efa-btn { animation: none; }
           .efa-btn:hover { transform: none; }
         }
+
+        /* Quiet variant — static, subordinate. Kills the animated
+           gradient ring/glow so the adjacent primary CTA dominates.
+           Reads as a plain ghost link with a sparkle. */
+        .efa-quiet {
+          background: none;
+          animation: none;
+          box-shadow: none;
+          padding: 0;
+        }
+        .efa-quiet:hover { transform: none; box-shadow: none; }
+        .efa-quiet .efa-inner {
+          background: transparent;
+          backdrop-filter: none;
+          -webkit-backdrop-filter: none;
+          border: 1px solid var(--dc-rule-on-dark-strong, rgba(247,245,240,0.22));
+          padding: 14px 20px;
+        }
+        .efa-quiet.efa-dark .efa-inner,
+        .efa-quiet.efa-dark .efa-label { color: rgba(247, 245, 240, 0.82); }
+        .efa-quiet.efa-dark:hover .efa-inner {
+          background: rgba(247, 245, 240, 0.06);
+          border-color: rgba(247, 245, 240, 0.40);
+        }
+        .efa-quiet .efa-spark { opacity: 0.85; }
 
         @media (max-width: 480px) {
           .efa-inner { padding: 10px 14px; }

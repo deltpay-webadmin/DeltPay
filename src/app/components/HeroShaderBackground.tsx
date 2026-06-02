@@ -74,6 +74,21 @@ export function HeroShaderBackground() {
             'linear-gradient(180deg, rgba(8,10,40,0.55) 0%, rgba(8,10,40,0.35) 45%, rgba(8,10,40,0.65) 100%)',
         }}
       />
+
+      {/* Hotspot tamer — the shader concentrates a bright violet peak in the
+          upper-right where there is no foreground content. Without something
+          anchored to it, that bright spot just reads as a distracting empty
+          area. We flatten it with a directional navy wash that's heaviest in
+          the top-right corner and fades toward the (text-bearing) left, so the
+          gradient stays alive on the left while the empty right corner settles
+          back into the navy canvas. */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            'radial-gradient(120% 110% at 100% 0%, rgba(8,10,40,0.72) 0%, rgba(8,10,40,0.30) 38%, rgba(8,10,40,0) 68%)',
+        }}
+      />
     </div>
   );
 }

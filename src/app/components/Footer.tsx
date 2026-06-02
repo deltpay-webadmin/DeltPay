@@ -170,6 +170,15 @@ export function Footer() {
           </span>
         </div>
 
+        {/* Legal disclaimer — moved here from the hero so the fold stays
+            clean. Applies to the headline offers (0% net processing via
+            cash discount, same-day deposits, instant onboarding). */}
+        <p className="dc-footer-disclaimer">
+          0% net processing reflects savings from a compliant cash-discount program; actual
+          merchant cost varies by program and card mix. Instant onboarding and same-day deposits
+          are subject to underwriting approval and not available to all merchants.
+        </p>
+
         {/* Bottom row */}
         <div className="dc-footer-bottom">
           <span className="dc-footer-copy">
@@ -365,6 +374,16 @@ export function Footer() {
         @media (max-width: 600px) {
           .dc-footer-partners { gap: 8px 14px; }
           .dc-footer-partners-meta { flex-basis: 100%; }
+        }
+
+        /* Legal disclaimer */
+        .dc-footer-disclaimer {
+          font-family: 'Inter', sans-serif;
+          font-size: 11.5px;
+          line-height: 1.6;
+          color: rgba(247, 245, 240, 0.38);
+          margin: 0 0 20px;
+          max-width: 880px;
         }
 
         /* Bottom row */
