@@ -282,7 +282,7 @@ function CaseStudyCard({ cs }: { cs: CaseStudy }) {
           ))}
         </div>
         <a
-          href="#"
+          href="#/case-studies"
           className="inline-flex items-center gap-1.5 text-sm font-semibold mt-1 transition-colors"
           style={{ color: PURPLE }}
         >
@@ -381,7 +381,7 @@ export function ReviewsPage() {
                   Read the stories <ArrowRight size={14} />
                 </a>
                 <a
-                  href="#"
+                  href="#/contact"
                   className="inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold border"
                   style={{ borderColor: `${NAVY}1A`, color: NAVY, background: WHITE }}
                 >
@@ -547,7 +547,7 @@ export function ReviewsPage() {
                 Deep dives
               </h2>
             </div>
-            <a href="#" className="inline-flex items-center gap-1.5 text-sm font-semibold" style={{ color: PURPLE }}>
+            <a href="#/case-studies" className="inline-flex items-center gap-1.5 text-sm font-semibold" style={{ color: PURPLE }}>
               View all stories <ArrowRight size={14} />
             </a>
           </div>
@@ -598,14 +598,14 @@ export function ReviewsPage() {
           </p>
           <div className="flex items-center justify-center gap-3 flex-wrap">
             <a
-              href="#"
+              href="#/get-a-quote"
               className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl text-sm font-semibold"
               style={{ background: PURPLE, color: WHITE, boxShadow: '0 8px 24px rgba(73,69,255,0.45)' }}
             >
               Create a free account <ArrowRight size={14} />
             </a>
             <a
-              href="#"
+              href="#/contact-sales"
               className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl text-sm font-semibold border"
               style={{ borderColor: 'rgba(255,255,255,0.25)', color: WHITE, background: 'rgba(255,255,255,0.05)' }}
             >

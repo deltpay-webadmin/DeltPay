@@ -623,7 +623,7 @@ export function LensAIPage() {
 
         <p style={{ textAlign: 'center', marginTop: 32, fontSize: 14, color: C.muted }}>
           Looking for enterprise?{' '}
-          <a href="#" style={{ color: C.navy, fontWeight: 600, textDecoration: 'underline' }}>
+          <a href="#/contact-sales" style={{ color: C.navy, fontWeight: 600, textDecoration: 'underline' }}>
             Schedule a call.
           </a>
         </p>

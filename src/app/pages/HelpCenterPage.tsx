@@ -134,7 +134,7 @@ function ArticleRow({ title, snippet }: { title: string; snippet: string }) {
       <p className="text-sm font-semibold tracking-tight" style={{ color: NAVY }}>{title}</p>
       <p className="text-xs text-[#475569] leading-relaxed flex-1">{snippet}</p>
       <a
-        href="#"
+        href="#/support"
         className="inline-flex items-center gap-1 text-xs font-semibold transition-colors"
         style={{ color: PURPLE }}
       >
@@ -188,7 +188,7 @@ export function HelpCenterPage() {
             {POPULAR_TAGS.map(tag => (
               <a
                 key={tag}
-                href="#"
+                href="#/support"
                 className="inline-flex items-center px-3 py-1 rounded-full border text-xs font-medium transition-all"
                 style={{
                   borderColor: `${NAVY}20`,
@@ -357,7 +357,7 @@ export function HelpCenterPage() {
                 </p>
               </div>
               <a
-                href="#"
+                href="#/support"
                 className="inline-flex items-center gap-1.5 text-sm font-semibold transition-colors self-start"
                 style={{ color: PURPLE }}
               >

@@ -479,7 +479,7 @@ export function NewBlogPage() {
             Editor&rsquo;s pick
           </p>
           <a
-            href="#"
+            href="#/blog"
             className="group block rounded-3xl overflow-hidden transition-all duration-300 grid md:grid-cols-[1.1fr_1fr]"
             style={{
               background: 'linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.03) 100%)',

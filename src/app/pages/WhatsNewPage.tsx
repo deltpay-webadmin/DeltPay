@@ -227,7 +227,7 @@ function TimelineEntry({ item, index }: { item: ChangelogItem; index: number }) 
           {item.description}
         </p>
         <a
-          href="#"
+          href="#/blog"
           className="inline-flex items-center gap-1.5 text-sm font-semibold transition-colors"
           style={{ color: PURPLE }}
         >
@@ -351,7 +351,7 @@ export function WhatsNewPage() {
 
           <div className="mt-10 flex flex-wrap items-center gap-4">
             <a
-              href="#"
+              href="#/blog"
               className="inline-flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold transition-all"
               style={{
                 background: WHITE,
@@ -503,7 +503,7 @@ export function WhatsNewPage() {
                 Looking for something older? Browse the full archive.
               </p>
               <a
-                href="#"
+                href="#/blog"
                 className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold"
                 style={{ color: PURPLE }}
               >
