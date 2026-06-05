@@ -27,7 +27,7 @@ export function HeroShaderBackground() {
           wireframe={false}
           shader="defaults"
           uTime={0}
-          uSpeed={0.49}
+          uSpeed={0.3}
           uStrength={0.3}
           uDensity={0.8}
           uFrequency={5.5}
@@ -38,10 +38,10 @@ export function HeroShaderBackground() {
           rotationX={0}
           rotationY={130}
           rotationZ={70}
-          // Electric-blue light band on a true-black field (matches reference)
-          color1="#0b7bff"
-          color2="#0a32ff"
-          color3="#000010"
+          // Exact playground palette (matches the reference recording)
+          color1="#92dbe0"
+          color2="#0b7bff"
+          color3="#3865cf"
           reflection={0.4}
           // Camera
           cAzimuthAngle={270}
@@ -61,14 +61,14 @@ export function HeroShaderBackground() {
         />
       </ShaderGradientCanvas>
 
-      {/* Light text-contrast scrim, weighted to the left where the hero copy
-          sits. Kept intentionally subtle so the bright electric-blue light
-          band reads cleanly — like the raw shader reference. */}
+      {/* Minimal far-left contrast anchor for the hero copy. Kept very light
+          and confined to the left edge so the shader motion reads exactly like
+          the raw playground reference everywhere else. */}
       <div
         className="absolute inset-0"
         style={{
           background:
-            'linear-gradient(100deg, rgba(0,0,16,0.55) 0%, rgba(0,0,16,0.25) 32%, rgba(0,0,16,0) 60%)',
+            'linear-gradient(90deg, rgba(8,10,40,0.45) 0%, rgba(8,10,40,0.12) 22%, rgba(8,10,40,0) 42%)',
         }}
       />
     </div>
