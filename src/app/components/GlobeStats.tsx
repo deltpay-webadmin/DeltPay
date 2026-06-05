@@ -10,11 +10,11 @@ import { Link } from 'react-router';
    Plus Jakarta sans, deep navy ground, blue/violet markers.
    ────────────────────────────────────────────────────────────── */
 
-const stats = [
-  { label: 'Go Live', value: '<1 Day', trait: 'Speed' },
-  { label: 'Avg. monthly savings', value: '$847', trait: 'Savings' },
-  { label: 'Capital deployed', value: '$50M', trait: 'Scale' },
-  { label: 'Merchant retention rate', value: '97%', trait: 'Reliability' },
+const stats: { label: string; value: string; trait: string; long?: boolean }[] = [
+  { label: 'Same-day approvals', value: '99%', trait: 'Approvals' },
+  { label: 'Approval decisions', value: '1 hr', trait: 'Speed' },
+  { label: 'Merchant funding (eligible)', value: 'Same-day', trait: 'Funding', long: true },
+  { label: 'US-based support', value: '24/7/365', trait: 'Support', long: true },
 ];
 
 const MARKERS = [
@@ -78,7 +78,7 @@ export function GlobeStats() {
                 transition={{ delay: i * 0.12, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
               >
                 <span className="gs-stat-label">{stat.label}</span>
-                <span className="gs-stat-value">{stat.value}</span>
+                <span className={stat.long ? 'gs-stat-value gs-stat-value-long' : 'gs-stat-value'}>{stat.value}</span>
                 <span className="gs-stat-trait">{stat.trait}</span>
               </motion.div>
             ))}
@@ -209,6 +209,11 @@ export function GlobeStats() {
           color: #fff;
           letter-spacing: -0.03em;
           line-height: 1;
+          white-space: nowrap;
+        }
+        /* Longer word/values (Same-day, 24/7/365) — scale down so they fit on one line */
+        .gs-stat-value-long {
+          font-size: clamp(1.75rem, 3.2vw, 2.6rem);
         }
         .gs-stat-trait {
           font-family: 'Plus Jakarta Sans', sans-serif;
