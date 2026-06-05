@@ -176,26 +176,21 @@ export function GlobeStats() {
         }
 
         .gs-stats {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 48px;
+          align-items: end;
           margin: 0 0 72px;
-          padding: 0 8%;
+          padding: 0;
         }
         .gs-stat {
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-          flex: 0 0 auto;
-        }
-        .gs-stat:last-child {
-          align-items: flex-end;
-          text-align: right;
-        }
-        .gs-stat:nth-child(2),
-        .gs-stat:nth-child(3) {
-          align-items: center;
-          text-align: center;
+          display: grid;
+          grid-template-rows: auto auto auto;
+          row-gap: 8px;
+          align-content: end;
+          text-align: left;
+          align-items: start;
+          justify-items: start;
         }
         .gs-stat-label {
           font-family: 'Plus Jakarta Sans', sans-serif;
@@ -210,6 +205,9 @@ export function GlobeStats() {
           letter-spacing: -0.03em;
           line-height: 1;
           white-space: nowrap;
+          display: flex;
+          align-items: flex-end;
+          min-height: clamp(2.5rem, 5vw, 4rem);
         }
         /* Longer word/values (Same-day, 24/7/365) — scale down so they fit on one line */
         .gs-stat-value-long {
@@ -332,7 +330,8 @@ export function GlobeStats() {
         @media (max-width: 900px) {
           .gs-section { padding: 0 16px; }
           .gs-card { padding: 40px 24px 0; }
-          .gs-stats { flex-wrap: wrap; gap: 32px; margin-bottom: 60px; }
+          .gs-stats { grid-template-columns: repeat(2, 1fr); gap: 32px 24px; margin-bottom: 60px; }
+          .gs-stat-value { min-height: 0; }
           .gs-globe-wrap {
             width: 96vw;
             height: 96vw;
