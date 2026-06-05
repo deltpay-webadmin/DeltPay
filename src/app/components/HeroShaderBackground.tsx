@@ -1,10 +1,12 @@
+'use client';
 import { ShaderGradientCanvas, ShaderGradient } from '@shadergradient/react';
 
 /* ──────────────────────────────────────────────────────────────
    HeroShaderBackground
-   Live, animated shader gradient locked to the Delt brand
-   indigo (#4945ff). Sits absolute-filling its parent section.
-   Pointer events are disabled so it never intercepts clicks.
+   Live, animated shader gradient. Uses the user-provided playground
+   config verbatim, with the palette tuned to read blue. Sits
+   absolute-filling its parent section; pointer events disabled so it
+   never intercepts clicks on the hero content.
    ────────────────────────────────────────────────────────────── */
 
 export function HeroShaderBackground() {
@@ -26,12 +28,7 @@ export function HeroShaderBackground() {
           type="sphere"
           wireframe={false}
           shader="defaults"
-          // Begin the loop at the frame the user picked: dark navy top,
-          // indigo glow concentrated along the bottom edge.
-          range="enabled"
-          rangeStart={53}
-          rangeEnd={9999}
-          uTime={53}
+          uTime={0}
           uSpeed={0.3}
           uStrength={0.3}
           uDensity={0.8}
@@ -43,52 +40,29 @@ export function HeroShaderBackground() {
           rotationX={0}
           rotationY={130}
           rotationZ={70}
-          // Delt brand indigo — primary, secondary tonal, deep-navy anchor
-          color1="#4945ff"
-          color2="#7c79ff"
-          color3="#1a1a4d"
+          // Blue palette (replacing the teal/orange/periwinkle from the snippet)
+          color1="#73b8ff"
+          color2="#0a5bff"
+          color3="#3865cf"
           reflection={0.4}
-          // Camera
+          // View (camera) props
           cAzimuthAngle={270}
           cPolarAngle={180}
           cDistance={0.5}
           cameraZoom={15.1}
-          // Lighting
+          // Effect props
           lightType="env"
           brightness={0.8}
           envPreset="city"
           grain="on"
-          // Misc
+          // Tool props
           toggleAxis={false}
           zoomOut={false}
           hoverState=""
+          // Optional - if using transition features
           enableTransition={false}
         />
       </ShaderGradientCanvas>
-
-      {/* Subtle navy wash so foreground text stays high-contrast */}
-      <div
-        className="absolute inset-0"
-        style={{
-          background:
-            'linear-gradient(180deg, rgba(8,10,40,0.55) 0%, rgba(8,10,40,0.35) 45%, rgba(8,10,40,0.65) 100%)',
-        }}
-      />
-
-      {/* Hotspot tamer — the shader concentrates a bright violet peak in the
-          upper-right where there is no foreground content. Without something
-          anchored to it, that bright spot just reads as a distracting empty
-          area. We flatten it with a directional navy wash that's heaviest in
-          the top-right corner and fades toward the (text-bearing) left, so the
-          gradient stays alive on the left while the empty right corner settles
-          back into the navy canvas. */}
-      <div
-        className="absolute inset-0"
-        style={{
-          background:
-            'radial-gradient(120% 110% at 100% 0%, rgba(8,10,40,0.72) 0%, rgba(8,10,40,0.30) 38%, rgba(8,10,40,0) 68%)',
-        }}
-      />
     </div>
   );
 }
