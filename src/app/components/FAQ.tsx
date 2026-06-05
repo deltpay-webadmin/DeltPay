@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
 import { ScrollReveal, StaggerChildren, staggerItemVariants } from './MicroInteractions';
 
@@ -109,50 +110,52 @@ export function FAQ() {
     setOpenIndex(openIndex === index ? null : index);
   };
 
-  // Split FAQ items into two columns
-  const leftColumnFAQs = faqData.filter((_, index) => index % 2 === 0);
-  const rightColumnFAQs = faqData.filter((_, index) => index % 2 === 1);
-
   return (
-    <section className="py-20 bg-white">
+    <section className="py-24 lg:py-28 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <ScrollReveal className="mb-12">
-          <h2 className="text-4xl sm:text-5xl font-bold text-[#0F1119]">
-            FAQ<span className="text-[#4945FF]">.</span>
-          </h2>
-        </ScrollReveal>
+        <div className="grid grid-cols-1 lg:grid-cols-[0.85fr_1.15fr] gap-12 lg:gap-20 items-start">
+          {/* Left — sticky heading block */}
+          <ScrollReveal className="lg:sticky lg:top-24">
+            <div className="dc-eyebrow dc-on-light" style={{ color: 'var(--dc-indigo)' }}>
+              FAQ
+            </div>
+            <h2
+              className="mt-5 dc-h2"
+              style={{
+                color: 'var(--dc-on-light)',
+                fontSize: 'clamp(34px, 5vw, 56px)',
+                lineHeight: 1.05,
+                fontWeight: 600,
+                letterSpacing: '-0.035em',
+              }}
+            >
+              Your questions, answered
+              <span style={{ color: 'var(--dc-indigo)' }}>.</span>
+            </h2>
+            <p
+              className="mt-5 max-w-[420px] text-[16px] leading-[1.6]"
+              style={{ color: 'var(--dc-on-light-muted)', fontFamily: 'var(--dc-font-body)' }}
+            >
+              Everything you need to know about pricing, hardware, deposits, and
+              getting set up. Still stuck? Our team replies fast.
+            </p>
+            <Link to="/get-a-quote" className="dc-btn-primary dc-lg mt-8">
+              Ask a question
+              <span aria-hidden style={{ marginLeft: 2 }}>→</span>
+            </Link>
+          </ScrollReveal>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-16 gap-y-1">
-          {/* Left Column */}
-          <StaggerChildren className="space-y-1" staggerDelay={0.06}>
-            {leftColumnFAQs.map((faq, index) => {
-              const actualIndex = index * 2;
-              return (
-                <FAQAccordionItem
-                  key={actualIndex}
-                  faq={faq}
-                  index={actualIndex}
-                  isOpen={openIndex === actualIndex}
-                  onToggle={() => toggleFAQ(actualIndex)}
-                />
-              );
-            })}
-          </StaggerChildren>
-
-          {/* Right Column */}
-          <StaggerChildren className="space-y-1" staggerDelay={0.06}>
-            {rightColumnFAQs.map((faq, index) => {
-              const actualIndex = index * 2 + 1;
-              return (
-                <FAQAccordionItem
-                  key={actualIndex}
-                  faq={faq}
-                  index={actualIndex}
-                  isOpen={openIndex === actualIndex}
-                  onToggle={() => toggleFAQ(actualIndex)}
-                />
-              );
-            })}
+          {/* Right — single-column accordion */}
+          <StaggerChildren className="space-y-1" staggerDelay={0.05}>
+            {faqData.map((faq, index) => (
+              <FAQAccordionItem
+                key={index}
+                faq={faq}
+                index={index}
+                isOpen={openIndex === index}
+                onToggle={() => toggleFAQ(index)}
+              />
+            ))}
           </StaggerChildren>
         </div>
       </div>

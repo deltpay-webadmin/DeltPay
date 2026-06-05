@@ -10,6 +10,9 @@ import { SpotlightTestimonial } from '@/app/components/SpotlightTestimonial';
 import { IndustryPanel } from '@/app/components/IndustryPanel';
 import { EmailCaptureBar } from '@/app/components/EmailCaptureBar';
 import { CapitalCrossSell } from '@/app/components/CapitalCrossSell';
+import { CodeExamples } from '@/app/components/CodeExamples';
+import { IntegrationsGrid } from '@/app/components/IntegrationsGrid';
+import { FAQ } from '@/app/components/FAQ';
 // DeltMarquee was previously rendered here; it now lives in App.tsx
 // AFTER <Footer /> so the animation sits below the footer.
 
@@ -79,6 +82,15 @@ export function HomePage() {
       <div className="hidden md:block">
         <ResultsBento />
       </div>
+
+      {/* Developer-first code examples (dark) */}
+      <CodeExamples />
+
+      {/* Integrations grid (light) — dark → light alternation */}
+      <IntegrationsGrid />
+
+      {/* FAQ split layout (light) */}
+      <FAQ />
 
       <SpotlightTestimonial />
       <FinalCTA />
