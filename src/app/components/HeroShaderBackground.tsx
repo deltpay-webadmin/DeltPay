@@ -38,10 +38,10 @@ export function HeroShaderBackground() {
           rotationX={0}
           rotationY={130}
           rotationZ={70}
-          // Updated brand palette — aqua highlight, brand blue, deep blue anchor
-          color1="#92dbe0"
-          color2="#0b7bff"
-          color3="#3865cf"
+          // Electric-blue light band on a true-black field (matches reference)
+          color1="#0b7bff"
+          color2="#0a32ff"
+          color3="#000010"
           reflection={0.4}
           // Camera
           cAzimuthAngle={270}
@@ -61,27 +61,14 @@ export function HeroShaderBackground() {
         />
       </ShaderGradientCanvas>
 
-      {/* Subtle navy wash so foreground text stays high-contrast */}
+      {/* Light text-contrast scrim, weighted to the left where the hero copy
+          sits. Kept intentionally subtle so the bright electric-blue light
+          band reads cleanly — like the raw shader reference. */}
       <div
         className="absolute inset-0"
         style={{
           background:
-            'linear-gradient(180deg, rgba(8,10,40,0.55) 0%, rgba(8,10,40,0.35) 45%, rgba(8,10,40,0.65) 100%)',
-        }}
-      />
-
-      {/* Hotspot tamer — the shader concentrates a bright violet peak in the
-          upper-right where there is no foreground content. Without something
-          anchored to it, that bright spot just reads as a distracting empty
-          area. We flatten it with a directional navy wash that's heaviest in
-          the top-right corner and fades toward the (text-bearing) left, so the
-          gradient stays alive on the left while the empty right corner settles
-          back into the navy canvas. */}
-      <div
-        className="absolute inset-0"
-        style={{
-          background:
-            'radial-gradient(120% 110% at 100% 0%, rgba(8,10,40,0.72) 0%, rgba(8,10,40,0.30) 38%, rgba(8,10,40,0) 68%)',
+            'linear-gradient(100deg, rgba(0,0,16,0.55) 0%, rgba(0,0,16,0.25) 32%, rgba(0,0,16,0) 60%)',
         }}
       />
     </div>
