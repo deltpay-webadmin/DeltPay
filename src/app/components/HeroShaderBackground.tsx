@@ -26,13 +26,8 @@ export function HeroShaderBackground() {
           type="sphere"
           wireframe={false}
           shader="defaults"
-          // Begin the loop at the frame the user picked: dark navy top,
-          // indigo glow concentrated along the bottom edge.
-          range="enabled"
-          rangeStart={53}
-          rangeEnd={9999}
-          uTime={53}
-          uSpeed={0.3}
+          uTime={0}
+          uSpeed={0.49}
           uStrength={0.3}
           uDensity={0.8}
           uFrequency={5.5}
@@ -43,10 +38,10 @@ export function HeroShaderBackground() {
           rotationX={0}
           rotationY={130}
           rotationZ={70}
-          // Delt brand indigo — primary, secondary tonal, deep-navy anchor
-          color1="#4945ff"
-          color2="#7c79ff"
-          color3="#1a1a4d"
+          // Updated brand palette — aqua highlight, brand blue, deep blue anchor
+          color1="#92dbe0"
+          color2="#0b7bff"
+          color3="#3865cf"
           reflection={0.4}
           // Camera
           cAzimuthAngle={270}
