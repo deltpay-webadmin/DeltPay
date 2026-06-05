@@ -16,14 +16,18 @@ interface Row {
 
 const ROWS: Row[] = [
   { num: '01', metric: 'Processing cost',        legacy: '2.6% + $0.15 per transaction', delt: '0% with cash discount',           pill: 'MERCHANT PAYS NOTHING' },
-  { num: '02', metric: 'Time to go live',        legacy: '3–10 business days',           delt: 'Under 1 day',                     pill: 'SAME-DAY ONBOARD' },
-  { num: '03', metric: 'Settlement',             legacy: 'T+2 standard',                 delt: 'Next-day · same-day eligible',    pill: 'FASTER FUNDS' },
-  { num: '04', metric: 'Hardware & POS',         legacy: 'Sold separately',              delt: 'Included',                        pill: 'NO LEASE' },
-  { num: '05', metric: 'Chargeback support',     legacy: 'Self-serve portal only',       delt: 'Live dispute team',               pill: 'WE FIGHT FOR YOU' },
-  { num: '06', metric: 'Capital access',         legacy: 'Requires third-party lender',  delt: 'Built-in · underwritten off deposits', pill: 'ONE LOGIN' },
-  { num: '07', metric: 'Contract',               legacy: '36-month + early termination fee', delt: 'Month-to-month',              pill: 'NO LOCK-IN' },
-  { num: '08', metric: 'Business intelligence',  legacy: 'Basic reports only',           delt: 'Lens AI · revenue + cash flow',   pill: 'ONLY AT DELT' },
-  { num: '09', metric: 'Website',                legacy: 'Not included',                 delt: 'Custom site, built and managed',  pill: 'ONLY AT DELT' },
+  { num: '02', metric: 'Approval speed',         legacy: '3–10 business days',           delt: '99% same-day · 1-hour decisions', pill: 'FAST APPROVALS' },
+  { num: '03', metric: 'Funding & settlement',   legacy: 'T+2 standard',                 delt: 'Same-day eligible · next-day standard', pill: 'FASTER FUNDS' },
+  { num: '04', metric: 'Rate increases',         legacy: 'Annual hikes + surprise tiers', delt: 'Never — locked-in pricing',      pill: 'NO SURPRISES' },
+  { num: '05', metric: 'Hidden fees',            legacy: 'Annual, batch & PCI fees',     delt: 'No annual fees · no batch fees',  pill: 'TRANSPARENT' },
+  { num: '06', metric: 'Hardware & POS',         legacy: 'Sold separately',              delt: 'Included',                        pill: 'NO LEASE' },
+  { num: '07', metric: 'Support',                legacy: 'Tiered queue, business hours',  delt: '24/7/365 US-based · dedicated success manager', pill: 'ALWAYS ON' },
+  { num: '08', metric: 'Fraud protection',       legacy: 'Add-on, billed separately',    delt: 'Active fraud + account-takeover protection, included', pill: 'INCLUDED' },
+  { num: '09', metric: 'Chargeback support',     legacy: 'Self-serve portal only',       delt: 'Live dispute team',               pill: 'WE FIGHT FOR YOU' },
+  { num: '10', metric: 'Capital access',         legacy: 'Requires third-party lender',  delt: 'Built-in · underwritten off deposits', pill: 'ONE LOGIN' },
+  { num: '11', metric: 'Contract',               legacy: '36-month + early termination fee', delt: 'Month-to-month',              pill: 'NO LOCK-IN' },
+  { num: '12', metric: 'Business intelligence',  legacy: 'Basic reports only',           delt: 'Lens AI · revenue + cash flow',   pill: 'ONLY AT DELT' },
+  { num: '13', metric: 'Website',                legacy: 'Not included',                 delt: 'Custom site, built and managed',  pill: 'ONLY AT DELT' },
 ];
 
 const HIGHLIGHTS: { label: string; value: string; sub: string; icon: string; color: string }[] = [

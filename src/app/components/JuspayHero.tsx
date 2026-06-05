@@ -139,8 +139,8 @@ export function JuspayHero() {
               style={{ borderTop: '1px solid var(--dc-rule-on-dark)' }}
             >
               <Stat label="NET PROCESSING" big="0%" unit="cash discount" />
-              <Stat label="DEPOSITS" big="Same-day" unit="eligible" />
-              <Stat label="ONBOARDING" big="Instant" unit="approval-based" />
+              <Stat label="SAME-DAY APPROVALS" big="99%" unit="approval-based" />
+              <Stat label="FUNDING" big="Same-day" unit="eligible accts" />
             </div>
 
             {/* Stats strip — mobile (stacked, no overlap) */}
@@ -178,7 +178,32 @@ export function JuspayHero() {
                   className="text-[10px] tracking-[0.14em] mb-1.5 uppercase"
                   style={{ fontFamily: 'var(--dc-font-mono)', color: 'var(--dc-on-dark-faint)' }}
                 >
-                  DEPOSITS
+                  SAME-DAY APPROVALS
+                </div>
+                <div
+                  className="text-3xl font-semibold"
+                  style={{
+                    fontFamily: 'var(--dc-font-display)',
+                    letterSpacing: '-0.025em',
+                    color: 'var(--dc-on-dark)',
+                    lineHeight: 1,
+                  }}
+                >
+                  99%
+                  <span
+                    className="ml-2 text-[10px] font-normal"
+                    style={{ fontFamily: 'var(--dc-font-mono)', color: 'rgba(247, 245, 240, 0.32)', letterSpacing: '0.04em' }}
+                  >
+                    approval-based
+                  </span>
+                </div>
+              </div>
+              <div>
+                <div
+                  className="text-[10px] tracking-[0.14em] mb-1.5 uppercase"
+                  style={{ fontFamily: 'var(--dc-font-mono)', color: 'var(--dc-on-dark-faint)' }}
+                >
+                  FUNDING
                 </div>
                 <div
                   className="text-3xl font-semibold"
@@ -195,31 +220,6 @@ export function JuspayHero() {
                     style={{ fontFamily: 'var(--dc-font-mono)', color: 'rgba(247, 245, 240, 0.32)', letterSpacing: '0.04em' }}
                   >
                     eligible accts
-                  </span>
-                </div>
-              </div>
-              <div>
-                <div
-                  className="text-[10px] tracking-[0.14em] mb-1.5 uppercase"
-                  style={{ fontFamily: 'var(--dc-font-mono)', color: 'var(--dc-on-dark-faint)' }}
-                >
-                  ONBOARDING
-                </div>
-                <div
-                  className="text-3xl font-semibold"
-                  style={{
-                    fontFamily: 'var(--dc-font-display)',
-                    letterSpacing: '-0.025em',
-                    color: 'var(--dc-on-dark)',
-                    lineHeight: 1,
-                  }}
-                >
-                  Instant
-                  <span
-                    className="ml-2 text-[10px] font-normal"
-                    style={{ fontFamily: 'var(--dc-font-mono)', color: 'rgba(247, 245, 240, 0.32)', letterSpacing: '0.04em' }}
-                  >
-                    approval-based
                   </span>
                 </div>
               </div>
