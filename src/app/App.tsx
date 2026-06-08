@@ -1,4 +1,4 @@
-import { HashRouter, Routes, Route, useLocation } from 'react-router';
+import { HashRouter, Routes, Route, Navigate, useLocation } from 'react-router';
 import { Navigation } from '@/app/components/Navigation';
 import { Footer } from '@/app/components/Footer';
 import DeltMarquee from '@/app/components/DeltMarquee';
@@ -22,7 +22,6 @@ import { HardwareProductPage } from '@/app/pages/HardwareProductPage';
 import { ShoppingCartPage } from '@/app/pages/ShoppingCartPage';
 import { BlogPage } from '@/app/pages/BlogPage';
 import { NewBlogPage } from '@/app/pages/NewBlogPage';
-import { WhatsNewPage } from '@/app/pages/WhatsNewPage';
 import { AboutUsPage } from '@/app/pages/AboutUsPage';
 import { ReviewsPage } from '@/app/pages/ReviewsPage';
 import { LensAIPage } from '@/app/pages/LensAIPage';
@@ -86,7 +85,7 @@ export default function App() {
                 <Route path="/pricing" element={<PricingPage />} />
                 <Route path="/payments" element={<PaymentsPage />} />
                 <Route path="/apply" element={<ApplicationPage />} />
-                <Route path="/whats-new" element={<WhatsNewPage />} />
+                <Route path="/whats-new" element={<Navigate to="/blog" replace />} />
                 <Route path="/blog" element={<NewBlogPage />} />
                 <Route path="/contact" element={<ContactPage />} />
                 <Route path="/contact-sales" element={<ContactSalesPage />} />

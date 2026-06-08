@@ -34,7 +34,6 @@ const BUSINESS = [
 
 const COMPANY = [
   { label: 'About',           href: '/about' },
-  { label: "What's New",      href: '/whats-new' },
   { label: 'Reviews',         href: '/reviews' },
   { label: 'Case Studies',    href: '/case-studies' },
   { label: 'Careers',         href: '/careers' },

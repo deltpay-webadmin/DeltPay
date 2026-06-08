@@ -57,7 +57,6 @@ const specialized = [
 
 /* ── Learn mega-menu ── */
 const learnLinks = [
-  { label: "What's New",   description: 'Product updates & releases',          href: '/whats-new',     icon: Star,         badge: 'LATEST' },
   { label: 'About Us',     description: 'Our story, team & mission',           href: '/about',         icon: User },
   { label: 'Blog',         description: 'Insights for growing businesses',     href: '/blog',          icon: AlignLeft },
   { label: 'Reviews',      description: 'What merchants are saying',           href: '/reviews',       icon: Star },

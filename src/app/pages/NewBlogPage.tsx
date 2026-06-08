@@ -1,6 +1,26 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { ArrowRight, ArrowLeft, Clock, Mail } from 'lucide-react';
-import { BusinessScene } from '../components/BusinessScene';
+
+/* ─── Images ─────────────────────────────────────────── */
+import imgFeatured             from '@/assets/blog/blog-featured-capital-rebuild.png';
+import imgLensAi               from '@/assets/blog/blog-lens-ai-agent.png';
+import imgEngineeringScale     from '@/assets/blog/blog-engineering-scale.png';
+import imgRomaTrattoria        from '@/assets/blog/blog-roma-trattoria.png';
+import imgWritingBeforeCoding  from '@/assets/blog/blog-writing-before-coding.png';
+import imgSmbLendingPolicy     from '@/assets/blog/blog-smb-lending-policy.png';
+import imgDistractedOperators  from '@/assets/blog/blog-designing-distracted-operators.png';
+import imgZeroDowntime         from '@/assets/blog/blog-zero-downtime-migrations.png';
+import imgBloomSalon           from '@/assets/blog/blog-bloom-salon.png';
+import imgAgainstDashboards    from '@/assets/blog/blog-case-against-dashboards.png';
+import imgMerchantOnboarding   from '@/assets/blog/blog-merchant-onboarding-day.png';
+import imgFraudProtection      from '@/assets/blog/blog-fraud-protection-essay.png';
+import imgInterchange          from '@/assets/blog/blog-interchange-explained.png';
+import imgKitchenDisplay       from '@/assets/blog/blog-kitchen-display-systems.png';
+import imgSalonNoShows         from '@/assets/blog/blog-salon-no-shows-essay.png';
+import imgWellnessMembership   from '@/assets/blog/blog-wellness-membership-engine.png';
+import imgRetailInventory      from '@/assets/blog/blog-retail-inventory-truth.png';
+import imgFounderLetter        from '@/assets/blog/blog-founder-letter-anniversary.png';
+import imgSupportAsProduct     from '@/assets/blog/blog-support-as-product.png';
 
 /* ─── Palette ────────────────────────────────────────── */
 const NAVY      = '#041E42';
@@ -23,6 +43,7 @@ interface Post {
   author: string;
   date: string;
   readMin: number;
+  image: string;
 }
 
 /* ─── Data ───────────────────────────────────────────── */
@@ -35,6 +56,7 @@ const FEATURED: Post = {
   author: 'Avery Chen',
   date: 'Apr 18, 2026',
   readMin: 12,
+  image: imgFeatured,
 };
 
 const POSTS: Post[] = [
@@ -46,6 +68,7 @@ const POSTS: Post[] = [
     author: 'Daniel Kim',
     date: 'Apr 11, 2026',
     readMin: 9,
+    image: imgLensAi,
   },
   {
     id: 2,
@@ -55,6 +78,7 @@ const POSTS: Post[] = [
     author: 'Marcus Webb',
     date: 'Apr 04, 2026',
     readMin: 14,
+    image: imgEngineeringScale,
   },
   {
     id: 3,
@@ -64,6 +88,7 @@ const POSTS: Post[] = [
     author: 'Zara Okafor',
     date: 'Mar 28, 2026',
     readMin: 7,
+    image: imgRomaTrattoria,
   },
   {
     id: 4,
@@ -73,6 +98,7 @@ const POSTS: Post[] = [
     author: 'Elena Rodriguez',
     date: 'Mar 21, 2026',
     readMin: 6,
+    image: imgWritingBeforeCoding,
   },
   {
     id: 5,
@@ -82,6 +108,7 @@ const POSTS: Post[] = [
     author: 'Priya Patel',
     date: 'Mar 14, 2026',
     readMin: 8,
+    image: imgSmbLendingPolicy,
   },
   {
     id: 6,
@@ -91,6 +118,7 @@ const POSTS: Post[] = [
     author: 'Daniel Kim',
     date: 'Mar 07, 2026',
     readMin: 10,
+    image: imgDistractedOperators,
   },
   {
     id: 7,
@@ -100,6 +128,7 @@ const POSTS: Post[] = [
     author: 'Marcus Webb',
     date: 'Feb 28, 2026',
     readMin: 11,
+    image: imgZeroDowntime,
   },
   {
     id: 8,
@@ -109,6 +138,7 @@ const POSTS: Post[] = [
     author: 'Zara Okafor',
     date: 'Feb 21, 2026',
     readMin: 5,
+    image: imgBloomSalon,
   },
   {
     id: 9,
@@ -118,10 +148,102 @@ const POSTS: Post[] = [
     author: 'Avery Chen',
     date: 'Feb 14, 2026',
     readMin: 8,
+    image: imgAgainstDashboards,
+  },
+  {
+    id: 10,
+    category: 'Customers',
+    title: 'What we learn from onboarding day.',
+    excerpt: "Every new merchant unboxing a terminal teaches us something. Here are five lessons we've shipped from the first ten minutes of activation.",
+    author: 'Zara Okafor',
+    date: 'Feb 07, 2026',
+    readMin: 6,
+    image: imgMerchantOnboarding,
+  },
+  {
+    id: 11,
+    category: 'Engineering',
+    title: 'Fraud is a craft, not a checkbox.',
+    excerpt: 'Why our fraud models are written by people who answer the phone when things go wrong — and what that changes about the work.',
+    author: 'Marcus Webb',
+    date: 'Jan 31, 2026',
+    readMin: 12,
+    image: imgFraudProtection,
+  },
+  {
+    id: 12,
+    category: 'Product',
+    title: 'Interchange, explained without the jargon.',
+    excerpt: 'The fees behind every card swipe, written for an operator — not a payments lifer.',
+    author: 'Avery Chen',
+    date: 'Jan 24, 2026',
+    readMin: 9,
+    image: imgInterchange,
+  },
+  {
+    id: 13,
+    category: 'Product',
+    title: 'Kitchen display systems, rebuilt for real tickets.',
+    excerpt: 'A look at how we shipped a KDS that survives Friday-night service — and what it took to convince ourselves we needed one.',
+    author: 'Daniel Kim',
+    date: 'Jan 17, 2026',
+    readMin: 8,
+    image: imgKitchenDisplay,
+  },
+  {
+    id: 14,
+    category: 'Product',
+    title: "Why salon no-shows are a product problem.",
+    excerpt: "Reminders are table stakes. The real fix lives in deposits, waitlists, and the moment between booking and showing up.",
+    author: 'Elena Rodriguez',
+    date: 'Jan 10, 2026',
+    readMin: 7,
+    image: imgSalonNoShows,
+  },
+  {
+    id: 15,
+    category: 'Product',
+    title: 'Building a membership engine for wellness.',
+    excerpt: "How we designed recurring revenue tooling that yoga, pilates, and barre studios can actually run themselves.",
+    author: 'Daniel Kim',
+    date: 'Jan 03, 2026',
+    readMin: 10,
+    image: imgWellnessMembership,
+  },
+  {
+    id: 16,
+    category: 'Engineering',
+    title: 'Inventory should tell the truth.',
+    excerpt: "A retailer's stockroom is the cruelest place a software bug can live. Here's how we hold ourselves to a higher bar for inventory accuracy.",
+    author: 'Marcus Webb',
+    date: 'Dec 20, 2025',
+    readMin: 11,
+    image: imgRetailInventory,
+  },
+  {
+    id: 17,
+    category: 'Culture',
+    title: 'A letter on our second anniversary.',
+    excerpt: 'Two years in. A note to our merchants, our team, and our future selves — about what we built, what we broke, and what comes next.',
+    author: 'Avery Chen',
+    date: 'Dec 13, 2025',
+    readMin: 5,
+    image: imgFounderLetter,
+  },
+  {
+    id: 18,
+    category: 'Culture',
+    title: 'Support is a product, not a cost center.',
+    excerpt: "Our support team ships fixes, not just replies. Here's how we organize the work so the answer to 'who owns this?' is always the same: we do.",
+    author: 'Elena Rodriguez',
+    date: 'Dec 06, 2025',
+    readMin: 7,
+    image: imgSupportAsProduct,
   },
 ];
 
 const CATEGORIES: Category[] = ['All', 'Product', 'Engineering', 'Culture', 'Customers', 'Policy'];
+const POSTS_PER_PAGE = 6;
 
 const CATEGORY_COLOR: Record<Exclude<Category, 'All'>, string> = {
   Product:     PURPLE,
@@ -133,171 +255,15 @@ const CATEGORY_COLOR: Record<Exclude<Category, 'All'>, string> = {
 
 /* ─── Sub-components ─────────────────────────────────── */
 
-function CategoryCover({ post, className = '' }: { post: Post; className?: string }) {
-  const { category } = post;
-
-  // Customers → real BusinessScene photo
-  if (category === 'Customers') {
-    const customerTheme =
-      post.title.includes('Roma')  ? 'restaurant' :
-      post.title.includes('Bloom') ? 'salon' :
-      'cafe';
-    const initials = post.title.includes('Roma') ? 'RT' : post.title.includes('Bloom') ? 'BS' : 'BW';
-    const biz      = post.title.includes('Roma') ? 'Roma Trattoria' : post.title.includes('Bloom') ? 'Bloom Salon' : 'Blue Wren Coffee';
-    return (
-      <div className={className} style={{ overflow: 'hidden' }}>
-        <BusinessScene
-          theme={customerTheme as any}
-          initials={initials}
-          businessName={biz}
-          location="Customer story"
-          aspect="landscape"
-          variant="navy"
-          className="w-full h-full !rounded-none"
-        />
-      </div>
-    );
-  }
-
-  // Product → stylised UI mockup
-  if (category === 'Product') {
-    return (
-      <div
-        className={className}
-        style={{
-          background: `linear-gradient(135deg, ${NAVY} 0%, #0a1638 60%, ${PURPLE} 160%)`,
-          position: 'relative', overflow: 'hidden',
-        }}
-      >
-        <div
-          aria-hidden
-          style={{
-            position: 'absolute', inset: 0,
-            background: `radial-gradient(circle at 80% 20%, ${PURPLE_HI}55 0%, transparent 55%)`,
-          }}
-        />
-        {/* browser window */}
-        <div style={{
-          position: 'absolute', left: '10%', top: '18%', right: '10%', bottom: '18%',
-          background: WHITE, borderRadius: 10,
-          boxShadow: '0 20px 40px -10px rgba(0,0,0,0.45)', overflow: 'hidden',
-        }}>
-          <div style={{ height: 14, background: '#F6F7FB', display: 'flex', alignItems: 'center', gap: 4, paddingLeft: 6 }}>
-            <span style={{ width: 5, height: 5, borderRadius: 99, background: '#ff5f57' }} />
-            <span style={{ width: 5, height: 5, borderRadius: 99, background: '#febc2e' }} />
-            <span style={{ width: 5, height: 5, borderRadius: 99, background: '#28c840' }} />
-          </div>
-          <div style={{ padding: 8, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
-            <div style={{ background: `${PURPLE}14`, borderRadius: 5, padding: '6px 7px' }}>
-              <div style={{ width: 18, height: 3, background: `${PURPLE}80`, borderRadius: 2, marginBottom: 3 }} />
-              <div style={{ width: 34, height: 7, background: NAVY, borderRadius: 2 }} />
-            </div>
-            <div style={{ background: `${NAVY}10`, borderRadius: 5, padding: '6px 7px' }}>
-              <div style={{ width: 14, height: 3, background: `${NAVY}60`, borderRadius: 2, marginBottom: 3 }} />
-              <div style={{ width: 28, height: 7, background: PURPLE, borderRadius: 2 }} />
-            </div>
-            <div style={{ gridColumn: 'span 2', background: '#F6F7FB', borderRadius: 5, height: 26, position: 'relative', overflow: 'hidden' }}>
-              <svg viewBox="0 0 100 30" preserveAspectRatio="none" style={{ width: '100%', height: '100%' }}>
-                <path d="M0 22 L15 18 L30 20 L45 12 L60 14 L75 6 L100 10" stroke={PURPLE} strokeWidth="2" fill="none" strokeLinecap="round" />
-                <path d="M0 22 L15 18 L30 20 L45 12 L60 14 L75 6 L100 10 L100 30 L0 30 Z" fill={`${PURPLE}20`} />
-              </svg>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Engineering → terminal/code feel
-  if (category === 'Engineering') {
-    return (
-      <div
-        className={className}
-        style={{
-          background: 'linear-gradient(135deg, #060e22 0%, #0a1628 100%)',
-          position: 'relative', overflow: 'hidden',
-        }}
-      >
-        <div style={{
-          position: 'absolute', inset: 0,
-          backgroundImage: `linear-gradient(${PURPLE}14 1px, transparent 1px), linear-gradient(90deg, ${PURPLE}14 1px, transparent 1px)`,
-          backgroundSize: '22px 22px',
-        }} />
-        <div style={{
-          position: 'absolute', left: '8%', right: '8%', top: '16%', bottom: '16%',
-          background: '#0b1026', borderRadius: 8,
-          border: `1px solid ${PURPLE}40`,
-          boxShadow: `0 0 0 1px ${PURPLE}20, 0 20px 40px -10px rgba(0,0,0,0.6)`,
-          padding: 10,
-          fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
-          fontSize: 9, lineHeight: 1.45, color: '#94A3B8', overflow: 'hidden',
-        }}>
-          <div style={{ color: '#6D68FF' }}>$ deploy --region us-east-1</div>
-          <div>✓ build succeeded <span style={{ color: '#28c840' }}>2.1s</span></div>
-          <div>✓ tests passed <span style={{ color: '#28c840' }}>128/128</span></div>
-          <div style={{ color: WHITE }}>→ rolling out <span style={{ color: PURPLE }}>v2026.04</span></div>
-          <div style={{ color: '#6D68FF' }}>█</div>
-        </div>
-      </div>
-    );
-  }
-
-  // Culture → notebook / handwritten
-  if (category === 'Culture') {
-    return (
-      <div
-        className={className}
-        style={{
-          background: `linear-gradient(160deg, #f3f1ff 0%, ${WHITE} 60%)`,
-          position: 'relative', overflow: 'hidden',
-        }}
-      >
-        {[0, 1, 2, 3, 4].map(i => (
-          <div key={i} style={{
-            position: 'absolute', left: '10%', right: '10%',
-            top: `${22 + i * 14}%`, height: 1, background: `${NAVY}10`,
-          }} />
-        ))}
-        <div style={{
-          position: 'absolute', left: '8%', top: '-5%',
-          fontFamily: 'Georgia, serif', fontSize: 120, lineHeight: 1,
-          color: `${PURPLE}30`, fontWeight: 700,
-        }}>&ldquo;</div>
-        <svg viewBox="0 0 200 80" style={{ position: 'absolute', right: '8%', bottom: '12%', width: '55%' }}>
-          <path d="M10 50 Q 40 10, 80 40 T 160 30" stroke={PURPLE} strokeWidth="3" fill="none" strokeLinecap="round" />
-          <circle cx="162" cy="29" r="4" fill={PURPLE} />
-        </svg>
-      </div>
-    );
-  }
-
-  // Policy → document with seal
+function PostImage({ post, className = '' }: { post: Post; className?: string }) {
   return (
-    <div
-      className={className}
-      style={{
-        background: `linear-gradient(135deg, ${NAVY} 0%, #1a3060 100%)`,
-        position: 'relative', overflow: 'hidden',
-      }}
-    >
-      <div style={{
-        position: 'absolute', left: '14%', top: '18%', width: '42%', bottom: '18%',
-        background: WHITE, borderRadius: 4,
-        boxShadow: '0 10px 30px -6px rgba(0,0,0,0.5)',
-        padding: 10,
-      }}>
-        <div style={{ width: '70%', height: 4, background: NAVY, borderRadius: 2, marginBottom: 6 }} />
-        {[0,1,2,3,4,5].map(i => (
-          <div key={i} style={{ width: `${60 + (i * 7) % 35}%`, height: 2, background: `${NAVY}40`, borderRadius: 1, marginBottom: 3 }} />
-        ))}
-        <div style={{ width: 22, height: 22, border: `2px solid ${PURPLE}`, borderRadius: 99, position: 'absolute', right: 8, bottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 700, color: PURPLE, transform: 'rotate(-12deg)' }}>SEAL</div>
-      </div>
-      <div style={{ position: 'absolute', right: '10%', bottom: 0, display: 'flex', alignItems: 'flex-end', gap: 4, opacity: 0.4 }}>
-        {[40, 50, 60, 50, 40].map((h, i) => (
-          <div key={i} style={{ width: 8, height: h, background: WHITE, borderRadius: '2px 2px 0 0' }} />
-        ))}
-        <div style={{ position: 'absolute', left: -4, right: -4, bottom: 60, height: 4, background: WHITE, borderRadius: 1 }} />
-      </div>
+    <div className={className} style={{ overflow: 'hidden', background: `${NAVY}08` }}>
+      <img
+        src={post.image}
+        alt=""
+        loading="lazy"
+        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+      />
     </div>
   );
 }
@@ -370,7 +336,7 @@ function ArticleCard({ post }: { post: Post }) {
         (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
       }}
     >
-      <CategoryCover post={post} className="h-44" />
+      <PostImage post={post} className="h-44" />
       <div className="p-6 flex flex-col gap-3 flex-1">
         <CategoryPill category={post.category} small />
         <h3
@@ -393,11 +359,42 @@ function ArticleCard({ post }: { post: Post }) {
 /* ─── Page ───────────────────────────────────────────── */
 export function NewBlogPage() {
   const [activeCategory, setActiveCategory] = useState<Category>('All');
+  const [currentPage, setCurrentPage] = useState(1);
+  const gridRef = useRef<HTMLDivElement | null>(null);
 
   const filteredPosts = useMemo(
     () => (activeCategory === 'All' ? POSTS : POSTS.filter(p => p.category === activeCategory)),
     [activeCategory],
   );
+
+  const totalPages = Math.max(1, Math.ceil(filteredPosts.length / POSTS_PER_PAGE));
+
+  // Reset page when filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeCategory]);
+
+  // Clamp page if filter shrinks the list
+  useEffect(() => {
+    if (currentPage > totalPages) setCurrentPage(totalPages);
+  }, [currentPage, totalPages]);
+
+  const paginatedPosts = useMemo(() => {
+    const start = (currentPage - 1) * POSTS_PER_PAGE;
+    return filteredPosts.slice(start, start + POSTS_PER_PAGE);
+  }, [filteredPosts, currentPage]);
+
+  const goToPage = (page: number) => {
+    const next = Math.min(Math.max(1, page), totalPages);
+    setCurrentPage(next);
+    if (gridRef.current) {
+      const top = gridRef.current.getBoundingClientRect().top + window.scrollY - 120;
+      window.scrollTo({ top, behavior: 'smooth' });
+    }
+  };
+
+  const prevDisabled = currentPage <= 1;
+  const nextDisabled = currentPage >= totalPages;
 
   return (
     <div style={{ background: WHITE, color: INK, fontFamily: 'system-ui, -apple-system, sans-serif' }}>
@@ -487,60 +484,20 @@ export function NewBlogPage() {
               backdropFilter: 'blur(10px)',
             }}
           >
-            {/* Left: illustrated capital scene */}
-            <div
-              className="relative min-h-72 md:min-h-0 overflow-hidden"
-              style={{
-                background: `linear-gradient(135deg, ${NAVY} 0%, #0a1638 55%, ${PURPLE} 140%)`,
-              }}
-            >
+            {/* Left: featured editorial image */}
+            <div className="relative min-h-72 md:min-h-0 overflow-hidden">
+              <img
+                src={FEATURED.image}
+                alt=""
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
+              />
               <div
                 aria-hidden
                 className="absolute inset-0"
                 style={{
-                  background: `radial-gradient(circle at 85% 20%, ${PURPLE}66 0%, transparent 55%)`,
+                  background: `linear-gradient(180deg, rgba(2,14,34,0.15) 0%, rgba(2,14,34,0.55) 100%)`,
                 }}
               />
-              {/* Capital offer card */}
-              <div
-                className="absolute right-6 top-8 rounded-2xl p-4 w-52 transition-transform duration-500 group-hover:-translate-y-1"
-                style={{
-                  background: 'rgba(255,255,255,0.98)',
-                  boxShadow: '0 20px 40px -12px rgba(0,0,0,0.4)',
-                }}
-              >
-                <p className="text-[10px] font-bold uppercase tracking-[0.18em]" style={{ color: PURPLE }}>
-                  Capital offer
-                </p>
-                <p className="text-2xl font-bold mt-1 tracking-tight" style={{ color: NAVY }}>
-                  $42,000
-                </p>
-                <div className="mt-3 h-1.5 rounded-full" style={{ background: `${NAVY}14` }}>
-                  <div className="h-1.5 rounded-full" style={{ width: '68%', background: `linear-gradient(90deg, ${PURPLE} 0%, ${PURPLE_HI} 100%)` }} />
-                </div>
-                <p className="mt-2 text-[10px] font-medium" style={{ color: MUTED }}>
-                  68% of offer used · 12 months
-                </p>
-              </div>
-              {/* Funded badge */}
-              <div
-                className="absolute right-6 top-44 rounded-xl px-3 py-2 flex items-center gap-2 transition-transform duration-500 group-hover:-translate-y-1"
-                style={{
-                  background: 'rgba(255,255,255,0.94)',
-                  boxShadow: '0 10px 24px -8px rgba(0,0,0,0.3)',
-                }}
-              >
-                <span
-                  className="w-5 h-5 rounded-lg flex items-center justify-center text-[11px] font-bold"
-                  style={{ background: `${PURPLE}22`, color: PURPLE }}
-                >
-                  ✓
-                </span>
-                <span className="text-[11px] font-semibold" style={{ color: NAVY }}>
-                  Funded in 24h
-                </span>
-              </div>
-
               {/* Floor tag */}
               <div className="absolute left-8 bottom-8">
                 <CategoryPill category={FEATURED.category} onDark />
@@ -617,45 +574,80 @@ export function NewBlogPage() {
       {/* ══ ARTICLE GRID ══════════════════════════════════════ */}
       <section className="py-16 md:py-20 px-6">
         <div className="max-w-6xl mx-auto">
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-7">
-            {filteredPosts.map(post => (
+          <div ref={gridRef} className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-7">
+            {paginatedPosts.map(post => (
               <ArticleCard key={post.id} post={post} />
             ))}
           </div>
 
+          {paginatedPosts.length === 0 && (
+            <div
+              className="mt-8 rounded-2xl text-center py-16 px-6"
+              style={{
+                background: `${NAVY}06`,
+                boxShadow: `inset 0 0 0 1px ${HAIRLINE}`,
+                color: MUTED,
+              }}
+            >
+              No essays in this category yet. Check back soon.
+            </div>
+          )}
+
           {/* Pagination */}
-          <div
-            className="mt-16 flex items-center justify-center gap-8 text-sm"
-            style={{ color: MUTED }}
-          >
-            <button
-              className="inline-flex items-center gap-1.5 opacity-40 cursor-default"
-              disabled
+          {totalPages > 1 && (
+            <div
+              className="mt-16 flex items-center justify-center gap-8 text-sm"
+              style={{ color: MUTED }}
             >
-              <ArrowLeft size={14} /> Previous
-            </button>
-            <span className="flex items-center gap-2">
-              {[1, 2, 3].map(n => (
-                <span
-                  key={n}
-                  className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-sm font-semibold"
-                  style={
-                    n === 1
-                      ? { background: NAVY, color: WHITE }
-                      : { color: MUTED, background: 'transparent' }
-                  }
-                >
-                  {n}
-                </span>
-              ))}
-            </span>
-            <button
-              className="inline-flex items-center gap-1.5 font-semibold transition-colors"
-              style={{ color: PURPLE }}
-            >
-              Next <ArrowRight size={14} strokeWidth={2.5} />
-            </button>
-          </div>
+              <button
+                type="button"
+                onClick={() => !prevDisabled && goToPage(currentPage - 1)}
+                disabled={prevDisabled}
+                className="inline-flex items-center gap-1.5 font-semibold transition-colors"
+                style={{
+                  color: prevDisabled ? '#CBD5E1' : PURPLE,
+                  cursor: prevDisabled ? 'default' : 'pointer',
+                  opacity: prevDisabled ? 0.5 : 1,
+                }}
+              >
+                <ArrowLeft size={14} strokeWidth={2.5} /> Previous
+              </button>
+              <span className="flex items-center gap-2">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(n => {
+                  const active = n === currentPage;
+                  return (
+                    <button
+                      key={n}
+                      type="button"
+                      onClick={() => goToPage(n)}
+                      className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-sm font-semibold transition-all"
+                      style={
+                        active
+                          ? { background: NAVY, color: WHITE }
+                          : { color: MUTED, background: 'transparent' }
+                      }
+                      aria-current={active ? 'page' : undefined}
+                    >
+                      {n}
+                    </button>
+                  );
+                })}
+              </span>
+              <button
+                type="button"
+                onClick={() => !nextDisabled && goToPage(currentPage + 1)}
+                disabled={nextDisabled}
+                className="inline-flex items-center gap-1.5 font-semibold transition-colors"
+                style={{
+                  color: nextDisabled ? '#CBD5E1' : PURPLE,
+                  cursor: nextDisabled ? 'default' : 'pointer',
+                  opacity: nextDisabled ? 0.5 : 1,
+                }}
+              >
+                Next <ArrowRight size={14} strokeWidth={2.5} />
+              </button>
+            </div>
+          )}
         </div>
       </section>
 
