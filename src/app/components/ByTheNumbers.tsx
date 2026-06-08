@@ -16,7 +16,7 @@ interface Row {
 
 const ROWS: Row[] = [
   { num: '01', metric: 'Processing cost',      legacy: '2.6% + $0.15 per transaction',    delt: '0% with cash discount',                 pill: 'MERCHANT PAYS NOTHING' },
-  { num: '02', metric: 'Hidden fees',          legacy: 'Annual, batch & PCI fees',        delt: 'No annual · no batch · no PCI',         pill: 'TRANSPARENT' },
+  { num: '02', metric: 'Hidden fees',          legacy: 'Junk fees & hidden charges',      delt: 'Clear, itemized statements',            pill: 'TRANSPARENT' },
   { num: '03', metric: 'Funding & settlement', legacy: 'T+2 standard',                    delt: 'Same-day eligible · next-day standard', pill: 'FASTER FUNDS' },
   { num: '04', metric: 'Hardware & POS',       legacy: 'Sold or leased separately',       delt: 'Included',                              pill: 'NO LEASE' },
   { num: '05', metric: 'Capital access',       legacy: 'Requires third-party lender',     delt: 'Built-in · underwritten off deposits',  pill: 'ONE LOGIN' },
@@ -128,7 +128,7 @@ export function ByTheNumbers() {
               </div>
             </div>
             <div
-              className="px-5 py-5 flex items-center"
+              className="pl-8 pr-5 py-5 flex items-center"
               style={{
                 borderLeft: '1px solid rgba(4, 30, 66, 0.06)',
               }}
