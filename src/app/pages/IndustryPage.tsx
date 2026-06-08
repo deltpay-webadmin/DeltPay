@@ -414,7 +414,7 @@ export function IndustryPage() {
 
   // Brand-anchored editorial palette
   const SERIF = 'var(--dc-font-serif-italic, "Source Serif Pro", Georgia, serif)';
-  const PAPER = '#F6F2EA'; // warm cream — neutral, premium, off-template
+  const PAPER = '#FFFFFF'; // Delt white — on-brand neutral
   const INK = '#041E42';   // Delt navy
   const ACCENT = '#4945FF'; // Delt indigo
 
@@ -559,7 +559,7 @@ export function IndustryPage() {
                 transition={{ duration: 0.45, delay: i * 0.05 }}
                 className="grid grid-cols-[auto_1fr] gap-7 lg:gap-9 p-7 lg:p-9 rounded-[24px] transition-all hover:-translate-y-0.5"
                 style={{
-                  background: '#FFFFFF',
+                  background: '#F8F9FC',
                   border: '1px solid rgba(4,30,66,0.08)',
                   boxShadow: '0 1px 0 rgba(4,30,66,0.02), 0 12px 28px -22px rgba(4,30,66,0.18)',
                 }}
