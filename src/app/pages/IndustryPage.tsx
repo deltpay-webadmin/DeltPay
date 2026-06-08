@@ -1,17 +1,5 @@
 import { Link, useLocation } from 'react-router';
-import {
-  ArrowRight,
-  Check,
-  Globe,
-  CreditCard,
-  Sparkles,
-  Landmark,
-  Quote,
-  Clock,
-  DollarSign,
-  TrendingUp,
-  Shield,
-} from 'lucide-react';
+import { ArrowRight, ArrowUpRight, Quote } from 'lucide-react';
 import { motion } from 'motion/react';
 import { ProductCrossSell } from '@/app/components/ProductCrossSell';
 import { KoronaPartnerBlock } from '@/app/components/KoronaPartnerBlock';
@@ -22,11 +10,12 @@ import industrySalon from '@/assets/industries/industry-salon.jpg';
 import industryWellness from '@/assets/industries/industry-wellness.jpg';
 
 /* ════════════════════════════════════════════════════════════
-   Wave 3 — Industry page (data-driven)
-   Replaces IndustryPlaceholder. One component renders all
-   5 industry pages with full content, photos, products,
-   proof points, a testimonial, and final CTA.
-   Palette: strictly #FFFFFF / #041E42 / #4945FF.
+   Industry pages — editorial template (v2)
+   Replaces the previous cookie-cutter SaaS layout.
+   One bold, editorial layout applied to all 5 verticals.
+   Design DNA: full-bleed overlay hero, indexed feature scroller,
+   oversized serif stat numerals, dark capability tiles,
+   editorial pull-quote — anchored to Delt's navy/indigo palette.
    ════════════════════════════════════════════════════════════ */
 
 interface ProductHighlight {
@@ -381,76 +370,6 @@ const INDUSTRIES: Record<string, Industry> = {
   },
 };
 
-/* ────────────────────────────────────────────────────────────
-   Per-industry layout variants
-   heroReverse: image left vs right
-   featureLayout: '2col' (cards), '3col-mosaic' (mix sizes), 'alternating' (zig-zag rows)
-   accentStyle: 'chip' | 'number' | 'dot' | 'bar'
-   productLayout: 'grid' (2x2) | 'list' (stacked row) | 'split-hero'
-   proofIcons: industry-specific icon set for stats
-   ─────────────────────────────────────────────────────────── */
-interface LayoutVariant {
-  heroReverse: boolean;
-  featureLayout: '2col' | '3col-mosaic' | 'alternating';
-  accentStyle: 'chip' | 'number' | 'dot' | 'bar' | 'badge';
-  productLayout: 'grid' | 'list' | 'split';
-  statIcons: Array<React.ComponentType<{ className?: string; strokeWidth?: number }>>;
-}
-
-const LAYOUTS: Record<string, LayoutVariant> = {
-  restaurants: {
-    heroReverse: false,
-    featureLayout: '3col-mosaic',
-    accentStyle: 'number',
-    productLayout: 'grid',
-    statIcons: [Clock, TrendingUp, Shield],
-  },
-  retail: {
-    heroReverse: true,
-    featureLayout: '2col',
-    accentStyle: 'chip',
-    productLayout: 'list',
-    statIcons: [Globe, Clock, DollarSign],
-  },
-  'professional-services': {
-    heroReverse: false,
-    featureLayout: 'alternating',
-    accentStyle: 'bar',
-    productLayout: 'grid',
-    statIcons: [Clock, Check, Shield],
-  },
-  'salon-barber': {
-    heroReverse: true,
-    featureLayout: '2col',
-    accentStyle: 'dot',
-    productLayout: 'split',
-    statIcons: [TrendingUp, DollarSign, Shield],
-  },
-  'health-wellness': {
-    heroReverse: false,
-    featureLayout: '3col-mosaic',
-    accentStyle: 'badge',
-    productLayout: 'list',
-    statIcons: [Check, Clock, TrendingUp],
-  },
-};
-
-const DEFAULT_LAYOUT: LayoutVariant = {
-  heroReverse: false,
-  featureLayout: '2col',
-  accentStyle: 'chip',
-  productLayout: 'grid',
-  statIcons: [Clock, DollarSign, Shield],
-};
-
-function ProductIcon({ type }: { type: ProductHighlight['icon'] }) {
-  const common = { className: 'w-5 h-5 text-[#4945FF]' } as const;
-  if (type === 'website') return <Globe {...common} />;
-  if (type === 'payments') return <CreditCard {...common} />;
-  if (type === 'lens') return <Sparkles {...common} />;
-  return <Landmark {...common} />;
-}
-
 function productLabel(icon: ProductHighlight['icon']): string {
   return icon === 'website'
     ? 'Website'
@@ -461,66 +380,10 @@ function productLabel(icon: ProductHighlight['icon']): string {
     : 'Capital';
 }
 
-function AccentMark({
-  index,
-  style,
-  onDark = false,
-}: {
-  index: number;
-  style: LayoutVariant['accentStyle'];
-  onDark?: boolean;
-}) {
-  if (style === 'number') {
-    return (
-      <div
-        className={`inline-flex items-center justify-center w-9 h-9 rounded-lg mb-5 font-bold text-[14px] ${
-          onDark ? 'bg-white/15 text-white' : 'bg-[#4945FF] text-white'
-        }`}
-      >
-        {String(index + 1).padStart(2, '0')}
-      </div>
-    );
-  }
-  if (style === 'dot') {
-    return (
-      <div className="flex items-center gap-2 mb-5">
-        <span className="w-2 h-2 rounded-full bg-[#4945FF]" />
-        <span className="w-2 h-2 rounded-full bg-[#4945FF]/50" />
-        <span className="w-2 h-2 rounded-full bg-[#4945FF]/20" />
-      </div>
-    );
-  }
-  if (style === 'bar') {
-    return <div className="w-12 h-1 rounded-full bg-[#4945FF] mb-5" />;
-  }
-  if (style === 'badge') {
-    return (
-      <div
-        className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 mb-5 text-[10.5px] font-bold uppercase tracking-[0.14em] ${
-          onDark ? 'bg-white/15 text-white' : 'bg-[#4945FF]/10 text-[#4945FF]'
-        }`}
-      >
-        <span className={`w-1.5 h-1.5 rounded-full ${onDark ? 'bg-white' : 'bg-[#4945FF]'}`} />
-        Built-in
-      </div>
-    );
-  }
-  // default 'chip' — existing check icon
-  return (
-    <div
-      className="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center mb-5"
-      style={{ background: 'rgba(73,69,255,0.1)' }}
-    >
-      <Check className="w-5 h-5 text-[#4945FF]" strokeWidth={2.4} />
-    </div>
-  );
-}
-
 export function IndustryPage() {
   const location = useLocation();
   const slug = location.pathname.replace('/industries/', '').replace(/\/$/, '');
   const data = INDUSTRIES[slug];
-  const layout = LAYOUTS[slug] || DEFAULT_LAYOUT;
 
   if (!data) {
     return (
@@ -549,436 +412,372 @@ export function IndustryPage() {
     );
   }
 
+  // Brand-anchored editorial palette
+  const SERIF = 'var(--dc-font-serif-italic, "Source Serif Pro", Georgia, serif)';
+  const PAPER = '#F6F2EA'; // warm cream — neutral, premium, off-template
+  const INK = '#041E42';   // Delt navy
+  const ACCENT = '#4945FF'; // Delt indigo
+
   return (
-    <div className="min-h-screen bg-white">
-      {/* ════════ Hero ════════ */}
-      <section
-        className="relative overflow-hidden pt-32 pb-24 px-6"
-        style={{ background: '#080A28' }}
-      >
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background:
-              'radial-gradient(ellipse at 15% 10%, rgba(73,69,255,0.32) 0%, transparent 55%)',
-          }}
-        />
-        <div className={`relative max-w-[1240px] mx-auto grid lg:grid-cols-[1.15fr_1fr] gap-12 items-center ${layout.heroReverse ? 'lg:[&>*:first-child]:order-2' : ''}`}>
+    <div className="min-h-screen" style={{ background: PAPER, color: INK }}>
+      {/* ════════ 1. Full-bleed editorial hero ════════ */}
+      <section className="relative w-full" style={{ minHeight: '92vh' }}>
+        <div className="absolute inset-0">
+          <img
+            src={data.image}
+            alt={data.imageAlt}
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+          {/* Editorial gradient — heavy bottom-left for left-aligned copy */}
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                'linear-gradient(110deg, rgba(4,30,66,0.78) 0%, rgba(4,30,66,0.55) 38%, rgba(4,30,66,0.18) 70%, transparent 100%)',
+            }}
+          />
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                'linear-gradient(180deg, rgba(4,30,66,0.18) 0%, transparent 30%, transparent 60%, rgba(4,30,66,0.45) 100%)',
+            }}
+          />
+        </div>
+
+        <div className="relative max-w-[1320px] mx-auto px-6 lg:px-10 pt-40 pb-28 lg:pb-36">
           <motion.div
-            initial={{ opacity: 0, y: 14 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.55 }}
+            transition={{ duration: 0.6 }}
+            className="max-w-[760px]"
           >
-            <div className="text-[12px] font-bold uppercase tracking-[0.2em] text-[#4945FF] mb-5">
-              {data.eyebrow}
+            <div className="text-[11px] font-bold uppercase tracking-[0.24em] text-white/80 mb-7">
+              — {data.eyebrow}
             </div>
             <h1
-              className="text-white font-bold leading-[1.04] mb-6"
+              className="text-white leading-[1.02] mb-8"
               style={{
-                fontSize: 'clamp(40px, 5.2vw, 64px)',
+                fontFamily: SERIF,
+                fontStyle: 'italic',
+                fontWeight: 500,
+                fontSize: 'clamp(44px, 6.4vw, 84px)',
                 letterSpacing: '-0.025em',
-                maxWidth: 820,
               }}
             >
               {data.heroTagline}
             </h1>
-            <p className="text-[18px] text-white/70 max-w-[620px] leading-relaxed mb-10">
+            <p
+              className="text-[17px] lg:text-[18.5px] text-white/85 leading-[1.55] mb-10 max-w-[600px]"
+              style={{ fontFamily: 'var(--dc-font-body)' }}
+            >
               {data.heroLede}
             </p>
             <div className="flex flex-wrap gap-3">
               <Link
                 to="/apply"
-                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full bg-[#4945FF] text-white text-[15px] font-semibold hover:bg-[#3933CC] transition-colors"
+                className="group inline-flex items-center gap-2 pl-6 pr-5 py-4 rounded-full text-[14.5px] font-semibold transition-colors"
+                style={{ background: PAPER, color: INK }}
               >
-                Get started free <ArrowRight className="w-4 h-4" />
+                Get started free
+                <ArrowUpRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
               </Link>
               <Link
                 to="/contact-sales"
-                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full bg-white/10 backdrop-blur-sm text-white text-[15px] font-semibold hover:bg-white/15 transition-colors border border-white/15"
+                className="inline-flex items-center gap-2 px-6 py-4 rounded-full text-[14.5px] font-semibold transition-colors border border-white/30 text-white hover:bg-white/10"
               >
                 Talk with {data.specialistLabel}
               </Link>
             </div>
           </motion.div>
 
-          {/* Hero photo card */}
-          <motion.div
-            initial={{ opacity: 0, y: 18 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            className="relative rounded-3xl overflow-hidden"
-            style={{
-              aspectRatio: '4 / 5',
-              boxShadow: '0 30px 80px -30px rgba(73,69,255,0.45)',
-            }}
+          {/* Floating industry tag — editorial corner element */}
+          <div
+            className="absolute right-6 lg:right-10 bottom-10 px-4 py-2 rounded-full text-[10.5px] font-bold uppercase tracking-[0.18em] backdrop-blur"
+            style={{ background: 'rgba(246,242,234,0.92)', color: INK, letterSpacing: '0.18em' }}
           >
-            <img
-              src={data.image}
-              alt={data.imageAlt}
-              className="absolute inset-0 w-full h-full object-cover"
-            />
-            <div
-              className="absolute inset-0 pointer-events-none"
+            {data.name}
+          </div>
+        </div>
+      </section>
+
+      {/* ════════ 2. Indexed feature scroller (Suede DNA, navy/indigo palette) ════════ */}
+      <section className="px-6 lg:px-10 py-24 lg:py-32">
+        <div className="max-w-[1320px] mx-auto grid lg:grid-cols-[1.05fr_1.1fr] gap-16 lg:gap-20">
+          {/* Left rail — sticky photo + intro */}
+          <div className="lg:sticky lg:top-28 self-start">
+            <div className="text-[11px] font-bold uppercase tracking-[0.24em] mb-6" style={{ color: ACCENT }}>
+              — What's included
+            </div>
+            <h2
+              className="mb-8"
               style={{
-                background:
-                  'linear-gradient(180deg, rgba(4,30,66,0) 55%, rgba(8,10,40,0.55) 100%)',
-              }}
-            />
-            <div
-              className="absolute top-5 left-5 px-3 py-1 rounded-full text-[10.5px] font-bold"
-              style={{
-                background: 'rgba(255,255,255,0.94)',
-                color: '#041E42',
-                letterSpacing: '0.14em',
-                backdropFilter: 'blur(6px)',
+                fontFamily: SERIF,
+                fontStyle: 'italic',
+                fontWeight: 500,
+                fontSize: 'clamp(34px, 4.2vw, 54px)',
+                letterSpacing: '-0.022em',
+                lineHeight: 1.06,
+                color: INK,
               }}
             >
-              {data.name.toUpperCase()}
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* ════════ Industry-specific stats strip ════════ */}
-      <section className="px-6 py-14 border-b border-[#EEF0F4]">
-        <div className="max-w-[1240px] mx-auto grid md:grid-cols-3 gap-8">
-          {data.stats.map((s, i) => {
-            const Icon = layout.statIcons[i] || Check;
-            return (
-              <motion.div
-                key={s.label}
-                initial={{ opacity: 0, y: 10 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: i * 0.06 }}
-                className="flex items-start gap-4"
-              >
-                <div className="flex-shrink-0 w-11 h-11 rounded-xl bg-[#4945FF]/10 flex items-center justify-center mt-1">
-                  <Icon className="w-5 h-5 text-[#4945FF]" strokeWidth={2.2} />
-                </div>
-                <div className="flex flex-col">
-                  <div
-                    className="text-[#041E42] font-bold mb-1.5"
-                    style={{ fontSize: 'clamp(32px, 3.8vw, 46px)', letterSpacing: '-0.02em' }}
-                  >
-                    {s.value}
-                  </div>
-                  <div className="text-[14.5px] text-[#475569] leading-snug max-w-[300px]">
-                    {s.label}
-                  </div>
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
-        <p className="text-xs text-[#475569] mt-6 max-w-[1240px] mx-auto">*Based on Delt merchant data; individual results vary.</p>
-      </section>
-
-      {/* ════════ Unified honest-stats ribbon (cross-site cohesion) ════════ */}
-      <section className="px-6 py-16 bg-white">
-        <div className="max-w-[1240px] mx-auto">
-          <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#4945FF] mb-6 text-center">
-            Delt by the numbers
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-[#EEF0F4] border-y border-[#EEF0F4]">
-            {[
-              { big: '<1 Day', small: 'Go live', sub: 'Speed' },
-              { big: '$847', small: 'Avg. monthly savings', sub: 'Savings' },
-              { big: '$50M', small: 'Capital deployed', sub: 'Scale' },
-              { big: '97%', small: 'Merchant retention', sub: 'Reliability' },
-            ].map((s) => (
-              <div key={s.small} className="text-center py-6 md:py-4 px-4">
+              {data.featureHeadline}
+            </h2>
+            <div
+              className="relative overflow-hidden rounded-[28px]"
+              style={{ aspectRatio: '4 / 5', boxShadow: '0 24px 60px -28px rgba(4,30,66,0.35)' }}
+            >
+              <img src={data.image} alt={data.imageAlt} className="absolute inset-0 w-full h-full object-cover" />
+              <div
+                className="absolute inset-0"
+                style={{
+                  background:
+                    'linear-gradient(180deg, transparent 55%, rgba(4,30,66,0.55) 100%)',
+                }}
+              />
+              <div className="absolute bottom-6 left-6 right-6 text-white">
                 <div
-                  className="text-[#041E42] font-bold leading-none mb-2"
-                  style={{ fontSize: 'clamp(28px, 3vw, 38px)', letterSpacing: '-0.02em' }}
+                  className="text-[11px] font-bold uppercase tracking-[0.2em] opacity-80 mb-1.5"
                 >
-                  {s.big}
+                  In practice
                 </div>
-                <div className="text-[13px] text-[#475569]">{s.small}</div>
-                <div className="text-[10px] text-[#4945FF] font-semibold uppercase tracking-[0.18em] mt-2">
-                  {s.sub}
+                <div className="text-[16px] font-semibold" style={{ letterSpacing: '-0.01em' }}>
+                  {data.name}
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Right rail — indexed cards */}
+          <div className="space-y-4">
+            {data.features.map((f, i) => (
+              <motion.div
+                key={f.title}
+                initial={{ opacity: 0, y: 14 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-80px' }}
+                transition={{ duration: 0.45, delay: i * 0.05 }}
+                className="grid grid-cols-[auto_1fr] gap-7 lg:gap-9 p-7 lg:p-9 rounded-[24px] transition-all hover:-translate-y-0.5"
+                style={{
+                  background: '#FFFFFF',
+                  border: '1px solid rgba(4,30,66,0.08)',
+                  boxShadow: '0 1px 0 rgba(4,30,66,0.02), 0 12px 28px -22px rgba(4,30,66,0.18)',
+                }}
+              >
+                <div
+                  style={{
+                    fontFamily: SERIF,
+                    fontStyle: 'italic',
+                    fontWeight: 500,
+                    fontSize: 'clamp(46px, 5vw, 72px)',
+                    lineHeight: 0.9,
+                    color: ACCENT,
+                    letterSpacing: '-0.04em',
+                  }}
+                >
+                  {String(i + 1).padStart(2, '0')}
+                </div>
+                <div>
+                  <h3
+                    className="text-[20px] lg:text-[22px] font-semibold mb-2.5"
+                    style={{ color: INK, letterSpacing: '-0.012em', fontFamily: 'var(--dc-font-display)' }}
+                  >
+                    {f.title}
+                  </h3>
+                  <p
+                    className="text-[15px] lg:text-[15.5px] leading-[1.6]"
+                    style={{ color: '#5C6478', fontFamily: 'var(--dc-font-body)' }}
+                  >
+                    {f.body}
+                  </p>
+                </div>
+              </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ════════ Feature grid ════════ */}
-      <section className="py-24 px-6">
-        <div className="max-w-[1240px] mx-auto">
-          <div className="text-[12px] font-bold uppercase tracking-[0.2em] text-[#4945FF] mb-4">
-            What's included
+      {/* ════════ 3. Stats — oversized serif numerals, no cards ════════ */}
+      <section
+        className="px-6 lg:px-10 py-24 lg:py-28"
+        style={{ background: INK, color: '#fff' }}
+      >
+        <div className="max-w-[1320px] mx-auto">
+          <div className="text-[11px] font-bold uppercase tracking-[0.24em] mb-6" style={{ color: '#A8A4FF' }}>
+            — Real results
           </div>
           <h2
-            className="text-[#041E42] font-bold leading-[1.08] mb-14 max-w-[780px]"
+            className="mb-16 max-w-[900px]"
             style={{
-              fontSize: 'clamp(32px, 4vw, 46px)',
+              fontFamily: SERIF,
+              fontStyle: 'italic',
+              fontWeight: 500,
+              fontSize: 'clamp(32px, 4vw, 50px)',
               letterSpacing: '-0.02em',
+              lineHeight: 1.08,
             }}
           >
-            {data.featureHeadline}
+            What our {data.name.toLowerCase()} merchants actually see in the first ninety days.
           </h2>
-          {/* Feature layout varies by industry */}
-          {layout.featureLayout === '2col' && (
-            <div className="grid md:grid-cols-2 gap-5">
-              {data.features.map((f, i) => (
-                <motion.div
-                  key={f.title}
-                  initial={{ opacity: 0, y: 10 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.4, delay: i * 0.05 }}
-                  className="p-7 rounded-2xl border border-[#EEF0F4] bg-white hover:border-[#4945FF]/40 transition-colors"
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-10 lg:gap-16">
+            {data.stats.map((s, i) => (
+              <motion.div
+                key={s.label}
+                initial={{ opacity: 0, y: 12 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: i * 0.08 }}
+                className="border-t pt-7"
+                style={{ borderColor: 'rgba(255,255,255,0.18)' }}
+              >
+                <div
+                  style={{
+                    fontFamily: SERIF,
+                    fontStyle: 'italic',
+                    fontWeight: 500,
+                    fontSize: 'clamp(64px, 7vw, 104px)',
+                    lineHeight: 0.95,
+                    letterSpacing: '-0.035em',
+                    color: '#A8A4FF',
+                  }}
                 >
-                  <AccentMark index={i} style={layout.accentStyle} />
-                  <h3 className="text-[19px] font-semibold text-[#041E42] mb-2.5" style={{ letterSpacing: '-0.01em' }}>
-                    {f.title}
-                  </h3>
-                  <p className="text-[15px] text-[#475569] leading-relaxed">{f.body}</p>
-                </motion.div>
-              ))}
-            </div>
-          )}
-
-          {layout.featureLayout === '3col-mosaic' && (
-            <div className="grid grid-cols-6 gap-5">
-              {data.features.map((f, i) => {
-                // First card spans wide, rest split
-                const span = i === 0 ? 'col-span-6 md:col-span-4' : i === 1 ? 'col-span-6 md:col-span-2' : 'col-span-6 md:col-span-3';
-                const isDark = i === 0;
-                return (
-                  <motion.div
-                    key={f.title}
-                    initial={{ opacity: 0, y: 10 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.4, delay: i * 0.05 }}
-                    className={`${span} p-7 rounded-2xl transition-colors ${
-                      isDark
-                        ? 'bg-[#080A28] text-white hover:bg-[#0a2850]'
-                        : 'border border-[#EEF0F4] bg-white hover:border-[#4945FF]/40'
-                    }`}
-                  >
-                    <AccentMark index={i} style={layout.accentStyle} onDark={isDark} />
-                    <h3
-                      className={`text-[19px] font-semibold mb-2.5 ${isDark ? 'text-white' : 'text-[#041E42]'}`}
-                      style={{ letterSpacing: '-0.01em' }}
-                    >
-                      {f.title}
-                    </h3>
-                    <p className={`text-[15px] leading-relaxed ${isDark ? 'text-white/70' : 'text-[#475569]'}`}>
-                      {f.body}
-                    </p>
-                  </motion.div>
-                );
-              })}
-            </div>
-          )}
-
-          {layout.featureLayout === 'alternating' && (
-            <div className="space-y-4">
-              {data.features.map((f, i) => (
-                <motion.div
-                  key={f.title}
-                  initial={{ opacity: 0, y: 10 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.4, delay: i * 0.05 }}
-                  className={`grid md:grid-cols-[auto_1fr] gap-6 p-7 rounded-2xl border border-[#EEF0F4] bg-white items-start ${
-                    i % 2 === 1 ? 'md:flex-row-reverse md:[&>*:first-child]:order-2' : ''
-                  }`}
+                  {s.value}
+                </div>
+                <div
+                  className="mt-4 text-[15.5px] leading-snug max-w-[280px]"
+                  style={{ color: 'rgba(255,255,255,0.78)', fontFamily: 'var(--dc-font-body)' }}
                 >
-                  <AccentMark index={i} style={layout.accentStyle} />
-                  <div>
-                    <h3 className="text-[20px] font-semibold text-[#041E42] mb-2" style={{ letterSpacing: '-0.01em' }}>
-                      {f.title}
-                    </h3>
-                    <p className="text-[15px] text-[#475569] leading-relaxed">{f.body}</p>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          )}
+                  {s.label}
+                </div>
+              </motion.div>
+            ))}
+          </div>
+          <p
+            className="text-[12px] mt-12 opacity-60"
+            style={{ fontFamily: 'var(--dc-font-body)' }}
+          >
+            *Based on Delt merchant data; individual results vary.
+          </p>
         </div>
       </section>
 
-      {/* ════════ Products tuned for industry ════════ */}
-      <section className="py-24 px-6" style={{ background: '#F7F7FB' }}>
-        <div className="max-w-[1240px] mx-auto">
-          <div className="text-[12px] font-bold uppercase tracking-[0.2em] text-[#4945FF] mb-4">
-            The full stack
+      {/* ════════ 4. Capability tiles — dark horizontal row ════════ */}
+      <section className="px-6 lg:px-10 py-24 lg:py-32">
+        <div className="max-w-[1320px] mx-auto">
+          <div className="grid lg:grid-cols-[1fr_1.3fr] gap-12 lg:gap-20 mb-14 items-end">
+            <div>
+              <div className="text-[11px] font-bold uppercase tracking-[0.24em] mb-6" style={{ color: ACCENT }}>
+                — The full stack
+              </div>
+              <h2
+                style={{
+                  fontFamily: SERIF,
+                  fontStyle: 'italic',
+                  fontWeight: 500,
+                  fontSize: 'clamp(32px, 4.2vw, 52px)',
+                  letterSpacing: '-0.022em',
+                  lineHeight: 1.06,
+                  color: INK,
+                }}
+              >
+                Website, Payments, Lens AI, and Capital —
+                <span className="text-[#4945FF]"> tuned for {data.name.toLowerCase()}.</span>
+              </h2>
+            </div>
+            <p
+              className="text-[16.5px] leading-[1.65] max-w-[520px] lg:justify-self-end"
+              style={{ color: '#5C6478', fontFamily: 'var(--dc-font-body)' }}
+            >
+              Start with one product or take the whole stack. Either way, it's one merchant
+              account, one login, one team behind it.
+            </p>
           </div>
-          <h2
-            className="text-[#041E42] font-bold leading-[1.08] mb-14 max-w-[820px]"
-            style={{
-              fontSize: 'clamp(32px, 4vw, 46px)',
-              letterSpacing: '-0.02em',
-            }}
-          >
-            Website, Payments, Lens AI, and Capital — tuned for {data.name.toLowerCase()}.
-          </h2>
 
-          {/* Product layout varies by industry */}
-          {layout.productLayout === 'grid' && (
-            <div className="grid md:grid-cols-2 gap-5">
-              {data.products.map((p, i) => (
-                <motion.div
-                  key={p.title}
-                  initial={{ opacity: 0, y: 10 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.4, delay: i * 0.05 }}
-                  className="p-7 rounded-2xl bg-white border border-[#EEF0F4]"
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
+            {data.products.map((p, i) => (
+              <motion.div
+                key={p.title}
+                initial={{ opacity: 0, y: 14 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.45, delay: i * 0.06 }}
+                className="group relative p-7 lg:p-8 rounded-[24px] flex flex-col min-h-[320px] transition-colors overflow-hidden"
+                style={{
+                  background: i === 0 ? ACCENT : '#0B1640',
+                  color: '#fff',
+                }}
+              >
+                <div
+                  className="text-[10.5px] font-bold uppercase tracking-[0.22em] mb-auto"
+                  style={{ color: i === 0 ? '#fff' : '#A8A4FF' }}
                 >
-                  <div className="flex items-center gap-3 mb-4">
-                    <div
-                      className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center"
-                      style={{ background: 'rgba(73,69,255,0.1)' }}
-                    >
-                      <ProductIcon type={p.icon} />
-                    </div>
-                    <div className="text-[11.5px] font-bold uppercase tracking-[0.18em] text-[#4945FF]">
-                      {productLabel(p.icon)}
-                    </div>
-                  </div>
-                  <h3 className="text-[20px] font-semibold text-[#041E42] mb-2.5" style={{ letterSpacing: '-0.01em' }}>
-                    {p.title}
-                  </h3>
-                  <p className="text-[15px] text-[#475569] leading-relaxed">{p.body}</p>
-                </motion.div>
-              ))}
-            </div>
-          )}
-
-          {layout.productLayout === 'list' && (
-            <div className="space-y-4">
-              {data.products.map((p, i) => (
-                <motion.div
-                  key={p.title}
-                  initial={{ opacity: 0, y: 10 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.4, delay: i * 0.05 }}
-                  className="grid md:grid-cols-[220px_1fr] gap-8 p-7 rounded-2xl bg-white border border-[#EEF0F4] hover:border-[#4945FF]/40 transition-colors items-start"
-                >
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center"
-                      style={{ background: 'rgba(73,69,255,0.1)' }}
-                    >
-                      <ProductIcon type={p.icon} />
-                    </div>
-                    <div className="text-[14px] font-bold text-[#041E42]">
-                      {productLabel(p.icon)}
-                    </div>
-                  </div>
-                  <div>
-                    <h3 className="text-[20px] font-semibold text-[#041E42] mb-2" style={{ letterSpacing: '-0.01em' }}>
-                      {p.title}
-                    </h3>
-                    <p className="text-[15px] text-[#475569] leading-relaxed">{p.body}</p>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          )}
-
-          {layout.productLayout === 'split' && (
-            <div className="grid md:grid-cols-4 gap-4">
-              {data.products.map((p, i) => (
-                <motion.div
-                  key={p.title}
-                  initial={{ opacity: 0, y: 10 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.4, delay: i * 0.05 }}
-                  className={`p-6 rounded-2xl transition-colors ${
-                    i === 0
-                      ? 'bg-[#080A28] text-white md:row-span-2'
-                      : 'bg-white border border-[#EEF0F4]'
-                  }`}
-                >
-                  <div
-                    className={`w-10 h-10 rounded-xl flex items-center justify-center mb-4 ${
-                      i === 0 ? 'bg-[#4945FF]' : ''
-                    }`}
-                    style={i === 0 ? {} : { background: 'rgba(73,69,255,0.1)' }}
-                  >
-                    <ProductIcon type={p.icon} />
-                  </div>
-                  <div
-                    className={`text-[11px] font-bold uppercase tracking-[0.18em] mb-2 ${
-                      i === 0 ? 'text-[#4945FF]' : 'text-[#4945FF]'
-                    }`}
-                  >
-                    {productLabel(p.icon)}
-                  </div>
+                  {String(i + 1).padStart(2, '0')} · {productLabel(p.icon)}
+                </div>
+                <div className="mt-12">
                   <h3
-                    className={`text-[18px] font-semibold mb-2 ${i === 0 ? 'text-white' : 'text-[#041E42]'}`}
-                    style={{ letterSpacing: '-0.01em' }}
+                    className="text-[19px] lg:text-[21px] font-semibold mb-3 text-white"
+                    style={{ letterSpacing: '-0.01em', fontFamily: 'var(--dc-font-display)' }}
                   >
                     {p.title}
                   </h3>
                   <p
-                    className={`text-[14px] leading-relaxed ${i === 0 ? 'text-white/70' : 'text-[#475569]'}`}
+                    className="text-[14px] leading-[1.6]"
+                    style={{ color: 'rgba(255,255,255,0.72)', fontFamily: 'var(--dc-font-body)' }}
                   >
                     {p.body}
                   </p>
-                </motion.div>
-              ))}
-            </div>
-          )}
+                </div>
+                <ArrowUpRight
+                  className="absolute top-7 right-7 w-5 h-5 text-white/40 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-white/80"
+                />
+              </motion.div>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* ════════ KORONA POS partnership (retail only) ════════
-           Only the retail vertical aligns with KORONA's stated focus:
-           high-inventory retailers, liquor stores, c-stores, specialty
-           shops. Restaurants page intentionally omits KORONA — they
-           only serve QSRs explicitly, and Delt's restaurants page is
-           full-service-led. Salon/health/services are not a fit. */}
+      {/* ════════ 5. KORONA POS partnership (retail only) ════════ */}
       {slug === 'retail' && (
-        <section className="py-20 px-6" style={{ background: '#F6F7FB' }}>
-          <div className="max-w-[1240px] mx-auto">
-            <div
-              className="text-[12px] font-bold uppercase mb-4"
-              style={{ color: '#4945FF', letterSpacing: '0.2em' }}
-            >
-              Built with the right POS
+        <section className="px-6 lg:px-10 py-20 lg:py-24">
+          <div className="max-w-[1320px] mx-auto">
+            <div className="text-[11px] font-bold uppercase tracking-[0.24em] mb-6" style={{ color: ACCENT }}>
+              — Built with the right POS
             </div>
             <h2
-              className="font-extrabold leading-[1.05] mb-3"
+              className="mb-5"
               style={{
-                color: '#041E42',
-                fontSize: 'clamp(32px, 4vw, 48px)',
-                letterSpacing: '-0.025em',
-                maxWidth: 820,
+                fontFamily: SERIF,
+                fontStyle: 'italic',
+                fontWeight: 500,
+                fontSize: 'clamp(30px, 3.8vw, 48px)',
+                letterSpacing: '-0.022em',
+                lineHeight: 1.08,
+                color: INK,
+                maxWidth: 880,
               }}
             >
               For liquor, smoke, and high-SKU retail: Delt + KORONA POS.
             </h2>
             <p
               className="text-[17px] leading-relaxed mb-10"
-              style={{ color: '#475569', maxWidth: 720 }}
+              style={{ color: '#5C6478', maxWidth: 720, fontFamily: 'var(--dc-font-body)' }}
             >
-              Boutiques and general retailers run beautifully on Delt alone.
-              But if you carry thousands of SKUs, run a liquor or smoke shop,
-              or operate multiple stores, we pair Delt with KORONA POS — a
-              category-leading retail POS we vetted and chose because it
+              Boutiques and general retailers run beautifully on Delt alone. But if you carry
+              thousands of SKUs, run a liquor or smoke shop, or operate multiple stores, we pair
+              Delt with KORONA POS — a category-leading retail POS we vetted and chose because it
               handles the depth these operators need.
             </p>
             <KoronaPartnerBlock
               title="The POS we picked for high-inventory retail."
               body={
-                "Delt handles payments, capital, your website, and Lens AI. "
-                + "KORONA POS handles the register, inventory, vendor relationships, "
-                + "and multi-location operations. Two specialists, one merchant "
-                + "relationship \u2014 you call Delt, we coordinate the rest."
+                'Delt handles payments, capital, your website, and Lens AI. ' +
+                'KORONA POS handles the register, inventory, vendor relationships, ' +
+                'and multi-location operations. Two specialists, one merchant ' +
+                'relationship \u2014 you call Delt, we coordinate the rest.'
               }
               testimonial={{
                 quote:
-                  "Switching to KORONA POS was the best decision we made for our liquor store. The inventory management system makes it so easy to track our stock and reorder products before we run out. Highly recommend it.",
+                  'Switching to KORONA POS was the best decision we made for our liquor store. The inventory management system makes it so easy to track our stock and reorder products before we run out. Highly recommend it.',
                 name: 'Kristen L.',
                 role: 'Pine and Peoria Liquor Store',
               }}
@@ -987,113 +786,129 @@ export function IndustryPage() {
         </section>
       )}
 
-      {/* ════════ Testimonial ════════ */}
-      <section className="py-24 px-6">
-        <div className="max-w-[980px] mx-auto">
+      {/* ════════ 6. Editorial pull-quote ════════ */}
+      <section className="px-6 lg:px-10 py-24 lg:py-32">
+        <div className="max-w-[1320px] mx-auto grid lg:grid-cols-[auto_1fr] gap-12 lg:gap-20 items-start">
+          {/* Left: portrait card with initials — editorial monogram */}
+          <div className="flex lg:flex-col items-center lg:items-start gap-5 lg:gap-7">
+            <div
+              className="w-32 h-32 lg:w-40 lg:h-40 rounded-full flex items-center justify-center text-white"
+              style={{
+                background: `linear-gradient(135deg, ${ACCENT} 0%, ${INK} 100%)`,
+                fontFamily: SERIF,
+                fontStyle: 'italic',
+                fontWeight: 500,
+                fontSize: 56,
+                letterSpacing: '-0.02em',
+              }}
+            >
+              {data.quoteAuthor
+                .split(' ')
+                .map((n) => n[0])
+                .slice(0, 2)
+                .join('')}
+            </div>
+            <div className="lg:max-w-[200px]">
+              <div className="text-[15.5px] font-semibold" style={{ color: INK }}>
+                {data.quoteAuthor}
+              </div>
+              <div
+                className="text-[13.5px] mt-1"
+                style={{ color: '#5C6478', fontFamily: 'var(--dc-font-body)' }}
+              >
+                {data.quoteRole}
+              </div>
+            </div>
+          </div>
+
           <motion.div
             initial={{ opacity: 0, y: 14 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.55 }}
-            className="relative p-12 md:p-16 rounded-3xl overflow-hidden"
-            style={{ background: '#080A28' }}
           >
-            <div
-              className="absolute inset-0 pointer-events-none"
-              style={{
-                background:
-                  'radial-gradient(circle at 85% 15%, rgba(73,69,255,0.35) 0%, transparent 50%)',
-              }}
-            />
-            <Quote
-              className="w-10 h-10 mb-6 relative"
-              style={{ color: '#4945FF' }}
-              strokeWidth={2}
-            />
+            <Quote className="w-9 h-9 mb-6" style={{ color: ACCENT }} strokeWidth={1.8} />
             <blockquote
-              className="relative text-white font-semibold leading-[1.25] mb-8"
               style={{
-                fontSize: 'clamp(22px, 2.8vw, 32px)',
-                letterSpacing: '-0.015em',
+                fontFamily: SERIF,
+                fontStyle: 'italic',
+                fontWeight: 500,
+                fontSize: 'clamp(26px, 3.4vw, 44px)',
+                letterSpacing: '-0.018em',
+                lineHeight: 1.18,
+                color: INK,
               }}
             >
-              &ldquo;{data.quote} — Individual results vary.&rdquo;
+              &ldquo;{data.quote}&rdquo;
             </blockquote>
-            <div className="relative flex items-center gap-4">
-              <div
-                className="w-11 h-11 rounded-full flex items-center justify-center font-bold text-white text-[16px]"
-                style={{ background: '#4945FF', letterSpacing: '0.02em' }}
-              >
-                {data.quoteAuthor
-                  .split(' ')
-                  .map((n) => n[0])
-                  .slice(0, 2)
-                  .join('')}
-              </div>
-              <div>
-                <div className="text-white font-semibold text-[15px]">
-                  {data.quoteAuthor}
-                </div>
-                <div className="text-white/60 text-[13.5px]">{data.quoteRole}</div>
-              </div>
+            <div
+              className="text-[12px] mt-6 opacity-55"
+              style={{ color: INK, fontFamily: 'var(--dc-font-body)' }}
+            >
+              — Individual results vary.
             </div>
           </motion.div>
         </div>
       </section>
 
-      {/* ════════ Cross-sell for continuity ════════ */}
-      <ProductCrossSell
-        eyebrow={`Built for ${data.name}`}
-        title="Pick your starting point"
-        subtitle="Every product plugs into the same stack. Start with one, add the rest when you're ready."
-      />
+      {/* ════════ 7. Cross-sell for continuity ════════ */}
+      <div style={{ background: '#fff' }}>
+        <ProductCrossSell
+          eyebrow={`Built for ${data.name}`}
+          title="Pick your starting point"
+          subtitle="Every product plugs into the same stack. Start with one, add the rest when you're ready."
+        />
+      </div>
 
-      {/* ════════ Final CTA ════════ */}
-      <section className="pb-28 px-6 pt-24">
-        <div className="max-w-[1100px] mx-auto">
-          <div
-            className="relative overflow-hidden rounded-3xl p-12 md:p-16 border border-[#EEF0F4]"
-            style={{ background: '#FFFFFF' }}
+      {/* ════════ 8. Final CTA — editorial center, no boxed card ════════ */}
+      <section className="px-6 lg:px-10 py-28 lg:py-36 text-center" style={{ background: PAPER }}>
+        <div className="max-w-[860px] mx-auto">
+          <div className="text-[11px] font-bold uppercase tracking-[0.24em] mb-7" style={{ color: ACCENT }}>
+            — Ready when you are
+          </div>
+          <h2
+            className="mb-7"
+            style={{
+              fontFamily: SERIF,
+              fontStyle: 'italic',
+              fontWeight: 500,
+              fontSize: 'clamp(36px, 5vw, 64px)',
+              letterSpacing: '-0.025em',
+              lineHeight: 1.06,
+              color: INK,
+            }}
           >
-            <div className="grid md:grid-cols-[1.2fr_1fr] gap-10 items-center">
-              <div>
-                <div className="text-[12px] font-bold uppercase tracking-[0.2em] text-[#4945FF] mb-4">
-                  Ready when you are
-                </div>
-                <h2
-                  className="text-[#041E42] font-bold leading-[1.1] mb-5"
-                  style={{
-                    fontSize: 'clamp(28px, 3.4vw, 40px)',
-                    letterSpacing: '-0.02em',
-                  }}
-                >
-                  {data.finalHeadline}
-                </h2>
-                <p className="text-[16.5px] text-[#475569] leading-relaxed max-w-[520px]">
-                  {data.finalBody}
-                </p>
-              </div>
-              <div className="flex flex-col gap-3">
-                <Link
-                  to="/apply"
-                  className="inline-flex items-center justify-center gap-2 px-6 py-4 rounded-full bg-[#4945FF] text-white text-[15px] font-semibold hover:bg-[#3933CC] transition-colors"
-                >
-                  Start your free trial <ArrowRight className="w-4 h-4" />
-                </Link>
-                <Link
-                  to="/contact-sales"
-                  className="inline-flex items-center justify-center gap-2 px-6 py-4 rounded-full bg-white text-[#041E42] text-[15px] font-semibold hover:bg-[#F2F3F7] transition-colors border border-[#E4E6EC]"
-                >
-                  Book a 20-minute demo
-                </Link>
-                <Link
-                  to="/business-types"
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3 text-[#4945FF] text-[14px] font-semibold hover:text-[#3933CC] transition-colors"
-                >
-                  See every industry <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
-              </div>
-            </div>
+            {data.finalHeadline}
+          </h2>
+          <p
+            className="text-[17.5px] leading-relaxed max-w-[640px] mx-auto mb-12"
+            style={{ color: '#5C6478', fontFamily: 'var(--dc-font-body)' }}
+          >
+            {data.finalBody}
+          </p>
+          <div className="flex flex-wrap justify-center gap-3">
+            <Link
+              to="/apply"
+              className="group inline-flex items-center gap-2 pl-6 pr-5 py-4 rounded-full text-[14.5px] font-semibold text-white transition-colors"
+              style={{ background: ACCENT }}
+            >
+              Start your free trial
+              <ArrowUpRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+            </Link>
+            <Link
+              to="/contact-sales"
+              className="inline-flex items-center gap-2 px-6 py-4 rounded-full text-[14.5px] font-semibold border transition-colors"
+              style={{ borderColor: 'rgba(4,30,66,0.18)', color: INK }}
+            >
+              Book a 20-minute demo
+            </Link>
+            <Link
+              to="/business-types"
+              className="inline-flex items-center gap-2 px-6 py-4 text-[14px] font-semibold transition-colors"
+              style={{ color: ACCENT }}
+            >
+              See every industry <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
           </div>
         </div>
       </section>
