@@ -11,13 +11,31 @@ import { IndustryPanel } from '@/app/components/IndustryPanel';
 import { EmailCaptureBar } from '@/app/components/EmailCaptureBar';
 import { CapitalCrossSell } from '@/app/components/CapitalCrossSell';
 import { FAQ } from '@/app/components/FAQ';
+import { RiveraStatementProof } from '@/app/components/RiveraStatementProof';
 // DeltMarquee was previously rendered here; it now lives in App.tsx
 // AFTER <Footer /> so the animation sits below the footer.
+
+/* HomePage — section arc follows the Plaid editorial cadence:
+   1. Hero (with David + built-with partner ledger)
+   2. Email capture
+   3. Globe / scale proof  (desktop)
+   4. SeeItInAction dashboard preview
+   5. IndustryPanel — "made for how you work"
+   6. ByTheNumbers — legacy vs Delt
+   7. RiveraStatementProof — concrete merchant statement diff
+   8. CapitalCrossSell — payments → capital loop
+   9. ScrollRevealText — editorial pause
+   10. FeatureShowcase — product surface area
+   11. ResultsBento — fake-dashboard bento (desktop only)
+   12. SpotlightTestimonial
+   13. FAQ
+   14. FinalCTA */
 
 export function HomePage() {
   return (
     <div className="relative">
       <JuspayHero />
+
       {/* Wave 5 — email capture beneath hero */}
       <EmailCaptureBar />
 
@@ -57,6 +75,21 @@ export function HomePage() {
         <SeeItInAction />
       </div>
 
+      {/* Wave 2 — Made for how you actually work (industry panel) */}
+      <IndustryPanel />
+
+      {/* Legacy processor vs Delt comparison — has mobile-stacked alt inside */}
+      <ByTheNumbers />
+
+      {/* Concrete proof: real merchant statement diff (Rivera Auto Detail).
+          Lives between the comparative numbers and the capital cross-sell
+          so the visitor sees abstract savings → specific line items →
+          what those savings unlock (capital). */}
+      <RiveraStatementProof />
+
+      {/* Merchant Services → Capital value loop */}
+      <CapitalCrossSell variant="full" theme="light" />
+
       {/* Scroll-reveal headline — desktop only (purely decorative on mobile) */}
       <div className="hidden md:block">
         <ScrollRevealText />
@@ -67,24 +100,16 @@ export function HomePage() {
         <FeatureShowcase />
       </div>
 
-      {/* Legacy processor vs Delt comparison — has mobile-stacked alt inside */}
-      <ByTheNumbers />
-
-      {/* Merchant Services → Capital value loop */}
-      <CapitalCrossSell variant="full" theme="light" />
-
-      {/* Wave 2 — Made for how you actually work (industry panel) */}
-      <IndustryPanel />
-
       {/* Bento of fake dashboard tiles — desktop only (decorative) */}
       <div className="hidden md:block">
         <ResultsBento />
       </div>
 
+      <SpotlightTestimonial />
+
       {/* FAQ split layout (light) */}
       <FAQ />
 
-      <SpotlightTestimonial />
       <FinalCTA />
     </div>
   );
