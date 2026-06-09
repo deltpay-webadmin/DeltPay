@@ -1,33 +1,22 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
-import { HeroShaderBackground } from './HeroShaderBackground';
 import { ExploreFeaturesWithAI } from './ExploreFeaturesWithAI';
 import heroDavidPng from '@/app/assets/hero-david.png';
 import heroDavidWebp from '@/app/assets/hero-david.webp';
 
 /* ──────────────────────────────────────────────────────────────
    JuspayHero — Delt Pay (merchant services) home hero.
-   Navy canvas with live shader. Two-column desktop layout: copy
-   left, engraved Michelangelo David holding a Verifone VP550 on
-   the right — the Delt mark that ties "you built the business"
-   to its visual rhyme (the craftsman + his tool). Mobile collapses
-   David to a low-opacity wash behind the type. Plaid-style "Built
-   with" partner ledger pins the bottom of the hero for credibility.
+   Navy canvas. Large display H1 with italic-serif rotating verb.
+   Body copy is Payments + AI focused (not Capital/lending — that
+   pitch lives in the dedicated CapitalCrossSell section further
+   down the page). Stats strip + bottom mono ledger line.
    ────────────────────────────────────────────────────────────── */
 
+// Payments + AI flavored verbs. 'fund' was the previous (Capital) word
+// and has been removed — the merchant→Capital cross-sell lives lower on
+// the page in its own section.
 const ROTATING_WORDS = ['process', 'automate', 'grow', 'power'];
-
-// Plaid-style "Built with" partner ledger — names only, JetBrains Mono,
-// pinned to the bottom-left of the hero so it never touches David's hand.
-const HERO_PARTNERS = [
-  'Verifone',
-  'Paysafe',
-  'Global Payments',
-  'PAX',
-  'Korona POS',
-  'Plaid',
-];
 
 export function JuspayHero() {
   const [wordIdx, setWordIdx] = useState(0);
@@ -46,18 +35,25 @@ export function JuspayHero() {
       style={{
         background: 'var(--dc-bg-navy)',
         color: 'var(--dc-on-dark)',
+        // Bleed the hero (and its animated shader) UP behind the sticky 64px
+        // global nav so the liquid-glass header has the gradient behind it
+        // from the first paint instead of the white body. The negative top
+        // margin pulls the section under the nav; the matching padding-top
+        // keeps inner content visually anchored where it was before.
         marginTop: -64,
         paddingTop: 64,
+        // Fill the viewport on load so the email-capture / next section sits
+        // below the fold. Account for the site-wide CSS `zoom` applied at the
+        // body level — `vh` is evaluated in the un-zoomed coordinate space,
+        // so dividing by --site-zoom keeps the hero exactly one physical
+        // viewport tall regardless of the active zoom factor. We no longer
+        // subtract 64px (the nav) because the hero now extends behind it.
         minHeight: 'calc(100vh / var(--site-zoom, 1))',
       }}
     >
-      {/* Live shader gradient — Delt indigo, animated */}
-      <HeroShaderBackground />
-
-      {/* David — desktop right-side. Absolutely positioned against the
-          hero section itself so he can bleed to the right edge and the
-          bottom while the copy column keeps its natural rhythm inside
-          the max-width container. */}
+      {/* Atmospheric David — Plaid/Ben Franklin treatment: cropped low,
+          desaturated, blended into the navy canvas so the copy on the
+          left owns the fold. Replaces the previous animated shader. */}
       <picture>
         <source srcSet={heroDavidWebp} type="image/webp" />
         <img
@@ -66,7 +62,6 @@ export function JuspayHero() {
           aria-hidden
           className="pointer-events-none select-none hidden lg:block absolute"
           style={{
-            // Plaid-Ben treatment: low + cropped low, blends into navy, no portrait halo.
             right: -60,
             bottom: -40,
             height: '78%',
@@ -75,8 +70,6 @@ export function JuspayHero() {
             objectPosition: 'right bottom',
             opacity: 0.55,
             zIndex: 0,
-            // Desaturate + push toward the indigo of the canvas so David reads as
-            // atmosphere, not as a separate portrait.
             filter: 'grayscale(0.85) saturate(0.6) brightness(0.85) hue-rotate(210deg)',
             mixBlendMode: 'luminosity',
             WebkitMaskImage:
@@ -88,8 +81,6 @@ export function JuspayHero() {
           }}
         />
       </picture>
-      {/* Mobile / tablet David wash — sits behind copy at low opacity so
-          the type still owns the fold without losing the brand cue. */}
       <picture>
         <source srcSet={heroDavidWebp} type="image/webp" />
         <img
@@ -115,10 +106,14 @@ export function JuspayHero() {
       </picture>
 
       <div className="relative z-[1] mx-auto w-full max-w-[1320px] px-6 lg:px-10 pt-8 lg:pt-10 pb-0 flex-1 flex flex-col">
-        {/* Copy column — capped at 58% on desktop so David has the
-            right half of the hero to himself, full width on mobile. */}
+        {/* Top centered mono volume eyebrow removed per user request
+            (was: VOL. VII · Q2 2026 · DIRECT FUNDING · EST. 2019 · QUOTING NOW). */}
+
+        {/* Single-column copy block — the right-side visual was removed
+            (no dashboard, no hero image). The animated shader gradient is
+            the visual; the typography carries the fold. */}
         <div className="mt-8 lg:mt-10">
-          <div className="relative lg:max-w-[58%]">
+          <div className="relative">
             <h1
               className="dc-display"
               style={{
@@ -166,6 +161,18 @@ export function JuspayHero() {
               with cash discount.
             </p>
 
+            {/* Hero CTA row — two buttons only.
+
+                Pairing rationale: "Get a quote" is the actual conversion
+                action (non-negotiable), and "Explore Features with AI"
+                gives curious-but-not-ready visitors a self-serve path
+                that signals Delt's AI posture without leaking them to
+                a competitor's site. We dropped "See how pricing works"
+                from this row because it duplicated the Pricing nav link,
+                split attention from "Get a quote" (same intent, weaker
+                CTA), and made the row feel crowded — two CTAs read
+                cleaner and give the primary action more weight. The
+                /calculator route is still reachable from nav/footer. */}
             <div className="mt-9 flex items-center gap-4 flex-wrap">
               <Link
                 to="/get-a-quote"
@@ -193,54 +200,103 @@ export function JuspayHero() {
               className="md:hidden mt-10 pt-6 space-y-5"
               style={{ borderTop: '1px solid var(--dc-rule-on-dark)' }}
             >
-              <MobileStat label="NET PROCESSING" big="0%" unit="with cash discount" />
-              <MobileStat label="SAME-DAY APPROVALS" big="99%" unit="approval-based" />
-              <MobileStat label="FUNDING" big="Same-day" unit="eligible accts" />
+              <div>
+                <div
+                  className="text-[10px] tracking-[0.14em] mb-1.5 uppercase"
+                  style={{ fontFamily: 'var(--dc-font-mono)', color: 'var(--dc-on-dark-faint)' }}
+                >
+                  NET PROCESSING
+                </div>
+                <div
+                  className="text-3xl font-semibold"
+                  style={{
+                    fontFamily: 'var(--dc-font-display)',
+                    letterSpacing: '-0.025em',
+                    color: 'var(--dc-on-dark)',
+                    lineHeight: 1,
+                  }}
+                >
+                  0%
+                  <span
+                    className="ml-2 text-[10px] font-normal"
+                    style={{ fontFamily: 'var(--dc-font-mono)', color: 'rgba(247, 245, 240, 0.32)', letterSpacing: '0.04em' }}
+                  >
+                    with cash discount
+                  </span>
+                </div>
+              </div>
+              <div>
+                <div
+                  className="text-[10px] tracking-[0.14em] mb-1.5 uppercase"
+                  style={{ fontFamily: 'var(--dc-font-mono)', color: 'var(--dc-on-dark-faint)' }}
+                >
+                  SAME-DAY APPROVALS
+                </div>
+                <div
+                  className="text-3xl font-semibold"
+                  style={{
+                    fontFamily: 'var(--dc-font-display)',
+                    letterSpacing: '-0.025em',
+                    color: 'var(--dc-on-dark)',
+                    lineHeight: 1,
+                  }}
+                >
+                  99%
+                  <span
+                    className="ml-2 text-[10px] font-normal"
+                    style={{ fontFamily: 'var(--dc-font-mono)', color: 'rgba(247, 245, 240, 0.32)', letterSpacing: '0.04em' }}
+                  >
+                    approval-based
+                  </span>
+                </div>
+              </div>
+              <div>
+                <div
+                  className="text-[10px] tracking-[0.14em] mb-1.5 uppercase"
+                  style={{ fontFamily: 'var(--dc-font-mono)', color: 'var(--dc-on-dark-faint)' }}
+                >
+                  FUNDING
+                </div>
+                <div
+                  className="text-3xl font-semibold"
+                  style={{
+                    fontFamily: 'var(--dc-font-display)',
+                    letterSpacing: '-0.025em',
+                    color: 'var(--dc-on-dark)',
+                    lineHeight: 1,
+                  }}
+                >
+                  Same-day
+                  <span
+                    className="ml-2 text-[10px] font-normal"
+                    style={{ fontFamily: 'var(--dc-font-mono)', color: 'rgba(247, 245, 240, 0.32)', letterSpacing: '0.04em' }}
+                  >
+                    eligible accts
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
+
         </div>
 
-        {/* Plaid-style "Built with" partner ledger + mono meta line.
-            Anchored at the bottom-left half so it never crowds David. */}
+        {/* Bottom hairline + meta strip — pinned to the bottom of the viewport so the
+            hero owns the first fold and the email-capture bar lives below it.
+            Hidden on mobile — the decorative "SCROLL" / mono ledger line is noise on phone. */}
         <div
-          className="hidden md:block mt-auto pt-5 pb-6"
+          className="hidden md:flex mt-auto pt-5 pb-6 items-center justify-start gap-4 flex-wrap"
           style={{ borderTop: '1px solid var(--dc-rule-on-dark)' }}
         >
-          <div
-            className="flex items-center gap-x-6 gap-y-2 flex-wrap"
-            style={{
-              maxWidth: '62%',
-              fontFamily: 'var(--dc-font-mono)',
-              fontSize: 11,
-              letterSpacing: '0.18em',
-              textTransform: 'uppercase',
-            }}
-          >
-            <span style={{ color: 'var(--dc-on-dark-faint)' }}>Built with</span>
-            {HERO_PARTNERS.map((p) => (
-              <span
-                key={p}
-                style={{
-                  color: 'var(--dc-on-dark-muted)',
-                  fontWeight: 600,
-                }}
-              >
-                {p}
-              </span>
-            ))}
-          </div>
-          <div
-            className="mt-4"
+          <span
+            className="text-[11px] tracking-[0.18em]"
             style={{
               fontFamily: 'var(--dc-font-mono)',
-              fontSize: 11,
-              letterSpacing: '0.18em',
+              color: 'var(--dc-on-dark-muted)',
               textTransform: 'uppercase',
-              color: 'var(--dc-on-dark-faint)',
             }}
           >
             0% NET PROCESSING · SAME-DAY DEPOSITS
-          </div>
+          </span>
         </div>
       </div>
     </section>
@@ -260,6 +316,10 @@ function Stat({ label, big, unit }: { label: string; big: string; unit: string }
       >
         {label}
       </div>
+      {/* Value + caveat stacked vertically so all three stats read with
+          identical visual weight regardless of token length. "Same-day"
+          no longer wraps next to its caveat, so 0% / Same-day / Instant
+          all sit on one line at the same size and weight. */}
       <div
         style={{
           fontFamily: 'var(--dc-font-display)',
@@ -283,36 +343,6 @@ function Stat({ label, big, unit }: { label: string; big: string; unit: string }
         }}
       >
         {unit}
-      </div>
-    </div>
-  );
-}
-
-function MobileStat({ label, big, unit }: { label: string; big: string; unit: string }) {
-  return (
-    <div>
-      <div
-        className="text-[10px] tracking-[0.14em] mb-1.5 uppercase"
-        style={{ fontFamily: 'var(--dc-font-mono)', color: 'var(--dc-on-dark-faint)' }}
-      >
-        {label}
-      </div>
-      <div
-        className="text-3xl font-semibold"
-        style={{
-          fontFamily: 'var(--dc-font-display)',
-          letterSpacing: '-0.025em',
-          color: 'var(--dc-on-dark)',
-          lineHeight: 1,
-        }}
-      >
-        {big}
-        <span
-          className="ml-2 text-[10px] font-normal"
-          style={{ fontFamily: 'var(--dc-font-mono)', color: 'rgba(247, 245, 240, 0.32)', letterSpacing: '0.04em' }}
-        >
-          {unit}
-        </span>
       </div>
     </div>
   );

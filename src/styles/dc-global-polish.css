@@ -110,13 +110,3 @@ body {
   color: var(--dc-on-light-subtle);
 }
 .dc-powered-by::before { content: "—"; opacity: 0.6; }
-
-/* Blinking cursor used in the Rivera statement proof code panel */
-@keyframes dc-cursor-blink-kf {
-  0%, 49%   { opacity: 1; }
-  50%, 100% { opacity: 0; }
-}
-.dc-cursor-blink {
-  display: inline-block;
-  animation: dc-cursor-blink-kf 1.05s steps(1, end) infinite;
-}
