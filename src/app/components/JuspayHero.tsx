@@ -66,19 +66,23 @@ export function JuspayHero() {
           aria-hidden
           className="pointer-events-none select-none hidden lg:block absolute"
           style={{
-            right: -40,
-            bottom: 0,
-            height: '96%',
+            // Plaid-Ben treatment: low + cropped low, blends into navy, no portrait halo.
+            right: -60,
+            bottom: -40,
+            height: '78%',
             width: 'auto',
             objectFit: 'contain',
             objectPosition: 'right bottom',
-            opacity: 1,
+            opacity: 0.55,
             zIndex: 0,
-            filter: 'drop-shadow(0 18px 60px rgba(73,69,255,0.40))',
+            // Desaturate + push toward the indigo of the canvas so David reads as
+            // atmosphere, not as a separate portrait.
+            filter: 'grayscale(0.85) saturate(0.6) brightness(0.85) hue-rotate(210deg)',
+            mixBlendMode: 'luminosity',
             WebkitMaskImage:
-              'linear-gradient(90deg, transparent 0%, #000 14%, #000 100%), linear-gradient(180deg, transparent 0%, #000 6%, #000 100%)',
+              'linear-gradient(90deg, transparent 0%, #000 42%, #000 100%), linear-gradient(180deg, transparent 0%, #000 12%, #000 100%)',
             maskImage:
-              'linear-gradient(90deg, transparent 0%, #000 14%, #000 100%), linear-gradient(180deg, transparent 0%, #000 6%, #000 100%)',
+              'linear-gradient(90deg, transparent 0%, #000 42%, #000 100%), linear-gradient(180deg, transparent 0%, #000 12%, #000 100%)',
             WebkitMaskComposite: 'source-in',
             maskComposite: 'intersect',
           }}
@@ -94,16 +98,18 @@ export function JuspayHero() {
           aria-hidden
           className="pointer-events-none select-none lg:hidden absolute"
           style={{
-            right: -80,
-            bottom: 0,
-            height: '85%',
+            right: -100,
+            bottom: -20,
+            height: '70%',
             width: 'auto',
-            opacity: 0.16,
+            opacity: 0.22,
             zIndex: 0,
+            filter: 'grayscale(0.85) saturate(0.6) brightness(0.85) hue-rotate(210deg)',
+            mixBlendMode: 'luminosity',
             WebkitMaskImage:
-              'linear-gradient(90deg, transparent 0%, #000 45%, #000 100%)',
+              'linear-gradient(90deg, transparent 0%, #000 55%, #000 100%)',
             maskImage:
-              'linear-gradient(90deg, transparent 0%, #000 45%, #000 100%)',
+              'linear-gradient(90deg, transparent 0%, #000 55%, #000 100%)',
           }}
         />
       </picture>
