@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
 import { ExploreFeaturesWithAI } from './ExploreFeaturesWithAI';
+import { PlaidWaveLines } from './PlaidWaveLines';
 import heroDavidPng from '@/app/assets/hero-david.png';
 import heroDavidWebp from '@/app/assets/hero-david.webp';
 
@@ -51,6 +52,11 @@ export function JuspayHero() {
         minHeight: 'calc(100vh / var(--site-zoom, 1))',
       }}
     >
+      {/* Plaid-style concentric wavy lines anchored to the top-left,
+          tinted in Delt indigo. Brightens on cursor hover via an
+          internal radial mask that follows the mouse. */}
+      <PlaidWaveLines color="#4945ff" />
+
       {/* Atmospheric David — Plaid/Ben Franklin treatment: cropped low,
           desaturated, blended into the navy canvas so the copy on the
           left owns the fold. Replaces the previous animated shader. */}
