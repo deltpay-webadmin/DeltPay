@@ -10,6 +10,7 @@ import { SpotlightTestimonial } from '@/app/components/SpotlightTestimonial';
 import { IndustryPanel } from '@/app/components/IndustryPanel';
 import { EmailCaptureBar } from '@/app/components/EmailCaptureBar';
 import { CustomerCarousel } from '@/app/components/CustomerCarousel';
+import { CustomerLogoStrip } from '@/app/components/CustomerLogoStrip';
 import { CapitalCrossSell } from '@/app/components/CapitalCrossSell';
 import { FAQ } from '@/app/components/FAQ';
 // DeltMarquee was previously rendered here; it now lives in App.tsx
@@ -19,11 +20,12 @@ export function HomePage() {
   return (
     <div className="relative">
       <JuspayHero />
-      {/* Wave 5 — email capture beneath hero */}
-      <EmailCaptureBar />
 
-      {/* Plaid-style social-proof strip — dynamic marquee of real-sounding
-          customers across every industry Delt processes for. */}
+      {/* Plaid-style black wordmark strip — the 'Citi · Chime · Greendot' moment.
+          Sits directly under the hero in pure black as the social-proof anchor. */}
+      <CustomerLogoStrip />
+
+      {/* Dynamic marquee of real-sounding SMB customers across every industry. */}
       <CustomerCarousel />
 
       {/* Mobile-only tight trust line (replaces decorative globe section on mobile) */}
@@ -61,6 +63,9 @@ export function HomePage() {
       <div className="hidden md:block">
         <SeeItInAction />
       </div>
+
+      {/* Email capture — relocated below the product showcase where intent is warmer */}
+      <EmailCaptureBar />
 
       {/* Scroll-reveal headline — desktop only (purely decorative on mobile) */}
       <div className="hidden md:block">

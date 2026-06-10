@@ -1,15 +1,31 @@
 import { Link } from 'react-router';
-import { ExploreFeaturesWithAI } from './ExploreFeaturesWithAI';
 import { PlaidWaveLines } from './PlaidWaveLines';
 import heroDavidPng from '@/app/assets/hero-david.png';
 import heroDavidWebp from '@/app/assets/hero-david.webp';
 
 /* ──────────────────────────────────────────────────────────────
-   JuspayHero — Delt Pay (merchant services) home hero.
-   Navy canvas. Large display H1 with a fixed italic-serif verb.
-   Body copy is Payments + AI focused (not Capital/lending — that
-   pitch lives in the dedicated CapitalCrossSell section further
-   down the page). Stats strip + bottom mono ledger line.
+   JuspayHero — Delt Pay home hero, rebuilt to the Plaid bar.
+
+   Design principles (vs. the previous version):
+   1. Painted background. A hand-tuned indigo→violet linear
+      gradient plus two soft radial vignettes act as a printed
+      color field. The flat #080A28 navy is gone.
+   2. Wave-line contour field is texture, not feature — opacity
+      drops from 70% to ~14%. You should sense it, not read it.
+   3. A single faint horizontal "shelf" gradient anchors the
+      lower third (the way Plaid puts a metallic bar across
+      Franklin's chest).
+   4. David is the focal subject. Natural engraving tones with
+      a duotone overlay (indigo shadows → warm highlights) so
+      he picks up the brand color without going monochrome.
+      Soft drop-shadow on the copy side gives him dimensional
+      separation from the field.
+   5. Typography: tighter tracking (-0.055em), tighter line-
+      height (0.94), gradient shimmer on the italic verb.
+   6. The fold owns ONLY five things: wordmark (in nav),
+      headline, sub, primary CTA, quiet secondary text link.
+      Stats and mono ledger are removed — they belong in the
+      sections below, not the fold.
    ────────────────────────────────────────────────────────────── */
 
 export function JuspayHero() {
@@ -18,60 +34,118 @@ export function JuspayHero() {
       data-hero-section
       className="relative w-full overflow-hidden flex flex-col"
       style={{
-        background: 'var(--dc-bg-navy)',
+        // Painted color field — deep indigo top-left → richer violet
+        // bottom-right. The two radial vignettes (one warm highlight
+        // behind David, one cooler shadow in the lower-left) give the
+        // canvas a "printed" feel rather than a flat color block.
+        background: `
+          radial-gradient(120% 80% at 88% 18%, rgba(120, 95, 255, 0.35) 0%, transparent 55%),
+          radial-gradient(90% 70% at 6% 92%, rgba(20, 18, 70, 0.55) 0%, transparent 60%),
+          linear-gradient(135deg, #0B0D33 0%, #14123F 38%, #1C1856 70%, #221C66 100%)
+        `,
         color: 'var(--dc-on-dark)',
-        // Bleed the hero (and its animated shader) UP behind the sticky 64px
-        // global nav so the liquid-glass header has the gradient behind it
-        // from the first paint instead of the white body. The negative top
-        // margin pulls the section under the nav; the matching padding-top
-        // keeps inner content visually anchored where it was before.
         marginTop: -64,
         paddingTop: 64,
-        // Fill the viewport on load so the email-capture / next section sits
-        // below the fold. Account for the site-wide CSS `zoom` applied at the
-        // body level — `vh` is evaluated in the un-zoomed coordinate space,
-        // so dividing by --site-zoom keeps the hero exactly one physical
-        // viewport tall regardless of the active zoom factor. We no longer
-        // subtract 64px (the nav) because the hero now extends behind it.
         minHeight: 'calc(100vh / var(--site-zoom, 1))',
       }}
     >
-      {/* Plaid-style concentric wavy lines anchored to the top-left,
-          tinted in Delt indigo. Brightens on cursor hover via an
-          internal radial mask that follows the mouse. */}
-      <PlaidWaveLines color="#4945ff" />
+      {/* Contour texture — whisper, not pattern. */}
+      <PlaidWaveLines color="#4945ff" baseOpacity={0.14} hoverOpacity={0.55} />
 
-      {/* Atmospheric David — Plaid/Ben Franklin treatment: cropped low,
-          desaturated, blended into the navy canvas so the copy on the
-          left owns the fold. Replaces the previous animated shader. */}
-      <picture>
-        <source srcSet={heroDavidWebp} type="image/webp" />
-        <img
-          src={heroDavidPng}
-          alt=""
-          aria-hidden
-          className="pointer-events-none select-none hidden lg:block absolute"
+      {/* Lower-third "shelf" — a faint horizontal metallic stripe that
+          anchors the composition the way Plaid's chest-bar does on
+          Franklin. Subtle gradient that fades out at both edges. */}
+      <div
+        aria-hidden
+        className="hidden md:block absolute pointer-events-none"
+        style={{
+          left: 0,
+          right: 0,
+          bottom: '22%',
+          height: 1,
+          zIndex: 1,
+          background:
+            'linear-gradient(90deg, transparent 0%, rgba(165, 180, 252, 0.18) 25%, rgba(196, 181, 253, 0.32) 55%, rgba(165, 180, 252, 0.10) 85%, transparent 100%)',
+        }}
+      />
+      <div
+        aria-hidden
+        className="hidden md:block absolute pointer-events-none"
+        style={{
+          left: 0,
+          right: 0,
+          bottom: 'calc(22% - 3px)',
+          height: 6,
+          zIndex: 1,
+          background:
+            'linear-gradient(90deg, transparent 0%, rgba(124, 110, 255, 0.06) 30%, rgba(196, 181, 253, 0.10) 55%, rgba(124, 110, 255, 0.04) 85%, transparent 100%)',
+          filter: 'blur(4px)',
+        }}
+      />
+
+      {/* David — natural sepia engraving tones with a duotone overlay
+          so he picks up indigo in the shadows and warm light in the
+          highlights, exactly the treatment Plaid uses on Franklin.
+          z-index 1 keeps him IN FRONT of the contour field but BEHIND
+          the headline copy at z-[2]. */}
+      <div
+        aria-hidden
+        className="pointer-events-none select-none hidden lg:block absolute"
+        style={{
+          right: -40,
+          bottom: -30,
+          height: '88%',
+          width: '52%',
+          zIndex: 1,
+          // Soft drop-shadow on the side facing the copy gives David
+          // dimensional separation from the indigo field.
+          filter: 'drop-shadow(-30px 20px 48px rgba(0, 0, 0, 0.45))',
+        }}
+      >
+        {/* Duotone via two stacked layers: the warm-tone original at
+            full strength, with an indigo→amber gradient mask-composited
+            on top to recolor shadows toward Delt indigo while keeping
+            highlights warm — the Plaid duotone illustration trick. */}
+        <picture>
+          <source srcSet={heroDavidWebp} type="image/webp" />
+          <img
+            src={heroDavidPng}
+            alt=""
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'contain',
+              objectPosition: 'right bottom',
+              opacity: 0.95,
+              filter: 'sepia(0.15) saturate(1.05) contrast(1.08) brightness(1.02)',
+              WebkitMaskImage:
+                'linear-gradient(90deg, transparent 0%, #000 28%, #000 100%), linear-gradient(180deg, transparent 0%, #000 8%, #000 100%)',
+              maskImage:
+                'linear-gradient(90deg, transparent 0%, #000 28%, #000 100%), linear-gradient(180deg, transparent 0%, #000 8%, #000 100%)',
+              WebkitMaskComposite: 'source-in',
+              maskComposite: 'intersect',
+            }}
+          />
+        </picture>
+        {/* Indigo shadow-tint overlay (multiply blend pushes the dark
+            engraved areas toward brand indigo without flattening the
+            mid-tones or killing the warm highlights). */}
+        <div
           style={{
-            right: -60,
-            bottom: -40,
-            height: '78%',
-            width: 'auto',
-            objectFit: 'contain',
-            objectPosition: 'right bottom',
-            opacity: 0.95,
-            // David sits IN FRONT of the wave-line design but behind
-            // the text content (which lives at z-[2] below).
-            zIndex: 1,
-            filter: 'grayscale(0.2) saturate(1.05) brightness(1) contrast(1.05)',
+            position: 'absolute',
+            inset: 0,
+            background:
+              'linear-gradient(155deg, rgba(73, 69, 255, 0.55) 0%, rgba(73, 69, 255, 0.22) 45%, rgba(252, 211, 77, 0.06) 100%)',
+            mixBlendMode: 'multiply',
             WebkitMaskImage:
-              'linear-gradient(90deg, transparent 0%, #000 42%, #000 100%), linear-gradient(180deg, transparent 0%, #000 12%, #000 100%)',
+              'linear-gradient(90deg, transparent 0%, #000 28%, #000 100%)',
             maskImage:
-              'linear-gradient(90deg, transparent 0%, #000 42%, #000 100%), linear-gradient(180deg, transparent 0%, #000 12%, #000 100%)',
-            WebkitMaskComposite: 'source-in',
-            maskComposite: 'intersect',
+              'linear-gradient(90deg, transparent 0%, #000 28%, #000 100%)',
           }}
         />
-      </picture>
+      </div>
+
+      {/* Mobile David — simpler, lower opacity, no duotone overlay. */}
       <picture>
         <source srcSet={heroDavidWebp} type="image/webp" />
         <img
@@ -84,9 +158,9 @@ export function JuspayHero() {
             bottom: -20,
             height: '70%',
             width: 'auto',
-            opacity: 0.7,
+            opacity: 0.55,
             zIndex: 1,
-            filter: 'grayscale(0.2) saturate(1.05) brightness(1) contrast(1.05)',
+            filter: 'sepia(0.2) saturate(1.05) brightness(1) hue-rotate(220deg)',
             WebkitMaskImage:
               'linear-gradient(90deg, transparent 0%, #000 55%, #000 100%)',
             maskImage:
@@ -95,237 +169,95 @@ export function JuspayHero() {
         />
       </picture>
 
+      {/* ───── Copy block ───── */}
       <div className="relative z-[2] mx-auto w-full max-w-[1320px] px-6 lg:px-10 pt-8 lg:pt-10 pb-0 flex-1 flex flex-col">
-        {/* Top centered mono volume eyebrow removed per user request
-            (was: VOL. VII · Q2 2026 · DIRECT FUNDING · EST. 2019 · QUOTING NOW). */}
-
-        {/* Single-column copy block — the right-side visual was removed
-            (no dashboard, no hero image). The animated shader gradient is
-            the visual; the typography carries the fold. */}
-        <div className="mt-8 lg:mt-10">
-          <div className="relative">
-            <h1
-              className="dc-display"
-              style={{
-                color: 'var(--dc-on-dark)',
-                fontSize: 'clamp(48px, 7vw, 92px)',
-                lineHeight: 0.96,
-                fontWeight: 600,
-                letterSpacing: '-0.045em',
-              }}
-            >
-              You built the<br />
-              business.<br />
-              We{' '}
-              <span
-                className="inline-block align-baseline"
-                style={{
-                  fontFamily: 'var(--dc-font-serif-italic)',
-                  fontStyle: 'italic',
-                  fontWeight: 400,
-                  color: '#A5B4FC',
-                }}
-              >
-                power
-              </span>
-              {' '}it.
-            </h1>
-
-            <p
-              className="mt-8 max-w-[460px] text-[17px] leading-[1.55]"
-              style={{ color: 'var(--dc-on-dark-muted)', fontFamily: 'var(--dc-font-body)' }}
-            >
-              Payments + AI in one stack —{' '}
-              <strong style={{ color: 'var(--dc-on-dark)', fontWeight: 600 }}>
-                0% processing fees — yes really
-              </strong>{' '}
-              with cash discount.
-            </p>
-
-            {/* Hero CTA row — two buttons only.
-
-                Pairing rationale: "Get a quote" is the actual conversion
-                action (non-negotiable), and "Explore Features with AI"
-                gives curious-but-not-ready visitors a self-serve path
-                that signals Delt's AI posture without leaking them to
-                a competitor's site. We dropped "See how pricing works"
-                from this row because it duplicated the Pricing nav link,
-                split attention from "Get a quote" (same intent, weaker
-                CTA), and made the row feel crowded — two CTAs read
-                cleaner and give the primary action more weight. The
-                /calculator route is still reachable from nav/footer. */}
-            <div className="mt-9 flex items-center gap-4 flex-wrap">
-              <Link
-                to="/get-a-quote"
-                className="dc-btn-primary dc-lg"
-                style={{ fontSize: 16, fontWeight: 600, padding: '18px 30px', minHeight: 52 }}
-              >
-                Get a quote
-                <span aria-hidden style={{ marginLeft: 2 }}>→</span>
-              </Link>
-              <ExploreFeaturesWithAI quiet />
-            </div>
-
-            {/* Stats strip — desktop / tablet (3-col) */}
-            <div
-              className="hidden md:grid mt-12 pt-7 grid-cols-3 gap-8 max-w-[540px]"
-              style={{ borderTop: '1px solid var(--dc-rule-on-dark)' }}
-            >
-              <Stat label="NET PROCESSING" big="0%" unit="cash discount" />
-              <Stat label="SAME-DAY APPROVALS" big="99%" unit="approval-based" />
-              <Stat label="FUNDING" big="Same-day" unit="eligible accts" />
-            </div>
-
-            {/* Stats strip — mobile (stacked, no overlap) */}
-            <div
-              className="md:hidden mt-10 pt-6 space-y-5"
-              style={{ borderTop: '1px solid var(--dc-rule-on-dark)' }}
-            >
-              <div>
-                <div
-                  className="text-[10px] tracking-[0.14em] mb-1.5 uppercase"
-                  style={{ fontFamily: 'var(--dc-font-mono)', color: 'var(--dc-on-dark-faint)' }}
-                >
-                  NET PROCESSING
-                </div>
-                <div
-                  className="text-3xl font-semibold"
-                  style={{
-                    fontFamily: 'var(--dc-font-display)',
-                    letterSpacing: '-0.025em',
-                    color: 'var(--dc-on-dark)',
-                    lineHeight: 1,
-                  }}
-                >
-                  0%
-                  <span
-                    className="ml-2 text-[10px] font-normal"
-                    style={{ fontFamily: 'var(--dc-font-mono)', color: 'rgba(247, 245, 240, 0.32)', letterSpacing: '0.04em' }}
-                  >
-                    with cash discount
-                  </span>
-                </div>
-              </div>
-              <div>
-                <div
-                  className="text-[10px] tracking-[0.14em] mb-1.5 uppercase"
-                  style={{ fontFamily: 'var(--dc-font-mono)', color: 'var(--dc-on-dark-faint)' }}
-                >
-                  SAME-DAY APPROVALS
-                </div>
-                <div
-                  className="text-3xl font-semibold"
-                  style={{
-                    fontFamily: 'var(--dc-font-display)',
-                    letterSpacing: '-0.025em',
-                    color: 'var(--dc-on-dark)',
-                    lineHeight: 1,
-                  }}
-                >
-                  99%
-                  <span
-                    className="ml-2 text-[10px] font-normal"
-                    style={{ fontFamily: 'var(--dc-font-mono)', color: 'rgba(247, 245, 240, 0.32)', letterSpacing: '0.04em' }}
-                  >
-                    approval-based
-                  </span>
-                </div>
-              </div>
-              <div>
-                <div
-                  className="text-[10px] tracking-[0.14em] mb-1.5 uppercase"
-                  style={{ fontFamily: 'var(--dc-font-mono)', color: 'var(--dc-on-dark-faint)' }}
-                >
-                  FUNDING
-                </div>
-                <div
-                  className="text-3xl font-semibold"
-                  style={{
-                    fontFamily: 'var(--dc-font-display)',
-                    letterSpacing: '-0.025em',
-                    color: 'var(--dc-on-dark)',
-                    lineHeight: 1,
-                  }}
-                >
-                  Same-day
-                  <span
-                    className="ml-2 text-[10px] font-normal"
-                    style={{ fontFamily: 'var(--dc-font-mono)', color: 'rgba(247, 245, 240, 0.32)', letterSpacing: '0.04em' }}
-                  >
-                    eligible accts
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-        </div>
-
-        {/* Bottom hairline + meta strip — pinned to the bottom of the viewport so the
-            hero owns the first fold and the email-capture bar lives below it.
-            Hidden on mobile — the decorative "SCROLL" / mono ledger line is noise on phone. */}
-        <div
-          className="hidden md:flex mt-auto pt-5 pb-6 items-center justify-start gap-4 flex-wrap"
-          style={{ borderTop: '1px solid var(--dc-rule-on-dark)' }}
-        >
-          <span
-            className="text-[11px] tracking-[0.18em]"
+        <div className="mt-10 lg:mt-16">
+          <h1
+            className="dc-display"
             style={{
-              fontFamily: 'var(--dc-font-mono)',
-              color: 'var(--dc-on-dark-muted)',
-              textTransform: 'uppercase',
+              color: 'var(--dc-on-dark)',
+              fontSize: 'clamp(48px, 7.2vw, 96px)',
+              lineHeight: 0.94,
+              fontWeight: 600,
+              letterSpacing: '-0.055em',
             }}
           >
-            0% NET PROCESSING · SAME-DAY DEPOSITS
-          </span>
+            You built the<br />
+            business.<br />
+            We{' '}
+            <span
+              className="inline-block align-baseline"
+              style={{
+                fontFamily: 'var(--dc-font-serif-italic)',
+                fontStyle: 'italic',
+                fontWeight: 400,
+                // Gradient shimmer — indigo → lavender → soft pink, the
+                // way Plaid does "data into revolutionary".
+                background:
+                  'linear-gradient(95deg, #6366F1 0%, #A5B4FC 45%, #E9D5FF 85%)',
+                WebkitBackgroundClip: 'text',
+                backgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                color: 'transparent',
+              }}
+            >
+              power
+            </span>
+            {' '}it.
+          </h1>
+
+          <p
+            className="mt-7 max-w-[480px] text-[18px] leading-[1.55]"
+            style={{ color: 'rgba(247, 245, 240, 0.75)', fontFamily: 'var(--dc-font-body)' }}
+          >
+            Payments + AI in one stack —{' '}
+            <strong style={{ color: 'var(--dc-on-dark)', fontWeight: 600 }}>
+              0% processing fees
+            </strong>{' '}
+            with cash discount, same-day funding.
+          </p>
+
+          {/* CTAs — primary button + quiet text link. The secondary
+              gets out of the way so the primary owns the eye. */}
+          <div className="mt-10 flex items-center gap-7 flex-wrap">
+            <Link
+              to="/get-a-quote"
+              className="dc-btn-primary dc-lg"
+              style={{ fontSize: 16, fontWeight: 600, padding: '18px 30px', minHeight: 52 }}
+            >
+              Get a quote
+              <span aria-hidden style={{ marginLeft: 4 }}>→</span>
+            </Link>
+            <Link
+              to="/delt-ai-chat"
+              className="dc-quiet-link"
+              style={{
+                color: 'rgba(247, 245, 240, 0.78)',
+                fontFamily: 'var(--dc-font-body)',
+                fontSize: 15,
+                fontWeight: 500,
+                textDecoration: 'none',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                transition: 'color 180ms ease',
+              }}
+            >
+              Explore features
+              <span aria-hidden>→</span>
+            </Link>
+          </div>
         </div>
       </div>
-    </section>
-  );
-}
 
-function Stat({ label, big, unit }: { label: string; big: string; unit: string }) {
-  return (
-    <div>
-      <div
-        className="text-[10px] tracking-[0.14em] mb-2"
-        style={{
-          fontFamily: 'var(--dc-font-mono)',
-          color: 'var(--dc-on-dark-faint)',
-          textTransform: 'uppercase',
-        }}
-      >
-        {label}
-      </div>
-      {/* Value + caveat stacked vertically so all three stats read with
-          identical visual weight regardless of token length. "Same-day"
-          no longer wraps next to its caveat, so 0% / Same-day / Instant
-          all sit on one line at the same size and weight. */}
-      <div
-        style={{
-          fontFamily: 'var(--dc-font-display)',
-          fontWeight: 600,
-          fontSize: 28,
-          letterSpacing: '-0.025em',
-          color: 'var(--dc-on-dark)',
-          lineHeight: 1.05,
-          whiteSpace: 'nowrap',
-        }}
-      >
-        {big}
-      </div>
-      <div
-        className="mt-1.5"
-        style={{
-          fontFamily: 'var(--dc-font-mono)',
-          fontSize: 10,
-          color: 'rgba(247, 245, 240, 0.32)',
-          letterSpacing: '0.04em',
-        }}
-      >
-        {unit}
-      </div>
-    </div>
+      {/* Hover style for the quiet link — defined inline so it travels
+          with the component. */}
+      <style>{`
+        [data-hero-section] .dc-quiet-link:hover {
+          color: #fff !important;
+        }
+      `}</style>
+    </section>
   );
 }
 
