@@ -1,5 +1,6 @@
 import { Link } from 'react-router';
 import { PlaidWaveLines } from './PlaidWaveLines';
+import { ExploreFeaturesWithAI } from './ExploreFeaturesWithAI';
 import heroDavidPng from '@/app/assets/hero-david-cutout.png';
 import heroDavidWebp from '@/app/assets/hero-david-cutout.webp';
 
@@ -165,24 +166,11 @@ export function JuspayHero() {
               Get a quote
               <span aria-hidden style={{ marginLeft: 4 }}>→</span>
             </Link>
-            <Link
-              to="/delt-ai-chat"
-              className="dc-quiet-link"
-              style={{
-                color: 'rgba(247, 245, 240, 0.78)',
-                fontFamily: 'var(--dc-font-body)',
-                fontSize: 15,
-                fontWeight: 500,
-                textDecoration: 'none',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 6,
-                transition: 'color 180ms ease',
-              }}
-            >
-              Explore features
-              <span aria-hidden>→</span>
-            </Link>
+            {/* Restored: the original iridescent "Explore Features with AI"
+                pill. Opens ChatGPT in a new tab pre-seeded with a Delt
+                exploration prompt — the same behavior the live site had
+                before the hero rebuild. */}
+            <ExploreFeaturesWithAI />
           </div>
         </div>
       </div>
