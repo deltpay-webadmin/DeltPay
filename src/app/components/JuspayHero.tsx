@@ -1,8 +1,8 @@
 import { Link } from 'react-router';
 import { PlaidWaveLines } from './PlaidWaveLines';
 import { ExploreFeaturesWithAI } from './ExploreFeaturesWithAI';
-import heroDavidPng from '@/app/assets/hero-david-cutout.png';
-import heroDavidWebp from '@/app/assets/hero-david-cutout.webp';
+import heroDavidPng from '@/app/assets/hero-david-complete.png';
+import heroDavidWebp from '@/app/assets/hero-david-complete.webp';
 
 /* ──────────────────────────────────────────────────────────────
    JuspayHero — Delt Pay home hero, rebuilt to the Plaid bar.
@@ -70,9 +70,9 @@ export function JuspayHero() {
           aria-hidden
           className="pointer-events-none select-none hidden lg:block absolute"
           style={{
-            right: 0,
+            right: '6%',
             bottom: 0,
-            height: '74%',
+            height: '78%',
             width: 'auto',
             zIndex: 1,
             opacity: 0.82,
@@ -88,9 +88,9 @@ export function JuspayHero() {
         className="lg:hidden absolute pointer-events-none"
         aria-hidden
         style={{
-          right: '-18%',
+          right: '-10%',
           bottom: 0,
-          width: '115%',
+          width: '110%',
           height: '88%',
           zIndex: 1,
           overflow: 'hidden',
