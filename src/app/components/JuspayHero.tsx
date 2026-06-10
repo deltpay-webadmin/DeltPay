@@ -50,8 +50,13 @@ export function JuspayHero() {
         minHeight: 'calc(100vh / var(--site-zoom, 1))',
       }}
     >
-      {/* Contour texture — whisper, not pattern. */}
-      <PlaidWaveLines color="#4945ff" baseOpacity={0.14} hoverOpacity={0.55} />
+      {/* Contour texture — whisper, not pattern. Even quieter on mobile. */}
+      <div className="hidden lg:block absolute inset-0" aria-hidden style={{ zIndex: 0 }}>
+        <PlaidWaveLines color="#4945ff" baseOpacity={0.14} hoverOpacity={0.55} />
+      </div>
+      <div className="lg:hidden absolute inset-0" aria-hidden style={{ zIndex: 0 }}>
+        <PlaidWaveLines color="#4945ff" baseOpacity={0.06} hoverOpacity={0.2} />
+      </div>
 
       {/* David — clean cutout, no rectangle, no masks, no shadow.
           Just the engraving sitting on the gradient field.
@@ -77,24 +82,49 @@ export function JuspayHero() {
         />
       </picture>
 
-      {/* Mobile David — simpler, lower opacity, no duotone overlay. */}
-      <picture>
-        <source srcSet={heroDavidWebp} type="image/webp" />
-        <img
-          src={heroDavidPng}
-          alt=""
+      {/* Mobile David — centered, full-bust visible behind the copy.
+          Sits behind a darkening gradient so the headline stays legible. */}
+      <div
+        className="lg:hidden absolute pointer-events-none"
+        aria-hidden
+        style={{
+          right: '-22%',
+          bottom: 0,
+          width: '110%',
+          height: '70%',
+          zIndex: 1,
+          overflow: 'hidden',
+        }}
+      >
+        <picture>
+          <source srcSet={heroDavidWebp} type="image/webp" />
+          <img
+            src={heroDavidPng}
+            alt=""
+            className="pointer-events-none select-none"
+            style={{
+              position: 'absolute',
+              right: 0,
+              bottom: 0,
+              height: '100%',
+              width: 'auto',
+              opacity: 0.32,
+              objectFit: 'contain',
+              objectPosition: 'right bottom',
+            }}
+          />
+        </picture>
+        {/* Left-side darkening veil so copy stays readable */}
+        <div
           aria-hidden
-          className="pointer-events-none select-none lg:hidden absolute"
           style={{
-            right: -100,
-            bottom: -20,
-            height: '70%',
-            width: 'auto',
-            opacity: 0.4,
-            zIndex: 1,
+            position: 'absolute',
+            inset: 0,
+            background:
+              'linear-gradient(90deg, rgba(11,13,51,0.85) 0%, rgba(11,13,51,0.55) 35%, rgba(11,13,51,0.15) 70%, rgba(11,13,51,0) 100%)',
           }}
         />
-      </picture>
+      </div>
 
       {/* ───── Copy block ───── */}
       <div className="relative z-[2] mx-auto w-full max-w-[1320px] px-6 lg:px-10 pt-8 lg:pt-10 pb-0 flex-1 flex flex-col">
@@ -126,7 +156,7 @@ export function JuspayHero() {
                 // Gradient shimmer — indigo → lavender → soft pink, the
                 // way Plaid does "data into revolutionary".
                 background:
-                  'linear-gradient(95deg, #6366F1 0%, #A5B4FC 45%, #E9D5FF 85%)',
+                  'linear-gradient(95deg, #818CF8 0%, #A5B4FC 50%, #C7D2FE 100%)',
                 WebkitBackgroundClip: 'text',
                 backgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
