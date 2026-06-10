@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChevronDown, ArrowRight, Check, Award, ShoppingBag, Printer, CreditCard, Sparkles, Users, MessageSquare } from 'lucide-react';
 import { CapitalCrossSell } from '../components/CapitalCrossSell';
+import { AllPlansInclude } from '../components/AllPlansInclude';
+import { TierMatrix } from '../components/TierMatrix';
 
 const COLORS = {
   navy: "#041e42",
@@ -287,7 +289,7 @@ export function PricingPage() {
         </div>
 
         {/* Section header */}
-        <div style={{ textAlign: "center", marginBottom: 40 }}>
+        <div style={{ textAlign: "center", marginBottom: 28 }}>
           <p style={{
             fontSize: 17,
             color: COLORS.gray600,
@@ -298,17 +300,47 @@ export function PricingPage() {
             marginRight: "auto",
             lineHeight: 1.5,
           }}>Pick a plan. See results this week. Every plan includes $0 processing with Delt Zero.</p>
-          <p style={{ fontSize: 13, color: COLORS.gray600, marginTop: 12 }}>
+        </div>
+
+        {/* Savings anchor pill */}
+        <div style={{ textAlign: "center", marginBottom: 36 }}>
+          <div style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 10,
+            background: COLORS.indigoPale,
+            border: `1px solid ${COLORS.indigo}`,
+            borderRadius: 999,
+            padding: "8px 16px",
+            fontSize: 13,
+            fontWeight: 700,
+            color: COLORS.indigo,
+            letterSpacing: "-0.005em",
+            fontFamily: fonts.heading,
+          }}>
+            <span style={{
+              background: COLORS.indigo,
+              color: "#FFFFFF",
+              fontSize: 10.5,
+              fontWeight: 800,
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+              padding: "3px 8px",
+              borderRadius: 999,
+            }}>Save</span>
+            Merchants save an average of $4,800/yr vs. Stripe, Square, and Toast.
+          </div>
+          <p style={{ fontSize: 13, color: COLORS.gray600, marginTop: 14, fontFamily: fonts.heading }}>
             Questions? <Link to="/support" style={{ color: COLORS.indigo, textDecoration: 'underline' }}>Chat with us</Link>
           </p>
         </div>
 
-        {/* Bundle callout */}
+        {/* Bundle callout (hidden — moved below tier cards in matrix flow) */}
         <div className="bundle-callout" style={{
           background: COLORS.navy,
           borderRadius: 16,
           padding: "20px 32px",
-          display: "flex",
+          display: "none",
           alignItems: "center",
           justifyContent: "space-between",
           marginBottom: 24,
@@ -370,17 +402,41 @@ export function PricingPage() {
           gridTemplateColumns: "1fr 1fr 1fr",
           gap: 20,
         }}>
-          {tiers.map((tier, i) => (
+          {tiers.map((tier, i) => {
+            const isPopular = tier.name === "Growth";
+            return (
             <div key={i} style={{
               background: COLORS.white,
-              borderRadius: 16,
-              border: `1px solid ${COLORS.gray200}`,
+              borderRadius: 18,
+              border: isPopular ? `2px solid ${COLORS.indigo}` : `1px solid ${COLORS.gray200}`,
               padding: "32px 28px",
               position: "relative",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+              boxShadow: isPopular
+                ? "0 12px 36px rgba(73,69,255,0.18)"
+                : "0 1px 3px rgba(0,0,0,0.04)",
               display: "flex",
               flexDirection: "column",
+              transform: isPopular ? "translateY(-6px)" : "none",
             }}>
+              {isPopular && (
+                <div style={{
+                  position: "absolute",
+                  top: -12,
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                  background: COLORS.indigo,
+                  color: "#FFFFFF",
+                  fontSize: 11,
+                  fontWeight: 800,
+                  letterSpacing: "0.12em",
+                  textTransform: "uppercase",
+                  padding: "6px 14px",
+                  borderRadius: 999,
+                  whiteSpace: "nowrap",
+                  fontFamily: fonts.heading,
+                  boxShadow: "0 4px 12px rgba(73,69,255,0.3)",
+                }}>Most Popular</div>
+              )}
               <div style={{
                 fontSize: 20,
                 fontWeight: 800,
@@ -521,10 +577,17 @@ export function PricingPage() {
                 </div>
               )}
             </div>
-          ))}
+            );
+          })}
         </div>
       </div>
       </div>
+
+      {/* EVERY PLAN INCLUDES band */}
+      <AllPlansInclude />
+
+      {/* TIER-VS-TIER COMPARISON MATRIX */}
+      <TierMatrix />
 
       {/* ═══ 2. ADD-ONS 3-UP (LAVENDER CARDS on white) ══════════════ */}
       <section style={{ background: '#FFFFFF', padding: '80px 24px' }}>
