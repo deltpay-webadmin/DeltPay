@@ -102,10 +102,15 @@ export function JuspayHero() {
             style={{
               color: 'var(--dc-on-dark)',
               fontSize: 'clamp(44px, 6.6vw, 88px)',
-              lineHeight: 0.96,
+              lineHeight: 1.02,
               fontWeight: 600,
               letterSpacing: '-0.05em',
               maxWidth: '14ch',
+              // Extra bottom padding so the italic 'g/p' descenders in
+              // 'nothing stops' don't get clipped by the section / next
+              // block. Without this the descenders sit right on the
+              // section's bottom mathematical edge.
+              paddingBottom: '0.18em',
             }}
           >
             You built it from nothing.<br />
@@ -124,6 +129,10 @@ export function JuspayHero() {
                 backgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 color: 'transparent',
+                // Some browsers clip the painted gradient at the text
+                // glyph box, cutting descenders. A tiny inline padding
+                // expands the bounding box so 'g' and 'p' render fully.
+                paddingBottom: '0.12em',
               }}
             >
               nothing stops it.
@@ -142,7 +151,7 @@ export function JuspayHero() {
             <strong style={{ color: 'var(--dc-on-dark)', fontWeight: 600 }}>
               same-day funding
             </strong>
-            , and intelligence that grows with your business.
+            , and business intelligence built in.
           </p>
 
           {/* CTAs — primary button + quiet text link. The secondary
