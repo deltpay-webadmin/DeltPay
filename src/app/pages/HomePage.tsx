@@ -45,7 +45,7 @@ export function HomePage() {
             color: '#fff',
           }}
         >
-          10,000+ merchants run on Delt.
+Thousands of merchants run on Delt.
         </div>
       </div>
 

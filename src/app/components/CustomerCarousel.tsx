@@ -210,7 +210,7 @@ export function CustomerCarousel() {
             maxWidth: 920,
           }}
         >
-          10,000+ merchants{' '}
+          Thousands of merchants{' '}
           <span
             style={{
               fontFamily: 'var(--dc-font-serif-italic)',

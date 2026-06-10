@@ -67,15 +67,43 @@ export function GlobeStats() {
     <>
       <section className="gs-section" ref={ref}>
         <div className="gs-card">
-          {/* Stats row — top of section */}
+          {/* Lede block — anchors the section before the stats row */}
+          <div className="gs-lede">
+            <motion.div
+              className="gs-eyebrow"
+              initial={{ opacity: 0, y: 12 }}
+              animate={inView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            >
+              — By the numbers
+            </motion.div>
+            <motion.h2
+              className="gs-lede-heading"
+              initial={{ opacity: 0, y: 20 }}
+              animate={inView ? { opacity: 1, y: 0 } : {}}
+              transition={{ delay: 0.1, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+            >
+              Fewer tools. <span className="gs-lede-emph">More money. Less stress.</span>
+            </motion.h2>
+            <motion.p
+              className="gs-lede-sub"
+              initial={{ opacity: 0, y: 12 }}
+              animate={inView ? { opacity: 1, y: 0 } : {}}
+              transition={{ delay: 0.25, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            >
+              Powering thousands of businesses worldwide.
+            </motion.p>
+          </div>
+
+          {/* Stats row */}
           <div className="gs-stats">
             {stats.map((stat, i) => (
               <motion.div
                 key={stat.label}
                 className="gs-stat"
-                initial={{ opacity: 0, y: 30 }}
+                initial={{ opacity: 0, y: 24 }}
                 animate={inView ? { opacity: 1, y: 0 } : {}}
-                transition={{ delay: i * 0.12, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                transition={{ delay: 0.35 + i * 0.08, duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
               >
                 <span className="gs-stat-label">{stat.label}</span>
                 <span className={stat.long ? 'gs-stat-value gs-stat-value-long' : 'gs-stat-value'}>{stat.value}</span>
@@ -87,30 +115,13 @@ export function GlobeStats() {
           {/* Globe area */}
           <div className="gs-globe-area">
             <div className="gs-globe-text">
-              <motion.h2
-                className="gs-globe-heading"
-                initial={{ opacity: 0, y: 20 }}
-                animate={inView ? { opacity: 1, y: 0 } : {}}
-                transition={{ delay: 0.5, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-              >
-                Fewer tools.<br />More money. Less stress.
-              </motion.h2>
-              <motion.p
-                className="gs-globe-sub"
-                initial={{ opacity: 0, y: 12 }}
-                animate={inView ? { opacity: 1, y: 0 } : {}}
-                transition={{ delay: 0.65, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-              >
-                Trusted by 10,000+ businesses worldwide.
-              </motion.p>
               <motion.div
                 initial={{ opacity: 0, y: 12 }}
                 animate={inView ? { opacity: 1, y: 0 } : {}}
-                transition={{ delay: 0.8, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                style={{ marginTop: 28 }}
+                transition={{ delay: 0.7, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
               >
                 <Link to="/contact" className="gs-schedule-btn">
-                  Schedule a call <span className="gs-schedule-arrow">›</span>
+                  Schedule a call <span className="gs-schedule-arrow">→</span>
                 </Link>
               </motion.div>
             </div>
@@ -166,58 +177,98 @@ export function GlobeStats() {
         }
 
         .gs-card {
-          max-width: 1600px;
+          max-width: 1320px;
           margin: 0 auto;
           background: transparent;
           border: none;
           border-radius: 0;
-          padding: 48px 64px 0;
+          padding: 96px 24px 0;
           position: relative;
+        }
+
+        /* Lede — the anchor of the section */
+        .gs-lede {
+          text-align: center;
+          max-width: 920px;
+          margin: 0 auto 56px;
+        }
+        .gs-eyebrow {
+          font-family: 'JetBrains Mono', ui-monospace, monospace;
+          font-size: 11px;
+          letter-spacing: 0.18em;
+          text-transform: uppercase;
+          color: rgba(255,255,255,0.45);
+          margin-bottom: 18px;
+        }
+        .gs-lede-heading {
+          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-size: clamp(2.25rem, 4.2vw, 3.5rem);
+          font-weight: 600;
+          color: #fff;
+          letter-spacing: -0.035em;
+          line-height: 1.05;
+          margin: 0 0 16px;
+        }
+        .gs-lede-emph {
+          font-family: var(--dc-font-serif-italic, 'Plus Jakarta Sans', sans-serif);
+          font-style: italic;
+          font-weight: 400;
+          background: linear-gradient(95deg, #6366F1 0%, #A5B4FC 45%, #E9D5FF 85%);
+          -webkit-background-clip: text;
+          background-clip: text;
+          -webkit-text-fill-color: transparent;
+          color: transparent;
+        }
+        .gs-lede-sub {
+          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-size: 17px;
+          line-height: 1.5;
+          color: rgba(255,255,255,0.6);
+          margin: 0;
         }
 
         .gs-stats {
           display: grid;
           grid-template-columns: repeat(4, 1fr);
-          gap: 48px;
-          align-items: end;
-          margin: 0 0 72px;
-          padding: 0;
+          gap: 32px;
+          align-items: start;
+          margin: 0 0 56px;
+          padding: 32px 0;
+          border-top: 1px solid rgba(255,255,255,0.08);
+          border-bottom: 1px solid rgba(255,255,255,0.08);
         }
         .gs-stat {
-          display: grid;
-          grid-template-rows: auto auto auto;
-          row-gap: 8px;
-          align-content: end;
+          display: flex;
+          flex-direction: column;
+          row-gap: 10px;
           text-align: left;
-          align-items: start;
-          justify-items: start;
         }
         .gs-stat-label {
-          font-family: 'Plus Jakarta Sans', sans-serif;
-          font-size: 14px;
-          color: rgba(255,255,255,0.35);
+          font-family: 'JetBrains Mono', ui-monospace, monospace;
+          font-size: 11px;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+          color: rgba(255,255,255,0.45);
         }
         .gs-stat-value {
           font-family: 'Plus Jakarta Sans', sans-serif;
-          font-size: clamp(2.5rem, 5vw, 4rem);
-          font-weight: 800;
+          font-size: clamp(2rem, 3.4vw, 2.75rem);
+          font-weight: 700;
           color: #fff;
-          letter-spacing: -0.03em;
+          letter-spacing: -0.035em;
           line-height: 1;
           white-space: nowrap;
-          display: flex;
-          align-items: flex-end;
-          min-height: clamp(2.5rem, 5vw, 4rem);
         }
-        /* Longer word/values (Same-day, 24/7/365) — scale down so they fit on one line */
+        /* Longer word/values (Same-day, 24/7/365) tighter so they balance */
         .gs-stat-value-long {
-          font-size: clamp(1.75rem, 3.2vw, 2.6rem);
+          font-size: clamp(1.6rem, 2.6vw, 2.2rem);
+          letter-spacing: -0.025em;
         }
         .gs-stat-trait {
           font-family: 'Plus Jakarta Sans', sans-serif;
-          font-size: 14px;
-          font-weight: 600;
-          color: #16C784;
+          font-size: 13px;
+          font-weight: 500;
+          color: rgba(255,255,255,0.7);
         }
 
         /* Globe layout */
@@ -264,46 +315,33 @@ export function GlobeStats() {
           z-index: 3;
         }
 
-        .gs-globe-heading {
-          font-family: 'Plus Jakarta Sans', sans-serif;
-          font-size: clamp(2rem, 4vw, 3.2rem);
-          font-weight: 800;
-          color: #fff;
-          letter-spacing: -0.03em;
-          line-height: 1.15;
-          margin: 0 0 16px;
-        }
-        .gs-globe-sub {
-          font-family: 'Plus Jakarta Sans', sans-serif;
-          font-size: 16px;
-          color: rgba(255,255,255,0.4);
-          margin: 0;
-        }
         .gs-schedule-btn {
           display: inline-flex;
           align-items: center;
-          gap: 6px;
+          gap: 8px;
           font-family: 'Plus Jakarta Sans', sans-serif;
           font-size: 15px;
           font-weight: 600;
-          color: rgba(255,255,255,0.85);
-          background: rgba(255,255,255,0.08);
-          border: 1px solid rgba(255,255,255,0.12);
-          padding: 12px 28px;
+          color: #fff;
+          background: #4945FF;
+          border: 1px solid #4945FF;
+          padding: 14px 28px;
           border-radius: 999px;
           text-decoration: none;
-          transition: background 0.2s, border-color 0.2s;
+          transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+          box-shadow: 0 8px 24px rgba(73,69,255,0.28);
         }
         .gs-schedule-btn:hover {
-          background: rgba(255,255,255,0.12);
-          border-color: rgba(255,255,255,0.2);
+          background: #5C58FF;
+          transform: translateY(-1px);
+          box-shadow: 0 12px 28px rgba(73,69,255,0.36);
         }
         .gs-schedule-arrow {
-          font-size: 18px;
+          font-size: 16px;
           transition: transform 0.2s;
         }
         .gs-schedule-btn:hover .gs-schedule-arrow {
-          transform: translateX(2px);
+          transform: translateX(3px);
         }
 
         /* Sparkles */
@@ -329,9 +367,9 @@ export function GlobeStats() {
 
         @media (max-width: 900px) {
           .gs-section { padding: 0 16px; }
-          .gs-card { padding: 40px 24px 0; }
-          .gs-stats { grid-template-columns: repeat(2, 1fr); gap: 32px 24px; margin-bottom: 60px; }
-          .gs-stat-value { min-height: 0; }
+          .gs-card { padding: 64px 16px 0; }
+          .gs-lede { margin-bottom: 44px; }
+          .gs-stats { grid-template-columns: repeat(2, 1fr); gap: 28px 24px; margin-bottom: 44px; padding: 24px 0; }
           .gs-globe-wrap {
             width: 96vw;
             height: 96vw;
