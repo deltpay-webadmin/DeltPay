@@ -88,10 +88,10 @@ export function JuspayHero() {
         className="lg:hidden absolute pointer-events-none"
         aria-hidden
         style={{
-          right: '-22%',
+          right: '-18%',
           bottom: 0,
-          width: '110%',
-          height: '70%',
+          width: '115%',
+          height: '88%',
           zIndex: 1,
           overflow: 'hidden',
         }}
@@ -108,7 +108,7 @@ export function JuspayHero() {
               bottom: 0,
               height: '100%',
               width: 'auto',
-              opacity: 0.32,
+              opacity: 0.42,
               objectFit: 'contain',
               objectPosition: 'right bottom',
             }}
@@ -121,7 +121,7 @@ export function JuspayHero() {
             position: 'absolute',
             inset: 0,
             background:
-              'linear-gradient(90deg, rgba(11,13,51,0.85) 0%, rgba(11,13,51,0.55) 35%, rgba(11,13,51,0.15) 70%, rgba(11,13,51,0) 100%)',
+              'linear-gradient(90deg, rgba(11,13,51,0.92) 0%, rgba(11,13,51,0.65) 30%, rgba(11,13,51,0.2) 65%, rgba(11,13,51,0) 100%)',
           }}
         />
       </div>
