@@ -1,6 +1,4 @@
-import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
-import { motion, AnimatePresence } from 'motion/react';
 import { ExploreFeaturesWithAI } from './ExploreFeaturesWithAI';
 import { PlaidWaveLines } from './PlaidWaveLines';
 import heroDavidPng from '@/app/assets/hero-david.png';
@@ -8,27 +6,13 @@ import heroDavidWebp from '@/app/assets/hero-david.webp';
 
 /* ──────────────────────────────────────────────────────────────
    JuspayHero — Delt Pay (merchant services) home hero.
-   Navy canvas. Large display H1 with italic-serif rotating verb.
+   Navy canvas. Large display H1 with a fixed italic-serif verb.
    Body copy is Payments + AI focused (not Capital/lending — that
    pitch lives in the dedicated CapitalCrossSell section further
    down the page). Stats strip + bottom mono ledger line.
    ────────────────────────────────────────────────────────────── */
 
-// Payments + AI flavored verbs. 'fund' was the previous (Capital) word
-// and has been removed — the merchant→Capital cross-sell lives lower on
-// the page in its own section.
-const ROTATING_WORDS = ['process', 'automate', 'grow', 'power'];
-
 export function JuspayHero() {
-  const [wordIdx, setWordIdx] = useState(0);
-
-  useEffect(() => {
-    const id = window.setInterval(() => {
-      setWordIdx((i) => (i + 1) % ROTATING_WORDS.length);
-    }, 2400);
-    return () => window.clearInterval(id);
-  }, []);
-
   return (
     <section
       data-hero-section
@@ -133,25 +117,16 @@ export function JuspayHero() {
               You built the<br />
               business.<br />
               We{' '}
-              <span className="relative inline-block align-baseline" style={{ minWidth: '2ch' }}>
-                <AnimatePresence mode="wait">
-                  <motion.span
-                    key={wordIdx}
-                    initial={{ y: 18, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    exit={{ y: -18, opacity: 0 }}
-                    transition={{ duration: 0.45, ease: [0.2, 0.8, 0.2, 1] }}
-                    className="inline-block"
-                    style={{
-                      fontFamily: 'var(--dc-font-serif-italic)',
-                      fontStyle: 'italic',
-                      fontWeight: 400,
-                      color: '#A5B4FC',
-                    }}
-                  >
-                    {ROTATING_WORDS[wordIdx]}
-                  </motion.span>
-                </AnimatePresence>
+              <span
+                className="inline-block align-baseline"
+                style={{
+                  fontFamily: 'var(--dc-font-serif-italic)',
+                  fontStyle: 'italic',
+                  fontWeight: 400,
+                  color: '#A5B4FC',
+                }}
+              >
+                power
               </span>
               {' '}it.
             </h1>
