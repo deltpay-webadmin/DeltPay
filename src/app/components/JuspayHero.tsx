@@ -64,9 +64,9 @@ export function JuspayHero() {
           aria-hidden
           className="pointer-events-none select-none hidden lg:block absolute"
           style={{
-            right: -40,
-            bottom: -30,
-            height: '88%',
+            right: -20,
+            bottom: 0,
+            height: '92%',
             width: 'auto',
             zIndex: 1,
             objectFit: 'contain',
@@ -101,15 +101,15 @@ export function JuspayHero() {
             className="dc-display"
             style={{
               color: 'var(--dc-on-dark)',
-              fontSize: 'clamp(48px, 7.2vw, 96px)',
-              lineHeight: 0.94,
+              fontSize: 'clamp(44px, 6.6vw, 88px)',
+              lineHeight: 0.96,
               fontWeight: 600,
-              letterSpacing: '-0.055em',
+              letterSpacing: '-0.05em',
+              maxWidth: '14ch',
             }}
           >
-            You built the<br />
-            business.<br />
-            We{' '}
+            You built it from nothing.<br />
+            We make sure{' '}
             <span
               className="inline-block align-baseline"
               style={{
@@ -126,20 +126,23 @@ export function JuspayHero() {
                 color: 'transparent',
               }}
             >
-              power
+              nothing stops it.
             </span>
-            {' '}it.
           </h1>
 
           <p
-            className="mt-7 max-w-[480px] text-[18px] leading-[1.55]"
+            className="mt-7 max-w-[540px] text-[18px] leading-[1.55]"
             style={{ color: 'rgba(247, 245, 240, 0.75)', fontFamily: 'var(--dc-font-body)' }}
           >
-            Payments + AI in one stack —{' '}
+            Payments, capital, and AI in one stack —{' '}
             <strong style={{ color: 'var(--dc-on-dark)', fontWeight: 600 }}>
               0% processing fees
-            </strong>{' '}
-            with cash discount, same-day funding.
+            </strong>
+            ,{' '}
+            <strong style={{ color: 'var(--dc-on-dark)', fontWeight: 600 }}>
+              same-day funding
+            </strong>
+            , and intelligence that grows with your business.
           </p>
 
           {/* CTAs — primary button + quiet text link. The secondary
