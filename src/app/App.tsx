@@ -47,6 +47,7 @@ import { IndustryPage } from '@/app/pages/IndustryPage';
 import { LensDemoPage } from '@/app/pages/LensDemoPage';
 import { InternationalUSDTPage } from '@/app/pages/InternationalUSDTPage';
 import { HighRiskProcessingPage } from '@/app/pages/HighRiskProcessingPage';
+import { AuditPage } from '@/app/pages/AuditPage';
 
 /* Renders the brand marquee BELOW the global footer, but only on the
    home route — preserving the original "single instance on ‘/’" behavior
@@ -84,6 +85,7 @@ export default function App() {
                 <Route path="/" element={<HomePage />} />
                 <Route path="/pricing" element={<PricingPage />} />
                 <Route path="/payments" element={<PaymentsPage />} />
+                <Route path="/audit" element={<AuditPage />} />
                 <Route path="/apply" element={<ApplicationPage />} />
                 <Route path="/whats-new" element={<Navigate to="/blog" replace />} />
                 <Route path="/blog" element={<NewBlogPage />} />
