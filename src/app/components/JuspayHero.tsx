@@ -70,6 +70,7 @@ export function JuspayHero() {
             height: '92%',
             width: 'auto',
             zIndex: 1,
+            opacity: 0.82,
             objectFit: 'contain',
             objectPosition: 'right bottom',
           }}
@@ -89,7 +90,7 @@ export function JuspayHero() {
             bottom: -20,
             height: '70%',
             width: 'auto',
-            opacity: 0.5,
+            opacity: 0.4,
             zIndex: 1,
           }}
         />
