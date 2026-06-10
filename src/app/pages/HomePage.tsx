@@ -9,6 +9,7 @@ import { ScrollRevealText } from '@/app/components/ScrollRevealText';
 import { SpotlightTestimonial } from '@/app/components/SpotlightTestimonial';
 import { IndustryPanel } from '@/app/components/IndustryPanel';
 import { EmailCaptureBar } from '@/app/components/EmailCaptureBar';
+import { CustomerCarousel } from '@/app/components/CustomerCarousel';
 import { CapitalCrossSell } from '@/app/components/CapitalCrossSell';
 import { FAQ } from '@/app/components/FAQ';
 // DeltMarquee was previously rendered here; it now lives in App.tsx
@@ -20,6 +21,10 @@ export function HomePage() {
       <JuspayHero />
       {/* Wave 5 — email capture beneath hero */}
       <EmailCaptureBar />
+
+      {/* Plaid-style social-proof strip — dynamic marquee of real-sounding
+          customers across every industry Delt processes for. */}
+      <CustomerCarousel />
 
       {/* Mobile-only tight trust line (replaces decorative globe section on mobile) */}
       <div

@@ -1,23 +1,27 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 /* ──────────────────────────────────────────────────────────────
-   PlaidWaveLines — decorative SVG background of dense concentric
-   ripple lines emanating from the upper-left corner, modeled
-   after the Plaid hero treatment. Tinted in Delt indigo
-   (#4945ff). Covers the entire parent (which must be `relative`),
-   absolute / pointer-events: none so it never blocks clicks.
+   PlaidWaveLines — topographic contour-map background, modeled
+   after the Plaid hero treatment. Dozens of horizontal lines
+   undulate across the canvas using layered sine waves, producing
+   the organic "flowing contour" feel rather than perfect
+   concentric arcs. Tinted in Delt indigo (#4945ff) by default.
+
+   Covers the entire parent (which must be `relative`), is
+   absolutely positioned, and ignores pointer events so it never
+   blocks clicks.
 
    Cursor-tracking brightness halo: as the user moves the mouse
-   over the hero, lines closest to the cursor brighten via a
+   over the hero, the lines closest to the cursor brighten via a
    radial mask, creating a soft spotlight follow effect.
    ────────────────────────────────────────────────────────────── */
 
 type Props = {
   /** Color of the lines. Default Delt indigo. */
   color?: string;
-  /** Number of concentric ripple lines. */
+  /** Number of horizontal contour lines. */
   lineCount?: number;
-  /** Spacing between successive lines (in viewBox units). */
+  /** Vertical spacing between successive lines (viewBox units). */
   spacing?: number;
   /** Base opacity at idle. */
   baseOpacity?: number;
@@ -28,19 +32,24 @@ type Props = {
   className?: string;
 };
 
-// The viewBox is sized generously so a single ellipse anchored at the
-// top-left corner of the section can sweep all the way across to the
-// far edges, giving us full-bleed coverage no matter the aspect ratio.
+// Wide, generous viewBox so the contour field flows naturally across
+// any hero aspect ratio. `xMinYMid slice` keeps lines anchored to the
+// left edge and vertically centered when the container is shorter or
+// taller than the viewBox.
 const VB_W = 2400;
 const VB_H = 1400;
 
+// Number of points along each line — higher = smoother curves but
+// more SVG nodes. 90 keeps the file lightweight while staying smooth.
+const POINTS_PER_LINE = 90;
+
 export function PlaidWaveLines({
   color = '#4945ff',
-  lineCount = 70,
-  spacing = 42,
-  baseOpacity = 0.22,
-  hoverOpacity = 0.9,
-  spotlightRadius = 520,
+  lineCount = 90,
+  spacing = 22,
+  baseOpacity = 0.45,
+  hoverOpacity = 1,
+  spotlightRadius = 460,
   className,
 }: Props) {
   const wrapRef = useRef<HTMLDivElement | null>(null);
@@ -76,17 +85,63 @@ export function PlaidWaveLines({
     };
   }, []);
 
-  // Dense concentric ellipses anchored at (0, 0), each one slightly
-  // larger than the last. Using ellipses (not circles) lets the ripple
-  // stretch naturally across a wide hero — matching the Plaid look
-  // where the lines fan out from the corner and cover the whole canvas.
-  //
-  // The aspect of each ring is slightly wider than tall so the lines
-  // sweep more across than down, giving the upper-left "ripple" feel.
-  const lines = Array.from({ length: lineCount }, (_, i) => {
-    const r = (i + 1) * spacing;
-    return { rx: r * 1.35, ry: r, key: i };
-  });
+  /* Build the contour paths once. Each line is a smooth horizontal
+     curve whose vertical offset is the sum of two sine waves with
+     phase that shifts per line — this is what gives the topographic
+     "flowing wood-grain" look. The lines start slightly above the
+     viewBox and end slightly below so there is no visible top or
+     bottom edge inside the hero. */
+  const paths = useMemo(() => {
+    // Place lines so they comfortably extend off both top and bottom
+    // — total vertical span ≈ lineCount * spacing, recentered.
+    const totalSpan = (lineCount - 1) * spacing;
+    const startY = VB_H / 2 - totalSpan / 2;
+
+    const out: string[] = [];
+    for (let i = 0; i < lineCount; i++) {
+      const baseY = startY + i * spacing;
+      // Three layered sines with line-dependent phase — yields the
+      // wandering, non-repeating topographic field.
+      const a1 = 38 + (i % 5) * 3;     // amplitude wave 1
+      const a2 = 22 + ((i * 7) % 9);   // amplitude wave 2
+      const a3 = 10;                   // amplitude wave 3 (fine detail)
+      const f1 = 0.0018;               // low frequency (long swells)
+      const f2 = 0.0042;               // mid frequency
+      const f3 = 0.011;                // high frequency (jitter)
+      const p1 = i * 0.42;
+      const p2 = i * 0.83 + 1.7;
+      const p3 = i * 0.17 + 3.1;
+
+      const pts: string[] = [];
+      for (let k = 0; k < POINTS_PER_LINE; k++) {
+        const t = k / (POINTS_PER_LINE - 1);
+        // Extend slightly beyond viewBox horizontally so lines bleed off both edges
+        const x = -100 + t * (VB_W + 200);
+        const y =
+          baseY +
+          Math.sin(x * f1 + p1) * a1 +
+          Math.sin(x * f2 + p2) * a2 +
+          Math.sin(x * f3 + p3) * a3;
+        pts.push(`${x.toFixed(1)},${y.toFixed(1)}`);
+      }
+      // Smooth polyline using SVG's quadratic-through-midpoints trick
+      // — start at first point, then for each midpoint between
+      // consecutive samples emit a Q with the sample as control.
+      let d = `M ${pts[0]}`;
+      const coords = pts.map((p) => p.split(',').map(Number) as [number, number]);
+      for (let k = 1; k < coords.length - 1; k++) {
+        const [x0, y0] = coords[k];
+        const [x1, y1] = coords[k + 1];
+        const mx = (x0 + x1) / 2;
+        const my = (y0 + y1) / 2;
+        d += ` Q ${x0.toFixed(1)},${y0.toFixed(1)} ${mx.toFixed(1)},${my.toFixed(1)}`;
+      }
+      const last = coords[coords.length - 1];
+      d += ` T ${last[0].toFixed(1)},${last[1].toFixed(1)}`;
+      out.push(d);
+    }
+    return out;
+  }, [lineCount, spacing]);
 
   // Map cursor pixel position into viewBox coordinates for the
   // spotlight gradient center.
@@ -114,12 +169,12 @@ export function PlaidWaveLines({
         width="100%"
         height="100%"
         viewBox={`0 0 ${VB_W} ${VB_H}`}
-        preserveAspectRatio="xMinYMin slice"
+        preserveAspectRatio="xMidYMid slice"
         style={{ position: 'absolute', inset: 0, opacity: baseOpacity }}
       >
         <g fill="none" stroke={color} strokeWidth={1} strokeLinecap="round">
-          {lines.map((l) => (
-            <ellipse key={`base-${l.key}`} cx={0} cy={0} rx={l.rx} ry={l.ry} />
+          {paths.map((d, i) => (
+            <path key={`base-${i}`} d={d} />
           ))}
         </g>
       </svg>
@@ -131,7 +186,7 @@ export function PlaidWaveLines({
         width="100%"
         height="100%"
         viewBox={`0 0 ${VB_W} ${VB_H}`}
-        preserveAspectRatio="xMinYMin slice"
+        preserveAspectRatio="xMidYMid slice"
         style={{
           position: 'absolute',
           inset: 0,
@@ -170,8 +225,8 @@ export function PlaidWaveLines({
           mask={`url(#${maskId})`}
           style={{ filter: `drop-shadow(0 0 6px ${color})` }}
         >
-          {lines.map((l) => (
-            <ellipse key={`hi-${l.key}`} cx={0} cy={0} rx={l.rx} ry={l.ry} />
+          {paths.map((d, i) => (
+            <path key={`hi-${i}`} d={d} />
           ))}
         </g>
       </svg>
