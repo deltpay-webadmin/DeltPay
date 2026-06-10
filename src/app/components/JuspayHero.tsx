@@ -70,9 +70,9 @@ export function JuspayHero() {
           aria-hidden
           className="pointer-events-none select-none hidden lg:block absolute"
           style={{
-            right: -20,
+            right: 0,
             bottom: 0,
-            height: '92%',
+            height: '74%',
             width: 'auto',
             zIndex: 1,
             opacity: 0.82,
