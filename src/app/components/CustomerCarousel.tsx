@@ -92,20 +92,20 @@ function CustomerCard({ c }: { c: Customer }) {
       <div
         aria-hidden
         style={{
-          width: 38,
-          height: 38,
+          width: 36,
+          height: 36,
           borderRadius: '50%',
-          background: c.accent,
+          background: 'rgba(255, 255, 255, 0.06)',
+          border: '1px solid rgba(255, 255, 255, 0.16)',
           display: 'inline-flex',
           alignItems: 'center',
           justifyContent: 'center',
           fontFamily: 'var(--dc-font-display)',
-          fontWeight: 700,
-          fontSize: 14,
-          color: '#fff',
+          fontWeight: 600,
+          fontSize: 13,
+          color: 'rgba(255, 255, 255, 0.85)',
           letterSpacing: '-0.01em',
           flex: '0 0 auto',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.25)',
         }}
       >
         {c.mark}

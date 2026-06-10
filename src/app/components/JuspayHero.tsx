@@ -1,7 +1,7 @@
 import { Link } from 'react-router';
 import { PlaidWaveLines } from './PlaidWaveLines';
-import heroDavidPng from '@/app/assets/hero-david.png';
-import heroDavidWebp from '@/app/assets/hero-david.webp';
+import heroDavidPng from '@/app/assets/hero-david-cutout.png';
+import heroDavidWebp from '@/app/assets/hero-david-cutout.webp';
 
 /* ──────────────────────────────────────────────────────────────
    JuspayHero — Delt Pay home hero, rebuilt to the Plaid bar.
@@ -52,98 +52,28 @@ export function JuspayHero() {
       {/* Contour texture — whisper, not pattern. */}
       <PlaidWaveLines color="#4945ff" baseOpacity={0.14} hoverOpacity={0.55} />
 
-      {/* Lower-third "shelf" — a faint horizontal metallic stripe that
-          anchors the composition the way Plaid's chest-bar does on
-          Franklin. Subtle gradient that fades out at both edges. */}
-      <div
-        aria-hidden
-        className="hidden md:block absolute pointer-events-none"
-        style={{
-          left: 0,
-          right: 0,
-          bottom: '22%',
-          height: 1,
-          zIndex: 1,
-          background:
-            'linear-gradient(90deg, transparent 0%, rgba(165, 180, 252, 0.18) 25%, rgba(196, 181, 253, 0.32) 55%, rgba(165, 180, 252, 0.10) 85%, transparent 100%)',
-        }}
-      />
-      <div
-        aria-hidden
-        className="hidden md:block absolute pointer-events-none"
-        style={{
-          left: 0,
-          right: 0,
-          bottom: 'calc(22% - 3px)',
-          height: 6,
-          zIndex: 1,
-          background:
-            'linear-gradient(90deg, transparent 0%, rgba(124, 110, 255, 0.06) 30%, rgba(196, 181, 253, 0.10) 55%, rgba(124, 110, 255, 0.04) 85%, transparent 100%)',
-          filter: 'blur(4px)',
-        }}
-      />
-
-      {/* David — natural sepia engraving tones with a duotone overlay
-          so he picks up indigo in the shadows and warm light in the
-          highlights, exactly the treatment Plaid uses on Franklin.
+      {/* David — clean cutout, no rectangle, no masks, no shadow.
+          Just the engraving sitting on the gradient field.
           z-index 1 keeps him IN FRONT of the contour field but BEHIND
           the headline copy at z-[2]. */}
-      <div
-        aria-hidden
-        className="pointer-events-none select-none hidden lg:block absolute"
-        style={{
-          right: -40,
-          bottom: -30,
-          height: '88%',
-          width: '52%',
-          zIndex: 1,
-          // Soft drop-shadow on the side facing the copy gives David
-          // dimensional separation from the indigo field.
-          filter: 'drop-shadow(-30px 20px 48px rgba(0, 0, 0, 0.45))',
-        }}
-      >
-        {/* Duotone via two stacked layers: the warm-tone original at
-            full strength, with an indigo→amber gradient mask-composited
-            on top to recolor shadows toward Delt indigo while keeping
-            highlights warm — the Plaid duotone illustration trick. */}
-        <picture>
-          <source srcSet={heroDavidWebp} type="image/webp" />
-          <img
-            src={heroDavidPng}
-            alt=""
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'contain',
-              objectPosition: 'right bottom',
-              opacity: 0.95,
-              filter: 'sepia(0.15) saturate(1.05) contrast(1.08) brightness(1.02)',
-              WebkitMaskImage:
-                'linear-gradient(90deg, transparent 0%, #000 28%, #000 100%), linear-gradient(180deg, transparent 0%, #000 8%, #000 100%)',
-              maskImage:
-                'linear-gradient(90deg, transparent 0%, #000 28%, #000 100%), linear-gradient(180deg, transparent 0%, #000 8%, #000 100%)',
-              WebkitMaskComposite: 'source-in',
-              maskComposite: 'intersect',
-            }}
-          />
-        </picture>
-        {/* Indigo shadow-tint overlay (multiply blend pushes the dark
-            engraved areas toward brand indigo without flattening the
-            mid-tones or killing the warm highlights). */}
-        <div
+      <picture>
+        <source srcSet={heroDavidWebp} type="image/webp" />
+        <img
+          src={heroDavidPng}
+          alt=""
+          aria-hidden
+          className="pointer-events-none select-none hidden lg:block absolute"
           style={{
-            position: 'absolute',
-            inset: 0,
-            background:
-              'linear-gradient(155deg, rgba(73, 69, 255, 0.55) 0%, rgba(73, 69, 255, 0.22) 45%, rgba(252, 211, 77, 0.06) 100%)',
-            mixBlendMode: 'multiply',
-            WebkitMaskImage:
-              'linear-gradient(90deg, transparent 0%, #000 28%, #000 100%)',
-            maskImage:
-              'linear-gradient(90deg, transparent 0%, #000 28%, #000 100%)',
+            right: -40,
+            bottom: -30,
+            height: '88%',
+            width: 'auto',
+            zIndex: 1,
+            objectFit: 'contain',
+            objectPosition: 'right bottom',
           }}
         />
-      </div>
+      </picture>
 
       {/* Mobile David — simpler, lower opacity, no duotone overlay. */}
       <picture>
@@ -158,13 +88,8 @@ export function JuspayHero() {
             bottom: -20,
             height: '70%',
             width: 'auto',
-            opacity: 0.55,
+            opacity: 0.5,
             zIndex: 1,
-            filter: 'sepia(0.2) saturate(1.05) brightness(1) hue-rotate(220deg)',
-            WebkitMaskImage:
-              'linear-gradient(90deg, transparent 0%, #000 55%, #000 100%)',
-            maskImage:
-              'linear-gradient(90deg, transparent 0%, #000 55%, #000 100%)',
           }}
         />
       </picture>

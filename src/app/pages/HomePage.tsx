@@ -10,7 +10,6 @@ import { SpotlightTestimonial } from '@/app/components/SpotlightTestimonial';
 import { IndustryPanel } from '@/app/components/IndustryPanel';
 import { EmailCaptureBar } from '@/app/components/EmailCaptureBar';
 import { CustomerCarousel } from '@/app/components/CustomerCarousel';
-import { CustomerLogoStrip } from '@/app/components/CustomerLogoStrip';
 import { CapitalCrossSell } from '@/app/components/CapitalCrossSell';
 import { FAQ } from '@/app/components/FAQ';
 // DeltMarquee was previously rendered here; it now lives in App.tsx
@@ -20,10 +19,6 @@ export function HomePage() {
   return (
     <div className="relative">
       <JuspayHero />
-
-      {/* Plaid-style black wordmark strip — the 'Citi · Chime · Greendot' moment.
-          Sits directly under the hero in pure black as the social-proof anchor. */}
-      <CustomerLogoStrip />
 
       {/* Dynamic marquee of real-sounding SMB customers across every industry. */}
       <CustomerCarousel />
