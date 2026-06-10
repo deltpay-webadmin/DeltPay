@@ -58,10 +58,11 @@ export function JuspayHero() {
             width: 'auto',
             objectFit: 'contain',
             objectPosition: 'right bottom',
-            opacity: 0.55,
-            zIndex: 0,
-            filter: 'grayscale(0.85) saturate(0.6) brightness(0.85) hue-rotate(210deg)',
-            mixBlendMode: 'luminosity',
+            opacity: 0.95,
+            // David sits IN FRONT of the wave-line design but behind
+            // the text content (which lives at z-[2] below).
+            zIndex: 1,
+            filter: 'grayscale(0.2) saturate(1.05) brightness(1) contrast(1.05)',
             WebkitMaskImage:
               'linear-gradient(90deg, transparent 0%, #000 42%, #000 100%), linear-gradient(180deg, transparent 0%, #000 12%, #000 100%)',
             maskImage:
@@ -83,10 +84,9 @@ export function JuspayHero() {
             bottom: -20,
             height: '70%',
             width: 'auto',
-            opacity: 0.22,
-            zIndex: 0,
-            filter: 'grayscale(0.85) saturate(0.6) brightness(0.85) hue-rotate(210deg)',
-            mixBlendMode: 'luminosity',
+            opacity: 0.7,
+            zIndex: 1,
+            filter: 'grayscale(0.2) saturate(1.05) brightness(1) contrast(1.05)',
             WebkitMaskImage:
               'linear-gradient(90deg, transparent 0%, #000 55%, #000 100%)',
             maskImage:
@@ -95,7 +95,7 @@ export function JuspayHero() {
         />
       </picture>
 
-      <div className="relative z-[1] mx-auto w-full max-w-[1320px] px-6 lg:px-10 pt-8 lg:pt-10 pb-0 flex-1 flex flex-col">
+      <div className="relative z-[2] mx-auto w-full max-w-[1320px] px-6 lg:px-10 pt-8 lg:pt-10 pb-0 flex-1 flex flex-col">
         {/* Top centered mono volume eyebrow removed per user request
             (was: VOL. VII · Q2 2026 · DIRECT FUNDING · EST. 2019 · QUOTING NOW). */}
 

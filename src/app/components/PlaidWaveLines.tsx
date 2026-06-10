@@ -1,53 +1,47 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 /* ──────────────────────────────────────────────────────────────
-   PlaidWaveLines — topographic contour-map background, modeled
-   after the Plaid hero treatment. Dozens of horizontal lines
-   undulate across the canvas using layered sine waves, producing
-   the organic "flowing contour" feel rather than perfect
-   concentric arcs. Tinted in Delt indigo (#4945ff) by default.
+   PlaidWaveLines — parallel topographic contour field. Every
+   horizontal line shares the same underlying wave function and
+   is shifted vertically by a tight, constant spacing, so the
+   wave crests stack into the ridged "moiré contour" pattern
+   that appears in the Plaid hero (and in the user-supplied
+   reference design 1:1).
 
-   Covers the entire parent (which must be `relative`), is
-   absolutely positioned, and ignores pointer events so it never
-   blocks clicks.
+   The wave is built from layered sines that vary along the x
+   axis only (no per-line phase shift), and the amplitude grows
+   smoothly from left to right so distortion intensifies toward
+   the right edge — matching the reference exactly.
 
-   Cursor-tracking brightness halo: as the user moves the mouse
-   over the hero, the lines closest to the cursor brighten via a
-   radial mask, creating a soft spotlight follow effect.
+   Tinted in Delt indigo (#4945ff) by default. Positioned
+   absolutely inside its parent (which must be `relative`),
+   ignores pointer events.
+
+   A cursor-tracking spotlight brightens the lines closest to
+   the mouse via a radial mask.
    ────────────────────────────────────────────────────────────── */
 
 type Props = {
-  /** Color of the lines. Default Delt indigo. */
   color?: string;
-  /** Number of horizontal contour lines. */
+  /** Number of parallel contour lines. */
   lineCount?: number;
   /** Vertical spacing between successive lines (viewBox units). */
   spacing?: number;
-  /** Base opacity at idle. */
   baseOpacity?: number;
-  /** Boost opacity inside the cursor spotlight. */
   hoverOpacity?: number;
-  /** Spotlight radius in viewBox units. */
   spotlightRadius?: number;
   className?: string;
 };
 
-// Wide, generous viewBox so the contour field flows naturally across
-// any hero aspect ratio. `xMinYMid slice` keeps lines anchored to the
-// left edge and vertically centered when the container is shorter or
-// taller than the viewBox.
 const VB_W = 2400;
 const VB_H = 1400;
-
-// Number of points along each line — higher = smoother curves but
-// more SVG nodes. 90 keeps the file lightweight while staying smooth.
-const POINTS_PER_LINE = 90;
+const POINTS_PER_LINE = 220; // dense sampling — the wave has sharp turns
 
 export function PlaidWaveLines({
   color = '#4945ff',
-  lineCount = 90,
-  spacing = 22,
-  baseOpacity = 0.45,
+  lineCount = 80,
+  spacing = 24,
+  baseOpacity = 0.7,
   hoverOpacity = 1,
   spotlightRadius = 460,
   className,
@@ -85,66 +79,70 @@ export function PlaidWaveLines({
     };
   }, []);
 
-  /* Build the contour paths once. Each line is a smooth horizontal
-     curve whose vertical offset is the sum of two sine waves with
-     phase that shifts per line — this is what gives the topographic
-     "flowing wood-grain" look. The lines start slightly above the
-     viewBox and end slightly below so there is no visible top or
-     bottom edge inside the hero. */
+  /* The shared wave function. All lines use this — the only thing
+     that changes between lines is the vertical baseline. That is
+     what aligns the crests into vertical "ridges" the way the
+     reference image does.
+
+     Three layered sines:
+       • a long swell across the canvas
+       • a mid wave that adds the rolling ridges
+       • a finer wave that adds the textured crest detail
+
+     The amplitudes are scaled by `ampScale(x)` which ramps from
+     ~0.35 on the left to 1.0 on the right, matching the reference
+     where the left side is calm and the right side is more agitated. */
+  const baseWave = useMemo(() => {
+    const sampleY = (x: number) => {
+      // Clamp t to [0,1] so the off-canvas overshoot (x < 0 or x > VB_W)
+      // doesn't produce NaN from Math.pow on a negative base.
+      const tNorm = Math.max(0, Math.min(1, x / VB_W));
+      const ampScale = 0.35 + Math.pow(tNorm, 1.15) * 0.85;
+
+      const w1 = Math.sin(x * 0.0034) * 70;        // long swell
+      const w2 = Math.sin(x * 0.0082 + 1.3) * 42;  // mid ridges
+      const w3 = Math.sin(x * 0.019  + 2.6) * 16;  // fine detail
+      const w4 = Math.sin(x * 0.041  + 0.9) * 6;   // crest texture
+
+      return (w1 + w2 + w3 + w4) * ampScale;
+    };
+
+    // Pre-compute sample points once.
+    const pts: Array<[number, number]> = [];
+    for (let k = 0; k < POINTS_PER_LINE; k++) {
+      const t = k / (POINTS_PER_LINE - 1);
+      const x = -120 + t * (VB_W + 240);
+      pts.push([x, sampleY(x)]);
+    }
+    return pts;
+  }, []);
+
+  /* Build all line paths by shifting the shared wave vertically.
+     Lines are stacked tightly (every `spacing` units) and re-centered
+     in the viewBox so the field appears to cover edge-to-edge. */
   const paths = useMemo(() => {
-    // Place lines so they comfortably extend off both top and bottom
-    // — total vertical span ≈ lineCount * spacing, recentered.
     const totalSpan = (lineCount - 1) * spacing;
     const startY = VB_H / 2 - totalSpan / 2;
 
     const out: string[] = [];
     for (let i = 0; i < lineCount; i++) {
-      const baseY = startY + i * spacing;
-      // Three layered sines with line-dependent phase — yields the
-      // wandering, non-repeating topographic field.
-      const a1 = 38 + (i % 5) * 3;     // amplitude wave 1
-      const a2 = 22 + ((i * 7) % 9);   // amplitude wave 2
-      const a3 = 10;                   // amplitude wave 3 (fine detail)
-      const f1 = 0.0018;               // low frequency (long swells)
-      const f2 = 0.0042;               // mid frequency
-      const f3 = 0.011;                // high frequency (jitter)
-      const p1 = i * 0.42;
-      const p2 = i * 0.83 + 1.7;
-      const p3 = i * 0.17 + 3.1;
-
-      const pts: string[] = [];
-      for (let k = 0; k < POINTS_PER_LINE; k++) {
-        const t = k / (POINTS_PER_LINE - 1);
-        // Extend slightly beyond viewBox horizontally so lines bleed off both edges
-        const x = -100 + t * (VB_W + 200);
-        const y =
-          baseY +
-          Math.sin(x * f1 + p1) * a1 +
-          Math.sin(x * f2 + p2) * a2 +
-          Math.sin(x * f3 + p3) * a3;
-        pts.push(`${x.toFixed(1)},${y.toFixed(1)}`);
-      }
-      // Smooth polyline using SVG's quadratic-through-midpoints trick
-      // — start at first point, then for each midpoint between
-      // consecutive samples emit a Q with the sample as control.
-      let d = `M ${pts[0]}`;
-      const coords = pts.map((p) => p.split(',').map(Number) as [number, number]);
-      for (let k = 1; k < coords.length - 1; k++) {
-        const [x0, y0] = coords[k];
-        const [x1, y1] = coords[k + 1];
+      const yShift = startY + i * spacing;
+      // Quadratic-through-midpoints smoothing for clean curves.
+      let d = `M ${baseWave[0][0].toFixed(1)},${(baseWave[0][1] + yShift).toFixed(1)}`;
+      for (let k = 1; k < baseWave.length - 1; k++) {
+        const [x0, y0] = baseWave[k];
+        const [x1, y1] = baseWave[k + 1];
         const mx = (x0 + x1) / 2;
         const my = (y0 + y1) / 2;
-        d += ` Q ${x0.toFixed(1)},${y0.toFixed(1)} ${mx.toFixed(1)},${my.toFixed(1)}`;
+        d += ` Q ${x0.toFixed(1)},${(y0 + yShift).toFixed(1)} ${mx.toFixed(1)},${(my + yShift).toFixed(1)}`;
       }
-      const last = coords[coords.length - 1];
-      d += ` T ${last[0].toFixed(1)},${last[1].toFixed(1)}`;
+      const last = baseWave[baseWave.length - 1];
+      d += ` T ${last[0].toFixed(1)},${(last[1] + yShift).toFixed(1)}`;
       out.push(d);
     }
     return out;
-  }, [lineCount, spacing]);
+  }, [baseWave, lineCount, spacing]);
 
-  // Map cursor pixel position into viewBox coordinates for the
-  // spotlight gradient center.
   const spotCx = pos ? (pos.x / size.w) * VB_W : -10000;
   const spotCy = pos ? (pos.y / size.h) * VB_H : -10000;
 
@@ -164,7 +162,6 @@ export function PlaidWaveLines({
         overflow: 'hidden',
       }}
     >
-      {/* Base layer — lines at low opacity, always visible */}
       <svg
         width="100%"
         height="100%"
@@ -172,16 +169,13 @@ export function PlaidWaveLines({
         preserveAspectRatio="xMidYMid slice"
         style={{ position: 'absolute', inset: 0, opacity: baseOpacity }}
       >
-        <g fill="none" stroke={color} strokeWidth={1} strokeLinecap="round">
+        <g fill="none" stroke={color} strokeWidth={1.4} strokeLinecap="round">
           {paths.map((d, i) => (
             <path key={`base-${i}`} d={d} />
           ))}
         </g>
       </svg>
 
-      {/* Spotlight layer — same lines, brighter, masked by a radial
-          gradient centered on the cursor. When pos is null (no hover),
-          the gradient sits far off-canvas so the layer is invisible. */}
       <svg
         width="100%"
         height="100%"
@@ -220,7 +214,7 @@ export function PlaidWaveLines({
         <g
           fill="none"
           stroke={color}
-          strokeWidth={1.25}
+          strokeWidth={1.6}
           strokeLinecap="round"
           mask={`url(#${maskId})`}
           style={{ filter: `drop-shadow(0 0 6px ${color})` }}
