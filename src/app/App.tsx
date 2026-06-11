@@ -11,6 +11,7 @@ import { DeltAI } from '@/app/components/DeltAI';
 import { LensChatPage } from '@/app/pages/LensChatPage';
 import { SandboxPage } from '@/app/pages/SandboxPage';
 import { SignInPage } from '@/app/pages/SignInPage';
+import { DashboardPage } from '@/app/pages/DashboardPage';
 import { SignUpPage } from '@/app/pages/SignUpPage';
 import { ContactPage } from '@/app/pages/ContactPage';
 import { ContactSalesPage } from '@/app/pages/ContactSalesPage';
@@ -67,7 +68,8 @@ export default function App() {
         <ScrollToTop />
         <Routes>
           <Route path="/sandbox" element={<SandboxPage />} />
-          <Route path="/dashboard" element={<SandboxPage />} />
+          {/* Authenticated Delt back-office CRM (Supabase-gated). */}
+          <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/demo" element={<SandboxPage />} />
           <Route path="/get-a-quote" element={<GetAQuotePage />} />
           <Route path="/signin" element={<SignInPage />} />

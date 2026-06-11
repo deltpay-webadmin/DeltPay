@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Lock, Mail, ArrowRight, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { Link, useNavigate } from 'react-router';
 import { Navigation } from '../components/Navigation';
+import { supabase } from '../lib/supabase';
 
 export function SignInPage() {
   const navigate = useNavigate();
@@ -12,15 +13,40 @@ export function SignInPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // If a session already exists, skip the form and go straight to the CRM.
+  useEffect(() => {
+    let active = true;
+    supabase.auth.getSession().then(({ data }) => {
+      if (active && data.session) navigate('/dashboard', { replace: true });
+    });
+    return () => {
+      active = false;
+    };
+  }, [navigate]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
-    // Simulated auth - replace with real endpoint
-    setTimeout(() => {
-      setLoading(false);
-      setError('Invalid email or password. Try signing up instead.');
-    }, 1000);
+
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: email.trim(),
+      password,
+    });
+
+    setLoading(false);
+
+    if (signInError) {
+      setError(
+        signInError.message === 'Invalid login credentials'
+          ? 'Invalid email or password. Please try again.'
+          : signInError.message,
+      );
+      return;
+    }
+
+    // Authenticated — land the user in the Delt back-office CRM.
+    navigate('/dashboard', { replace: true });
   };
 
   return (
