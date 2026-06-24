@@ -1,8 +1,8 @@
 import { Link } from 'react-router';
 import { PlaidWaveLines } from './PlaidWaveLines';
 import { ExploreFeaturesWithAI } from './ExploreFeaturesWithAI';
-import heroDavidPng from '@/app/assets/hero-david-complete.png';
-import heroDavidWebp from '@/app/assets/hero-david-complete.webp';
+import heroDavidPng from '@/app/assets/hero-david-cutout.png';
+import heroDavidWebp from '@/app/assets/hero-david-cutout.webp';
 
 /* ──────────────────────────────────────────────────────────────
    JuspayHero — Delt Pay home hero, rebuilt to the Plaid bar.
@@ -70,12 +70,17 @@ export function JuspayHero() {
           aria-hidden
           className="pointer-events-none select-none hidden lg:block absolute"
           style={{
-            right: '6%',
+            right: 0,
             bottom: 0,
-            height: '78%',
-            width: 'auto',
+            // Image is a right-anchored cutout (figure on the right of the
+            // canvas, transparent on the left). We let the asset's own width
+            // span the right half of the hero so the figure naturally sits
+            // outside the copy column — no overlap with the headline.
+            width: 'min(62%, 1080px)',
+            height: 'auto',
+            maxHeight: '105%',
             zIndex: 1,
-            opacity: 0.82,
+            opacity: 1,
             objectFit: 'contain',
             objectPosition: 'right bottom',
           }}
@@ -88,10 +93,10 @@ export function JuspayHero() {
         className="lg:hidden absolute pointer-events-none"
         aria-hidden
         style={{
-          right: '-10%',
+          right: '-20%',
           bottom: 0,
-          width: '110%',
-          height: '88%',
+          width: '120%',
+          height: '80%',
           zIndex: 1,
           overflow: 'hidden',
         }}
@@ -108,7 +113,7 @@ export function JuspayHero() {
               bottom: 0,
               height: '100%',
               width: 'auto',
-              opacity: 0.42,
+              opacity: 0.5,
               objectFit: 'contain',
               objectPosition: 'right bottom',
             }}
