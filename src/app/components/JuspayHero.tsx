@@ -70,15 +70,26 @@ export function JuspayHero() {
           aria-hidden
           className="pointer-events-none select-none hidden lg:block absolute"
           style={{
-            right: 0,
+            // Slight negative right offset lets the figure bleed a touch
+            // off the right edge, which shifts the POS terminal clear of
+            // the headline copy without shrinking David.
+            right: '-4%',
             bottom: 0,
-            // Image is a right-anchored cutout (figure on the right of the
-            // canvas, transparent on the left). We let the asset's own width
-            // span the right half of the hero so the figure naturally sits
-            // outside the copy column — no overlap with the headline.
-            width: 'min(62%, 1080px)',
-            height: 'auto',
-            maxHeight: '105%',
+            // Right-anchored cutout (figure on the right of the canvas,
+            // transparent on the left). Drive sizing by HEIGHT so David
+            // fills the hero vertically — head near the top, shoulders
+            // anchored to the bottom edge — matching the design spec.
+            // The asset's transparent left half keeps the headline copy
+            // clear regardless of how wide it scales.
+            // Drive sizing by HEIGHT so the engraving fills the hero
+            // vertically — head near the top, shoulders to the bottom.
+            // The cutout image is wider than tall, and the figure occupies
+            // the right half of the canvas, so when anchored to right: 0
+            // the transparent left half lands behind the headline column
+            // and never collides with copy.
+            height: '100%',
+            width: 'auto',
+            maxWidth: 'none',
             zIndex: 1,
             opacity: 1,
             objectFit: 'contain',
