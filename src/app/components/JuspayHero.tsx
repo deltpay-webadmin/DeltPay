@@ -87,7 +87,7 @@ export function JuspayHero() {
             // the right half of the canvas, so when anchored to right: 0
             // the transparent left half lands behind the headline column
             // and never collides with copy.
-            height: '100%',
+            height: '78%',
             width: 'auto',
             maxWidth: 'none',
             zIndex: 1,
