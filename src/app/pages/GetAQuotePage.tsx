@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
-import { JOTFORM_APP_URL } from '../lib/jotform';
 import { motion, AnimatePresence } from 'motion/react';
 import logoWhite from 'figma:asset/419e83442bb1bf5965a966a8870b00dd4288dd57.png';
 
@@ -342,8 +341,7 @@ export function GetAQuotePage() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setSubmitted(true);
-    window.location.href = JOTFORM_APP_URL;
+    navigate('/start');
   }
 
   /* ── Slide variants ── */
