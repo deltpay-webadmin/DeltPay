@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Link, useNavigate } from 'react-router';
-import { JOTFORM_APP_URL } from '../lib/jotform';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChevronDown, ArrowRight, Check, Award, ShoppingBag, Printer, CreditCard, Sparkles, Users, MessageSquare } from 'lucide-react';
 import { CapitalCrossSell } from '../components/CapitalCrossSell';
@@ -154,7 +153,7 @@ export function PricingPage() {
       price: null,
       cta: "Get a Quote",
       ctaStyle: "outline",
-      ctaRoute: JOTFORM_APP_URL,
+      ctaRoute: "/start",
       belowCta: "Custom features, custom rates. Solutions include, but not limited to:",
       features: [
         { text: "Full Lens AI suite", included: false },
@@ -491,7 +490,7 @@ export function PricingPage() {
 
               {/* CTA */}
               <button 
-                onClick={() => tier.ctaRoute.startsWith('http') ? window.open(tier.ctaRoute, '_blank') : navigate(tier.ctaRoute)}
+                onClick={() => navigate(tier.ctaRoute)}
                 style={{
                   width: "100%",
                   padding: "14px 0",

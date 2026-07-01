@@ -1,5 +1,4 @@
 import { Link } from 'react-router';
-import { JOTFORM_APP_URL } from '../lib/jotform';
 
 /* ──────────────────────────────────────────────────────────────
    FinalCTA — Delt Pay (merchant services) closing CTA.
@@ -94,10 +93,10 @@ export function FinalCTA() {
 
         {/* CTAs */}
         <div className="mt-10 flex items-center gap-3 flex-wrap">
-          <a href={JOTFORM_APP_URL} target="_blank" rel="noopener noreferrer" className="dc-btn-primary dc-lg">
+          <Link to="/start" className="dc-btn-primary dc-lg">
             Get a quote
             <span aria-hidden style={{ marginLeft: 2 }}>→</span>
-          </a>
+          </Link>
           <Link to="/calculator" className="dc-btn-secondary dc-on-dark dc-lg">
             Run the savings calculator
           </Link>

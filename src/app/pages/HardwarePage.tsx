@@ -41,7 +41,6 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router';
-import { JOTFORM_APP_URL } from '@/app/lib/jotform';
 import { serverFetch } from '@/app/lib/supabase';
 
 // Real hardware photography — wired to data-image-slot IDs
@@ -1099,16 +1098,14 @@ export function HardwarePage() {
             hardware bundle in under 24 hours.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4">
-            <a
-              href={JOTFORM_APP_URL}
-              target="_blank"
-              rel="noopener noreferrer"
+            <Link
+              to="/start"
               className="inline-flex items-center gap-2 rounded-full px-7 py-3.5 font-semibold text-white transition-all duration-200 hover:brightness-110"
               style={{ background: PURPLE, fontSize: 15, boxShadow: `0 4px 18px ${PURPLE}40` }}
             >
               Get a quote
               <ArrowRight size={16} />
-            </a>
+            </Link>
             <Link
               to="/contact-sales"
               className="inline-flex items-center gap-2 font-semibold"

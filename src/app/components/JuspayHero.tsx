@@ -1,5 +1,4 @@
 import { Link } from 'react-router';
-import { JOTFORM_APP_URL } from '../lib/jotform';
 import { PlaidWaveLines } from './PlaidWaveLines';
 import { ExploreFeaturesWithAI } from './ExploreFeaturesWithAI';
 import heroDavidPng from '@/app/assets/hero-david-cutout.png';
@@ -206,16 +205,14 @@ export function JuspayHero() {
           {/* CTAs — primary button + quiet text link. The secondary
               gets out of the way so the primary owns the eye. */}
           <div className="mt-10 flex items-center gap-7 flex-wrap">
-            <a
-              href={JOTFORM_APP_URL}
-              target="_blank"
-              rel="noopener noreferrer"
+            <Link
+              to="/start"
               className="dc-btn-primary dc-lg"
               style={{ fontSize: 16, fontWeight: 600, padding: '18px 30px', minHeight: 52 }}
             >
               Get a quote
               <span aria-hidden style={{ marginLeft: 4 }}>→</span>
-            </a>
+            </Link>
             {/* Restored: the original iridescent "Explore Features with AI"
                 pill. Opens ChatGPT in a new tab pre-seeded with a Delt
                 exploration prompt — the same behavior the live site had

@@ -42,6 +42,7 @@ import { CapitalPage } from '@/app/pages/CapitalPage';
 import { ResourcePage } from '@/app/pages/ResourcePage';
 import { CalculatorPage } from '@/app/pages/CalculatorPage';
 import { GetAQuotePage } from '@/app/pages/GetAQuotePage';
+import { StartApplicationPage } from '@/app/pages/StartApplicationPage';
 import { NotFoundPage } from '@/app/pages/NotFoundPage';
 import { IndustryPage } from '@/app/pages/IndustryPage';
 import { LensDemoPage } from '@/app/pages/LensDemoPage';
@@ -70,6 +71,7 @@ export default function App() {
           <Route path="/dashboard" element={<SandboxPage />} />
           <Route path="/demo" element={<SandboxPage />} />
           <Route path="/get-a-quote" element={<GetAQuotePage />} />
+          <Route path="/start" element={<StartApplicationPage />} />
           <Route path="/signin" element={<SignInPage />} />
           <Route path="/signup" element={<SignUpPage />} />
           <Route path="/cart" element={<ShoppingCartPage />} />

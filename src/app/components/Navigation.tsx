@@ -8,7 +8,6 @@ import {
 } from 'lucide-react';
 import deltLogoOnDark from '@/assets/delt-logo-on-dark.svg';
 import deltLogoOnLight from '@/assets/delt-logo-on-light.svg';
-import { JOTFORM_APP_URL } from '../lib/jotform';
 
 /* ──────────────────────────────────────────────────────────────
    Navigation — Delt Capital chrome + full DeltPay mega-menus
@@ -574,10 +573,10 @@ export function Navigation() {
             >
               Login
             </Link>
-            <a href={JOTFORM_APP_URL} target="_blank" rel="noopener noreferrer" className="dc-btn-primary">
+            <Link to="/start" className="dc-btn-primary">
               Get Started
               <ArrowRight size={12} />
-            </a>
+            </Link>
           </div>
 
           {/* Mobile toggle */}
@@ -629,9 +628,9 @@ export function Navigation() {
               />
               <div className="pt-4 flex flex-col gap-3" style={{ borderTop: '1px solid rgba(247, 245, 240, 0.08)' }}>
                 <Link to="/signin" className="dc-btn-secondary dc-on-dark dc-lg w-full justify-center">Login</Link>
-                <a href={JOTFORM_APP_URL} target="_blank" rel="noopener noreferrer" className="dc-btn-primary dc-lg w-full justify-center">
+                <Link to="/start" className="dc-btn-primary dc-lg w-full justify-center">
                   Get Started <ArrowRight size={14} />
-                </a>
+                </Link>
               </div>
             </div>
           </motion.div>
