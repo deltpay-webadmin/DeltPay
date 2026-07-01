@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router';
+import { JOTFORM_APP_URL } from '../lib/jotform';
 import { motion, useScroll, useTransform } from 'motion/react';
 import { ScrollIndicator } from './ScrollIndicator';
 
@@ -58,7 +59,7 @@ export function DeltPanelHero() {
                 payments, analytics, and funding — from day one.
               </p>
               <div className="dph-hero-ctas">
-                <Link to="/get-started" className="dph-hero-btn-primary">Get Started for Free</Link>
+                <a href={JOTFORM_APP_URL} target="_blank" rel="noopener noreferrer" className="dph-hero-btn-primary">Get Started for Free</a>
                 <Link to="/pricing" className="dph-hero-btn-secondary">Learn more</Link>
                 <motion.div
                   whileHover={{ scale: 1.05, y: -2 }}

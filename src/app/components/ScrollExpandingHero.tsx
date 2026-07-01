@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Link } from 'react-router';
+import { JOTFORM_APP_URL } from '../lib/jotform';
 import deltLogo from 'figma:asset/ba16007295b082bbfe774b1ba0c31a403b5502d6.png';
 
 const PURPLE  = '#4945FF';
@@ -507,8 +508,10 @@ export function ScrollExpandingHero() {
                 pointerEvents: 'none',
               }}
             >
-              <Link
-                to="/apply"
+              <a
+                href={JOTFORM_APP_URL}
+                target="_blank"
+                rel="noopener noreferrer"
                 style={{
                   background: PURPLE,
                   color: '#fff',
@@ -535,7 +538,7 @@ export function ScrollExpandingHero() {
                 }}
               >
                 Get Started — Free →
-              </Link>
+              </a>
               <Link
                 to="/contact"
                 style={{

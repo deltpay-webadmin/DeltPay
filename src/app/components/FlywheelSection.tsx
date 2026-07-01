@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { Link } from 'react-router';
+import { JOTFORM_APP_URL } from '../lib/jotform';
 
 const STEPS = [
   {
@@ -246,10 +247,10 @@ export function FlywheelSection() {
       <section className="fwl-cta">
         <div className="fwl-cta-heading">All four products connected.</div>
         <p className="fwl-cta-sub">Every Delt merchant begins the same way — a site that goes live in under 24 hours. What happens next is what makes the difference.</p>
-        <Link to="/get-started" className="fwl-cta-btn">
+        <a href={JOTFORM_APP_URL} target="_blank" rel="noopener noreferrer" className="fwl-cta-btn">
           Get Started for Free
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-        </Link>
+        </a>
       </section>
 
       <style>{`
