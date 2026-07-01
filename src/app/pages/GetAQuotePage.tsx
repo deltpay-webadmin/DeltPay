@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
+import { serverFetch } from '../lib/supabase';
 import { motion, AnimatePresence } from 'motion/react';
 import logoWhite from 'figma:asset/419e83442bb1bf5965a966a8870b00dd4288dd57.png';
 
@@ -339,9 +340,18 @@ export function GetAQuotePage() {
 
   const rec = getRecommendation(features, volume);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSubmitted(true);
+    try {
+      const res = await serverFetch('/config/jotform-url');
+      const data = await res.json();
+      if (data?.url) {
+        window.location.href = data.url;
+      }
+    } catch {
+      // fallback: stay on success screen
+    }
   }
 
   /* ── Slide variants ── */

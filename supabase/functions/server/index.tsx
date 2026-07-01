@@ -65,4 +65,23 @@ app.post("/make-server-940653c6/leads/pricing-guide", async (c) => {
   }
 });
 
+// Jotform application URL config
+// Returns the stored Jotform URL, seeding the default if not yet set.
+const JOTFORM_DEFAULT_URL = "https://form.jotform.com/261806885237063";
+const JOTFORM_KV_KEY = "config:jotform_application_url";
+
+app.get("/make-server-940653c6/config/jotform-url", async (c) => {
+  try {
+    let record = await kv.get(JOTFORM_KV_KEY);
+    if (!record || typeof record.url !== "string") {
+      await kv.set(JOTFORM_KV_KEY, { url: JOTFORM_DEFAULT_URL });
+      record = { url: JOTFORM_DEFAULT_URL };
+    }
+    return c.json({ ok: true, url: record.url });
+  } catch (err) {
+    console.error("jotform-url config error", err);
+    return c.json({ ok: true, url: JOTFORM_DEFAULT_URL });
+  }
+});
+
 Deno.serve(app.fetch);
