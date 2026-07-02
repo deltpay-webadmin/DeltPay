@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Navigation } from '../components/Navigation';
 import { Trash2, Plus, Minus, ShoppingBag, ArrowRight, Tag, Lock, CreditCard, Package, ArrowLeft } from 'lucide-react';
 import { Link, useNavigate } from 'react-router';
+import { trackCheckout } from '@/lib/pixel';
 
 interface CartItem {
   id: string;
@@ -263,7 +264,13 @@ export function ShoppingCartPage() {
                   {/* Checkout Button */}
                   <button
                     className="w-full bg-[#4945FF] text-white py-4 rounded-lg font-bold hover:bg-[#3730FF] transition-all flex items-center justify-center gap-2 group mb-2"
-                    onClick={() => navigate('/apply')}
+                    onClick={() => {
+                      // Meta Pixel: hardware checkout initiated. Value/currency
+                      // let Meta run Value Optimization on hardware campaigns.
+                      const itemCount = cartItems.reduce((sum, i) => sum + i.quantity, 0);
+                      trackCheckout(total, itemCount);
+                      navigate('/apply');
+                    }}
                   >
                     Proceed to Checkout
                     <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />

@@ -1,4 +1,5 @@
 import { HashRouter, Routes, Route, Navigate, useLocation } from 'react-router';
+import { useRouteChangePixel } from '@/lib/pixel';
 import { Navigation } from '@/app/components/Navigation';
 import { Footer } from '@/app/components/Footer';
 import DeltMarquee from '@/app/components/DeltMarquee';
@@ -58,6 +59,14 @@ function PostFooterMarquee() {
   return <DeltMarquee />;
 }
 
+/* Fires Meta Pixel PageView on every route change. The initial
+   PageView is fired by the base pixel snippet in index.html, so
+   this hook explicitly skips the first render to avoid duplicates. */
+function PixelRouteTracker() {
+  useRouteChangePixel();
+  return null;
+}
+
 /* App root - v2 */
 export default function App() {
   return (
@@ -65,6 +74,7 @@ export default function App() {
       <CustomCursor />
       <HashRouter>
         <ScrollToTop />
+        <PixelRouteTracker />
         <Routes>
           <Route path="/sandbox" element={<SandboxPage />} />
           <Route path="/dashboard" element={<SandboxPage />} />

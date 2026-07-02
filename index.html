@@ -124,13 +124,15 @@
       fbq('init', '1594401858975809');
       fbq('track', 'PageView');
     </script>
-    <noscript><img height="1" width="1" style="display:none"
-      src="https://www.facebook.com/tr?id=1594401858975809&ev=PageView&noscript=1"
-    /></noscript>
     <!-- End Meta Pixel Code -->
   </head>
 
   <body>
+    <!-- Meta Pixel fallback for no-JS visitors. Must live in <body>
+         because HTML5 disallows <noscript><img> inside <head>. -->
+    <noscript><img height="1" width="1" style="display:none"
+      src="https://www.facebook.com/tr?id=1594401858975809&ev=PageView&noscript=1"
+    /></noscript>
     <div id="root"></div>
 
     <!-- Record when the loader first paints so we can guarantee a

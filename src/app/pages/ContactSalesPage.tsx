@@ -3,6 +3,7 @@ import { Phone, MessageCircle, Users, Briefcase, ArrowLeft, Mail, Check, CheckCi
 import { useNavigate } from 'react-router';
 import { ProductCrossSell } from '../components/ProductCrossSell';
 import { SupportChatbot } from '../components/SupportChatbot';
+import { trackContact } from '@/lib/pixel';
 
 function SuccessPanel() {
   return (
@@ -42,6 +43,9 @@ export function ContactSalesPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    // Meta Pixel: sales contact form submitted. Contact is a standard
+    // Meta event, ideal for top-of-funnel awareness campaign optimization.
+    trackContact();
     setSubmitted(true);
   };
 

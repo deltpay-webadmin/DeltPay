@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router';
 import { ArrowLeft, Check, Building2, Mail, Phone, User } from 'lucide-react';
 import { usePlaidLink } from 'react-plaid-link';
 import { CapitalCrossSell } from '../components/CapitalCrossSell';
+import { trackMerchantLead, trackMerchantOnboarded } from '@/lib/pixel';
 
 export function ApplicationPage() {
   const navigate = useNavigate();
@@ -20,7 +21,12 @@ export function ApplicationPage() {
   // Handle form submission
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
+    // Meta Pixel: application form submitted — merchant lead captured.
+    // Fires before Plaid opens so ad-blockers on the Plaid modal can't
+    // suppress it. content_name carries the business type for reporting.
+    trackMerchantLead({ content_name: formData.businessType });
+
     // In production, you would call your backend to create a link_token
     // For demo purposes, we'll use a placeholder token
     const mockLinkToken = 'link-sandbox-' + Math.random().toString(36).substring(7);
@@ -31,6 +37,13 @@ export function ApplicationPage() {
   // Plaid Link callbacks
   const onSuccess = useCallback((public_token: string) => {
     setPublicToken(public_token);
+
+    // Meta Pixel: bank verified via Plaid. Standing in for
+    // CompleteRegistration until we wire real server-side approval
+    // via the Conversions API. Ad-blocker resilient: fires client-side
+    // immediately after Plaid returns success.
+    trackMerchantOnboarded();
+
     // In production, you would send this public_token to your backend
     // to exchange it for an access_token
     setTimeout(() => {

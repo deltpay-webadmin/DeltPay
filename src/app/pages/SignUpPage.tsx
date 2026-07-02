@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
+import { trackMerchantLead } from '@/lib/pixel';
 import { ArrowRight, Building2, User, DollarSign, CheckCircle2, ChevronDown } from 'lucide-react';
 import logoWhite from 'figma:asset/419e83442bb1bf5965a966a8870b00dd4288dd57.png';
 import stripeImage from 'figma:asset/6fe13f3e665435400e65aa6b6be0f4302bd8aac1.png';
@@ -76,7 +77,16 @@ export function SignUpPage() {
   const handleNext = () => {
     if (currentStep === 1 && canProceedStep1) setCurrentStep(2);
     else if (currentStep === 2 && canProceedStep2) setCurrentStep(3);
-    else if (currentStep === 3 && canProceedStep3) setSubmitted(true);
+    else if (currentStep === 3 && canProceedStep3) {
+      // Meta Pixel: signup completed — fires when the user clears the
+      // final step, i.e. the same success gate as the UI's "submitted"
+      // state. Category tags this as a signup lead (vs. quote / cart).
+      trackMerchantLead({
+        content_name: `${industry || 'unknown'}/${monthlyVolume || 'unknown'}`,
+        content_category: 'merchant_signup',
+      });
+      setSubmitted(true);
+    }
   };
 
   const handleBack = () => {

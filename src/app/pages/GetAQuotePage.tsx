@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { JOTFORM_APP_URL } from '../lib/jotform';
 import { motion, AnimatePresence } from 'motion/react';
+import { trackQuoteRequest } from '@/lib/pixel';
 import logoWhite from 'figma:asset/419e83442bb1bf5965a966a8870b00dd4288dd57.png';
 
 const NAVY   = '#041E42';
@@ -342,6 +343,12 @@ export function GetAQuotePage() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    // Meta Pixel: quote request submitted — mid-funnel intent lead.
+    // Fires BEFORE the redirect so the pixel has time to send the
+    // beacon even though the page is about to unload.
+    trackQuoteRequest({
+      content_name: `${bizType || 'unknown'}/${volume || 'unknown'}`,
+    });
     setSubmitted(true);
     window.location.href = JOTFORM_APP_URL;
   }
