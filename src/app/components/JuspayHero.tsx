@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
-import { DashboardPreview } from './DashboardPreview';
 import { HeroShaderBackground } from './HeroShaderBackground';
 
 /* ──────────────────────────────────────────────────────────────
@@ -25,44 +24,38 @@ export function JuspayHero() {
 
   return (
     <section
-      className="relative w-full overflow-hidden"
-      style={{ background: 'var(--dc-bg-navy)', color: 'var(--dc-on-dark)' }}
+      data-hero-section
+      className="relative w-full overflow-hidden flex flex-col"
+      style={{
+        background: 'var(--dc-bg-navy)',
+        color: 'var(--dc-on-dark)',
+        // Bleed the hero (and its animated shader) UP behind the sticky 64px
+        // global nav so the liquid-glass header has the gradient behind it
+        // from the first paint instead of the white body. The negative top
+        // margin pulls the section under the nav; the matching padding-top
+        // keeps inner content visually anchored where it was before.
+        marginTop: -64,
+        paddingTop: 64,
+        // Fill the viewport on load so the email-capture / next section sits
+        // below the fold. Account for the site-wide CSS `zoom` applied at the
+        // body level — `vh` is evaluated in the un-zoomed coordinate space,
+        // so dividing by --site-zoom keeps the hero exactly one physical
+        // viewport tall regardless of the active zoom factor. We no longer
+        // subtract 64px (the nav) because the hero now extends behind it.
+        minHeight: 'calc(100vh / var(--site-zoom, 1))',
+      }}
     >
       {/* Live shader gradient — Delt indigo, animated */}
       <HeroShaderBackground />
 
-      <div className="relative z-[1] mx-auto w-full max-w-[1320px] px-6 lg:px-10 pt-10 lg:pt-14 pb-0">
-        {/* Top centered mono volume eyebrow */}
-        <div className="flex justify-center">
-          <div
-            className="flex items-center gap-3 text-[11px] tracking-[0.18em]"
-            style={{
-              fontFamily: 'var(--dc-font-mono)',
-              color: 'var(--dc-on-dark-muted)',
-              textTransform: 'uppercase',
-            }}
-          >
-            <span>VOL. VII</span>
-            <span style={{ color: 'var(--dc-on-dark-faint)' }}>·</span>
-            <span>Q2 2026</span>
-            <span style={{ color: 'var(--dc-on-dark-faint)' }}>·</span>
-            <span>DIRECT FUNDING</span>
-            <span style={{ color: 'var(--dc-on-dark-faint)' }}>·</span>
-            <span>EST. 2019</span>
-            <span style={{ color: 'var(--dc-on-dark-faint)' }}>·</span>
-            <span className="inline-flex items-center gap-2" style={{ color: '#A5B4FC' }}>
-              <span
-                className="inline-block h-1.5 w-1.5 rounded-full"
-                style={{ background: '#A5B4FC', boxShadow: '0 0 8px #A5B4FC' }}
-              />
-              QUOTING NOW
-            </span>
-          </div>
-        </div>
+      <div className="relative z-[1] mx-auto w-full max-w-[1320px] px-6 lg:px-10 pt-8 lg:pt-10 pb-0 flex-1 flex flex-col">
+        {/* Top centered mono volume eyebrow removed per user request
+            (was: VOL. VII · Q2 2026 · DIRECT FUNDING · EST. 2019 · QUOTING NOW). */}
 
-        {/* Main 2-col split */}
-        <div className="mt-12 lg:mt-16 grid grid-cols-1 lg:grid-cols-[1.05fr_1fr] gap-10 lg:gap-14 items-start">
-          {/* LEFT: copy */}
+        {/* Single-column copy block — the right-side visual was removed
+            (no dashboard, no hero image). The animated shader gradient is
+            the visual; the typography carries the fold. */}
+        <div className="mt-8 lg:mt-10">
           <div className="relative">
             <h1
               className="dc-display"
@@ -136,45 +129,12 @@ export function JuspayHero() {
             </div>
           </div>
 
-          {/* RIGHT: dashboard preview, framed */}
-          <div className="relative lg:pt-2">
-            <div
-              className="relative rounded-[12px] overflow-hidden flex items-center justify-center"
-              style={{
-                border: '1px solid var(--dc-rule-on-dark)',
-                background: 'rgba(247, 245, 240, 0.02)',
-                aspectRatio: '4 / 3',
-                minHeight: 380,
-                padding: '40px 32px',
-              }}
-            >
-              <div
-                style={{ width: '100%', maxWidth: 480 }}
-                className="jh-dp-fit"
-              >
-                <DashboardPreview />
-              </div>
-              <style>{`.jh-dp-fit .dp-wrapper { transform: none !important; }`}</style>
-            </div>
-            {/* Caption */}
-            <div className="mt-4 flex justify-end">
-              <span
-                className="text-[11px] tracking-[0.14em]"
-                style={{
-                  fontFamily: 'var(--dc-font-mono)',
-                  color: 'var(--dc-on-dark-faint)',
-                  textTransform: 'uppercase',
-                }}
-              >
-                FIG. 01 — THE OFFER, IN MOTION
-              </span>
-            </div>
-          </div>
         </div>
 
-        {/* Bottom hairline + meta strip */}
+        {/* Bottom hairline + meta strip — pinned to the bottom of the viewport so the
+            hero owns the first fold and the email-capture bar lives below it. */}
         <div
-          className="mt-14 pt-5 pb-7 flex items-center justify-between gap-4 flex-wrap"
+          className="mt-auto pt-5 pb-6 flex items-center justify-between gap-4 flex-wrap"
           style={{ borderTop: '1px solid var(--dc-rule-on-dark)' }}
         >
           <span

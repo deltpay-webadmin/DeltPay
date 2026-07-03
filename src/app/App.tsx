@@ -1,6 +1,7 @@
-import { HashRouter, Routes, Route } from 'react-router';
+import { HashRouter, Routes, Route, useLocation } from 'react-router';
 import { Navigation } from '@/app/components/Navigation';
 import { Footer } from '@/app/components/Footer';
+import DeltMarquee from '@/app/components/DeltMarquee';
 import { ScrollToTop } from '@/app/components/ScrollToTop';
 import { HomePage } from '@/app/pages/HomePage';
 import { PricingPage } from '@/app/pages/PricingPage';
@@ -25,6 +26,7 @@ import { ReviewsPage } from '@/app/pages/ReviewsPage';
 import { LensAIPage } from '@/app/pages/LensAIPage';
 import { WebsiteBuilderDemo } from '@/app/pages/WebsiteBuilderDemo';
 import { ApplicationPage } from '@/app/pages/ApplicationPage';
+import { OnboardingPage } from '@/app/pages/OnboardingPage';
 import { AboutPage } from '@/app/pages/AboutPage';
 import { CareersPage } from '@/app/pages/CareersPage';
 import { PrivacyPolicyPage } from '@/app/pages/PrivacyPolicyPage';
@@ -41,6 +43,15 @@ import { IndustryPage } from '@/app/pages/IndustryPage';
 import { LensDemoPage } from '@/app/pages/LensDemoPage';
 import { InternationalUSDTPage } from '@/app/pages/InternationalUSDTPage';
 import { HighRiskProcessingPage } from '@/app/pages/HighRiskProcessingPage';
+
+/* Renders the brand marquee BELOW the global footer, but only on the
+   home route — preserving the original "single instance on ‘/’" behavior
+   while moving the visual to its new position under the footer. */
+function PostFooterMarquee() {
+  const { pathname } = useLocation();
+  if (pathname !== '/') return null;
+  return <DeltMarquee />;
+}
 
 /* App root - v2 */
 export default function App() {
@@ -60,6 +71,7 @@ export default function App() {
           <Route path="/delt-ai-chat" element={<DeltAI />} />
           <Route path="/lens-chat" element={<LensChatPage />} />
           <Route path="/website-builder" element={<WebsiteBuilderDemo />} />
+          <Route path="/onboarding" element={<OnboardingPage />} />
           <Route path="*" element={
             <div className="min-h-screen bg-white relative">
               <Navigation />
@@ -95,6 +107,10 @@ export default function App() {
                 <Route path="/solutions/high-risk-processing" element={<HighRiskProcessingPage />} />
               </Routes>
               <Footer />
+              {/* DeltMarquee renders BELOW the footer, on the home page only
+                  (matching the prior single-instance placement). Pulled out
+                  of HomePage so it sits after <Footer /> in the DOM. */}
+              <PostFooterMarquee />
             </div>
           } />
         </Routes>

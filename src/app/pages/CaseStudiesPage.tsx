@@ -6,10 +6,10 @@ export function CaseStudiesPage() {
   const caseStudies = [
     {
       icon: ShoppingBag,
-      company: 'Urban Outfitters Boutique',
+      company: 'Linden Lane Boutique',
       industry: 'Retail',
       location: 'Brooklyn, NY',
-      initials: 'UO',
+      initials: 'LL',
       theme: 'retail' as const,
       metric: '+180%',
       metricLabel: 'Sales Growth',

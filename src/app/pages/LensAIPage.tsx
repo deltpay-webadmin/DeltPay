@@ -232,11 +232,12 @@ export function LensAIPage() {
           <h1
             style={{
               margin: 0,
-              fontFamily: "'Playfair Display', Georgia, serif",
+              fontFamily: "'Cormorant Garamond', 'Playfair Display', Georgia, serif",
+              fontStyle: 'italic',
               fontSize: 'clamp(3.5rem, 8vw, 6.5rem)',
-              fontWeight: 400,
+              fontWeight: 500,
               lineHeight: 0.95,
-              letterSpacing: '0.015em',
+              letterSpacing: '0.005em',
             }}
           >
             {['L', 'e', 'n', 's'].map((ch, i) => (
@@ -687,7 +688,7 @@ export function LensAIPage() {
             typically appear within a few days of your first transactions.
           </p>
           <a
-            href="/sign-up"
+            href="#/onboarding"
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 8,
               background: C.white, color: C.navy,

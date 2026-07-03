@@ -79,12 +79,12 @@ export function ByTheNumbers() {
           <div
             className="grid items-center"
             style={{
-              gridTemplateColumns: '160px 1fr 1fr',
+              gridTemplateColumns: '180px 1fr 1fr',
               borderBottom: '1px solid rgba(4, 30, 66, 0.08)',
             }}
           >
             <div
-              className="px-5 py-5 text-[11px] tracking-[0.14em]"
+              className="px-5 py-5 text-[13px] tracking-[0.14em]"
               style={{
                 fontFamily: 'var(--dc-font-mono)',
                 color: 'var(--dc-on-light-subtle)',
@@ -98,24 +98,24 @@ export function ByTheNumbers() {
               style={{ borderLeft: '1px solid rgba(4, 30, 66, 0.06)' }}
             >
               <div
-                className="h-7 w-7 rounded-full flex items-center justify-center"
+                className="h-8 w-8 rounded-full flex items-center justify-center"
                 style={{ background: 'rgba(4, 30, 66, 0.06)' }}
               >
-                <span style={{ fontSize: 12, color: 'var(--dc-on-light-subtle)' }}>⌂</span>
+                <span style={{ fontSize: 14, color: 'var(--dc-on-light-subtle)' }}>⌂</span>
               </div>
               <div>
                 <div
                   style={{
                     fontFamily: 'var(--dc-font-display)',
                     fontWeight: 600,
-                    fontSize: 15,
+                    fontSize: 17,
                     color: 'var(--dc-on-light)',
                   }}
                 >
                   Legacy processor
                 </div>
                 <div
-                  className="text-[10px] tracking-[0.14em] mt-0.5"
+                  className="text-[12px] tracking-[0.14em] mt-1"
                   style={{
                     fontFamily: 'var(--dc-font-mono)',
                     color: 'var(--dc-on-light-subtle)',
@@ -134,24 +134,24 @@ export function ByTheNumbers() {
               }}
             >
               <div
-                className="h-7 w-7 rounded-md flex items-center justify-center"
+                className="h-8 w-8 rounded-md flex items-center justify-center"
                 style={{ background: 'var(--dc-indigo)' }}
               >
-                <span style={{ fontSize: 14, color: '#fff', fontWeight: 600 }}>+</span>
+                <span style={{ fontSize: 16, color: '#fff', fontWeight: 600 }}>+</span>
               </div>
               <div>
                 <div
                   style={{
                     fontFamily: 'var(--dc-font-display)',
                     fontWeight: 600,
-                    fontSize: 15,
+                    fontSize: 17,
                     color: 'var(--dc-on-light)',
                   }}
                 >
                   Delt.
                 </div>
                 <div
-                  className="text-[10px] tracking-[0.14em] mt-0.5"
+                  className="text-[12px] tracking-[0.14em] mt-1"
                   style={{
                     fontFamily: 'var(--dc-font-mono)',
                     color: 'var(--dc-indigo)',
@@ -170,14 +170,14 @@ export function ByTheNumbers() {
               key={row.num}
               className="grid items-center"
               style={{
-                gridTemplateColumns: '160px 1fr 1fr',
+                gridTemplateColumns: '180px 1fr 1fr',
                 borderBottom:
                   i === ROWS.length - 1 ? 'none' : '1px solid rgba(4, 30, 66, 0.06)',
               }}
             >
-              <div className="px-5 py-5">
+              <div className="px-5 py-6">
                 <div
-                  className="text-[10px] tracking-[0.14em] mb-1"
+                  className="text-[12px] tracking-[0.14em] mb-1.5"
                   style={{
                     fontFamily: 'var(--dc-font-mono)',
                     color: 'var(--dc-on-light-subtle)',
@@ -189,7 +189,7 @@ export function ByTheNumbers() {
                   style={{
                     fontFamily: 'var(--dc-font-display)',
                     fontWeight: 600,
-                    fontSize: 14,
+                    fontSize: 17,
                     color: 'var(--dc-on-light)',
                     letterSpacing: '-0.01em',
                   }}
@@ -198,11 +198,11 @@ export function ByTheNumbers() {
                 </div>
               </div>
               <div
-                className="px-5 py-5 flex items-center gap-3"
+                className="px-5 py-6 flex items-center gap-3"
                 style={{ borderLeft: '1px solid rgba(4, 30, 66, 0.06)' }}
               >
                 <span
-                  className="h-5 w-5 rounded-full flex items-center justify-center text-[11px]"
+                  className="h-6 w-6 rounded-full flex items-center justify-center text-[13px]"
                   style={{
                     background: 'rgba(4, 30, 66, 0.06)',
                     color: 'var(--dc-on-light-subtle)',
@@ -213,7 +213,7 @@ export function ByTheNumbers() {
                 <span
                   style={{
                     fontFamily: 'var(--dc-font-body)',
-                    fontSize: 14,
+                    fontSize: 16,
                     color: 'var(--dc-on-light-muted)',
                   }}
                 >
@@ -221,12 +221,12 @@ export function ByTheNumbers() {
                 </span>
               </div>
               <div
-                className="px-5 py-5 flex items-center justify-between gap-3"
+                className="px-5 py-6 flex items-center justify-between gap-3"
                 style={{ borderLeft: '1px solid rgba(4, 30, 66, 0.06)' }}
               >
                 <div className="flex items-center gap-3">
                   <span
-                    className="h-5 w-5 rounded-full flex items-center justify-center text-[11px]"
+                    className="h-6 w-6 rounded-full flex items-center justify-center text-[13px]"
                     style={{
                       background: 'rgba(73, 69, 255, 0.12)',
                       color: 'var(--dc-indigo)',
@@ -237,7 +237,7 @@ export function ByTheNumbers() {
                   <span
                     style={{
                       fontFamily: 'var(--dc-font-body)',
-                      fontSize: 14,
+                      fontSize: 16,
                       fontWeight: 500,
                       color: 'var(--dc-on-light)',
                     }}
@@ -247,10 +247,10 @@ export function ByTheNumbers() {
                 </div>
                 {row.pill && (
                   <span
-                    className="px-2.5 py-1 rounded-md"
+                    className="px-3 py-1.5 rounded-md"
                     style={{
                       fontFamily: 'var(--dc-font-mono)',
-                      fontSize: 10,
+                      fontSize: 12,
                       letterSpacing: '0.14em',
                       background: 'rgba(73, 69, 255, 0.10)',
                       color: 'var(--dc-indigo-deep)',
@@ -279,7 +279,7 @@ export function ByTheNumbers() {
             >
               <div>
                 <div
-                  className="text-[10px] tracking-[0.14em] mb-2"
+                  className="text-[12px] tracking-[0.14em] mb-2"
                   style={{
                     fontFamily: 'var(--dc-font-mono)',
                     color: 'var(--dc-on-light-subtle)',
@@ -292,7 +292,7 @@ export function ByTheNumbers() {
                   style={{
                     fontFamily: 'var(--dc-font-display)',
                     fontWeight: 600,
-                    fontSize: 36,
+                    fontSize: 40,
                     letterSpacing: '-0.03em',
                     color: 'var(--dc-on-light)',
                     lineHeight: 1,
@@ -301,7 +301,7 @@ export function ByTheNumbers() {
                   {h.value}
                 </div>
                 <div
-                  className="mt-2 text-[12px]"
+                  className="mt-2 text-[14px]"
                   style={{
                     fontFamily: 'var(--dc-font-body)',
                     color: 'var(--dc-on-light-subtle)',

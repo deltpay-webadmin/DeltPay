@@ -608,7 +608,7 @@ export function PaymentsPage() {
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4">
             <Link
-              to="/apply"
+              to="/onboarding"
               className="inline-flex items-center gap-2 px-7 py-3.5 text-white transition-all duration-200 hover:brightness-110"
               style={{ borderRadius: '6px', background: PURPLE, fontSize: 15, fontFamily: "'Inter', sans-serif", fontWeight: 600 }}
             >

@@ -26,7 +26,12 @@ export function HeroShaderBackground() {
           type="sphere"
           wireframe={false}
           shader="defaults"
-          uTime={0}
+          // Begin the loop at the frame the user picked: dark navy top,
+          // indigo glow concentrated along the bottom edge.
+          range="enabled"
+          rangeStart={53}
+          rangeEnd={9999}
+          uTime={53}
           uSpeed={0.3}
           uStrength={0.3}
           uDensity={0.8}

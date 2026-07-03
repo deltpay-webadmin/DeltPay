@@ -200,22 +200,16 @@ function Hero() {
   const sectionRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: sectionRef, offset: ['start start', 'end end'] });
 
-  // Scroll choreography (section is 300vh tall, sticky inner viewport):
-  //   0.00 – 0.00  Only the headline is visible, vertically centered.
-  //   0.00 – 0.25  User scrolls: headline slides up & shrinks to make room,
-  //                 carousels fade in from below and slide into place.
-  //   0.25 – 0.85  Sticky phase — headline + carousels stay locked on screen
-  //                 while the user continues scrolling.
-  //   0.85 – 1.00  Hand-off to the next section (no extra transforms here;
-  //                 the sticky container simply unsticks as we reach the end).
-  const headingY = useTransform(scrollYProgress, [0, 0.25], [0, -140]);
-  const headingScale = useTransform(scrollYProgress, [0, 0.25], [1, 0.88]);
+  // Scroll choreography (section is 300vh tall, sticky inner viewport).
+  // The hero no longer has CTAs in the strike-zone, so the carousels
+  // can fade in early and continuously alongside the heading.
+  const headingY = useTransform(scrollYProgress, [0, 0.30], [0, -180]);
+  const headingScale = useTransform(scrollYProgress, [0, 0.30], [1, 0.85]);
 
-  // Carousels start fully hidden and are revealed as the user scrolls.
   const c1Opacity = useTransform(scrollYProgress, [0.05, 0.22], [0, 1]);
-  const c1Y = useTransform(scrollYProgress, [0.05, 0.25], [80, 0]);
+  const c1Y = useTransform(scrollYProgress, [0.05, 0.24], [80, 0]);
 
-  const c2Opacity = useTransform(scrollYProgress, [0.12, 0.3], [0, 1]);
+  const c2Opacity = useTransform(scrollYProgress, [0.12, 0.30], [0, 1]);
   const c2Y = useTransform(scrollYProgress, [0.12, 0.32], [100, 0]);
 
   // Scroll indicator is shown only before the user has scrolled.
@@ -224,12 +218,12 @@ function Hero() {
   return (
     <section
       ref={sectionRef}
-      style={{ background: T.bg, position: 'relative', height: '300vh' }}
+      style={{ background: T.bg, position: 'relative', height: 'calc(300vh / var(--site-zoom, 1))' }}
     >
       {/* Sticky viewport */}
       <div style={{
         position: 'sticky', top: 0,
-        height: '100vh', overflow: 'hidden',
+        height: 'calc(100vh / var(--site-zoom, 1))', overflow: 'hidden',
       }}>
         {/* Heading — vertically centered on load, slides up as the user scrolls
            to make room for the carousels below. */}
@@ -287,25 +281,10 @@ function Hero() {
               Your business makes a great first impression in person. Your website should too.
             </p>
 
-            <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-              <Link to="/apply" style={{
-                padding: '13px 30px', borderRadius: 50, border: 'none',
-                background: `linear-gradient(135deg, ${T.accent}, ${T.blue})`,
-                color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer',
-                fontFamily: T.sans, textDecoration: 'none',
-                display: 'inline-flex', alignItems: 'center', gap: 8,
-              }}>
-                Get Your Site <ArrowRight size={16} />
-              </Link>
-              <a href="#showcase" style={{
-                padding: '13px 30px', borderRadius: 50,
-                border: `1px solid ${T.border}`, background: 'transparent',
-                color: T.gray1, fontSize: 14, fontWeight: 600, cursor: 'pointer',
-                fontFamily: T.sans, textDecoration: 'none',
-              }}>
-                See Examples
-              </a>
-            </div>
+            {/* CTAs intentionally removed from the hero — the carousels
+               below serve as the visual proof, and a dedicated CTA strip
+               lives between the feature walkthrough and the showcase grid.
+               (See <MidPageCTA /> in this file.) */}
           </div>
         </motion.div>
 
@@ -487,7 +466,7 @@ function FeatureWalkthrough() {
         }
         .we-text-track { order: 1; }
         .we-text-section {
-          min-height: 100vh;
+          min-height: calc(100vh / var(--site-zoom, 1));
           display: flex;
           align-items: center;
           padding: 80px 60px;
@@ -546,7 +525,7 @@ function FeatureWalkthrough() {
           order: 2;
           position: sticky;
           top: 0;
-          height: 100vh;
+          height: calc(100vh / var(--site-zoom, 1));
           display: flex;
           align-items: center;
           padding: 40px 60px 40px 20px;
@@ -1076,7 +1055,7 @@ function Testimonials() {
         <div
           style={{
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            minHeight: '100vh', padding: '4rem 1.5rem',
+            minHeight: 'calc(100vh / var(--site-zoom, 1))', padding: '4rem 1.5rem',
           }}
         >
           <article style={{ position: 'relative', zIndex: 50, mixBlendMode: 'difference' }}>
@@ -1526,15 +1505,59 @@ const SITE_PREVIEWS: Record<string, React.FC> = {
   'Maison': MaisonPreview,
 };
 
+/* Each card has a flippable back face. The back surfaces concrete proof
+   for the "Real businesses. Real results." subtitle: a headline metric,
+   a one-line story, and the Delt features that power the site. Keep stat
+   strings short — the back face is compact. */
 const SHOWCASE_SITES = [
-  { name: 'Kuro', type: 'Restaurant', image: kuroImage, accent: '#D4A574' },
-  { name: 'Foamy & Co.', type: 'Café', image: foamyImage, accent: '#C4956B' },
-  { name: 'Tundra', type: 'E-commerce', image: tundraImage, accent: '#67E8F9' },
-  { name: 'Gringos', type: 'Barbershop', image: gringosImage, accent: '#86EFAC' },
-  { name: 'Aura Wellness', type: 'Spa & Wellness', image: aurumSpaImg, accent: '#A78BFA' },
-  { name: 'Atelier', type: 'Architecture', image: meridianRealtyImg, accent: '#60A5FA' },
-  { name: 'Noir', type: 'Cocktail Bar', image: bloomCoImg, accent: '#F472B6' },
-  { name: 'Maison', type: 'Pâtisserie', image: roastRitualImg, accent: '#FBBF24' },
+  {
+    name: 'Kuro', type: 'Restaurant', image: kuroImage, accent: '#D4A574',
+    metric: '+38%', metricLabel: 'reservations',
+    story: 'Quiet seven-course concept doubled covers in two months.',
+    powers: ['Online reservations', 'POS + tableside', 'Capital for buildout'],
+  },
+  {
+    name: 'Foamy & Co.', type: 'Café', image: foamyImage, accent: '#C4956B',
+    metric: '< 2hr', metricLabel: 'sellouts on drops',
+    story: 'Limited matcha drops sell out before the shop even opens.',
+    powers: ['Drop scheduling', 'Inventory + checkout', 'SMS announcements'],
+  },
+  {
+    name: 'Tundra', type: 'E-commerce', image: tundraImage, accent: '#67E8F9',
+    metric: '+22%', metricLabel: 'checkout conversion',
+    story: 'Streetwear label cut cart abandonment with one-click pay.',
+    powers: ['Storefront + checkout', 'Apple/Google Pay', 'Same-day payouts'],
+  },
+  {
+    name: 'Gringos', type: 'Barbershop', image: gringosImage, accent: '#86EFAC',
+    metric: '24 / 7', metricLabel: 'self-serve booking',
+    story: 'Three-chair shop runs memberships and tipping on autopilot.',
+    powers: ['Online booking', 'Memberships', 'Tipping + payroll'],
+  },
+  {
+    name: 'Aura Wellness', type: 'Spa & Wellness', image: aurumSpaImg, accent: '#A78BFA',
+    metric: '–50%', metricLabel: 'no-show rate',
+    story: 'Deposit-on-book cut no-shows in half within a quarter.',
+    powers: ['Booking + deposits', 'HIPAA-ready intake', 'Gift cards'],
+  },
+  {
+    name: 'Atelier', type: 'Architecture', image: meridianRealtyImg, accent: '#60A5FA',
+    metric: '+60%', metricLabel: 'qualified inquiries',
+    story: 'Editorial portfolio turned cold visitors into warm leads.',
+    powers: ['Portfolio CMS', 'Lead routing', 'Contract e-sign'],
+  },
+  {
+    name: 'Noir', type: 'Cocktail Bar', image: bloomCoImg, accent: '#F472B6',
+    metric: '0', metricLabel: 'lost walk-ins',
+    story: 'Live waitlist + events keep the room full every night.',
+    powers: ['Reservations', 'Events ticketing', 'Tab + tip'],
+  },
+  {
+    name: 'Maison', type: 'Pâtisserie', image: roastRitualImg, accent: '#FBBF24',
+    metric: '3×', metricLabel: 'preorder volume',
+    story: 'Pickup windows + Stripe-fast checkout tripled morning rush.',
+    powers: ['Preorders + pickup', 'Daily menu', 'Loyalty rewards'],
+  },
 ];
 
 function ShowcaseCard({ site, index }: { site: typeof SHOWCASE_SITES[0]; index: number }) {
@@ -1546,62 +1569,160 @@ function ShowcaseCard({ site, index }: { site: typeof SHOWCASE_SITES[0]; index: 
       <motion.div
         onMouseEnter={() => setHov(true)}
         onMouseLeave={() => setHov(false)}
-        animate={{ y: hov ? -8 : 0, scale: hov ? 1.02 : 1 }}
+        animate={{ y: hov ? -8 : 0 }}
         transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-        style={{ borderRadius: 16, overflow: 'hidden', cursor: 'pointer', position: 'relative', background: T.card }}
+        style={{ position: 'relative', cursor: 'pointer' }}
       >
-        {/* Tall dominant screenshot or rendered website preview */}
-        <div style={{ position: 'relative', aspectRatio: '4 / 5', overflow: 'hidden', borderRadius: 16 }}>
-          {PreviewComponent ? (
-            <motion.div
-              animate={{ scale: hov ? 1.03 : 1 }}
-              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-              style={{ width: '100%', height: '100%', transformOrigin: 'top center' }}
-            >
-              <PreviewComponent />
-            </motion.div>
-          ) : (
-            <motion.img
-              src={site.image} alt={site.name} loading="lazy"
-              animate={{ scale: hov ? 1.05 : 1 }}
-              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-              style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top', display: 'block' }}
-            />
-          )}
-          {/* Hover overlay */}
-          <motion.div
-            animate={{ opacity: hov ? 1 : 0 }}
-            transition={{ duration: 0.3 }}
+        {/* 3D flip stage — perspective + preserve-3d on the inner element
+           so the front and back faces share the same footprint and rotate
+           around the Y axis on hover. The back face surfaces a real metric,
+           a one-line story, and the Delt features powering the site. */}
+        <div
+          style={{
+            position: 'relative',
+            aspectRatio: '4 / 5',
+            perspective: 1400,
+          }}
+        >
+          <div
             style={{
-              position: 'absolute', inset: 0,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: 'rgba(3,21,46,0.55)',
-              backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)',
+              position: 'relative',
+              width: '100%', height: '100%',
+              transformStyle: 'preserve-3d',
+              transform: hov ? 'rotateY(180deg)' : 'rotateY(0deg)',
+              transition: 'transform 0.7s cubic-bezier(0.4, 0.0, 0.2, 1)',
             }}
           >
-            <motion.div
-              animate={{ y: hov ? 0 : 12, opacity: hov ? 1 : 0 }}
-              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+            {/* ── FRONT FACE ── */}
+            <div
               style={{
-                display: 'flex', alignItems: 'center', gap: 8,
-                padding: '12px 28px', borderRadius: 50,
-                background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)',
-                backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
-                color: '#fff', fontSize: 13, fontWeight: 600, fontFamily: T.sans, letterSpacing: 0.3,
+                position: 'absolute', inset: 0,
+                borderRadius: 16, overflow: 'hidden',
+                background: T.card,
+                backfaceVisibility: 'hidden',
+                WebkitBackfaceVisibility: 'hidden',
+                boxShadow: hov
+                  ? `0 24px 60px -20px ${site.accent}55, 0 6px 20px rgba(0,0,0,0.35)`
+                  : '0 4px 12px rgba(0,0,0,0.25)',
+                transition: 'box-shadow 0.4s ease',
               }}
             >
-              View Site <ExternalLink size={14} strokeWidth={2} />
-            </motion.div>
-          </motion.div>
-          {/* Accent line at bottom */}
-          <motion.div
-            animate={{ scaleX: hov ? 1 : 0 }}
-            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 2, background: site.accent, transformOrigin: 'left' }}
-          />
+              {PreviewComponent ? (
+                <div style={{ width: '100%', height: '100%', transformOrigin: 'top center' }}>
+                  <PreviewComponent />
+                </div>
+              ) : (
+                <img
+                  src={site.image} alt={site.name} loading="lazy"
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top', display: 'block' }}
+                />
+              )}
+              {/* Subtle hint pill so users discover the flip affordance */}
+              <div style={{
+                position: 'absolute', top: 12, right: 12,
+                display: 'inline-flex', alignItems: 'center', gap: 6,
+                padding: '6px 10px', borderRadius: 999,
+                background: 'rgba(3,21,46,0.55)',
+                border: '1px solid rgba(255,255,255,0.14)',
+                backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
+                color: '#fff', fontSize: 10, fontWeight: 600,
+                fontFamily: T.sans, letterSpacing: 0.4, textTransform: 'uppercase',
+                opacity: hov ? 0 : 0.85,
+                transition: 'opacity 0.25s ease',
+                pointerEvents: 'none',
+              }}>
+                <span style={{ width: 5, height: 5, borderRadius: '50%', background: site.accent }} />
+                Hover for results
+              </div>
+            </div>
+
+            {/* ── BACK FACE ── pre-rotated 180° so it faces the camera once
+               the parent rotates. Dark navy panel with the accent color
+               doing the heavy lifting on the metric and divider. */}
+            <div
+              style={{
+                position: 'absolute', inset: 0,
+                borderRadius: 16, overflow: 'hidden',
+                background: `linear-gradient(165deg, ${T.card} 0%, ${T.bg} 100%)`,
+                border: `1px solid ${site.accent}33`,
+                backfaceVisibility: 'hidden',
+                WebkitBackfaceVisibility: 'hidden',
+                transform: 'rotateY(180deg)',
+                display: 'flex', flexDirection: 'column',
+                padding: '24px 22px',
+                boxShadow: `0 24px 60px -20px ${site.accent}55, 0 6px 20px rgba(0,0,0,0.35)`,
+              }}
+            >
+              {/* Top: type chip + accent dot */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
+                <span style={{
+                  fontSize: 10, fontWeight: 700, letterSpacing: 1.6,
+                  textTransform: 'uppercase', color: site.accent,
+                  fontFamily: T.sans,
+                }}>{site.type}</span>
+                <span style={{
+                  width: 8, height: 8, borderRadius: '50%', background: site.accent,
+                  boxShadow: `0 0 12px ${site.accent}aa`,
+                }} />
+              </div>
+
+              {/* Hero metric */}
+              <div style={{
+                fontSize: 'clamp(38px, 4.4vw, 54px)', fontWeight: 800,
+                color: T.white, fontFamily: T.heading,
+                letterSpacing: '-0.03em', lineHeight: 1, marginBottom: 4,
+                WebkitFontSmoothing: 'antialiased',
+              }}>
+                {site.metric}
+              </div>
+              <div style={{
+                fontSize: 12, color: T.gray2, fontFamily: T.sans,
+                letterSpacing: 0.2, marginBottom: 18,
+              }}>
+                {site.metricLabel}
+              </div>
+
+              {/* Divider */}
+              <div style={{
+                height: 1, background: `linear-gradient(90deg, ${site.accent}66, transparent)`,
+                marginBottom: 16,
+              }} />
+
+              {/* Story line */}
+              <p style={{
+                fontSize: 13, lineHeight: 1.55, color: T.gray1,
+                fontFamily: T.serif, fontStyle: 'italic',
+                margin: '0 0 18px',
+              }}>
+                “{site.story}”
+              </p>
+
+              {/* Powered-by features */}
+              <div style={{ marginTop: 'auto' }}>
+                <div style={{
+                  fontSize: 9, fontWeight: 700, letterSpacing: 1.4,
+                  textTransform: 'uppercase', color: T.gray3,
+                  fontFamily: T.sans, marginBottom: 10,
+                }}>
+                  Powered by Delt
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {site.powers.map((p) => (
+                    <div key={p} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <Check size={12} style={{ color: site.accent, flexShrink: 0 }} strokeWidth={2.5} />
+                      <span style={{
+                        fontSize: 12, color: T.white, fontFamily: T.sans,
+                        WebkitFontSmoothing: 'antialiased',
+                      }}>{p}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Minimal info — Framer-style */}
+        {/* Minimal info — Framer-style. Stays under both faces. */}
         <div style={{ padding: '16px 4px 8px', display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{
             width: 8, height: 8, borderRadius: '50%', background: site.accent, flexShrink: 0,
@@ -1766,7 +1887,7 @@ function FinalCTA() {
 
           {/* THE button — solid brand purple, real CTA energy */}
           <Link
-            to="/apply"
+            to="/onboarding"
             className="we-final-cta-btn"
             style={{
               padding: '17px 36px',
@@ -1835,6 +1956,128 @@ function FinalCTA() {
 }
 
 /* ═══════════════════════════════════════════════════════════
+   SECTION 4.5: MID-PAGE CTA STRIP
+   — Replaces the buttons that used to live in the hero. Sits between
+   the feature walkthrough and the showcase grid as a clean break.
+   ═══════════════════════════════════════════════════════════ */
+function MidPageCTA() {
+  return (
+    <section
+      style={{
+        position: 'relative',
+        background: T.bg,
+        padding: '72px 24px',
+        borderTop: `1px solid ${T.border}`,
+        borderBottom: `1px solid ${T.border}`,
+      }}
+    >
+      <Reveal>
+        <div
+          style={{
+            maxWidth: 1080,
+            margin: '0 auto',
+            padding: '36px 40px',
+            borderRadius: 20,
+            background:
+              'linear-gradient(135deg, rgba(73,69,255,0.16) 0%, rgba(108,105,255,0.06) 100%)',
+            border: '1px solid rgba(108,105,255,0.28)',
+            boxShadow:
+              '0 30px 70px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.05)',
+            display: 'grid',
+            gridTemplateColumns: 'minmax(0, 1fr) auto',
+            gap: 28,
+            alignItems: 'center',
+          }}
+          className="we-midcta"
+        >
+          <div>
+            <div
+              style={{
+                fontFamily: T.sans,
+                fontSize: 11,
+                letterSpacing: '0.20em',
+                textTransform: 'uppercase',
+                color: T.accentLight,
+                fontWeight: 700,
+                marginBottom: 10,
+              }}
+            >
+              Ready when you are
+            </div>
+            <h3
+              style={{
+                margin: 0,
+                fontSize: 'clamp(26px, 3.4vw, 36px)',
+                fontWeight: 800,
+                color: T.white,
+                fontFamily: T.heading,
+                lineHeight: 1.15,
+                letterSpacing: '-0.025em',
+              }}
+            >
+              See it on your own domain.{' '}
+              <span
+                style={{
+                  fontFamily: T.serif,
+                  fontStyle: 'italic',
+                  fontWeight: 500,
+                  color: T.accentLight,
+                }}
+              >
+                In days, not months.
+              </span>
+            </h3>
+            <p
+              style={{
+                margin: '10px 0 0',
+                fontSize: 15,
+                color: T.gray1,
+                lineHeight: 1.6,
+                fontFamily: T.sans,
+                maxWidth: 580,
+              }}
+            >
+              Five quick questions about your business, then we build the site, hook up payments,
+              and ship the hardware. One onboarding, one platform.
+            </p>
+          </div>
+          <Link
+            to="/onboarding"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 10,
+              padding: '15px 28px',
+              borderRadius: 14,
+              background: T.accent,
+              border: '1px solid rgba(108,105,255,0.6)',
+              color: '#fff',
+              fontSize: 15,
+              fontWeight: 700,
+              fontFamily: T.sans,
+              textDecoration: 'none',
+              boxShadow:
+                '0 12px 30px rgba(73,69,255,0.40), inset 0 1px 0 rgba(255,255,255,0.18)',
+              whiteSpace: 'nowrap',
+              transition: 'transform 0.2s ease, background 0.2s ease',
+            }}
+            className="we-midcta-btn"
+          >
+            Start onboarding <ArrowRight size={17} />
+          </Link>
+        </div>
+      </Reveal>
+      <style>{`
+        .we-midcta-btn:hover { transform: translateY(-2px); background: #5754FF; }
+        @media (max-width: 720px) {
+          .we-midcta { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
+    </section>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════
    MAIN PAGE EXPORT
    ═══════════════════════════════════════════════════════════ */
 export function WebsiteExamples() {
@@ -1842,6 +2085,7 @@ export function WebsiteExamples() {
     <div style={{ fontFamily: T.sans, color: T.white, background: T.bg, position: 'relative' }}>
       <Hero />
       <FeatureWalkthrough />
+      <MidPageCTA />
       <HowItWorksStrip />
       <ShowcaseGrid />
       <Testimonials />

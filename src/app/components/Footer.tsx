@@ -1,4 +1,5 @@
 import { Link } from 'react-router';
+import deltLogoOnDark from '@/assets/delt-logo-on-dark.svg';
 
 /* ════════════════════════════════════════════════════════════
    FOOTER — Delt Capital editorial style.
@@ -8,7 +9,6 @@ import { Link } from 'react-router';
 
 const NAVY = '#041E42';
 const CREAM = '#F7F5F0';
-const INDIGO = '#4945FF';
 const INDIGO_SOFT = '#A5B4FC';
 
 const PRODUCT = [
@@ -58,14 +58,14 @@ export function Footer() {
           {/* Brand */}
           <div className="dc-footer-brand">
             <Link to="/" className="dc-footer-logo" aria-label="Delt home">
-              <span className="dc-footer-mark" aria-hidden>
-                <span className="dc-footer-bar dc-footer-bar--cream" />
-                <span className="dc-footer-bar dc-footer-bar--indigo" />
-              </span>
-              <span className="dc-footer-logotype">
-                <span className="dc-footer-logo-light">Delt</span>
-                <span className="dc-footer-logo-indigo">Pay</span>
-              </span>
+              {/* Single Delt wordmark — the only brand logo on the site.
+                  Footer surface is navy, so we use the on-dark variant. */}
+              <img
+                src={deltLogoOnDark}
+                alt="Delt"
+                className="dc-footer-logo-img"
+                draggable={false}
+              />
             </Link>
             <p className="dc-footer-tagline">
               Run, grow, and{' '}
@@ -174,26 +174,14 @@ export function Footer() {
           text-decoration: none;
           margin-bottom: 20px;
         }
-        .dc-footer-mark {
-          display: inline-flex;
-          align-items: flex-end;
-          gap: 3px;
-          height: 24px;
+        /* Single SVG wordmark. Slightly larger than the header (32px vs
+           28px) since the footer is a roomier surface and a touch more
+           presence reads right — still well under "obnoxious". */
+        .dc-footer-logo-img {
+          display: block;
+          height: 32px;
+          width: auto;
         }
-        .dc-footer-bar { width: 5px; border-radius: 1px; }
-        .dc-footer-bar--cream  { height: 14px; background: ${CREAM}; }
-        .dc-footer-bar--indigo { height: 24px; background: ${INDIGO}; }
-        .dc-footer-logotype {
-          font-family: 'Manrope', 'Inter Tight', sans-serif;
-          font-size: 28px;
-          font-weight: 600;
-          letter-spacing: -0.025em;
-          line-height: 1;
-          display: inline-flex;
-          gap: 4px;
-        }
-        .dc-footer-logo-light  { color: ${CREAM}; }
-        .dc-footer-logo-indigo { color: ${INDIGO_SOFT}; }
 
         .dc-footer-tagline {
           font-family: 'Manrope', sans-serif;

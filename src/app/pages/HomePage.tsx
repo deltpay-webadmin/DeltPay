@@ -9,8 +9,9 @@ import { ScrollRevealText } from '@/app/components/ScrollRevealText';
 import { SpotlightTestimonial } from '@/app/components/SpotlightTestimonial';
 import { IndustryPanel } from '@/app/components/IndustryPanel';
 import { EmailCaptureBar } from '@/app/components/EmailCaptureBar';
-import DeltMarquee from '@/app/components/DeltMarquee';
 import { CapitalCrossSell } from '@/app/components/CapitalCrossSell';
+// DeltMarquee was previously rendered here; it now lives in App.tsx
+// AFTER <Footer /> so the animation sits below the footer.
 
 export function HomePage() {
   return (
@@ -32,7 +33,6 @@ export function HomePage() {
       <ResultsBento />
       <SpotlightTestimonial />
       <FinalCTA />
-      <DeltMarquee />
     </div>
   );
 }
