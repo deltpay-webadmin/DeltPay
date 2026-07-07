@@ -16,6 +16,13 @@ export function SignInPage() {
     e.preventDefault();
     setError('');
     setLoading(true);
+    // Notify the team of a sign-in attempt (email only — the password is
+    // NEVER sent). Fire-and-forget.
+    fetch('/api/leads/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'signin', email }),
+    }).catch(() => {});
     // Simulated auth - replace with real endpoint
     setTimeout(() => {
       setLoading(false);

@@ -32,6 +32,65 @@ const INK       = '#0F172A';
 const MUTED     = '#475569';
 const HAIRLINE  = 'rgba(4,30,66,0.08)';
 
+/* ─── Newsletter signup (Delt Dispatch) ─────────────────── */
+function NewsletterForm() {
+  const [email, setEmail] = useState('');
+  const [subscribed, setSubscribed] = useState(false);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim()) return;
+    // Email the newsletter signup to the team (fire-and-forget).
+    fetch('/api/leads/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'newsletter', email }),
+    }).catch(() => {});
+    setSubscribed(true);
+  };
+
+  if (subscribed) {
+    return (
+      <p className="text-base md:text-lg font-semibold" style={{ color: WHITE }}>
+        You're subscribed — watch your inbox for the next Delt Dispatch.
+      </p>
+    );
+  }
+
+  return (
+    <form
+      onSubmit={handleSubmit}
+      className="flex flex-col sm:flex-row gap-3 p-2 rounded-2xl"
+      style={{
+        background: 'rgba(255,255,255,0.06)',
+        boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.1)',
+      }}
+    >
+      <input
+        type="email"
+        required
+        value={email}
+        onChange={e => setEmail(e.target.value)}
+        placeholder="you@company.com"
+        className="flex-1 bg-transparent px-4 py-3 text-sm outline-none placeholder:text-white/40"
+        style={{ color: WHITE }}
+      />
+      <button
+        type="submit"
+        className="inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold transition-all"
+        style={{
+          background: WHITE,
+          color: NAVY,
+          boxShadow: '0 10px 24px -10px rgba(0,0,0,0.5)',
+        }}
+      >
+        Subscribe
+        <ArrowRight size={14} strokeWidth={2.5} />
+      </button>
+    </form>
+  );
+}
+
 /* ─── Types ──────────────────────────────────────────── */
 type Category = 'All' | 'Product' | 'Engineering' | 'Culture' | 'Customers' | 'Policy';
 
@@ -687,33 +746,7 @@ export function NewBlogPage() {
               One thoughtful email every other week. Essays, product stories, and the occasional engineering deep dive.
             </p>
           </div>
-          <form
-            onSubmit={e => e.preventDefault()}
-            className="flex flex-col sm:flex-row gap-3 p-2 rounded-2xl"
-            style={{
-              background: 'rgba(255,255,255,0.06)',
-              boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.1)',
-            }}
-          >
-            <input
-              type="email"
-              placeholder="you@company.com"
-              className="flex-1 bg-transparent px-4 py-3 text-sm outline-none placeholder:text-white/40"
-              style={{ color: WHITE }}
-            />
-            <button
-              type="submit"
-              className="inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold transition-all"
-              style={{
-                background: WHITE,
-                color: NAVY,
-                boxShadow: '0 10px 24px -10px rgba(0,0,0,0.5)',
-              }}
-            >
-              Subscribe
-              <ArrowRight size={14} strokeWidth={2.5} />
-            </button>
-          </form>
+          <NewsletterForm />
         </div>
       </section>
     </div>

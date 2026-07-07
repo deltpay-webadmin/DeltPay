@@ -100,7 +100,19 @@ function AuditForm() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !biz || !file) return;
-    // TODO: wire to backend audit intake endpoint
+    // Email the audit lead + statement attachment to the team. Read the file
+    // as a data URL, then fire-and-forget so the UI isn't blocked. If the read
+    // fails, still send the lead details without the attachment.
+    const post = (fileB64?: string) =>
+      fetch('/api/leads/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'audit', email, biz, fileName: file.name, fileB64 }),
+      }).catch(() => {});
+    const reader = new FileReader();
+    reader.onload = () => post(typeof reader.result === 'string' ? reader.result : undefined);
+    reader.onerror = () => post(undefined);
+    reader.readAsDataURL(file);
     setSubmitted(true);
   };
 

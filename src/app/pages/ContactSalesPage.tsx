@@ -46,6 +46,12 @@ export function ContactSalesPage() {
     // Meta Pixel: sales contact form submitted. Contact is a standard
     // Meta event, ideal for top-of-funnel awareness campaign optimization.
     trackContact();
+    // Email the sales lead to the team (fire-and-forget; UI unaffected).
+    fetch('/api/leads/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'contact', ...formData, source: '/contact-sales' }),
+    }).catch(() => {});
     setSubmitted(true);
   };
 

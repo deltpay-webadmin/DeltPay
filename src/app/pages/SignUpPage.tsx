@@ -85,6 +85,17 @@ export function SignUpPage() {
         content_name: `${industry || 'unknown'}/${monthlyVolume || 'unknown'}`,
         content_category: 'merchant_signup',
       });
+      // Email the sign-up lead to the team (fire-and-forget).
+      fetch('/api/leads/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'signup',
+          businessName, businessType, industry, website,
+          firstName, lastName, email, phone,
+          monthlyVolume, averageTicket, businessDescription,
+        }),
+      }).catch(() => {});
       setSubmitted(true);
     }
   };

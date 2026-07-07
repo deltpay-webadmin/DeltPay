@@ -8,6 +8,12 @@ export function EmailCaptureBar() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) return;
+    // Email the rate-check lead to the team (fire-and-forget).
+    fetch('/api/leads/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'rate-check', email }),
+    }).catch(() => {});
     setSubmitted(true);
   };
 

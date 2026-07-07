@@ -44,6 +44,12 @@ export function ContactPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    // Email the contact lead to the team (fire-and-forget; UI unaffected).
+    fetch('/api/leads/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'contact', ...formData, source: '/contact' }),
+    }).catch(() => {});
     setFormSubmitted(true);
     setTimeout(() => setFormSubmitted(false), 4000);
   };
