@@ -1,6 +1,5 @@
 import { Check, ChevronDown } from 'lucide-react';
 import { useState } from 'react';
-import { JOTFORM_APP_URL } from '../lib/jotform';
 
 export function Pricing() {
   const [showComparison, setShowComparison] = useState(false);
@@ -55,9 +54,9 @@ export function Pricing() {
               </li>
             </ul>
 
-            <a href={JOTFORM_APP_URL} target="_blank" rel="noopener noreferrer" className="block w-full py-4 px-6 rounded-xl border-2 border-[#041E42] text-[#041E42] font-semibold text-base hover:bg-[#080A28] hover:text-white transition-all text-center">
+            <button className="w-full py-4 px-6 rounded-xl border-2 border-[#041E42] text-[#041E42] font-semibold text-base hover:bg-[#080A28] hover:text-white transition-all">
               Get Started — Free
-            </a>
+            </button>
           </div>
 
           {/* Pro Tier */}

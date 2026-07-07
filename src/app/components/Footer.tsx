@@ -1,5 +1,4 @@
 import { Link, useLocation } from 'react-router';
-import { JOTFORM_APP_URL } from '../lib/jotform';
 import deltLogoOnDark from '@/assets/delt-logo-on-dark.svg';
 import deltInstagramQR from '@/assets/delt-instagram-qr.png';
 
@@ -46,7 +45,7 @@ const RESOURCES = [
   { label: 'Blog',         href: '/blog' },
   { label: 'How it works', href: '/how-it-works' },
   { label: 'Apply',        href: '/apply' },
-  { label: 'Get a quote',  href: JOTFORM_APP_URL },
+  { label: 'Get a quote',  href: '/get-a-quote' },
   { label: 'Support',      href: '/support' },
 ];
 
@@ -120,11 +119,7 @@ export function Footer() {
             <ul className="dc-footer-list">
               {RESOURCES.map((l) => (
                 <li key={l.href}>
-                  {l.href.startsWith('http') ? (
-                    <a href={l.href} target="_blank" rel="noopener noreferrer" className="dc-footer-link">{l.label}</a>
-                  ) : (
-                    <Link to={l.href} className="dc-footer-link">{l.label}</Link>
-                  )}
+                  <Link to={l.href} className="dc-footer-link">{l.label}</Link>
                 </li>
               ))}
             </ul>
