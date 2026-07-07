@@ -338,10 +338,10 @@ export function DeltAI({ embedded = false, externalQuestion = null, externalQues
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <button className="px-5 py-2.5 text-base font-medium text-[#041E42] hover:bg-[#F8FAFC] rounded-lg transition-colors">
+            <button onClick={() => navigate('/signin')} className="px-5 py-2.5 text-base font-medium text-[#041E42] hover:bg-[#F8FAFC] rounded-lg transition-colors">
               Log in
             </button>
-            <button className="px-5 py-2.5 text-base font-medium text-white bg-[#4945FF] hover:bg-[#080A28] rounded-lg transition-colors">
+            <button onClick={() => navigate('/signup')} className="px-5 py-2.5 text-base font-medium text-white bg-[#4945FF] hover:bg-[#080A28] rounded-lg transition-colors">
               Sign up for free
             </button>
           </div>

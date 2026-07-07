@@ -1,4 +1,5 @@
 import { CreditCard, Wallet, DollarSign, Globe, Sparkles, ShieldCheck, Search, ArrowRight, MessageCircle, Activity } from 'lucide-react';
+import { useNavigate } from 'react-router';
 
 /* ─── Palette ────────────────────────────────────────── */
 const NAVY   = '#041E42';
@@ -146,6 +147,7 @@ function ArticleRow({ title, snippet }: { title: string; snippet: string }) {
 
 /* ─── Page ───────────────────────────────────────────── */
 export function HelpCenterPage() {
+  const navigate = useNavigate();
   return (
     <div
       style={{ background: WHITE, color: NAVY, fontFamily: 'system-ui, -apple-system, sans-serif' }}
@@ -281,6 +283,7 @@ export function HelpCenterPage() {
                 </p>
               </div>
               <button
+                onClick={() => navigate('/support')}
                 className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all self-start"
                 style={{ background: PURPLE, color: WHITE }}
               >
@@ -314,11 +317,11 @@ export function HelpCenterPage() {
                 </p>
               </div>
               <a
-                href="mailto:support@delt.co"
+                href="mailto:support@delt.com"
                 className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all self-start"
                 style={{ background: `${NAVY}0F`, color: NAVY }}
               >
-                support@delt.co <ArrowRight size={14} />
+                support@delt.com <ArrowRight size={14} />
               </a>
             </div>
 

@@ -593,7 +593,7 @@ export function GetAQuotePage() {
                     />
                   </div>
 
-                  <p style={{ fontFamily: JAK, fontSize: 13, color: '#475569', marginTop: 4 }}>By submitting, you acknowledge our <a href="/privacy" style={{ color: INDIGO, textDecoration: 'underline' }}>Privacy Policy</a> and agree to our <a href="/terms" style={{ color: INDIGO, textDecoration: 'underline' }}>Terms of Service</a>.</p>
+                  <p style={{ fontFamily: JAK, fontSize: 13, color: '#475569', marginTop: 4 }}>By submitting, you acknowledge our <a href="#/privacy" target="_blank" rel="noopener noreferrer" style={{ color: INDIGO, textDecoration: 'underline' }}>Privacy Policy</a> and agree to our <a href="#/terms" target="_blank" rel="noopener noreferrer" style={{ color: INDIGO, textDecoration: 'underline' }}>Terms of Service</a>.</p>
 
                   <div style={{ display: 'flex', gap: 12, marginTop: 4 }}>
                     <button type="button" onClick={() => setStep(3)} style={{ padding: '16px 28px', borderRadius: 12, border: '1.5px solid #D1D5DB', background: '#fff', color: NAVY, fontFamily: JAK, fontSize: 16, fontWeight: 700, cursor: 'pointer' }}>

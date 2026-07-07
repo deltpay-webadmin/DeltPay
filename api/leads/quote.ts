@@ -11,6 +11,12 @@ const LEAD_NOTIFY_FROM =
 const FONT_STACK =
   "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
 
+const ALLOWED_HOST_RE = /(^|\.)deltpay\.com$|(^|\.)vercel\.app$/i;
+function originAllowed(req: any): boolean {
+  const src = req.headers?.origin || req.headers?.referer || "";
+  if (!src) return true;
+  try { return ALLOWED_HOST_RE.test(new URL(src).hostname); } catch { return false; }
+}
 const emailOk = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e) && e.length <= 254;
 const clean = (v: unknown, max = 500) =>
   typeof v === "string" ? v.trim().slice(0, max) : "";
@@ -109,7 +115,9 @@ export default async function handler(req: any, res: any) {
     res.setHeader("Allow", "POST");
     return res.status(405).json({ ok: false, error: "Method not allowed" });
   }
+  if (!originAllowed(req)) return res.status(403).json({ ok: false, error: "Forbidden" });
   const body = parseBody(req.body);
+  if (clean(body.company_website, 200) !== "") return res.status(200).json({ ok: true });
   const name = clean(body.name, 200);
   const email = clean(body.email, 254).toLowerCase();
   if (!name || !emailOk(email)) {

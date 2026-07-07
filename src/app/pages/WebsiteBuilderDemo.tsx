@@ -222,13 +222,13 @@ export function WebsiteBuilderDemo() {
 
             <div className="flex flex-wrap gap-4">
               <a
-                href="#"
+                href="#/signup"
                 className="inline-flex items-center gap-2 bg-[#4945FF] hover:bg-[#3b38e0] text-white font-semibold px-7 py-3.5 rounded-full transition-colors duration-150 text-sm"
               >
                 Start your free trial <ArrowRight className="w-4 h-4" />
               </a>
               <a
-                href="#"
+                href="#/contact-sales"
                 className="inline-flex items-center gap-2 border border-white/30 hover:border-white/60 text-white font-semibold px-7 py-3.5 rounded-full transition-colors duration-150 text-sm"
               >
                 Book a demo
@@ -286,7 +286,7 @@ export function WebsiteBuilderDemo() {
                 <h3 className="text-[#041E42] font-bold text-lg leading-snug">{card.title}</h3>
                 <p className="text-[#475569] text-sm leading-relaxed flex-1">{card.copy}</p>
                 <a
-                  href="#"
+                  href="#/website-examples"
                   className="inline-flex items-center gap-1.5 text-[#4945FF] font-semibold text-sm hover:gap-2.5 transition-all duration-150"
                 >
                   Learn how <ArrowRight className="w-4 h-4" />
@@ -396,20 +396,20 @@ export function WebsiteBuilderDemo() {
           </h2>
           <p className="text-white/55 text-base mb-10">
             Already a Delt customer?{' '}
-            <a href="#" className="text-white/80 underline underline-offset-2 hover:text-white transition-colors">
+            <a href="#/signin" className="text-white/80 underline underline-offset-2 hover:text-white transition-colors">
               Sign in
             </a>{' '}
             to launch your Digital Storefront Suite.
           </p>
           <div className="flex flex-wrap gap-4 justify-center">
             <a
-              href="#"
+              href="#/contact-sales"
               className="inline-flex items-center gap-2 bg-[#4945FF] hover:bg-[#3b38e0] text-white font-semibold px-8 py-4 rounded-full transition-colors duration-150 text-sm"
             >
               Book a demo <ArrowRight className="w-4 h-4" />
             </a>
             <a
-              href="#"
+              href="#/signin"
               className="inline-flex items-center gap-2 border border-white/30 hover:border-white/60 text-white font-semibold px-8 py-4 rounded-full transition-colors duration-150 text-sm"
             >
               Sign in

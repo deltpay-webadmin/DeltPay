@@ -14,6 +14,30 @@ const FONT_STACK =
 // Max base64 attachment size (~3.5MB) — Vercel caps the request body near 4.5MB.
 const MAX_ATTACH_B64 = 3_500_000;
 
+// Abuse controls. Only accept requests whose Origin/Referer is our own site
+// (blocks the trivial `curl` flood), and honor a hidden honeypot field that
+// real users never see but bots fill in.
+const ALLOWED_HOST_RE = /(^|\.)deltpay\.com$|(^|\.)vercel\.app$/i;
+function originAllowed(req: any): boolean {
+  const src = req.headers?.origin || req.headers?.referer || "";
+  if (!src) return true; // same-origin fetches may omit Origin; don't hard-block
+  try { return ALLOWED_HOST_RE.test(new URL(src).hostname); } catch { return false; }
+}
+const isBot = (b: Record<string, unknown>) => clean(b.company_website, 200) !== "";
+
+// Attachment allowlist — sniff the base64 magic bytes so an attacker can't relay
+// an executable to the team inbox in a trusted-looking email.
+function sniffAllowed(fileName: string, b64: string): boolean {
+  const ext = (fileName.split(".").pop() || "").toLowerCase();
+  if (!["pdf", "png", "jpg", "jpeg"].includes(ext)) return false;
+  const head = b64.slice(0, 16);
+  return (
+    head.startsWith("JVBERi") ||        // %PDF
+    head.startsWith("iVBORw0KGgo") ||   // PNG
+    head.startsWith("/9j/")             // JPEG
+  );
+}
+
 const emailOk = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e) && e.length <= 254;
 const clean = (v: unknown, max = 500) =>
   typeof v === "string" ? v.trim().slice(0, max) : "";
@@ -214,7 +238,12 @@ export default async function handler(req: any, res: any) {
     res.setHeader("Allow", "POST");
     return res.status(405).json({ ok: false, error: "Method not allowed" });
   }
+  if (!originAllowed(req)) {
+    return res.status(403).json({ ok: false, error: "Forbidden" });
+  }
   const body = parseBody(req.body);
+  // Honeypot: pretend success without sending so bots get no signal.
+  if (isBot(body)) return res.status(200).json({ ok: true });
   const type = clean(body.type, 40);
   const def = FORMS[type];
   if (!def) {
@@ -231,10 +260,13 @@ export default async function handler(req: any, res: any) {
   let attachments: Array<{ filename: string; content: string }> | undefined;
   if (type === "audit" && typeof body.fileB64 === "string" && body.fileB64) {
     const b64 = body.fileB64.includes(",") ? body.fileB64.split(",").pop()! : body.fileB64;
-    if (b64.length <= MAX_ATTACH_B64) {
-      attachments = [{ filename: clean(body.fileName, 200) || "statement", content: b64 }];
-    } else {
+    const name = clean(body.fileName, 200) || "statement";
+    if (b64.length > MAX_ATTACH_B64) {
       rows.push(["Statement", "File too large to attach — follow up with the merchant."]);
+    } else if (!sniffAllowed(name, b64)) {
+      rows.push(["Statement", "Unsupported file type (not a PDF/PNG/JPG) — not attached; follow up."]);
+    } else {
+      attachments = [{ filename: name, content: b64 }];
     }
   }
 

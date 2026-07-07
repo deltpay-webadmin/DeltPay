@@ -1,8 +1,9 @@
 import { Building2, ShoppingBag, Utensils, Briefcase, Heart, Sparkles } from 'lucide-react';
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { BusinessScene } from '../components/BusinessScene';
 
 export function CaseStudiesPage() {
+  const navigate = useNavigate();
   const caseStudies = [
     {
       icon: ShoppingBag,
@@ -187,7 +188,7 @@ export function CaseStudiesPage() {
                     </ul>
                   </div>
 
-                  <button className="w-full mt-6 px-6 py-3 border-2 border-[#4945FF] text-[#4945FF] rounded-lg hover:bg-[#4945FF]/8 transition-colors font-semibold">
+                  <button onClick={() => navigate('/reviews')} className="w-full mt-6 px-6 py-3 border-2 border-[#4945FF] text-[#4945FF] rounded-lg hover:bg-[#4945FF]/8 transition-colors font-semibold">
                     Read Full Story
                   </button>
                   </div>

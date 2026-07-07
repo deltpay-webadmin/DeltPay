@@ -1,12 +1,13 @@
 import { MessageSquare, Phone, Mail, Clock, ArrowRight, Send, Users, Briefcase } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
-import { useLocation } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
 import { SupportChatbot } from '@/app/components/SupportChatbot';
 
 type Tab = 'sales' | 'support';
 
 export function ContactPage() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<Tab>('support');
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -51,6 +52,11 @@ export function ContactPage() {
       body: JSON.stringify({ type: 'contact', ...formData, source: '/contact' }),
     }).catch(() => {});
     setFormSubmitted(true);
+    // Clear every field so the form never re-shows the previous submission.
+    setFormData({
+      firstName: '', lastName: '', email: '', phone: '',
+      company: '', monthlyVolume: '', isMerchant: '', message: '',
+    });
     setTimeout(() => setFormSubmitted(false), 4000);
   };
 
@@ -177,9 +183,9 @@ export function ContactPage() {
                   >
                     (864) 729-3358
                   </a>
-                  <button className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-[#4945FF] text-[#4945FF] rounded-lg hover:bg-[#4945FF]/8 transition-colors font-semibold mt-auto">
+                  <a href="tel:+18647293358" className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-[#4945FF] text-[#4945FF] rounded-lg hover:bg-[#4945FF]/8 transition-colors font-semibold mt-auto">
                     Call Now <ArrowRight className="w-4 h-4" />
-                  </button>
+                  </a>
                 </div>
 
                 {/* Email Us */}
@@ -197,9 +203,9 @@ export function ContactPage() {
                   >
                     support@delt.com
                   </a>
-                  <button className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-[#4945FF] text-[#4945FF] rounded-lg hover:bg-[#4945FF]/8 transition-colors font-semibold mt-auto">
+                  <a href="mailto:support@delt.com" className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-[#4945FF] text-[#4945FF] rounded-lg hover:bg-[#4945FF]/8 transition-colors font-semibold mt-auto">
                     Send Email <ArrowRight className="w-4 h-4" />
-                  </button>
+                  </a>
                 </div>
               </div>
             </div>
@@ -298,7 +304,7 @@ export function ContactPage() {
                     We'll call you within one business day to discuss your needs.
                   </p>
                   <p className="text-xs text-[#94A3B8] mb-4">Monday - Friday: 9am - 6pm ET</p>
-                  <button className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#4945FF] text-white rounded-lg hover:bg-[#3730FF] transition-colors font-semibold">
+                  <button onClick={() => navigate('/contact-sales')} className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#4945FF] text-white rounded-lg hover:bg-[#3730FF] transition-colors font-semibold">
                     Request a Call <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
@@ -313,7 +319,7 @@ export function ContactPage() {
                     See Delt in action with a personalized walkthrough of our platform.
                   </p>
                   <p className="text-xs text-[#94A3B8] mb-4">30-minute sessions available</p>
-                  <button className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-[#4945FF] text-[#4945FF] rounded-lg hover:bg-[#4945FF]/8 transition-colors font-semibold">
+                  <button onClick={() => navigate('/contact-sales')} className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-[#4945FF] text-[#4945FF] rounded-lg hover:bg-[#4945FF]/8 transition-colors font-semibold">
                     Schedule Demo <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
@@ -333,9 +339,9 @@ export function ContactPage() {
                   >
                     sales@delt.com
                   </a>
-                  <button className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-[#4945FF] text-[#4945FF] rounded-lg hover:bg-[#4945FF]/8 transition-colors font-semibold mt-auto">
+                  <a href="mailto:support@delt.com" className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-[#4945FF] text-[#4945FF] rounded-lg hover:bg-[#4945FF]/8 transition-colors font-semibold mt-auto">
                     Send Email <ArrowRight className="w-4 h-4" />
-                  </button>
+                  </a>
                 </div>
               </div>
             </div>
@@ -410,6 +416,7 @@ export function ContactPage() {
                     </div>
                   ) : (
                     <form onSubmit={handleSubmit} className="space-y-5">
+                      <input type="text" name="company_website" tabIndex={-1} autoComplete="off" aria-hidden="true" onChange={handleChange} style={{ position: 'absolute', left: '-9999px', width: 1, height: 1, opacity: 0 }} />
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <label className="block text-sm font-medium text-[#041E42] mb-2">First Name</label>

@@ -330,7 +330,7 @@ export function ApplicationPage() {
               <div className="bg-[#F6F7FB] border border-[#4945FF]/15 rounded-lg p-4 text-sm text-[#475569] mb-4">By continuing, you authorize Delt and our bank-verification partner Plaid to access your bank account information. See <a href="https://plaid.com/legal/#consumers" target="_blank" rel="noopener" className="underline text-[#4945FF]">Plaid's Privacy Policy</a>.</div>
 
               {/* Privacy consent */}
-              <p className="text-xs text-[#475569] mb-2">By submitting, you acknowledge our <a href="/privacy" className="underline text-[#4945FF]">Privacy Policy</a> and agree to our <a href="/terms" className="underline text-[#4945FF]">Terms of Service</a>.</p>
+              <p className="text-xs text-[#475569] mb-2">By submitting, you acknowledge our <a href="#/privacy" target="_blank" rel="noopener noreferrer" className="underline text-[#4945FF]">Privacy Policy</a> and agree to our <a href="#/terms" target="_blank" rel="noopener noreferrer" className="underline text-[#4945FF]">Terms of Service</a>.</p>
 
               {/* Submit Button */}
               <button

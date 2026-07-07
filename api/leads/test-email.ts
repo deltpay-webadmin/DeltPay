@@ -56,7 +56,14 @@ function renderLeadEmail(o: {
 </body></html>`;
 }
 
-export default async function handler(_req: any, res: any) {
+export default async function handler(req: any, res: any) {
+  // Gate this behind a secret so it isn't a world-open "email the team" GET.
+  // Set LEADS_TEST_TOKEN in the Vercel env; call /api/leads/test-email?token=...
+  const token = process.env.LEADS_TEST_TOKEN || "";
+  const provided = (req.query && req.query.token) || "";
+  if (!token || provided !== token) {
+    return res.status(404).json({ ok: false, error: "Not found" });
+  }
   let result: { ok: boolean; error?: string } = { ok: false, error: "email not configured" };
   if (RESEND_API_KEY) {
     try {

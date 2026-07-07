@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { ArrowRight, ArrowLeft, Clock, Mail } from 'lucide-react';
+import { useHoneypot } from '../components/Honeypot';
 
 /* ─── Images ─────────────────────────────────────────── */
 import imgFeatured             from '@/assets/blog/blog-featured-capital-rebuild.png';
@@ -36,6 +37,7 @@ const HAIRLINE  = 'rgba(4,30,66,0.08)';
 function NewsletterForm() {
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
+  const { honeypotField, honeypotValue } = useHoneypot();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,7 +46,7 @@ function NewsletterForm() {
     fetch('/api/leads/submit', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type: 'newsletter', email }),
+      body: JSON.stringify({ type: 'newsletter', email, company_website: honeypotValue() }),
     }).catch(() => {});
     setSubscribed(true);
   };
@@ -66,6 +68,7 @@ function NewsletterForm() {
         boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.1)',
       }}
     >
+      {honeypotField}
       <input
         type="email"
         required
