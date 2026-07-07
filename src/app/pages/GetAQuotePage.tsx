@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
 import { trackQuoteRequest } from '@/lib/pixel';
+import { serverFetch } from '../lib/supabase';
 import logoWhite from 'figma:asset/419e83442bb1bf5965a966a8870b00dd4288dd57.png';
 
 const NAVY   = '#041E42';
@@ -346,6 +347,22 @@ export function GetAQuotePage() {
     trackQuoteRequest({
       content_name: `${bizType || 'unknown'}/${volume || 'unknown'}`,
     });
+    // Send the submission to the backend (stores it + emails the team).
+    // Fire-and-forget: the success screen shows regardless of delivery.
+    serverFetch('/leads/quote', {
+      method: 'POST',
+      body: JSON.stringify({
+        name: form.name,
+        email: form.email,
+        phone: form.phone,
+        business: form.business,
+        notes: form.notes,
+        features,
+        bizType,
+        volume,
+        recommendedPlan: rec.plan,
+      }),
+    }).catch(() => { /* non-blocking: success screen already shown */ });
     setSubmitted(true);
   }
 

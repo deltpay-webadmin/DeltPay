@@ -4,6 +4,7 @@ import { ArrowLeft, Check, Building2, Mail, Phone, User } from 'lucide-react';
 import { usePlaidLink } from 'react-plaid-link';
 import { CapitalCrossSell } from '../components/CapitalCrossSell';
 import { trackMerchantLead, trackMerchantOnboarded } from '@/lib/pixel';
+import { serverFetch } from '../lib/supabase';
 
 export function ApplicationPage() {
   const navigate = useNavigate();
@@ -26,6 +27,19 @@ export function ApplicationPage() {
     // Fires before Plaid opens so ad-blockers on the Plaid modal can't
     // suppress it. content_name carries the business type for reporting.
     trackMerchantLead({ content_name: formData.businessType });
+
+    // Send the application to the backend (stores it + emails the team).
+    // Fire-and-forget so the Plaid step opens without waiting on delivery.
+    serverFetch('/leads/application', {
+      method: 'POST',
+      body: JSON.stringify({
+        fullName: formData.fullName,
+        email: formData.email,
+        phone: formData.phone,
+        businessName: formData.businessName,
+        businessType: formData.businessType,
+      }),
+    }).catch(() => { /* non-blocking */ });
 
     // In production, you would call your backend to create a link_token
     // For demo purposes, we'll use a placeholder token
