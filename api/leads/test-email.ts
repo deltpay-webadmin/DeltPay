@@ -1,4 +1,4 @@
-import { sendLeadEmail, LEAD_CONFIG } from "../_lib/leadEmail";
+import { sendLeadEmail, LEAD_CONFIG } from "../../lib/leadEmail";
 
 // Manual delivery check. Hit this once after setting the RESEND_API_KEY env
 // var to confirm Resend + domain verification work end-to-end. Returns the

@@ -3,7 +3,7 @@ import {
   parseBody,
   clean,
   emailOk,
-} from "../_lib/leadEmail";
+} from "../../lib/leadEmail";
 
 // Application ("Get Started" / Apply) submission → branded email to sales.
 export default async function handler(req: any, res: any) {

@@ -4,7 +4,7 @@ import {
   clean,
   cleanList,
   emailOk,
-} from "../_lib/leadEmail";
+} from "../../lib/leadEmail";
 
 // Get-a-Quote wizard submission → branded email to the sales inbox.
 export default async function handler(req: any, res: any) {
