@@ -4,7 +4,6 @@ import { ArrowLeft, Check, Building2, Mail, Phone, User } from 'lucide-react';
 import { usePlaidLink } from 'react-plaid-link';
 import { CapitalCrossSell } from '../components/CapitalCrossSell';
 import { trackMerchantLead, trackMerchantOnboarded } from '@/lib/pixel';
-import { serverFetch } from '../lib/supabase';
 
 export function ApplicationPage() {
   const navigate = useNavigate();
@@ -28,10 +27,11 @@ export function ApplicationPage() {
     // suppress it. content_name carries the business type for reporting.
     trackMerchantLead({ content_name: formData.businessType });
 
-    // Send the application to the backend (stores it + emails the team).
+    // Email the application to the team via the Vercel /api function.
     // Fire-and-forget so the Plaid step opens without waiting on delivery.
-    serverFetch('/leads/application', {
+    fetch('/api/leads/application', {
       method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         fullName: formData.fullName,
         email: formData.email,
