@@ -6,7 +6,7 @@ import { Footer } from '@/app/components/Footer';
 import DeltMarquee from '@/app/components/DeltMarquee';
 import { ScrollToTop } from '@/app/components/ScrollToTop';
 import { CustomCursor } from '@/app/components/CustomCursor';
-import { PageLoader } from '@/app/components/PageLoader';
+import { PageLoader, RouteTransitionLoader } from '@/app/components/PageLoader';
 
 /* Route components are code-split (React.lazy) so the initial load ships a
    small chunk instead of the whole ~2.2MB app. Each page fetches on demand,
@@ -84,6 +84,8 @@ export default function App() {
       <HashRouter>
         <ScrollToTop />
         <PixelRouteTracker />
+        {/* Branded loading moment on every page change (not just chunk fetches). */}
+        <RouteTransitionLoader />
         <Suspense fallback={<PageLoader />}>
         <Routes>
           <Route path="/sandbox" element={<SandboxPage />} />
