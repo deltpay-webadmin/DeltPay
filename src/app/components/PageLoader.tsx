@@ -1,39 +1,76 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router';
 
-/* Shared branded loader visual: DeltPay wordmark + spinner. */
+/*
+ * Shared branded loader visual — the SAME look as the initial app splash in
+ * index.html (#app-loader): navy background, the Delt logo easing in with a
+ * gentle breathe, and a slim indeterminate gradient sweep underneath. Keep the
+ * two in sync if the splash design changes.
+ */
 function LoaderMark() {
   return (
     <>
-      <div
+      <img
+        src="/delt-logo.svg"
+        alt="Delt"
         style={{
-          fontFamily: "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif",
-          fontSize: 26,
-          fontWeight: 800,
-          letterSpacing: '-0.5px',
-          color: '#041E42',
-        }}
-      >
-        Delt<span style={{ color: '#4945FF' }}>Pay</span>
-      </div>
-      <div
-        style={{
-          width: 28,
-          height: 28,
-          borderRadius: '50%',
-          border: '3px solid rgba(73,69,255,0.18)',
-          borderTopColor: '#4945FF',
-          animation: 'deltpay-spin 0.7s linear infinite',
+          width: 'clamp(150px, 22vw, 210px)',
+          height: 'auto',
+          opacity: 0,
+          transform: 'translateY(8px) scale(0.98)',
+          animation:
+            'dp-loader-in 0.45s cubic-bezier(0.22,1,0.36,1) forwards, dp-loader-breathe 2.6s ease-in-out 0.45s infinite',
         }}
       />
-      <style>{`@keyframes deltpay-spin { to { transform: rotate(360deg); } }`}</style>
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'relative',
+          width: 'clamp(160px, 24vw, 220px)',
+          height: 3,
+          borderRadius: 999,
+          background: 'rgba(255,255,255,0.12)',
+          overflow: 'hidden',
+        }}
+      >
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            height: '100%',
+            width: '42%',
+            borderRadius: 999,
+            background: 'linear-gradient(90deg, #4945ff, #6e8bff, #b47bff)',
+            animation: 'dp-loader-sweep 1.25s ease-in-out infinite',
+          }}
+        />
+      </div>
+      <style>{`
+        @keyframes dp-loader-in {
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes dp-loader-breathe {
+          0%, 100% { transform: scale(1); opacity: 1; }
+          50% { transform: scale(1.035); opacity: 0.92; }
+        }
+        @keyframes dp-loader-sweep {
+          0% { left: -45%; }
+          100% { left: 100%; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          img[alt="Delt"] { animation: dp-loader-in 0.3s ease forwards !important; }
+        }
+      `}</style>
     </>
   );
 }
 
+const LOADER_BG = '#041e42';
+
 /**
- * Branded route loader shown while a lazy-loaded page chunk is fetching
- * (Suspense fallback) — keeps the screen from flashing blank.
+ * Suspense fallback while a lazy-loaded page chunk fetches — keeps the screen
+ * from flashing blank, in the same branded style as the splash.
  */
 export function PageLoader() {
   return (
@@ -46,8 +83,8 @@ export function PageLoader() {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: 22,
-        background: '#F6F7FB',
+        gap: 30,
+        background: LOADER_BG,
       }}
     >
       <LoaderMark />
@@ -59,11 +96,11 @@ export function PageLoader() {
  * Route-transition overlay: a deliberate branded loading moment on EVERY page
  * navigation, not just when a chunk fetches. Shows instantly on route change,
  * holds for a minimum time so the transition reads as intentional, then fades
- * out. Skips the very first render (the index.html splash covers that), and
- * collapses to near-nothing for reduced-motion users.
+ * out (same 0.5s ease as the splash). Skips the very first render (the
+ * index.html splash covers that) and shortens for reduced-motion users.
  */
 const HOLD_MS = 650;
-const FADE_MS = 320;
+const FADE_MS = 500;
 
 export function RouteTransitionLoader() {
   const { pathname } = useLocation();
@@ -99,8 +136,8 @@ export function RouteTransitionLoader() {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: 22,
-        background: '#F6F7FB',
+        gap: 30,
+        background: LOADER_BG,
         opacity: phase === 'fading' ? 0 : 1,
         transition: `opacity ${FADE_MS}ms ease`,
         pointerEvents: phase === 'fading' ? 'none' : 'auto',
