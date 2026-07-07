@@ -81,39 +81,97 @@ function escapeHtml(v: unknown): string {
     .replace(/"/g, "&quot;");
 }
 
-function rowsToHtml(rows: Array<[string, unknown]>): string {
-  const body = rows
+const FONT_STACK =
+  "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
+
+// Renders one label/value row. `full` values (e.g. notes) stack the value
+// under the label so long text isn't cramped into a narrow column.
+function detailRow([label, v]: [string, unknown]): string {
+  const value = escapeHtml(v).replace(/\n/g, "<br>");
+  return `<tr>
+    <td style="padding:14px 0;border-bottom:1px solid #EEF1F6;vertical-align:top;width:150px">
+      <span style="font:600 11px ${FONT_STACK};color:#94A3B8;text-transform:uppercase;letter-spacing:.6px">${escapeHtml(label)}</span>
+    </td>
+    <td style="padding:14px 0;border-bottom:1px solid #EEF1F6;vertical-align:top;font:500 15px ${FONT_STACK};color:#0F172A;line-height:1.5">${value}</td>
+  </tr>`;
+}
+
+// Builds a branded, email-client-safe HTML document (table layout + inline
+// styles, ~600px, works in Gmail/Outlook/Apple Mail).
+function renderLeadEmail(o: {
+  heading: string;
+  subtitle: string;
+  badge: string;
+  accent: string;
+  rows: Array<[string, unknown]>;
+  replyTo?: string;
+  preheader?: string;
+}): string {
+  const rowsHtml = o.rows
     .filter(([, v]) => v !== undefined && v !== null && String(v).trim() !== "")
-    .map(
-      ([label, v]) =>
-        `<tr><td style="padding:6px 14px 6px 0;color:#64748B;font:600 13px sans-serif;white-space:nowrap;vertical-align:top">${escapeHtml(
-          label,
-        )}</td><td style="padding:6px 0;color:#0F172A;font:400 14px sans-serif">${escapeHtml(
-          v,
-        )}</td></tr>`,
-    )
+    .map(detailRow)
     .join("");
-  return `<table style="border-collapse:collapse">${body}</table>`;
+  const sentAt = new Date().toUTCString();
+  const cta = o.replyTo
+    ? `<tr><td style="padding:8px 40px 40px">
+         <a href="mailto:${escapeHtml(o.replyTo)}" style="display:inline-block;background:#4945FF;color:#ffffff;font:700 14px ${FONT_STACK};text-decoration:none;padding:13px 26px;border-radius:10px">Reply to ${escapeHtml(o.replyTo)} &rarr;</a>
+       </td></tr>`
+    : "";
+  return `<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"></head>
+<body style="margin:0;padding:0;background:#EEF1F6;">
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent">${escapeHtml(o.preheader || o.subtitle)}</div>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#EEF1F6;padding:32px 16px;">
+    <tr><td align="center">
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:600px;max-width:600px;background:#ffffff;border-radius:18px;overflow:hidden;border:1px solid #E2E8F0;">
+        <!-- header -->
+        <tr><td style="background:#041E42;padding:26px 40px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+            <td style="font:800 21px ${FONT_STACK};color:#ffffff;letter-spacing:-.5px">Delt<span style="color:#6C63FF">Pay</span></td>
+            <td align="right"><span style="display:inline-block;background:${o.accent};color:#ffffff;font:700 11px ${FONT_STACK};padding:6px 13px;border-radius:999px;text-transform:uppercase;letter-spacing:.5px">${escapeHtml(o.badge)}</span></td>
+          </tr></table>
+        </td></tr>
+        <!-- accent rule -->
+        <tr><td style="height:4px;line-height:4px;font-size:0;background:${o.accent};">&nbsp;</td></tr>
+        <!-- title -->
+        <tr><td style="padding:36px 40px 4px;">
+          <h1 style="margin:0;font:800 23px ${FONT_STACK};color:#041E42;letter-spacing:-.4px">${escapeHtml(o.heading)}</h1>
+          <p style="margin:9px 0 0;font:400 14px ${FONT_STACK};color:#64748B;line-height:1.5">${escapeHtml(o.subtitle)}</p>
+        </td></tr>
+        <!-- details -->
+        <tr><td style="padding:20px 40px 8px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">${rowsHtml}</table>
+        </td></tr>
+        ${cta}
+      </table>
+      <!-- footer -->
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:600px;max-width:600px;">
+        <tr><td style="padding:22px 40px;text-align:center;font:400 12px ${FONT_STACK};color:#94A3B8;line-height:1.6">
+          Sent automatically when a form was submitted on <a href="https://deltpay.com" style="color:#4945FF;text-decoration:none">deltpay.com</a><br>${escapeHtml(sentAt)}
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body></html>`;
 }
 
 // Sends a formatted lead notification. Returns { ok, error? } and never
 // throws — the caller still succeeds (and the lead is stored) even if
 // email delivery fails, so the visitor's submit is never blocked.
-async function sendLeadEmail(
-  subject: string,
-  heading: string,
-  rows: Array<[string, unknown]>,
-  replyTo?: string,
-): Promise<{ ok: boolean; error?: string }> {
+async function sendLeadEmail(o: {
+  subject: string;
+  heading: string;
+  subtitle: string;
+  badge: string;
+  accent: string;
+  rows: Array<[string, unknown]>;
+  replyTo?: string;
+}): Promise<{ ok: boolean; error?: string }> {
   if (!RESEND_API_KEY) {
     console.error("RESEND_API_KEY not configured — skipping lead email");
     return { ok: false, error: "email not configured" };
   }
-  const html = `<div style="max-width:560px;margin:0 auto;font-family:sans-serif">
-    <h2 style="color:#041E42;font-size:20px;margin:0 0 4px">${escapeHtml(heading)}</h2>
-    <p style="color:#64748B;font-size:13px;margin:0 0 20px">New submission from the DeltPay site</p>
-    ${rowsToHtml(rows)}
-  </div>`;
+  const html = renderLeadEmail(o);
   try {
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -124,9 +182,9 @@ async function sendLeadEmail(
       body: JSON.stringify({
         from: LEAD_NOTIFY_FROM,
         to: [LEAD_NOTIFY_TO],
-        subject,
+        subject: o.subject,
         html,
-        ...(replyTo ? { reply_to: replyTo } : {}),
+        ...(o.replyTo ? { reply_to: o.replyTo } : {}),
       }),
     });
     if (!res.ok) {
@@ -173,10 +231,14 @@ app.post("/make-server-940653c6/leads/quote", async (c) => {
     };
     await kv.set(`lead:quote:${email}:${record.submitted_at}`, record);
 
-    await sendLeadEmail(
-      `New quote request — ${name}`,
-      "New Get-a-Quote request",
-      [
+    await sendLeadEmail({
+      subject: `New quote request — ${name}`,
+      heading: "New Get-a-Quote request",
+      subtitle: `${name} just requested a quote through the DeltPay site.`,
+      badge: "Quote request",
+      accent: "#4945FF",
+      replyTo: record.email,
+      rows: [
         ["Name", record.name],
         ["Email", record.email],
         ["Phone", record.phone],
@@ -187,8 +249,7 @@ app.post("/make-server-940653c6/leads/quote", async (c) => {
         ["Recommended plan", record.recommendedPlan],
         ["Notes", record.notes],
       ],
-      record.email,
-    );
+    });
 
     return c.json({ ok: true });
   } catch (err) {
@@ -219,18 +280,21 @@ app.post("/make-server-940653c6/leads/application", async (c) => {
     };
     await kv.set(`lead:application:${email}:${record.submitted_at}`, record);
 
-    await sendLeadEmail(
-      `New application — ${fullName}`,
-      "New merchant application",
-      [
+    await sendLeadEmail({
+      subject: `New application — ${fullName}`,
+      heading: "New merchant application",
+      subtitle: `${fullName} started a merchant application on the DeltPay site.`,
+      badge: "Application",
+      accent: "#16C784",
+      replyTo: record.email,
+      rows: [
         ["Full name", record.fullName],
         ["Email", record.email],
         ["Phone", record.phone],
         ["Business name", record.businessName],
         ["Business type", record.businessType],
       ],
-      record.email,
-    );
+    });
 
     return c.json({ ok: true });
   } catch (err) {
@@ -244,16 +308,19 @@ app.post("/make-server-940653c6/leads/application", async (c) => {
 // end-to-end. Sends a sample email to the lead recipient and returns
 // the outcome so you can see failures (e.g. unverified domain) directly.
 app.get("/make-server-940653c6/leads/test-email", async (c) => {
-  const result = await sendLeadEmail(
-    "DeltPay Resend test email",
-    "Resend test email",
-    [
+  const result = await sendLeadEmail({
+    subject: "DeltPay Resend test email",
+    heading: "Resend test email",
+    subtitle: "This confirms your lead notification emails are set up correctly.",
+    badge: "Test",
+    accent: "#4945FF",
+    rows: [
       ["Status", "If you received this, Resend delivery is working."],
       ["Recipient", LEAD_NOTIFY_TO],
       ["Sender", LEAD_NOTIFY_FROM],
       ["Sent at", new Date().toISOString()],
     ],
-  );
+  });
   const status = result.ok ? 200 : 500;
   return c.json(
     {
