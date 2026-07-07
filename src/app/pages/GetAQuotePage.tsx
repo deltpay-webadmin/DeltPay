@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
-import { JOTFORM_APP_URL } from '../lib/jotform';
 import { motion, AnimatePresence } from 'motion/react';
 import { trackQuoteRequest } from '@/lib/pixel';
 import logoWhite from 'figma:asset/419e83442bb1bf5965a966a8870b00dd4288dd57.png';
@@ -344,13 +343,27 @@ export function GetAQuotePage() {
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     // Meta Pixel: quote request submitted — mid-funnel intent lead.
-    // Fires BEFORE the redirect so the pixel has time to send the
-    // beacon even though the page is about to unload.
     trackQuoteRequest({
       content_name: `${bizType || 'unknown'}/${volume || 'unknown'}`,
     });
+    // Email the submission to the team via the Vercel /api function.
+    // Fire-and-forget: the success screen shows regardless of delivery.
+    fetch('/api/leads/quote', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: form.name,
+        email: form.email,
+        phone: form.phone,
+        business: form.business,
+        notes: form.notes,
+        features,
+        bizType,
+        volume,
+        recommendedPlan: rec.plan,
+      }),
+    }).catch(() => { /* non-blocking: success screen already shown */ });
     setSubmitted(true);
-    window.location.href = JOTFORM_APP_URL;
   }
 
   /* ── Slide variants ── */

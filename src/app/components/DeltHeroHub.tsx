@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router';
-import { JOTFORM_APP_URL } from '../lib/jotform';
 import { motion, useInView } from 'motion/react';
 import lensIcon from 'figma:asset/86ab3fe0422dec5536bf8bfb4c1714db1dfe7b45.png';
 import { CPULoadingAnimation } from './CPULoadingAnimation';
@@ -179,10 +178,8 @@ export function DeltHeroHub() {
           {/* CTAs + stats */}
           <Reveal delay={0.3}>
             <div className="flex items-center gap-4 flex-wrap">
-              <a
-                href={JOTFORM_APP_URL}
-                target="_blank"
-                rel="noopener noreferrer"
+              <Link
+                to="/apply"
                 className="inline-flex items-center gap-2 text-[15px] font-bold text-white px-[30px] py-3.5 rounded-lg transition-all duration-200 hover:-translate-y-0.5"
                 style={{ background: NAVY }}
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = PURPLE; }}
@@ -192,7 +189,7 @@ export function DeltHeroHub() {
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                   <path d="M1 7h12M8 2l5 5-5 5" />
                 </svg>
-              </a>
+              </Link>
               <Link
                 to="/sandbox"
                 className="text-[15px] font-semibold px-[30px] py-3.5 rounded-lg border-[1.5px] bg-white transition-colors duration-150"

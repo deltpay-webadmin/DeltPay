@@ -1,7 +1,6 @@
 import { useRef, useCallback } from 'react';
 import { motion, useMotionValue, useTransform, useSpring } from 'motion/react';
 import { Link } from 'react-router';
-import { JOTFORM_APP_URL } from '../lib/jotform';
 
 // --- Word-by-word cinematic text reveal ---
 function CinematicHeading() {
@@ -321,14 +320,12 @@ export function HeroSection() {
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.98 }}
               >
-                <a
-                  href={JOTFORM_APP_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <Link
+                  to="/apply"
                   className="get-started-btn inline-flex justify-center items-center px-8 py-4 rounded-xl font-medium transition-all text-lg bg-[#4945FF] text-white border-2 border-[#4945FF] hover:bg-[#3933CC] hover:border-[#3933CC] relative overflow-hidden"
                 >
                   Get Started for Free
-                </a>
+                </Link>
               </motion.div>
               <motion.a
                 href="#products"

@@ -27,6 +27,20 @@ export function ApplicationPage() {
     // suppress it. content_name carries the business type for reporting.
     trackMerchantLead({ content_name: formData.businessType });
 
+    // Email the application to the team via the Vercel /api function.
+    // Fire-and-forget so the Plaid step opens without waiting on delivery.
+    fetch('/api/leads/application', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fullName: formData.fullName,
+        email: formData.email,
+        phone: formData.phone,
+        businessName: formData.businessName,
+        businessType: formData.businessType,
+      }),
+    }).catch(() => { /* non-blocking */ });
+
     // In production, you would call your backend to create a link_token
     // For demo purposes, we'll use a placeholder token
     const mockLinkToken = 'link-sandbox-' + Math.random().toString(36).substring(7);
