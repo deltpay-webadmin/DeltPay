@@ -71,7 +71,12 @@ app.post("/make-server-940653c6/leads/pricing-guide", async (c) => {
 // (deltpay.com) must be verified in Resend for delivery to succeed.
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 const LEAD_NOTIFY_TO = "david@deltpay.com";
-const LEAD_NOTIFY_FROM = "DeltPay Leads <noreply@deltpay.com>";
+const LEAD_NOTIFY_BCC = "carlos@deltpay.com";
+// Sender. Override with LEAD_NOTIFY_FROM secret (e.g. while deltpay.com is
+// still being verified in Resend, set it to "DeltPay <onboarding@resend.dev>"
+// to confirm the pipeline works). Defaults to the verified-domain sender.
+const LEAD_NOTIFY_FROM =
+  Deno.env.get("LEAD_NOTIFY_FROM") || "DeltPay Leads <noreply@deltpay.com>";
 
 function escapeHtml(v: unknown): string {
   return String(v ?? "")
@@ -182,6 +187,7 @@ async function sendLeadEmail(o: {
       body: JSON.stringify({
         from: LEAD_NOTIFY_FROM,
         to: [LEAD_NOTIFY_TO],
+        bcc: [LEAD_NOTIFY_BCC],
         subject: o.subject,
         html,
         ...(o.replyTo ? { reply_to: o.replyTo } : {}),
@@ -190,7 +196,9 @@ async function sendLeadEmail(o: {
     if (!res.ok) {
       const detail = await res.text().catch(() => "");
       console.error("resend send failed", res.status, detail);
-      return { ok: false, error: `resend ${res.status}` };
+      // Surface Resend's own message (e.g. "The deltpay.com domain is not
+      // verified") so the cause is visible without digging through logs.
+      return { ok: false, error: `resend ${res.status}: ${detail.slice(0, 300)}` };
     }
     return { ok: true };
   } catch (err) {
@@ -231,7 +239,7 @@ app.post("/make-server-940653c6/leads/quote", async (c) => {
     };
     await kv.set(`lead:quote:${email}:${record.submitted_at}`, record);
 
-    await sendLeadEmail({
+    const emailResult = await sendLeadEmail({
       subject: `New quote request — ${name}`,
       heading: "New Get-a-Quote request",
       subtitle: `${name} just requested a quote through the DeltPay site.`,
@@ -251,7 +259,7 @@ app.post("/make-server-940653c6/leads/quote", async (c) => {
       ],
     });
 
-    return c.json({ ok: true });
+    return c.json({ ok: true, emailed: emailResult.ok, emailError: emailResult.error });
   } catch (err) {
     console.error("quote lead error", err);
     return c.json({ ok: false, error: "Something went wrong. Please try again." }, 500);
@@ -280,7 +288,7 @@ app.post("/make-server-940653c6/leads/application", async (c) => {
     };
     await kv.set(`lead:application:${email}:${record.submitted_at}`, record);
 
-    await sendLeadEmail({
+    const emailResult = await sendLeadEmail({
       subject: `New application — ${fullName}`,
       heading: "New merchant application",
       subtitle: `${fullName} started a merchant application on the DeltPay site.`,
@@ -296,7 +304,7 @@ app.post("/make-server-940653c6/leads/application", async (c) => {
       ],
     });
 
-    return c.json({ ok: true });
+    return c.json({ ok: true, emailed: emailResult.ok, emailError: emailResult.error });
   } catch (err) {
     console.error("application lead error", err);
     return c.json({ ok: false, error: "Something went wrong. Please try again." }, 500);
@@ -326,6 +334,8 @@ app.get("/make-server-940653c6/leads/test-email", async (c) => {
     {
       ok: result.ok,
       sentTo: LEAD_NOTIFY_TO,
+      bcc: LEAD_NOTIFY_BCC,
+      from: LEAD_NOTIFY_FROM,
       keyConfigured: RESEND_API_KEY !== "",
       ...(result.error ? { error: result.error } : {}),
     },
