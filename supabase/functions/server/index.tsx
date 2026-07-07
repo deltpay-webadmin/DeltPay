@@ -239,4 +239,31 @@ app.post("/make-server-940653c6/leads/application", async (c) => {
   }
 });
 
+// Manual delivery check. Hit this once after deploying + setting the
+// RESEND_API_KEY secret to confirm Resend + domain verification work
+// end-to-end. Sends a sample email to the lead recipient and returns
+// the outcome so you can see failures (e.g. unverified domain) directly.
+app.get("/make-server-940653c6/leads/test-email", async (c) => {
+  const result = await sendLeadEmail(
+    "DeltPay Resend test email",
+    "Resend test email",
+    [
+      ["Status", "If you received this, Resend delivery is working."],
+      ["Recipient", LEAD_NOTIFY_TO],
+      ["Sender", LEAD_NOTIFY_FROM],
+      ["Sent at", new Date().toISOString()],
+    ],
+  );
+  const status = result.ok ? 200 : 500;
+  return c.json(
+    {
+      ok: result.ok,
+      sentTo: LEAD_NOTIFY_TO,
+      keyConfigured: RESEND_API_KEY !== "",
+      ...(result.error ? { error: result.error } : {}),
+    },
+    status,
+  );
+});
+
 Deno.serve(app.fetch);
