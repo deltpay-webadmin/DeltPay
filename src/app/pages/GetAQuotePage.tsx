@@ -343,8 +343,6 @@ export function GetAQuotePage() {
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     // Meta Pixel: quote request submitted — mid-funnel intent lead.
-    // Fires BEFORE the redirect so the pixel has time to send the
-    // beacon even though the page is about to unload.
     trackQuoteRequest({
       content_name: `${bizType || 'unknown'}/${volume || 'unknown'}`,
     });
