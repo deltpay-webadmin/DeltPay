@@ -9,11 +9,19 @@ const LEAD_NOTIFY_FROM =
 const FONT_STACK =
   "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
 
-const ALLOWED_HOST_RE = /(^|\.)deltpay\.com$|(^|\.)vercel\.app$/i;
+const ALLOWED_HOST_RE = /(^|\.)deltpay\.com$|(^|\.)delt\.com$|(^|\.)vercel\.app$/i;
 function originAllowed(req: any): boolean {
   const src = req.headers?.origin || req.headers?.referer || "";
   if (!src) return true;
-  try { return ALLOWED_HOST_RE.test(new URL(src).hostname); } catch { return false; }
+  try {
+    const host = new URL(src).hostname;
+    if (ALLOWED_HOST_RE.test(host)) return true;
+    console.warn("application lead blocked: origin not allowed:", host);
+    return false;
+  } catch {
+    console.warn("application lead blocked: unparseable origin");
+    return false;
+  }
 }
 const emailOk = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e) && e.length <= 254;
 const clean = (v: unknown, max = 500) =>
@@ -113,14 +121,16 @@ export default async function handler(req: any, res: any) {
   }
   if (!originAllowed(req)) return res.status(403).json({ ok: false, error: "Forbidden" });
   const body = parseBody(req.body);
-  if (clean(body.company_website, 200) !== "") return res.status(200).json({ ok: true });
+  // Honeypot is non-fatal (autofill-safe): tag instead of drop.
+  const spamSuspect =
+    clean(body.hp_extra_field, 200) !== "" || clean(body.company_website, 200) !== "";
   const fullName = clean(body.fullName, 200);
   const email = clean(body.email, 254).toLowerCase();
   if (!fullName || !emailOk(email)) {
     return res.status(400).json({ ok: false, error: "Please enter a valid name and email." });
   }
   const r = await sendLeadEmail({
-    subject: `New application — ${fullName}`,
+    subject: `${spamSuspect ? "[possible spam] " : ""}New application — ${fullName}`,
     heading: "New merchant application",
     subtitle: `${fullName} started a merchant application on the DeltPay site.`,
     badge: "Application",

@@ -14,7 +14,7 @@ export function EmailCaptureBar() {
     fetch('/api/leads/submit', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type: 'rate-check', email, company_website: honeypotValue() }),
+      body: JSON.stringify({ type: 'rate-check', email, hp_extra_field: honeypotValue() }),
     }).catch(() => {});
     setSubmitted(true);
   };

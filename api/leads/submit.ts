@@ -15,15 +15,27 @@ const FONT_STACK =
 const MAX_ATTACH_B64 = 3_500_000;
 
 // Abuse controls. Only accept requests whose Origin/Referer is our own site
-// (blocks the trivial `curl` flood), and honor a hidden honeypot field that
-// real users never see but bots fill in.
-const ALLOWED_HOST_RE = /(^|\.)deltpay\.com$|(^|\.)vercel\.app$/i;
+// (blocks the trivial `curl` flood). The honeypot is NON-FATAL: browser
+// autofill can fill hidden fields too, so a filled honeypot tags the email as
+// possible spam instead of dropping it — a real lead is never lost to a
+// false positive. Every block/tag is logged so Vercel runtime logs show why.
+const ALLOWED_HOST_RE = /(^|\.)deltpay\.com$|(^|\.)delt\.com$|(^|\.)vercel\.app$/i;
 function originAllowed(req: any): boolean {
   const src = req.headers?.origin || req.headers?.referer || "";
   if (!src) return true; // same-origin fetches may omit Origin; don't hard-block
-  try { return ALLOWED_HOST_RE.test(new URL(src).hostname); } catch { return false; }
+  try {
+    const host = new URL(src).hostname;
+    if (ALLOWED_HOST_RE.test(host)) return true;
+    console.warn("lead blocked: origin not allowed:", host);
+    return false;
+  } catch {
+    console.warn("lead blocked: unparseable origin:", String(src).slice(0, 100));
+    return false;
+  }
 }
-const isBot = (b: Record<string, unknown>) => clean(b.company_website, 200) !== "";
+// Accept both the current and the legacy honeypot field names.
+const honeypotFilled = (b: Record<string, unknown>) =>
+  clean(b.hp_extra_field, 200) !== "" || clean(b.company_website, 200) !== "";
 
 // Attachment allowlist — sniff the base64 magic bytes so an attacker can't relay
 // an executable to the team inbox in a trusted-looking email.
@@ -242,8 +254,9 @@ export default async function handler(req: any, res: any) {
     return res.status(403).json({ ok: false, error: "Forbidden" });
   }
   const body = parseBody(req.body);
-  // Honeypot: pretend success without sending so bots get no signal.
-  if (isBot(body)) return res.status(200).json({ ok: true });
+  // Honeypot filled → still send, but tagged (autofill-safe; see note above).
+  const spamSuspect = honeypotFilled(body);
+  if (spamSuspect) console.log("lead honeypot filled — sending tagged as possible spam");
   const type = clean(body.type, 40);
   const def = FORMS[type];
   if (!def) {
@@ -270,8 +283,11 @@ export default async function handler(req: any, res: any) {
     }
   }
 
+  if (spamSuspect) {
+    rows.push(["Spam signals", "Hidden honeypot field was filled (bot, or the sender's browser autofill)."]);
+  }
   const r = await sendLeadEmail({
-    subject: def.subject(body),
+    subject: (spamSuspect ? "[possible spam] " : "") + def.subject(body),
     heading: def.heading,
     subtitle: def.subtitle(body),
     badge: def.badge,

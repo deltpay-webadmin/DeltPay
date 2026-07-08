@@ -46,7 +46,7 @@ function NewsletterForm() {
     fetch('/api/leads/submit', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type: 'newsletter', email, company_website: honeypotValue() }),
+      body: JSON.stringify({ type: 'newsletter', email, hp_extra_field: honeypotValue() }),
     }).catch(() => {});
     setSubscribed(true);
   };

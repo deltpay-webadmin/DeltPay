@@ -57,13 +57,17 @@ function renderLeadEmail(o: {
 }
 
 export default async function handler(req: any, res: any) {
-  // Gate this behind a secret so it isn't a world-open "email the team" GET.
-  // Set LEADS_TEST_TOKEN in the Vercel env; call /api/leads/test-email?token=...
+  // Optional gate: when LEADS_TEST_TOKEN is set in the Vercel env, require
+  // /api/leads/test-email?token=<value>. When unset, the route stays open so
+  // the owner can always self-test delivery (set the token to lock it down).
   const token = process.env.LEADS_TEST_TOKEN || "";
   const provided = (req.query && req.query.token) || "";
-  if (!token || provided !== token) {
+  if (token && provided !== token) {
     return res.status(404).json({ ok: false, error: "Not found" });
   }
+  const tokenGate = token
+    ? "enabled"
+    : "disabled — set LEADS_TEST_TOKEN in Vercel to lock this route down";
   let result: { ok: boolean; error?: string } = { ok: false, error: "email not configured" };
   if (RESEND_API_KEY) {
     try {
@@ -100,6 +104,7 @@ export default async function handler(req: any, res: any) {
     bcc: LEAD_NOTIFY_BCC,
     from: LEAD_NOTIFY_FROM,
     keyConfigured: RESEND_API_KEY !== "",
+    tokenGate,
     ...(result.error ? { error: result.error } : {}),
   });
 }
