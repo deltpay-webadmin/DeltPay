@@ -7,6 +7,7 @@ import DeltMarquee from '@/app/components/DeltMarquee';
 import { ScrollToTop } from '@/app/components/ScrollToTop';
 import { CustomCursor } from '@/app/components/CustomCursor';
 import { PageLoader, RouteTransitionLoader } from '@/app/components/PageLoader';
+import { CookieConsent } from '@/app/components/CookieConsent';
 
 /* Route components are code-split (React.lazy) so the initial load ships a
    small chunk instead of the whole ~2.2MB app. Each page fetches on demand,
@@ -86,6 +87,9 @@ export default function App() {
         <PixelRouteTracker />
         {/* Branded loading moment on every page change (not just chunk fetches). */}
         <RouteTransitionLoader />
+        {/* Cookie consent banner + system (EN/ES). Inside the router so its
+            "Cookie & Privacy Policy" link can SPA-navigate to /privacy. */}
+        <CookieConsent />
         <Suspense fallback={<PageLoader />}>
         <Routes>
           <Route path="/sandbox" element={<SandboxPage />} />

@@ -122,7 +122,30 @@
       s.parentNode.insertBefore(t,s)}(window,document,'script',
       'https://connect.facebook.net/en_US/fbevents.js');
       fbq('init', '1594401858975809');
-      fbq('track', 'PageView');
+
+      /* ── Consent-gated PageView ──────────────────────────────────
+         Privacy-safe (opt-in): revoke consent immediately so the pixel
+         holds ALL events until the visitor accepts. We only grant + fire
+         the initial PageView here for a returning visitor who has already
+         accepted. Undecided / declined visitors are held; the in-app
+         banner (src/lib/consent.ts) grants + fires exactly one PageView
+         on Accept. __deltPixelPageViewFired guards against double-counting
+         between this script and the app. */
+      fbq('consent', 'revoke');
+      (function () {
+        try {
+          var raw = window.localStorage.getItem('deltcap:cookie-consent:v1');
+          if (!raw) return;
+          var rec = JSON.parse(raw);
+          if (rec && rec.choice === 'accepted') {
+            fbq('consent', 'grant');
+            fbq('track', 'PageView');
+            window.__deltPixelPageViewFired = true;
+          }
+        } catch (e) {
+          /* storage blocked — stay revoked, banner will handle it */
+        }
+      })();
     </script>
     <!-- End Meta Pixel Code -->
   </head>

@@ -187,6 +187,15 @@ export function Footer() {
             <Link to="/terms" className="dc-footer-link">Terms of Use</Link>
             <Link to="/privacy" className="dc-footer-link">Privacy Policy</Link>
             <Link to="/contact" className="dc-footer-link">Communications</Link>
+            {/* Reopens the cookie banner so visitors can change their mind.
+                Rendered as a button styled like the legal links. */}
+            <button
+              type="button"
+              className="dc-footer-link dc-footer-link-btn"
+              onClick={() => window.DeltConsent?.open()}
+            >
+              Cookie preferences
+            </button>
           </div>
         </div>
       </div>
@@ -405,6 +414,17 @@ export function Footer() {
         .dc-footer-legal .dc-footer-link {
           font-size: 12.5px;
           color: rgba(247, 245, 240, 0.6);
+        }
+        /* "Cookie preferences" is a <button> (it opens the banner) but
+           should read exactly like the neighboring legal links. */
+        .dc-footer-link-btn {
+          background: none;
+          border: none;
+          padding: 5px 0;
+          margin: 0;
+          font-family: 'Inter', sans-serif;
+          cursor: pointer;
+          text-align: left;
         }
 
         @media (max-width: 980px) {
