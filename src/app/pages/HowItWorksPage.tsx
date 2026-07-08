@@ -306,19 +306,24 @@ export function HowItWorksPage() {
           color: #fff;
           margin: 0 0 28px;
         }
+        /* Editorial accent, on-brand: the site's Source Serif Pro italic
+           (the same treatment as "savings." / "We fund it." elsewhere) in a
+           soft indigo that reads cleanly on the navy field. Lighter weight
+           than the sans line above so the contrast feels intentional, not
+           bolted-on. The tiny bottom padding keeps the italic 'p' descender
+           from clipping. */
         .hiw-hero-title-accent {
-          background: linear-gradient(90deg, #4945FF 0%, #7B78FF 60%, #4945FF 100%);
-          background-size: 200% 100%;
-          animation: hiw-shimmer 6s ease-in-out infinite;
+          display: inline-block;
+          font-family: var(--dc-font-serif-italic, 'Source Serif Pro', Georgia, serif);
+          font-style: italic;
+          font-weight: 400;
+          letter-spacing: -0.01em;
+          padding-bottom: 0.08em;
+          background: linear-gradient(92deg, #A5B4FC 0%, #C7D2FE 100%);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
           background-clip: text;
-          font-style: italic;
-          font-family: 'Playfair Display', serif;
-        }
-        @keyframes hiw-shimmer {
-          0%, 100% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
+          color: transparent;
         }
         .hiw-hero-sub {
           font-family: 'Plus Jakarta Sans', sans-serif;

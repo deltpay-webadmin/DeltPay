@@ -10,9 +10,6 @@ export function CalculatorPage() {
   const [avgTransactionSize, setAvgTransactionSize] = useState('50');
   const [calculated, setCalculated] = useState(false);
 
-  const DELT_RATE = 0.026;
-  const DELT_PER_TXN = 0.10;
-
   const calcSavings = () => {
     const volume = parseFloat(monthlyVolume.replace(/,/g, '')) || 0;
     const avgSize = parseFloat(avgTransactionSize.replace(/,/g, '')) || 1;
@@ -21,8 +18,12 @@ export function CalculatorPage() {
     const numTransactions = volume / avgSize;
 
     const currentCost = volume * rate + numTransactions * perTxn;
-    const deltCost = volume * DELT_RATE + numTransactions * DELT_PER_TXN;
-    const savings = currentCost - deltCost;
+    // Cash-discount program: the standard card fee is passed to card-paying
+    // customers as a service fee, and cash customers get the discounted
+    // price — so the merchant's NET processing cost is $0. That means the
+    // savings equal the entire amount they hand their current processor.
+    const deltCost = 0;
+    const savings = currentCost - deltCost; // === currentCost
 
     return { currentCost, deltCost, savings, numTransactions };
   };
@@ -159,11 +160,12 @@ export function CalculatorPage() {
                 </button>
               </div>
 
-              {/* Delt Rates */}
+              {/* Delt cash-discount program — the merchant keeps 100% because
+                  the card fee is passed to the card-paying customer. */}
               <div className="mt-6 p-5 bg-[#4945FF]/8 rounded-xl border border-[#4945FF]/15">
-                <div className="text-xs text-[#4945FF] mb-1 tracking-wider uppercase" style={{ fontWeight: 700 }}>Delt Rates</div>
-                <div className="text-2xl text-[#041E42]" style={{ fontWeight: 800 }}>2.6% + $0.10</div>
-                <div className="text-sm text-[#475569] mt-0.5">Per transaction · No hidden fees</div>
+                <div className="text-xs text-[#4945FF] mb-1 tracking-wider uppercase" style={{ fontWeight: 700 }}>Cash Discount Program</div>
+                <div className="text-2xl text-[#041E42]" style={{ fontWeight: 800 }}>0% net processing</div>
+                <div className="text-sm text-[#475569] mt-0.5">Card fees (2.6% + $0.10) passed to customers · You keep 100%</div>
               </div>
             </div>
 
@@ -189,8 +191,11 @@ export function CalculatorPage() {
                   </div>
 
                   <div>
-                    <p className="text-sm text-[#475569] mb-1">With Delt</p>
+                    <p className="text-sm text-[#475569] mb-1">With Delt — cash discount</p>
                     <p className="text-2xl text-[#4945FF]" style={{ fontWeight: 700 }}>{formatCurrency(deltCost)}</p>
+                    <p className="text-xs mt-1" style={{ color: '#1F845A', fontWeight: 600 }}>
+                      Card fees passed to your customers
+                    </p>
                   </div>
 
                   <div className="h-px bg-[#E5E7EB]" />
@@ -202,7 +207,7 @@ export function CalculatorPage() {
                     </p>
                     {savings > 0 && (
                       <p className="text-sm text-[#4945FF] mt-1" style={{ fontWeight: 500 }}>
-                        {formatCurrency(savings * 12)} saved per year
+                        {formatCurrency(savings * 12)} saved per year — that's 100% of your processing cost
                       </p>
                     )}
                   </div>
@@ -219,7 +224,7 @@ export function CalculatorPage() {
                       Get started with Delt
                     </Link>
                   </motion.div>
-                  <p className="text-xs text-[#475569] mt-4 max-w-md">Savings estimates are illustrative and based on rates you entered. Actual savings depend on card mix, plan, and volume. Delt's 2.6% + $0.10 rate applies to standard card-present transactions on the Free plan.</p>
+                  <p className="text-xs text-[#475569] mt-4 max-w-md">Savings shown reflect a compliant cash-discount program: the standard card fee (2.6% + $0.10) is passed to card-paying customers as a service fee and cash customers receive the discounted price, so your net processing cost is $0. Actual results vary by card mix, ticket size, and how customers choose to pay.</p>
                   <p className="text-sm text-[#475569] mt-2">Questions? <Link to="/support" className="text-[#4945FF] underline">Chat with us</Link></p>
                 </motion.div>
               )}
