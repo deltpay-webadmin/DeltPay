@@ -8,6 +8,21 @@ const LEAD_NOTIFY_TO = "david@deltpay.com";
 const LEAD_NOTIFY_BCC = "carlos@deltpay.com";
 const LEAD_NOTIFY_FROM =
   process.env.LEAD_NOTIFY_FROM || "DeltPay Leads <noreply@deltpay.com>";
+
+// ── Supabase persistence ─────────────────────────────────────────────
+// Every quote submission is also written to the public.leads table so the
+// lead is durable in the Delt backend, not just delivered as an email.
+// Prefer a service-role key when configured (bypasses RLS); otherwise fall
+// back to the project's public anon key, which the leads table's RLS policy
+// allows to INSERT (and nothing else). The anon key already ships in the
+// client bundle, so embedding it here as a fallback exposes nothing new.
+const SUPABASE_URL =
+  process.env.SUPABASE_URL || "https://ukruhkiwhxoreamerfoh.supabase.co";
+const SUPABASE_KEY =
+  process.env.SUPABASE_SERVICE_ROLE_KEY ||
+  process.env.SUPABASE_ANON_KEY ||
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVrcnVoa2l3aHhvcmVhbWVyZm9oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NDA1MjcsImV4cCI6MjA4ODMxNjUyN30.CigRxidM_NRstzasqnWEOHhpiXnes9Gd86mFBXUZptw";
+
 const FONT_STACK =
   "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
 
@@ -118,6 +133,32 @@ async function sendLeadEmail(o: {
   }
 }
 
+// Insert a lead row into public.leads via PostgREST. Zero-import (fetch only)
+// to match this function's ESM-safe style. Non-fatal: a DB miss must never
+// break the submission — the email path and success screen stand on their own.
+async function persistLead(row: Record<string, unknown>): Promise<{ ok: boolean; error?: string }> {
+  if (!SUPABASE_URL || !SUPABASE_KEY) return { ok: false, error: "supabase not configured" };
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/leads`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${SUPABASE_KEY}`,
+        Prefer: "return=minimal",
+      },
+      body: JSON.stringify(row),
+    });
+    if (!res.ok) {
+      const detail = await res.text().catch(() => "");
+      return { ok: false, error: `supabase ${res.status}: ${detail.slice(0, 300)}` };
+    }
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: `db error: ${(err as Error)?.message || err}` };
+  }
+}
+
 export default async function handler(req: any, res: any) {
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
@@ -133,7 +174,27 @@ export default async function handler(req: any, res: any) {
   if (!name || !emailOk(email)) {
     return res.status(400).json({ ok: false, error: "Please enter a valid name and email." });
   }
-  const r = await sendLeadEmail({
+
+  // Persist to the backend and notify sales in parallel — each is independent
+  // and non-fatal, so one failing never blocks the other.
+  const leadRow = {
+    source: "get-a-quote",
+    name,
+    email,
+    phone: clean(body.phone, 40) || null,
+    business_name: clean(body.business, 200) || null,
+    business_type: clean(body.bizType, 80) || null,
+    monthly_volume: clean(body.volume, 80) || null,
+    features: cleanList(body.features),
+    recommended_plan: clean(body.recommendedPlan, 80) || null,
+    notes: clean(body.notes, 2000) || null,
+    spam_suspect: spamSuspect,
+    user_agent: clean(req.headers?.["user-agent"], 500) || null,
+  };
+
+  const [persist, r] = await Promise.all([
+    persistLead(leadRow),
+    sendLeadEmail({
     subject: `${spamSuspect ? "[possible spam] " : ""}New quote request — ${name}`,
     heading: "New Get-a-Quote request",
     subtitle: `${name} just requested a quote through the DeltPay site.`,
@@ -151,6 +212,14 @@ export default async function handler(req: any, res: any) {
       ["Recommended plan", clean(body.recommendedPlan, 80)],
       ["Notes", clean(body.notes, 2000)],
     ],
+    }),
+  ]);
+  if (!persist.ok) console.warn("quote lead not persisted:", persist.error);
+  return res.status(200).json({
+    ok: true,
+    persisted: persist.ok,
+    persistError: persist.error,
+    emailed: r.ok,
+    emailError: r.error,
   });
-  return res.status(200).json({ ok: true, emailed: r.ok, emailError: r.error });
 }
