@@ -28,7 +28,40 @@ export interface PinnedChatData {
   pinnedAt: number;
 }
 
+/* Real per-user data injected by the authenticated portal (PortalPage). All
+   optional — in demo mode these are undefined and the dashboards fall back to
+   their built-in mock constants, so the marketing demo is unchanged. */
+export interface PortalData {
+  home?: { availableCents?: number };
+  payments?: {
+    metrics?: import('../components/PaymentsDashboard').PaymentsMetrics;
+    invoices?: import('../components/PaymentsDashboard').PaymentsInvoice[];
+  };
+  capital?: import('../components/CapitalDashboard').CapitalData;
+}
+
+interface SandboxPageProps {
+  /** 'demo' = public marketing sandbox (default); 'portal' = authenticated portal. */
+  mode?: 'demo' | 'portal';
+  /** In portal mode, which product areas this merchant can see (profiles.product_access). */
+  productAccess?: string[];
+  /** Real per-user data (portal mode only). */
+  data?: PortalData;
+}
+
 const UNLOCKED_VIEWS = new Set(['dashboard', 'lens-ai', 'analytics']);
+
+/* Which nav ids a merchant can open in the portal, derived from product_access.
+   Home + Lens are always available; the Pay bundle needs 'payments', Capital
+   needs 'capital'. */
+function portalUnlockedViews(productAccess: string[]): Set<string> {
+  const unlocked = new Set<string>(['dashboard', 'lens-ai']);
+  if (productAccess.includes('payments')) {
+    ['payments', 'insights', 'storefront', 'analytics'].forEach((v) => unlocked.add(v));
+  }
+  if (productAccess.includes('capital')) unlocked.add('capital');
+  return unlocked;
+}
 
 const NAV_ITEMS_TOP = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutGrid },
@@ -49,8 +82,10 @@ type NavId = (typeof NAV_ITEMS)[number]['id'];
 
 const FULL_HEIGHT_VIEWS: NavId[] = ['lens-ai'];
 
-export function SandboxPage() {
+export function SandboxPage({ mode = 'demo', productAccess = [], data }: SandboxPageProps) {
   const navigate = useNavigate();
+  const isDemo = mode === 'demo';
+  const unlockedViews = isDemo ? UNLOCKED_VIEWS : portalUnlockedViews(productAccess);
   const [activeMenuItem, setActiveMenuItem] = useState<NavId>('dashboard');
   const [searchFocused, setSearchFocused] = useState(false);
   const { pinnedChats, pinChat, unpinChat } = usePinnedChatsStorage();
@@ -252,7 +287,8 @@ export function SandboxPage() {
       className={`overflow-hidden bg-white flex flex-col relative ${darkMode ? 'dashboard-dark' : ''}`}
       style={{ height: 'calc(100vh / 0.8)' }}
     >
-      {/* ═══ Branded demo banner (navy, not purple) ═══ */}
+      {/* ═══ Branded demo banner (navy, not purple) — demo mode only ═══ */}
+      {isDemo && (
       <div
         className="sandbox-top-banner flex items-center justify-center gap-4 px-8 py-2.5 flex-shrink-0 relative"
         style={{ backgroundColor: '#080A28' }}
@@ -271,6 +307,7 @@ export function SandboxPage() {
           Start Free Trial <ArrowRight size={12} />
         </motion.button>
       </div>
+      )}
 
       {/* ═══ Mobile Header ═══ */}
       <div className="sandbox-mobile-header">
@@ -384,7 +421,7 @@ export function SandboxPage() {
               {/* Top tier: daily workflow */}
               {NAV_ITEMS_TOP.map((item) => {
                 const isActive = activeMenuItem === item.id;
-                const isLocked = !UNLOCKED_VIEWS.has(item.id);
+                const isLocked = !unlockedViews.has(item.id);
                 const Icon = item.icon;
                 return (
                   <button
@@ -413,7 +450,7 @@ export function SandboxPage() {
               {/* Bottom tier: secondary */}
               {NAV_ITEMS_BOTTOM.map((item) => {
                 const isActive = activeMenuItem === item.id;
-                const isLocked = !UNLOCKED_VIEWS.has(item.id);
+                const isLocked = !unlockedViews.has(item.id);
                 const Icon = item.icon;
                 return (
                   <button
@@ -520,15 +557,15 @@ export function SandboxPage() {
 
         <div className={isFullHeight ? 'h-screen' : ''}>
           {activeMenuItem === 'dashboard' ? (
-            <HomeDashboard pinnedChats={pinnedChats} onUnpinChat={handleUnpinChat} onNavigateToLens={() => setActiveMenuItem('lens-ai')} onNavigate={handleNavigate} />
+            <HomeDashboard pinnedChats={pinnedChats} onUnpinChat={handleUnpinChat} onNavigateToLens={() => setActiveMenuItem('lens-ai')} onNavigate={handleNavigate} availableCents={data?.home?.availableCents} />
           ) : activeMenuItem === 'insights' ? (
             <InsightsDashboard />
           ) : activeMenuItem === 'storefront' ? (
             <StorefrontDashboard />
           ) : activeMenuItem === 'payments' ? (
-            <PaymentsDashboard forceTerminalKey={forceTerminalKey} />
+            <PaymentsDashboard forceTerminalKey={forceTerminalKey} metrics={data?.payments?.metrics} invoicesData={data?.payments?.invoices} />
           ) : activeMenuItem === 'capital' ? (
-            <CapitalDashboard />
+            <CapitalDashboard capitalData={data?.capital} />
           ) : activeMenuItem === 'lens-ai' ? (
             <LensChatSimulator embedded pinnedChats={pinnedChats} onPinChat={handlePinChat} onUnpinChat={handleUnpinChat} key={forceTerminalKey} />
           ) : activeMenuItem === 'analytics' ? (
@@ -537,7 +574,7 @@ export function SandboxPage() {
 
           {/* ── Locked view overlay ─ branded navy card, intentional IP-protection state ── */}
           <AnimatePresence>
-            {!UNLOCKED_VIEWS.has(activeMenuItem) && (
+            {!unlockedViews.has(activeMenuItem) && (
               <motion.div
                 key="lock-overlay"
                 className="absolute inset-0 z-40 flex items-center justify-center"
@@ -598,26 +635,27 @@ export function SandboxPage() {
                       className="text-[11px] font-bold uppercase"
                       style={{ letterSpacing: '0.18em', color: '#4945FF' }}
                     >
-                      Available on trial
+                      {isDemo ? 'Available on trial' : 'Not on your plan'}
                     </div>
                     <p style={{ fontWeight: 700, color: '#FFFFFF', fontSize: 19, letterSpacing: '-0.3px' }}>
                       {NAV_ITEMS.find(n => n.id === activeMenuItem)?.label}
                     </p>
                     <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: 13.5, lineHeight: 1.6 }}>
-                      This view is reserved for trial and live accounts. Your free dashboard already includes
-                      Home, Lens AI, and Analytics.
+                      {isDemo
+                        ? 'This view is reserved for trial and live accounts. Your free dashboard already includes Home, Lens AI, and Analytics.'
+                        : 'This area isn’t part of your current Delt products. Add it to your account to unlock it.'}
                     </p>
                   </div>
 
                   {/* CTA — Delt indigo */}
                   <motion.button
-                    onClick={() => navigate('/signup')}
+                    onClick={() => navigate(isDemo ? '/signup' : '/contact-sales')}
                     className="relative w-full flex items-center justify-center gap-2 py-3 rounded-xl text-white text-sm"
                     style={{ backgroundColor: '#4945FF', fontWeight: 600, letterSpacing: '-0.01em' }}
                     whileHover={{ scale: 1.02, backgroundColor: '#3933CC' }}
                     whileTap={{ scale: 0.97 }}
                   >
-                    Start 14-day trial <ArrowRight size={14} />
+                    {isDemo ? <>Start 14-day trial <ArrowRight size={14} /></> : <>Add this product <ArrowRight size={14} /></>}
                   </motion.button>
 
                   {/* Back link */}
@@ -672,7 +710,8 @@ export function SandboxPage() {
         })}
       </div>
 
-      {/* ═══ Floating "Start Free Trial" CTA ═══ */}
+      {/* ═══ Floating "Start Free Trial" CTA — demo mode only ═══ */}
+      {isDemo && (
       <motion.button
         onClick={() => navigate('/signup')}
         className="sandbox-floating-cta fixed bottom-6 right-24 z-[90] flex items-center gap-2.5 px-8 py-4 rounded-full text-white text-base cursor-pointer"
@@ -689,6 +728,7 @@ export function SandboxPage() {
       >
         Start Free Trial <ArrowRight size={18} />
       </motion.button>
+      )}
       </div>
     </div>
     </>

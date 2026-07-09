@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router';
+import { useAuth } from '@/app/lib/auth';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Search, X, ArrowRight, Globe, CreditCard, DollarSign, BarChart3,
@@ -234,6 +235,13 @@ function NavTrigger({
 export function Navigation() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { session, signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    await signOut();
+    setMobileOpen(false);
+    navigate('/');
+  };
 
   const [openMenu, setOpenMenu] = useState<null | 'products' | 'biz' | 'resources'>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -562,7 +570,7 @@ export function Navigation() {
               Pricing
             </Link>
             <Link
-              to="/signin"
+              to={session ? '/dashboard' : '/signin'}
               className="text-[13px] font-medium px-3 py-2 transition-colors"
               style={{
                 color: 'rgba(247, 245, 240, 0.78)',
@@ -571,12 +579,25 @@ export function Navigation() {
               onMouseEnter={(e) => (e.currentTarget.style.color = '#FFFFFF')}
               onMouseLeave={(e) => (e.currentTarget.style.color = 'rgba(247, 245, 240, 0.78)')}
             >
-              Login
+              {session ? 'Dashboard' : 'Login'}
             </Link>
-            <Link to="/get-a-quote" className="dc-btn-primary">
-              Get Started
-              <ArrowRight size={12} />
-            </Link>
+            {session ? (
+              <button
+                type="button"
+                onClick={handleSignOut}
+                className="text-[13px] font-medium px-3 py-2 transition-colors"
+                style={{ color: 'rgba(247, 245, 240, 0.78)', fontFamily: 'var(--dc-font-body)' }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = '#FFFFFF')}
+                onMouseLeave={(e) => (e.currentTarget.style.color = 'rgba(247, 245, 240, 0.78)')}
+              >
+                Sign out
+              </button>
+            ) : (
+              <Link to="/get-a-quote" className="dc-btn-primary">
+                Get Started
+                <ArrowRight size={12} />
+              </Link>
+            )}
           </div>
 
           {/* Mobile toggle */}
@@ -627,10 +648,21 @@ export function Navigation() {
                 ]}
               />
               <div className="pt-4 flex flex-col gap-3" style={{ borderTop: '1px solid rgba(247, 245, 240, 0.08)' }}>
-                <Link to="/signin" className="dc-btn-secondary dc-on-dark dc-lg w-full justify-center">Login</Link>
-                <Link to="/get-a-quote" className="dc-btn-primary dc-lg w-full justify-center">
-                  Get Started <ArrowRight size={14} />
-                </Link>
+                {session ? (
+                  <>
+                    <Link to="/dashboard" className="dc-btn-secondary dc-on-dark dc-lg w-full justify-center">Dashboard</Link>
+                    <button type="button" onClick={handleSignOut} className="dc-btn-primary dc-lg w-full justify-center">
+                      Sign out
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link to="/signin" className="dc-btn-secondary dc-on-dark dc-lg w-full justify-center">Login</Link>
+                    <Link to="/get-a-quote" className="dc-btn-primary dc-lg w-full justify-center">
+                      Get Started <ArrowRight size={14} />
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
           </motion.div>

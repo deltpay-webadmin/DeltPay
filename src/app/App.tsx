@@ -1,6 +1,8 @@
 import { lazy, Suspense } from 'react';
 import { HashRouter, Routes, Route, Navigate, useLocation } from 'react-router';
 import { useRouteChangePixel } from '@/lib/pixel';
+import { AuthProvider } from '@/app/lib/auth';
+import { ProtectedRoute } from '@/app/components/ProtectedRoute';
 import { Navigation } from '@/app/components/Navigation';
 import { Footer } from '@/app/components/Footer';
 import DeltMarquee from '@/app/components/DeltMarquee';
@@ -22,8 +24,10 @@ const DeltAiPage = lazy(() => named(import('@/app/pages/DeltAiPage'), 'DeltAiPag
 const DeltAI = lazy(() => named(import('@/app/components/DeltAI'), 'DeltAI'));
 const LensChatPage = lazy(() => named(import('@/app/pages/LensChatPage'), 'LensChatPage'));
 const SandboxPage = lazy(() => named(import('@/app/pages/SandboxPage'), 'SandboxPage'));
+const PortalPage = lazy(() => named(import('@/app/pages/PortalPage'), 'PortalPage'));
 const SignInPage = lazy(() => named(import('@/app/pages/SignInPage'), 'SignInPage'));
 const SignUpPage = lazy(() => named(import('@/app/pages/SignUpPage'), 'SignUpPage'));
+const ResetPasswordPage = lazy(() => named(import('@/app/pages/ResetPasswordPage'), 'ResetPasswordPage'));
 const ContactPage = lazy(() => named(import('@/app/pages/ContactPage'), 'ContactPage'));
 const ContactSalesPage = lazy(() => named(import('@/app/pages/ContactSalesPage'), 'ContactSalesPage'));
 const SupportPage = lazy(() => named(import('@/app/pages/SupportPage'), 'SupportPage'));
@@ -82,18 +86,24 @@ export default function App() {
     <>
       <CustomCursor />
       <HashRouter>
+        <AuthProvider>
         <ScrollToTop />
         <PixelRouteTracker />
         {/* Branded loading moment on every page change (not just chunk fetches). */}
         <RouteTransitionLoader />
         <Suspense fallback={<PageLoader />}>
         <Routes>
+          {/* Public marketing demo — locked-teaser sales tool, no auth. */}
           <Route path="/sandbox" element={<SandboxPage />} />
-          <Route path="/dashboard" element={<SandboxPage />} />
           <Route path="/demo" element={<SandboxPage />} />
+          {/* Real, authenticated customer portal. */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/dashboard" element={<PortalPage />} />
+          </Route>
           <Route path="/get-a-quote" element={<GetAQuotePage />} />
           <Route path="/signin" element={<SignInPage />} />
           <Route path="/signup" element={<SignUpPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/cart" element={<ShoppingCartPage />} />
           <Route path="/delt-ai-chat" element={<DeltAI />} />
           <Route path="/lens-chat" element={<LensChatPage />} />
@@ -154,6 +164,7 @@ export default function App() {
           } />
         </Routes>
         </Suspense>
+        </AuthProvider>
       </HashRouter>
     </>
   );

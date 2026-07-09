@@ -38,7 +38,27 @@ const RECURRING = [
   { client: 'Green Valley', plan: 'Bi-weekly Delivery', amount: '$420.00', next: 'Mar 17', frequency: 'Bi-weekly', active: false },
 ];
 
-export function PaymentsDashboard({ forceTerminalKey }: { forceTerminalKey?: number }) {
+/* Real-data props supplied by the authenticated portal. Optional — when absent
+   the dashboard renders its built-in demo constants unchanged. */
+export interface PaymentsMetrics {
+  collectedCents: number;
+  paymentsCount: number;
+  outstandingCents: number;
+  unpaidCount: number;
+  recurringCents: number;
+  activePlans: number;
+}
+export interface PaymentsInvoice {
+  id: string;
+  client: string;
+  amount: string;   // preformatted, e.g. "$3,400.00"
+  due: string;
+  status: 'draft' | 'sent' | 'paid' | 'overdue' | string;
+}
+
+const fmtCents0 = (cents: number) => `$${Math.round(cents / 100).toLocaleString()}`;
+
+export function PaymentsDashboard({ forceTerminalKey, metrics, invoicesData }: { forceTerminalKey?: number; metrics?: PaymentsMetrics; invoicesData?: PaymentsInvoice[] }) {
   const [tab, setTab] = useState<'terminal' | 'invoices' | 'recurring'>('terminal');
   const [amount, setAmount] = useState('');
   const [cardNumber, setCardNumber] = useState('4242 4242 4242 4242');
@@ -162,11 +182,18 @@ export function PaymentsDashboard({ forceTerminalKey }: { forceTerminalKey?: num
           className="grid grid-cols-3 mb-8 overflow-hidden"
           style={{ backgroundColor: '#f4f5f7', border: '1px solid #e6e6e6', borderRadius: 8 }}
         >
-          {[
-            { label: 'Collected This Month', value: '$18,420', sub: '12 payments', dotColor: '#0cbc87' },
-            { label: 'Outstanding Invoices', value: '$7,450', sub: '3 unpaid', dotColor: '#f5a623' },
-            { label: 'Recurring Revenue', value: '$10,100', valueSuffix: '/mo', sub: '4 active plans', dotColor: '#635bff' },
-          ].map((kpi, i) => (
+          {(metrics
+            ? [
+                { label: 'Collected This Month', value: fmtCents0(metrics.collectedCents), sub: `${metrics.paymentsCount} payments`, dotColor: '#0cbc87' },
+                { label: 'Outstanding Invoices', value: fmtCents0(metrics.outstandingCents), sub: `${metrics.unpaidCount} unpaid`, dotColor: '#f5a623' },
+                { label: 'Recurring Revenue', value: fmtCents0(metrics.recurringCents), valueSuffix: '/mo', sub: `${metrics.activePlans} active plans`, dotColor: '#635bff' },
+              ]
+            : [
+                { label: 'Collected This Month', value: '$18,420', sub: '12 payments', dotColor: '#0cbc87' },
+                { label: 'Outstanding Invoices', value: '$7,450', sub: '3 unpaid', dotColor: '#f5a623' },
+                { label: 'Recurring Revenue', value: '$10,100', valueSuffix: '/mo', sub: '4 active plans', dotColor: '#635bff' },
+              ]
+          ).map((kpi, i) => (
             <div
               key={i}
               className="px-5 py-[18px]"
@@ -654,7 +681,7 @@ export function PaymentsDashboard({ forceTerminalKey }: { forceTerminalKey?: num
             <div className="grid grid-cols-[80px_1fr_110px_90px_90px_40px] gap-2 px-6 py-3 bg-[#FAFAFA] border-b border-[#E8E8E8] text-[10px] text-[#999]" style={{ fontWeight: 600 }}>
               <span>ID</span><span>CLIENT</span><span className="text-right">AMOUNT</span><span className="text-right">DUE</span><span className="text-right">STATUS</span><span></span>
             </div>
-            {INVOICES.map((inv, i) => (
+            {(invoicesData ?? INVOICES).map((inv, i) => (
               <div key={i} className="grid grid-cols-[80px_1fr_110px_90px_90px_40px] gap-2 px-6 py-3.5 border-b border-[#F0F0F0] items-center hover:bg-[#FAFAFA] transition-colors cursor-pointer">
                 <span className="text-xs text-[#999] font-mono">{inv.id}</span>
                 <span className="text-sm text-[#333]" style={{ fontWeight: 500 }}>{inv.client}</span>

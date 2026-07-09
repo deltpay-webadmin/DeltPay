@@ -563,7 +563,10 @@ function PerformanceChart() {
 /* ════════════════════════════════════════════════════════════
    MAIN DASHBOARD
    ════════════════════════════════════════════════════════════ */
-export function HomeDashboard({ pinnedChats = [], onUnpinChat, onNavigateToLens, onNavigate }: { pinnedChats?: PinnedChatData[]; onUnpinChat?: (chatId: string) => void; onNavigateToLens?: () => void; onNavigate?: (tabId: string) => void }) {
+export function HomeDashboard({ pinnedChats = [], onUnpinChat, onNavigateToLens, onNavigate, availableCents }: { pinnedChats?: PinnedChatData[]; onUnpinChat?: (chatId: string) => void; onNavigateToLens?: () => void; onNavigate?: (tabId: string) => void; availableCents?: number }) {
+  // Real available balance when the portal supplies it, else the demo figure.
+  const availableDollars = availableCents != null ? Math.floor(availableCents / 100) : 12384;
+  const availableCentsPart = availableCents != null ? String(Math.abs(availableCents % 100)).padStart(2, '0') : '23';
   const [showAllTasks, setShowAllTasks] = useState(false);
   const [pinnedModalOpen, setPinnedModalOpen] = useState(false);
   const [items, setItems] = useState<PinnedItem[]>(DEFAULT_PINNABLE_ITEMS);
@@ -631,7 +634,7 @@ export function HomeDashboard({ pinnedChats = [], onUnpinChat, onNavigateToLens,
         {/* Greeting */}
         <div className="mb-6">
           <h1 className="text-[#111] mb-4" style={{ fontSize: '1.65rem', fontWeight: 600, letterSpacing: -0.3 }}>
-            Hello! You have <AnimatedNumber value={12384} prefix="$" />.23 available.
+            Hello! You have <AnimatedNumber value={availableDollars} prefix="$" />.{availableCentsPart} available.
           </h1>
           <div className="flex items-center gap-3 flex-wrap">
             <button onClick={() => onNavigate?.('analytics')} className="px-5 py-2.5 rounded-full bg-[#4945FF] text-white text-sm hover:bg-[#3730FF] transition-colors" style={{ fontWeight: 600 }}>

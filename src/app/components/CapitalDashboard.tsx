@@ -2,7 +2,29 @@ import { useState } from 'react';
 import { Landmark, TrendingUp, DollarSign, Calendar, CheckCircle2, Clock, ArrowUpRight, Shield, Upload, ChevronLeft, Calculator } from 'lucide-react';
 import { useToast, ToastContainer } from './ui/Toast';
 
-export function CapitalDashboard() {
+/* Real-data props supplied by the authenticated portal. Optional — when absent
+   the dashboard renders its built-in demo constants unchanged. When present but
+   `loan` is null, the active-loan card becomes a "no active financing" state. */
+export interface CapitalData {
+  loan?: {
+    originalAmountCents: number;
+    balanceCents: number;
+    dailyRepaymentCents: number;
+    estimatedPayoff: string | null;
+    issuedAt: string | null;
+    status: string;
+  } | null;
+  repayments?: { date: string; amountCents: number; method: string; status: string }[];
+  eligibility?: {
+    readinessScore: number | null;
+    maxAvailableCents: number | null;
+    eligibleAfter: string | null;
+  } | null;
+  /** Real submit for the "Apply for Capital" modal (inserts capital_applications). */
+  onApply?: (input: { requestedAmountCents: number; purpose: string }) => Promise<{ error: string | null }>;
+}
+
+export function CapitalDashboard({ capitalData }: { capitalData?: CapitalData }) {
   const [showDetails, setShowDetails] = useState(false);
   const [showAllRepayments, setShowAllRepayments] = useState(false);
   const [applyModalOpen, setApplyModalOpen] = useState(false);
@@ -19,11 +41,72 @@ export function CapitalDashboard() {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [emailAddress, setEmailAddress] = useState('');
 
-  const loanBalance = 32400;
-  const loanTotal = 55000;
-  const paidPercent = ((loanTotal - loanBalance) / loanTotal) * 100;
-  const dailyRepayment = 203;
-  const estimatedPayoff = 'Aug 14, 2026';
+  // Apply-modal form state
+  const [applyAmount, setApplyAmount] = useState('');
+  const [applyPurpose, setApplyPurpose] = useState('Equipment purchase');
+  const [applySubmitting, setApplySubmitting] = useState(false);
+
+  // ── Data source: real portal values when supplied, else the demo figures ──
+  const portalMode = capitalData !== undefined;
+  const loan = capitalData?.loan ?? null;
+  const hasActiveLoan = portalMode ? !!loan : true;
+
+  const loanTotal = loan ? loan.originalAmountCents / 100 : 55000;
+  const loanBalance = loan ? loan.balanceCents / 100 : 32400;
+  const dailyRepayment = loan ? Math.round(loan.dailyRepaymentCents / 100) : 203;
+  const estimatedPayoff = loan ? (loan.estimatedPayoff ?? '—') : 'Aug 14, 2026';
+  const paidPercent = loanTotal > 0 ? ((loanTotal - loanBalance) / loanTotal) * 100 : 0;
+
+  const repayments = capitalData?.repayments
+    ? capitalData.repayments.map((r) => ({
+        date: r.date,
+        amount: `$${(r.amountCents / 100).toFixed(2)}`,
+        method: r.method,
+        status: r.status,
+      }))
+    : [
+        { date: 'Mar 4', amount: '$203.00', method: 'Auto-deducted from sales', status: 'completed' },
+        { date: 'Mar 3', amount: '$203.00', method: 'Auto-deducted from sales', status: 'completed' },
+        { date: 'Mar 2', amount: '$203.00', method: 'Auto-deducted from sales', status: 'completed' },
+        { date: 'Mar 1', amount: '$203.00', method: 'Auto-deducted from sales', status: 'completed' },
+        { date: 'Feb 28', amount: '$203.00', method: 'Auto-deducted from sales', status: 'completed' },
+        { date: 'Feb 27', amount: '$203.00', method: 'Auto-deducted from sales', status: 'completed' },
+        { date: 'Feb 26', amount: '$203.00', method: 'Auto-deducted from sales', status: 'completed' },
+        { date: 'Feb 25', amount: '$203.00', method: 'Auto-deducted from sales', status: 'completed' },
+        { date: 'Feb 24', amount: '$203.00', method: 'Auto-deducted from sales', status: 'completed' },
+        { date: 'Feb 23', amount: '$203.00', method: 'Auto-deducted from sales', status: 'completed' },
+      ];
+
+  const readinessScore = capitalData?.eligibility?.readinessScore ?? 87;
+  const maxAvailable =
+    capitalData?.eligibility && capitalData.eligibility.maxAvailableCents != null
+      ? `$${Math.round(capitalData.eligibility.maxAvailableCents / 100).toLocaleString()}`
+      : '$62,000';
+  const eligibleAfter = capitalData?.eligibility?.eligibleAfter ?? '50% paid';
+
+  const handleApplySubmit = async () => {
+    const requestedAmountCents = Math.round((parseFloat(applyAmount.replace(/[^0-9.]/g, '')) || 0) * 100);
+    if (capitalData?.onApply) {
+      if (requestedAmountCents <= 0) {
+        addToast('info', 'Enter an amount', 'Please enter a requested amount to continue');
+        return;
+      }
+      setApplySubmitting(true);
+      const { error } = await capitalData.onApply({ requestedAmountCents, purpose: applyPurpose });
+      setApplySubmitting(false);
+      if (error) {
+        addToast('error', 'Could not submit', error);
+        return;
+      }
+      setApplyModalOpen(false);
+      setApplyAmount('');
+      addToast('success', 'Application submitted', "We'll review your request within 24 hours");
+    } else {
+      // Demo mode — no backend write.
+      setApplyModalOpen(false);
+      addToast('success', 'Application submitted', "We'll review your request within 24 hours");
+    }
+  };
 
   // Calculate savings
   const calculateSavings = () => {
@@ -77,6 +160,7 @@ export function CapitalDashboard() {
       {/* Content */}
       <div className="max-w-[1080px] mx-auto px-10 pb-8">
         {/* Active Loan Card */}
+        {hasActiveLoan ? (
         <div className="border border-[#E8E8E8] rounded-2xl p-8 mb-8">
           <div className="flex items-center gap-2 mb-6">
             <div className="w-10 h-10 rounded-xl bg-[#635bff]/8 flex items-center justify-center">
@@ -84,7 +168,7 @@ export function CapitalDashboard() {
             </div>
             <div>
               <h2 className="text-base text-[#111]" style={{ fontWeight: 700 }}>Active Loan</h2>
-              <span className="text-xs text-[#999]">Delt Capital Advance · Issued Jan 15, 2026</span>
+              <span className="text-xs text-[#999]">Delt Capital Advance{loan?.issuedAt ? ` · Issued ${loan.issuedAt}` : ' · Issued Jan 15, 2026'}</span>
             </div>
             <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#ECFDF5] text-[#0cbc87] ml-2" style={{ fontWeight: 600 }}>Active</span>
           </div>
@@ -131,25 +215,34 @@ export function CapitalDashboard() {
             </div>
           </div>
         </div>
+        ) : (
+          /* No active financing — portal user without a loan */
+          <div className="border border-[#E8E8E8] rounded-2xl p-10 mb-8 flex flex-col items-center text-center">
+            <div className="w-14 h-14 rounded-2xl bg-[#635bff]/8 flex items-center justify-center mb-4">
+              <Landmark className="w-7 h-7 text-[#635bff]" />
+            </div>
+            <h2 className="text-base text-[#111] mb-1" style={{ fontWeight: 700 }}>No active financing</h2>
+            <p className="text-sm text-[#8898aa] mb-6 max-w-sm">
+              You don’t have a Delt Capital advance yet. Apply below to get pre-qualified based on your revenue.
+            </p>
+            <button
+              onClick={() => setApplyModalOpen(true)}
+              className="flex items-center gap-1.5 px-4 py-2.5 rounded-md text-sm text-white transition-colors"
+              style={{ fontWeight: 600, backgroundColor: '#635bff' }}
+            >
+              <Landmark className="w-4 h-4" /> Apply for Capital
+            </button>
+          </div>
+        )}
 
         {/* Repayment History */}
+        {hasActiveLoan && (
         <div className="border border-[#E8E8E8] rounded-xl mb-8">
           <div className="px-6 py-4 border-b border-[#F0F0F0] flex items-center justify-between">
             <h3 className="text-base text-[#111]" style={{ fontWeight: 700 }}>Recent Repayments</h3>
             <button onClick={() => setShowAllRepayments(p => !p)} className="text-xs text-[#4945FF] hover:underline" style={{ fontWeight: 500 }}>{showAllRepayments ? 'Show less' : 'View all'}</button>
           </div>
-          {[
-            { date: 'Mar 4', amount: '$203.00', method: 'Auto-deducted from sales', status: 'completed' },
-            { date: 'Mar 3', amount: '$203.00', method: 'Auto-deducted from sales', status: 'completed' },
-            { date: 'Mar 2', amount: '$203.00', method: 'Auto-deducted from sales', status: 'completed' },
-            { date: 'Mar 1', amount: '$203.00', method: 'Auto-deducted from sales', status: 'completed' },
-            { date: 'Feb 28', amount: '$203.00', method: 'Auto-deducted from sales', status: 'completed' },
-            { date: 'Feb 27', amount: '$203.00', method: 'Auto-deducted from sales', status: 'completed' },
-            { date: 'Feb 26', amount: '$203.00', method: 'Auto-deducted from sales', status: 'completed' },
-            { date: 'Feb 25', amount: '$203.00', method: 'Auto-deducted from sales', status: 'completed' },
-            { date: 'Feb 24', amount: '$203.00', method: 'Auto-deducted from sales', status: 'completed' },
-            { date: 'Feb 23', amount: '$203.00', method: 'Auto-deducted from sales', status: 'completed' },
-          ].slice(0, showAllRepayments ? 10 : 5).map((r, i) => (
+          {repayments.slice(0, showAllRepayments ? 10 : 5).map((r, i) => (
             <div key={i} className="flex items-center justify-between px-6 py-3.5 border-b border-[#F0F0F0] last:border-0 hover:bg-[#FAFAFA] transition-colors">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-[#ECFDF5] flex items-center justify-center">
@@ -163,7 +256,11 @@ export function CapitalDashboard() {
               <span className="text-sm text-[#111]" style={{ fontWeight: 600 }}>{r.amount}</span>
             </div>
           ))}
+          {repayments.length === 0 && (
+            <div className="px-6 py-8 text-center text-sm text-[#8898aa]">No repayments yet.</div>
+          )}
         </div>
+        )}
 
         {/* Eligibility Card */}
         <div className="border border-[#4945FF]/15 rounded-2xl p-8 bg-[#4945FF]/[0.02]">
@@ -180,16 +277,15 @@ export function CapitalDashboard() {
               <div className="grid grid-cols-3 gap-4 mb-6">
                 <div className="bg-white rounded-xl p-4 border border-[#E8E8E8]">
                   <span className="text-xs text-[#999] block mb-1" style={{ fontWeight: 500 }}>Readiness Score</span>
-                  <span className="text-xl text-[#4945FF]" style={{ fontWeight: 800 }}>87/100</span>
+                  <span className="text-xl text-[#4945FF]" style={{ fontWeight: 800 }}>{readinessScore}/100</span>
                 </div>
                 <div className="bg-white rounded-xl p-4 border border-[#E8E8E8]">
                   <span className="text-xs text-[#999] block mb-1" style={{ fontWeight: 500 }}>Max. Available</span>
-                  <span className="text-xl text-[#111]" style={{ fontWeight: 700 }}>$62,000</span>
+                  <span className="text-xl text-[#111]" style={{ fontWeight: 700 }}>{maxAvailable}</span>
                 </div>
                 <div className="bg-white rounded-xl p-4 border border-[#E8E8E8]">
                   <span className="text-xs text-[#999] block mb-1" style={{ fontWeight: 500 }}>Eligible After</span>
-                  <span className="text-xl text-[#111]" style={{ fontWeight: 700 }}>50% paid</span>
-                  <div className="text-[10px] text-[#10B981] mt-0.5" style={{ fontWeight: 600 }}>Threshold met</div>
+                  <span className="text-xl text-[#111]" style={{ fontWeight: 700 }}>{eligibleAfter}</span>
                 </div>
               </div>
 
@@ -213,16 +309,26 @@ export function CapitalDashboard() {
                 <Landmark className="w-6 h-6 text-[#4945FF]" />
               </div>
               <h2 className="text-lg text-[#111]" style={{ fontWeight: 700 }}>Apply for Capital</h2>
-              <p className="text-sm text-[#999] mt-1">Pre-approved for up to $62,000</p>
+              <p className="text-sm text-[#999] mt-1">Pre-approved for up to {maxAvailable}</p>
             </div>
             <div className="space-y-4 mb-6">
               <div>
                 <label className="text-xs text-[#999] block mb-1.5" style={{ fontWeight: 500 }}>Requested Amount</label>
-                <input className="w-full px-4 py-3 border border-[#E8E8E8] rounded-xl text-lg text-[#111] outline-none focus:ring-2 focus:ring-[#4945FF]/20 focus:border-[#4945FF]" placeholder="$0.00" style={{ fontWeight: 700 }} />
+                <input
+                  value={applyAmount}
+                  onChange={e => setApplyAmount(e.target.value)}
+                  className="w-full px-4 py-3 border border-[#E8E8E8] rounded-xl text-lg text-[#111] outline-none focus:ring-2 focus:ring-[#4945FF]/20 focus:border-[#4945FF]"
+                  placeholder="$0.00"
+                  style={{ fontWeight: 700 }}
+                />
               </div>
               <div>
                 <label className="text-xs text-[#999] block mb-1.5" style={{ fontWeight: 500 }}>Purpose</label>
-                <select className="w-full px-4 py-3 border border-[#E8E8E8] rounded-xl text-sm text-[#333] outline-none focus:ring-2 focus:ring-[#4945FF]/20 focus:border-[#4945FF]">
+                <select
+                  value={applyPurpose}
+                  onChange={e => setApplyPurpose(e.target.value)}
+                  className="w-full px-4 py-3 border border-[#E8E8E8] rounded-xl text-sm text-[#333] outline-none focus:ring-2 focus:ring-[#4945FF]/20 focus:border-[#4945FF]"
+                >
                   <option>Equipment purchase</option>
                   <option>Inventory expansion</option>
                   <option>Hiring & staffing</option>
@@ -231,8 +337,8 @@ export function CapitalDashboard() {
                 </select>
               </div>
             </div>
-            <button onClick={() => { setApplyModalOpen(false); addToast('success', 'Application submitted', 'We\'ll review your request within 24 hours'); }} className="w-full py-3 rounded-xl bg-[#4945FF] text-white text-sm hover:bg-[#3730FF] transition-colors" style={{ fontWeight: 600 }}>
-              Submit Application
+            <button onClick={handleApplySubmit} disabled={applySubmitting} className="w-full py-3 rounded-xl bg-[#4945FF] text-white text-sm hover:bg-[#3730FF] transition-colors disabled:opacity-60" style={{ fontWeight: 600 }}>
+              {applySubmitting ? 'Submitting…' : 'Submit Application'}
             </button>
             <button onClick={() => setApplyModalOpen(false)} className="w-full py-2 mt-2 text-sm text-[#999] hover:text-[#333] transition-colors">Cancel</button>
           </div>

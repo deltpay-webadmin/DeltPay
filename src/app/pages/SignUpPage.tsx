@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
 import { trackMerchantLead } from '@/lib/pixel';
-import { ArrowRight, Building2, User, DollarSign, CheckCircle2, ChevronDown } from 'lucide-react';
+import { useAuth } from '@/app/lib/auth';
+import { ArrowRight, Building2, User, DollarSign, CheckCircle2, ChevronDown, CreditCard, Landmark, MailCheck } from 'lucide-react';
 import logoWhite from 'figma:asset/419e83442bb1bf5965a966a8870b00dd4288dd57.png';
 import stripeImage from 'figma:asset/6fe13f3e665435400e65aa6b6be0f4302bd8aac1.png';
 
@@ -39,10 +40,21 @@ const MONTHLY_VOLUMES = [
   'More than $1M',
 ];
 
+/* Which Delt products the merchant is opting into. The tag is what lands in
+   profiles.product_access and drives what the portal unlocks. Both products may
+   be selected — the account is unified. */
+const PRODUCTS = [
+  { tag: 'payments', label: 'Delt Pay', desc: 'Accept payments, invoicing & terminal', icon: CreditCard },
+  { tag: 'capital', label: 'Delt Capital', desc: 'Business financing & capital advances', icon: Landmark },
+] as const;
+
 export function SignUpPage() {
   const navigate = useNavigate();
+  const { signUp } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
 
   // Step 1: Business Info
   const [businessName, setBusinessName] = useState('');
@@ -51,12 +63,15 @@ export function SignUpPage() {
   const [industry, setIndustry] = useState('');
   const [industryOpen, setIndustryOpen] = useState(false);
   const [website, setWebsite] = useState('');
+  const [products, setProducts] = useState<string[]>([]);
 
-  // Step 2: Contact Info
+  // Step 2: Contact Info + credentials
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
   // Step 3: Processing Details
   const [monthlyVolume, setMonthlyVolume] = useState('');
@@ -64,28 +79,56 @@ export function SignUpPage() {
   const [averageTicket, setAverageTicket] = useState('');
   const [businessDescription, setBusinessDescription] = useState('');
 
+  const toggleProduct = (tag: string) =>
+    setProducts(prev => (prev.includes(tag) ? prev.filter(p => p !== tag) : [...prev, tag]));
+
   const steps = [
     { number: 1, title: 'Business details' },
-    { number: 2, title: 'Contact information' },
+    { number: 2, title: 'Account & contact' },
     { number: 3, title: 'Processing information' },
   ];
 
-  const canProceedStep1 = businessName.length > 0 && businessType.length > 0 && industry.length > 0;
-  const canProceedStep2 = firstName.length > 0 && lastName.length > 0 && email.includes('@') && phone.length >= 10;
+  const passwordsValid = password.length >= 8 && password === confirmPassword;
+  const canProceedStep1 =
+    businessName.length > 0 && businessType.length > 0 && industry.length > 0 && products.length > 0;
+  const canProceedStep2 =
+    firstName.length > 0 && lastName.length > 0 && email.includes('@') && phone.length >= 10 && passwordsValid;
   const canProceedStep3 = monthlyVolume.length > 0 && averageTicket.length > 0 && businessDescription.length > 0;
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (currentStep === 1 && canProceedStep1) setCurrentStep(2);
     else if (currentStep === 2 && canProceedStep2) setCurrentStep(3);
     else if (currentStep === 3 && canProceedStep3) {
-      // Meta Pixel: signup completed — fires when the user clears the
-      // final step, i.e. the same success gate as the UI's "submitted"
-      // state. Category tags this as a signup lead (vs. quote / cart).
+      setSubmitError('');
+      setSubmitting(true);
+      // Create the real Supabase Auth account. The handle_new_user DB trigger
+      // persists this metadata (incl. product_access) into `profiles`.
+      const { error, needsEmailConfirmation } = await signUp({
+        email,
+        password,
+        metadata: {
+          first_name: firstName,
+          last_name: lastName,
+          business_name: businessName,
+          business_type: businessType,
+          industry,
+          website,
+          phone,
+          monthly_volume: monthlyVolume,
+          product_access: products,
+        },
+      });
+      if (error) {
+        setSubmitting(false);
+        setSubmitError(error);
+        return;
+      }
+      // Meta Pixel: signup completed.
       trackMerchantLead({
         content_name: `${industry || 'unknown'}/${monthlyVolume || 'unknown'}`,
         content_category: 'merchant_signup',
       });
-      // Email the sign-up lead to the team (fire-and-forget).
+      // Notify the team of the new signup (fire-and-forget, no password sent).
       fetch('/api/leads/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -94,9 +137,17 @@ export function SignUpPage() {
           businessName, businessType, industry, website,
           firstName, lastName, email, phone,
           monthlyVolume, averageTicket, businessDescription,
+          products,
         }),
       }).catch(() => {});
-      setSubmitted(true);
+      setSubmitting(false);
+      // With email confirmation ON there is no session yet — send them to sign
+      // in after confirming. If confirmation is OFF, a session already exists.
+      if (needsEmailConfirmation) {
+        setSubmitted(true);
+      } else {
+        navigate('/dashboard', { replace: true });
+      }
     }
   };
 
@@ -120,22 +171,32 @@ export function SignUpPage() {
             animate={{ opacity: 1, y: 0 }}
             className="text-center py-20"
           >
-            <div className="w-16 h-16 rounded-full mx-auto mb-6 flex items-center justify-center bg-[#00D924]/10">
-              <CheckCircle2 size={32} className="text-[#00D924]" />
+            <div className="w-16 h-16 rounded-full mx-auto mb-6 flex items-center justify-center bg-[#4945FF]/10">
+              <MailCheck size={32} className="text-[#4945FF]" />
             </div>
             <h2 className="text-3xl font-semibold mb-3" style={{ color: TEXT_DARK }}>
-              Application received
+              Confirm your email
             </h2>
             <p className="text-lg mb-8 max-w-md mx-auto" style={{ color: TEXT_GRAY }}>
-              We'll review your information and get back to you within 1-2 business days.
+              We sent a confirmation link to <strong style={{ color: TEXT_DARK }}>{email}</strong>.
+              Click it to activate your account, then sign in to your Delt portal.
             </p>
-            <button
-              onClick={() => navigate('/')}
-              className="px-6 py-3 rounded-md font-medium transition-colors cursor-pointer"
-              style={{ backgroundColor: ACCENT, color: 'white' }}
-            >
-              Return to home
-            </button>
+            <div className="flex items-center justify-center gap-3">
+              <button
+                onClick={() => navigate('/signin')}
+                className="px-6 py-3 rounded-md font-medium transition-colors cursor-pointer"
+                style={{ backgroundColor: ACCENT, color: 'white' }}
+              >
+                Go to sign in
+              </button>
+              <button
+                onClick={() => navigate('/')}
+                className="px-6 py-3 rounded-md font-medium transition-colors cursor-pointer border"
+                style={{ borderColor: BORDER, color: TEXT_DARK }}
+              >
+                Return to home
+              </button>
+            </div>
           </motion.div>
         ) : (
           <>
@@ -343,6 +404,49 @@ export function SignUpPage() {
                           }}
                         />
                       </div>
+
+                      {/* Product selection — drives profiles.product_access */}
+                      <div>
+                        <label className="block text-sm font-medium mb-2" style={{ color: TEXT_DARK }}>
+                          Which Delt products do you want?
+                        </label>
+                        <p className="text-xs mb-3" style={{ color: TEXT_GRAY }}>
+                          Choose one or both — you can add the other later.
+                        </p>
+                        <div className="grid grid-cols-2 gap-3">
+                          {PRODUCTS.map(p => {
+                            const selected = products.includes(p.tag);
+                            const Icon = p.icon;
+                            return (
+                              <button
+                                key={p.tag}
+                                type="button"
+                                onClick={() => toggleProduct(p.tag)}
+                                className="flex flex-col items-start gap-2 p-4 rounded-lg border text-left transition-all"
+                                style={{
+                                  borderColor: selected ? ACCENT : BORDER,
+                                  backgroundColor: selected ? `${ACCENT}0A` : '#ffffff',
+                                  boxShadow: selected ? `0 0 0 3px ${ACCENT}15` : 'none',
+                                }}
+                              >
+                                <div className="flex items-center justify-between w-full">
+                                  <div
+                                    className="w-9 h-9 rounded-lg flex items-center justify-center"
+                                    style={{ backgroundColor: `${ACCENT}12` }}
+                                  >
+                                    <Icon size={18} style={{ color: ACCENT }} />
+                                  </div>
+                                  {selected && <CheckCircle2 size={18} style={{ color: ACCENT }} />}
+                                </div>
+                                <div>
+                                  <div className="text-sm font-semibold" style={{ color: TEXT_DARK }}>{p.label}</div>
+                                  <div className="text-xs mt-0.5" style={{ color: TEXT_GRAY }}>{p.desc}</div>
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
                     </div>
                   </motion.div>
                 )}
@@ -468,6 +572,59 @@ export function SignUpPage() {
                           }}
                         />
                       </div>
+
+                      {/* Account credentials */}
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium mb-2" style={{ color: TEXT_DARK }}>
+                            Password
+                          </label>
+                          <input
+                            type="password"
+                            value={password}
+                            onChange={e => setPassword(e.target.value)}
+                            placeholder="At least 8 characters"
+                            className="w-full px-3 py-2.5 rounded-md text-sm border transition-colors focus:outline-none"
+                            style={{ borderColor: BORDER, color: TEXT_DARK }}
+                            onFocus={e => {
+                              e.currentTarget.style.borderColor = ACCENT;
+                              e.currentTarget.style.boxShadow = `0 0 0 3px ${ACCENT}15`;
+                            }}
+                            onBlur={e => {
+                              e.currentTarget.style.borderColor = BORDER;
+                              e.currentTarget.style.boxShadow = 'none';
+                            }}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-2" style={{ color: TEXT_DARK }}>
+                            Confirm password
+                          </label>
+                          <input
+                            type="password"
+                            value={confirmPassword}
+                            onChange={e => setConfirmPassword(e.target.value)}
+                            placeholder="Re-enter password"
+                            className="w-full px-3 py-2.5 rounded-md text-sm border transition-colors focus:outline-none"
+                            style={{ borderColor: BORDER, color: TEXT_DARK }}
+                            onFocus={e => {
+                              e.currentTarget.style.borderColor = ACCENT;
+                              e.currentTarget.style.boxShadow = `0 0 0 3px ${ACCENT}15`;
+                            }}
+                            onBlur={e => {
+                              e.currentTarget.style.borderColor = BORDER;
+                              e.currentTarget.style.boxShadow = 'none';
+                            }}
+                          />
+                        </div>
+                      </div>
+                      {password.length > 0 && !passwordsValid && (
+                        <p className="text-xs" style={{ color: '#DC2626' }}>
+                          {password.length < 8
+                            ? 'Password must be at least 8 characters.'
+                            : 'Passwords do not match.'}
+                        </p>
+                      )}
                     </div>
                   </motion.div>
                 )}
@@ -600,10 +757,15 @@ export function SignUpPage() {
               {currentStep === 3 && (
                 <p className="text-xs text-[#475569] mb-4 mt-6">By submitting, you acknowledge our <Link to="/privacy" className="underline text-[#4945FF]">Privacy Policy</Link> and agree to our <Link to="/terms" className="underline text-[#4945FF]">Terms of Service</Link>.</p>
               )}
+              {submitError && (
+                <div className="mt-6 rounded-md px-4 py-3 text-sm" style={{ backgroundColor: '#FEF2F2', border: '1px solid #FECACA', color: '#B91C1C' }}>
+                  {submitError}
+                </div>
+              )}
               <div className="flex items-center justify-between mt-8 pt-6 border-t" style={{ borderColor: BORDER }}>
                 <button
                   onClick={handleBack}
-                  disabled={currentStep === 1}
+                  disabled={currentStep === 1 || submitting}
                   className={`px-4 py-2 text-sm font-medium rounded-md transition-colors cursor-pointer ${
                     currentStep === 1
                       ? 'opacity-0 pointer-events-none'
@@ -616,6 +778,7 @@ export function SignUpPage() {
                 <button
                   onClick={handleNext}
                   disabled={
+                    submitting ||
                     (currentStep === 1 && !canProceedStep1) ||
                     (currentStep === 2 && !canProceedStep2) ||
                     (currentStep === 3 && !canProceedStep3)
@@ -626,8 +789,10 @@ export function SignUpPage() {
                     color: 'white',
                   }}
                 >
-                  {currentStep === 3 ? 'Submit application' : 'Continue'}
-                  <ArrowRight size={16} />
+                  {currentStep === 3
+                    ? (submitting ? 'Creating account…' : 'Create account')
+                    : 'Continue'}
+                  {!submitting && <ArrowRight size={16} />}
                 </button>
               </div>
             </div>
