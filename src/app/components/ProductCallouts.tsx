@@ -520,7 +520,7 @@ export function CapitalCallout() {
           </Reveal>
 
           <Reveal delay={0.24}>
-            <ArrowLink to="/apply" label="Fuel Your Growth" />
+            <ArrowLink to="/get-a-quote" label="Fuel Your Growth" />
           </Reveal>
         </div>
 

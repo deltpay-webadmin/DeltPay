@@ -32,7 +32,7 @@ export function TransparentPricing() {
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-4">
             <Link
-              to="/apply"
+              to="/get-a-quote"
               className="inline-flex items-center justify-center px-8 py-4 bg-[#4945FF] text-white rounded-xl font-medium hover:bg-[#3832E5] transition-all text-lg shadow-lg hover:shadow-xl"
             >
               Find your custom rate

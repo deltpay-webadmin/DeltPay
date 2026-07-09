@@ -475,7 +475,7 @@ export function IndustryPage() {
             </p>
             <div className="flex flex-wrap gap-3">
               <Link
-                to="/apply"
+                to="/get-a-quote"
                 className="group inline-flex items-center gap-2 pl-6 pr-5 py-4 rounded-full text-[14.5px] font-semibold transition-colors"
                 style={{ background: PAPER, color: INK }}
               >
@@ -888,7 +888,7 @@ export function IndustryPage() {
           </p>
           <div className="flex flex-wrap justify-center gap-3">
             <Link
-              to="/apply"
+              to="/get-a-quote"
               className="group inline-flex items-center gap-2 pl-6 pr-5 py-4 rounded-full text-[14.5px] font-semibold text-white transition-colors"
               style={{ background: ACCENT }}
             >

@@ -321,7 +321,7 @@ export function HeroSection() {
                 whileTap={{ scale: 0.98 }}
               >
                 <Link
-                  to="/apply"
+                  to="/get-a-quote"
                   className="get-started-btn inline-flex justify-center items-center px-8 py-4 rounded-xl font-medium transition-all text-lg bg-[#4945FF] text-white border-2 border-[#4945FF] hover:bg-[#3933CC] hover:border-[#3933CC] relative overflow-hidden"
                 >
                   Get Started for Free

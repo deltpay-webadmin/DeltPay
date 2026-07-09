@@ -407,7 +407,7 @@ export function ResourcePage() {
             plan, no projections, no commitment.
           </p>
           <Link
-            to="/apply"
+            to="/get-a-quote"
             className="inline-flex items-center gap-2 rounded-full px-7 py-3.5 font-semibold transition-all duration-200 hover:brightness-105"
             style={{
               background: '#FFFFFF',

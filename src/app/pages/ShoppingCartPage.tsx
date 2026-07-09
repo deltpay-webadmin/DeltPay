@@ -269,7 +269,7 @@ export function ShoppingCartPage() {
                       // let Meta run Value Optimization on hardware campaigns.
                       const itemCount = cartItems.reduce((sum, i) => sum + i.quantity, 0);
                       trackCheckout(total, itemCount);
-                      navigate('/apply');
+                      navigate('/get-a-quote');
                     }}
                   >
                     Proceed to Checkout

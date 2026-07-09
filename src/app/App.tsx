@@ -113,7 +113,10 @@ export default function App() {
                 <Route path="/pricing" element={<PricingPage />} />
                 <Route path="/payments" element={<PaymentsPage />} />
                 <Route path="/audit" element={<AuditPage />} />
-                <Route path="/apply" element={<ApplicationPage />} />
+                {/* Legacy application form — retired. All onboarding now
+                    flows through the "What features do you need?" quiz. Any
+                    remaining/bookmarked /apply links land there. */}
+                <Route path="/apply" element={<Navigate to="/get-a-quote" replace />} />
                 <Route path="/whats-new" element={<Navigate to="/blog" replace />} />
                 <Route path="/blog" element={<NewBlogPage />} />
                 <Route path="/contact" element={<ContactPage />} />

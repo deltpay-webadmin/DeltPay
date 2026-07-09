@@ -508,7 +508,7 @@ export function ScrollExpandingHero() {
               }}
             >
               <Link
-                to="/apply"
+                to="/get-a-quote"
                 style={{
                   background: PURPLE,
                   color: '#fff',

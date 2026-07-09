@@ -406,7 +406,7 @@ export function Navigation() {
                         — NEW · Median time to funds 24h
                       </span>
                       <Link
-                        to="/apply"
+                        to="/get-a-quote"
                         className="dc-btn-primary"
                       >
                         Get Funded

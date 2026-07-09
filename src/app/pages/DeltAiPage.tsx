@@ -588,7 +588,7 @@ export function DeltAiPage() {
 
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center' }}>
               <Link
-                to="/onboarding"
+                to="/get-a-quote"
                 style={{
                   display: 'inline-flex', alignItems: 'center', gap: 8,
                   padding: '14px 32px', borderRadius: 999,
