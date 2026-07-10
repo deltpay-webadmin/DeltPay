@@ -3,16 +3,10 @@ import { Link, useNavigate } from 'react-router';
 import { Eye, EyeOff, LogIn, UserPlus, ChevronDown } from 'lucide-react';
 import deltLogoWhite from '@/assets/delt-logo-on-dark.svg';
 /*
- * Hero image for the sign-in split panel.
- *
- * TARGET: a nano-banana-pro (Gemini 3 Pro Image) render of a merchant in a
- * premium retail environment standing at a point-of-sale terminal. Once that
- * asset is generated it is saved to `src/assets/scenes/signin-merchant-pos.jpg`
- * and this import is repointed there — nothing else in this file changes.
- *
- * Until then we fall back to the closest on-brand premium-retail scene.
+ * Hero image for the sign-in split panel: a merchant in a premium retail
+ * environment using a point-of-sale terminal (nano-banana-pro render).
  */
-import heroMerchant from '@/assets/scenes/scene_retail.jpg';
+import heroMerchant from '@/assets/scenes/signin-merchant-pos.jpg';
 
 const INDIGO = '#4945FF';
 const NAVY = '#041E42';
