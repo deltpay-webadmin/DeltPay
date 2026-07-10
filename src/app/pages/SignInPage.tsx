@@ -52,15 +52,7 @@ export function SignInPage() {
 
           {/* Brand lockup + tagline */}
           <div className="relative z-10 p-9">
-            <div className="flex items-baseline gap-1.5">
-              <img src={deltLogoWhite} alt="Delt" className="h-5 w-auto" />
-              <span
-                className="text-white/95 text-[19px] leading-none font-medium"
-                style={{ fontFamily: 'var(--dc-font-display)', letterSpacing: '-0.02em' }}
-              >
-                Pay
-              </span>
-            </div>
+            <img src={deltLogoWhite} alt="Delt" className="h-6 w-auto" />
             <p className="mt-3 max-w-[19rem] text-[13px] leading-snug text-white/80">
               Payments for operators who don&rsquo;t overpay — flat rates,
               next-day deposits.
@@ -85,7 +77,7 @@ export function SignInPage() {
           {/* Sign up link */}
           <div className="flex justify-end">
             <Link
-              to="/signup"
+              to="/get-a-quote"
               className="inline-flex items-center gap-2 text-[15px] font-medium text-[#041E42] hover:text-[#4945FF] transition-colors"
             >
               <UserPlus className="h-[18px] w-[18px]" strokeWidth={2} />

@@ -23,7 +23,6 @@ const DeltAI = lazy(() => named(import('@/app/components/DeltAI'), 'DeltAI'));
 const LensChatPage = lazy(() => named(import('@/app/pages/LensChatPage'), 'LensChatPage'));
 const SandboxPage = lazy(() => named(import('@/app/pages/SandboxPage'), 'SandboxPage'));
 const SignInPage = lazy(() => named(import('@/app/pages/SignInPage'), 'SignInPage'));
-const SignUpPage = lazy(() => named(import('@/app/pages/SignUpPage'), 'SignUpPage'));
 const ContactPage = lazy(() => named(import('@/app/pages/ContactPage'), 'ContactPage'));
 const ContactSalesPage = lazy(() => named(import('@/app/pages/ContactSalesPage'), 'ContactSalesPage'));
 const SupportPage = lazy(() => named(import('@/app/pages/SupportPage'), 'SupportPage'));
@@ -93,7 +92,9 @@ export default function App() {
           <Route path="/demo" element={<SandboxPage />} />
           <Route path="/get-a-quote" element={<GetAQuotePage />} />
           <Route path="/signin" element={<SignInPage />} />
-          <Route path="/signup" element={<SignUpPage />} />
+          {/* Legacy sign-up form retired — send every /signup entry point
+              through the standard "Get Started" flow. */}
+          <Route path="/signup" element={<Navigate to="/get-a-quote" replace />} />
           <Route path="/cart" element={<ShoppingCartPage />} />
           <Route path="/delt-ai-chat" element={<DeltAI />} />
           <Route path="/lens-chat" element={<LensChatPage />} />
