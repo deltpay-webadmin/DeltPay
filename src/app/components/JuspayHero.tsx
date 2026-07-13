@@ -5,29 +5,57 @@ import heroDavidPng from '@/app/assets/hero-david-cutout.png';
 import heroDavidWebp from '@/app/assets/hero-david-cutout.webp';
 
 /* ──────────────────────────────────────────────────────────────
-   JuspayHero — Delt Pay home hero, rebuilt to the Plaid bar.
+   JuspayHero — Delt Pay home hero.
 
-   Design principles (vs. the previous version):
-   1. Painted background. A hand-tuned indigo→violet linear
-      gradient plus two soft radial vignettes act as a printed
-      color field. The flat #080A28 navy is gone.
-   2. Wave-line contour field is texture, not feature — opacity
-      drops from 70% to ~14%. You should sense it, not read it.
-   3. A single faint horizontal "shelf" gradient anchors the
-      lower third (the way Plaid puts a metallic bar across
-      Franklin's chest).
-   4. David is the focal subject. Natural engraving tones with
-      a duotone overlay (indigo shadows → warm highlights) so
-      he picks up the brand color without going monochrome.
-      Soft drop-shadow on the copy side gives him dimensional
-      separation from the field.
-   5. Typography: tighter tracking (-0.055em), tighter line-
-      height (0.94), gradient shimmer on the italic verb.
-   6. The fold owns ONLY five things: wordmark (in nav),
-      headline, sub, primary CTA, quiet secondary text link.
-      Stats and mono ledger are removed — they belong in the
-      sections below, not the fold.
+   Restyled to the premium Delt Capital hero language while keeping
+   the SAME engraving image and the SAME headline / sub-head copy:
+
+   1. Deep-navy printed field (--dc-bg-navy) with a single soft
+      indigo highlight behind the figure — the flat purple wash is
+      gone in favour of the darker, more premium Capital canvas.
+   2. A live deal ticker rides the top of the fold (dc-ticker),
+      the same proof-strip that anchors the Capital hero.
+   3. The whole headline is a light indigo→periwinkle gradient
+      (not just the verb), with the italic serif phrase carrying a
+      deeper accent gradient — mirroring "We *fund* it."
+   4. A three-up stat rail sits at the foot of the fold, matching
+      the Capital hero's FUNDING RANGE / TIME TO FUNDS / CREDIT PULL
+      rhythm — here tuned to Delt Pay's proof points.
+   5. The engraving (David) stays exactly as before: a clean cutout
+      on the right, in front of the contour field, behind the copy.
    ────────────────────────────────────────────────────────────── */
+
+/* Illustrative live-proof entries, in the Capital deal-ticker format. */
+const TICKER = [
+  { name: 'Sunset Café', metric: '$0 fees', status: 'Live' },
+  { name: 'River Ink Tattoo', metric: '$38K/mo', status: 'Settled' },
+  { name: 'Maple & Co.', metric: 'Same-day payout', status: 'Wired' },
+  { name: 'Harbor Goods', metric: '2,140 txns', status: 'Cleared' },
+  { name: 'Bloom Floral', metric: '$12K/wk', status: 'Settled' },
+  { name: 'Northside Auto', metric: '$0 fees', status: 'Live' },
+];
+
+/* Fold stat rail — Delt Pay proof points in the Capital stat rhythm. */
+const STATS = [
+  { label: 'Processing fees', value: '0%', unit: 'with pass-through' },
+  { label: 'Settlement', value: 'Same day', unit: 'typical' },
+  { label: 'Hardware', value: 'Included', unit: 'every plan' },
+];
+
+function TickerRow() {
+  return (
+    <>
+      {TICKER.map((t, i) => (
+        <span key={i}>
+          <span style={{ color: 'var(--dc-on-dark-muted)' }}>{t.name}</span>
+          <span style={{ color: 'var(--dc-indigo-soft)' }}>{t.metric}</span>
+          <span className="dc-pill">{t.status}</span>
+          <span className="dc-ticker__sep" aria-hidden>/</span>
+        </span>
+      ))}
+    </>
+  );
+}
 
 export function JuspayHero() {
   return (
@@ -35,14 +63,13 @@ export function JuspayHero() {
       data-hero-section
       className="relative w-full overflow-hidden flex flex-col"
       style={{
-        // Painted color field — deep indigo top-left → richer violet
-        // bottom-right. The two radial vignettes (one warm highlight
-        // behind David, one cooler shadow in the lower-left) give the
-        // canvas a "printed" feel rather than a flat color block.
+        // Premium Delt Capital canvas: deep navy with a single soft
+        // indigo highlight top-right (behind the figure) and a cooler
+        // shadow lower-left — a printed field, not a flat block.
         background: `
-          radial-gradient(120% 80% at 88% 18%, rgba(120, 95, 255, 0.35) 0%, transparent 55%),
-          radial-gradient(90% 70% at 6% 92%, rgba(20, 18, 70, 0.55) 0%, transparent 60%),
-          linear-gradient(135deg, #0B0D33 0%, #14123F 38%, #1C1856 70%, #221C66 100%)
+          radial-gradient(110% 75% at 86% 16%, rgba(73, 69, 255, 0.28) 0%, transparent 56%),
+          radial-gradient(90% 70% at 4% 96%, rgba(4, 6, 24, 0.65) 0%, transparent 60%),
+          linear-gradient(160deg, #080A28 0%, #0B0E30 55%, #0E1140 100%)
         `,
         color: 'var(--dc-on-dark)',
         marginTop: -64,
@@ -50,9 +77,17 @@ export function JuspayHero() {
         minHeight: 'calc(100vh / var(--site-zoom, 1))',
       }}
     >
+      {/* ───── Live deal ticker — rides just below the nav ───── */}
+      <div className="dc-ticker relative z-[3]" aria-label="Recent Delt Pay activity">
+        <div className="dc-ticker__track">
+          <TickerRow />
+          <TickerRow />
+        </div>
+      </div>
+
       {/* Contour texture — whisper, not pattern. Even quieter on mobile. */}
       <div className="hidden lg:block absolute inset-0" aria-hidden style={{ zIndex: 0 }}>
-        <PlaidWaveLines color="#4945ff" baseOpacity={0.14} hoverOpacity={0.55} />
+        <PlaidWaveLines color="#4945ff" baseOpacity={0.12} hoverOpacity={0.5} />
       </div>
       <div className="lg:hidden absolute inset-0" aria-hidden style={{ zIndex: 0 }}>
         <PlaidWaveLines color="#4945ff" baseOpacity={0.06} hoverOpacity={0.2} />
@@ -75,18 +110,10 @@ export function JuspayHero() {
             // the headline copy without shrinking David.
             right: '-4%',
             bottom: 0,
-            // Right-anchored cutout (figure on the right of the canvas,
-            // transparent on the left). Drive sizing by HEIGHT so David
-            // fills the hero vertically — head near the top, shoulders
-            // anchored to the bottom edge — matching the design spec.
-            // The asset's transparent left half keeps the headline copy
-            // clear regardless of how wide it scales.
             // Drive sizing by HEIGHT so the engraving fills the hero
             // vertically — head near the top, shoulders to the bottom.
-            // The cutout image is wider than tall, and the figure occupies
-            // the right half of the canvas, so when anchored to right: 0
-            // the transparent left half lands behind the headline column
-            // and never collides with copy.
+            // The cutout's transparent left half lands behind the headline
+            // column and never collides with copy.
             height: '78%',
             width: 'auto',
             maxWidth: 'none',
@@ -137,28 +164,31 @@ export function JuspayHero() {
             position: 'absolute',
             inset: 0,
             background:
-              'linear-gradient(90deg, rgba(11,13,51,0.92) 0%, rgba(11,13,51,0.65) 30%, rgba(11,13,51,0.2) 65%, rgba(11,13,51,0) 100%)',
+              'linear-gradient(90deg, rgba(8,10,40,0.94) 0%, rgba(8,10,40,0.68) 30%, rgba(8,10,40,0.2) 65%, rgba(8,10,40,0) 100%)',
           }}
         />
       </div>
 
       {/* ───── Copy block ───── */}
       <div className="relative z-[2] mx-auto w-full max-w-[1320px] px-6 lg:px-10 pt-8 lg:pt-10 pb-0 flex-1 flex flex-col">
-        <div className="mt-10 lg:mt-16">
+        <div className="mt-8 lg:mt-14">
           <h1
             className="dc-display"
             style={{
-              color: 'var(--dc-on-dark)',
               fontSize: 'clamp(44px, 6.6vw, 88px)',
               lineHeight: 1.02,
               fontWeight: 600,
               letterSpacing: '-0.05em',
               maxWidth: '14ch',
-              // Extra bottom padding so the italic 'g/p' descenders in
-              // 'nothing stops' don't get clipped by the section / next
-              // block. Without this the descenders sit right on the
-              // section's bottom mathematical edge.
               paddingBottom: '0.18em',
+              // Full-headline light gradient — indigo → periwinkle —
+              // the premium Capital treatment applied to the whole line.
+              background:
+                'linear-gradient(112deg, #E7EBFF 0%, #C6CEFF 44%, #AEB8FF 74%, #BEAEFF 100%)',
+              WebkitBackgroundClip: 'text',
+              backgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              color: 'transparent',
             }}
           >
             You built it from nothing.<br />
@@ -169,17 +199,15 @@ export function JuspayHero() {
                 fontFamily: 'var(--dc-font-serif-italic)',
                 fontStyle: 'italic',
                 fontWeight: 400,
-                // Gradient shimmer — indigo → lavender → soft pink, the
-                // way Plaid does "data into revolutionary".
+                // Deeper accent gradient on the italic verb so it pops
+                // against the lighter headline — the way Capital sets
+                // "We *fund* it."
                 background:
-                  'linear-gradient(95deg, #818CF8 0%, #A5B4FC 50%, #C7D2FE 100%)',
+                  'linear-gradient(95deg, #6D74F5 0%, #8E8BFF 55%, #B7A6FF 100%)',
                 WebkitBackgroundClip: 'text',
                 backgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 color: 'transparent',
-                // Some browsers clip the painted gradient at the text
-                // glyph box, cutting descenders. A tiny inline padding
-                // expands the bounding box so 'g' and 'p' render fully.
                 paddingBottom: '0.12em',
               }}
             >
@@ -202,8 +230,7 @@ export function JuspayHero() {
             , and business intelligence built in.
           </p>
 
-          {/* CTAs — primary button + quiet text link. The secondary
-              gets out of the way so the primary owns the eye. */}
+          {/* CTAs — primary button + the iridescent AI pill. */}
           <div className="mt-10 flex items-center gap-7 flex-wrap">
             <Link
               to="/get-a-quote"
@@ -213,11 +240,32 @@ export function JuspayHero() {
               Get a quote
               <span aria-hidden style={{ marginLeft: 4 }}>→</span>
             </Link>
-            {/* Restored: the original iridescent "Explore Features with AI"
-                pill. Opens ChatGPT in a new tab pre-seeded with a Delt
-                exploration prompt — the same behavior the live site had
-                before the hero rebuild. */}
             <ExploreFeaturesWithAI />
+          </div>
+        </div>
+
+        {/* ───── Fold stat rail — Capital-style three-up ───── */}
+        <div
+          className="mt-auto pt-8 lg:pt-9 pb-10 lg:pb-12"
+          style={{ borderTop: '1px solid var(--dc-rule-on-dark)', maxWidth: 620 }}
+        >
+          <div className="grid grid-cols-3 gap-4 sm:gap-8">
+            {STATS.map((s) => (
+              <div key={s.label}>
+                <div className="dc-eyebrow dc-bare" style={{ marginBottom: 10 }}>
+                  {s.label}
+                </div>
+                <div className="flex items-baseline gap-2 flex-wrap">
+                  <span
+                    className="dc-stat-num"
+                    style={{ fontSize: 'clamp(24px, 3vw, 40px)', color: 'var(--dc-on-dark)' }}
+                  >
+                    {s.value}
+                  </span>
+                  <span className="dc-stat-unit">{s.unit}</span>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -228,6 +276,7 @@ export function JuspayHero() {
         [data-hero-section] .dc-quiet-link:hover {
           color: #fff !important;
         }
+        [data-hero-section] .dc-ticker { padding-left: 0; }
       `}</style>
     </section>
   );
