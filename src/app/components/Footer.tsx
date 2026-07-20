@@ -17,6 +17,7 @@ const PRODUCT = [
   { label: 'Capital',            href: '/capital' },
   { label: 'Websites',           href: '/website-examples' },
   { label: 'Lens AI',            href: '/lens-ai' },
+  { label: 'Square + Online Ordering', href: '/solutions/square-online-ordering' },
   { label: 'International / USDT', href: '/solutions/international-usdt' },
   { label: 'High Risk',          href: '/solutions/high-risk-processing' },
   { label: 'Pricing',            href: '/pricing' },

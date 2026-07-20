@@ -56,6 +56,7 @@ const IndustryPage = lazy(() => named(import('@/app/pages/IndustryPage'), 'Indus
 const LensDemoPage = lazy(() => named(import('@/app/pages/LensDemoPage'), 'LensDemoPage'));
 const InternationalUSDTPage = lazy(() => named(import('@/app/pages/InternationalUSDTPage'), 'InternationalUSDTPage'));
 const HighRiskProcessingPage = lazy(() => named(import('@/app/pages/HighRiskProcessingPage'), 'HighRiskProcessingPage'));
+const SquareResellerPage = lazy(() => named(import('@/app/pages/SquareResellerPage'), 'SquareResellerPage'));
 const AuditPage = lazy(() => named(import('@/app/pages/AuditPage'), 'AuditPage'));
 
 /* Renders the brand marquee BELOW the global footer, but only on the
@@ -138,6 +139,10 @@ export default function App() {
                 <Route path="/lens-demo" element={<LensDemoPage />} />
                 <Route path="/solutions/international-usdt" element={<InternationalUSDTPage />} />
                 <Route path="/solutions/high-risk-processing" element={<HighRiskProcessingPage />} />
+                <Route path="/solutions/square-online-ordering" element={<SquareResellerPage />} />
+                {/* Friendly aliases for the Square reseller launch. */}
+                <Route path="/reseller" element={<Navigate to="/solutions/square-online-ordering" replace />} />
+                <Route path="/square" element={<Navigate to="/solutions/square-online-ordering" replace />} />
                 {/* Capital "More for your business" cards — each links to a
                     full editorial article rendered by ResourcePage. */}
                 <Route path="/resources/:slug" element={<ResourcePage />} />

@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import {
   Search, X, ArrowRight, Globe, CreditCard, DollarSign, BarChart3,
   Star, User, AlignLeft, HelpCircle, LayoutDashboard, Calculator,
-  ChevronDown, Menu, Globe2, ShieldAlert, Monitor,
+  ChevronDown, Menu, Globe2, ShieldAlert, Monitor, Zap,
 } from 'lucide-react';
 import deltLogoOnDark from '@/assets/delt-logo-on-dark.svg';
 import deltLogoOnLight from '@/assets/delt-logo-on-light.svg';
@@ -51,6 +51,7 @@ const businessTypes = [
 ];
 
 const specialized = [
+  { label: 'Square + Online Ordering', description: 'Board on Square with Instant Funding',       href: '/solutions/square-online-ordering', icon: Zap, badge: 'NEW' },
   { label: 'International / USDT',   description: 'Same-day cross-border, settle in stablecoin',  href: '/solutions/international-usdt',   icon: Globe2 },
   { label: 'High Risk Processing',   description: 'Custom rates for every high-risk vertical',    href: '/solutions/high-risk-processing', icon: ShieldAlert },
 ];
