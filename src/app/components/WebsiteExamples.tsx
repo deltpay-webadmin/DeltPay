@@ -1887,7 +1887,7 @@ function FinalCTA() {
 
           {/* THE button — solid brand purple, real CTA energy */}
           <Link
-            to="/onboarding"
+            to="/get-a-quote"
             className="we-final-cta-btn"
             style={{
               padding: '17px 36px',
@@ -2042,7 +2042,7 @@ function MidPageCTA() {
             </p>
           </div>
           <Link
-            to="/onboarding"
+            to="/get-a-quote"
             style={{
               display: 'inline-flex',
               alignItems: 'center',
