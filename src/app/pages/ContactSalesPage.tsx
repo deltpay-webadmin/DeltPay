@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Phone, MessageCircle, Users, Briefcase, ArrowLeft, Mail, Check, CheckCircle, MessagesSquare } from 'lucide-react';
+import { Phone, MessageCircle, Users, Briefcase, ArrowLeft, Mail, Check, CheckCircle, MessagesSquare, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { ProductCrossSell } from '../components/ProductCrossSell';
 import { SupportChatbot } from '../components/SupportChatbot';
@@ -73,30 +73,32 @@ export function ContactSalesPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Hero — navy on-palette */}
+      {/* Hero — navy, matched to the site's hero design spec */}
       <section className="relative overflow-hidden bg-[#080A28] text-white">
-        {/* Glow accent */}
-        <div className="absolute -top-32 -right-32 w-[480px] h-[480px] rounded-full bg-[#4945FF]/25 blur-[120px] pointer-events-none" />
-        <div className="absolute -bottom-32 -left-32 w-[420px] h-[420px] rounded-full bg-[#4945FF]/15 blur-[120px] pointer-events-none" />
+        {/* Ambient glows */}
+        <div className="absolute -top-40 -right-32 w-[520px] h-[520px] rounded-full bg-[#4945FF]/25 blur-[130px] pointer-events-none" />
+        <div className="absolute -bottom-40 -left-24 w-[440px] h-[440px] rounded-full bg-[#4945FF]/12 blur-[130px] pointer-events-none" />
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-20 lg:pt-14 lg:pb-28">
           <button
             onClick={() => navigate(-1)}
-            className="mb-10 flex items-center gap-2 text-white/70 hover:text-white transition-colors group"
+            className="mb-10 flex items-center gap-2 text-white/60 hover:text-white transition-colors group"
           >
             <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
             <span className="font-medium">Back</span>
           </button>
 
           <div className="max-w-4xl">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-4 py-1.5 text-sm text-white/80 mb-6">
-              <span className="w-2 h-2 rounded-full bg-[#4945FF]" />
-              Talk to sales
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/15 bg-white/[0.06] mb-6">
+              <Sparkles className="w-3.5 h-3.5 text-[#9C9AFF]" />
+              <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-white">
+                Talk to sales
+              </span>
             </div>
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight mb-6">
-              Let's grow your business <span className="text-[#4945FF]">together.</span>
+            <h1 className="text-[44px] sm:text-[56px] lg:text-[72px] font-extrabold leading-[1.02] tracking-[-0.025em] mb-6">
+              Let's grow your business <span className="text-[#9C9AFF]">together.</span>
             </h1>
-            <p className="text-xl text-white/70 max-w-2xl">
+            <p className="text-lg lg:text-xl text-white/70 max-w-2xl leading-relaxed">
               Chat with a specialist to size up Delt for your business. No hard sell — just
               honest answers, real pricing, and a clear path to go live.
             </p>

@@ -64,11 +64,6 @@ const FUNDING_POINTS = [
     label: 'access',
     body: 'Weekends and holidays included. The batch closes, the money moves.',
   },
-  {
-    stat: 'Auto',
-    label: 'attribution',
-    body: 'Every deal is tracked from application to residual in one portal.',
-  },
 ];
 
 /* ─── Simple onboarding — what merchants DON\'T have to give ───── */
@@ -107,8 +102,8 @@ export function SquareResellerPage() {
       {/* ═══ 1. HERO ═════════════════════════════════════════════ */}
       <section
         data-hero-section
-        className="relative overflow-hidden pt-28 pb-24 lg:pt-32 lg:pb-28"
-        style={{ background: NAVY }}
+        className="relative overflow-hidden pt-44 pb-24 lg:pt-48 lg:pb-28"
+        style={{ background: NAVY, marginTop: -64 }}
       >
         {/* Ambient glow */}
         <div
@@ -305,7 +300,7 @@ export function SquareResellerPage() {
                     Money in, the moment you close
                   </div>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   {FUNDING_POINTS.map((f) => (
                     <div key={f.label}>
                       <div className="text-[34px] lg:text-[40px] font-extrabold leading-none mb-1" style={{ color: '#FFFFFF' }}>
