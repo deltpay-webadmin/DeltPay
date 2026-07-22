@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ArrowRight, Check } from 'lucide-react';
 import { useHoneypot } from './Honeypot';
+import { FadeIn } from './motion';
 
 export function EmailCaptureBar() {
   const [email, setEmail] = useState('');
@@ -22,7 +23,9 @@ export function EmailCaptureBar() {
   return (
     <section className="relative bg-[#080A28] pt-2 pb-16 lg:pb-20">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div
+        {/* Single fade-up of the whole capture card. */}
+        <FadeIn
+          as="div"
           className="bg-white/5 border border-white/10 backdrop-blur-sm p-6 lg:p-8"
           style={{ borderRadius: '6px' }}
         >
@@ -95,7 +98,7 @@ export function EmailCaptureBar() {
               </form>
             )}
           </div>
-        </div>
+        </FadeIn>
       </div>
     </section>
   );

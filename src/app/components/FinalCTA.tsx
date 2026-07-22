@@ -1,4 +1,5 @@
 import { Link } from 'react-router';
+import { FadeIn } from './motion';
 
 /* ──────────────────────────────────────────────────────────────
    FinalCTA — Delt Pay (merchant services) closing CTA.
@@ -27,7 +28,8 @@ export function FinalCTA() {
         }}
       />
 
-      <div className="relative mx-auto w-full max-w-[1200px] px-6 lg:px-10 py-28 lg:py-36">
+      {/* Single fade-up of the whole CTA block — no stagger (per spec). */}
+      <FadeIn as="div" className="relative mx-auto w-full max-w-[1200px] px-6 lg:px-10 py-28 lg:py-36">
         {/* Eyebrow */}
         <div className="dc-eyebrow" style={{ color: '#A5B4FC' }}>
           — READY WHEN YOU ARE
@@ -128,7 +130,7 @@ export function FinalCTA() {
             0% NET PROCESSING · SAME-DAY DEPOSITS · INSTANT ONBOARDING
           </span>
         </div>
-      </div>
+      </FadeIn>
     </section>
   );
 }

@@ -1,6 +1,10 @@
+import { useRef } from 'react';
 import { Link } from 'react-router';
+import { motion, useTransform } from 'motion/react';
 import { PlaidWaveLines } from './PlaidWaveLines';
 import { ExploreFeaturesWithAI } from './ExploreFeaturesWithAI';
+import { Stagger, StaggerItem, useScrollProgress } from './motion';
+import { EASE_OUT_EXPO } from '@/app/lib/motion';
 import heroDavidPng from '@/app/assets/hero-david-cutout.png';
 import heroDavidWebp from '@/app/assets/hero-david-cutout.webp';
 
@@ -30,8 +34,20 @@ import heroDavidWebp from '@/app/assets/hero-david-cutout.webp';
    ────────────────────────────────────────────────────────────── */
 
 export function JuspayHero() {
+  // Scroll-linked parallax for the hero figure. Progress runs from when
+  // the hero fills the viewport to when it scrolls off the top. Under
+  // reduced motion the parallax range collapses to 0 (no movement).
+  const heroRef = useRef<HTMLElement>(null);
+  const { scrollYProgress, reduceMotion } = useScrollProgress(heroRef, [
+    'start start',
+    'end start',
+  ]);
+  // Max ~28px (well under the 5–8% brief cap) — a whisper of depth, not a slide.
+  const davidY = useTransform(scrollYProgress, [0, 1], [0, reduceMotion ? 0 : -28]);
+
   return (
     <section
+      ref={heroRef}
       data-hero-section
       className="relative w-full overflow-hidden flex flex-col"
       style={{
@@ -62,13 +78,27 @@ export function JuspayHero() {
           Just the engraving sitting on the gradient field.
           z-index 1 keeps him IN FRONT of the contour field but BEHIND
           the headline copy at z-[2]. */}
+      {/* Outer layer = scroll parallax; inner layer = on-load entrance.
+          Split across two elements so the scroll-linked `y` and the
+          mount `y` never fight over the same transform. */}
+      <motion.div
+        aria-hidden
+        className="hidden lg:block absolute inset-0 pointer-events-none"
+        style={{ y: davidY, zIndex: 1 }}
+      >
+        <motion.div
+          className="absolute inset-0 pointer-events-none"
+          initial={reduceMotion ? false : { opacity: 0, y: 18 }}
+          animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+          transition={{ delay: 0.45, duration: 0.75, ease: EASE_OUT_EXPO }}
+        >
       <picture>
         <source srcSet={heroDavidWebp} type="image/webp" />
         <img
           src={heroDavidPng}
           alt=""
           aria-hidden
-          className="pointer-events-none select-none hidden lg:block absolute"
+          className="pointer-events-none select-none absolute"
           style={{
             // Slight negative right offset lets the figure bleed a touch
             // off the right edge, which shifts the POS terminal clear of
@@ -97,6 +127,8 @@ export function JuspayHero() {
           }}
         />
       </picture>
+        </motion.div>
+      </motion.div>
 
       {/* Mobile David — centered, full-bust visible behind the copy.
           Sits behind a darkening gradient so the headline stays legible. */}
@@ -144,8 +176,11 @@ export function JuspayHero() {
 
       {/* ───── Copy block ───── */}
       <div className="relative z-[2] mx-auto w-full max-w-[1320px] px-6 lg:px-10 pt-8 lg:pt-10 pb-0 flex-1 flex flex-col">
-        <div className="mt-10 lg:mt-16">
-          <h1
+        {/* On-load stagger: headline → subhead → CTA row. trigger="mount"
+            so the fold animates on page load, not on scroll. */}
+        <Stagger as="div" trigger="mount" className="mt-10 lg:mt-16" delayChildren={0.15}>
+          <StaggerItem
+            as="h1"
             className="dc-display"
             style={{
               color: 'var(--dc-on-dark)',
@@ -185,9 +220,10 @@ export function JuspayHero() {
             >
               nothing stops it.
             </span>
-          </h1>
+          </StaggerItem>
 
-          <p
+          <StaggerItem
+            as="p"
             className="mt-7 max-w-[540px] text-[18px] leading-[1.55]"
             style={{ color: 'rgba(247, 245, 240, 0.75)', fontFamily: 'var(--dc-font-body)' }}
           >
@@ -200,11 +236,11 @@ export function JuspayHero() {
               same-day funding
             </strong>
             , and business intelligence built in.
-          </p>
+          </StaggerItem>
 
           {/* CTAs — primary button + quiet text link. The secondary
               gets out of the way so the primary owns the eye. */}
-          <div className="mt-10 flex items-center gap-7 flex-wrap">
+          <StaggerItem as="div" className="mt-10 flex items-center gap-7 flex-wrap">
             <Link
               to="/get-a-quote"
               className="dc-btn-primary dc-lg"
@@ -218,8 +254,8 @@ export function JuspayHero() {
                 exploration prompt — the same behavior the live site had
                 before the hero rebuild. */}
             <ExploreFeaturesWithAI />
-          </div>
-        </div>
+          </StaggerItem>
+        </Stagger>
       </div>
 
       {/* Hover style for the quiet link — defined inline so it travels

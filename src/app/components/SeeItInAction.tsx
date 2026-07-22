@@ -1,5 +1,7 @@
 import { useNavigate } from 'react-router';
 import { DashboardLitePreview } from './DashboardLitePreview';
+import { FadeIn } from './motion';
+import { REVEAL } from '@/app/lib/motion';
 
 export function SeeItInAction() {
   const navigate = useNavigate();
@@ -7,8 +9,8 @@ export function SeeItInAction() {
   return (
     <section className="siia-section">
       <div className="siia-inner">
-        {/* Header */}
-        <div className="siia-header">
+        {/* Header — fades up first. */}
+        <FadeIn as="div" className="siia-header">
           <div className="siia-eyebrow">— ONE DASHBOARD · EVERY MOVE</div>
           <h2 className="siia-title">
             One dashboard. The whole{' '}
@@ -17,12 +19,17 @@ export function SeeItInAction() {
           <p className="siia-subtitle">
             Explore our platform to see how Delt helps you run, grow, and fund your business — all from one dashboard.
           </p>
-        </div>
+        </FadeIn>
 
-        {/* Lite Dashboard Preview */}
-        <div className="siia-preview-wrap">
+        {/* Lite Dashboard Preview — media rises in slightly after, longer duration. */}
+        <FadeIn
+          as="div"
+          className="siia-preview-wrap"
+          delay={0.1}
+          duration={REVEAL.mediaDuration}
+        >
           <DashboardLitePreview onClickOverride={() => navigate('/demo')} />
-        </div>
+        </FadeIn>
       </div>
 
       <style>{`

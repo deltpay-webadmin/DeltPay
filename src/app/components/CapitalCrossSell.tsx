@@ -15,6 +15,7 @@
 
 import { Link } from 'react-router';
 import { ArrowRight, BadgeCheck, Percent, Repeat, Zap, TrendingUp } from 'lucide-react';
+import { FadeIn, Stagger, StaggerItem } from './motion';
 
 const NAVY = '#041E42';
 const PURPLE = '#4945FF';
@@ -93,9 +94,9 @@ function FullSection({
       />
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="grid lg:grid-cols-[1.1fr_1fr] gap-12 items-end mb-14">
-          <div>
+        {/* Header — staggered reveal */}
+        <Stagger as="div" className="grid lg:grid-cols-[1.1fr_1fr] gap-12 items-end mb-14">
+          <StaggerItem as="div">
             <div
               className="mb-6"
               style={{
@@ -139,10 +140,11 @@ function FullSection({
               {subhead ??
                 'Every Delt merchant gets pre-approved offers from Delt Capital — same company, different product. The longer you process with us, the better the rate and the bigger the offer.'}
             </p>
-          </div>
+          </StaggerItem>
 
-          {/* Sample offer card */}
-          <div
+          {/* Sample offer card — rises in slightly after the copy. */}
+          <StaggerItem
+            as="div"
             className="p-6 lg:p-7"
             style={{
               borderRadius: '6px',
@@ -205,13 +207,14 @@ function FullSection({
                 </div>
               </div>
             </div>
-          </div>
-        </div>
+          </StaggerItem>
+        </Stagger>
 
-        {/* Pillars */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5 mb-12">
+        {/* Pillars — staggered per card, left-to-right / top-to-bottom */}
+        <Stagger as="div" className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5 mb-12">
           {PILLARS.map(({ icon: Icon, title, body }) => (
-            <div
+            <StaggerItem
+              as="div"
               key={title}
               className="p-6 transition-all duration-300"
               style={{
@@ -240,12 +243,12 @@ function FullSection({
               <p className="text-sm leading-relaxed" style={{ color: bodyColor }}>
                 {body}
               </p>
-            </div>
+            </StaggerItem>
           ))}
-        </div>
+        </Stagger>
 
         {/* CTA row */}
-        <div className="flex flex-wrap items-center gap-4">
+        <FadeIn as="div" delay={0.05} className="flex flex-wrap items-center gap-4">
           <Link
             to={ctaHref}
             className="inline-flex items-center gap-2 px-7 py-3.5 text-white transition-all duration-200 hover:brightness-110"
@@ -269,7 +272,7 @@ function FullSection({
             How Delt Capital works
             <ArrowRight size={14} />
           </Link>
-        </div>
+        </FadeIn>
 
         <p
           className="mt-6 text-xs"

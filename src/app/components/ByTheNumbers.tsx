@@ -5,6 +5,7 @@
    ────────────────────────────────────────────────────────────── */
 
 import deltLogoOnLight from '@/assets/delt-logo-on-light.svg';
+import { FadeIn, Stagger, StaggerItem } from './motion';
 
 interface Row {
   num: string;
@@ -35,9 +36,9 @@ export function ByTheNumbers() {
       style={{ background: 'var(--dc-bg-paper)', color: 'var(--dc-on-light)' }}
     >
       <div className="mx-auto w-full max-w-[1200px] px-6 lg:px-10">
-        {/* Header — 2 col */}
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-10 items-end">
-          <div>
+        {/* Header — 2 col, staggered reveal */}
+        <Stagger as="div" className="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-10 items-end">
+          <StaggerItem as="div">
             <div className="dc-eyebrow dc-on-light" style={{ color: 'var(--dc-indigo)' }}>
               LEGACY PROCESSOR VS DELT
             </div>
@@ -53,8 +54,8 @@ export function ByTheNumbers() {
             >
               Why merchants leave<br />legacy processors.
             </h2>
-          </div>
-          <div>
+          </StaggerItem>
+          <StaggerItem as="div">
             <p
               className="text-[15px] leading-[1.6]"
               style={{ color: 'var(--dc-on-light-muted)', fontFamily: 'var(--dc-font-body)' }}
@@ -63,11 +64,11 @@ export function ByTheNumbers() {
               against the published rates and onboarding times of leading legacy
               processors. Updated quarterly.
             </p>
-          </div>
-        </div>
+          </StaggerItem>
+        </Stagger>
 
         {/* Comparison table — desktop only (replaced by stacked cards on mobile) */}
-        <div className="hidden md:block mt-12 overflow-x-auto -mx-2 px-2">
+        <FadeIn as="div" delay={0.05} className="hidden md:block mt-12 overflow-x-auto -mx-2 px-2">
         <div
           className="rounded-[12px] overflow-hidden min-w-[600px]"
           style={{
@@ -241,10 +242,10 @@ export function ByTheNumbers() {
             </div>
           ))}
         </div>
-        </div>
+        </FadeIn>
 
         {/* Comparison — mobile stacked cards */}
-        <div className="md:hidden mt-10 space-y-3">
+        <FadeIn as="div" className="md:hidden mt-10 space-y-3">
           {ROWS.map((row) => (
             <div
               key={row.num}
@@ -301,10 +302,10 @@ export function ByTheNumbers() {
               )}
             </div>
           ))}
-        </div>
+        </FadeIn>
 
         {/* Highlight stat cards */}
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <FadeIn as="div" delay={0.05} className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
           {HIGHLIGHTS.map((h) => (
             <div
               key={h.label}
@@ -360,7 +361,7 @@ export function ByTheNumbers() {
               </div>
             </div>
           ))}
-        </div>
+        </FadeIn>
       </div>
     </section>
   );
