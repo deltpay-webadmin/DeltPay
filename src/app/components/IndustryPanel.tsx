@@ -17,34 +17,39 @@ interface CardDef {
   image: string;
 }
 
+/* Bespoke, on-brand industry photography generated with Higgsfield
+   (soul_2), color-graded to Delt's indigo/navy palette — replacing the
+   previous generic Unsplash stock. Served from the Higgsfield CDN, same
+   external-image pattern as before; the optimized _min.webp variants keep
+   the page weight in check. */
 const CARDS: CardDef[] = [
   {
     slug: 'restaurants',
     category: 'RESTAURANT',
     title: 'Full service',
     image:
-      'https://images.unsplash.com/photo-1504940892017-d23b9053d5d4?auto=format&fit=crop&w=1400&q=80',
+      'https://d8j0ntlcm91z4.cloudfront.net/user_3GrS2UWtF81Y8aeL6zXsuXMKa8U/hf_20260722_150358_98dc2d76-98de-4261-a4bf-8de7036f240b_min.webp',
   },
   {
     slug: 'retail',
     category: 'RETAIL',
     title: 'Boutique',
     image:
-      'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1400&q=80',
+      'https://d8j0ntlcm91z4.cloudfront.net/user_3GrS2UWtF81Y8aeL6zXsuXMKa8U/hf_20260722_150409_a6978ddf-ceaf-4d7d-a704-3183d94e8f65_min.webp',
   },
   {
     slug: 'health-wellness',
     category: 'FITNESS',
     title: 'Studio',
     image:
-      'https://images.unsplash.com/photo-1651077837628-52b3247550ae?auto=format&fit=crop&w=1400&q=80',
+      'https://d8j0ntlcm91z4.cloudfront.net/user_3GrS2UWtF81Y8aeL6zXsuXMKa8U/hf_20260722_150411_b739f001-e731-4b84-8a5a-4fda4bef1e5a_min.webp',
   },
   {
     slug: 'salon-barber',
     category: 'SERVICES',
     title: 'Salon & spa',
     image:
-      'https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=1400&q=80',
+      'https://d8j0ntlcm91z4.cloudfront.net/user_3GrS2UWtF81Y8aeL6zXsuXMKa8U/hf_20260722_150413_b9868ff5-bcb2-46a5-8ba5-fab897ce4961_min.webp',
   },
 ];
 
