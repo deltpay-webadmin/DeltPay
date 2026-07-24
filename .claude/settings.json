@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__Jotform__edit_form",
+      "mcp__Jotform__display_form",
+      "mcp__Jotform__get_teams",
+      "mcp__Jotform__create_form",
+      "mcp__Jotform__search",
+      "mcp__Jotform__fetch",
+      "mcp__Jotform__list_submissions",
+      "mcp__Jotform__create_submission",
+      "mcp__Jotform__create_app",
+      "mcp__Jotform__edit_app",
+      "mcp__Jotform__assign_form",
+      "mcp__Jotform__analyze_submissions"
+    ],
+    "deny": []
+  }
+}

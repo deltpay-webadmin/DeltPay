@@ -565,7 +565,9 @@ export function LensAIPage() {
                 </div>
               ))}
             </div>
-            <button style={{
+            <button
+              onClick={() => navigate('/lens-ai/chat')}
+              style={{
               width: '100%', padding: '13px 0',
               border: `1.5px solid ${C.purple}`, borderRadius: 12,
               background: 'transparent', color: C.purple,
@@ -610,7 +612,9 @@ export function LensAIPage() {
                 </div>
               ))}
             </div>
-            <button style={{
+            <button
+              onClick={() => navigate('/contact-sales')}
+              style={{
               width: '100%', padding: '13px 0',
               border: 'none', borderRadius: 12,
               background: C.purple, color: C.white,
@@ -755,7 +759,7 @@ export function LensAIPage() {
           </a>
           <p style={{ marginTop: 24, fontSize: 13, color: 'rgba(255,255,255,0.6)' }}>
             Need help with Lens?{' '}
-            <a href="/help-center" style={{ color: 'rgba(255,255,255,0.85)', textDecoration: 'underline' }}>
+            <a href="#/help-center" style={{ color: 'rgba(255,255,255,0.85)', textDecoration: 'underline' }}>
               Visit the Help Center
             </a>
           </p>

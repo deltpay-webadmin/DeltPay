@@ -85,9 +85,9 @@ export function SupportPage() {
               >
                 (864) 729-3358
               </a>
-              <button className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-[#4945FF] text-[#4945FF] rounded-lg hover:bg-[#4945FF]/8 transition-colors font-semibold mt-auto">
+              <a href="tel:+18647293358" className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-[#4945FF] text-[#4945FF] rounded-lg hover:bg-[#4945FF]/8 transition-colors font-semibold mt-auto">
                 Call Now <ArrowRight className="w-4 h-4" />
-              </button>
+              </a>
             </div>
 
             {/* Email Us */}
@@ -105,9 +105,9 @@ export function SupportPage() {
               >
                 support@delt.com
               </a>
-              <button className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-[#4945FF] text-[#4945FF] rounded-lg hover:bg-[#4945FF]/8 transition-colors font-semibold mt-auto">
+              <a href="mailto:support@delt.com" className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-[#4945FF] text-[#4945FF] rounded-lg hover:bg-[#4945FF]/8 transition-colors font-semibold mt-auto">
                 Send Email <ArrowRight className="w-4 h-4" />
-              </button>
+              </a>
             </div>
           </div>
         </div>

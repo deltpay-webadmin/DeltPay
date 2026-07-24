@@ -41,7 +41,6 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router';
-import { serverFetch } from '@/app/lib/supabase';
 
 // Real hardware photography — wired to data-image-slot IDs
 import imgRegister        from '@/app/assets/hardware/register.png';
@@ -185,12 +184,13 @@ function PricingGuideGate() {
     setStatus('loading');
     setErrorMsg('');
     try {
-      const res = await serverFetch('/leads/pricing-guide', {
+      const res = await fetch('/api/leads/submit', {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          type: 'pricing-guide',
           email: email.trim(),
           business: business.trim(),
-          source: 'hardware-pricing-guide',
         }),
       });
       const data = await res.json().catch(() => ({}));

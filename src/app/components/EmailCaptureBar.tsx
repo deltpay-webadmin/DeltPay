@@ -1,13 +1,21 @@
 import { useState } from 'react';
 import { ArrowRight, Check } from 'lucide-react';
+import { useHoneypot } from './Honeypot';
 
 export function EmailCaptureBar() {
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const { honeypotField, honeypotValue } = useHoneypot();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) return;
+    // Email the rate-check lead to the team (fire-and-forget).
+    fetch('/api/leads/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'rate-check', email, hp_extra_field: honeypotValue() }),
+    }).catch(() => {});
     setSubmitted(true);
   };
 
@@ -66,6 +74,7 @@ export function EmailCaptureBar() {
                 onSubmit={handleSubmit}
                 className="flex flex-col sm:flex-row gap-3 lg:min-w-[420px]"
               >
+                {honeypotField}
                 <input
                   type="email"
                   value={email}

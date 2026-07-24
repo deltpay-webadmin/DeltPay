@@ -108,6 +108,16 @@ export function OnboardingPage() {
   }, [current.key, form]);
 
   const next = () => {
+    // "Submit application" (identity step -> done): email the application to
+    // the team. Fire-and-forget; DOB and SSN are intentionally NOT sent.
+    if (current.key === 'identity') {
+      const { dob: _dob, ssnLast4: _ssn, ...safe } = form;
+      fetch('/api/leads/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'onboarding', ...safe }),
+      }).catch(() => {});
+    }
     if (stepIdx < totalSteps - 1) setStepIdx((i) => i + 1);
   };
   const back = () => {

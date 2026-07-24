@@ -363,17 +363,20 @@ export function AboutUsPage() {
               See open roles
               <ArrowRight size={14} strokeWidth={2.5} />
             </a>
-            <a
-              href="#our-story"
+            <button
+              type="button"
+              onClick={() => document.getElementById('our-story')?.scrollIntoView({ behavior: 'smooth' })}
               className="inline-flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold transition-all"
               style={{
                 background: 'rgba(255,255,255,0.06)',
                 color: WHITE,
                 boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.14)',
+                border: 'none',
+                cursor: 'pointer',
               }}
             >
               Read our story
-            </a>
+            </button>
           </div>
 
           {/* Company facts row */}

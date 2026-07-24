@@ -35,7 +35,7 @@ const PRODUCTS = [
     icon: Globe,
     name: 'Websites',
     blurb: 'Launch a site that actually sells in five days, not five months.',
-    path: '/websites',
+    path: '/website-examples',
     stat: '5 days',
     statLabel: 'average go-live',
   },

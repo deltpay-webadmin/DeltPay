@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
+import { trackQuoteRequest } from '@/lib/pixel';
 import logoWhite from 'figma:asset/419e83442bb1bf5965a966a8870b00dd4288dd57.png';
 
 const NAVY   = '#041E42';
@@ -341,6 +342,27 @@ export function GetAQuotePage() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    // Meta Pixel: quote request submitted — mid-funnel intent lead.
+    trackQuoteRequest({
+      content_name: `${bizType || 'unknown'}/${volume || 'unknown'}`,
+    });
+    // Email the submission to the team via the Vercel /api function.
+    // Fire-and-forget: the success screen shows regardless of delivery.
+    fetch('/api/leads/quote', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: form.name,
+        email: form.email,
+        phone: form.phone,
+        business: form.business,
+        notes: form.notes,
+        features,
+        bizType,
+        volume,
+        recommendedPlan: rec.plan,
+      }),
+    }).catch(() => { /* non-blocking: success screen already shown */ });
     setSubmitted(true);
   }
 
@@ -571,7 +593,7 @@ export function GetAQuotePage() {
                     />
                   </div>
 
-                  <p style={{ fontFamily: JAK, fontSize: 13, color: '#475569', marginTop: 4 }}>By submitting, you acknowledge our <a href="/privacy" style={{ color: INDIGO, textDecoration: 'underline' }}>Privacy Policy</a> and agree to our <a href="/terms" style={{ color: INDIGO, textDecoration: 'underline' }}>Terms of Service</a>.</p>
+                  <p style={{ fontFamily: JAK, fontSize: 13, color: '#475569', marginTop: 4 }}>By submitting, you acknowledge our <a href="#/privacy" target="_blank" rel="noopener noreferrer" style={{ color: INDIGO, textDecoration: 'underline' }}>Privacy Policy</a> and agree to our <a href="#/terms" target="_blank" rel="noopener noreferrer" style={{ color: INDIGO, textDecoration: 'underline' }}>Terms of Service</a>.</p>
 
                   <div style={{ display: 'flex', gap: 12, marginTop: 4 }}>
                     <button type="button" onClick={() => setStep(3)} style={{ padding: '16px 28px', borderRadius: 12, border: '1.5px solid #D1D5DB', background: '#fff', color: NAVY, fontFamily: JAK, fontSize: 16, fontWeight: 700, cursor: 'pointer' }}>

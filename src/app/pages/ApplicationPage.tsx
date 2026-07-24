@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router';
 import { ArrowLeft, Check, Building2, Mail, Phone, User } from 'lucide-react';
 import { usePlaidLink } from 'react-plaid-link';
 import { CapitalCrossSell } from '../components/CapitalCrossSell';
+import { trackMerchantLead, trackMerchantOnboarded } from '@/lib/pixel';
 
 export function ApplicationPage() {
   const navigate = useNavigate();
@@ -20,7 +21,26 @@ export function ApplicationPage() {
   // Handle form submission
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
+    // Meta Pixel: application form submitted — merchant lead captured.
+    // Fires before Plaid opens so ad-blockers on the Plaid modal can't
+    // suppress it. content_name carries the business type for reporting.
+    trackMerchantLead({ content_name: formData.businessType });
+
+    // Email the application to the team via the Vercel /api function.
+    // Fire-and-forget so the Plaid step opens without waiting on delivery.
+    fetch('/api/leads/application', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fullName: formData.fullName,
+        email: formData.email,
+        phone: formData.phone,
+        businessName: formData.businessName,
+        businessType: formData.businessType,
+      }),
+    }).catch(() => { /* non-blocking */ });
+
     // In production, you would call your backend to create a link_token
     // For demo purposes, we'll use a placeholder token
     const mockLinkToken = 'link-sandbox-' + Math.random().toString(36).substring(7);
@@ -31,6 +51,13 @@ export function ApplicationPage() {
   // Plaid Link callbacks
   const onSuccess = useCallback((public_token: string) => {
     setPublicToken(public_token);
+
+    // Meta Pixel: bank verified via Plaid. Standing in for
+    // CompleteRegistration until we wire real server-side approval
+    // via the Conversions API. Ad-blocker resilient: fires client-side
+    // immediately after Plaid returns success.
+    trackMerchantOnboarded();
+
     // In production, you would send this public_token to your backend
     // to exchange it for an access_token
     setTimeout(() => {
@@ -303,7 +330,7 @@ export function ApplicationPage() {
               <div className="bg-[#F6F7FB] border border-[#4945FF]/15 rounded-lg p-4 text-sm text-[#475569] mb-4">By continuing, you authorize Delt and our bank-verification partner Plaid to access your bank account information. See <a href="https://plaid.com/legal/#consumers" target="_blank" rel="noopener" className="underline text-[#4945FF]">Plaid's Privacy Policy</a>.</div>
 
               {/* Privacy consent */}
-              <p className="text-xs text-[#475569] mb-2">By submitting, you acknowledge our <a href="/privacy" className="underline text-[#4945FF]">Privacy Policy</a> and agree to our <a href="/terms" className="underline text-[#4945FF]">Terms of Service</a>.</p>
+              <p className="text-xs text-[#475569] mb-2">By submitting, you acknowledge our <a href="#/privacy" target="_blank" rel="noopener noreferrer" className="underline text-[#4945FF]">Privacy Policy</a> and agree to our <a href="#/terms" target="_blank" rel="noopener noreferrer" className="underline text-[#4945FF]">Terms of Service</a>.</p>
 
               {/* Submit Button */}
               <button

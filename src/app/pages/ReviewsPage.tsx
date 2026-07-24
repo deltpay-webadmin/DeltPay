@@ -373,13 +373,14 @@ export function ReviewsPage() {
                 Thousands of merchants run their shops on Delt. Here are a few of their stories — raw, unedited, and in their own words.
               </p>
               <div className="flex items-center gap-3">
-                <a
-                  href="#stories"
+                <button
+                  type="button"
+                  onClick={() => document.getElementById('stories')?.scrollIntoView({ behavior: 'smooth' })}
                   className="inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold"
-                  style={{ background: PURPLE, color: WHITE }}
+                  style={{ background: PURPLE, color: WHITE, border: 'none', cursor: 'pointer' }}
                 >
                   Read the stories <ArrowRight size={14} />
-                </a>
+                </button>
                 <a
                   href="#/contact"
                   className="inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold border"

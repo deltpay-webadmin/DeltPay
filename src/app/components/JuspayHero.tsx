@@ -70,12 +70,28 @@ export function JuspayHero() {
           aria-hidden
           className="pointer-events-none select-none hidden lg:block absolute"
           style={{
-            right: 0,
+            // Slight negative right offset lets the figure bleed a touch
+            // off the right edge, which shifts the POS terminal clear of
+            // the headline copy without shrinking David.
+            right: '-4%',
             bottom: 0,
-            height: '74%',
+            // Right-anchored cutout (figure on the right of the canvas,
+            // transparent on the left). Drive sizing by HEIGHT so David
+            // fills the hero vertically — head near the top, shoulders
+            // anchored to the bottom edge — matching the design spec.
+            // The asset's transparent left half keeps the headline copy
+            // clear regardless of how wide it scales.
+            // Drive sizing by HEIGHT so the engraving fills the hero
+            // vertically — head near the top, shoulders to the bottom.
+            // The cutout image is wider than tall, and the figure occupies
+            // the right half of the canvas, so when anchored to right: 0
+            // the transparent left half lands behind the headline column
+            // and never collides with copy.
+            height: '78%',
             width: 'auto',
+            maxWidth: 'none',
             zIndex: 1,
-            opacity: 0.82,
+            opacity: 1,
             objectFit: 'contain',
             objectPosition: 'right bottom',
           }}
@@ -88,10 +104,10 @@ export function JuspayHero() {
         className="lg:hidden absolute pointer-events-none"
         aria-hidden
         style={{
-          right: '-18%',
+          right: '-20%',
           bottom: 0,
-          width: '115%',
-          height: '88%',
+          width: '120%',
+          height: '80%',
           zIndex: 1,
           overflow: 'hidden',
         }}
@@ -108,7 +124,7 @@ export function JuspayHero() {
               bottom: 0,
               height: '100%',
               width: 'auto',
-              opacity: 0.42,
+              opacity: 0.5,
               objectFit: 'contain',
               objectPosition: 'right bottom',
             }}

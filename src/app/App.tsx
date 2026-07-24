@@ -1,54 +1,63 @@
+import { lazy, Suspense } from 'react';
 import { HashRouter, Routes, Route, Navigate, useLocation } from 'react-router';
+import { useRouteChangePixel } from '@/lib/pixel';
 import { Navigation } from '@/app/components/Navigation';
 import { Footer } from '@/app/components/Footer';
 import DeltMarquee from '@/app/components/DeltMarquee';
 import { ScrollToTop } from '@/app/components/ScrollToTop';
-import { HomePage } from '@/app/pages/HomePage';
-import { PricingPage } from '@/app/pages/PricingPage';
-import { PaymentsPage } from '@/app/pages/PaymentsPage';
-import { DeltAiPage } from '@/app/pages/DeltAiPage';
-import { DeltAI } from '@/app/components/DeltAI';
-import { LensChatPage } from '@/app/pages/LensChatPage';
-import { SandboxPage } from '@/app/pages/SandboxPage';
-import { SignInPage } from '@/app/pages/SignInPage';
-import { DashboardPage } from '@/app/pages/DashboardPage';
-import { SignUpPage } from '@/app/pages/SignUpPage';
-import { ContactPage } from '@/app/pages/ContactPage';
-import { ContactSalesPage } from '@/app/pages/ContactSalesPage';
-import { SupportPage } from '@/app/pages/SupportPage';
-import { BusinessTypesPage } from '@/app/pages/BusinessTypesPage';
-import { ProductsPage } from '@/app/pages/ProductsPage';
-import { HardwarePage } from '@/app/pages/HardwarePage';
-import { HardwareProductPage } from '@/app/pages/HardwareProductPage';
-import { ShoppingCartPage } from '@/app/pages/ShoppingCartPage';
-import { BlogPage } from '@/app/pages/BlogPage';
-import { NewBlogPage } from '@/app/pages/NewBlogPage';
-import { AboutUsPage } from '@/app/pages/AboutUsPage';
-import { ReviewsPage } from '@/app/pages/ReviewsPage';
-import { LensAIPage } from '@/app/pages/LensAIPage';
-import { LensAIChatPage } from '@/app/pages/LensAIChatPage';
-import { WebsiteBuilderDemo } from '@/app/pages/WebsiteBuilderDemo';
-import { ApplicationPage } from '@/app/pages/ApplicationPage';
-import { OnboardingPage } from '@/app/pages/OnboardingPage';
-import { AboutPage } from '@/app/pages/AboutPage';
-import { CareersPage } from '@/app/pages/CareersPage';
-import { PrivacyPolicyPage } from '@/app/pages/PrivacyPolicyPage';
-import { TermsPage } from '@/app/pages/TermsPage';
-import { CaseStudiesPage } from '@/app/pages/CaseStudiesPage';
-import { HowItWorksPage } from '@/app/pages/HowItWorksPage';
-import { HelpCenterPage } from '@/app/pages/HelpCenterPage';
-import { WebsiteExamples } from '@/app/components/WebsiteExamples';
 import { CustomCursor } from '@/app/components/CustomCursor';
-import { CapitalPage } from '@/app/pages/CapitalPage';
-import { ResourcePage } from '@/app/pages/ResourcePage';
-import { CalculatorPage } from '@/app/pages/CalculatorPage';
-import { GetAQuotePage } from '@/app/pages/GetAQuotePage';
-import { NotFoundPage } from '@/app/pages/NotFoundPage';
-import { IndustryPage } from '@/app/pages/IndustryPage';
-import { LensDemoPage } from '@/app/pages/LensDemoPage';
-import { InternationalUSDTPage } from '@/app/pages/InternationalUSDTPage';
-import { HighRiskProcessingPage } from '@/app/pages/HighRiskProcessingPage';
-import { AuditPage } from '@/app/pages/AuditPage';
+import { PageLoader, RouteTransitionLoader } from '@/app/components/PageLoader';
+
+/* Route components are code-split (React.lazy) so the initial load ships a
+   small chunk instead of the whole ~2.2MB app. Each page fetches on demand,
+   showing the branded <PageLoader/> during the brief fetch. Named exports are
+   adapted to the default-export shape lazy() expects. */
+const named = <T,>(p: Promise<T>, key: keyof T) =>
+  p.then((m) => ({ default: (m as any)[key] }));
+
+const HomePage = lazy(() => named(import('@/app/pages/HomePage'), 'HomePage'));
+const PricingPage = lazy(() => named(import('@/app/pages/PricingPage'), 'PricingPage'));
+const PaymentsPage = lazy(() => named(import('@/app/pages/PaymentsPage'), 'PaymentsPage'));
+const DeltAiPage = lazy(() => named(import('@/app/pages/DeltAiPage'), 'DeltAiPage'));
+const DeltAI = lazy(() => named(import('@/app/components/DeltAI'), 'DeltAI'));
+const LensChatPage = lazy(() => named(import('@/app/pages/LensChatPage'), 'LensChatPage'));
+const SandboxPage = lazy(() => named(import('@/app/pages/SandboxPage'), 'SandboxPage'));
+const SignInPage = lazy(() => named(import('@/app/pages/SignInPage'), 'SignInPage'));
+const DashboardPage = lazy(() => named(import('@/app/pages/DashboardPage'), 'DashboardPage'));
+const ContactPage = lazy(() => named(import('@/app/pages/ContactPage'), 'ContactPage'));
+const ContactSalesPage = lazy(() => named(import('@/app/pages/ContactSalesPage'), 'ContactSalesPage'));
+const SupportPage = lazy(() => named(import('@/app/pages/SupportPage'), 'SupportPage'));
+const BusinessTypesPage = lazy(() => named(import('@/app/pages/BusinessTypesPage'), 'BusinessTypesPage'));
+const ProductsPage = lazy(() => named(import('@/app/pages/ProductsPage'), 'ProductsPage'));
+const HardwarePage = lazy(() => named(import('@/app/pages/HardwarePage'), 'HardwarePage'));
+const HardwareProductPage = lazy(() => named(import('@/app/pages/HardwareProductPage'), 'HardwareProductPage'));
+const ShoppingCartPage = lazy(() => named(import('@/app/pages/ShoppingCartPage'), 'ShoppingCartPage'));
+const NewBlogPage = lazy(() => named(import('@/app/pages/NewBlogPage'), 'NewBlogPage'));
+const AboutUsPage = lazy(() => named(import('@/app/pages/AboutUsPage'), 'AboutUsPage'));
+const ReviewsPage = lazy(() => named(import('@/app/pages/ReviewsPage'), 'ReviewsPage'));
+const LensAIPage = lazy(() => named(import('@/app/pages/LensAIPage'), 'LensAIPage'));
+const LensAIChatPage = lazy(() => named(import('@/app/pages/LensAIChatPage'), 'LensAIChatPage'));
+const WebsiteBuilderDemo = lazy(() => named(import('@/app/pages/WebsiteBuilderDemo'), 'WebsiteBuilderDemo'));
+const ApplicationPage = lazy(() => named(import('@/app/pages/ApplicationPage'), 'ApplicationPage'));
+const OnboardingPage = lazy(() => named(import('@/app/pages/OnboardingPage'), 'OnboardingPage'));
+const AboutPage = lazy(() => named(import('@/app/pages/AboutPage'), 'AboutPage'));
+const CareersPage = lazy(() => named(import('@/app/pages/CareersPage'), 'CareersPage'));
+const PrivacyPolicyPage = lazy(() => named(import('@/app/pages/PrivacyPolicyPage'), 'PrivacyPolicyPage'));
+const TermsPage = lazy(() => named(import('@/app/pages/TermsPage'), 'TermsPage'));
+const CaseStudiesPage = lazy(() => named(import('@/app/pages/CaseStudiesPage'), 'CaseStudiesPage'));
+const HowItWorksPage = lazy(() => named(import('@/app/pages/HowItWorksPage'), 'HowItWorksPage'));
+const HelpCenterPage = lazy(() => named(import('@/app/pages/HelpCenterPage'), 'HelpCenterPage'));
+const WebsiteExamples = lazy(() => named(import('@/app/components/WebsiteExamples'), 'WebsiteExamples'));
+const CapitalPage = lazy(() => named(import('@/app/pages/CapitalPage'), 'CapitalPage'));
+const ResourcePage = lazy(() => named(import('@/app/pages/ResourcePage'), 'ResourcePage'));
+const CalculatorPage = lazy(() => named(import('@/app/pages/CalculatorPage'), 'CalculatorPage'));
+const GetAQuotePage = lazy(() => named(import('@/app/pages/GetAQuotePage'), 'GetAQuotePage'));
+const NotFoundPage = lazy(() => named(import('@/app/pages/NotFoundPage'), 'NotFoundPage'));
+const IndustryPage = lazy(() => named(import('@/app/pages/IndustryPage'), 'IndustryPage'));
+const LensDemoPage = lazy(() => named(import('@/app/pages/LensDemoPage'), 'LensDemoPage'));
+const InternationalUSDTPage = lazy(() => named(import('@/app/pages/InternationalUSDTPage'), 'InternationalUSDTPage'));
+const HighRiskProcessingPage = lazy(() => named(import('@/app/pages/HighRiskProcessingPage'), 'HighRiskProcessingPage'));
+const AuditPage = lazy(() => named(import('@/app/pages/AuditPage'), 'AuditPage'));
 
 /* Renders the brand marquee BELOW the global footer, but only on the
    home route — preserving the original "single instance on ‘/’" behavior
@@ -59,6 +68,14 @@ function PostFooterMarquee() {
   return <DeltMarquee />;
 }
 
+/* Fires Meta Pixel PageView on every route change. The initial
+   PageView is fired by the base pixel snippet in index.html, so
+   this hook explicitly skips the first render to avoid duplicates. */
+function PixelRouteTracker() {
+  useRouteChangePixel();
+  return null;
+}
+
 /* App root - v2 */
 export default function App() {
   return (
@@ -66,6 +83,10 @@ export default function App() {
       <CustomCursor />
       <HashRouter>
         <ScrollToTop />
+        <PixelRouteTracker />
+        {/* Branded loading moment on every page change (not just chunk fetches). */}
+        <RouteTransitionLoader />
+        <Suspense fallback={<PageLoader />}>
         <Routes>
           <Route path="/sandbox" element={<SandboxPage />} />
           {/* Authenticated Delt back-office CRM (Supabase-gated). */}
@@ -73,7 +94,9 @@ export default function App() {
           <Route path="/demo" element={<SandboxPage />} />
           <Route path="/get-a-quote" element={<GetAQuotePage />} />
           <Route path="/signin" element={<SignInPage />} />
-          <Route path="/signup" element={<SignUpPage />} />
+          {/* Legacy sign-up form retired — send every /signup entry point
+              through the standard "Get Started" flow. */}
+          <Route path="/signup" element={<Navigate to="/get-a-quote" replace />} />
           <Route path="/cart" element={<ShoppingCartPage />} />
           <Route path="/delt-ai-chat" element={<DeltAI />} />
           <Route path="/lens-chat" element={<LensChatPage />} />
@@ -83,6 +106,7 @@ export default function App() {
           <Route path="*" element={
             <div className="min-h-screen bg-white relative">
               <Navigation />
+              <Suspense fallback={<PageLoader />}>
               <Routes>
                 <Route path="/" element={<HomePage />} />
                 <Route path="/pricing" element={<PricingPage />} />
@@ -123,6 +147,7 @@ export default function App() {
                     gracefully instead of rendering an empty body. */}
                 <Route path="*" element={<NotFoundPage />} />
               </Routes>
+              </Suspense>
               <Footer />
               {/* DeltMarquee renders BELOW the footer, on the home page only
                   (matching the prior single-instance placement). Pulled out
@@ -131,6 +156,7 @@ export default function App() {
             </div>
           } />
         </Routes>
+        </Suspense>
       </HashRouter>
     </>
   );

@@ -3,6 +3,7 @@ import { Phone, MessageCircle, Users, Briefcase, ArrowLeft, Mail, Check, CheckCi
 import { useNavigate } from 'react-router';
 import { ProductCrossSell } from '../components/ProductCrossSell';
 import { SupportChatbot } from '../components/SupportChatbot';
+import { trackContact } from '@/lib/pixel';
 
 function SuccessPanel() {
   return (
@@ -42,6 +43,15 @@ export function ContactSalesPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    // Meta Pixel: sales contact form submitted. Contact is a standard
+    // Meta event, ideal for top-of-funnel awareness campaign optimization.
+    trackContact();
+    // Email the sales lead to the team (fire-and-forget; UI unaffected).
+    fetch('/api/leads/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'contact', ...formData, source: '/contact-sales' }),
+    }).catch(() => {});
     setSubmitted(true);
   };
 
@@ -106,7 +116,7 @@ export function ContactSalesPage() {
               <h3 className="text-2xl font-bold text-[#041E42] mb-2">Schedule a call</h3>
               <p className="text-[#475569] mb-4">We'll call you back within one business day.</p>
               <p className="text-sm text-[#94A3B8] mb-6">Mon–Fri · 9am–6pm ET</p>
-              <button className="inline-flex items-center gap-2 text-[#4945FF] font-semibold hover:gap-3 transition-all">
+              <button onClick={() => document.getElementById('contact-form')?.scrollIntoView({ behavior: 'smooth' })} className="inline-flex items-center gap-2 text-[#4945FF] font-semibold hover:gap-3 transition-all">
                 Request a call <span aria-hidden>→</span>
               </button>
             </div>
@@ -119,7 +129,7 @@ export function ContactSalesPage() {
               <h3 className="text-2xl font-bold mb-2">Book a demo</h3>
               <p className="text-white/70 mb-4">See Delt in a 30-minute personalized walkthrough.</p>
               <p className="text-sm text-white/50 mb-6">Flexible times, same or next day.</p>
-              <button className="inline-flex items-center gap-2 text-white font-semibold hover:gap-3 transition-all">
+              <button onClick={() => document.getElementById('contact-form')?.scrollIntoView({ behavior: 'smooth' })} className="inline-flex items-center gap-2 text-white font-semibold hover:gap-3 transition-all">
                 Schedule demo <span aria-hidden>→</span>
               </button>
             </div>
@@ -222,11 +232,12 @@ export function ContactSalesPage() {
             </div>
 
             {/* Right — form */}
-            <div className="bg-white rounded-2xl p-8 lg:p-10 shadow-[0_24px_60px_-24px_rgba(4,30,66,0.18)] border border-[#041E42]/8">
+            <div id="contact-form" className="bg-white rounded-2xl p-8 lg:p-10 shadow-[0_24px_60px_-24px_rgba(4,30,66,0.18)] border border-[#041E42]/8">
               <h3 className="text-2xl font-bold text-[#041E42] mb-2">Get in touch</h3>
               <p className="text-[#475569] mb-8">A specialist will reach out within one business day.</p>
 
               {submitted ? <SuccessPanel /> : <form onSubmit={handleSubmit} className="space-y-5">
+                <input type="text" name="hp_extra_field" tabIndex={-1} autoComplete="off" aria-hidden="true" onChange={handleChange} style={{ position: 'absolute', left: '-9999px', width: 1, height: 1, opacity: 0 }} />
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-[#041E42] mb-2">First Name</label>
