@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { toast } from 'sonner@2.0.3';
 import { NewLeadFlow } from '../flows/NewLeadFlow';
+import { QuickLeadFlow } from '../flows/QuickLeadFlow';
 import { LeadImportFlow } from '../flows/LeadImportFlow';
 import {
   Plus,
@@ -876,6 +877,7 @@ export function BackendLeads({ openImport = false }: { openImport?: boolean } = 
   const [stageFilter, setStageFilter] = useState<string>('All');
   const [agentFilter, setAgentFilter] = useState<string>('All');
   const [newLeadOpen, setNewLeadOpen] = useState(false);
+  const [fullApplicationOpen, setFullApplicationOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(openImport);
 
   const leads = useLeads();
@@ -1227,10 +1229,23 @@ export function BackendLeads({ openImport = false }: { openImport?: boolean } = 
       {/* Lead Detail Panel */}
       {selectedLead && <LeadDetailPanel lead={selectedLead} onClose={() => setSelectedLead(null)} />}
 
-      {/* New Lead Flow (Stripe-style slide-over) */}
-      <NewLeadFlow
+      {/* Quick add (default) — full KYB intake one click away */}
+      <QuickLeadFlow
         open={newLeadOpen}
         onClose={() => setNewLeadOpen(false)}
+        onCreated={created => {
+          setSelectedLeadId(created.id);
+        }}
+        onOpenFullApplication={() => {
+          setNewLeadOpen(false);
+          setFullApplicationOpen(true);
+        }}
+      />
+
+      {/* Full KYB intake (Stripe-style slide-over) */}
+      <NewLeadFlow
+        open={fullApplicationOpen}
+        onClose={() => setFullApplicationOpen(false)}
         onCreated={created => {
           setSelectedLeadId(created.id);
           toast.success(`Lead "${created.businessName}" created`);
