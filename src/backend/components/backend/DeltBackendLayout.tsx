@@ -84,6 +84,7 @@ import {
   Wallet,
   BarChart3,
   Upload,
+  ArrowLeft,
 } from 'lucide-react';
 
 // ── Types ──
@@ -565,6 +566,13 @@ export function DeltBackendLayout() {
 
           {/* Sidebar bottom */}
           <div className="border-t border-gray-100 px-3 py-3 space-y-0.5">
+            <a
+              href="#/"
+              className="w-full flex items-center gap-2.5 px-3 py-[7px] rounded-[6px] text-[13px] text-gray-500 hover:text-gray-900 hover:bg-gray-50 font-medium transition-colors"
+            >
+              <ArrowLeft className="w-[16px] h-[16px]" />
+              Return to site
+            </a>
             <button
               onClick={() => setHelpCenterOpen(true)}
               className="w-full flex items-center gap-2.5 px-3 py-[7px] rounded-[6px] text-[13px] text-gray-500 hover:text-gray-900 hover:bg-gray-50 font-medium transition-colors"
