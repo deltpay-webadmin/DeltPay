@@ -1,15 +1,13 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { Eye, EyeOff, LogIn, UserPlus, ChevronDown } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 import deltLogoWhite from '@/assets/delt-logo-on-dark.svg';
 /*
  * Hero image for the sign-in split panel: a merchant in a premium retail
  * environment using a point-of-sale terminal (nano-banana-pro render).
  */
 import heroMerchant from '@/assets/scenes/signin-merchant-pos.jpg';
-
-const INDIGO = '#4945FF';
-const NAVY = '#041E42';
 
 export function SignInPage() {
   const navigate = useNavigate();
@@ -19,22 +17,40 @@ export function SignInPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // If a session already exists, skip the form and go straight to the CRM.
+  useEffect(() => {
+    let active = true;
+    supabase.auth.getSession().then(({ data }) => {
+      if (active && data.session) navigate('/dashboard', { replace: true });
+    });
+    return () => {
+      active = false;
+    };
+  }, [navigate]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
-    // Notify the team of a sign-in attempt (email only — the password is
-    // NEVER sent). Fire-and-forget.
-    fetch('/api/leads/submit', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type: 'signin', email }),
-    }).catch(() => {});
-    // Simulated auth — replace with real endpoint
-    setTimeout(() => {
-      setLoading(false);
-      setError('Invalid email or password. Try signing up instead.');
-    }, 1000);
+
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: email.trim(),
+      password,
+    });
+
+    setLoading(false);
+
+    if (signInError) {
+      setError(
+        signInError.message === 'Invalid login credentials'
+          ? 'Invalid email or password. Please try again.'
+          : signInError.message,
+      );
+      return;
+    }
+
+    // Authenticated — land the user in the Delt back-office CRM.
+    navigate('/dashboard', { replace: true });
   };
 
   return (

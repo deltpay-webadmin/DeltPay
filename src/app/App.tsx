@@ -23,6 +23,7 @@ const DeltAI = lazy(() => named(import('@/app/components/DeltAI'), 'DeltAI'));
 const LensChatPage = lazy(() => named(import('@/app/pages/LensChatPage'), 'LensChatPage'));
 const SandboxPage = lazy(() => named(import('@/app/pages/SandboxPage'), 'SandboxPage'));
 const SignInPage = lazy(() => named(import('@/app/pages/SignInPage'), 'SignInPage'));
+const DashboardPage = lazy(() => named(import('@/app/pages/DashboardPage'), 'DashboardPage'));
 const ContactPage = lazy(() => named(import('@/app/pages/ContactPage'), 'ContactPage'));
 const ContactSalesPage = lazy(() => named(import('@/app/pages/ContactSalesPage'), 'ContactSalesPage'));
 const SupportPage = lazy(() => named(import('@/app/pages/SupportPage'), 'SupportPage'));
@@ -88,7 +89,8 @@ export default function App() {
         <Suspense fallback={<PageLoader />}>
         <Routes>
           <Route path="/sandbox" element={<SandboxPage />} />
-          <Route path="/dashboard" element={<SandboxPage />} />
+          {/* Authenticated Delt back-office CRM (Supabase-gated). */}
+          <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/demo" element={<SandboxPage />} />
           <Route path="/get-a-quote" element={<GetAQuotePage />} />
           <Route path="/signin" element={<SignInPage />} />
