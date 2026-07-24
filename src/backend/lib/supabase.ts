@@ -1,38 +1,18 @@
 /**
  * ────────────────────────────────────────────────────────────
- * Supabase client
+ * Supabase client (backend portal)
  * ────────────────────────────────────────────────────────────
- * Creates a single Supabase client instance from Vite env vars.
- *
- * If either env var is missing, `supabase` is exported as `null`
- * and the CRM store falls back to its in-memory behavior with a
- * console warning. This keeps the app runnable in preview or
- * contributor environments without credentials.
- *
- * Required env vars (set in .env.local or Vercel):
- *   VITE_SUPABASE_URL        e.g. https://xxxxxxxx.supabase.co
- *   VITE_SUPABASE_ANON_KEY   long JWT from Project Settings → API
+ * Re-exports the app-wide client from src/app/lib/supabase so the
+ * CRM shares the signed-in user's session. RLS on the CRM tables
+ * gates access on is_staff(), which requires the request to carry
+ * the authenticated user's JWT — a separate non-persisting client
+ * here would send anonymous requests and every read/write would be
+ * denied.
  */
 
-import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import { supabase as appClient } from '../../app/lib/supabase';
 
-const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
-
-export const supabase: SupabaseClient | null =
-  url && anonKey
-    ? createClient(url, anonKey, {
-        auth: { persistSession: false },
-        realtime: { params: { eventsPerSecond: 10 } },
-      })
-    : null;
+export const supabase: SupabaseClient | null = appClient;
 
 export const isSupabaseConfigured = supabase !== null;
-
-if (!supabase && typeof window !== 'undefined') {
-  // eslint-disable-next-line no-console
-  console.warn(
-    '[Delt CRM] Supabase env vars missing. Running in local-only mode. ' +
-      'Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to enable persistence.',
-  );
-}

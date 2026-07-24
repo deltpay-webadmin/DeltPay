@@ -1,8 +1,10 @@
 import React, { useState, useMemo } from 'react';
 import { toast } from 'sonner@2.0.3';
 import { NewLeadFlow } from '../flows/NewLeadFlow';
+import { LeadImportFlow } from '../flows/LeadImportFlow';
 import {
   Plus,
+  Upload,
   Search,
   Phone,
   Mail,
@@ -864,7 +866,7 @@ function ReferralsTab() {
 // ════════════════════════════════
 // Main Component
 // ════════════════════════════════
-export function BackendLeads() {
+export function BackendLeads({ openImport = false }: { openImport?: boolean } = {}) {
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [mainTab, setMainTab] = useState<'leads' | 'referrals'>('leads');
@@ -874,6 +876,7 @@ export function BackendLeads() {
   const [stageFilter, setStageFilter] = useState<string>('All');
   const [agentFilter, setAgentFilter] = useState<string>('All');
   const [newLeadOpen, setNewLeadOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(openImport);
 
   const leads = useLeads();
   const selectedLead = leads.find(l => l.id === selectedLeadId) || null;
@@ -964,13 +967,22 @@ export function BackendLeads() {
             <h1 className="text-2xl font-bold text-gray-900">Sales Leads</h1>
             <p className="text-sm text-gray-600 mt-1">{totalLeads} total leads in pipeline</p>
           </div>
-          <button
-            onClick={() => setNewLeadOpen(true)}
-            className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-[6px] hover:bg-indigo-700 transition-colors flex items-center gap-2"
-          >
-            <Plus className="w-4 h-4" />
-            New Lead
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setImportOpen(true)}
+              className="px-4 py-2 bg-white text-gray-700 text-sm font-medium rounded-[6px] border border-gray-200 hover:bg-gray-50 transition-colors flex items-center gap-2"
+            >
+              <Upload className="w-4 h-4" />
+              Import
+            </button>
+            <button
+              onClick={() => setNewLeadOpen(true)}
+              className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-[6px] hover:bg-indigo-700 transition-colors flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              New Lead
+            </button>
+          </div>
         </div>
       </div>
 
@@ -1224,6 +1236,9 @@ export function BackendLeads() {
           toast.success(`Lead "${created.businessName}" created`);
         }}
       />
+
+      {/* Spreadsheet Lead Import (Meta lead ads etc.) */}
+      <LeadImportFlow open={importOpen} onClose={() => setImportOpen(false)} />
     </div>
   );
 }
