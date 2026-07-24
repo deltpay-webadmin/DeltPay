@@ -83,6 +83,7 @@ import {
   PenTool,
   Wallet,
   BarChart3,
+  Upload,
 } from 'lucide-react';
 
 // ── Types ──
@@ -247,6 +248,7 @@ const allCommands: CommandItem[] = [
   { label: 'Dashboard', path: '/', group: 'Navigation', icon: Home },
   { label: 'Workspace', path: '/workspace', group: 'Navigation', icon: Inbox, keywords: 'inbox email sms call messages tasks activity timeline' },
   { label: 'Leads', path: '/leads', group: 'Pipeline', icon: Users, keywords: 'sales pipeline' },
+  { label: 'Import Leads', path: '/leads/import', group: 'Pipeline', icon: Upload, keywords: 'upload csv xlsx spreadsheet meta facebook instagram bulk import' },
   { label: 'Underwriting', path: '/underwriting', group: 'Pipeline', icon: ClipboardCheck },
   { label: 'Analysis', path: '/analysis', group: 'Pipeline', icon: FileText, keywords: 'deal analysis review cost calculator' },
   { label: 'All Merchants', path: '/merchants', group: 'Merchants', icon: Store },
@@ -403,6 +405,7 @@ export function DeltBackendLayout() {
     switch (currentPage) {
       case '/': return <BackendDashboard />;
       case '/leads': return <BackendLeads />;
+      case '/leads/import': return <BackendLeads openImport />;
       case '/onboarding': return <BackendOnboarding />;
       case '/merchants': return <BackendMerchants />;
       case '/retention': return <BackendRetention />;

@@ -521,7 +521,7 @@ function fromDbLead(r: any): Lead {
   };
 }
 
-function toDbLead(l: Partial<Lead>): Record<string, any> {
+export function toDbLead(l: Partial<Lead>): Record<string, any> {
   const out: Record<string, any> = {};
   if (l.id !== undefined) out.id = l.id;
   if (l.businessName !== undefined) out.business_name = l.businessName;
@@ -720,7 +720,7 @@ async function maybeHydrate() {
 
   try {
     const [leadsRes, onbRes, uwRes, refRes, progRes] = await Promise.all([
-      supabase.from('leads').select('*').order('id', { ascending: true }),
+      supabase.from('pipeline_leads').select('*').order('created_at', { ascending: false }),
       supabase.from('onboarding_apps').select('*').order('id', { ascending: true }),
       supabase.from('underwriting_apps').select('*').order('id', { ascending: true }),
       supabase.from('referrals').select('*').order('id', { ascending: true }),
@@ -762,7 +762,7 @@ function subscribeRealtime() {
     .channel('crm-sync')
     .on(
       'postgres_changes',
-      { event: '*', schema: 'public', table: 'leads' },
+      { event: '*', schema: 'public', table: 'pipeline_leads' },
       payload => applyRealtime('leads', payload),
     )
     .on(
@@ -874,6 +874,85 @@ async function persist<T>(
 }
 
 // ══════════════════════════════════════════════════════════════
+// Bulk import
+// ══════════════════════════════════════════════════════════════
+
+export interface LeadImportOutcome {
+  inserted: number;
+  duplicates: number;
+  failed: number;
+  errors: string[];
+}
+
+export interface LeadImportMeta {
+  filename: string;
+  rowCount: number;
+  skippedCount: number;
+  errorCount: number;
+  notes?: string;
+}
+
+/** Refetch all leads from the DB and replace store state. */
+export async function refreshLeads(): Promise<void> {
+  if (!supabase) return;
+  const { data, error } = await supabase
+    .from('pipeline_leads')
+    .select('*')
+    .order('created_at', { ascending: false });
+  if (!error && data) set({ leads: data.map(fromDbLead) });
+}
+
+const IMPORT_CHUNK = 100;
+
+/**
+ * Bulk-upsert pre-mapped rows into pipeline_leads, deduped on external_id
+ * (existing rows are left untouched), then record the batch in lead_imports
+ * and refresh the store.
+ */
+export async function importLeads(
+  dbRows: Record<string, any>[],
+  meta: LeadImportMeta,
+): Promise<LeadImportOutcome> {
+  if (!supabase) {
+    return { inserted: 0, duplicates: 0, failed: dbRows.length, errors: ['Supabase not configured'] };
+  }
+  const out: LeadImportOutcome = { inserted: 0, duplicates: 0, failed: 0, errors: [] };
+  for (let i = 0; i < dbRows.length; i += IMPORT_CHUNK) {
+    const chunk = dbRows.slice(i, i + IMPORT_CHUNK);
+    const { data, error } = await supabase
+      .from('pipeline_leads')
+      .upsert(chunk, { onConflict: 'external_id', ignoreDuplicates: true })
+      .select('id');
+    if (error) {
+      out.failed += chunk.length;
+      out.errors.push(error.message);
+      continue;
+    }
+    // ignoreDuplicates → ON CONFLICT DO NOTHING, which returns only rows
+    // actually inserted; the remainder of the chunk hit existing external_ids.
+    const insertedNow = data?.length ?? 0;
+    out.inserted += insertedNow;
+    out.duplicates += chunk.length - insertedNow;
+  }
+  const { error: logError } = await supabase.from('lead_imports').insert({
+    filename: meta.filename,
+    source: 'Meta Ads',
+    row_count: meta.rowCount,
+    inserted_count: out.inserted,
+    duplicate_count: out.duplicates,
+    skipped_count: meta.skippedCount,
+    error_count: meta.errorCount + out.failed,
+    notes: meta.notes ?? null,
+  });
+  if (logError) {
+    // eslint-disable-next-line no-console
+    console.error('[Delt CRM] Failed to record import batch:', logError);
+  }
+  await refreshLeads();
+  return out;
+}
+
+// ══════════════════════════════════════════════════════════════
 // Hooks
 // ══════════════════════════════════════════════════════════════
 
@@ -969,7 +1048,7 @@ export const leadActions = {
       'lead',
       () => set({ leads: [created, ...state.leads] }),
       () => set({ leads: prev }),
-      () => supabase!.from('leads').insert(toDbLead(created)).then(r => ({ error: r.error })),
+      () => supabase!.from('pipeline_leads').insert(toDbLead(created)).then(r => ({ error: r.error })),
     );
     return created;
   },
@@ -982,7 +1061,7 @@ export const leadActions = {
       'lead',
       () => set({ leads: state.leads.map(l => (l.id === id ? { ...l, ...patch } : l)) }),
       () => set({ leads: prev }),
-      () => supabase!.from('leads').update(toDbLead(patch)).eq('id', id).then(r => ({ error: r.error })),
+      () => supabase!.from('pipeline_leads').update(toDbLead(patch)).eq('id', id).then(r => ({ error: r.error })),
     );
   },
 
