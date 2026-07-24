@@ -43,7 +43,7 @@ export function SignInPage() {
     if (signInError) {
       setError(
         signInError.message === 'Invalid login credentials'
-          ? 'Invalid email or password. Please try again.'
+          ? 'User not found'
           : signInError.message,
       );
       return;
