@@ -104,13 +104,20 @@ export function JuspayHero() {
       {/* Banknote scanlines — fine horizontal security linework, like the
           field behind a portrait on a bill. The mask is a centered, even
           vignette so the lines cover the whole plate uniformly and only
-          soften at the very edges. */}
+          soften at the very edges.
+
+          The site renders under a global zoom (--site-zoom, 1.08), which
+          would scale a raw 1px/4px pattern to fractional device pixels and
+          alias the lines into uneven moiré bands. Every occurrence of the
+          pattern (here and in the lit layer's masks below) divides by the
+          zoom so the lines land on exact 1px/4px after scaling — same
+          crisp render as Delt Capital, which runs unzoomed. */}
       <div
         aria-hidden
         style={{
           position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none',
           background:
-            'repeating-linear-gradient(180deg, rgba(125,160,205,0.10) 0px, rgba(125,160,205,0.10) 1px, transparent 1px, transparent 4px)',
+            'repeating-linear-gradient(180deg, rgba(125,160,205,0.10) 0px, rgba(125,160,205,0.10) calc(1px / var(--site-zoom, 1)), transparent calc(1px / var(--site-zoom, 1)), transparent calc(4px / var(--site-zoom, 1)))',
           WebkitMaskImage:
             'radial-gradient(120% 130% at 50% 50%, black 55%, rgba(0,0,0,0.55) 78%, rgba(0,0,0,0.12) 95%, transparent 100%)',
           maskImage:
@@ -130,11 +137,11 @@ export function JuspayHero() {
           background:
             'linear-gradient(105deg, #6EE7F9 0%, #7DD3FC 25%, #A5B4FC 55%, #C7D2FE 78%, #F7F5F0 100%)',
           WebkitMaskImage:
-            'repeating-linear-gradient(180deg, #000 0px, #000 1px, transparent 1px, transparent 4px), radial-gradient(circle 640px at var(--mx, 50%) var(--my, 40%), #000 0%, rgba(0,0,0,0.82) 32%, rgba(0,0,0,0.4) 62%, rgba(0,0,0,0.12) 84%, transparent 100%)',
+            'repeating-linear-gradient(180deg, #000 0px, #000 calc(1px / var(--site-zoom, 1)), transparent calc(1px / var(--site-zoom, 1)), transparent calc(4px / var(--site-zoom, 1))), radial-gradient(circle 640px at var(--mx, 50%) var(--my, 40%), #000 0%, rgba(0,0,0,0.82) 32%, rgba(0,0,0,0.4) 62%, rgba(0,0,0,0.12) 84%, transparent 100%)',
           WebkitMaskRepeat: 'repeat, no-repeat',
           WebkitMaskComposite: 'source-in',
           maskImage:
-            'repeating-linear-gradient(180deg, #000 0px, #000 1px, transparent 1px, transparent 4px), radial-gradient(circle 640px at var(--mx, 50%) var(--my, 40%), #000 0%, rgba(0,0,0,0.82) 32%, rgba(0,0,0,0.4) 62%, rgba(0,0,0,0.12) 84%, transparent 100%)',
+            'repeating-linear-gradient(180deg, #000 0px, #000 calc(1px / var(--site-zoom, 1)), transparent calc(1px / var(--site-zoom, 1)), transparent calc(4px / var(--site-zoom, 1))), radial-gradient(circle 640px at var(--mx, 50%) var(--my, 40%), #000 0%, rgba(0,0,0,0.82) 32%, rgba(0,0,0,0.4) 62%, rgba(0,0,0,0.12) 84%, transparent 100%)',
           maskRepeat: 'repeat, no-repeat',
           maskComposite: 'intersect',
         }}
