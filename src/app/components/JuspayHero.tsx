@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { ExploreFeaturesWithAI } from './ExploreFeaturesWithAI';
-import heroWashingtonPng from '@/app/assets/washington-cutout.png';
-import heroWashingtonWebp from '@/app/assets/washington-cutout.webp';
+import heroWashingtonWebp from '@/app/assets/washington-cutout-forward.webp';
 
 /* ──────────────────────────────────────────────────────────────
    JuspayHero — Delt Pay home hero, aligned to the Delt Capital
@@ -16,10 +15,11 @@ import heroWashingtonWebp from '@/app/assets/washington-cutout.webp';
       like the field behind a portrait on a bill. A dim base
       always on, plus a brighter gradient copy revealed through
       a radial mask that follows the cursor.
-   3. George Washington cutout (same asset as Delt Capital) —
-      anchored to the right edge, static (no parallax), with the
-      same sizing, drop-shadow, breathing phone-screen glow, and
-      responsive dimming breakpoints.
+   3. George Washington cutout (same asset as Delt Capital —
+      the phone-facing-George pose) — anchored to the right edge,
+      static (no parallax), with the same sizing, drop-shadow,
+      85% fade, breathing phone-spill glow, and responsive
+      dimming breakpoints.
 
    Only the copy block differs: Delt Pay's headline, subhead,
    and CTAs are kept as-is.
@@ -139,8 +139,9 @@ export function JuspayHero() {
         }}
       />
 
-      {/* Washington cutout — transparent PNG, absolutely positioned on the
-          right. Anchored to the section's right edge (right:0). On narrow
+      {/* Washington cutout — transparent WebP (phone held screen-toward-
+          George), absolutely positioned on the right. Anchored to the
+          section's right edge (right:0). On narrow
           viewports we push it partially off-screen and dim it so the copy
           stays readable. No parallax / scroll transform — the portrait
           sits static, matching Delt Capital. */}
@@ -162,6 +163,9 @@ export function JuspayHero() {
           height: 100%; width: auto; display: block;
           max-width: none;
           filter: drop-shadow(0 8px 22px rgba(0,0,0,0.28));
+          /* Slightly faded so the portrait supports the copy instead of
+             competing with it; mobile queries below override with deeper dims. */
+          opacity: 0.85;
         }
         @media (max-width: 1200px) {
           .v1hero-washington { right: 0; }
@@ -187,13 +191,14 @@ export function JuspayHero() {
           transition: 'opacity 1100ms ease-out 200ms',
         }}
       >
-        {/* Breathing glow off the phone screen — sells the "screen is lit"
-            read against the plate-dark background. Positioned in % of the
-            portrait so it stays glued to the phone at every viewport. */}
+        {/* Breathing glow around the phone — the screen faces George in this
+            pose, so the light reads as spill escaping past the phone's edges.
+            Positioned in % of the portrait so it stays glued to the phone at
+            every viewport. */}
         <div
           className="v1hero-glow"
           style={{
-            position: 'absolute', left: '-7%', top: '16%', width: '46%', height: '72%',
+            position: 'absolute', left: '-3%', top: '32%', width: '46%', height: '58%',
             background:
               'radial-gradient(50% 42% at 42% 50%, rgba(129,140,248,0.28) 0%, rgba(73,69,255,0.10) 48%, rgba(12,26,42,0) 74%)',
             filter: 'blur(18px)',
@@ -201,10 +206,7 @@ export function JuspayHero() {
             pointerEvents: 'none',
           }}
         />
-        <picture>
-          <source srcSet={heroWashingtonWebp} type="image/webp" />
-          <img src={heroWashingtonPng} alt="" />
-        </picture>
+        <img src={heroWashingtonWebp} alt="" />
       </div>
 
       {/* ───── Copy block ───── */}
