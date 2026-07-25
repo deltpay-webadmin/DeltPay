@@ -17,9 +17,9 @@ import heroWashingtonWebp from '@/app/assets/washington-cutout-forward.webp';
       a radial mask that follows the cursor.
    3. George Washington cutout (same asset as Delt Capital —
       the phone-facing-George pose) — anchored to the right edge,
-      static (no parallax), with the same sizing, drop-shadow,
-      85% fade, breathing phone-spill glow, and responsive
-      dimming breakpoints.
+      static (no parallax), with the same drop-shadow, 85% fade,
+      breathing phone-spill glow, and responsive dimming
+      breakpoints, sized 20% smaller than Capital's.
 
    Only the copy block differs: Delt Pay's headline, subhead,
    and CTAs are kept as-is.
@@ -102,8 +102,9 @@ export function JuspayHero() {
       }}
     >
       {/* Banknote scanlines — fine horizontal security linework, like the
-          field behind a portrait on a bill. Lines halo around George
-          (right of center) and fade toward the copy column and corners. */}
+          field behind a portrait on a bill. The mask is a centered, even
+          vignette so the lines cover the whole plate uniformly and only
+          soften at the very edges. */}
       <div
         aria-hidden
         style={{
@@ -111,9 +112,9 @@ export function JuspayHero() {
           background:
             'repeating-linear-gradient(180deg, rgba(125,160,205,0.10) 0px, rgba(125,160,205,0.10) 1px, transparent 1px, transparent 4px)',
           WebkitMaskImage:
-            'radial-gradient(90% 120% at 74% 52%, black 40%, rgba(0,0,0,0.45) 64%, rgba(0,0,0,0.05) 90%, transparent 100%)',
+            'radial-gradient(120% 130% at 50% 50%, black 55%, rgba(0,0,0,0.55) 78%, rgba(0,0,0,0.12) 95%, transparent 100%)',
           maskImage:
-            'radial-gradient(90% 120% at 74% 52%, black 40%, rgba(0,0,0,0.45) 64%, rgba(0,0,0,0.05) 90%, transparent 100%)',
+            'radial-gradient(120% 130% at 50% 50%, black 55%, rgba(0,0,0,0.55) 78%, rgba(0,0,0,0.12) 95%, transparent 100%)',
         }}
       />
       {/* Cursor-revealed illumination. The lines carry a cyan→sky→indigo→
@@ -156,7 +157,7 @@ export function JuspayHero() {
         .v1hero-washington {
           position: absolute;
           right: 0; bottom: 0;
-          height: 75%; max-height: 675px;
+          height: 60%; max-height: 540px;
           z-index: 2; pointer-events: none;
         }
         .v1hero-washington img {
@@ -171,11 +172,11 @@ export function JuspayHero() {
           .v1hero-washington { right: 0; }
         }
         @media (max-width: 900px) {
-          .v1hero-washington { right: -8%; bottom: 0; height: 82%; max-height: 620px; }
+          .v1hero-washington { right: -8%; bottom: 0; height: 66%; max-height: 496px; }
           .v1hero-washington img { opacity: 0.45; animation: none; }
         }
         @media (max-width: 560px) {
-          .v1hero-washington { right: -20%; bottom: 0; height: 68%; }
+          .v1hero-washington { right: -20%; bottom: 0; height: 54%; }
           .v1hero-washington img { opacity: 0.28; }
         }
         @media (prefers-reduced-motion: reduce) {
