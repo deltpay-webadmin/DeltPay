@@ -230,14 +230,13 @@ export function JuspayHero() {
               letterSpacing: '-0.05em',
               maxWidth: '14ch',
               // Extra bottom padding so the italic 'g/p' descenders in
-              // 'nothing stops' don't get clipped by the section / next
-              // block. Without this the descenders sit right on the
-              // section's bottom mathematical edge.
+              // 'get paid' don't get clipped by the section / next block.
+              // Without this the descenders sit right on the section's
+              // bottom mathematical edge.
               paddingBottom: '0.18em',
             }}
           >
-            You built it from nothing.<br />
-            We make sure{' '}
+            Winners don&apos;t wait to<br />
             <span
               className="inline-block align-baseline"
               style={{
@@ -258,7 +257,7 @@ export function JuspayHero() {
                 paddingBottom: '0.12em',
               }}
             >
-              nothing stops it.
+              get paid.
             </span>
           </h1>
 
@@ -268,13 +267,13 @@ export function JuspayHero() {
           >
             Payments, capital, and AI in one stack —{' '}
             <strong style={{ color: 'var(--dc-on-dark)', fontWeight: 600 }}>
-              0% processing fees
+              same-day funding
             </strong>
             ,{' '}
             <strong style={{ color: 'var(--dc-on-dark)', fontWeight: 600 }}>
-              same-day funding
+              0% processing fees
             </strong>
-            , and business intelligence built in.
+            , and intelligence that keeps your cash moving.
           </p>
 
           {/* CTAs — primary button + quiet text link. The secondary
