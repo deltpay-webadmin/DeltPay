@@ -102,9 +102,16 @@ export function JuspayHero() {
       }}
     >
       {/* Banknote scanlines — fine horizontal security linework, like the
-          field behind a portrait on a bill. The mask is a centered, even
-          vignette so the lines cover the whole plate uniformly and only
-          soften at the very edges.
+          field behind a portrait on a bill.
+
+          The mask keeps the linework EVEN across the whole plate: a solid
+          interior that only feathers within a few percent of each edge, so
+          the lines read at one uniform density everywhere the eye lands.
+          (The previous elliptical `radial-gradient` vignette faded the
+          field toward the corners/edges on this ~2:1 box, which made the
+          lines look denser in the center and washed-out toward the sides —
+          i.e. not uniform.) The two linear gradients are composited with
+          `intersect` so the feather applies symmetrically on all four edges.
 
           The site renders under a global zoom (--site-zoom, 1.08), which
           would scale a raw 1px/4px pattern to fractional device pixels and
@@ -119,9 +126,11 @@ export function JuspayHero() {
           background:
             'repeating-linear-gradient(180deg, rgba(125,160,205,0.10) 0px, rgba(125,160,205,0.10) calc(1px / var(--site-zoom, 1)), transparent calc(1px / var(--site-zoom, 1)), transparent calc(4px / var(--site-zoom, 1)))',
           WebkitMaskImage:
-            'radial-gradient(120% 130% at 50% 50%, black 55%, rgba(0,0,0,0.55) 78%, rgba(0,0,0,0.12) 95%, transparent 100%)',
+            'linear-gradient(90deg, transparent 0, #000 3.5%, #000 96.5%, transparent 100%), linear-gradient(180deg, transparent 0, #000 7%, #000 93%, transparent 100%)',
+          WebkitMaskComposite: 'source-in',
           maskImage:
-            'radial-gradient(120% 130% at 50% 50%, black 55%, rgba(0,0,0,0.55) 78%, rgba(0,0,0,0.12) 95%, transparent 100%)',
+            'linear-gradient(90deg, transparent 0, #000 3.5%, #000 96.5%, transparent 100%), linear-gradient(180deg, transparent 0, #000 7%, #000 93%, transparent 100%)',
+          maskComposite: 'intersect',
         }}
       />
       {/* Cursor-revealed illumination. The lines carry a cyan→sky→indigo→
