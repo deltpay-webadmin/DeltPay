@@ -265,15 +265,15 @@ export function JuspayHero() {
             className="mt-7 max-w-[540px] text-[18px] leading-[1.55]"
             style={{ color: 'rgba(247, 245, 240, 0.75)', fontFamily: 'var(--dc-font-body)' }}
           >
-            Payments, capital, and AI in one stack —{' '}
-            <strong style={{ color: 'var(--dc-on-dark)', fontWeight: 600 }}>
-              same-day funding
-            </strong>
-            ,{' '}
+            Delt processes your card payments at{' '}
             <strong style={{ color: 'var(--dc-on-dark)', fontWeight: 600 }}>
               0% processing fees
-            </strong>
-            , and intelligence that keeps your cash moving.
+            </strong>{' '}
+            and gets you{' '}
+            <strong style={{ color: 'var(--dc-on-dark)', fontWeight: 600 }}>
+              same-day funding
+            </strong>{' '}
+            when you need it — so the money you earn keeps working, not waiting.
           </p>
 
           {/* CTAs — primary button + quiet text link. The secondary
