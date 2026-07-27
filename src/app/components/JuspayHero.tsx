@@ -277,18 +277,17 @@ export function JuspayHero() {
           </p>
 
           {/* CTAs — primary button + quiet text link. The secondary
-              gets out of the way so the primary owns the eye.
-              "Put George to work" trades the generic quote ask for the
-              portrait's payoff: George is the dollar, and Delt makes the
-              dollars work. Trimmed padding so the button reads punchy,
-              not hefty. */}
+              gets out of the way so the primary owns the eye. The primary
+              says exactly where it goes ("Get a quote" → /get-a-quote) so
+              the action is unambiguous. Trimmed padding so the button
+              reads punchy, not hefty. */}
           <div className="mt-10 flex items-center gap-7 flex-wrap">
             <Link
               to="/get-a-quote"
               className="dc-btn-primary dc-lg"
               style={{ fontSize: 16, fontWeight: 600, padding: '14px 24px', minHeight: 48 }}
             >
-              Put George to work
+              Get a quote
               <span aria-hidden style={{ marginLeft: 4 }}>→</span>
             </Link>
             {/* Restored: the original iridescent "Explore Features with AI"
