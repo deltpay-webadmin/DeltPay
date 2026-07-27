@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion } from 'motion/react';
 import { Link, useSearchParams } from 'react-router';
 import { Calculator, CheckCircle } from 'lucide-react';
+import { trackCalculatorQuote } from '@/lib/pixel';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -66,6 +67,9 @@ export function CalculatorPage() {
         }),
       });
       setQuoteSent(true);
+      // High-intent conversion: they entered real volume + gave an email.
+      // Value carries their own estimated annual savings for ad optimization.
+      trackCalculatorQuote(savings * 12, { content_name: 'savings_calculator' });
     } catch {
       /* keep the results on-screen even if the email call fails */
     } finally {

@@ -1,5 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { HashRouter, Routes, Route, Navigate, useLocation } from 'react-router';
+import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import { useRouteChangePixel } from '@/lib/pixel';
 import { Navigation } from '@/app/components/Navigation';
 import { Footer } from '@/app/components/Footer';
@@ -81,6 +83,11 @@ export default function App() {
   return (
     <>
       <CustomCursor />
+      {/* First-party traffic + funnel analytics and Core Web Vitals.
+          Enable "Web Analytics" and "Speed Insights" on the Vercel project
+          for data to start flowing. */}
+      <Analytics />
+      <SpeedInsights />
       <HashRouter>
         <ScrollToTop />
         <PixelRouteTracker />

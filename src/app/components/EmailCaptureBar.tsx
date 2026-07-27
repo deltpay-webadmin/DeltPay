@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ArrowRight, Check } from 'lucide-react';
 import { useHoneypot } from './Honeypot';
+import { trackRateCheck } from '@/lib/pixel';
 
 export function EmailCaptureBar() {
   const [email, setEmail] = useState('');
@@ -16,6 +17,9 @@ export function EmailCaptureBar() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ type: 'rate-check', email, hp_extra_field: honeypotValue() }),
     }).catch(() => {});
+    // Fire the Meta Pixel Lead so ad optimization + reporting see this
+    // top-of-funnel capture (previously untracked).
+    trackRateCheck({ content_name: 'homepage_rate_bar' });
     setSubmitted(true);
   };
 

@@ -173,3 +173,30 @@ export function trackCheckout(cartValue: number, itemCount: number): void {
     content_category: 'hardware',
   });
 }
+
+/**
+ * Homepage "See your custom rate" email captured — top-of-funnel lead.
+ * Email-only, so a light placeholder value vs. a full application.
+ */
+export function trackRateCheck(extra?: EventParams): void {
+  trackEvent('Lead', {
+    value: 100,
+    currency: 'USD',
+    content_category: 'rate_check',
+    ...extra,
+  });
+}
+
+/**
+ * Savings-calculator quote completed (email + real volume entered) — the
+ * most qualified marketing lead. Value carries the visitor's own estimated
+ * annual savings so Meta can optimize toward higher-value merchants.
+ */
+export function trackCalculatorQuote(annualSavings: number, extra?: EventParams): void {
+  trackEvent('Lead', {
+    value: Math.max(0, Math.round(annualSavings || 0)),
+    currency: 'USD',
+    content_category: 'calculator_quote',
+    ...extra,
+  });
+}
