@@ -1,149 +1,224 @@
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
-import { PlaidWaveLines } from './PlaidWaveLines';
 import { ExploreFeaturesWithAI } from './ExploreFeaturesWithAI';
-import heroDavidPng from '@/app/assets/hero-david-cutout.png';
-import heroDavidWebp from '@/app/assets/hero-david-cutout.webp';
+import heroWashingtonWebp from '@/app/assets/washington-cutout-forward.webp';
 
 /* ──────────────────────────────────────────────────────────────
-   JuspayHero — Delt Pay home hero, rebuilt to the Plaid bar.
+   JuspayHero — Delt Pay home hero, aligned to the Delt Capital
+   hero plate.
 
-   Design principles (vs. the previous version):
-   1. Painted background. A hand-tuned indigo→violet linear
-      gradient plus two soft radial vignettes act as a printed
-      color field. The flat #080A28 navy is gone.
-   2. Wave-line contour field is texture, not feature — opacity
-      drops from 70% to ~14%. You should sense it, not read it.
-   3. A single faint horizontal "shelf" gradient anchors the
-      lower third (the way Plaid puts a metallic bar across
-      Franklin's chest).
-   4. David is the focal subject. Natural engraving tones with
-      a duotone overlay (indigo shadows → warm highlights) so
-      he picks up the brand color without going monochrome.
-      Soft drop-shadow on the copy side gives him dimensional
-      separation from the field.
-   5. Typography: tighter tracking (-0.055em), tighter line-
-      height (0.94), gradient shimmer on the italic verb.
-   6. The fold owns ONLY five things: wordmark (in nav),
-      headline, sub, primary CTA, quiet secondary text link.
-      Stats and mono ledger are removed — they belong in the
-      sections below, not the fold.
+   The visual field is a 1:1 port of deltcapital.com's hero:
+   1. Engraving-plate dark: deep slate navy (#0c1a2a, banknote-
+      reference) with a soft steel bloom behind the portrait and
+      a whisper of indigo low-left.
+   2. Banknote scanlines — fine horizontal security linework,
+      like the field behind a portrait on a bill. A dim base
+      always on, plus a brighter gradient copy revealed through
+      a radial mask that follows the cursor.
+   3. George Washington cutout (same asset as Delt Capital —
+      the phone-facing-George pose) — anchored to the right edge,
+      static (no parallax), with the same drop-shadow, 85% fade,
+      breathing phone-spill glow, and responsive dimming
+      breakpoints, sized 20% smaller than Capital's.
+
+   Only the copy block differs: Delt Pay's headline, subhead,
+   and CTAs are kept as-is.
    ────────────────────────────────────────────────────────────── */
 
 export function JuspayHero() {
+  const heroRef = useRef<HTMLElement>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Cursor-revealed scanline illumination (ported from Delt Capital).
+  // Idle: the lit-lines layer starts fully faded out (--illum-op 0) and
+  // the spotlight starts centered so that when it fades in it isn't
+  // parked in a corner. On leave we don't move the spotlight — we leave
+  // --mx/--my where the cursor last was and gently fade the layer out
+  // in place, so it never darts to a corner.
+  useEffect(() => {
+    const el = heroRef.current;
+    if (!el) return undefined;
+    const OP_MAX = 0.155; // matches the layer's target opacity
+    const sec = { x: 50, y: 40 };
+    const curSec = { x: 50, y: 40 };
+    let targetOp = 0;
+    let curOp = 0;
+    let raf = 0;
+    const onMove = (e: MouseEvent) => {
+      const r = el.getBoundingClientRect();
+      sec.x = ((e.clientX - r.left) / r.width) * 100;
+      sec.y = ((e.clientY - r.top) / r.height) * 100;
+      targetOp = OP_MAX;
+    };
+    const onEnter = () => { targetOp = OP_MAX; };
+    const onLeave = () => { targetOp = 0; };
+    const tick = () => {
+      curSec.x += (sec.x - curSec.x) * 0.15;
+      curSec.y += (sec.y - curSec.y) * 0.15;
+      // Slow, symmetric opacity lerp so the fade in/out reads as a soft
+      // dissolve rather than a snap.
+      curOp += (targetOp - curOp) * 0.055;
+      el.style.setProperty('--mx', curSec.x.toFixed(2) + '%');
+      el.style.setProperty('--my', curSec.y.toFixed(2) + '%');
+      el.style.setProperty('--illum-op', curOp.toFixed(3));
+      raf = requestAnimationFrame(tick);
+    };
+    el.addEventListener('mousemove', onMove);
+    el.addEventListener('mouseenter', onEnter);
+    el.addEventListener('mouseleave', onLeave);
+    raf = requestAnimationFrame(tick);
+    return () => {
+      cancelAnimationFrame(raf);
+      el.removeEventListener('mousemove', onMove);
+      el.removeEventListener('mouseenter', onEnter);
+      el.removeEventListener('mouseleave', onLeave);
+    };
+  }, []);
+
   return (
     <section
+      ref={heroRef}
       data-hero-section
       className="relative w-full overflow-hidden flex flex-col"
       style={{
-        // Painted color field — deep indigo top-left → richer violet
-        // bottom-right. The two radial vignettes (one warm highlight
-        // behind David, one cooler shadow in the lower-left) give the
-        // canvas a "printed" feel rather than a flat color block.
-        background: `
-          radial-gradient(120% 80% at 88% 18%, rgba(120, 95, 255, 0.35) 0%, transparent 55%),
-          radial-gradient(90% 70% at 6% 92%, rgba(20, 18, 70, 0.55) 0%, transparent 60%),
-          linear-gradient(135deg, #0B0D33 0%, #14123F 38%, #1C1856 70%, #221C66 100%)
-        `,
+        // Engraving-plate dark (Delt Capital hero field): deep slate navy
+        // with a soft steel bloom behind the portrait and a whisper of
+        // indigo low-left.
+        backgroundColor: '#0c1a2a',
+        backgroundImage:
+          'radial-gradient(85% 90% at 74% 34%, rgba(43,74,114,0.42) 0%, rgba(12,26,42,0) 62%), radial-gradient(60% 70% at 8% 96%, rgba(73,69,255,0.10) 0%, rgba(12,26,42,0) 60%)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
         color: 'var(--dc-on-dark)',
+        borderBottom: '1px solid rgba(255,255,255,0.06)',
         marginTop: -64,
         paddingTop: 64,
         minHeight: 'calc(100vh / var(--site-zoom, 1))',
       }}
     >
-      {/* Contour texture — whisper, not pattern. Even quieter on mobile. */}
-      <div className="hidden lg:block absolute inset-0" aria-hidden style={{ zIndex: 0 }}>
-        <PlaidWaveLines color="#4945ff" baseOpacity={0.14} hoverOpacity={0.55} />
-      </div>
-      <div className="lg:hidden absolute inset-0" aria-hidden style={{ zIndex: 0 }}>
-        <PlaidWaveLines color="#4945ff" baseOpacity={0.06} hoverOpacity={0.2} />
-      </div>
+      {/* Banknote scanlines — fine horizontal security linework, like the
+          field behind a portrait on a bill. The mask is a centered, even
+          vignette so the lines cover the whole plate uniformly and only
+          soften at the very edges.
 
-      {/* David — clean cutout, no rectangle, no masks, no shadow.
-          Just the engraving sitting on the gradient field.
-          z-index 1 keeps him IN FRONT of the contour field but BEHIND
-          the headline copy at z-[2]. */}
-      <picture>
-        <source srcSet={heroDavidWebp} type="image/webp" />
-        <img
-          src={heroDavidPng}
-          alt=""
-          aria-hidden
-          className="pointer-events-none select-none hidden lg:block absolute"
-          style={{
-            // Slight negative right offset lets the figure bleed a touch
-            // off the right edge, which shifts the POS terminal clear of
-            // the headline copy without shrinking David.
-            right: '-4%',
-            bottom: 0,
-            // Right-anchored cutout (figure on the right of the canvas,
-            // transparent on the left). Drive sizing by HEIGHT so David
-            // fills the hero vertically — head near the top, shoulders
-            // anchored to the bottom edge — matching the design spec.
-            // The asset's transparent left half keeps the headline copy
-            // clear regardless of how wide it scales.
-            // Drive sizing by HEIGHT so the engraving fills the hero
-            // vertically — head near the top, shoulders to the bottom.
-            // The cutout image is wider than tall, and the figure occupies
-            // the right half of the canvas, so when anchored to right: 0
-            // the transparent left half lands behind the headline column
-            // and never collides with copy.
-            height: '78%',
-            width: 'auto',
-            maxWidth: 'none',
-            zIndex: 1,
-            opacity: 1,
-            objectFit: 'contain',
-            objectPosition: 'right bottom',
-          }}
-        />
-      </picture>
-
-      {/* Mobile David — centered, full-bust visible behind the copy.
-          Sits behind a darkening gradient so the headline stays legible. */}
+          The site renders under a global zoom (--site-zoom, 1.08), which
+          would scale a raw 1px/4px pattern to fractional device pixels and
+          alias the lines into uneven moiré bands. Every occurrence of the
+          pattern (here and in the lit layer's masks below) divides by the
+          zoom so the lines land on exact 1px/4px after scaling — same
+          crisp render as Delt Capital, which runs unzoomed. */}
       <div
-        className="lg:hidden absolute pointer-events-none"
         aria-hidden
         style={{
-          right: '-20%',
-          bottom: 0,
-          width: '120%',
-          height: '80%',
-          zIndex: 1,
-          overflow: 'hidden',
+          position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none',
+          background:
+            'repeating-linear-gradient(180deg, rgba(125,160,205,0.10) 0px, rgba(125,160,205,0.10) calc(1px / var(--site-zoom, 1)), transparent calc(1px / var(--site-zoom, 1)), transparent calc(4px / var(--site-zoom, 1)))',
+          WebkitMaskImage:
+            'radial-gradient(120% 130% at 50% 50%, black 55%, rgba(0,0,0,0.55) 78%, rgba(0,0,0,0.12) 95%, transparent 100%)',
+          maskImage:
+            'radial-gradient(120% 130% at 50% 50%, black 55%, rgba(0,0,0,0.55) 78%, rgba(0,0,0,0.12) 95%, transparent 100%)',
+        }}
+      />
+      {/* Cursor-revealed illumination. The lines carry a cyan→sky→indigo→
+          ivory gradient; two mask layers are composited with `intersect`:
+          the 1px line pattern AND a large, soft regional glow that follows
+          the cursor — so the lit area reads as a broad wash over the
+          linework rather than a tight spotlight. */}
+      <div
+        aria-hidden
+        style={{
+          position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none',
+          opacity: 'var(--illum-op, 0)',
+          background:
+            'linear-gradient(105deg, #6EE7F9 0%, #7DD3FC 25%, #A5B4FC 55%, #C7D2FE 78%, #F7F5F0 100%)',
+          WebkitMaskImage:
+            'repeating-linear-gradient(180deg, #000 0px, #000 calc(1px / var(--site-zoom, 1)), transparent calc(1px / var(--site-zoom, 1)), transparent calc(4px / var(--site-zoom, 1))), radial-gradient(circle 640px at var(--mx, 50%) var(--my, 40%), #000 0%, rgba(0,0,0,0.82) 32%, rgba(0,0,0,0.4) 62%, rgba(0,0,0,0.12) 84%, transparent 100%)',
+          WebkitMaskRepeat: 'repeat, no-repeat',
+          WebkitMaskComposite: 'source-in',
+          maskImage:
+            'repeating-linear-gradient(180deg, #000 0px, #000 calc(1px / var(--site-zoom, 1)), transparent calc(1px / var(--site-zoom, 1)), transparent calc(4px / var(--site-zoom, 1))), radial-gradient(circle 640px at var(--mx, 50%) var(--my, 40%), #000 0%, rgba(0,0,0,0.82) 32%, rgba(0,0,0,0.4) 62%, rgba(0,0,0,0.12) 84%, transparent 100%)',
+          maskRepeat: 'repeat, no-repeat',
+          maskComposite: 'intersect',
+        }}
+      />
+
+      {/* Washington cutout — transparent WebP (phone held screen-toward-
+          George), absolutely positioned on the right. Anchored to the
+          section's right edge (right:0). On narrow
+          viewports we push it partially off-screen and dim it so the copy
+          stays readable. No parallax / scroll transform — the portrait
+          sits static, matching Delt Capital. */}
+      <style>{`
+        @keyframes v1heroGlow { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
+        /* Franklin-ratio portrait: anchored to the right so his head sits
+           in the upper-right quadrant and coat/shoulders spread down and
+           to the left. The wrapper shrink-wraps the img, so the phone-glow
+           child can use % coordinates that track the portrait at any size.
+           Mobile dim lives on the img (not the wrapper) because the wrapper
+           carries an inline entrance opacity that would win otherwise. */
+        .v1hero-washington {
+          position: absolute;
+          right: 0; bottom: 0;
+          height: 60%; max-height: 540px;
+          z-index: 2; pointer-events: none;
+        }
+        .v1hero-washington img {
+          height: 100%; width: auto; display: block;
+          max-width: none;
+          filter: drop-shadow(0 8px 22px rgba(0,0,0,0.28));
+          /* Slightly faded so the portrait supports the copy instead of
+             competing with it; mobile queries below override with deeper dims. */
+          opacity: 0.85;
+        }
+        @media (max-width: 1200px) {
+          .v1hero-washington { right: 0; }
+        }
+        @media (max-width: 900px) {
+          .v1hero-washington { right: -8%; bottom: 0; height: 66%; max-height: 496px; }
+          .v1hero-washington img { opacity: 0.45; animation: none; }
+        }
+        @media (max-width: 560px) {
+          .v1hero-washington { right: -20%; bottom: 0; height: 54%; }
+          .v1hero-washington img { opacity: 0.28; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .v1hero-washington img { animation: none; }
+          .v1hero-glow { animation: none !important; }
+        }
+      `}</style>
+      <div
+        className="v1hero-washington"
+        aria-hidden
+        style={{
+          opacity: mounted ? 1 : 0,
+          transition: 'opacity 1100ms ease-out 200ms',
         }}
       >
-        <picture>
-          <source srcSet={heroDavidWebp} type="image/webp" />
-          <img
-            src={heroDavidPng}
-            alt=""
-            className="pointer-events-none select-none"
-            style={{
-              position: 'absolute',
-              right: 0,
-              bottom: 0,
-              height: '100%',
-              width: 'auto',
-              opacity: 0.5,
-              objectFit: 'contain',
-              objectPosition: 'right bottom',
-            }}
-          />
-        </picture>
-        {/* Left-side darkening veil so copy stays readable */}
+        {/* Breathing glow around the phone — the screen faces George in this
+            pose, so the light reads as spill escaping past the phone's edges.
+            Positioned in % of the portrait so it stays glued to the phone at
+            every viewport. */}
         <div
-          aria-hidden
+          className="v1hero-glow"
           style={{
-            position: 'absolute',
-            inset: 0,
+            position: 'absolute', left: '-3%', top: '32%', width: '46%', height: '58%',
             background:
-              'linear-gradient(90deg, rgba(11,13,51,0.92) 0%, rgba(11,13,51,0.65) 30%, rgba(11,13,51,0.2) 65%, rgba(11,13,51,0) 100%)',
+              'radial-gradient(50% 42% at 42% 50%, rgba(129,140,248,0.28) 0%, rgba(73,69,255,0.10) 48%, rgba(12,26,42,0) 74%)',
+            filter: 'blur(18px)',
+            animation: 'v1heroGlow 5.5s ease-in-out infinite',
+            pointerEvents: 'none',
           }}
         />
+        <img src={heroWashingtonWebp} alt="" />
       </div>
 
       {/* ───── Copy block ───── */}
-      <div className="relative z-[2] mx-auto w-full max-w-[1320px] px-6 lg:px-10 pt-8 lg:pt-10 pb-0 flex-1 flex flex-col">
+      <div className="relative z-[3] mx-auto w-full max-w-[1320px] px-6 lg:px-10 pt-8 lg:pt-10 pb-0 flex-1 flex flex-col">
         <div className="mt-10 lg:mt-16">
           <h1
             className="dc-display"
@@ -202,14 +277,18 @@ export function JuspayHero() {
           </p>
 
           {/* CTAs — primary button + quiet text link. The secondary
-              gets out of the way so the primary owns the eye. */}
+              gets out of the way so the primary owns the eye.
+              "Put George to work" trades the generic quote ask for the
+              portrait's payoff: George is the dollar, and Delt makes the
+              dollars work. Trimmed padding so the button reads punchy,
+              not hefty. */}
           <div className="mt-10 flex items-center gap-7 flex-wrap">
             <Link
               to="/get-a-quote"
               className="dc-btn-primary dc-lg"
-              style={{ fontSize: 16, fontWeight: 600, padding: '18px 30px', minHeight: 52 }}
+              style={{ fontSize: 16, fontWeight: 600, padding: '14px 24px', minHeight: 48 }}
             >
-              Get a quote
+              Put George to work
               <span aria-hidden style={{ marginLeft: 4 }}>→</span>
             </Link>
             {/* Restored: the original iridescent "Explore Features with AI"
