@@ -1,14 +1,21 @@
 import { useState } from 'react';
 import { motion } from 'motion/react';
-import { Link } from 'react-router';
+import { Link, useSearchParams } from 'react-router';
 import { Calculator, CheckCircle } from 'lucide-react';
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export function CalculatorPage() {
+  const [searchParams] = useSearchParams();
   const [processingRate, setProcessingRate] = useState('2.9');
   const [perTransactionFee, setPerTransactionFee] = useState('0.30');
   const [monthlyVolume, setMonthlyVolume] = useState('50000');
   const [avgTransactionSize, setAvgTransactionSize] = useState('50');
   const [calculated, setCalculated] = useState(false);
+  // Prefilled from the "Build your custom quote" email link (?e=...).
+  const [email, setEmail] = useState(() => searchParams.get('e') || '');
+  const [quoteSent, setQuoteSent] = useState(false);
+  const [sending, setSending] = useState(false);
 
   const DELT_RATE = 0.026;
   const DELT_PER_TXN = 0.10;
@@ -35,6 +42,42 @@ export function CalculatorPage() {
   const formatVolume = (val: string) => {
     const num = val.replace(/[^0-9]/g, '');
     return num ? parseInt(num).toLocaleString() : '';
+  };
+
+  // Email the finished quote to the visitor (and notify the team). Best-effort:
+  // the on-page results always show regardless of whether the email sends.
+  const emailQuote = async () => {
+    const to = email.trim();
+    if (!EMAIL_RE.test(to) || sending || quoteSent) return;
+    const { currentCost, deltCost, savings } = calcSavings();
+    setSending(true);
+    try {
+      await fetch('/api/leads/calc-quote', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: to,
+          monthlyVolume,
+          processingRate,
+          currentCost,
+          deltCost,
+          savings,
+          annual: savings * 12,
+        }),
+      });
+      setQuoteSent(true);
+    } catch {
+      /* keep the results on-screen even if the email call fails */
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleCalculate = () => {
+    setCalculated(true);
+    // Arriving from the email link? The address is prefilled — send their
+    // finished quote automatically so it lands in their inbox.
+    if (EMAIL_RE.test(email.trim())) emailQuote();
   };
 
   return (
@@ -151,7 +194,7 @@ export function CalculatorPage() {
 
                 {/* Calculate Button */}
                 <button
-                  onClick={() => setCalculated(true)}
+                  onClick={handleCalculate}
                   className="w-full py-3.5 bg-[#4945FF] hover:bg-[#3933CC] text-white rounded-lg transition-colors text-base"
                   style={{ fontWeight: 600 }}
                 >
@@ -219,6 +262,39 @@ export function CalculatorPage() {
                       Get started with Delt
                     </Link>
                   </motion.div>
+
+                  {/* Email the quote to the visitor. Prefilled + auto-sent when
+                      they came from the "custom quote" email link. */}
+                  {quoteSent ? (
+                    <div className="flex items-center gap-2 text-sm text-[#059669]" style={{ fontWeight: 600 }}>
+                      <CheckCircle className="w-4 h-4 flex-shrink-0" />
+                      Quote emailed to {email}
+                    </div>
+                  ) : (
+                    <div className="rounded-lg border border-[#E5E7EB] bg-white p-3">
+                      <label className="block text-xs text-[#475569] mb-1.5" style={{ fontWeight: 600 }}>
+                        Want this quote in your inbox?
+                      </label>
+                      <div className="flex gap-2">
+                        <input
+                          type="email"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          placeholder="you@company.com"
+                          className="flex-1 min-w-0 px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm text-[#041E42] focus:outline-none focus:ring-2 focus:ring-[#4945FF]/20 focus:border-[#4945FF]"
+                        />
+                        <button
+                          onClick={emailQuote}
+                          disabled={sending || !EMAIL_RE.test(email.trim())}
+                          className="px-4 py-2 bg-[#041E42] hover:bg-[#0a2b5c] text-white rounded-lg text-sm transition-colors disabled:opacity-50 whitespace-nowrap"
+                          style={{ fontWeight: 600 }}
+                        >
+                          {sending ? 'Sending…' : 'Email it'}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
                   <p className="text-xs text-[#475569] mt-4 max-w-md">Savings estimates are illustrative and based on rates you entered. Actual savings depend on card mix, plan, and volume. Delt's 2.6% + $0.10 rate applies to standard card-present transactions on the Free plan.</p>
                   <p className="text-sm text-[#475569] mt-2">Questions? <Link to="/support" className="text-[#4945FF] underline">Chat with us</Link></p>
                 </motion.div>

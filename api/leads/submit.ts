@@ -10,6 +10,10 @@ const LEAD_NOTIFY_FROM =
   process.env.LEAD_NOTIFY_FROM || "DeltPay Leads <noreply@deltpay.com>";
 const FONT_STACK =
   "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
+// Where the calculator lives (HashRouter → /#/calculator). Overridable per env.
+const SITE_ORIGIN = process.env.SITE_ORIGIN || "https://deltpay.com";
+const VISITOR_FROM =
+  process.env.VISITOR_EMAIL_FROM || "DeltPay <noreply@deltpay.com>";
 
 // Max base64 attachment size (~3.5MB) — Vercel caps the request body near 4.5MB.
 const MAX_ATTACH_B64 = 3_500_000;
@@ -137,6 +141,67 @@ async function sendLeadEmail(o: {
         subject: o.subject, html: renderLeadEmail(o),
         ...(o.replyTo ? { reply_to: o.replyTo } : {}),
         ...(o.attachments && o.attachments.length ? { attachments: o.attachments } : {}),
+      }),
+    });
+    if (!res.ok) {
+      const detail = await res.text().catch(() => "");
+      return { ok: false, error: `resend ${res.status}: ${detail.slice(0, 300)}` };
+    }
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: `send error: ${(err as Error)?.message || err}` };
+  }
+}
+
+// ── Visitor-facing "here's your custom-quote link" email ─────────
+// Sent to the address a visitor typed into the homepage rate-check bar.
+// Email clients can't run our calculator, so we send a branded button that
+// opens the calculator on the site, pre-filled with their email.
+function renderVisitorRateEmail(calcUrl: string): string {
+  const sentAt = new Date().toUTCString();
+  const accent = "#4945FF";
+  return `<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"></head>
+<body style="margin:0;padding:0;background:#EEF1F6;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#EEF1F6;padding:32px 16px;">
+    <tr><td align="center">
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:600px;max-width:600px;background:#ffffff;border-radius:18px;overflow:hidden;border:1px solid #E2E8F0;">
+        <tr><td style="background:#041E42;padding:26px 40px;">
+          <span style="font:800 21px ${FONT_STACK};color:#ffffff;letter-spacing:-.5px">Delt<span style="color:#6C63FF">Pay</span></span>
+        </td></tr>
+        <tr><td style="height:4px;line-height:4px;font-size:0;background:${accent};">&nbsp;</td></tr>
+        <tr><td style="padding:38px 40px 6px;">
+          <h1 style="margin:0;font:800 24px ${FONT_STACK};color:#041E42;letter-spacing:-.4px">Winners don't wait to get paid.</h1>
+          <p style="margin:12px 0 0;font:400 15px ${FONT_STACK};color:#475569;line-height:1.6">Thanks for reaching out. Your custom rate is one quick step away &mdash; plug in your current numbers and we'll show you exactly what you'd keep with Delt: <strong style="color:#041E42">0% processing fees</strong> and <strong style="color:#041E42">same-day funding</strong>.</p>
+        </td></tr>
+        <tr><td style="padding:26px 40px 8px;">
+          <a href="${calcUrl}" style="display:inline-block;background:${accent};color:#ffffff;font:700 15px ${FONT_STACK};text-decoration:none;padding:15px 30px;border-radius:10px">Build your custom quote (60 sec) &rarr;</a>
+        </td></tr>
+        <tr><td style="padding:6px 40px 36px;">
+          <p style="margin:0;font:400 13px ${FONT_STACK};color:#94A3B8;line-height:1.6">Or paste this link into your browser:<br><a href="${calcUrl}" style="color:#4945FF;text-decoration:none;word-break:break-all">${calcUrl}</a></p>
+        </td></tr>
+      </table>
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:600px;max-width:600px;">
+        <tr><td style="padding:22px 40px;text-align:center;font:400 12px ${FONT_STACK};color:#94A3B8;line-height:1.6">
+          DeltPay &middot; <a href="https://deltpay.com" style="color:#4945FF;text-decoration:none">deltpay.com</a><br>You're receiving this because you requested a custom rate on deltpay.com.<br>${escapeHtml(sentAt)}
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body></html>`;
+}
+// Send an email TO the visitor (not the team). Replies route to sales.
+async function sendVisitorEmail(o: {
+  to: string; subject: string; html: string; replyTo?: string;
+}): Promise<{ ok: boolean; error?: string }> {
+  if (!RESEND_API_KEY) return { ok: false, error: "email not configured" };
+  try {
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        from: VISITOR_FROM, to: [o.to], subject: o.subject, html: o.html,
+        ...(o.replyTo ? { reply_to: o.replyTo } : {}),
       }),
     });
     if (!res.ok) {
@@ -318,5 +383,22 @@ export default async function handler(req: any, res: any) {
     rows,
     attachments,
   });
-  return res.status(200).json({ ok: true, type, emailed: r.ok, emailError: r.error });
+
+  // Homepage rate-check bar: also send the VISITOR a branded email with a
+  // button to the calculator (pre-filled with their email). This is what
+  // makes the on-screen "check your inbox — quote on the way" promise real.
+  let visitorEmailed: boolean | undefined;
+  if (type === "rate-check" && !spamSuspect) {
+    const calcUrl = `${SITE_ORIGIN}/#/calculator?e=${encodeURIComponent(email)}`;
+    const v = await sendVisitorEmail({
+      to: email,
+      subject: "Your custom Delt rate — build it in 60 seconds",
+      html: renderVisitorRateEmail(calcUrl),
+      replyTo: LEAD_NOTIFY_TO,
+    });
+    visitorEmailed = v.ok;
+    if (!v.ok) console.warn("visitor rate email failed:", v.error);
+  }
+
+  return res.status(200).json({ ok: true, type, emailed: r.ok, emailError: r.error, visitorEmailed });
 }
