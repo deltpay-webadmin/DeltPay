@@ -58,7 +58,7 @@ export function SignInPage() {
 
   return (
     // This screen is the door to the dark back-office, so it carries the
-    // CRM's token scope (DeltPay dark system + Satoshi).
+    // CRM's token scope (DeltPay dark system + Inter).
     <div className="delt-backend-scope min-h-screen w-full !bg-(--dp-bg-base) flex items-center justify-center p-4 sm:p-6 lg:p-8">
       <div className="w-full max-w-[1180px] grid grid-cols-1 lg:grid-cols-2 bg-(--dp-bg-surface) rounded-[16px] overflow-hidden border border-white/[0.08] shadow-[0_30px_80px_-20px_rgba(0,0,0,0.7)]">
         {/* ── Left: photographic panel with cobalt wash ─────────── */}
