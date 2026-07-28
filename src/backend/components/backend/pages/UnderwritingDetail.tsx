@@ -425,20 +425,17 @@ export function UnderwritingDetail() {
             <div className="lg:sticky lg:top-4 space-y-4">
               {/* Composite + tier */}
               <div className="bg-white border border-gray-200 rounded-[8px] p-5">
-                <div className="flex items-center gap-4">
-                  <div className={`w-20 h-20 rounded-full ring-4 ${ts.ring} flex flex-col items-center justify-center`}>
-                    <span className="text-2xl font-bold text-gray-900 tabular-nums">{result.composite}</span>
-                    <span className="text-[9px] text-gray-400 uppercase">/ 100</span>
-                  </div>
-                  <div>
-                    <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-bold text-white ${ts.bg}`}>{tierLabel}</span>
-                    <p className="text-xs text-gray-500 mt-1.5">{result.terms.label}</p>
-                  </div>
+                <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-gray-500">Composite score</p>
+                <div className="mt-2 flex flex-wrap items-baseline gap-3">
+                  <span className="text-[44px] leading-none font-bold text-gray-900 tabular-nums tracking-[-0.02em]">{result.composite}</span>
+                  <span className="text-sm text-gray-400 tabular-nums">/ 100</span>
+                  <span className={`inline-block px-2.5 py-1 rounded-[8px] text-xs font-bold text-white ${ts.bg}`}>{tierLabel}</span>
                 </div>
+                <p className="text-xs text-gray-500 mt-2">{result.terms.label}</p>
                 <div className="mt-5 space-y-3">
-                  <ScoreBar label="Plaid Cash Flow" raw={result.p.total} weightPct={WEIGHTS.plaid * 100} color="bg-indigo-500" />
-                  <ScoreBar label="CRS Credit" raw={result.c.total} weightPct={WEIGHTS.crs * 100} color="bg-violet-500" />
-                  <ScoreBar label="DataMerch MCA" raw={result.d.total} weightPct={WEIGHTS.dataMerch * 100} color="bg-cyan-500" />
+                  <ScoreBar label="Plaid Cash Flow" raw={result.p.total} weightPct={WEIGHTS.plaid * 100} color="bg-[#2E6BFF]" />
+                  <ScoreBar label="CRS Credit" raw={result.c.total} weightPct={WEIGHTS.crs * 100} color="bg-[#7C5BFF]" />
+                  <ScoreBar label="DataMerch MCA" raw={result.d.total} weightPct={WEIGHTS.dataMerch * 100} color="bg-[#3CC9E3]" />
                 </div>
               </div>
 
@@ -544,16 +541,16 @@ export function UnderwritingDetail() {
             Composite <strong className="text-gray-900">{result.composite}</strong> · <span className={ts.text}>{tierLabel}</span>
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={() => saveDraft()} className="px-3 py-2 text-sm font-medium text-gray-600 border border-gray-200 rounded-[6px] hover:bg-gray-50">
+            <button onClick={() => saveDraft()} className="h-10 px-5 text-sm font-bold text-gray-900 border border-gray-300 rounded-[10px] hover:bg-white/[0.04] transition-colors">
               Save Draft
             </button>
             {!stageDone && (
-              <button onClick={moveToReview} className="px-3 py-2 text-sm font-medium text-indigo-600 border border-indigo-200 rounded-[6px] hover:bg-indigo-50">
+              <button onClick={moveToReview} className="h-10 px-5 text-sm font-bold text-indigo-600 border border-indigo-200 rounded-[10px] hover:bg-indigo-50 transition-colors">
                 Move to Final Review
               </button>
             )}
             {!stageDone && (
-              <button onClick={() => setDeclineOpen(true)} className="px-3 py-2 text-sm font-medium text-red-600 border border-red-200 rounded-[6px] hover:bg-red-50">
+              <button onClick={() => setDeclineOpen(true)} className="h-10 px-5 text-sm font-bold text-red-500 border border-red-200 rounded-[10px] hover:bg-red-50 transition-colors">
                 Decline
               </button>
             )}
@@ -562,7 +559,7 @@ export function UnderwritingDetail() {
                 onClick={() => setApproveOpen(true)}
                 disabled={!canApprove}
                 title={canApprove ? '' : 'Requires Tier ≤ 3, no disqualifiers, passing stress test'}
-                className="px-4 py-2 text-sm font-semibold text-white bg-emerald-600 rounded-[6px] hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5"
+                className="h-10 px-5 text-sm font-bold text-white bg-emerald-600 rounded-[10px] hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5 transition-colors"
               >
                 <Check className="w-4 h-4" /> Approve &amp; Fund
               </button>

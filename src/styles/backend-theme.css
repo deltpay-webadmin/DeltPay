@@ -386,6 +386,54 @@ body.crm-active {
 .delt-backend-scope .shadow-xl,
 .delt-backend-scope .shadow-2xl { box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55); }
 
+/* ── DeltPay gradients + glass (HeroPanel, glass KpiTiles) ── */
+.delt-backend-scope .dp-grad-panel {
+  background: linear-gradient(120deg, #101B36 0%, #1C3A78 60%, #2E6BFF 130%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.delt-backend-scope .dp-grad-hero {
+  background: linear-gradient(135deg, #0A1020 0%, #14295C 45%, #2E6BFF 100%);
+}
+.delt-backend-scope .dp-glass {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(16px);
+}
+.delt-backend-scope .dp-sphere {
+  position: absolute;
+  right: -120px;
+  top: -140px;
+  width: 420px;
+  height: 420px;
+  border-radius: 999px;
+  background: radial-gradient(circle at 35% 35%, rgba(143, 176, 255, 0.55) 0%, rgba(46, 107, 255, 0.25) 45%, rgba(46, 107, 255, 0) 70%);
+  filter: blur(6px);
+  pointer-events: none;
+}
+
+/* ── Feel sweep for the long tail of pages ──
+   The legacy CRM was built on 8px radii, colored KPI top-borders, and
+   plain-case table headers. Nudge every page toward the spec: 12px tiles,
+   hairline-only cards, spaced uppercase overline table headers. */
+.delt-backend-scope .rounded-\[8px\] { border-radius: 12px; }
+.delt-backend-scope .rounded-\[10px\] { border-radius: 12px; }
+.delt-backend-scope .rounded-\[6px\] { border-radius: 10px; }
+.delt-backend-scope .rounded-\[4px\] { border-radius: 8px; }
+.delt-backend-scope [class*='border-t-\[3px\]'] {
+  border-top-width: 1px;
+  border-top-color: var(--dp-border);
+}
+.delt-backend-scope th {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--dp-text-muted);
+}
+.delt-backend-scope thead tr {
+  background-color: transparent !important;
+}
+
 /* ── Recharts chrome: tooltips carry inline light styles in a few pages;
    !important beats inline so every chart tooltip reads dark. ── */
 .delt-backend-scope .recharts-default-tooltip {

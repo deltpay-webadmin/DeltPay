@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { NavigationContext } from './NavigationContext';
 import { SyncIndicator } from './SyncIndicator';
 import { BackendDashboard } from './pages/BackendDashboard';
@@ -42,14 +42,11 @@ import {
   Users,
   Store,
   ClipboardCheck,
-  Handshake,
   UserCircle,
   DollarSign,
   Sparkles,
-  Settings,
   Search,
   Bell,
-  ChevronDown,
   Menu,
   X,
   Banknote,
@@ -57,9 +54,6 @@ import {
   ArrowLeftRight,
   CreditCard,
   ShieldAlert,
-  GitBranch,
-  Brain,
-  UsersRound,
   Heart,
   Link2,
   Shield,
@@ -67,149 +61,160 @@ import {
   Wrench,
   Briefcase,
   Receipt,
-  Plus,
   ChevronRight,
-  Command,
   Home,
   FileText,
-  Zap,
   Package,
   Send,
-  Activity,
-  CheckSquare,
   Inbox,
   Globe,
-  Handshake as HandshakeIcon,
-  PenTool,
-  Wallet,
   BarChart3,
   Upload,
   ArrowLeft,
+  CalendarDays,
 } from 'lucide-react';
 
 // ── Types ──
 type UserRole = 'admin' | 'agent';
 
-interface NavSection {
-  id: string;
+interface NavItem {
   label: string;
+  path: string;
   icon: React.ElementType;
-  children: { label: string; path: string }[];
 }
 
-// ── Admin sidebar sections (Gusto-style expandable) ──
-const adminSections: NavSection[] = [
+interface NavGroup {
+  label: string | null; // null → no overline header
+  items: NavItem[];
+}
+
+// ── Admin sidebar: flat groups under overline headers (spec §4.2) ──
+const adminGroups: NavGroup[] = [
   {
-    id: 'pipeline',
+    label: null,
+    items: [
+      { label: 'Overview', path: '/', icon: Home },
+      { label: 'Workspace', path: '/workspace', icon: Inbox },
+    ],
+  },
+  {
     label: 'Pipeline',
-    icon: GitBranch,
-    children: [
-      { label: 'Leads', path: '/leads' },
-      { label: 'Underwriting', path: '/underwriting' },
-      { label: 'Analysis', path: '/analysis' },
+    items: [
+      { label: 'Leads', path: '/leads', icon: Users },
+      { label: 'Underwriting', path: '/underwriting', icon: ClipboardCheck },
+      { label: 'Analysis', path: '/analysis', icon: FileText },
     ],
   },
   {
-    id: 'merchants',
     label: 'Merchants',
-    icon: Store,
-    children: [
-      { label: 'All Merchants', path: '/merchants' },
-      { label: 'Residuals', path: '/residuals' },
-      { label: 'Capital', path: '/capital' },
-      { label: 'Health & Retention', path: '/retention' },
+    items: [
+      { label: 'All Merchants', path: '/merchants', icon: Store },
+      { label: 'Residuals', path: '/residuals', icon: Receipt },
+      { label: 'Capital', path: '/capital', icon: Banknote },
+      { label: 'Retention', path: '/retention', icon: Heart },
     ],
   },
   {
-    id: 'disputes',
-    label: 'Disputes',
-    icon: ShieldAlert,
-    children: [
-      { label: 'Dispute Center', path: '/disputes' },
+    label: 'Operations',
+    items: [
+      { label: 'Disputes', path: '/disputes', icon: ShieldAlert },
+      { label: 'Outreach', path: '/outreach', icon: Send },
+      { label: 'Compliance', path: '/compliance', icon: ShieldCheck },
     ],
   },
   {
-    id: 'outreach',
-    label: 'Outreach',
-    icon: Send,
-    children: [
-      { label: 'Campaigns', path: '/outreach' },
-    ],
-  },
-  {
-    id: 'team',
     label: 'Team',
-    icon: UsersRound,
-    children: [
-      { label: 'Agents', path: '/agents' },
-      { label: 'Employees', path: '/employees' },
-      { label: 'Payroll', path: '/payroll' },
+    items: [
+      { label: 'Agents', path: '/agents', icon: UserCircle },
+      { label: 'Employees', path: '/employees', icon: Briefcase },
+      { label: 'Payroll', path: '/payroll', icon: Receipt },
     ],
   },
   {
-    id: 'intelligence',
     label: 'Intelligence',
-    icon: Brain,
-    children: [
-      { label: 'Lens AI', path: '/lens-ai' },
-      { label: 'Financials', path: '/financials' },
-      { label: 'Reports', path: '/reports' },
+    items: [
+      { label: 'Lens AI', path: '/lens-ai', icon: Sparkles },
+      { label: 'Financials', path: '/financials', icon: DollarSign },
+      { label: 'Reports', path: '/reports', icon: BarChart3 },
     ],
   },
   {
-    id: 'products',
     label: 'Products',
-    icon: Globe,
-    children: [
-      { label: 'Websites', path: '/websites' },
-      { label: 'Subscriptions', path: '/subscriptions' },
+    items: [
+      { label: 'Websites', path: '/websites', icon: Globe },
+      { label: 'Subscriptions', path: '/subscriptions', icon: CreditCard },
     ],
   },
   {
-    id: 'compliance',
-    label: 'Compliance',
-    icon: ShieldCheck,
-    children: [
-      { label: 'Compliance Hub', path: '/compliance' },
-    ],
-  },
-  {
-    id: 'settings',
     label: 'Settings',
-    icon: Settings,
-    children: [
-      { label: 'General', path: '/settings' },
-      { label: 'Integration Health', path: '/settings/integrations' },
-      { label: 'Roles & Permissions', path: '/settings/roles' },
-      { label: 'Bundles', path: '/settings/bundles' },
+    items: [
+      { label: 'General', path: '/settings', icon: Wrench },
+      { label: 'Integrations', path: '/settings/integrations', icon: Link2 },
+      { label: 'Roles', path: '/settings/roles', icon: Shield },
+      { label: 'Bundles', path: '/settings/bundles', icon: Package },
     ],
   },
 ];
 
-// ── Agent sidebar (flat, no expand) ──
-const agentItems = [
-  { label: 'Dashboard', path: '/', icon: LayoutDashboard },
-  { label: 'My Merchants', path: '/merchants', icon: Store },
-  { label: 'My Leads', path: '/leads', icon: Users },
-  { label: 'Commissions', path: '/commissions', icon: Banknote },
+// ── Agent sidebar (flat, no groups) ──
+const agentGroups: NavGroup[] = [
+  {
+    label: null,
+    items: [
+      { label: 'Dashboard', path: '/', icon: LayoutDashboard },
+      { label: 'My Merchants', path: '/merchants', icon: Store },
+      { label: 'My Leads', path: '/leads', icon: Users },
+      { label: 'Commissions', path: '/commissions', icon: Banknote },
+    ],
+  },
 ];
 
-// ── Which section owns a path? ──
-function sectionForPath(path: string): string | null {
-  for (const s of adminSections) {
-    if (s.children.some(c => path === c.path || path.startsWith(c.path + '/'))) return s.id;
-  }
-  // Additional mappings for detail pages
-  if (path.startsWith('/inbox') || path.startsWith('/activity-timeline') || path.startsWith('/tasks')) return 'crm';
-  if (path.startsWith('/leads') || path.startsWith('/underwriting') || path.startsWith('/onboarding') || path.startsWith('/analysis')) return 'pipeline';
-  if (path.startsWith('/merchants') || path.startsWith('/residuals') || path.startsWith('/capital') || path.startsWith('/retention') || path.startsWith('/documents') || path.startsWith('/payments')) return 'merchants';
-  if (path.startsWith('/disputes')) return 'disputes';
-  if (path.startsWith('/outreach')) return 'outreach';
-  if (path.startsWith('/agents') || path.startsWith('/employees') || path.startsWith('/payroll') || path.startsWith('/commissions')) return 'team';
-  if (path.startsWith('/lens-ai') || path.startsWith('/financials') || path.startsWith('/reports')) return 'intelligence';
-  if (path.startsWith('/compliance')) return 'compliance';
-  if (path.startsWith('/settings')) return 'settings';
-  return null;
+// ── Page titles for the topbar ──
+const PAGE_TITLES: Record<string, string> = {
+  '/': 'Overview',
+  '/workspace': 'Workspace',
+  '/leads': 'Leads',
+  '/leads/import': 'Import Leads',
+  '/underwriting': 'Underwriting',
+  '/analysis': 'Analysis',
+  '/merchants': 'Merchants',
+  '/residuals': 'Residuals',
+  '/capital': 'Capital',
+  '/retention': 'Retention',
+  '/disputes': 'Disputes',
+  '/outreach': 'Outreach',
+  '/compliance': 'Compliance',
+  '/agents': 'Agents',
+  '/employees': 'Employees',
+  '/payroll': 'Payroll',
+  '/lens-ai': 'Lens AI',
+  '/financials': 'Financials',
+  '/reports': 'Reports',
+  '/websites': 'Websites',
+  '/subscriptions': 'Subscriptions',
+  '/settings': 'Settings',
+  '/settings/integrations': 'Integrations',
+  '/settings/roles': 'Roles & Permissions',
+  '/settings/bundles': 'Bundles',
+  '/onboarding': 'Onboarding',
+  '/deals': 'Deals',
+  '/commissions': 'Commissions',
+  '/my-residuals': 'My Residuals',
+  '/tasks': 'Tasks',
+  '/inbox': 'Inbox',
+  '/documents': 'Documents',
+  '/payments': 'Payments',
+  '/activity-timeline': 'Activity',
+};
+
+function titleForPath(path: string): string {
+  if (PAGE_TITLES[path]) return PAGE_TITLES[path];
+  if (path.startsWith('/merchants/')) return 'Merchant';
+  if (path.startsWith('/underwriting/')) return 'Underwriting';
+  if (path.startsWith('/deals/')) return 'Deal';
+  if (path.startsWith('/residuals/')) return 'Residuals';
+  if (path.startsWith('/templates/')) return 'Template';
+  return 'Overview';
 }
 
 // ── Breadcrumb helpers ──
@@ -246,7 +251,7 @@ interface CommandItem {
 }
 
 const allCommands: CommandItem[] = [
-  { label: 'Dashboard', path: '/', group: 'Navigation', icon: Home },
+  { label: 'Overview', path: '/', group: 'Navigation', icon: Home },
   { label: 'Workspace', path: '/workspace', group: 'Navigation', icon: Inbox, keywords: 'inbox email sms call messages tasks activity timeline' },
   { label: 'Leads', path: '/leads', group: 'Pipeline', icon: Users, keywords: 'sales pipeline' },
   { label: 'Import Leads', path: '/leads/import', group: 'Pipeline', icon: Upload, keywords: 'upload csv xlsx spreadsheet meta facebook instagram bulk import' },
@@ -255,19 +260,19 @@ const allCommands: CommandItem[] = [
   { label: 'All Merchants', path: '/merchants', group: 'Merchants', icon: Store },
   { label: 'Residuals', path: '/residuals', group: 'Merchants', icon: Receipt },
   { label: 'Capital', path: '/capital', group: 'Merchants', icon: Banknote },
-  { label: 'Health & Retention', path: '/retention', group: 'Merchants', icon: Heart },
-  { label: 'Dispute Center', path: '/disputes', group: 'Disputes', icon: ShieldAlert, keywords: 'chargeback representment evidence' },
-  { label: 'Outreach Campaigns', path: '/outreach', group: 'Outreach', icon: Send, keywords: 'email sms campaign automation bulk send' },
+  { label: 'Retention', path: '/retention', group: 'Merchants', icon: Heart },
+  { label: 'Disputes', path: '/disputes', group: 'Operations', icon: ShieldAlert, keywords: 'chargeback representment evidence' },
+  { label: 'Outreach', path: '/outreach', group: 'Operations', icon: Send, keywords: 'email sms campaign automation bulk send' },
+  { label: 'Compliance', path: '/compliance', group: 'Operations', icon: ShieldCheck, keywords: 'compliance rules' },
   { label: 'Agents', path: '/agents', group: 'Team', icon: UserCircle },
   { label: 'Employees', path: '/employees', group: 'Team', icon: Briefcase },
   { label: 'Payroll', path: '/payroll', group: 'Team', icon: Receipt },
   { label: 'Lens AI', path: '/lens-ai', group: 'Intelligence', icon: Sparkles, keywords: 'ai analysis' },
   { label: 'Financials', path: '/financials', group: 'Intelligence', icon: DollarSign, keywords: 'revenue profit' },
   { label: 'Reports', path: '/reports', group: 'Intelligence', icon: BarChart3, keywords: 'data visualization' },
-  { label: 'Compliance Hub', path: '/compliance', group: 'Compliance', icon: ShieldCheck, keywords: 'compliance rules' },
   { label: 'Websites', path: '/websites', group: 'Products', icon: Globe, keywords: 'sites domain builder analytics' },
   { label: 'Subscriptions', path: '/subscriptions', group: 'Products', icon: CreditCard, keywords: 'billing plans MRR SaaS' },
-  { label: 'Integration Health', path: '/settings/integrations', group: 'Settings', icon: Link2 },
+  { label: 'Integrations', path: '/settings/integrations', group: 'Settings', icon: Link2 },
   { label: 'Roles & Permissions', path: '/settings/roles', group: 'Settings', icon: Shield },
   { label: 'Bundles', path: '/settings/bundles', group: 'Settings', icon: Package },
   { label: 'General Settings', path: '/settings', group: 'Settings', icon: Wrench },
@@ -275,6 +280,14 @@ const allCommands: CommandItem[] = [
 
 const adminUser = { name: 'John Doe', initials: 'JD', email: 'john.doe@delt.com', role: 'Operations Manager' };
 const agentUser = { name: 'Marcus Johnson', initials: 'MJ', email: 'marcus.j@delt.com', role: 'Senior Sales Agent' };
+
+// ── Shared row styles ──
+const itemBase =
+  'w-full flex items-center gap-2.5 h-[34px] px-3 rounded-[8px] text-[13px] transition-colors';
+const itemActive =
+  'text-white bg-white/[0.06] font-semibold shadow-[inset_2px_0_0_var(--dp-accent)]';
+const itemIdle =
+  'text-(--dp-text-muted) hover:text-(--dp-text) hover:bg-white/[0.04] font-medium';
 
 // ════════════════════════════════════════
 // Main Layout
@@ -287,21 +300,6 @@ export function DeltBackendLayout() {
   const [cmdPaletteOpen, setCmdPaletteOpen] = useState(false);
   const [cmdQuery, setCmdQuery] = useState('');
   const [helpCenterOpen, setHelpCenterOpen] = useState(false);
-
-  // Track which sidebar sections are expanded
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
-
-  // Auto-expand the section that contains the current page
-  useEffect(() => {
-    const sec = sectionForPath(currentPage);
-    if (sec) {
-      setExpandedSections(prev => {
-        const next = new Set(prev);
-        next.add(sec);
-        return next;
-      });
-    }
-  }, [currentPage]);
 
   // ── Command palette keyboard shortcut ──
   useEffect(() => {
@@ -339,15 +337,6 @@ export function DeltBackendLayout() {
   const handleNavigate = (page: string) => {
     setCurrentPage(page);
     setIsMobileMenuOpen(false);
-  };
-
-  const toggleSection = (id: string) => {
-    setExpandedSections(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
   };
 
   const toggleRole = () => {
@@ -441,241 +430,171 @@ export function DeltBackendLayout() {
   };
 
   const user = userRole === 'admin' ? adminUser : agentUser;
+  const groups = userRole === 'admin' ? adminGroups : agentGroups;
+
+  // ── Sidebar nav body (shared desktop/mobile) ──
+  const navBody = (
+    <nav className="flex-1 overflow-y-auto px-3 pb-3">
+      {groups.map((group, gi) => (
+        <div key={group.label ?? `g${gi}`} className={gi === 0 ? '' : 'mt-5'}>
+          {group.label && (
+            <p className="px-3 pb-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-(--dp-text-faint)">
+              {group.label}
+            </p>
+          )}
+          <div className="space-y-px">
+            {group.items.map(item => {
+              const Icon = item.icon;
+              const active = isActivePath(item.path);
+              return (
+                <button
+                  key={item.path}
+                  onClick={() => handleNavigate(item.path)}
+                  className={`${itemBase} ${active ? itemActive : itemIdle}`}
+                >
+                  <Icon className="w-4 h-4 shrink-0" strokeWidth={active ? 2.25 : 2} />
+                  {item.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+    </nav>
+  );
+
+  const sidebarFooter = (
+    <>
+      <div className="border-t border-white/[0.06] px-3 py-2 space-y-px">
+        <a href="#/" className={`${itemBase} ${itemIdle}`}>
+          <ArrowLeft className="w-4 h-4" />
+          Return to site
+        </a>
+        <button onClick={() => setHelpCenterOpen(true)} className={`${itemBase} ${itemIdle}`}>
+          <HelpCircle className="w-4 h-4" />
+          Help &amp; Support
+        </button>
+      </div>
+
+      <div className="border-t border-white/[0.06] px-3 py-3">
+        <div className="relative">
+          <button
+            onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+            className="w-full flex items-center gap-2.5 px-2 py-2 rounded-[8px] hover:bg-white/[0.04] transition-colors"
+          >
+            <div className="w-8 h-8 rounded-full bg-(--dp-accent-soft) flex items-center justify-center shrink-0">
+              <span className="text-(--dp-accent-text) text-xs font-bold">{user.initials}</span>
+            </div>
+            <div className="flex-1 text-left min-w-0">
+              <p className="text-[13px] font-semibold text-(--dp-text) truncate leading-tight">{user.name}</p>
+              <p className="font-mono text-[10px] text-(--dp-text-faint) truncate leading-tight mt-0.5 uppercase tracking-wide">
+                {user.role}
+              </p>
+            </div>
+          </button>
+
+          {isUserMenuOpen && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setIsUserMenuOpen(false)} />
+              <div className="absolute left-0 bottom-full mb-2 w-56 bg-(--dp-bg-raised) rounded-[12px] shadow-[0_16px_40px_rgba(0,0,0,0.55)] border border-(--dp-border) py-1 z-50">
+                <div className="px-4 py-3 border-b border-white/[0.06]">
+                  <p className="text-[13px] font-semibold text-(--dp-text)">{user.name}</p>
+                  <p className="text-[11px] text-(--dp-text-muted)">{user.email}</p>
+                </div>
+                <button className="w-full px-4 py-2 text-left text-[13px] text-(--dp-text-secondary) hover:bg-white/[0.05]">Profile Settings</button>
+                <button
+                  onClick={toggleRole}
+                  className="w-full px-4 py-2 text-left text-[13px] text-(--dp-text-secondary) hover:bg-white/[0.05] flex items-center gap-2"
+                >
+                  <ArrowLeftRight className="w-3.5 h-3.5" />
+                  Switch to {userRole === 'admin' ? 'Agent' : 'Admin'} View
+                </button>
+                <div className="border-t border-white/[0.06] mt-1 pt-1">
+                  <button className="w-full px-4 py-2 text-left text-[13px] text-(--dp-danger) hover:bg-[rgba(242,86,91,.08)]">Log Out</button>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </>
+  );
+
+  const logo = (
+    <button onClick={() => handleNavigate('/')} className="flex items-center gap-2.5 group">
+      {/* Placeholder mark — swapped for the real Delt logo when supplied */}
+      <div className="w-7 h-7 bg-(--dp-accent) rounded-[8px] flex items-center justify-center">
+        <span className="text-white text-xs font-black">D</span>
+      </div>
+      <span className="text-[15px] font-bold text-(--dp-text) group-hover:text-(--dp-accent-text) transition-colors">
+        Delt
+      </span>
+    </button>
+  );
 
   return (
     <NavigationContext.Provider value={{ navigate: handleNavigate, currentPage }}>
-      <div className="flex h-screen bg-canvas font-sans">
+      <div className="flex h-screen bg-(--dp-bg-surface) font-sans">
 
-        {/* ═══ Left Sidebar ═══ */}
-        <aside className="hidden lg:flex flex-col w-[236px] bg-(--dp-bg-base) border-r border-white/[0.06] shrink-0">
-          {/* Logo */}
-          <div className="px-5 h-16 flex items-center shrink-0">
-            <button
-              onClick={() => handleNavigate('/')}
-              className="flex items-center gap-2.5 group"
-            >
-              <div className="w-7 h-7 bg-brand rounded-[6px] flex items-center justify-center">
-                <span className="text-white text-xs font-bold">D</span>
-              </div>
-              <span className="text-[15px] font-bold text-gray-900 group-hover:text-(--dp-accent-text) transition-colors">
-                Delt
-              </span>
-            </button>
-          </div>
-
-          {/* Nav */}
-          <nav className="flex-1 overflow-y-auto px-3 pb-3">
-            {/* Home / Dashboard */}
-            <button
-              onClick={() => handleNavigate('/')}
-              className={`w-full flex items-center gap-2.5 px-3 py-[7px] rounded-[6px] text-[13px] transition-colors mb-0.5 ${
-                currentPage === '/'
-                  ? 'text-white bg-white/[0.06] font-semibold shadow-[inset_2px_0_0_var(--dp-accent)]'
-                  : 'text-gray-500 hover:text-gray-900 hover:bg-white/[0.04] font-medium'
-              }`}
-            >
-              <Home className="w-[16px] h-[16px]" />
-              Home
-            </button>
-
-            {/* Workspace — direct button (mobile) */}
-            {userRole === 'admin' && (
-              <button
-                onClick={() => handleNavigate('/workspace')}
-                className={`w-full flex items-center gap-2.5 px-3 py-[7px] rounded-[6px] text-[13px] transition-colors mb-0.5 ${
-                  currentPage === '/workspace'
-                    ? 'text-white bg-white/[0.06] font-semibold shadow-[inset_2px_0_0_var(--dp-accent)]'
-                    : 'text-gray-500 hover:text-gray-900 hover:bg-white/[0.04] font-medium'
-                }`}
-              >
-                <Inbox className="w-[16px] h-[16px]" />
-                Workspace
-              </button>
-            )}
-
-            {userRole === 'agent' ? (
-              /* Agent flat nav */
-              agentItems.filter(i => i.path !== '/').map(item => {
-                const Icon = item.icon;
-                const active = isActivePath(item.path);
-                return (
-                  <button
-                    key={item.path}
-                    onClick={() => handleNavigate(item.path)}
-                    className={`w-full flex items-center gap-2.5 px-3 py-[7px] rounded-[6px] text-[13px] transition-colors mb-0.5 ${
-                      active
-                        ? 'text-white bg-white/[0.06] font-semibold shadow-[inset_2px_0_0_var(--dp-accent)]'
-                        : 'text-gray-500 hover:text-gray-900 hover:bg-white/[0.04] font-medium'
-                    }`}
-                  >
-                    <Icon className="w-[16px] h-[16px]" />
-                    {item.label}
-                  </button>
-                );
-              })
-            ) : (
-              /* Admin expandable sections */
-              adminSections.map(section => {
-                const Icon = section.icon;
-                const isExpanded = expandedSections.has(section.id);
-                const hasActiveChild = section.children.some(c => isActivePath(c.path));
-
-                return (
-                  <div key={section.id} className="mt-0.5">
-                    <button
-                      onClick={() => toggleSection(section.id)}
-                      className={`w-full flex items-center gap-2.5 px-3 py-[7px] rounded-[6px] text-[13px] transition-colors ${
-                        hasActiveChild && !isExpanded
-                          ? 'text-white bg-white/[0.06] font-semibold shadow-[inset_2px_0_0_var(--dp-accent)]'
-                          : hasActiveChild
-                            ? 'text-white font-semibold'
-                            : 'text-gray-500 hover:text-gray-900 hover:bg-white/[0.04] font-medium'
-                      }`}
-                    >
-                      <Icon className="w-[16px] h-[16px]" />
-                      <span className="flex-1 text-left">{section.label}</span>
-                      <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${isExpanded ? '' : '-rotate-90'}`} />
-                    </button>
-
-                    {/* Sub-items */}
-                    {isExpanded && (
-                      <div className="ml-[18px] pl-[14px] border-l border-white/[0.08] mt-0.5 mb-1">
-                        {section.children.map(child => {
-                          const active = isActivePath(child.path);
-                          return (
-                            <button
-                              key={child.path}
-                              onClick={() => handleNavigate(child.path)}
-                              className={`w-full text-left px-2.5 py-[6px] rounded-[6px] text-[13px] transition-colors block ${
-                                active
-                                  ? 'text-white bg-white/[0.06] font-semibold shadow-[inset_2px_0_0_var(--dp-accent)]'
-                                  : 'text-gray-400 hover:text-gray-900 hover:bg-white/[0.04] font-normal'
-                              }`}
-                            >
-                              {child.label}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                );
-              })
-            )}
-          </nav>
-
-          {/* Sidebar bottom */}
-          <div className="border-t border-white/[0.06] px-3 py-3 space-y-0.5">
-            <a
-              href="#/"
-              className="w-full flex items-center gap-2.5 px-3 py-[7px] rounded-[6px] text-[13px] text-gray-500 hover:text-gray-900 hover:bg-gray-50 font-medium transition-colors"
-            >
-              <ArrowLeft className="w-[16px] h-[16px]" />
-              Return to site
-            </a>
-            <button
-              onClick={() => setHelpCenterOpen(true)}
-              className="w-full flex items-center gap-2.5 px-3 py-[7px] rounded-[6px] text-[13px] text-gray-500 hover:text-gray-900 hover:bg-gray-50 font-medium transition-colors"
-            >
-              <HelpCircle className="w-[16px] h-[16px]" />
-              Help & Support
-            </button>
-          </div>
-
-          {/* User card at bottom */}
-          <div className="border-t border-white/[0.06] px-3 py-3">
-            <div className="relative">
-              <button
-                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                className="w-full flex items-center gap-2.5 px-2 py-2 rounded-[6px] hover:bg-gray-50 transition-colors"
-              >
-                <div className="w-8 h-8 rounded-full bg-brand/10 flex items-center justify-center shrink-0">
-                  <span className="text-brand text-xs font-semibold">{user.initials}</span>
-                </div>
-                <div className="flex-1 text-left min-w-0">
-                  <p className="text-[13px] font-semibold text-gray-900 truncate leading-tight">{user.name}</p>
-                  <p className="text-[11px] text-gray-400 truncate leading-tight mt-0.5">{user.role}</p>
-                </div>
-              </button>
-
-              {isUserMenuOpen && (
-                <>
-                  <div className="fixed inset-0 z-40" onClick={() => setIsUserMenuOpen(false)} />
-                  <div className="absolute left-0 bottom-full mb-2 w-52 bg-white rounded-[8px] shadow-lg border border-gray-200 py-1 z-50">
-                    <div className="px-4 py-3 border-b border-white/[0.06]">
-                      <p className="text-[13px] font-semibold text-gray-900">{user.name}</p>
-                      <p className="text-[11px] text-gray-500">{user.email}</p>
-                    </div>
-                    <button className="w-full px-4 py-2 text-left text-[13px] text-gray-700 hover:bg-gray-50">Profile Settings</button>
-                    <button
-                      onClick={toggleRole}
-                      className="w-full px-4 py-2 text-left text-[13px] text-gray-700 hover:bg-gray-50 flex items-center gap-2"
-                    >
-                      <ArrowLeftRight className="w-3.5 h-3.5" />
-                      Switch to {userRole === 'admin' ? 'Agent' : 'Admin'} View
-                    </button>
-                    <div className="border-t border-white/[0.06] mt-1 pt-1">
-                      <button className="w-full px-4 py-2 text-left text-[13px] text-red-600 hover:bg-red-50">Log Out</button>
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
+        {/* ═══ Left Sidebar — 240px on bg-base ═══ */}
+        <aside className="hidden lg:flex flex-col w-[240px] bg-(--dp-bg-base) border-r border-white/[0.06] shrink-0">
+          <div className="px-6 h-16 flex items-center shrink-0">{logo}</div>
+          {navBody}
+          {sidebarFooter}
         </aside>
 
-        {/* ══ Right side: top bar + content ═══ */}
+        {/* ═══ Right side: top bar + content ═══ */}
         <div className="flex flex-col flex-1 overflow-hidden">
 
-          {/* ── Slim Top Bar ── */}
+          {/* ── Topbar — 64px, page title + tools ── */}
           <header className="bg-(--dp-bg-surface) border-b border-white/[0.06] shrink-0 z-30">
-            <div className="flex items-center h-16 px-4 lg:px-6">
-              {/* Mobile hamburger */}
+            <div className="flex items-center h-16 px-4 lg:px-8 gap-3">
+              {/* Mobile hamburger + logo */}
               <button
                 onClick={() => setIsMobileMenuOpen(true)}
-                className="lg:hidden p-2 hover:bg-gray-100 rounded-[6px] mr-3"
+                className="lg:hidden p-2 hover:bg-white/[0.06] rounded-[8px]"
+                aria-label="Open menu"
               >
-                <Menu className="w-5 h-5 text-gray-700" />
+                <Menu className="w-5 h-5 text-(--dp-text-secondary)" />
               </button>
+              <div className="lg:hidden">{logo}</div>
 
-              {/* Mobile logo */}
-              <button
-                onClick={() => handleNavigate('/')}
-                className="lg:hidden flex items-center gap-2 mr-auto"
-              >
-                <div className="w-7 h-7 bg-brand rounded-[6px] flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">D</span>
-                </div>
-                <span className="text-[15px] font-bold text-gray-900">Delt</span>
-              </button>
+              {/* Page title */}
+              <h1 className="hidden lg:block text-[22px] font-bold text-(--dp-text) tracking-[-0.01em]">
+                {titleForPath(currentPage)}
+              </h1>
 
-              {/* Search */}
-              <div className="hidden md:block relative w-72 lg:ml-0 ml-auto">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search..."
+              {/* Right tools */}
+              <div className="flex items-center gap-2 ml-auto">
+                <SyncIndicator />
+
+                {/* Search chip */}
+                <button
                   onClick={() => setCmdPaletteOpen(true)}
-                  readOnly
-                  className="w-full pl-9 pr-16 py-[7px] bg-gray-50 border border-gray-200 rounded-[8px] text-[13px] focus:outline-none cursor-pointer hover:border-gray-300 transition-colors"
-                />
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 text-[11px] text-gray-400 pointer-events-none">
-                  <kbd className="bg-gray-100 border border-gray-200 rounded px-1 py-px">&#8984;</kbd>
-                  <kbd className="bg-gray-100 border border-gray-200 rounded px-1 py-px">K</kbd>
-                </div>
-              </div>
+                  className="hidden md:inline-flex items-center gap-2 h-9 pl-3 pr-2 rounded-full border border-(--dp-border) text-[13px] text-(--dp-text-faint) hover:border-(--dp-border-strong) hover:text-(--dp-text-muted) transition-colors w-56"
+                >
+                  <Search className="w-4 h-4" />
+                  <span className="flex-1 text-left">Search</span>
+                  <kbd className="font-mono text-[10px] text-(--dp-text-faint) bg-white/[0.06] border border-(--dp-border) rounded-[6px] px-1.5 py-0.5">⌘K</kbd>
+                </button>
+                <button
+                  onClick={() => setCmdPaletteOpen(true)}
+                  className="md:hidden p-2 hover:bg-white/[0.06] rounded-[8px]"
+                  aria-label="Search"
+                >
+                  <Search className="w-[18px] h-[18px] text-(--dp-text-muted)" />
+                </button>
 
-              {/* Right actions */}
-              <div className="flex items-center gap-1 ml-auto">
-                {/* Sync status */}
-                <div className="mr-1">
-                  <SyncIndicator />
-                </div>
+                {/* Date-range chip */}
+                <span className="hidden xl:inline-flex items-center gap-1.5 h-9 px-3 rounded-full border border-(--dp-border) text-[12px] font-semibold text-(--dp-text-muted)">
+                  <CalendarDays className="w-3.5 h-3.5" />
+                  Last 30 days
+                </span>
 
-                {/* Role Toggle */}
+                {/* Role toggle */}
                 <button
                   onClick={toggleRole}
-                  className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-medium rounded-[6px] border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors"
+                  className="hidden sm:inline-flex items-center gap-1.5 h-9 px-3 rounded-full border border-(--dp-border) text-[12px] font-semibold text-(--dp-text-muted) hover:text-(--dp-text) hover:border-(--dp-border-strong) transition-colors"
                   title="Switch view"
                 >
                   <ArrowLeftRight className="w-3.5 h-3.5" />
@@ -683,38 +602,39 @@ export function DeltBackendLayout() {
                 </button>
 
                 {/* Notifications */}
-                <button className="relative p-2 hover:bg-gray-100 rounded-[8px] transition-colors">
-                  <Bell className="w-[18px] h-[18px] text-gray-500" />
-                  <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full" />
+                <button className="relative p-2 hover:bg-white/[0.06] rounded-full transition-colors" aria-label="Notifications">
+                  <Bell className="w-[18px] h-[18px] text-(--dp-text-muted)" />
+                  <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-(--dp-accent) rounded-full" />
                 </button>
 
-                {/* Mobile search */}
+                {/* Avatar */}
                 <button
-                  onClick={() => setCmdPaletteOpen(true)}
-                  className="md:hidden p-2 hover:bg-gray-100 rounded-[8px] transition-colors"
+                  onClick={() => setIsUserMenuOpen(v => !v)}
+                  className="w-8 h-8 rounded-full bg-(--dp-accent-soft) flex items-center justify-center"
+                  aria-label="Account"
                 >
-                  <Search className="w-[18px] h-[18px] text-gray-500" />
+                  <span className="text-(--dp-accent-text) text-xs font-bold">{user.initials}</span>
                 </button>
               </div>
             </div>
           </header>
 
-          {/* ── Breadcrumbs ── */}
+          {/* ── Breadcrumbs (deep pages only) ── */}
           {isDeepPage(currentPage) && (
-            <div className="bg-(--dp-bg-surface) border-b border-white/[0.06] px-6 py-2.5 shrink-0">
+            <div className="bg-(--dp-bg-surface) border-b border-white/[0.06] px-8 py-2.5 shrink-0">
               <nav className="flex items-center gap-1.5 text-[13px]">
                 {getBreadcrumbs(currentPage).map((crumb, i, arr) => (
                   <React.Fragment key={crumb.path}>
-                    {i > 0 && <ChevronRight className="w-3.5 h-3.5 text-gray-400" />}
+                    {i > 0 && <ChevronRight className="w-3.5 h-3.5 text-(--dp-text-faint)" />}
                     {i < arr.length - 1 ? (
                       <button
                         onClick={() => handleNavigate(crumb.path)}
-                        className="text-gray-500 hover:text-brand transition-colors"
+                        className="text-(--dp-text-muted) hover:text-(--dp-accent-text) transition-colors"
                       >
                         {i === 0 ? <Home className="w-4 h-4" /> : crumb.label}
                       </button>
                     ) : (
-                      <span className="text-gray-900 font-medium">{crumb.label}</span>
+                      <span className="text-(--dp-text) font-medium">{crumb.label}</span>
                     )}
                   </React.Fragment>
                 ))}
@@ -731,124 +651,23 @@ export function DeltBackendLayout() {
         {/* ═══ Mobile Sidebar Overlay ═══ */}
         {isMobileMenuOpen && (
           <div className="fixed inset-0 z-50 lg:hidden">
-            <div className="fixed inset-0 bg-black/40" onClick={() => setIsMobileMenuOpen(false)} />
-            <aside className="fixed left-0 top-0 bottom-0 w-[260px] bg-(--dp-bg-base) flex flex-col shadow-xl">
+            <div className="fixed inset-0 bg-black/60" onClick={() => setIsMobileMenuOpen(false)} />
+            <aside className="fixed left-0 top-0 bottom-0 w-[264px] bg-(--dp-bg-base) flex flex-col shadow-[0_16px_40px_rgba(0,0,0,0.55)]">
               <div className="flex items-center justify-between px-5 h-16 border-b border-white/[0.06] shrink-0">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 bg-brand rounded-[6px] flex items-center justify-center">
-                    <span className="text-white text-xs font-bold">D</span>
-                  </div>
-                  <span className="text-[15px] font-bold text-gray-900">Delt</span>
-                </div>
-                <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 hover:bg-gray-100 rounded-[6px]">
-                  <X className="w-5 h-5 text-gray-400" />
+                {logo}
+                <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 hover:bg-white/[0.06] rounded-[8px]" aria-label="Close menu">
+                  <X className="w-5 h-5 text-(--dp-text-muted)" />
                 </button>
               </div>
-
-              <nav className="flex-1 overflow-y-auto px-3 pt-3 pb-3">
-                {/* Home */}
-                <button
-                  onClick={() => handleNavigate('/')}
-                  className={`w-full flex items-center gap-2.5 px-3 py-[7px] rounded-[6px] text-[13px] transition-colors mb-0.5 ${
-                    currentPage === '/'
-                      ? 'text-white bg-white/[0.06] font-semibold shadow-[inset_2px_0_0_var(--dp-accent)]'
-                      : 'text-gray-500 hover:text-gray-900 hover:bg-white/[0.04] font-medium'
-                  }`}
-                >
-                  <Home className="w-[16px] h-[16px]" />
-                  Home
-                </button>
-
-                {/* Workspace — direct button (mobile) */}
-                {userRole === 'admin' && (
-                  <button
-                    onClick={() => handleNavigate('/workspace')}
-                    className={`w-full flex items-center gap-2.5 px-3 py-[7px] rounded-[6px] text-[13px] transition-colors mb-0.5 ${
-                      currentPage === '/workspace'
-                        ? 'text-white bg-white/[0.06] font-semibold shadow-[inset_2px_0_0_var(--dp-accent)]'
-                        : 'text-gray-500 hover:text-gray-900 hover:bg-white/[0.04] font-medium'
-                    }`}
-                  >
-                    <Inbox className="w-[16px] h-[16px]" />
-                    Workspace
-                  </button>
-                )}
-
-                {userRole === 'agent' ? (
-                  agentItems.filter(i => i.path !== '/').map(item => {
-                    const Icon = item.icon;
-                    const active = isActivePath(item.path);
-                    return (
-                      <button
-                        key={item.path}
-                        onClick={() => handleNavigate(item.path)}
-                        className={`w-full flex items-center gap-2.5 px-3 py-[7px] rounded-[6px] text-[13px] transition-colors mb-0.5 ${
-                          active
-                            ? 'text-white bg-white/[0.06] font-semibold shadow-[inset_2px_0_0_var(--dp-accent)]'
-                            : 'text-gray-500 hover:text-gray-900 hover:bg-white/[0.04] font-medium'
-                        }`}
-                      >
-                        <Icon className="w-[16px] h-[16px]" />
-                        {item.label}
-                      </button>
-                    );
-                  })
-                ) : (
-                  adminSections.map(section => {
-                    const Icon = section.icon;
-                    const isExpanded = expandedSections.has(section.id);
-                    const hasActiveChild = section.children.some(c => isActivePath(c.path));
-                    return (
-                      <div key={section.id} className="mt-0.5">
-                        <button
-                          onClick={() => toggleSection(section.id)}
-                          className={`w-full flex items-center gap-2.5 px-3 py-[7px] rounded-[6px] text-[13px] transition-colors ${
-                            hasActiveChild && !isExpanded
-                              ? 'text-white bg-white/[0.06] font-semibold shadow-[inset_2px_0_0_var(--dp-accent)]'
-                              : hasActiveChild
-                                ? 'text-white font-semibold'
-                                : 'text-gray-500 hover:text-gray-900 hover:bg-white/[0.04] font-medium'
-                          }`}
-                        >
-                          <Icon className="w-[16px] h-[16px]" />
-                          <span className="flex-1 text-left">{section.label}</span>
-                          <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${isExpanded ? '' : '-rotate-90'}`} />
-                        </button>
-                        {isExpanded && (
-                          <div className="ml-[18px] pl-[14px] border-l border-white/[0.08] mt-0.5 mb-1">
-                            {section.children.map(child => {
-                              const active = isActivePath(child.path);
-                              return (
-                                <button
-                                  key={child.path}
-                                  onClick={() => handleNavigate(child.path)}
-                                  className={`w-full text-left px-2.5 py-[6px] rounded-[6px] text-[13px] transition-colors block ${
-                                    active
-                                      ? 'text-white bg-white/[0.06] font-semibold shadow-[inset_2px_0_0_var(--dp-accent)]'
-                                      : 'text-gray-400 hover:text-gray-900 hover:bg-white/[0.04] font-normal'
-                                  }`}
-                                >
-                                  {child.label}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })
-                )}
-              </nav>
-
-              {/* Mobile sidebar bottom */}
+              {navBody}
               <div className="border-t border-white/[0.06] px-3 py-3">
                 <div className="flex items-center gap-2.5 px-2 py-2">
-                  <div className="w-8 h-8 rounded-full bg-brand/10 flex items-center justify-center shrink-0">
-                    <span className="text-brand text-xs font-semibold">{user.initials}</span>
+                  <div className="w-8 h-8 rounded-full bg-(--dp-accent-soft) flex items-center justify-center shrink-0">
+                    <span className="text-(--dp-accent-text) text-xs font-bold">{user.initials}</span>
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[13px] font-semibold text-gray-900 truncate">{user.name}</p>
-                    <p className="text-[11px] text-gray-400 truncate">{user.role}</p>
+                    <p className="text-[13px] font-semibold text-(--dp-text) truncate">{user.name}</p>
+                    <p className="text-[11px] text-(--dp-text-faint) truncate">{user.role}</p>
                   </div>
                 </div>
               </div>
@@ -860,37 +679,37 @@ export function DeltBackendLayout() {
         {cmdPaletteOpen && (
           <div className="fixed inset-0 z-[60] flex items-start justify-center pt-[15vh]">
             <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px]" onClick={() => setCmdPaletteOpen(false)} />
-            <div className="relative w-full max-w-lg bg-white rounded-[12px] shadow-2xl border border-gray-200 overflow-hidden">
-              <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-200">
-                <Search className="w-5 h-5 text-gray-400 shrink-0" />
+            <div className="relative w-full max-w-lg bg-(--dp-bg-card) rounded-[16px] shadow-[0_16px_40px_rgba(0,0,0,0.55)] border border-(--dp-border) overflow-hidden">
+              <div className="flex items-center gap-3 px-4 py-3 border-b border-(--dp-border)">
+                <Search className="w-5 h-5 text-(--dp-text-faint) shrink-0" />
                 <input
                   autoFocus
                   type="text"
                   value={cmdQuery}
                   onChange={e => setCmdQuery(e.target.value)}
-                  placeholder="Type a command or search..."
-                  className="flex-1 text-[13px] text-gray-900 placeholder-gray-400 outline-none bg-transparent"
+                  placeholder="Type a command or search…"
+                  className="flex-1 text-[13px] text-(--dp-text) placeholder-(--dp-text-faint) outline-none bg-transparent"
                 />
-                <kbd className="text-[10px] text-gray-400 bg-gray-100 border border-gray-200 rounded px-1.5 py-0.5">ESC</kbd>
+                <kbd className="font-mono text-[10px] text-(--dp-text-faint) bg-white/[0.06] border border-(--dp-border) rounded-[6px] px-1.5 py-0.5">ESC</kbd>
               </div>
               <div className="max-h-[50vh] overflow-y-auto py-2">
                 {filteredCommands.length === 0 ? (
-                  <div className="px-4 py-8 text-center text-[13px] text-gray-400">No results found</div>
+                  <div className="px-4 py-8 text-center text-[13px] text-(--dp-text-faint)">No results found</div>
                 ) : (
                   Array.from(cmdGroups.entries()).map(([group, items]) => (
                     <div key={group}>
-                      <p className="px-4 pt-3 pb-1 text-[10px] text-gray-400 uppercase tracking-wider font-semibold">{group}</p>
+                      <p className="px-4 pt-3 pb-1 text-[10px] text-(--dp-text-faint) uppercase tracking-[0.14em] font-bold">{group}</p>
                       {items.map(item => {
                         const CmdIcon = item.icon;
                         return (
                           <button
                             key={item.path}
                             onClick={() => { handleNavigate(item.path); setCmdPaletteOpen(false); }}
-                            className="w-full flex items-center gap-3 px-4 py-2.5 text-[13px] text-gray-700 hover:bg-brand/5 hover:text-brand transition-colors"
+                            className="w-full flex items-center gap-3 px-4 py-2.5 text-[13px] text-(--dp-text-secondary) hover:bg-(--dp-accent-soft) hover:text-(--dp-accent-text) transition-colors"
                           >
-                            <CmdIcon className="w-4 h-4 text-gray-400" />
+                            <CmdIcon className="w-4 h-4 text-(--dp-text-faint)" />
                             <span className="flex-1 text-left">{item.label}</span>
-                            <ChevronRight className="w-3.5 h-3.5 text-gray-300" />
+                            <ChevronRight className="w-3.5 h-3.5 text-(--dp-text-faint)" />
                           </button>
                         );
                       })}
@@ -898,10 +717,10 @@ export function DeltBackendLayout() {
                   ))
                 )}
               </div>
-              <div className="border-t border-gray-200 px-4 py-2 flex items-center gap-4 text-[10px] text-gray-400">
-                <span className="flex items-center gap-1"><kbd className="bg-gray-100 border border-gray-200 rounded px-1">&#8593;&#8595;</kbd> Navigate</span>
-                <span className="flex items-center gap-1"><kbd className="bg-gray-100 border border-gray-200 rounded px-1">&#8629;</kbd> Open</span>
-                <span className="flex items-center gap-1"><kbd className="bg-gray-100 border border-gray-200 rounded px-1">esc</kbd> Close</span>
+              <div className="border-t border-(--dp-border) px-4 py-2 flex items-center gap-4 text-[10px] text-(--dp-text-faint)">
+                <span className="flex items-center gap-1"><kbd className="bg-white/[0.06] border border-(--dp-border) rounded px-1">&#8593;&#8595;</kbd> Navigate</span>
+                <span className="flex items-center gap-1"><kbd className="bg-white/[0.06] border border-(--dp-border) rounded px-1">&#8629;</kbd> Open</span>
+                <span className="flex items-center gap-1"><kbd className="bg-white/[0.06] border border-(--dp-border) rounded px-1">esc</kbd> Close</span>
               </div>
             </div>
           </div>
@@ -913,26 +732,5 @@ export function DeltBackendLayout() {
         )}
       </div>
     </NavigationContext.Provider>
-  );
-}
-
-// ── Placeholder page for new sections ──
-function PlaceholderPage({ title, subtitle }: { title: string; subtitle: string }) {
-  return (
-    <div className="px-6 py-6 space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
-        <p className="text-sm text-gray-500 mt-1">{subtitle}</p>
-      </div>
-      <div className="bg-white rounded-[8px] border border-gray-200 p-12 flex flex-col items-center justify-center text-center">
-        <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mb-4">
-          <Settings className="w-8 h-8 text-gray-400" />
-        </div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">Coming Soon</h3>
-        <p className="text-sm text-gray-500 max-w-sm">
-          This section is under development. You'll be able to manage {title.toLowerCase()} here.
-        </p>
-      </div>
-    </div>
   );
 }
