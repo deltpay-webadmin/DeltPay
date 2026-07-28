@@ -51,16 +51,16 @@ body.crm-active {
   -webkit-font-smoothing: antialiased;
 
   /* ── DeltPay core surface tokens ── */
-  --dp-bg-base: #050A16;    /* page floor, sidebar */
-  --dp-bg-surface: #0A1020; /* app shell, section bg */
-  --dp-bg-card: #111A2E;    /* cards, panels, table rows */
-  --dp-bg-raised: #18233C;  /* hover, selected row, drawer */
-  --dp-border: #22304F;     /* hairlines (lifted a step so they read on card) */
-  --dp-border-strong: #33415F;
+  --dp-bg-base: #0A1224;    /* page floor, sidebar */
+  --dp-bg-surface: #0E1730; /* app shell, section bg */
+  --dp-bg-card: #172341;    /* cards, panels, table rows */
+  --dp-bg-raised: #20305A;  /* hover, selected row, drawer */
+  --dp-border: #2E3F6B;     /* hairlines (lifted a step so they read on card) */
+  --dp-border-strong: #435687;
   --dp-text: #F2F5FA;
-  --dp-text-secondary: #C9D2E0;
-  --dp-text-muted: #8A97AE;
-  --dp-text-faint: #5F6C85;
+  --dp-text-secondary: #CBD5E8;
+  --dp-text-muted: #98A6C2;
+  --dp-text-faint: #6E7D9E;
   --dp-accent: #2E6BFF;
   --dp-accent-hover: #4A7EFF;
   --dp-accent-press: #1B4FD6;
@@ -76,7 +76,7 @@ body.crm-active {
   --brand-hover: var(--dp-accent-hover);
   --brand-light: var(--dp-accent-text);
   --canvas: var(--dp-bg-surface);
-  --canvas-muted: #0D1526;
+  --canvas-muted: #121C38;
   --info: var(--dp-accent-text);
   --info-hover: #7FA3FF;
 
@@ -87,46 +87,46 @@ body.crm-active {
      light text that passes on tinted chips. */
 
   /* neutrals — gray is the workhorse; slate/zinc/neutral/stone follow */
-  --color-gray-50: #18233C;
-  --color-gray-100: #1E2B49;
-  --color-gray-200: #26345A;
-  --color-gray-300: #33415F;
-  --color-gray-400: #6E7C96;
-  --color-gray-500: #8A97AE;
-  --color-gray-600: #A5B1C6;
-  --color-gray-700: #C9D2E0;
-  --color-gray-800: #DEE5EF;
+  --color-gray-50: #20305A;
+  --color-gray-100: #273A6A;
+  --color-gray-200: #2E3F6B;
+  --color-gray-300: #435687;
+  --color-gray-400: #7A89A8;
+  --color-gray-500: #98A6C2;
+  --color-gray-600: #AEBAD2;
+  --color-gray-700: #CBD5E8;
+  --color-gray-800: #DFE6F2;
   --color-gray-900: #F2F5FA;
   --color-gray-950: #F8FAFD;
-  --color-slate-50: #18233C;
-  --color-slate-100: #1E2B49;
-  --color-slate-200: #26345A;
-  --color-slate-300: #33415F;
-  --color-slate-400: #6E7C96;
-  --color-slate-500: #8A97AE;
-  --color-slate-600: #A5B1C6;
-  --color-slate-700: #C9D2E0;
-  --color-slate-800: #DEE5EF;
+  --color-slate-50: #20305A;
+  --color-slate-100: #273A6A;
+  --color-slate-200: #2E3F6B;
+  --color-slate-300: #435687;
+  --color-slate-400: #7A89A8;
+  --color-slate-500: #98A6C2;
+  --color-slate-600: #AEBAD2;
+  --color-slate-700: #CBD5E8;
+  --color-slate-800: #DFE6F2;
   --color-slate-900: #F2F5FA;
   --color-slate-950: #F8FAFD;
-  --color-zinc-50: #18233C;
-  --color-zinc-100: #1E2B49;
-  --color-zinc-200: #26345A;
-  --color-zinc-400: #6E7C96;
-  --color-zinc-500: #8A97AE;
-  --color-zinc-700: #C9D2E0;
+  --color-zinc-50: #20305A;
+  --color-zinc-100: #273A6A;
+  --color-zinc-200: #2E3F6B;
+  --color-zinc-400: #7A89A8;
+  --color-zinc-500: #98A6C2;
+  --color-zinc-700: #CBD5E8;
   --color-zinc-900: #F2F5FA;
-  --color-neutral-50: #18233C;
-  --color-neutral-100: #1E2B49;
-  --color-neutral-200: #26345A;
-  --color-neutral-400: #6E7C96;
-  --color-neutral-500: #8A97AE;
-  --color-neutral-700: #C9D2E0;
+  --color-neutral-50: #20305A;
+  --color-neutral-100: #273A6A;
+  --color-neutral-200: #2E3F6B;
+  --color-neutral-400: #7A89A8;
+  --color-neutral-500: #98A6C2;
+  --color-neutral-700: #CBD5E8;
   --color-neutral-900: #F2F5FA;
-  --color-stone-50: #18233C;
-  --color-stone-100: #1E2B49;
-  --color-stone-200: #26345A;
-  --color-stone-500: #8A97AE;
+  --color-stone-50: #20305A;
+  --color-stone-100: #273A6A;
+  --color-stone-200: #2E3F6B;
+  --color-stone-500: #98A6C2;
   --color-stone-900: #F2F5FA;
 
   /* success — emerald / green / teal */
@@ -287,14 +287,14 @@ body.crm-active {
   --secondary-foreground: var(--dp-text);
   --muted: var(--dp-bg-raised);
   --muted-foreground: var(--dp-text-muted);
-  --accent: #1E2B49;
+  --accent: #273A6A;
   --accent-foreground: var(--dp-text);
   --destructive: var(--dp-danger);
   --destructive-foreground: #ffffff;
   --border: rgba(255, 255, 255, 0.09);
   --input: transparent;
   --input-background: var(--dp-bg-raised);
-  --switch-background: #33415F;
+  --switch-background: #435687;
   --ring: var(--dp-accent);
   --chart-1: #2E6BFF;
   --chart-2: #5B8CFF;
@@ -388,15 +388,15 @@ body.crm-active {
 
 /* ── DeltPay gradients + glass (HeroPanel, glass KpiTiles) ── */
 .delt-backend-scope .dp-grad-panel {
-  background: linear-gradient(120deg, #101B36 0%, #1C3A78 60%, #2E6BFF 130%);
+  background: linear-gradient(120deg, #182750 0%, #234488 60%, #2E6BFF 130%);
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 .delt-backend-scope .dp-grad-hero {
-  background: linear-gradient(135deg, #0A1020 0%, #14295C 45%, #2E6BFF 100%);
+  background: linear-gradient(135deg, #0E1730 0%, #1B3268 45%, #2E6BFF 100%);
 }
 .delt-backend-scope .dp-glass {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   backdrop-filter: blur(16px);
 }
 .delt-backend-scope .dp-sphere {
@@ -470,14 +470,14 @@ body.crm-active {
 }
 .delt-backend-scope * {
   scrollbar-width: thin;
-  scrollbar-color: #33415F transparent;
+  scrollbar-color: #435687 transparent;
 }
 .delt-backend-scope *::-webkit-scrollbar {
   width: 10px;
   height: 10px;
 }
 .delt-backend-scope *::-webkit-scrollbar-thumb {
-  background: #33415F;
+  background: #435687;
   border-radius: 999px;
   border: 2px solid transparent;
   background-clip: content-box;

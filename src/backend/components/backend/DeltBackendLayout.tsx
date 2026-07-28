@@ -146,13 +146,8 @@ const adminGroups: NavGroup[] = [
     ],
   },
   {
-    label: 'Settings',
-    items: [
-      { label: 'General', path: '/settings', icon: Wrench },
-      { label: 'Integrations', path: '/settings/integrations', icon: Link2 },
-      { label: 'Roles', path: '/settings/roles', icon: Shield },
-      { label: 'Bundles', path: '/settings/bundles', icon: Package },
-    ],
+    label: null,
+    items: [{ label: 'Settings', path: '/settings', icon: Wrench }],
   },
 ];
 
@@ -274,7 +269,6 @@ const allCommands: CommandItem[] = [
   { label: 'Subscriptions', path: '/subscriptions', group: 'Products', icon: CreditCard, keywords: 'billing plans MRR SaaS' },
   { label: 'Integrations', path: '/settings/integrations', group: 'Settings', icon: Link2 },
   { label: 'Roles & Permissions', path: '/settings/roles', group: 'Settings', icon: Shield },
-  { label: 'Bundles', path: '/settings/bundles', group: 'Settings', icon: Package },
   { label: 'General Settings', path: '/settings', group: 'Settings', icon: Wrench },
 ];
 
@@ -347,7 +341,7 @@ export function DeltBackendLayout() {
 
   const isActivePath = (path: string) => {
     if (path === '/') return currentPage === '/';
-    if (path === '/settings') return currentPage === '/settings';
+    if (path === '/settings') return currentPage.startsWith('/settings');
     return currentPage === path || currentPage.startsWith(path + '/');
   };
 

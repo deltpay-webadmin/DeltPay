@@ -12,6 +12,8 @@ import {
   ShieldAlert,
   FileText,
   Printer,
+  RefreshCw,
+  Link2,
 } from 'lucide-react';
 import { useAppNavigate } from '../NavigationContext';
 import { useUnderwriting, underwritingActions, type UWApplication, type UWStage } from '../crmStore';
@@ -107,6 +109,46 @@ function BoolField({ label, value, onChange }: { label: string; value: boolean; 
       >
         <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform ${value ? 'translate-x-4' : ''}`} />
       </button>
+    </div>
+  );
+}
+
+function VendorField({ label, value, good }: { label: string; value: React.ReactNode; good?: boolean }) {
+  return (
+    <div>
+      <p className="text-[11px] text-gray-400">{label}</p>
+      <p className={`text-sm font-semibold mt-0.5 tabular-nums ${good ? 'text-emerald-700' : 'text-gray-900'}`}>{value}</p>
+    </div>
+  );
+}
+
+function VendorCard({
+  title, meta, lastPulled, onPull, children,
+}: { title: string; meta: string; lastPulled: string; onPull: () => void; children?: React.ReactNode }) {
+  return (
+    <div className="bg-white border border-gray-200 rounded-[8px]">
+      <div className="px-4 py-3 flex items-center justify-between border-b border-gray-100">
+        <div className="flex items-center gap-2.5">
+          <span className="text-sm font-bold text-gray-900">{title}</span>
+          <span className="inline-flex items-center gap-1.5 rounded-[8px] px-2 py-0.5 text-[10px] font-bold bg-emerald-50 text-emerald-700">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+            Connected
+          </span>
+        </div>
+        <button
+          onClick={onPull}
+          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-[8px] text-[11px] font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 transition-colors"
+        >
+          <RefreshCw className="w-3 h-3" />
+          Pull data
+        </button>
+      </div>
+      <div className="px-4 py-3">
+        {children}
+        <p className={`text-[11px] text-gray-400 ${children ? 'mt-3 pt-3 border-t border-gray-100' : ''}`}>
+          {meta} · Last pulled {lastPulled}
+        </p>
+      </div>
     </div>
   );
 }
@@ -325,6 +367,55 @@ export function UnderwritingDetail() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
           {/* ── LEFT: Inputs ── */}
           <div className="lg:col-span-7 space-y-4">
+            {/* Data sources — underwriting runs in-house off these connections */}
+            <div>
+              <div className="flex items-center gap-2 px-1 pb-2">
+                <Link2 className="w-3.5 h-3.5 text-gray-400" />
+                <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-gray-500">Data sources</span>
+              </div>
+              <div className="space-y-3">
+                <VendorCard
+                  title="Plaid"
+                  meta="Bank verification, cash flow, identity"
+                  lastPulled="Apr 9, 2026 at 10:23 AM"
+                  onPull={() => { saveDraft(true); toast.success('Plaid data refreshed', { description: 'Cash flow inputs updated from the linked account.' }); }}
+                >
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-3">
+                    <VendorField label="Bank verification" good value={<span className="inline-flex items-center gap-1"><Check className="w-3.5 h-3.5" />Verified</span>} />
+                    <VendorField label="IDV status" good value={<span className="inline-flex items-center gap-1"><Check className="w-3.5 h-3.5" />Verified</span>} />
+                    <VendorField label="OFAC screening" good value={<span className="inline-flex items-center gap-1"><Check className="w-3.5 h-3.5" />Clear</span>} />
+                    <VendorField label="3-mo avg revenue" value={fmt$(plaid.monthlyRevenue || 0)} />
+                    <VendorField label="NSF count (90d)" good={plaid.nsfCount90d === 0} value={plaid.nsfCount90d} />
+                    <VendorField label="Avg daily balance" value={fmt$(plaid.avgDailyBalance || 0)} />
+                  </div>
+                </VendorCard>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <VendorCard
+                    title="CRS Credit"
+                    meta="Personal + business credit"
+                    lastPulled="Apr 9, 2026"
+                    onPull={() => toast.success('CRS credit data refreshed')}
+                  >
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                      <VendorField label="Personal FICO" value={crs.fico} />
+                      <VendorField label="Derogatory marks" good={crs.derogatoryMarks === 0} value={crs.derogatoryMarks} />
+                    </div>
+                  </VendorCard>
+                  <VendorCard
+                    title="DataMerch"
+                    meta="MCA industry database"
+                    lastPulled="Apr 9, 2026"
+                    onPull={() => toast.success('DataMerch data refreshed')}
+                  >
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                      <VendorField label="Open positions" good={dm.currentOpenPositions === 0} value={dm.currentOpenPositions} />
+                      <VendorField label="Prior defaults" good={dm.priorDefaults === 0} value={dm.priorDefaults} />
+                    </div>
+                  </VendorCard>
+                </div>
+              </div>
+            </div>
+
             <Section
               title="Plaid Cash Flow Inputs"
               open={openPlaid}
