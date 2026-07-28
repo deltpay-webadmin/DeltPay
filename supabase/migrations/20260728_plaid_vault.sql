@@ -113,3 +113,16 @@ begin
   exception when duplicate_object then null;
   end;
 end $$;
+
+-- 6) Table privileges
+-- This project does not carry Supabase's usual default privileges, so the
+-- vault tables come up bare. Grant exactly what each role needs; RLS still
+-- gates rows. plaid_credentials stays service-role only.
+grant select on public.plaid_items to authenticated;
+grant select on public.plaid_nodes to authenticated;
+grant select, insert, update, delete on public.plaid_items to service_role;
+grant select, insert, update, delete on public.plaid_nodes to service_role;
+grant select, insert, update, delete on public.plaid_credentials to service_role;
+revoke truncate, trigger, references on public.plaid_items from anon, authenticated;
+revoke truncate, trigger, references on public.plaid_nodes from anon, authenticated;
+revoke truncate, trigger, references on public.plaid_credentials from anon, authenticated;
