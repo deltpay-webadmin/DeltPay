@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { toast } from 'sonner@2.0.3';
 import {
   Users,
   DollarSign,
@@ -210,12 +211,46 @@ const avgConversion = activeWithDeals.length > 0
 // Main Component
 // ════════════════════════════════════════
 export function BackendAgents() {
+  const [agentList, setAgentList] = useState<Agent[]>(agents);
+  const [onboardOpen, setOnboardOpen] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'All' | AgentStatus>('All');
   const [openActionMenu, setOpenActionMenu] = useState<string | null>(null);
 
-  const filtered = agents.filter(a => {
+  // Stats follow the live list (module seeds + anything onboarded this session)
+  const activeAgents = agentList.filter(a => a.status === 'Active').length;
+  const totalVolume = agentList.reduce((s, a) => s + a.monthlyVolume, 0);
+  const totalCommPaid = agentList.reduce((s, a) => s + a.commissionEarned, 0);
+  const activeWithDeals = agentList.filter(a => a.status === 'Active' && a.dealsFunded > 0);
+  const avgConversion = activeWithDeals.length > 0
+    ? Math.round(activeWithDeals.reduce((s, a) => s + (a.dealsFunded / Math.max(a.merchants, 1)) * 100, 0) / activeWithDeals.length)
+    : 0;
+
+  const handleOnboard = (a: { name: string; email: string; phone: string; type: 'W-2' | 'Sub-ISO'; tier: string }) => {
+    const created: Agent = {
+      id: `AGT-${String(agentList.length + 1).padStart(3, '0')}`,
+      name: a.name,
+      email: a.email,
+      phone: a.phone,
+      status: 'Active',
+      merchants: 0,
+      monthlyVolume: 0,
+      dealsFunded: 0,
+      commissionEarned: 0,
+      defaultRate: 0,
+      lastActivity: 'Just now',
+      agreementDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      commissionTier: a.tier,
+      initials: a.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase(),
+      type: a.type,
+    };
+    setAgentList(prev => [created, ...prev]);
+    setOnboardOpen(false);
+    toast.success(`${created.name} onboarded`, { description: `${created.id} · ${created.commissionTier}` });
+  };
+
+  const filtered = agentList.filter(a => {
     const matchSearch = a.name.toLowerCase().includes(search.toLowerCase()) || a.id.toLowerCase().includes(search.toLowerCase());
     const matchStatus = statusFilter === 'All' || a.status === statusFilter;
     return matchSearch && matchStatus;
@@ -238,11 +273,16 @@ export function BackendAgents() {
           <h1 className="text-2xl font-bold text-gray-900">Agents</h1>
           <p className="text-sm text-gray-500 mt-1">Manage your sales team, Sub-ISOs, and agent performance.</p>
         </div>
-        <button className="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-[6px] hover:bg-indigo-700 transition-colors shadow-sm">
+        <button
+          onClick={() => setOnboardOpen(true)}
+          className="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-[6px] hover:bg-indigo-700 transition-colors shadow-sm"
+        >
           <Plus className="w-4 h-4" />
           Onboard Agent
         </button>
       </div>
+
+      {onboardOpen && <OnboardAgentModal onClose={() => setOnboardOpen(false)} onCreate={handleOnboard} />}
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -1007,6 +1047,79 @@ function ReassignModal({ agent, onClose }: { agent: Agent; onClose: () => void }
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+// ── Onboard Agent modal ──
+function OnboardAgentModal({
+  onClose,
+  onCreate,
+}: {
+  onClose: () => void;
+  onCreate: (a: { name: string; email: string; phone: string; type: 'W-2' | 'Sub-ISO'; tier: string }) => void;
+}) {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [type, setType] = useState<'W-2' | 'Sub-ISO'>('W-2');
+  const [tier, setTier] = useState('Tier 1 — 50% Split');
+
+  const inputCls =
+    'w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-[8px] text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500';
+
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim() || !email.trim()) return;
+    onCreate({ name: name.trim(), email: email.trim(), phone: phone.trim() || '—', type, tier });
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
+      <form onClick={e => e.stopPropagation()} onSubmit={submit} className="bg-white rounded-[12px] shadow-xl w-full max-w-md overflow-hidden">
+        <div className="px-5 py-4 border-b border-gray-200 flex items-center justify-between">
+          <h2 className="text-base font-semibold text-gray-900">Onboard Agent</h2>
+          <button type="button" onClick={onClose} className="p-1.5 hover:bg-gray-100 rounded-[8px] text-gray-400 hover:text-gray-600">✕</button>
+        </div>
+        <div className="px-5 py-4 space-y-3">
+          <div>
+            <label className="block text-[12px] font-medium text-gray-600 mb-1">Full name</label>
+            <input required autoFocus value={name} onChange={e => setName(e.target.value)} placeholder="Jordan Alvarez" className={inputCls} />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[12px] font-medium text-gray-600 mb-1">Email</label>
+              <input required type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="jordan@deltpay.com" className={inputCls} />
+            </div>
+            <div>
+              <label className="block text-[12px] font-medium text-gray-600 mb-1">Phone</label>
+              <input value={phone} onChange={e => setPhone(e.target.value)} placeholder="(555) 123-4567" className={inputCls} />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[12px] font-medium text-gray-600 mb-1">Agent type</label>
+              <select value={type} onChange={e => setType(e.target.value as 'W-2' | 'Sub-ISO')} className={inputCls}>
+                <option>W-2</option>
+                <option>Sub-ISO</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-[12px] font-medium text-gray-600 mb-1">Commission tier</label>
+              <select value={tier} onChange={e => setTier(e.target.value)} className={inputCls}>
+                <option>Tier 1 — 50% Split</option>
+                <option>Tier 2 — 60% Split</option>
+                <option>Tier 3 — 70% Split</option>
+              </select>
+            </div>
+          </div>
+          <p className="text-[11px] text-gray-400">New agents start Active on the selected tier with an empty book. Agreement date is set to today.</p>
+        </div>
+        <div className="px-5 py-3 border-t border-gray-200 bg-gray-50 flex items-center justify-end gap-2">
+          <button type="button" onClick={onClose} className="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-300 rounded-[10px] hover:bg-white">Cancel</button>
+          <button type="submit" className="px-4 py-2 text-sm font-bold text-white bg-indigo-600 rounded-[10px] hover:bg-indigo-700">Onboard Agent</button>
+        </div>
+      </form>
     </div>
   );
 }

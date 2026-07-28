@@ -467,16 +467,16 @@ export function BackendCompliance() {
         </div>
       </div>
 
-      {/* ── Tab Bar ── */}
-      <div className="bg-white rounded-[8px] border border-gray-200">
-        <div className="px-1 pt-1 border-b border-gray-200 flex gap-0.5 overflow-x-auto">
+      {/* ── Tab Bar — shared underline style ── */}
+      <div>
+        <div className="border-b border-gray-200 flex gap-6 overflow-x-auto">
           {TABS.map(t => {
             const Icon = t.icon;
             const isActive = tab === t.id;
             return (
               <button key={t.id} onClick={() => { setTab(t.id); setActiveControl(null); setSelectedMerchant(null); setSelectedDeal(null); }}
-                className={`flex items-center gap-1.5 px-4 py-2.5 text-xs font-medium rounded-t-[6px] transition-colors whitespace-nowrap ${
-                  isActive ? 'bg-brand/5 text-brand border-b-2 border-brand' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50 border-b-2 border-transparent'
+                className={`flex items-center gap-1.5 px-1 pb-3 -mb-px text-[13px] font-semibold border-b-2 transition-colors whitespace-nowrap ${
+                  isActive ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700'
                 }`}>
                 <Icon className="w-3.5 h-3.5" />
                 {t.label}
@@ -488,7 +488,7 @@ export function BackendCompliance() {
           })}
         </div>
 
-        <div className="p-5">
+        <div className="pt-5">
 
           {/* ═══════════════════════════════
               TODAY — personalized triage

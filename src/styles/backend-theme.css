@@ -695,3 +695,19 @@ body.crm-active {
   border: 2px solid transparent;
   background-clip: content-box;
 }
+
+/* ════════════════════════════════════════════════════════════════
+   Button system — one set of rules everywhere:
+   · Primary action: cobalt fill, 10px radius, bold. One per view.
+   · Secondary: hairline border, same radius. Ghost: soft fill.
+   · Tabs are underlined; pills are reserved for filters + statuses.
+   Filled CTAs across legacy pages get pulled onto the system here
+   (beats the marketing-side radius overrides in dc-global-polish).
+   ════════════════════════════════════════════════════════════════ */
+.delt-backend-scope button[class*='bg-brand'],
+.delt-backend-scope button[class*='bg-indigo-600'],
+.delt-backend-scope button[class*='bg-indigo-500'] {
+  border-radius: 10px !important;
+  font-weight: 700;
+  box-shadow: none !important;
+}

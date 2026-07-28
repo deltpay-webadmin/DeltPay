@@ -37,6 +37,7 @@ import { BackendSubscriptions } from './pages/BackendSubscriptions';
 import { BackendDocuments } from './pages/BackendDocuments';
 import { BackendPayments } from './pages/BackendPayments';
 import { BackendReports } from './pages/BackendReports';
+import { BackendPlaid } from './pages/BackendPlaid';
 import {
   LayoutDashboard,
   Users,
@@ -252,7 +253,7 @@ const allCommands: CommandItem[] = [
   { label: 'Workspace', path: '/workspace', group: 'Navigation', icon: Inbox, keywords: 'inbox email sms call messages tasks activity timeline' },
   { label: 'Leads', path: '/leads', group: 'Pipeline', icon: Users, keywords: 'sales pipeline' },
   { label: 'Import Leads', path: '/leads/import', group: 'Pipeline', icon: Upload, keywords: 'upload csv xlsx spreadsheet meta facebook instagram bulk import' },
-  { label: 'Underwriting', path: '/underwriting', group: 'Pipeline', icon: ClipboardCheck },
+  { label: 'Underwriting', path: '/underwriting', group: 'Pipeline', icon: ClipboardCheck, keywords: 'plaid portal vault lending prospects bank credit identity verification' },
   { label: 'Analysis', path: '/analysis', group: 'Pipeline', icon: FileText, keywords: 'deal analysis review cost calculator' },
   { label: 'All Merchants', path: '/merchants', group: 'Merchants', icon: Store },
   { label: 'Residuals', path: '/residuals', group: 'Merchants', icon: Receipt },
@@ -784,7 +785,7 @@ function UnderwritingHub() {
         ))}
       </div>
       <div className="flex-1 overflow-y-auto">
-        {view === 'portal' ? <BackendOnboarding /> : <BackendUnderwriting />}
+        {view === 'portal' ? <BackendPlaid /> : <BackendUnderwriting />}
       </div>
     </div>
   );
