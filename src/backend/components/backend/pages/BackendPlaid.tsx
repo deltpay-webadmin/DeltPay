@@ -23,37 +23,37 @@ import {
 } from '../underwritingScore';
 
 // ══════════════════════════════════════════════════════════════
-// Delt liquid-glass design tokens (dark navy #121e3e / indigo #2E6BFF)
+// Delt liquid-glass design tokens (dark navy var(--dp-bg-card) / indigo #2E6BFF)
 // ══════════════════════════════════════════════════════════════
 
-const GLASS = 'bg-white/[0.06] backdrop-blur-xl border border-white/10 rounded-2xl';
-const GLASS_SOFT = 'bg-white/[0.04] border border-white/[0.08] rounded-xl';
-const GLASS_HOVER = 'hover:bg-white/[0.09] transition-colors';
-const TXT = 'text-slate-100';
-const TXT_MUTED = 'text-slate-400';
-const TXT_FAINT = 'text-slate-500';
+const GLASS = 'bg-(--dp-bg-card) border border-(--dp-border) rounded-2xl';
+const GLASS_SOFT = 'bg-(--dp-bg-raised) border border-(--dp-border) rounded-xl';
+const GLASS_HOVER = 'hover:bg-(--dp-bg-raised) transition-colors';
+const TXT = 'text-(--dp-text)';
+const TXT_MUTED = 'text-(--dp-text-muted)';
+const TXT_FAINT = 'text-(--dp-text-faint)';
 const BTN_PRIMARY =
-  'inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#2E6BFF] text-white text-sm font-medium hover:bg-[#4A7EFF] shadow-[0_0_24px_rgba(46,107,255,0.35)] disabled:opacity-50 disabled:shadow-none transition-all';
+  'inline-flex items-center gap-2 px-4 py-2 rounded-[10px] bg-(--dp-accent) text-white text-sm font-bold hover:bg-(--dp-accent-hover) disabled:opacity-50 transition-all';
 const BTN_GLASS =
-  'inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-white/[0.06] border border-white/10 text-sm text-slate-200 hover:bg-white/[0.12] disabled:opacity-50 transition-colors';
+  'inline-flex items-center gap-2 px-3 py-2 rounded-[10px] bg-white/[0.06] border border-(--dp-border) text-sm text-(--dp-text-secondary) hover:bg-(--dp-bg-raised) disabled:opacity-50 transition-colors';
 const INPUT_GLASS =
-  'bg-white/[0.06] border border-white/10 rounded-xl text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#2E6BFF]/50 focus:border-[#2E6BFF]/50';
+  'bg-(--dp-bg-card) border border-(--dp-border) rounded-[10px] text-sm text-(--dp-text) placeholder:text-(--dp-text-faint) focus:outline-none focus:ring-2 focus:ring-(--dp-accent-soft) focus:border-(--dp-accent)';
 
 // Chart series — validated for the dark navy surface (dataviz six checks).
 const CHART_IN = '#059669';
 const CHART_OUT = '#6366f1';
-const CHART_GRID = 'rgba(255,255,255,0.08)';
-const CHART_TICK = '#8b94b8';
+const CHART_GRID = 'rgba(127,147,184,0.18)';
+const CHART_TICK = 'var(--dp-text-muted)';
 const CHART_TOOLTIP = {
   contentStyle: {
-    background: '#0d1633',
+    background: 'var(--dp-bg-surface)',
     border: '1px solid rgba(255,255,255,0.14)',
     borderRadius: 12,
-    color: '#e6eaf6',
+    color: 'var(--dp-text)',
     fontSize: 12,
   },
-  labelStyle: { color: '#e6eaf6' },
-  itemStyle: { color: '#c7cdea' },
+  labelStyle: { color: 'var(--dp-text)' },
+  itemStyle: { color: 'var(--dp-text-secondary)' },
 } as const;
 
 // ══════════════════════════════════════════════════════════════
@@ -208,13 +208,13 @@ const MODEL_DECISION_STYLE: Record<string, { cls: string; Icon: React.ElementTyp
   PRE_APPROVE: { cls: 'bg-emerald-400/10 border-emerald-400/30 text-emerald-300', Icon: CheckCircle2, label: 'Pre-Approved' },
   REVIEW: { cls: 'bg-amber-400/10 border-amber-400/30 text-amber-300', Icon: AlertTriangle, label: 'Review' },
   DECLINE: { cls: 'bg-red-400/10 border-red-400/30 text-red-300', Icon: XCircle, label: 'Decline' },
-  INSUFFICIENT_DATA: { cls: 'bg-white/[0.06] border-white/15 text-slate-300', Icon: Clock, label: 'More data' },
+  INSUFFICIENT_DATA: { cls: 'bg-white/[0.06] border-(--dp-border-strong) text-(--dp-text-secondary)', Icon: Clock, label: 'More data' },
 };
 
 function ModelDecisionBadge({ decision }: { decision: string | null | undefined }) {
   if (!decision) {
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-white/[0.05] border border-white/10 text-slate-400">
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-white/[0.05] border border-(--dp-border) text-(--dp-text-muted)">
         <Clock className="w-3 h-3" /> No data
       </span>
     );
@@ -230,7 +230,7 @@ function ModelDecisionBadge({ decision }: { decision: string | null | undefined 
 function TrendIcon({ trend }: { trend?: string }) {
   if (trend === 'growing') return <TrendingUp className="w-4 h-4 text-emerald-400" />;
   if (trend === 'declining') return <TrendingDown className="w-4 h-4 text-red-400" />;
-  return <Minus className="w-4 h-4 text-slate-500" />;
+  return <Minus className="w-4 h-4 text-(--dp-text-faint)" />;
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -256,7 +256,7 @@ function CashFlowChart({ monthly }: { monthly: any[] }) {
           tickFormatter={(v: number) => `$${v >= 1000 ? `${Math.round(v / 1000)}k` : v}`}
         />
         <RTooltip {...CHART_TOOLTIP} formatter={(v: any) => fmtMoney(Number(v))} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
-        <Legend wrapperStyle={{ fontSize: 12, color: '#c7cdea' }} />
+        <Legend wrapperStyle={{ fontSize: 12, color: 'var(--dp-text-secondary)' }} />
         <Bar dataKey="Inflows" fill={CHART_IN} radius={[4, 4, 0, 0]} maxBarSize={28} />
         <Bar dataKey="Outflows" fill={CHART_OUT} radius={[4, 4, 0, 0]} maxBarSize={28} />
       </BarChart>
@@ -324,7 +324,7 @@ function GateRow({ g }: { g: any }) {
       {g.passed
         ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
         : <XCircle className="w-3.5 h-3.5 text-red-400 flex-shrink-0" />}
-      <span className={`text-xs flex-1 ${g.passed ? 'text-slate-300' : 'text-red-300'}`}>{g.label}</span>
+      <span className={`text-xs flex-1 ${g.passed ? 'text-(--dp-text-secondary)' : 'text-red-300'}`}>{g.label}</span>
       <span className={`text-[11px] ${g.passed ? TXT_FAINT : 'text-red-300'}`}>{g.value}</span>
       <span className={`text-[10px] ${TXT_FAINT} w-20 text-right`}>{g.threshold}</span>
     </div>
@@ -382,8 +382,8 @@ function RecommendationView({ rec, onSendToUnderwriting }: { rec: any; onSendToU
                       key={k}
                       className={`px-2 py-0.5 rounded-full text-[10px] border ${
                         offer.binding_cap === k
-                          ? 'bg-[#2E6BFF]/20 border-[#2E6BFF]/50 text-[#b3b9ff] font-medium'
-                          : 'bg-white/[0.04] border-white/10 text-slate-400'
+                          ? 'bg-[#2E6BFF]/20 border-[#2E6BFF]/50 text-[var(--dp-accent-text)] font-medium'
+                          : 'bg-white/[0.04] border-(--dp-border) text-(--dp-text-muted)'
                       }`}
                     >
                       {k.replace(/_/g, ' ')}: {fmtMoney(Number(v))}
@@ -447,7 +447,7 @@ function RecommendationView({ rec, onSendToUnderwriting }: { rec: any; onSendToU
       <div className={`${GLASS_SOFT} p-3`}>
         <button
           onClick={() => setShowTrace(v => !v)}
-          className={`text-xs ${TXT_MUTED} hover:text-slate-200 inline-flex items-center gap-1.5`}
+          className={`text-xs ${TXT_MUTED} hover:text-(--dp-text-secondary) inline-flex items-center gap-1.5`}
         >
           <ScrollText className="w-3.5 h-3.5" />
           {showTrace ? 'Hide' : 'Show'} model reasoning trace
@@ -509,8 +509,8 @@ function ProspectDetail({
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <button onClick={onBack} className={`p-2 rounded-xl border border-white/10 ${GLASS_HOVER}`}>
-            <ArrowLeft className="w-4 h-4 text-slate-300" />
+          <button onClick={onBack} className={`p-2 rounded-xl border border-(--dp-border) ${GLASS_HOVER}`}>
+            <ArrowLeft className="w-4 h-4 text-(--dp-text-secondary)" />
           </button>
           <div>
             <h2 className={`text-lg font-semibold ${TXT}`}>{lead.businessName}</h2>
@@ -536,7 +536,7 @@ function ProspectDetail({
 
       {items.length === 0 ? (
         <div className={`${GLASS} border-dashed p-10 text-center`}>
-          <Landmark className="w-8 h-8 text-slate-600 mx-auto mb-3" />
+          <Landmark className="w-8 h-8 text-(--dp-text-faint) mx-auto mb-3" />
           <p className={`text-sm ${TXT} font-medium`}>No bank connected yet</p>
           <p className={`text-xs ${TXT_FAINT} mt-1 mb-4`}>
             Connect this prospect's bank via Plaid Link to pull identity, account verification, financials and credit data.
@@ -644,7 +644,7 @@ function ProspectDetail({
               )}
 
               {/* Verified Asset Report */}
-              <div className="mt-4 border-t border-white/10 pt-3">
+              <div className="mt-4 border-t border-(--dp-border) pt-3">
                 <div className="flex items-center justify-between gap-2">
                   <div>
                     <p className={`text-sm font-semibold ${TXT}`}>Verified Asset Report</p>
@@ -653,7 +653,7 @@ function ProspectDetail({
                   {!assetReport ? (
                     <button
                       onClick={() => plaidActions.createAssetReport(lead.id)}
-                      className="px-3 py-1.5 rounded-xl border border-white/10 bg-white/[0.06] text-xs font-medium text-slate-200 hover:bg-white/[0.12]"
+                      className="px-3 py-1.5 rounded-xl border border-(--dp-border) bg-white/[0.06] text-xs font-medium text-(--dp-text-secondary) hover:bg-(--dp-bg-raised)"
                     >
                       Generate
                     </button>
@@ -674,7 +674,7 @@ function ProspectDetail({
                   <div className="mt-2 space-y-1">
                     {(assetReport.data.items ?? []).map((it: any, i: number) => (
                       <div key={i} className={`text-xs ${TXT_MUTED}`}>
-                        <span className="font-medium text-slate-300">{it.institution_name}</span>
+                        <span className="font-medium text-(--dp-text-secondary)">{it.institution_name}</span>
                         {' — '}
                         {(it.accounts ?? []).map((a: any) =>
                           `${a.name ?? 'acct'} ••${a.mask ?? ''} (${a.days_available ?? 0}d history)`
@@ -683,7 +683,7 @@ function ProspectDetail({
                     ))}
                     <button
                       onClick={() => onOpenInExplorer(`${base}/financials/asset-report`)}
-                      className="text-xs text-[#8FB0FF] hover:text-[#b3b9ff] hover:underline"
+                      className="text-xs text-[#8FB0FF] hover:text-[var(--dp-accent-text)] hover:underline"
                     >
                       View full report in Explorer →
                     </button>
@@ -730,7 +730,7 @@ function ProspectDetail({
                   <div key={doc.path} className={`${GLASS_SOFT} p-3`}>
                     <p className={`text-xs ${TXT_FAINT} mb-1`}>{doc.data?.institution?.name ?? 'Institution'}</p>
                     {(doc.data?.owners ?? []).map((o: any, i: number) => (
-                      <div key={i} className="text-sm text-slate-300">
+                      <div key={i} className="text-sm text-(--dp-text-secondary)">
                         <p className={`font-medium ${TXT}`}>{(o.names ?? []).join(', ') || 'Unnamed owner'}</p>
                         <p className={`text-xs ${TXT_MUTED}`}>
                           {(o.emails ?? []).map((e: any) => e.data).slice(0, 2).join(' · ')}
@@ -749,7 +749,7 @@ function ProspectDetail({
                 ))}
               </div>
               {/* Attach an IDV session created via your Plaid IDV template */}
-              <div className="mt-3 border-t border-white/10 pt-3">
+              <div className="mt-3 border-t border-(--dp-border) pt-3">
                 <p className={`text-[11px] ${TXT_FAINT} mb-1.5`}>
                   Ran a Plaid Identity Verification session elsewhere? Paste its ID (idv_…) to attach it.
                 </p>
@@ -817,7 +817,7 @@ function ProspectDetail({
                 {liabilityDocs.map(doc => {
                   const s = doc.data?.summary ?? {};
                   return (
-                    <div key={doc.path} className={`${GLASS_SOFT} p-3 text-sm text-slate-300 space-y-1`}>
+                    <div key={doc.path} className={`${GLASS_SOFT} p-3 text-sm text-(--dp-text-secondary) space-y-1`}>
                       <p className={`text-xs ${TXT_FAINT}`}>{doc.data?.institution?.name ?? 'Institution'}</p>
                       <div className="grid grid-cols-2 gap-2 mt-1">
                         <MetricTile label="Credit cards" value={s.credit_cards ?? 0} />
@@ -871,7 +871,7 @@ function ProspectDetail({
                           ))}
                           {inflows.slice(0, 4).map((s: any) => (
                             <div key={s.stream_id} className="flex items-center justify-between py-1 text-sm">
-                              <span className="text-slate-300 flex items-center gap-1.5">
+                              <span className="text-(--dp-text-secondary) flex items-center gap-1.5">
                                 <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
                                 {s.merchant_name || s.description || 'Recurring deposit'}
                                 <span className={`text-[10px] ${TXT_FAINT} uppercase`}>{s.frequency?.toLowerCase()}</span>
@@ -906,7 +906,7 @@ function ProspectDetail({
                         </div>
                         {(doc.data?.holdings ?? []).slice(0, 6).map((h: any, i: number) => (
                           <div key={i} className="flex items-center justify-between py-0.5 text-sm">
-                            <span className="text-slate-300 truncate mr-3">
+                            <span className="text-(--dp-text-secondary) truncate mr-3">
                               {h.ticker ? <span className={`font-mono text-xs ${TXT_MUTED} mr-1.5`}>{h.ticker}</span> : null}
                               {h.name ?? 'Holding'}
                             </span>
@@ -1026,13 +1026,13 @@ function DataExplorer({
               setSelected(n.path);
             }}
             className={`w-full flex items-center gap-1.5 px-2 py-1 rounded-lg text-left text-sm truncate ${
-              isSelected ? 'bg-[#2E6BFF]/20 text-[#c3c8ff]' : `text-slate-300 ${GLASS_HOVER}`
+              isSelected ? 'bg-[#2E6BFF]/20 text-[var(--dp-accent-text)]' : `text-(--dp-text-secondary) ${GLASS_HOVER}`
             }`}
             style={{ paddingLeft: `${8 + depth * 14}px` }}
             title={n.path}
           >
             {isFolder ? (
-              isOpen ? <ChevronDown className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" /> : <ChevronRight className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" />
+              isOpen ? <ChevronDown className="w-3.5 h-3.5 text-(--dp-text-faint) flex-shrink-0" /> : <ChevronRight className="w-3.5 h-3.5 text-(--dp-text-faint) flex-shrink-0" />
             ) : (
               <span className="w-3.5" />
             )}
@@ -1063,7 +1063,7 @@ function DataExplorer({
       {/* Tree pane */}
       <div className={`${GLASS} p-3 lg:h-[640px] overflow-y-auto`}>
         <div className="relative mb-2">
-          <Search className="w-4 h-4 text-slate-500 absolute left-2.5 top-2.5" />
+          <Search className="w-4 h-4 text-(--dp-text-faint) absolute left-2.5 top-2.5" />
           <input
             value={query}
             onChange={e => setQuery(e.target.value)}
@@ -1078,7 +1078,7 @@ function DataExplorer({
               <button
                 key={n.path}
                 onClick={() => { setSelected(n.path); setQuery(''); }}
-                className={`w-full flex items-center gap-1.5 px-2 py-1 rounded-lg text-left text-sm text-slate-300 ${GLASS_HOVER}`}
+                className={`w-full flex items-center gap-1.5 px-2 py-1 rounded-lg text-left text-sm text-(--dp-text-secondary) ${GLASS_HOVER}`}
                 title={n.path}
               >
                 {n.nodeType === 'folder'
@@ -1101,7 +1101,7 @@ function DataExplorer({
       <div className={`${GLASS} p-4 lg:h-[640px] overflow-y-auto`}>
         {!selectedNode ? (
           <div className="h-full flex flex-col items-center justify-center text-center py-16">
-            <FolderTree className="w-10 h-10 text-slate-700 mb-3" />
+            <FolderTree className="w-10 h-10 text-(--dp-text-muted) mb-3" />
             <p className={`text-sm ${TXT_MUTED}`}>Select a folder or document from the tree.</p>
             <p className={`text-xs ${TXT_FAINT} mt-1`}>
               Everything Plaid pulls is filed under <code className="bg-white/[0.06] px-1 rounded">/prospects/&lt;lead&gt;/…</code>
@@ -1113,8 +1113,8 @@ function DataExplorer({
             <div className={`flex items-center flex-wrap gap-1 text-xs ${TXT_MUTED} mb-3`}>
               {crumbs.map((c, i) => (
                 <React.Fragment key={c.path}>
-                  {i > 0 && <ChevronRight className="w-3 h-3 text-slate-600" />}
-                  <button onClick={() => setSelected(c.path)} className="hover:text-[#b3b9ff]">
+                  {i > 0 && <ChevronRight className="w-3 h-3 text-(--dp-text-faint)" />}
+                  <button onClick={() => setSelected(c.path)} className="hover:text-[var(--dp-accent-text)]">
                     {c.label}
                   </button>
                 </React.Fragment>
@@ -1124,7 +1124,7 @@ function DataExplorer({
                 className="ml-2 p-1 rounded hover:bg-white/[0.08]"
                 title="Copy path"
               >
-                <Copy className="w-3 h-3 text-slate-500" />
+                <Copy className="w-3 h-3 text-(--dp-text-faint)" />
               </button>
             </div>
 
@@ -1165,7 +1165,7 @@ function FolderListing({
       ) : (
         <table className="w-full text-sm">
           <thead>
-            <tr className={`text-left text-xs ${TXT_FAINT} border-b border-white/10`}>
+            <tr className={`text-left text-xs ${TXT_FAINT} border-b border-(--dp-border)`}>
               <th className="py-2 font-medium">Name</th>
               <th className="py-2 font-medium">Type</th>
               <th className="py-2 font-medium">Updated</th>
@@ -1178,10 +1178,10 @@ function FolderListing({
                 <tr
                   key={c.path}
                   onClick={() => onOpen(c.path)}
-                  className="border-b border-white/[0.05] hover:bg-white/[0.05] cursor-pointer"
+                  className="border-b border-(--dp-border) hover:bg-(--dp-bg-raised) cursor-pointer"
                 >
                   <td className="py-2">
-                    <span className="inline-flex items-center gap-2 text-slate-200">
+                    <span className="inline-flex items-center gap-2 text-(--dp-text-secondary)">
                       <Icon className={`w-4 h-4 ${c.nodeType === 'folder' ? 'text-amber-400' : 'text-[#8FB0FF]'}`} />
                       {c.name}
                     </span>
@@ -1214,7 +1214,7 @@ function DocumentViewer({
         </h3>
         <button
           onClick={onToggleRaw}
-          className="px-2.5 py-1 rounded-lg border border-white/10 bg-white/[0.05] text-xs text-slate-300 hover:bg-white/[0.1] flex-shrink-0"
+          className="px-2.5 py-1 rounded-lg border border-(--dp-border) bg-white/[0.05] text-xs text-(--dp-text-secondary) hover:bg-(--dp-bg-raised) flex-shrink-0"
         >
           {showRaw ? 'Pretty view' : 'Raw JSON'}
         </button>
@@ -1222,7 +1222,7 @@ function DocumentViewer({
       <p className={`text-xs ${TXT_FAINT} mb-4 font-mono`}>{node.path} · {node.docKind ?? 'document'} · updated {timeAgo(node.updatedAt)}</p>
 
       {showRaw ? (
-        <pre className="text-xs bg-black/40 border border-white/10 text-slate-200 rounded-xl p-4 overflow-x-auto max-h-[440px] overflow-y-auto">
+        <pre className="text-xs bg-black/40 border border-(--dp-border) text-(--dp-text-secondary) rounded-xl p-4 overflow-x-auto max-h-[440px] overflow-y-auto">
           {JSON.stringify(node.data, null, 2)}
         </pre>
       ) : node.docKind === 'recommendation' ? (
@@ -1251,9 +1251,9 @@ function TransactionsTable({ data }: { data: any }) {
         <span className="text-[#8FB0FF] font-medium">Out {fmtMoney(data?.outflows)}</span>
         <span className={TXT_FAINT}>{txs.length} transactions</span>
       </div>
-      <div className="overflow-x-auto max-h-[420px] overflow-y-auto border border-white/10 rounded-xl">
+      <div className="overflow-x-auto max-h-[420px] overflow-y-auto border border-(--dp-border) rounded-xl">
         <table className="w-full text-sm">
-          <thead className="sticky top-0 bg-[#0d1633]">
+          <thead className="sticky top-0 bg-[var(--dp-bg-surface)]">
             <tr className={`text-left text-xs ${TXT_FAINT}`}>
               <th className="py-2 px-3 font-medium">Date</th>
               <th className="py-2 px-3 font-medium">Description</th>
@@ -1263,11 +1263,11 @@ function TransactionsTable({ data }: { data: any }) {
           </thead>
           <tbody>
             {txs.map(t => (
-              <tr key={t.transaction_id} className="border-t border-white/[0.05]">
+              <tr key={t.transaction_id} className="border-t border-(--dp-border)">
                 <td className={`py-1.5 px-3 ${TXT_MUTED} whitespace-nowrap`}>{t.date}</td>
-                <td className="py-1.5 px-3 text-slate-200">{t.merchant_name || t.name}</td>
+                <td className="py-1.5 px-3 text-(--dp-text-secondary)">{t.merchant_name || t.name}</td>
                 <td className={`py-1.5 px-3 ${TXT_FAINT} text-xs`}>{t.personal_finance_category?.primary ?? '—'}</td>
-                <td className={`py-1.5 px-3 text-right font-medium whitespace-nowrap ${t.amount < 0 ? 'text-emerald-400' : 'text-slate-300'}`}>
+                <td className={`py-1.5 px-3 text-right font-medium whitespace-nowrap ${t.amount < 0 ? 'text-emerald-400' : 'text-(--dp-text-secondary)'}`}>
                   {t.amount < 0 ? '+' : '−'}{fmtMoney(Math.abs(t.amount), 2)}
                 </td>
               </tr>
@@ -1287,7 +1287,7 @@ function KeyValueGrid({ obj }: { obj: Record<string, any> }) {
       {entries.map(([k, v]) => (
         <div key={k} className={`${GLASS_SOFT} p-3 overflow-hidden`}>
           <p className={`text-xs ${TXT_FAINT}`}>{k.replace(/_/g, ' ')}</p>
-          <div className="text-sm text-slate-200 mt-0.5 break-words">
+          <div className="text-sm text-(--dp-text-secondary) mt-0.5 break-words">
             {v == null ? (
               '—'
             ) : typeof v === 'object' ? (
@@ -1347,7 +1347,7 @@ function ConnectionsTab() {
           <select
             value={leadId}
             onChange={e => setLeadId(e.target.value)}
-            className={`px-3 py-2 min-w-[240px] ${INPUT_GLASS} [&>option]:bg-[#121e3e]`}
+            className={`px-3 py-2 min-w-[240px] ${INPUT_GLASS}`}
           >
             <option value="">Select a lead…</option>
             {unconnected.map(l => (
@@ -1393,13 +1393,13 @@ function ConnectionsTab() {
             {items.map(it => (
               <tr key={it.id} className="border-t border-white/[0.06]">
                 <td className="py-2.5 px-4">
-                  <span className="inline-flex items-center gap-2 text-slate-100 font-medium">
+                  <span className="inline-flex items-center gap-2 text-(--dp-text) font-medium">
                     <Landmark className="w-4 h-4 text-[#8FB0FF]" />
                     {it.institutionName ?? it.itemKey}
                   </span>
                   <p className={`text-[11px] ${TXT_FAINT} font-mono ml-6`}>{it.itemId.slice(0, 24)}…</p>
                 </td>
-                <td className="py-2.5 px-4 text-slate-300">{leadName(it.leadId)}</td>
+                <td className="py-2.5 px-4 text-(--dp-text-secondary)">{leadName(it.leadId)}</td>
                 <td className={`py-2.5 px-4 ${TXT_MUTED} text-xs`}>{it.products.join(', ')}</td>
                 <td className="py-2.5 px-4">
                   {it.status === 'active' ? (
@@ -1416,7 +1416,7 @@ function ConnectionsTab() {
                     <button
                       onClick={() => plaidActions.syncItem(it.itemId)}
                       disabled={busy.includes(`sync:${it.itemId}`)}
-                      className="p-1.5 rounded-lg border border-white/10 text-slate-300 hover:bg-white/[0.1] disabled:opacity-50"
+                      className="p-1.5 rounded-lg border border-(--dp-border) text-(--dp-text-secondary) hover:bg-(--dp-bg-raised) disabled:opacity-50"
                       title="Sync now"
                     >
                       <RefreshCw className={`w-4 h-4 ${busy.includes(`sync:${it.itemId}`) ? 'animate-spin' : ''}`} />
@@ -1428,7 +1428,7 @@ function ConnectionsTab() {
                         }
                       }}
                       disabled={busy.includes(`remove:${it.itemId}`)}
-                      className="p-1.5 rounded-lg border border-white/10 text-red-400 hover:bg-red-400/10 disabled:opacity-50"
+                      className="p-1.5 rounded-lg border border-(--dp-border) text-red-400 hover:bg-red-400/10 disabled:opacity-50"
                       title="Disconnect"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -1521,7 +1521,6 @@ export function BackendPlaid() {
   return (
     <div
       className="relative overflow-hidden rounded-3xl p-4 sm:p-6 -m-1"
-      style={{ background: 'linear-gradient(155deg, #0c1531 0%, #121e3e 55%, #17255280 100%), #121e3e' }}
     >
       {/* Ambient glows */}
       <div className="pointer-events-none absolute -top-32 left-1/4 w-[480px] h-[480px] rounded-full bg-[#2E6BFF]/20 blur-[120px]" />
@@ -1591,13 +1590,13 @@ export function BackendPlaid() {
               onClick={() => { setTab(key); if (key !== 'prospects') setSelectedLead(null); }}
               className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl border transition-colors ${
                 tab === key
-                  ? 'bg-[#2E6BFF]/20 border-[#2E6BFF]/50 text-[#c3c8ff]'
-                  : 'bg-white/[0.04] border-white/10 text-slate-400 hover:text-slate-200 hover:bg-white/[0.08]'
+                  ? 'bg-[#2E6BFF]/20 border-[#2E6BFF]/50 text-[var(--dp-accent-text)]'
+                  : 'bg-white/[0.04] border-(--dp-border) text-(--dp-text-muted) hover:text-(--dp-text-secondary) hover:bg-white/[0.08]'
               }`}
             >
               <Icon className="w-4 h-4" /> {label}
               {key === 'explorer' && nodes.length > 0 && (
-                <span className="text-[10px] bg-white/[0.1] text-slate-300 rounded-full px-1.5 py-0.5">{nodes.length}</span>
+                <span className="text-[10px] bg-white/[0.1] text-(--dp-text-secondary) rounded-full px-1.5 py-0.5">{nodes.length}</span>
               )}
             </button>
           ))}
@@ -1618,7 +1617,7 @@ export function BackendPlaid() {
         ) : (
           <div className="space-y-3">
             <div className="relative max-w-sm">
-              <Search className="w-4 h-4 text-slate-500 absolute left-3 top-2.5" />
+              <Search className="w-4 h-4 text-(--dp-text-faint) absolute left-3 top-2.5" />
               <input
                 value={search}
                 onChange={e => setSearch(e.target.value)}
@@ -1656,13 +1655,13 @@ export function BackendPlaid() {
                       <tr
                         key={p.lead.id}
                         onClick={() => setSelectedLead(p.lead.id)}
-                        className="border-t border-white/[0.06] hover:bg-white/[0.05] cursor-pointer"
+                        className="border-t border-white/[0.06] hover:bg-(--dp-bg-raised) cursor-pointer"
                       >
                         <td className="py-2.5 px-4">
-                          <p className="font-medium text-slate-100">{p.lead.businessName}</p>
+                          <p className="font-medium text-(--dp-text)">{p.lead.businessName}</p>
                           <p className={`text-[11px] ${TXT_FAINT}`}>{p.lead.id} · {p.lead.industry}</p>
                         </td>
-                        <td className="py-2.5 px-4 text-slate-300">{p.lead.amountRequested || '—'}</td>
+                        <td className="py-2.5 px-4 text-(--dp-text-secondary)">{p.lead.amountRequested || '—'}</td>
                         <td className="py-2.5 px-4" onClick={e => e.stopPropagation()}>
                           {p.items.length > 0 ? (
                             <span className="inline-flex items-center gap-1 text-emerald-400 text-xs">
@@ -1679,20 +1678,20 @@ export function BackendPlaid() {
                           ) : p.items.length > 0 ? (
                             <ShieldAlert className="w-4 h-4 text-amber-400" />
                           ) : (
-                            <span className="text-slate-700">—</span>
+                            <span className="text-(--dp-text-muted)">—</span>
                           )}
                         </td>
-                        <td className="py-2.5 px-4 text-slate-300">
+                        <td className="py-2.5 px-4 text-(--dp-text-secondary)">
                           {m ? (
                             <span className="inline-flex items-center gap-1.5">
                               {fmtMoney(m.monthlyRevenue)} <TrendIcon trend={m.revenueTrend} />
                             </span>
                           ) : '—'}
                         </td>
-                        <td className="py-2.5 px-4 text-slate-300">{m ? fmtMoney(m.avgDailyBalance) : '—'}</td>
+                        <td className="py-2.5 px-4 text-(--dp-text-secondary)">{m ? fmtMoney(m.avgDailyBalance) : '—'}</td>
                         <td className="py-2.5 px-4">
                           {m ? (
-                            <span className={m.nsfCount90d > 0 ? 'text-red-400 font-medium' : 'text-slate-300'}>
+                            <span className={m.nsfCount90d > 0 ? 'text-red-400 font-medium' : 'text-(--dp-text-secondary)'}>
                               {m.nsfCount90d}
                             </span>
                           ) : '—'}
