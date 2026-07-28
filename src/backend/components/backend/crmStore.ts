@@ -36,27 +36,19 @@ import { capitalActions } from './capitalStore';
 // Types (unchanged — pages depend on this exact shape)
 // ══════════════════════════════════════════════════════════════
 
+// Short CRM sales cycle. Onboarding / underwriting happens outside the CRM,
+// so a lead only moves New → Contacted → Qualified → Converted (handoff).
 export type LeadStage =
   | 'New'
   | 'Contacted'
   | 'Qualified'
-  | 'Application Submitted'
-  | 'Bank Verification'
-  | 'Identity Verification'
-  | 'Underwriting'
-  | 'Docs & E-Sign'
-  | 'Funded';
+  | 'Converted';
 
 export const LEAD_STAGES: LeadStage[] = [
   'New',
   'Contacted',
   'Qualified',
-  'Application Submitted',
-  'Bank Verification',
-  'Identity Verification',
-  'Underwriting',
-  'Docs & E-Sign',
-  'Funded',
+  'Converted',
 ];
 
 export interface LeadStepDetail {
@@ -225,9 +217,12 @@ export interface Lead {
   monthlySales: string;
   amountRequested: string;
   score: number;
-  status: 'New' | 'In Progress' | 'Won' | 'Lost';
+  status: 'New' | 'In Progress' | 'Not Qualified' | 'Won' | 'Lost';
   priority: 'High' | 'Medium' | 'Low';
   lastActivity: string;
+  /** ISO timestamps from Supabase (DB-managed). */
+  createdAt?: string;
+  updatedAt?: string;
   assignedAgent: string;
   stage: LeadStage;
   timeline: TimelineItem[];
@@ -543,6 +538,8 @@ function fromDbLead(r: any): Lead {
     referredBy: r.referred_by ?? undefined,
     bundle: r.bundle ?? null,
     kyb: r.kyb ?? undefined,
+    createdAt: r.created_at ?? undefined,
+    updatedAt: r.updated_at ?? undefined,
   };
 }
 
@@ -1076,18 +1073,44 @@ export const leadActions = {
     let id = `lead-${String(n).padStart(3, '0')}`;
     while (used.has(id)) id = `lead-${String(++n).padStart(3, '0')}`;
 
+    const businessName = lead.businessName || 'New Business';
+    const industry = lead.industry || 'General';
+    const contactName = lead.contactName || '';
+    const contactEmail = lead.contactEmail || '';
+    const contactPhone = lead.contactPhone || '';
+    const type = (lead.type as any) || 'MCA';
+    const source = lead.source || 'Manual';
+    const monthlySales = lead.monthlySales || '$0';
+    const amountRequested = lead.amountRequested || '$0';
+    // Auto-derive the score from whatever data we have unless one was passed in.
+    const score =
+      lead.score ??
+      scoreLead({
+        monthlySales,
+        amountRequested,
+        contactEmail,
+        contactPhone,
+        contactName,
+        industry,
+        source,
+        type,
+        referredBy: lead.referredBy,
+        status: 'New',
+        stage: 'New',
+      });
+
     const created: Lead = {
       id,
-      businessName: lead.businessName || 'New Business',
-      industry: lead.industry || 'General',
-      contactName: lead.contactName || '',
-      contactEmail: lead.contactEmail || '',
-      contactPhone: lead.contactPhone || '',
-      type: (lead.type as any) || 'MCA',
-      source: lead.source || 'Manual',
-      monthlySales: lead.monthlySales || '$0',
-      amountRequested: lead.amountRequested || '$0',
-      score: lead.score ?? 50,
+      businessName,
+      industry,
+      contactName,
+      contactEmail,
+      contactPhone,
+      type,
+      source,
+      monthlySales,
+      amountRequested,
+      score,
       status: 'New',
       priority: (lead.priority as any) || 'Medium',
       lastActivity: 'just now',
@@ -1097,6 +1120,8 @@ export const leadActions = {
       notes: lead.notes || '',
       extraNotes: [],
       tasks: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
     const prev = state.leads;
     persist(
@@ -1112,11 +1137,18 @@ export const leadActions = {
     const prev = state.leads;
     const lead = state.leads.find(l => l.id === id);
     if (!lead) return;
+    // Recompute the score when scoring inputs change and the caller didn't
+    // pass an explicit score — so the score stays in sync as data is added.
+    let effective = patch;
+    if (patch.score === undefined && SCORING_FIELDS.some(k => k in patch)) {
+      const merged = { ...lead, ...patch };
+      effective = { ...patch, score: scoreLead(merged) };
+    }
     persist(
       'lead',
-      () => set({ leads: state.leads.map(l => (l.id === id ? { ...l, ...patch } : l)) }),
+      () => set({ leads: state.leads.map(l => (l.id === id ? { ...l, ...effective } : l)) }),
       () => set({ leads: prev }),
-      () => supabase!.from('pipeline_leads').update(toDbLead(patch)).eq('id', id).then(r => ({ error: r.error })),
+      () => supabase!.from('pipeline_leads').update(toDbLead(effective)).eq('id', id).then(r => ({ error: r.error })),
     );
   },
 
@@ -1125,42 +1157,52 @@ export const leadActions = {
     leadActions.addTimeline(id, { title: `Status set to ${status}`, description: 'Updated from pipeline', user: 'You', timestamp: 'just now' });
   },
 
-  advanceStage(id: string) {
+  /** Returns false if the lead can't advance (dead-ended or already at the end). */
+  advanceStage(id: string): boolean {
     const lead = state.leads.find(l => l.id === id);
-    if (!lead) return;
+    if (!lead) return false;
+    // A disqualified/lost lead cannot be progressed or converted.
+    if (lead.status === 'Not Qualified' || lead.status === 'Lost') return false;
     const idx = LEAD_STAGES.indexOf(lead.stage);
-    if (idx < 0 || idx >= LEAD_STAGES.length - 1) return;
+    if (idx < 0 || idx >= LEAD_STAGES.length - 1) return false;
     const next = LEAD_STAGES[idx + 1];
     const patch: Partial<Lead> = { stage: next, lastActivity: 'just now' };
-    if (next === 'Funded') patch.status = 'Won';
+    if (next === 'Converted') patch.status = 'Won';
     else if (lead.status === 'New') patch.status = 'In Progress';
     leadActions.update(id, patch);
     leadActions.addTimeline(id, { title: `Advanced to ${next}`, description: 'Pipeline stage promoted', user: 'You', timestamp: 'just now' });
+    return true;
   },
 
-  submitApplication(id: string) {
+  /**
+   * Convert (win) a lead — the CRM's terminal success, handing off to
+   * onboarding elsewhere. Blocked for disqualified/lost leads.
+   * Returns false if the conversion was refused.
+   */
+  convert(id: string): boolean {
     const lead = state.leads.find(l => l.id === id);
-    if (!lead) return;
-    const patch: Partial<Lead> = {
-      stage: 'Application Submitted',
-      status: 'In Progress',
-      lastActivity: 'just now',
-      stepDetails: lead.stepDetails || [
-        { stage: 'Application Submitted', completedAt: nowStamp() },
-        { stage: 'Bank Verification', completedAt: null },
-        { stage: 'Identity Verification', completedAt: null },
-        { stage: 'Underwriting', completedAt: null },
-        { stage: 'Docs & E-Sign', completedAt: null },
-        { stage: 'Funded', completedAt: null },
-      ],
-    };
-    leadActions.update(id, patch);
-    leadActions.addTimeline(id, { title: 'Application submitted', description: 'Handed off to onboarding', user: 'You', timestamp: 'just now' });
+    if (!lead) return false;
+    if (lead.status === 'Not Qualified' || lead.status === 'Lost') return false;
+    leadActions.update(id, { stage: 'Converted', status: 'Won', lastActivity: 'just now' });
+    leadActions.addTimeline(id, { title: 'Lead converted', description: 'Won — handed off to onboarding', user: 'You', timestamp: 'just now' });
+    return true;
   },
 
   markLost(id: string) {
     leadActions.update(id, { status: 'Lost', lastActivity: 'just now' });
     leadActions.addTimeline(id, { title: 'Lead marked lost', description: 'Closed-lost from pipeline', user: 'You', timestamp: 'just now' });
+  },
+
+  markNotQualified(id: string) {
+    leadActions.update(id, { status: 'Not Qualified', lastActivity: 'just now' });
+    leadActions.addTimeline(id, { title: 'Lead marked not qualified', description: 'Did not meet qualification criteria', user: 'You', timestamp: 'just now' });
+  },
+
+  /** Force a fresh score recompute from the lead's current data. */
+  recomputeScore(id: string) {
+    const lead = state.leads.find(l => l.id === id);
+    if (!lead) return;
+    leadActions.update(id, { score: scoreLead(lead) });
   },
 
   addNote(id: string, body: string, author = 'You') {
@@ -1214,7 +1256,124 @@ export const leadActions = {
     const next = order[Math.min(idx + 1, order.length - 1)];
     leadActions.update(id, { bundle: { ...lead.bundle, status: next } });
   },
+
+  /** Permanently delete a single lead (optimistic + Supabase). */
+  remove(id: string) {
+    const prev = state.leads;
+    const lead = state.leads.find(l => l.id === id);
+    if (!lead) return;
+    persist(
+      'delete lead',
+      () => set({ leads: state.leads.filter(l => l.id !== id) }),
+      () => set({ leads: prev }),
+      () => supabase!.from('pipeline_leads').delete().eq('id', id).then(r => ({ error: r.error })),
+    );
+  },
+
+  /** Permanently delete many leads in one shot (optimistic + Supabase). */
+  removeMany(ids: string[]) {
+    if (ids.length === 0) return;
+    const idSet = new Set(ids);
+    const prev = state.leads;
+    persist(
+      'delete leads',
+      () => set({ leads: state.leads.filter(l => !idSet.has(l.id)) }),
+      () => set({ leads: prev }),
+      () => supabase!.from('pipeline_leads').delete().in('id', ids).then(r => ({ error: r.error })),
+    );
+  },
 };
+
+/**
+ * Heuristic: does this lead look like junk / test / placeholder data?
+ * Used by the backend "Find dummy leads" helper so staff can clear
+ * seed and test rows quickly without hand-picking each one.
+ */
+export function isDummyLead(l: Lead): boolean {
+  const name = (l.businessName || '').trim();
+  const lower = name.toLowerCase();
+  if (!name) return true;
+  // Angle-bracket placeholders Meta injects, e.g. "<test lead: dummy data…>"
+  if (name.startsWith('<') || name.includes('dummy') || name.includes('test lead')) return true;
+  // Obvious keyword placeholders
+  if (/\b(test|demo|sample|asdf|qwerty|placeholder|delete\s*me)\b/.test(lower)) return true;
+  // A bare social handle or email fragment with no real business identity
+  if (name.startsWith('@')) return true;
+  return false;
+}
+
+/** Parse a money-ish string ("$45,000", "45000") into a number. */
+function parseMoney(v?: string): number {
+  if (!v) return 0;
+  const n = Number(String(v).replace(/[^0-9.]/g, ''));
+  return Number.isFinite(n) ? n : 0;
+}
+
+/** Fields that feed the lead score — used to decide when to recompute. */
+const SCORING_FIELDS: (keyof Lead)[] = [
+  'monthlySales',
+  'amountRequested',
+  'contactEmail',
+  'contactPhone',
+  'contactName',
+  'industry',
+  'source',
+  'status',
+  'stage',
+  'referredBy',
+  'type',
+];
+
+/**
+ * Heuristic lead score (0–100) derived from whatever data is on the lead.
+ * Works for quick-capture leads and Meta imports — not just full KYB — so a
+ * lead's score becomes meaningful and improves as staff fill in more data.
+ * Deterministic and pure, so the same inputs always yield the same score.
+ */
+export function scoreLead(l: Partial<Lead>): number {
+  let score = 50;
+
+  // Monthly processing / sales volume — the strongest signal.
+  const sales = parseMoney(l.monthlySales);
+  if (sales >= 100_000) score += 22;
+  else if (sales >= 50_000) score += 15;
+  else if (sales >= 20_000) score += 9;
+  else if (sales >= 5_000) score += 4;
+  else if (sales > 0) score += 1;
+
+  // Requested amount vs. monthly sales — a sane ask scores higher.
+  const req = parseMoney(l.amountRequested);
+  if (sales > 0 && req > 0) {
+    const ratio = req / sales;
+    if (ratio <= 1.5) score += 8;
+    else if (ratio <= 3) score += 3;
+    else if (ratio > 6) score -= 8;
+  }
+
+  // Contact completeness — reachable leads convert.
+  if (l.contactEmail && l.contactEmail.includes('@')) score += 4;
+  if (l.contactPhone && l.contactPhone.replace(/\D/g, '').length >= 10) score += 4;
+  if (l.contactName && l.contactName.trim()) score += 2;
+  if (l.industry && l.industry.trim() && l.industry !== 'General') score += 2;
+
+  // Source quality.
+  const src = (l.source || '').toLowerCase();
+  if (src.includes('referral') || src.includes('partner')) score += 8;
+  else if (src.includes('website') || src.includes('inbound') || src.includes('event')) score += 4;
+  else if (src.includes('cold')) score -= 4;
+  if (l.referredBy) score += 4;
+
+  // Pipeline progress — later stages carry more conviction.
+  const stageIdx = l.stage ? LEAD_STAGES.indexOf(l.stage) : 0;
+  if (stageIdx > 0) score += Math.min(stageIdx * 2, 12);
+
+  // Status dispositions clamp the score to a sensible band.
+  if (l.status === 'Won') score = Math.max(score, 90);
+  else if (l.status === 'Lost') score = Math.min(score, 25);
+  else if (l.status === 'Not Qualified') score = Math.min(score, 15);
+
+  return Math.max(0, Math.min(100, Math.round(score)));
+}
 
 // ── Onboarding actions ──
 export const onboardingActions = {
