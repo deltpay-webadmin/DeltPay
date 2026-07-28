@@ -191,7 +191,7 @@ export function NewDealFlow({ open, onClose, onCreated, initialBorrower }: NewDe
                 label="Notes"
                 value={form.notes}
                 onChange={v => update('notes', v)}
-                placeholder="Context for the funding committee\u2026"
+                placeholder="Context for this deal…"
                 optional
               />
             </div>

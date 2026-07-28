@@ -38,7 +38,7 @@ function HealthRing({ score, size = 100 }: { score: number; size?: number }) {
   const r = (size - stroke) / 2;
   const circ = 2 * Math.PI * r;
   const offset = circ - (score / 100) * circ;
-  const color = score >= 75 ? '#10B981' : score >= 50 ? '#F59E0B' : '#EF4444';
+  const color = score >= 75 ? '#34C77B' : score >= 50 ? '#F0B429' : '#F2565B';
 
   return (
     <div className="relative" style={{ width: size, height: size }}>
@@ -357,25 +357,25 @@ function DashboardTab() {
               <AreaChart data={chartData}>
                 <defs>
                   <linearGradient id="bandGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#6366F1" stopOpacity={0.12} />
-                    <stop offset="95%" stopColor="#6366F1" stopOpacity={0.02} />
+                    <stop offset="5%" stopColor="#2E6BFF" stopOpacity={0.12} />
+                    <stop offset="95%" stopColor="#2E6BFF" stopOpacity={0.02} />
                   </linearGradient>
                   <linearGradient id="projGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#6366F1" stopOpacity={0.2} />
-                    <stop offset="95%" stopColor="#6366F1" stopOpacity={0} />
+                    <stop offset="5%" stopColor="#2E6BFF" stopOpacity={0.2} />
+                    <stop offset="95%" stopColor="#2E6BFF" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
-                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#94A3B8' }} />
+                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#8A97AE' }} />
                 <YAxis
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fontSize: 12, fill: '#94A3B8' }}
+                  tick={{ fontSize: 12, fill: '#8A97AE' }}
                   tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`}
                   domain={[80000, 'auto']}
                 />
                 <Tooltip
-                  contentStyle={{ backgroundColor: '#fff', border: '1px solid #E2E8F0', borderRadius: '8px', fontSize: '13px' }}
+                  contentStyle={{ backgroundColor: '#18233C', border: '1px solid #33415F', borderRadius: '8px', fontSize: '13px' }}
                   formatter={(value: number, name: string) => {
                     const labels: Record<string, string> = { projected: 'Projected', high: 'High', low: 'Low', actual: 'Actual' };
                     return [`$${value.toLocaleString()}`, labels[name] || name];
@@ -385,11 +385,11 @@ function DashboardTab() {
                 <Area key="area-high" type="monotone" dataKey="high" stroke="none" fill="url(#bandGrad)" stackId="band" />
                 <Area key="area-low" type="monotone" dataKey="low" stroke="none" fill="#fff" stackId="band-low" />
                 {/* Projected line */}
-                <Area key="area-projected" type="monotone" dataKey="projected" stroke="#6366F1" strokeWidth={2.5} fill="url(#projGrad)" />
+                <Area key="area-projected" type="monotone" dataKey="projected" stroke="#2E6BFF" strokeWidth={2.5} fill="url(#projGrad)" />
                 {/* Actuals */}
-                <Area key="area-actual" type="monotone" dataKey="actual" stroke="#10B981" strokeWidth={2.5} fill="none" dot={(props: any) => {
+                <Area key="area-actual" type="monotone" dataKey="actual" stroke="#34C77B" strokeWidth={2.5} fill="none" dot={(props: any) => {
                   if (props.payload?.actual == null) return null;
-                  return <circle key={`dot-actual-${props.cx}-${props.cy}`} cx={props.cx} cy={props.cy} r={4} fill="#10B981" stroke="#fff" strokeWidth={2} />;
+                  return <circle key={`dot-actual-${props.cx}-${props.cy}`} cx={props.cx} cy={props.cy} r={4} fill="#34C77B" stroke="#fff" strokeWidth={2} />;
                 }} connectNulls={false} />
               </AreaChart>
             </ResponsiveContainer>

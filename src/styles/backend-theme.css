@@ -1,14 +1,15 @@
 /* ----------------------------------------------------------------
-   Delt CRM (back-office) design tokens
+   Delt CRM (back-office) — DeltPay Design System, dark-first
 
-   Recreated from the Delt-Backend project so the authenticated CRM keeps
-   its own visual identity without affecting the public marketing site.
-   Every shadcn token is re-declared inside `.delt-backend-scope`, so the
-   `@theme inline` utilities (bg-background, text-muted-foreground, …)
-   resolve to the CRM's palette only within the dashboard subtree.
+   The CRM is a high-trust money surface. One accent (cobalt), dark
+   layered surfaces, tabular numerals everywhere. Every token below is
+   scoped to `.delt-backend-scope`, so the authenticated CRM carries the
+   DeltPay dark system without touching the public marketing site.
+
+   Tailwind v4 utilities resolve through `var(--color-*)`, so remapping
+   those variables inside the scope restyles every page of the CRM from
+   one place. Spec: DELTPAY_DESIGN_SPEC.md §2 (tokens) + §4.2 (app shell).
 ---------------------------------------------------------------- */
-
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap');
 
 /* Brand / product color utilities (bg-brand, text-info, bg-canvas, …) used
    throughout the CRM. Registered globally so Tailwind generates them; the
@@ -41,48 +42,398 @@ body.crm-active {
   zoom: 1 !important;
 }
 
-/* CRM palette — scoped so it never leaks onto the marketing pages. */
+/* ════════════════════════════════════════════════════════════════
+   CRM scope — DeltPay dark tokens
+   ════════════════════════════════════════════════════════════════ */
 .delt-backend-scope {
-  font-family: 'DM Sans', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
-    'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family: 'Satoshi', ui-sans-serif, system-ui, -apple-system,
+    BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
 
-  --background: #ffffff;
-  --foreground: oklch(0.145 0 0);
-  --card: #ffffff;
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: #030213;
-  --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.95 0.0058 264.53);
-  --secondary-foreground: #030213;
-  --muted: #ececf0;
-  --muted-foreground: #717182;
-  --accent: #e9ebef;
-  --accent-foreground: #030213;
-  --destructive: #d4183d;
+  /* ── DeltPay core surface tokens ── */
+  --dp-bg-base: #050A16;    /* page floor, sidebar */
+  --dp-bg-surface: #0A1020; /* app shell, section bg */
+  --dp-bg-card: #111A2E;    /* cards, panels, table rows */
+  --dp-bg-raised: #18233C;  /* hover, selected row, drawer */
+  --dp-border: #22304F;     /* hairlines (lifted a step so they read on card) */
+  --dp-border-strong: #33415F;
+  --dp-text: #F2F5FA;
+  --dp-text-secondary: #C9D2E0;
+  --dp-text-muted: #8A97AE;
+  --dp-text-faint: #5F6C85;
+  --dp-accent: #2E6BFF;
+  --dp-accent-hover: #4A7EFF;
+  --dp-accent-press: #1B4FD6;
+  --dp-accent-text: #5B8CFF;
+  --dp-accent-soft: rgba(46, 107, 255, 0.14);
+  --dp-success: #34C77B;
+  --dp-warning: #F0B429;
+  --dp-danger: #F2565B;
+  --dp-capital: #7C5BFF;
+
+  /* ── Brand utilities → cobalt inside the CRM ── */
+  --brand: var(--dp-accent);
+  --brand-hover: var(--dp-accent-hover);
+  --brand-light: var(--dp-accent-text);
+  --canvas: var(--dp-bg-surface);
+  --canvas-muted: #0D1526;
+  --info: var(--dp-accent-text);
+  --info-hover: #7FA3FF;
+
+  /* ── Tailwind palette remap (utilities resolve var(--color-*)) ──
+     Neutrals invert onto the dark surface stack; every hue family keeps
+     its meaning but is re-tuned for dark: 50/100/200 become alpha tints
+     (chip fills + borders), 500/600 stay the saturated fill, 700+ become
+     light text that passes on tinted chips. */
+
+  /* neutrals — gray is the workhorse; slate/zinc/neutral/stone follow */
+  --color-gray-50: #18233C;
+  --color-gray-100: #1E2B49;
+  --color-gray-200: #26345A;
+  --color-gray-300: #33415F;
+  --color-gray-400: #6E7C96;
+  --color-gray-500: #8A97AE;
+  --color-gray-600: #A5B1C6;
+  --color-gray-700: #C9D2E0;
+  --color-gray-800: #DEE5EF;
+  --color-gray-900: #F2F5FA;
+  --color-gray-950: #F8FAFD;
+  --color-slate-50: #18233C;
+  --color-slate-100: #1E2B49;
+  --color-slate-200: #26345A;
+  --color-slate-300: #33415F;
+  --color-slate-400: #6E7C96;
+  --color-slate-500: #8A97AE;
+  --color-slate-600: #A5B1C6;
+  --color-slate-700: #C9D2E0;
+  --color-slate-800: #DEE5EF;
+  --color-slate-900: #F2F5FA;
+  --color-slate-950: #F8FAFD;
+  --color-zinc-50: #18233C;
+  --color-zinc-100: #1E2B49;
+  --color-zinc-200: #26345A;
+  --color-zinc-400: #6E7C96;
+  --color-zinc-500: #8A97AE;
+  --color-zinc-700: #C9D2E0;
+  --color-zinc-900: #F2F5FA;
+  --color-neutral-50: #18233C;
+  --color-neutral-100: #1E2B49;
+  --color-neutral-200: #26345A;
+  --color-neutral-400: #6E7C96;
+  --color-neutral-500: #8A97AE;
+  --color-neutral-700: #C9D2E0;
+  --color-neutral-900: #F2F5FA;
+  --color-stone-50: #18233C;
+  --color-stone-100: #1E2B49;
+  --color-stone-200: #26345A;
+  --color-stone-500: #8A97AE;
+  --color-stone-900: #F2F5FA;
+
+  /* success — emerald / green / teal */
+  --color-emerald-50: rgba(52, 199, 123, 0.12);
+  --color-emerald-100: rgba(52, 199, 123, 0.18);
+  --color-emerald-200: rgba(52, 199, 123, 0.35);
+  --color-emerald-300: rgba(52, 199, 123, 0.5);
+  --color-emerald-400: #45D08A;
+  --color-emerald-500: #34C77B;
+  --color-emerald-600: #2BB56D;
+  --color-emerald-700: #63DFA2;
+  --color-emerald-800: #98EBC2;
+  --color-emerald-900: #C4F5DC;
+  --color-green-50: rgba(52, 199, 123, 0.12);
+  --color-green-100: rgba(52, 199, 123, 0.18);
+  --color-green-200: rgba(52, 199, 123, 0.35);
+  --color-green-400: #45D08A;
+  --color-green-500: #34C77B;
+  --color-green-600: #2BB56D;
+  --color-green-700: #63DFA2;
+  --color-green-800: #98EBC2;
+  --color-green-900: #C4F5DC;
+  --color-teal-50: rgba(49, 200, 180, 0.12);
+  --color-teal-100: rgba(49, 200, 180, 0.18);
+  --color-teal-200: rgba(49, 200, 180, 0.35);
+  --color-teal-400: #43D2BF;
+  --color-teal-500: #31C8B4;
+  --color-teal-600: #2AB5A3;
+  --color-teal-700: #7ADFD2;
+  --color-teal-800: #A8EAE1;
+  --color-teal-900: #CFF4EF;
+  --color-lime-50: rgba(155, 226, 75, 0.12);
+  --color-lime-200: rgba(155, 226, 75, 0.35);
+  --color-lime-500: #8FD83E;
+  --color-lime-600: #84CC33;
+  --color-lime-700: #B7EB7E;
+
+  /* danger — red / rose */
+  --color-red-50: rgba(242, 86, 91, 0.12);
+  --color-red-100: rgba(242, 86, 91, 0.18);
+  --color-red-200: rgba(242, 86, 91, 0.35);
+  --color-red-300: rgba(242, 86, 91, 0.5);
+  --color-red-400: #F87F83;
+  --color-red-500: #F2565B;
+  --color-red-600: #E84A4F;
+  --color-red-700: #FF8A8E;
+  --color-red-800: #FFB0B3;
+  --color-red-900: #FFD3D5;
+  --color-rose-50: rgba(242, 86, 91, 0.12);
+  --color-rose-100: rgba(242, 86, 91, 0.18);
+  --color-rose-200: rgba(242, 86, 91, 0.35);
+  --color-rose-500: #F2565B;
+  --color-rose-600: #E84A4F;
+  --color-rose-700: #FF8A8E;
+
+  /* warning — amber / yellow / orange */
+  --color-amber-50: rgba(240, 180, 41, 0.12);
+  --color-amber-100: rgba(240, 180, 41, 0.18);
+  --color-amber-200: rgba(240, 180, 41, 0.35);
+  --color-amber-300: rgba(240, 180, 41, 0.5);
+  --color-amber-400: #F3C14E;
+  --color-amber-500: #F0B429;
+  --color-amber-600: #E3A81F;
+  --color-amber-700: #F7CB66;
+  --color-amber-800: #FADD9A;
+  --color-amber-900: #FCEBC4;
+  --color-yellow-50: rgba(240, 180, 41, 0.12);
+  --color-yellow-100: rgba(240, 180, 41, 0.18);
+  --color-yellow-200: rgba(240, 180, 41, 0.35);
+  --color-yellow-400: #F3C14E;
+  --color-yellow-500: #F0B429;
+  --color-yellow-600: #E3A81F;
+  --color-yellow-700: #F7CB66;
+  --color-yellow-800: #FADD9A;
+  --color-orange-50: rgba(245, 152, 73, 0.12);
+  --color-orange-100: rgba(245, 152, 73, 0.18);
+  --color-orange-200: rgba(245, 152, 73, 0.35);
+  --color-orange-400: #F7A968;
+  --color-orange-500: #F59849;
+  --color-orange-600: #EE8A38;
+  --color-orange-700: #FBB077;
+  --color-orange-800: #FDCBA4;
+
+  /* action / info — indigo is the CRM accent, blue+sky+cyan are info */
+  --color-indigo-50: rgba(46, 107, 255, 0.14);
+  --color-indigo-100: rgba(46, 107, 255, 0.2);
+  --color-indigo-200: rgba(46, 107, 255, 0.35);
+  --color-indigo-300: rgba(46, 107, 255, 0.5);
+  --color-indigo-400: #4A7EFF;
+  --color-indigo-500: #2E6BFF;
+  --color-indigo-600: #5B8CFF;
+  --color-indigo-700: #7FA3FF;
+  --color-indigo-800: #A9C1FF;
+  --color-indigo-900: #CDDBFF;
+  --color-blue-50: rgba(46, 107, 255, 0.12);
+  --color-blue-100: rgba(46, 107, 255, 0.18);
+  --color-blue-200: rgba(46, 107, 255, 0.32);
+  --color-blue-300: rgba(46, 107, 255, 0.5);
+  --color-blue-400: #4A7EFF;
+  --color-blue-500: #4A7EFF;
+  --color-blue-600: #5B8CFF;
+  --color-blue-700: #7FA3FF;
+  --color-blue-800: #A9C1FF;
+  --color-blue-900: #CDDBFF;
+  --color-sky-50: rgba(74, 126, 255, 0.12);
+  --color-sky-100: rgba(74, 126, 255, 0.18);
+  --color-sky-200: rgba(74, 126, 255, 0.32);
+  --color-sky-500: #4A7EFF;
+  --color-sky-600: #5B8CFF;
+  --color-sky-700: #7FA3FF;
+  --color-cyan-50: rgba(60, 201, 227, 0.12);
+  --color-cyan-100: rgba(60, 201, 227, 0.18);
+  --color-cyan-200: rgba(60, 201, 227, 0.35);
+  --color-cyan-400: #55D2E8;
+  --color-cyan-500: #3CC9E3;
+  --color-cyan-600: #2FB8D2;
+  --color-cyan-700: #86E1F1;
+  --color-cyan-800: #B0ECF6;
+
+  /* capital — purple / violet / fuchsia / pink */
+  --color-purple-50: rgba(124, 91, 255, 0.14);
+  --color-purple-100: rgba(124, 91, 255, 0.2);
+  --color-purple-200: rgba(124, 91, 255, 0.35);
+  --color-purple-300: rgba(124, 91, 255, 0.5);
+  --color-purple-400: #9075FF;
+  --color-purple-500: #7C5BFF;
+  --color-purple-600: #7C5BFF;
+  --color-purple-700: #A794FF;
+  --color-purple-800: #C5B8FF;
+  --color-purple-900: #DED6FF;
+  --color-violet-50: rgba(124, 91, 255, 0.14);
+  --color-violet-100: rgba(124, 91, 255, 0.2);
+  --color-violet-200: rgba(124, 91, 255, 0.35);
+  --color-violet-500: #7C5BFF;
+  --color-violet-600: #7C5BFF;
+  --color-violet-700: #A794FF;
+  --color-fuchsia-50: rgba(216, 112, 235, 0.14);
+  --color-fuchsia-500: #D870EB;
+  --color-fuchsia-600: #D870EB;
+  --color-fuchsia-700: #E9A3F4;
+  --color-pink-50: rgba(237, 100, 166, 0.14);
+  --color-pink-100: rgba(237, 100, 166, 0.2);
+  --color-pink-200: rgba(237, 100, 166, 0.35);
+  --color-pink-500: #ED64A6;
+  --color-pink-600: #ED64A6;
+  --color-pink-700: #F58BBE;
+
+  /* ── shadcn tokens (ui/ primitives) ── */
+  --background: var(--dp-bg-surface);
+  --foreground: var(--dp-text);
+  --card: var(--dp-bg-card);
+  --card-foreground: var(--dp-text);
+  --popover: var(--dp-bg-card);
+  --popover-foreground: var(--dp-text);
+  --primary: var(--dp-accent);
+  --primary-foreground: #ffffff;
+  --secondary: var(--dp-bg-raised);
+  --secondary-foreground: var(--dp-text);
+  --muted: var(--dp-bg-raised);
+  --muted-foreground: var(--dp-text-muted);
+  --accent: #1E2B49;
+  --accent-foreground: var(--dp-text);
+  --destructive: var(--dp-danger);
   --destructive-foreground: #ffffff;
-  --border: rgba(0, 0, 0, 0.1);
+  --border: rgba(255, 255, 255, 0.09);
   --input: transparent;
-  --input-background: #f3f3f5;
-  --switch-background: #cbced4;
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
+  --input-background: var(--dp-bg-raised);
+  --switch-background: #33415F;
+  --ring: var(--dp-accent);
+  --chart-1: #2E6BFF;
+  --chart-2: #5B8CFF;
+  --chart-3: #8FB0FF;
+  --chart-4: #C4D5FF;
+  --chart-5: #7C5BFF;
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: #030213;
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar: var(--dp-bg-base);
+  --sidebar-foreground: var(--dp-text);
+  --sidebar-primary: var(--dp-accent);
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: var(--dp-bg-raised);
+  --sidebar-accent-foreground: var(--dp-text);
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --sidebar-ring: var(--dp-accent);
 
-  background-color: var(--background);
-  color: var(--foreground);
+  background-color: var(--dp-bg-surface);
+  color: var(--dp-text);
   min-height: 100vh;
+  color-scheme: dark;
+}
+
+/* Headings: keep Satoshi inside the CRM (dc-global-polish forces the
+   marketing display serif on h1–h3 with !important). */
+.delt-backend-scope :is(h1, h2, h3, h4, h5, h6) {
+  font-family: 'Satoshi', ui-sans-serif, system-ui, sans-serif !important;
+  letter-spacing: -0.01em;
+}
+
+/* Money never misaligns: every numeral in the CRM is tabular. */
+.delt-backend-scope {
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+/* Monospace runs (refs, MIDs, last-4) use JetBrains Mono per spec. */
+.delt-backend-scope .font-mono,
+.delt-backend-scope kbd {
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+/* ── `white` cannot be remapped at the variable level (text-white on
+   filled buttons must stay white), so the surface usages are re-pointed
+   here instead. ── */
+.delt-backend-scope .bg-white {
+  background-color: var(--dp-bg-card);
+}
+.delt-backend-scope .hover\:bg-white:hover {
+  background-color: var(--dp-bg-raised);
+}
+/* translucent white chips (e.g. `bg-white/60` count badges) become soft
+   light overlays instead of glaring patches */
+.delt-backend-scope :is(.bg-white\/50, .bg-white\/60, .bg-white\/80) {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+.delt-backend-scope .bg-white\/20 {
+  background-color: rgba(255, 255, 255, 0.12);
+}
+.delt-backend-scope .border-white {
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+/* ── Arbitrary-hex utilities that appear in a handful of pages —
+   pinned to their dark equivalents so nothing flashes light. ── */
+.delt-backend-scope .text-\[\#6B7280\] { color: var(--dp-text-muted); }
+.delt-backend-scope .text-\[\#111827\] { color: var(--dp-text); }
+.delt-backend-scope .border-\[\#E5E7EB\] { border-color: var(--dp-border); }
+.delt-backend-scope .text-\[\#2563EB\] { color: var(--dp-accent-text); }
+.delt-backend-scope .text-\[\#1E40AF\] { color: #7FA3FF; }
+.delt-backend-scope .text-\[\#15803D\] { color: #63DFA2; }
+.delt-backend-scope .text-\[\#B45309\] { color: #F7CB66; }
+.delt-backend-scope .text-\[\#A21CAF\] { color: #E9A3F4; }
+.delt-backend-scope .text-\[\#EF4444\] { color: var(--dp-danger); }
+.delt-backend-scope .bg-\[\#F5FBFF\],
+.delt-backend-scope .bg-\[\#EFF6FF\],
+.delt-backend-scope .bg-\[\#EBF5FF\] { background-color: var(--dp-bg-raised); }
+.delt-backend-scope .bg-\[\#DBEAFE\] { background-color: var(--dp-accent-soft); }
+.delt-backend-scope .bg-\[\#ECFDF5\] { background-color: rgba(52, 199, 123, 0.12); }
+.delt-backend-scope .bg-\[\#FEE2E2\] { background-color: rgba(242, 86, 91, 0.12); }
+.delt-backend-scope .bg-\[\#FCE7F3\] { background-color: rgba(237, 100, 166, 0.14); }
+.delt-backend-scope .border-\[\#BFDBFE\] { border-color: rgba(46, 107, 255, 0.32); }
+.delt-backend-scope .border-\[\#ECFDF5\] { border-color: rgba(52, 199, 123, 0.35); }
+.delt-backend-scope .border-\[\#FCE7F3\] { border-color: rgba(237, 100, 166, 0.35); }
+
+/* ── Shadows read as depth, not dirt, on dark ── */
+.delt-backend-scope .shadow-sm { box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4); }
+.delt-backend-scope .shadow-md,
+.delt-backend-scope .hover\:shadow-md:hover { box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45); }
+.delt-backend-scope .shadow-lg { box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45); }
+.delt-backend-scope .shadow-xl,
+.delt-backend-scope .shadow-2xl { box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55); }
+
+/* ── Recharts chrome: tooltips carry inline light styles in a few pages;
+   !important beats inline so every chart tooltip reads dark. ── */
+.delt-backend-scope .recharts-default-tooltip {
+  background-color: var(--dp-bg-raised) !important;
+  border: 1px solid var(--dp-border-strong) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+.delt-backend-scope .recharts-tooltip-label {
+  color: var(--dp-text-secondary) !important;
+}
+.delt-backend-scope .recharts-cartesian-grid line {
+  stroke: rgba(255, 255, 255, 0.06);
+}
+
+/* ── Form controls ── */
+.delt-backend-scope input,
+.delt-backend-scope select,
+.delt-backend-scope textarea {
+  color-scheme: dark;
+}
+.delt-backend-scope ::placeholder {
+  color: var(--dp-text-faint);
+}
+.delt-backend-scope select option {
+  background-color: var(--dp-bg-card);
+  color: var(--dp-text);
+}
+
+/* ── Selection + scrollbars ── */
+.delt-backend-scope ::selection {
+  background: rgba(46, 107, 255, 0.35);
+  color: #fff;
+}
+.delt-backend-scope * {
+  scrollbar-width: thin;
+  scrollbar-color: #33415F transparent;
+}
+.delt-backend-scope *::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.delt-backend-scope *::-webkit-scrollbar-thumb {
+  background: #33415F;
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+.delt-backend-scope *::-webkit-scrollbar-track {
+  background: transparent;
 }

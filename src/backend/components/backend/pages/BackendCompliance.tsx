@@ -165,7 +165,7 @@ const STATES = [
 ];
 
 const VENDORS = [
-  { id: 'global', name: 'Global Payments', role: 'Processor / Sponsor', color: '#4318FF', obligations: [
+  { id: 'global', name: 'Global Payments', role: 'Processor / Sponsor', color: '#2E6BFF', obligations: [
     { item: 'ISO registration renewal', type: 'deadline', detail: 'Annual $5k fee. Renew with Visa/MC through Global.' },
     { item: 'Merchant boarding standards', type: 'compliance', detail: 'KYC, business verification, prohibited MCCs, volume projections.' },
     { item: 'Reserve account monitoring', type: 'track', detail: 'Rolling reserves on high-risk merchants.' },

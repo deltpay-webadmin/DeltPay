@@ -226,7 +226,7 @@ function RiskScoreRing({ score, size = 44 }: { score: number; size?: number }) {
 }
 
 // Sparkline
-function Sparkline({ data, color = '#6366f1' }: { data: number[]; color?: string }) {
+function Sparkline({ data, color = '#2E6BFF' }: { data: number[]; color?: string }) {
   const max = Math.max(...data);
   const min = Math.min(...data);
   const range = max - min || 1;
@@ -441,7 +441,7 @@ function DetailPanel({ merchant, tasks, onAddTask, onClose }: {
   const trendDecline = merchant.volumeTrend[0] > 0
     ? Math.round(((merchant.volumeTrend[0] - merchant.volumeTrend[5]) / merchant.volumeTrend[0]) * 100)
     : 0;
-  const trendColor = trendDecline > 20 ? '#ef4444' : trendDecline > 10 ? '#f59e0b' : '#6366f1';
+  const trendColor = trendDecline > 20 ? '#F2565B' : trendDecline > 10 ? '#F0B429' : '#2E6BFF';
 
   const playbooks = [
     { label: 'Offer Rate Review', icon: Gift, desc: 'Review and potentially lower processing rates' },

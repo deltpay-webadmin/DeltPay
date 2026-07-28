@@ -168,23 +168,23 @@ export function AgentDashboard() {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData} barSize={40}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
-                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#94A3B8' }} />
+                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#8A97AE' }} />
                 <YAxis
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fontSize: 12, fill: '#94A3B8' }}
+                  tick={{ fontSize: 12, fill: '#8A97AE' }}
                   tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`}
                 />
                 <Tooltip
                   formatter={(value: number) => [`$${value.toLocaleString()}`, 'Funded']}
                   contentStyle={{
-                    backgroundColor: '#fff',
-                    border: '1px solid #E2E8F0',
+                    backgroundColor: '#18233C',
+                    border: '1px solid #33415F',
                     borderRadius: '8px',
                     fontSize: '13px',
                   }}
                 />
-                <Bar dataKey="funded" name="funded" fill="#6366F1" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="funded" name="funded" fill="#2E6BFF" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>

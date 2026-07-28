@@ -447,9 +447,9 @@ export function DeltBackendLayout() {
       <div className="flex h-screen bg-canvas font-sans">
 
         {/* ═══ Left Sidebar ═══ */}
-        <aside className="hidden lg:flex flex-col w-[220px] bg-white border-r border-gray-200 shrink-0">
+        <aside className="hidden lg:flex flex-col w-[236px] bg-(--dp-bg-base) border-r border-white/[0.06] shrink-0">
           {/* Logo */}
-          <div className="px-5 h-14 flex items-center shrink-0">
+          <div className="px-5 h-16 flex items-center shrink-0">
             <button
               onClick={() => handleNavigate('/')}
               className="flex items-center gap-2.5 group"
@@ -457,7 +457,7 @@ export function DeltBackendLayout() {
               <div className="w-7 h-7 bg-brand rounded-[6px] flex items-center justify-center">
                 <span className="text-white text-xs font-bold">D</span>
               </div>
-              <span className="text-[15px] font-bold text-gray-900 group-hover:text-brand transition-colors">
+              <span className="text-[15px] font-bold text-gray-900 group-hover:text-(--dp-accent-text) transition-colors">
                 Delt
               </span>
             </button>
@@ -470,8 +470,8 @@ export function DeltBackendLayout() {
               onClick={() => handleNavigate('/')}
               className={`w-full flex items-center gap-2.5 px-3 py-[7px] rounded-[6px] text-[13px] transition-colors mb-0.5 ${
                 currentPage === '/'
-                  ? 'text-brand bg-brand/[0.06] font-semibold'
-                  : 'text-gray-700 hover:bg-gray-50 font-medium'
+                  ? 'text-white bg-white/[0.06] font-semibold shadow-[inset_2px_0_0_var(--dp-accent)]'
+                  : 'text-gray-500 hover:text-gray-900 hover:bg-white/[0.04] font-medium'
               }`}
             >
               <Home className="w-[16px] h-[16px]" />
@@ -484,8 +484,8 @@ export function DeltBackendLayout() {
                 onClick={() => handleNavigate('/workspace')}
                 className={`w-full flex items-center gap-2.5 px-3 py-[7px] rounded-[6px] text-[13px] transition-colors mb-0.5 ${
                   currentPage === '/workspace'
-                    ? 'text-brand bg-brand/[0.06] font-semibold'
-                    : 'text-gray-700 hover:bg-gray-50 font-medium'
+                    ? 'text-white bg-white/[0.06] font-semibold shadow-[inset_2px_0_0_var(--dp-accent)]'
+                    : 'text-gray-500 hover:text-gray-900 hover:bg-white/[0.04] font-medium'
                 }`}
               >
                 <Inbox className="w-[16px] h-[16px]" />
@@ -504,8 +504,8 @@ export function DeltBackendLayout() {
                     onClick={() => handleNavigate(item.path)}
                     className={`w-full flex items-center gap-2.5 px-3 py-[7px] rounded-[6px] text-[13px] transition-colors mb-0.5 ${
                       active
-                        ? 'text-brand bg-brand/[0.06] font-semibold'
-                        : 'text-gray-700 hover:bg-gray-50 font-medium'
+                        ? 'text-white bg-white/[0.06] font-semibold shadow-[inset_2px_0_0_var(--dp-accent)]'
+                        : 'text-gray-500 hover:text-gray-900 hover:bg-white/[0.04] font-medium'
                     }`}
                   >
                     <Icon className="w-[16px] h-[16px]" />
@@ -526,10 +526,10 @@ export function DeltBackendLayout() {
                       onClick={() => toggleSection(section.id)}
                       className={`w-full flex items-center gap-2.5 px-3 py-[7px] rounded-[6px] text-[13px] transition-colors ${
                         hasActiveChild && !isExpanded
-                          ? 'text-brand bg-brand/[0.06] font-semibold'
+                          ? 'text-white bg-white/[0.06] font-semibold shadow-[inset_2px_0_0_var(--dp-accent)]'
                           : hasActiveChild
-                            ? 'text-brand font-semibold'
-                            : 'text-gray-700 hover:bg-gray-50 font-medium'
+                            ? 'text-white font-semibold'
+                            : 'text-gray-500 hover:text-gray-900 hover:bg-white/[0.04] font-medium'
                       }`}
                     >
                       <Icon className="w-[16px] h-[16px]" />
@@ -539,7 +539,7 @@ export function DeltBackendLayout() {
 
                     {/* Sub-items */}
                     {isExpanded && (
-                      <div className="ml-[18px] pl-[14px] border-l border-gray-100 mt-0.5 mb-1">
+                      <div className="ml-[18px] pl-[14px] border-l border-white/[0.08] mt-0.5 mb-1">
                         {section.children.map(child => {
                           const active = isActivePath(child.path);
                           return (
@@ -548,8 +548,8 @@ export function DeltBackendLayout() {
                               onClick={() => handleNavigate(child.path)}
                               className={`w-full text-left px-2.5 py-[6px] rounded-[6px] text-[13px] transition-colors block ${
                                 active
-                                  ? 'text-brand bg-brand/[0.06] font-semibold'
-                                  : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50 font-normal'
+                                  ? 'text-white bg-white/[0.06] font-semibold shadow-[inset_2px_0_0_var(--dp-accent)]'
+                                  : 'text-gray-400 hover:text-gray-900 hover:bg-white/[0.04] font-normal'
                               }`}
                             >
                               {child.label}
@@ -565,7 +565,7 @@ export function DeltBackendLayout() {
           </nav>
 
           {/* Sidebar bottom */}
-          <div className="border-t border-gray-100 px-3 py-3 space-y-0.5">
+          <div className="border-t border-white/[0.06] px-3 py-3 space-y-0.5">
             <a
               href="#/"
               className="w-full flex items-center gap-2.5 px-3 py-[7px] rounded-[6px] text-[13px] text-gray-500 hover:text-gray-900 hover:bg-gray-50 font-medium transition-colors"
@@ -583,7 +583,7 @@ export function DeltBackendLayout() {
           </div>
 
           {/* User card at bottom */}
-          <div className="border-t border-gray-100 px-3 py-3">
+          <div className="border-t border-white/[0.06] px-3 py-3">
             <div className="relative">
               <button
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
@@ -602,7 +602,7 @@ export function DeltBackendLayout() {
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setIsUserMenuOpen(false)} />
                   <div className="absolute left-0 bottom-full mb-2 w-52 bg-white rounded-[8px] shadow-lg border border-gray-200 py-1 z-50">
-                    <div className="px-4 py-3 border-b border-gray-100">
+                    <div className="px-4 py-3 border-b border-white/[0.06]">
                       <p className="text-[13px] font-semibold text-gray-900">{user.name}</p>
                       <p className="text-[11px] text-gray-500">{user.email}</p>
                     </div>
@@ -614,7 +614,7 @@ export function DeltBackendLayout() {
                       <ArrowLeftRight className="w-3.5 h-3.5" />
                       Switch to {userRole === 'admin' ? 'Agent' : 'Admin'} View
                     </button>
-                    <div className="border-t border-gray-100 mt-1 pt-1">
+                    <div className="border-t border-white/[0.06] mt-1 pt-1">
                       <button className="w-full px-4 py-2 text-left text-[13px] text-red-600 hover:bg-red-50">Log Out</button>
                     </div>
                   </div>
@@ -628,8 +628,8 @@ export function DeltBackendLayout() {
         <div className="flex flex-col flex-1 overflow-hidden">
 
           {/* ── Slim Top Bar ── */}
-          <header className="bg-white border-b border-gray-200 shrink-0 z-30">
-            <div className="flex items-center h-14 px-4 lg:px-6">
+          <header className="bg-(--dp-bg-surface) border-b border-white/[0.06] shrink-0 z-30">
+            <div className="flex items-center h-16 px-4 lg:px-6">
               {/* Mobile hamburger */}
               <button
                 onClick={() => setIsMobileMenuOpen(true)}
@@ -701,7 +701,7 @@ export function DeltBackendLayout() {
 
           {/* ── Breadcrumbs ── */}
           {isDeepPage(currentPage) && (
-            <div className="bg-white border-b border-gray-200 px-6 py-2.5 shrink-0">
+            <div className="bg-(--dp-bg-surface) border-b border-white/[0.06] px-6 py-2.5 shrink-0">
               <nav className="flex items-center gap-1.5 text-[13px]">
                 {getBreadcrumbs(currentPage).map((crumb, i, arr) => (
                   <React.Fragment key={crumb.path}>
@@ -732,8 +732,8 @@ export function DeltBackendLayout() {
         {isMobileMenuOpen && (
           <div className="fixed inset-0 z-50 lg:hidden">
             <div className="fixed inset-0 bg-black/40" onClick={() => setIsMobileMenuOpen(false)} />
-            <aside className="fixed left-0 top-0 bottom-0 w-[260px] bg-white flex flex-col shadow-xl">
-              <div className="flex items-center justify-between px-5 h-14 border-b border-gray-100 shrink-0">
+            <aside className="fixed left-0 top-0 bottom-0 w-[260px] bg-(--dp-bg-base) flex flex-col shadow-xl">
+              <div className="flex items-center justify-between px-5 h-16 border-b border-white/[0.06] shrink-0">
                 <div className="flex items-center gap-2.5">
                   <div className="w-7 h-7 bg-brand rounded-[6px] flex items-center justify-center">
                     <span className="text-white text-xs font-bold">D</span>
@@ -751,8 +751,8 @@ export function DeltBackendLayout() {
                   onClick={() => handleNavigate('/')}
                   className={`w-full flex items-center gap-2.5 px-3 py-[7px] rounded-[6px] text-[13px] transition-colors mb-0.5 ${
                     currentPage === '/'
-                      ? 'text-brand bg-brand/[0.06] font-semibold'
-                      : 'text-gray-700 hover:bg-gray-50 font-medium'
+                      ? 'text-white bg-white/[0.06] font-semibold shadow-[inset_2px_0_0_var(--dp-accent)]'
+                      : 'text-gray-500 hover:text-gray-900 hover:bg-white/[0.04] font-medium'
                   }`}
                 >
                   <Home className="w-[16px] h-[16px]" />
@@ -765,8 +765,8 @@ export function DeltBackendLayout() {
                     onClick={() => handleNavigate('/workspace')}
                     className={`w-full flex items-center gap-2.5 px-3 py-[7px] rounded-[6px] text-[13px] transition-colors mb-0.5 ${
                       currentPage === '/workspace'
-                        ? 'text-brand bg-brand/[0.06] font-semibold'
-                        : 'text-gray-700 hover:bg-gray-50 font-medium'
+                        ? 'text-white bg-white/[0.06] font-semibold shadow-[inset_2px_0_0_var(--dp-accent)]'
+                        : 'text-gray-500 hover:text-gray-900 hover:bg-white/[0.04] font-medium'
                     }`}
                   >
                     <Inbox className="w-[16px] h-[16px]" />
@@ -784,8 +784,8 @@ export function DeltBackendLayout() {
                         onClick={() => handleNavigate(item.path)}
                         className={`w-full flex items-center gap-2.5 px-3 py-[7px] rounded-[6px] text-[13px] transition-colors mb-0.5 ${
                           active
-                            ? 'text-brand bg-brand/[0.06] font-semibold'
-                            : 'text-gray-700 hover:bg-gray-50 font-medium'
+                            ? 'text-white bg-white/[0.06] font-semibold shadow-[inset_2px_0_0_var(--dp-accent)]'
+                            : 'text-gray-500 hover:text-gray-900 hover:bg-white/[0.04] font-medium'
                         }`}
                       >
                         <Icon className="w-[16px] h-[16px]" />
@@ -804,10 +804,10 @@ export function DeltBackendLayout() {
                           onClick={() => toggleSection(section.id)}
                           className={`w-full flex items-center gap-2.5 px-3 py-[7px] rounded-[6px] text-[13px] transition-colors ${
                             hasActiveChild && !isExpanded
-                              ? 'text-brand bg-brand/[0.06] font-semibold'
+                              ? 'text-white bg-white/[0.06] font-semibold shadow-[inset_2px_0_0_var(--dp-accent)]'
                               : hasActiveChild
-                                ? 'text-brand font-semibold'
-                                : 'text-gray-700 hover:bg-gray-50 font-medium'
+                                ? 'text-white font-semibold'
+                                : 'text-gray-500 hover:text-gray-900 hover:bg-white/[0.04] font-medium'
                           }`}
                         >
                           <Icon className="w-[16px] h-[16px]" />
@@ -815,7 +815,7 @@ export function DeltBackendLayout() {
                           <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${isExpanded ? '' : '-rotate-90'}`} />
                         </button>
                         {isExpanded && (
-                          <div className="ml-[18px] pl-[14px] border-l border-gray-100 mt-0.5 mb-1">
+                          <div className="ml-[18px] pl-[14px] border-l border-white/[0.08] mt-0.5 mb-1">
                             {section.children.map(child => {
                               const active = isActivePath(child.path);
                               return (
@@ -824,8 +824,8 @@ export function DeltBackendLayout() {
                                   onClick={() => handleNavigate(child.path)}
                                   className={`w-full text-left px-2.5 py-[6px] rounded-[6px] text-[13px] transition-colors block ${
                                     active
-                                      ? 'text-brand bg-brand/[0.06] font-semibold'
-                                      : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50 font-normal'
+                                      ? 'text-white bg-white/[0.06] font-semibold shadow-[inset_2px_0_0_var(--dp-accent)]'
+                                      : 'text-gray-400 hover:text-gray-900 hover:bg-white/[0.04] font-normal'
                                   }`}
                                 >
                                   {child.label}
@@ -841,7 +841,7 @@ export function DeltBackendLayout() {
               </nav>
 
               {/* Mobile sidebar bottom */}
-              <div className="border-t border-gray-100 px-3 py-3">
+              <div className="border-t border-white/[0.06] px-3 py-3">
                 <div className="flex items-center gap-2.5 px-2 py-2">
                   <div className="w-8 h-8 rounded-full bg-brand/10 flex items-center justify-center shrink-0">
                     <span className="text-brand text-xs font-semibold">{user.initials}</span>
@@ -859,7 +859,7 @@ export function DeltBackendLayout() {
         {/* ═══ Command Palette ═══ */}
         {cmdPaletteOpen && (
           <div className="fixed inset-0 z-[60] flex items-start justify-center pt-[15vh]">
-            <div className="absolute inset-0 bg-black/40" onClick={() => setCmdPaletteOpen(false)} />
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px]" onClick={() => setCmdPaletteOpen(false)} />
             <div className="relative w-full max-w-lg bg-white rounded-[12px] shadow-2xl border border-gray-200 overflow-hidden">
               <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-200">
                 <Search className="w-5 h-5 text-gray-400 shrink-0" />

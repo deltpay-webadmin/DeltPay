@@ -257,8 +257,8 @@ export function UnderwritingDetail() {
   const moveToReview = () => {
     if (!app) return;
     saveDraft(true);
-    underwritingActions.setStage(app.id, 'Committee');
-    toast.success('Moved to Review');
+    underwritingActions.setStage(app.id, 'Final Review');
+    toast.success('Moved to Final Review');
   };
 
   const confirmApprove = async () => {
@@ -298,7 +298,7 @@ export function UnderwritingDetail() {
   const stageDone = app.stage === 'Approved' || app.stage === 'Declined';
 
   return (
-    <div className="h-full overflow-y-auto bg-gray-50">
+    <div className="h-full overflow-y-auto bg-canvas">
       <div className="max-w-[1440px] mx-auto px-6 py-5 pb-28">
         {/* Header */}
         <div className="flex items-center justify-between mb-5">
@@ -549,7 +549,7 @@ export function UnderwritingDetail() {
             </button>
             {!stageDone && (
               <button onClick={moveToReview} className="px-3 py-2 text-sm font-medium text-indigo-600 border border-indigo-200 rounded-[6px] hover:bg-indigo-50">
-                Move to Review
+                Move to Final Review
               </button>
             )}
             {!stageDone && (

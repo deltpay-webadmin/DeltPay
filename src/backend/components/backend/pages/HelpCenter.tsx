@@ -98,7 +98,7 @@ const faqs: FAQItem[] = [
   },
   {
     question: 'How do I move a lead through the pipeline stages?',
-    answer: 'Navigate to Pipeline → Leads and select the lead. In the detail panel, use the stage dropdown to advance the lead (e.g., from "Doc Collection" to "Underwriting"). Each stage has SLA timers — if a lead sits too long, you\'ll see a breach alert. You can also drag cards between columns in Kanban view.',
+    answer: 'Navigate to Pipeline → Leads and select the lead. In the detail panel, use the stage dropdown to advance the lead (e.g., from "Contacted" to "Underwriting"). Each stage has SLA timers — if a lead sits too long, you\'ll see a breach alert. You can also drag cards between columns in Kanban view.',
   },
   {
     question: 'How are residual commissions calculated?',

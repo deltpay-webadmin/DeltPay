@@ -276,29 +276,29 @@ export function BackendFinancials() {
               <AreaChart data={cashFlowData}>
                 <defs>
                   <linearGradient id="netGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#6366F1" stopOpacity={0.15} />
-                    <stop offset="95%" stopColor="#6366F1" stopOpacity={0} />
+                    <stop offset="5%" stopColor="#2E6BFF" stopOpacity={0.15} />
+                    <stop offset="95%" stopColor="#2E6BFF" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
-                <XAxis dataKey="week" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#94A3B8' }} />
+                <XAxis dataKey="week" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#8A97AE' }} />
                 <YAxis
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fontSize: 12, fill: '#94A3B8' }}
+                  tick={{ fontSize: 12, fill: '#8A97AE' }}
                   tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`}
                 />
                 <Tooltip
-                  contentStyle={{ backgroundColor: '#fff', border: '1px solid #E2E8F0', borderRadius: '8px', fontSize: '13px' }}
+                  contentStyle={{ backgroundColor: '#18233C', border: '1px solid #33415F', borderRadius: '8px', fontSize: '13px' }}
                   formatter={(value: number, name: string) => [
                     `$${value.toLocaleString()}`,
                     name === 'inflows' ? 'Inflows' : name === 'outflows' ? 'Outflows' : 'Net',
                   ]}
                 />
-                <ReferenceLine y={10000} stroke="#F59E0B" strokeDasharray="6 4" strokeWidth={1.5} />
-                <Area type="monotone" dataKey="net" stroke="#6366F1" strokeWidth={2} fill="url(#netGrad)" />
-                <Area type="monotone" dataKey="inflows" stroke="#10B981" strokeWidth={2} fill="none" dot={false} />
-                <Area type="monotone" dataKey="outflows" stroke="#F87171" strokeWidth={2} fill="none" dot={false} />
+                <ReferenceLine y={10000} stroke="#F0B429" strokeDasharray="6 4" strokeWidth={1.5} />
+                <Area type="monotone" dataKey="net" stroke="#2E6BFF" strokeWidth={2} fill="url(#netGrad)" />
+                <Area type="monotone" dataKey="inflows" stroke="#34C77B" strokeWidth={2} fill="none" dot={false} />
+                <Area type="monotone" dataKey="outflows" stroke="#F87F83" strokeWidth={2} fill="none" dot={false} />
               </AreaChart>
             </ResponsiveContainer>
           </div>

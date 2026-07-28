@@ -7,9 +7,9 @@ import { useAppNavigate } from '../NavigationContext';
 
 // ─── ROLE DEFINITIONS ───────────────────────────────────────────
 const ROLES = [
-  { id: 'super_admin', name: 'Super Admin', description: 'Full platform access. Company settings, financials, RBAC, all modules.', color: '#4318FF', userCount: 2, isSystem: true },
-  { id: 'admin', name: 'Admin', description: 'Operational access across all modules. Cannot modify roles, billing, or company settings.', color: '#059669', userCount: 1, isSystem: true },
-  { id: 'agent', name: 'Agent', description: 'Portfolio-scoped access. Sees only assigned merchants, leads, and own compensation.', color: '#f59e0b', userCount: 4, isSystem: true },
+  { id: 'super_admin', name: 'Super Admin', description: 'Full platform access. Company settings, financials, RBAC, all modules.', color: '#2E6BFF', userCount: 2, isSystem: true },
+  { id: 'admin', name: 'Admin', description: 'Operational access across all modules. Cannot modify roles, billing, or company settings.', color: '#2BB56D', userCount: 1, isSystem: true },
+  { id: 'agent', name: 'Agent', description: 'Portfolio-scoped access. Sees only assigned merchants, leads, and own compensation.', color: '#F0B429', userCount: 4, isSystem: true },
   { id: 'viewer', name: 'Viewer', description: 'Read-only access to assigned modules. Cannot create, edit, or delete records.', color: '#6b7280', userCount: 1, isSystem: false },
 ];
 
@@ -99,7 +99,7 @@ const GENERAL_SECTIONS: SettingsSection[] = [
     { label: 'Entity Type', value: 'LLC — S-Corp Election', type: 'text', readonly: true },
   ]},
   { key: 'branding', title: 'Brand & Appearance', icon: '🎨', fields: [
-    { label: 'Primary Color', value: '#4318FF', type: 'color' },
+    { label: 'Primary Color', value: '#2E6BFF', type: 'color' },
     { label: 'Secondary Color', value: '#041e42', type: 'color' },
     { label: 'Heading Font', value: 'DM Sans', type: 'select', options: ['DM Sans', 'Inter', 'Outfit', 'Plus Jakarta Sans'] },
     { label: 'Mono Font', value: 'JetBrains Mono', type: 'select', options: ['JetBrains Mono', 'Fira Code', 'Source Code Pro'] },

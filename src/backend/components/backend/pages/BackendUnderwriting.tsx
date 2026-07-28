@@ -11,14 +11,14 @@ import { useAppNavigate } from '../NavigationContext';
 import { useUnderwriting, underwritingActions, type UWStage, type ProductType, type UWApplication as Application } from '../crmStore';
 import { NewApplicationFlow } from '../flows/NewApplicationFlow';
 
-const STAGES: UWStage[] = ['Received', 'Doc Collection', 'Bank Review', 'Credit Analysis', 'Committee', 'Approved', 'Declined'];
+const STAGES: UWStage[] = ['Intake', 'Plaid Verification', 'Credit Check', 'MCA History', 'Final Review', 'Approved', 'Declined'];
 
 const STAGE_CONFIG: Record<UWStage, { color: string; bg: string; border: string; dot: string }> = {
-  'Received': { color: 'text-blue-700', bg: 'bg-blue-50', border: 'border-blue-200', dot: 'bg-blue-500' },
-  'Doc Collection': { color: 'text-purple-700', bg: 'bg-purple-50', border: 'border-purple-200', dot: 'bg-purple-500' },
-  'Bank Review': { color: 'text-cyan-700', bg: 'bg-cyan-50', border: 'border-cyan-200', dot: 'bg-cyan-500' },
-  'Credit Analysis': { color: 'text-amber-700', bg: 'bg-amber-50', border: 'border-amber-200', dot: 'bg-amber-500' },
-  'Committee': { color: 'text-indigo-700', bg: 'bg-indigo-50', border: 'border-indigo-200', dot: 'bg-indigo-500' },
+  'Intake': { color: 'text-blue-700', bg: 'bg-blue-50', border: 'border-blue-200', dot: 'bg-blue-500' },
+  'Plaid Verification': { color: 'text-purple-700', bg: 'bg-purple-50', border: 'border-purple-200', dot: 'bg-purple-500' },
+  'Credit Check': { color: 'text-cyan-700', bg: 'bg-cyan-50', border: 'border-cyan-200', dot: 'bg-cyan-500' },
+  'MCA History': { color: 'text-amber-700', bg: 'bg-amber-50', border: 'border-amber-200', dot: 'bg-amber-500' },
+  'Final Review': { color: 'text-indigo-700', bg: 'bg-indigo-50', border: 'border-indigo-200', dot: 'bg-indigo-500' },
   'Approved': { color: 'text-emerald-700', bg: 'bg-emerald-50', border: 'border-emerald-200', dot: 'bg-emerald-500' },
   'Declined': { color: 'text-red-700', bg: 'bg-red-50', border: 'border-red-200', dot: 'bg-red-500' },
 };
@@ -28,41 +28,41 @@ const _legacyApps: Application[] = [
     id: 'app-001', applicationId: 'UW-2026-0147', businessName: 'TechForward Solutions', dba: 'TechForward', industry: 'IT Services', state: 'NY',
     productType: 'MCA', requestedAmount: 200000, monthlyRevenue: 85000, avgDailyBalance: 14200, monthsInBusiness: 48, creditScore: 712,
     existingPositions: 0, submissionDate: 'Apr 17, 2026', reviewer: 'Sarah Mitchell', reviewerInitials: 'SM', riskScore: 88,
-    stage: 'Received', daysInStage: 0, slaThreshold: 2, source: 'Direct — Website',
+    stage: 'Intake', daysInStage: 0, slaThreshold: 2, source: 'Direct — Website',
     missingDocs: ['Last 3 months bank statements', 'Voided check'],
   },
   {
     id: 'app-002', applicationId: 'UW-2026-0148', businessName: 'Miami Spice Kitchen', dba: 'Miami Spice', industry: 'Restaurant', state: 'FL',
     productType: 'MCA', requestedAmount: 75000, monthlyRevenue: 42000, avgDailyBalance: 6800, monthsInBusiness: 36, creditScore: 645,
     existingPositions: 1, submissionDate: 'Apr 17, 2026', reviewer: 'David Kim', reviewerInitials: 'DK', riskScore: 71,
-    stage: 'Received', daysInStage: 0, slaThreshold: 2, source: 'Agent — Marcus Johnson',
+    stage: 'Intake', daysInStage: 0, slaThreshold: 2, source: 'Agent — Marcus Johnson',
   },
   {
     id: 'app-003', applicationId: 'UW-2026-0143', businessName: 'Sunrise Cafe & Bakery', industry: 'Restaurant / Bakery', state: 'NY',
     productType: 'MCA', requestedAmount: 125000, monthlyRevenue: 37500, avgDailyBalance: 5100, monthsInBusiness: 24, creditScore: 668,
     existingPositions: 0, submissionDate: 'Apr 15, 2026', reviewer: 'David Kim', reviewerInitials: 'DK', riskScore: 78,
-    stage: 'Doc Collection', daysInStage: 2, slaThreshold: 3, source: 'ISO — Apex Funding',
+    stage: 'Plaid Verification', daysInStage: 2, slaThreshold: 3, source: 'ISO — Apex Funding',
     missingDocs: ['Tax returns (2024)', 'Landlord letter'],
   },
   {
     id: 'app-004', applicationId: 'UW-2026-0141', businessName: 'Coastal Construction LLC', industry: 'Construction', state: 'VA',
     productType: 'Term Loan', requestedAmount: 180000, monthlyRevenue: 95000, avgDailyBalance: 18200, monthsInBusiness: 72, creditScore: 701,
     existingPositions: 1, submissionDate: 'Apr 14, 2026', reviewer: 'Michael Torres', reviewerInitials: 'MT', riskScore: 68,
-    stage: 'Bank Review', daysInStage: 3, slaThreshold: 3, disclosureState: 'VA HB 1027',
+    stage: 'Credit Check', daysInStage: 3, slaThreshold: 3, disclosureState: 'VA HB 1027',
     notes: 'Large deposits irregular — need to verify contract payments',
   },
   {
     id: 'app-005', applicationId: 'UW-2026-0145', businessName: 'Urban Wellness Spa', industry: 'Health & Wellness', state: 'FL',
     productType: 'MCA', requestedAmount: 150000, monthlyRevenue: 62000, avgDailyBalance: 9400, monthsInBusiness: 42, creditScore: 724,
     existingPositions: 0, submissionDate: 'Apr 13, 2026', reviewer: 'Michael Torres', reviewerInitials: 'MT', riskScore: 91,
-    stage: 'Credit Analysis', daysInStage: 4, slaThreshold: 5,
+    stage: 'MCA History', daysInStage: 4, slaThreshold: 5,
     factorRate: 1.35, proposedPayback: 202500, dailyPayment: 675, holdbackPct: 15,
   },
   {
     id: 'app-006', applicationId: 'UW-2026-0138', businessName: 'Green Valley Auto Repair', industry: 'Automotive', state: 'CA',
     productType: 'Revenue Based', requestedAmount: 75000, monthlyRevenue: 45000, avgDailyBalance: 7200, monthsInBusiness: 60, creditScore: 690,
     existingPositions: 2, submissionDate: 'Apr 12, 2026', reviewer: 'Sarah Mitchell', reviewerInitials: 'SM', riskScore: 62,
-    stage: 'Credit Analysis', daysInStage: 5, slaThreshold: 5, disclosureState: 'CA SB 1235',
+    stage: 'MCA History', daysInStage: 5, slaThreshold: 5, disclosureState: 'CA SB 1235',
     factorRate: 1.42, proposedPayback: 106500, dailyPayment: 425, holdbackPct: 18,
     notes: '2 existing positions — stacking risk. Verify payoff on 1st position.',
   },
@@ -70,7 +70,7 @@ const _legacyApps: Application[] = [
     id: 'app-007', applicationId: 'UW-2026-0139', businessName: 'Brooklyn Vinyl Records', industry: 'Retail', state: 'NY',
     productType: 'MCA', requestedAmount: 50000, monthlyRevenue: 28000, avgDailyBalance: 4100, monthsInBusiness: 18, creditScore: 632,
     existingPositions: 0, submissionDate: 'Apr 11, 2026', reviewer: 'David Kim', reviewerInitials: 'DK', riskScore: 74,
-    stage: 'Committee', daysInStage: 2, slaThreshold: 2,
+    stage: 'Final Review', daysInStage: 2, slaThreshold: 2,
     factorRate: 1.38, proposedPayback: 69000, dailyPayment: 276, holdbackPct: 15,
     notes: 'Low TIB (18mo). Revenue trend positive. Recommend approval with conservative terms.',
   },
@@ -213,7 +213,7 @@ export function BackendUnderwriting() {
   const avgDaysToDecision = totalDecided > 0 ? (APPLICATIONS.filter(a => ['Approved', 'Declined'].includes(a.stage)).reduce((s, a) => s + a.daysInStage, 0) / totalDecided).toFixed(1) : '—';
 
   const handleAdvance = (app: Application) => {
-    const order: UWStage[] = ['Received', 'Doc Collection', 'Bank Review', 'Credit Analysis', 'Committee', 'Approved'];
+    const order: UWStage[] = ['Intake', 'Plaid Verification', 'Credit Check', 'MCA History', 'Final Review', 'Approved'];
     const idx = order.indexOf(app.stage);
     if (idx < 0 || idx === order.length - 1) return;
     const next = order[idx + 1];
@@ -245,7 +245,7 @@ export function BackendUnderwriting() {
           </div>
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Underwriting Queue</h1>
-            <p className="text-sm text-gray-500">{inQueueCount} applications in pipeline &middot; {overSLACount > 0 ? <span className="text-red-600 font-medium">{overSLACount} over SLA</span> : 'All within SLA'}</p>
+            <p className="text-sm text-gray-500">Underwritten in-house with Plaid, CRS &amp; DataMerch &middot; {inQueueCount} in pipeline &middot; {overSLACount > 0 ? <span className="text-red-600 font-medium">{overSLACount} over SLA</span> : 'All within SLA'}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -462,7 +462,7 @@ export function BackendUnderwriting() {
                               <button onClick={() => handleAdvance(app)} title="Advance stage" className="p-1 hover:bg-blue-50 rounded text-gray-400 hover:text-blue-600">
                                 <ChevronDown className="w-3.5 h-3.5 -rotate-90" />
                               </button>
-                              {app.stage === 'Committee' && (
+                              {app.stage === 'Final Review' && (
                                 <>
                                   <button onClick={() => handleApprove(app)} title="Approve" className="p-1 hover:bg-emerald-50 rounded text-gray-400 hover:text-emerald-600">
                                     <CheckCircle className="w-3.5 h-3.5" />

@@ -195,10 +195,10 @@ export function NewApplicationFlow({ open, onClose, onCreated }: NewApplicationF
                 <ReviewRow label="Months in business" value={monthsInBusiness} />
               </ReviewCard>
               <TextArea
-                label="Notes for underwriter"
+                label="Underwriting notes"
                 value={form.notes}
                 onChange={v => update('notes', v)}
-                placeholder="Context, red flags, opportunities\u2026"
+                placeholder="Context, red flags, opportunities…"
                 optional
               />
             </div>
@@ -221,7 +221,7 @@ export function NewApplicationFlow({ open, onClose, onCreated }: NewApplicationF
         onCreated?.(created);
         return {
           title: `${created.applicationId} submitted`,
-          description: `${created.businessName} is now in underwriting review. Assigned to ${created.reviewer}.`,
+          description: `${created.businessName} is in the pipeline \u2014 connect Plaid to start scoring. Assigned to ${created.reviewer}.`,
           primaryCta: { label: 'View application', onClick: onClose },
           secondaryCta: { label: 'Done', onClick: onClose },
         };

@@ -32,9 +32,9 @@ const VOLUME_BANDS = [
 ];
 
 const RISK_TIERS = [
-  { key: 'low', label: 'Low Risk', desc: 'Retail, professional svcs, healthcare', color: '#22c55e', bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-300' },
-  { key: 'medium', label: 'Medium Risk', desc: 'Restaurants, e-comm, subscription', color: '#f59e0b', bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-300' },
-  { key: 'high', label: 'High Risk', desc: 'CBD, nutra, travel, high-chargeback', color: '#ef4444', bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-300' },
+  { key: 'low', label: 'Low Risk', desc: 'Retail, professional svcs, healthcare', color: '#34C77B', bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-300' },
+  { key: 'medium', label: 'Medium Risk', desc: 'Restaurants, e-comm, subscription', color: '#F0B429', bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-300' },
+  { key: 'high', label: 'High Risk', desc: 'CBD, nutra, travel, high-chargeback', color: '#F2565B', bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-300' },
 ];
 
 const MERCHANT_TYPES = [
@@ -49,9 +49,9 @@ const MERCHANT_TYPES = [
 ];
 
 const RECEPTIVITY_LEVELS = [
-  { key: 'eager', label: 'Open to it', desc: 'Already aware or interested', color: '#22c55e' },
-  { key: 'neutral', label: 'Needs education', desc: "Hasn't heard of it or unsure", color: '#f59e0b' },
-  { key: 'resistant', label: 'Pushback', desc: 'Worried about customer reaction', color: '#ef4444' },
+  { key: 'eager', label: 'Open to it', desc: 'Already aware or interested', color: '#34C77B' },
+  { key: 'neutral', label: 'Needs education', desc: "Hasn't heard of it or unsure", color: '#F0B429' },
+  { key: 'resistant', label: 'Pushback', desc: 'Worried about customer reaction', color: '#F2565B' },
 ];
 
 const OBJECTIONS: Record<string, { title: string; reframe: string; talk: string; data: string }> = {

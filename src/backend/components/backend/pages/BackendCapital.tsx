@@ -1326,7 +1326,7 @@ function ConcentrationTab({ M }: { M: any }) {
           icon={<Activity className="w-4 h-4 text-orange-500" />}
           data={M.channelSplit}
           total={M.totalVolume}
-          colors={['#4318FF', '#F97316']}
+          colors={['#2E6BFF', '#F59849']}
           footer={
             <div className="mt-3 p-3 bg-gray-50 rounded-[6px]">
               <p className="text-[11px] text-gray-500 font-medium mb-1">Capital at Risk</p>
@@ -1343,7 +1343,7 @@ function ConcentrationTab({ M }: { M: any }) {
           icon={<Building2 className="w-4 h-4 text-brand" />}
           data={M.byMerchant}
           total={M.activeDeployed}
-          colors={['#4318FF', '#06B6D4', '#22C55E', '#F59E0B', '#A855F7', '#EF4444', '#F472B6', '#818CF8']}
+          colors={['#2E6BFF', '#3CC9E3', '#34C77B', '#F0B429', '#7C5BFF', '#F2565B', '#F472B6', '#5B8CFF']}
           warnThreshold={0.25}
         />
         <ConcentrationCard
@@ -1351,7 +1351,7 @@ function ConcentrationTab({ M }: { M: any }) {
           icon={<TrendingUp className="w-4 h-4 text-violet-500" />}
           data={M.byVertical}
           total={M.activeDeployed}
-          colors={['#4318FF', '#06B6D4', '#22C55E', '#F59E0B', '#A855F7', '#EF4444']}
+          colors={['#2E6BFF', '#3CC9E3', '#34C77B', '#F0B429', '#7C5BFF', '#F2565B']}
           warnThreshold={0.30}
         />
       </div>
