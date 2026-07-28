@@ -54,6 +54,7 @@ import {
   referralActions,
   programActions,
   isDummyLead,
+  scoreLead,
   type Lead as StoreLead,
 } from '../crmStore';
 
@@ -81,7 +82,7 @@ const SORT_OPTIONS: { key: SortKey; label: string }[] = [
   { key: 'status', label: 'Status' },
   { key: 'priority', label: 'Priority' },
 ];
-const STATUS_ORDER = ['New', 'In Progress', 'Won', 'Lost'];
+const STATUS_ORDER = ['New', 'In Progress', 'Won', 'Not Qualified', 'Lost'];
 const PRIORITY_ORDER = ['High', 'Medium', 'Low'];
 
 const ONBOARDING_STAGES: StageName[] = ['Application Submitted', 'Bank Verification', 'Identity Verification', 'Underwriting', 'Docs & E-Sign', 'Funded'];
@@ -388,6 +389,12 @@ function LeadDetailPanel({ lead, onClose, onEdit, onDelete }: { lead: Lead | nul
     toast.success('Lead marked as lost');
   };
 
+  const handleMarkNotQualified = () => {
+    if (lead.status === 'Not Qualified') { toast.info('Lead already marked not qualified'); return; }
+    leadActions.markNotQualified(lead.id);
+    toast.success('Lead marked as not qualified');
+  };
+
   const handleAddNote = () => {
     const body = newNote.trim();
     if (!body) { toast.error('Note cannot be empty'); return; }
@@ -415,6 +422,7 @@ function LeadDetailPanel({ lead, onClose, onEdit, onDelete }: { lead: Lead | nul
       case 'New': return 'bg-blue-50 text-blue-700';
       case 'In Progress': return 'bg-amber-50 text-amber-700';
       case 'Won': return 'bg-emerald-50 text-emerald-700';
+      case 'Not Qualified': return 'bg-orange-50 text-orange-700';
       case 'Lost': return 'bg-gray-100 text-gray-700';
       default: return 'bg-gray-100 text-gray-700';
     }
@@ -690,6 +698,12 @@ function LeadDetailPanel({ lead, onClose, onEdit, onDelete }: { lead: Lead | nul
               className="flex-1 px-4 py-2.5 bg-emerald-600 text-white text-sm font-medium rounded-[6px] hover:bg-emerald-700 transition-colors"
             >
               Submit Application
+            </button>
+            <button
+              onClick={handleMarkNotQualified}
+              className="px-4 py-2.5 bg-white border border-orange-300 text-orange-700 text-sm font-medium rounded-[6px] hover:bg-orange-50 transition-colors whitespace-nowrap"
+            >
+              Not Qualified
             </button>
             <button
               onClick={handleMarkLost}
@@ -990,14 +1004,38 @@ function EditLeadModal({ lead, onClose }: { lead: Lead; onClose: () => void }) {
     notes: lead.notes || '',
   });
 
+  // When false, the score auto-tracks the live computed value as fields change.
+  const [scoreManual, setScoreManual] = useState(false);
+
   const update = (k: keyof typeof form, v: string) => setForm(f => ({ ...f, [k]: v }));
+
+  // Live score derived from the form as data is entered.
+  const autoScore = useMemo(
+    () =>
+      scoreLead({
+        monthlySales: form.monthlySales,
+        amountRequested: form.amountRequested,
+        contactEmail: form.contactEmail,
+        contactPhone: form.contactPhone,
+        contactName: form.contactName,
+        industry: form.industry,
+        source: form.source,
+        type: form.type,
+        status: form.status,
+        stage: form.stage,
+      }),
+    [form.monthlySales, form.amountRequested, form.contactEmail, form.contactPhone, form.contactName, form.industry, form.source, form.type, form.status, form.stage],
+  );
+
+  const displayedScore = scoreManual ? form.score : String(autoScore);
 
   const handleSave = () => {
     if (!form.businessName.trim()) {
       toast.error('Business name is required');
       return;
     }
-    const scoreNum = Math.max(0, Math.min(100, Number(form.score) || 0));
+    const rawScore = scoreManual ? Number(form.score) : autoScore;
+    const scoreNum = Math.max(0, Math.min(100, rawScore || 0));
     leadActions.update(lead.id, {
       businessName: form.businessName.trim(),
       industry: form.industry,
@@ -1058,7 +1096,7 @@ function EditLeadModal({ lead, onClose }: { lead: Lead; onClose: () => void }) {
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">Status</label>
             <select value={form.status} onChange={e => update('status', e.target.value)} className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-              <option>New</option><option>In Progress</option><option>Won</option><option>Lost</option>
+              <option>New</option><option>In Progress</option><option>Won</option><option>Not Qualified</option><option>Lost</option>
             </select>
           </div>
           <div>
@@ -1070,7 +1108,31 @@ function EditLeadModal({ lead, onClose }: { lead: Lead; onClose: () => void }) {
           <FormInput label="Monthly Sales" value={form.monthlySales} onChange={v => update('monthlySales', v)} placeholder="$50,000" />
           <FormInput label="Amount Requested" value={form.amountRequested} onChange={v => update('amountRequested', v)} placeholder="$100,000" />
           <FormInput label="Assigned Agent" value={form.assignedAgent} onChange={v => update('assignedAgent', v)} />
-          <FormInput label="Lead Score (0-100)" value={form.score} onChange={v => update('score', v)} />
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-xs font-medium text-gray-600">Lead Score (0-100)</label>
+              <button
+                type="button"
+                onClick={() => {
+                  if (scoreManual) {
+                    setScoreManual(false);
+                  } else {
+                    setScoreManual(true);
+                    update('score', String(autoScore));
+                  }
+                }}
+                className={`text-[10px] px-1.5 py-0.5 rounded font-medium transition-colors ${scoreManual ? 'bg-gray-100 text-gray-600 hover:bg-gray-200' : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'}`}
+                title={scoreManual ? 'Switch back to auto-scoring' : 'Auto-scored from lead data — click to override'}
+              >
+                {scoreManual ? 'Manual · switch to Auto' : `Auto (${autoScore})`}
+              </button>
+            </div>
+            <input
+              value={displayedScore}
+              onChange={e => { setScoreManual(true); update('score', e.target.value); }}
+              className={`w-full px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 ${scoreManual ? 'bg-white' : 'bg-gray-50 text-gray-500'}`}
+            />
+          </div>
           <div className="col-span-2">
             <label className="block text-xs font-medium text-gray-600 mb-1">Notes</label>
             <textarea value={form.notes} onChange={e => update('notes', e.target.value)} rows={3} className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none" />
@@ -1127,6 +1189,7 @@ export function BackendLeads({ openImport = false }: { openImport?: boolean } = 
       case 'New': return 'bg-blue-50 text-blue-700';
       case 'In Progress': return 'bg-amber-50 text-amber-700';
       case 'Won': return 'bg-emerald-50 text-emerald-700';
+      case 'Not Qualified': return 'bg-orange-50 text-orange-700';
       case 'Lost': return 'bg-gray-100 text-gray-700';
       default: return 'bg-gray-100 text-gray-700';
     }
@@ -1295,6 +1358,7 @@ export function BackendLeads({ openImport = false }: { openImport?: boolean } = 
       case 'New': return 'bg-blue-50 text-blue-700';
       case 'In Progress': return 'bg-amber-50 text-amber-700';
       case 'Won': return 'bg-emerald-50 text-emerald-700';
+      case 'Not Qualified': return 'bg-orange-50 text-orange-700';
       case 'Lost': return 'bg-gray-100 text-gray-700';
       default: return 'bg-gray-100 text-gray-700';
     }
@@ -1402,6 +1466,7 @@ export function BackendLeads({ openImport = false }: { openImport?: boolean } = 
                 <option value="New">New</option>
                 <option value="In Progress">In Progress</option>
                 <option value="Won">Won</option>
+                <option value="Not Qualified">Not Qualified</option>
                 <option value="Lost">Lost</option>
               </select>
               <select
@@ -1626,6 +1691,7 @@ export function BackendLeads({ openImport = false }: { openImport?: boolean } = 
                             <option value="New">New</option>
                             <option value="In Progress">In Progress</option>
                             <option value="Won">Won</option>
+                            <option value="Not Qualified">Not Qualified</option>
                             <option value="Lost">Lost</option>
                           </select>
                         </td>
