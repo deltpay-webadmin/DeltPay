@@ -24,6 +24,7 @@
  */
 
 import { createClient, type SupabaseClient } from "jsr:@supabase/supabase-js@2.49.8";
+import { runDecisionModel, MODEL_VERSION, type ModelInput } from "./decision_model.ts";
 
 // ══════════════════════════════════════════════════════════════
 // Config
@@ -141,6 +142,13 @@ async function writeNodes(db: SupabaseClient, folders: NodeRow[], docs: NodeRow[
     const { error } = await db.from("plaid_nodes").upsert(docs, { onConflict: "path" });
     if (error) throw new Error(`vault document write failed: ${error.message}`);
   }
+}
+
+/** Parse a money-ish string ("$75,000") into a number. */
+function parseMoney(v: unknown): number {
+  if (v == null) return 0;
+  const n = Number(String(v).replace(/[^0-9.]/g, ""));
+  return Number.isFinite(n) ? n : 0;
 }
 
 function slugify(s: string): string {
@@ -822,7 +830,40 @@ export async function syncItem(itemId: string) {
       investmentsValue,
     };
     cashFlow.metrics = m as typeof cashFlow.metrics;
+
+    // ── 7. Run the standardized decision model (versioned, deterministic) ──
+    const bankVerified = allAccounts.some((a: any) => a.verification?.verified);
+    const modelInput: ModelInput = {
+      monthlyRevenue: m.monthlyRevenue,
+      revenueStdDevPct: m.revenueStdDevPct,
+      revenueTrend: m.revenueTrend,
+      revenueChange3moPct: m.revenueChange3moPct,
+      avgDailyBalance: m.avgDailyBalance,
+      minDailyBalance: m.minDailyBalance,
+      nsfCount90d: m.nsfCount90d,
+      daysSinceLastNsf: m.daysSinceLastNsf,
+      depositConcentration: m.depositConcentration,
+      monthsOfData: m.monthsOfData,
+      transactionCount: m.transactionCount,
+      monthlyDebtService,
+      detectedDebtPositions,
+      debtServiceToRevenuePct: m.debtServiceToRevenuePct,
+      requestedAmount: parseMoney(leadRow?.amount_requested),
+      bankVerified,
+      identityVerified,
+      institutionsConnected: (leadItems ?? []).length,
+    };
+    const recommendation = runDecisionModel(modelInput);
+
     const analysisDocs: NodeRow[] = [
+      {
+        path: `${base}/decisioning/recommendation`,
+        name: `Recommendation (model v${MODEL_VERSION})`,
+        node_type: "document",
+        doc_kind: "recommendation",
+        lead_id: leadId,
+        data: { ...recommendation, computed_at: now },
+      },
       {
         path: `${base}/financials/cash-flow-analysis`,
         name: "Cash Flow Analysis",
