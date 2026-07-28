@@ -37,6 +37,7 @@ import { BackendSubscriptions } from './pages/BackendSubscriptions';
 import { BackendDocuments } from './pages/BackendDocuments';
 import { BackendPayments } from './pages/BackendPayments';
 import { BackendReports } from './pages/BackendReports';
+import { BackendPlaid } from './pages/BackendPlaid';
 import {
   LayoutDashboard,
   Users,
@@ -105,6 +106,7 @@ const adminSections: NavSection[] = [
     icon: GitBranch,
     children: [
       { label: 'Leads', path: '/leads' },
+      { label: 'Plaid Vault', path: '/plaid' },
       { label: 'Underwriting', path: '/underwriting' },
       { label: 'Analysis', path: '/analysis' },
     ],
@@ -201,7 +203,7 @@ function sectionForPath(path: string): string | null {
   }
   // Additional mappings for detail pages
   if (path.startsWith('/inbox') || path.startsWith('/activity-timeline') || path.startsWith('/tasks')) return 'crm';
-  if (path.startsWith('/leads') || path.startsWith('/underwriting') || path.startsWith('/onboarding') || path.startsWith('/analysis')) return 'pipeline';
+  if (path.startsWith('/leads') || path.startsWith('/underwriting') || path.startsWith('/onboarding') || path.startsWith('/analysis') || path.startsWith('/plaid')) return 'pipeline';
   if (path.startsWith('/merchants') || path.startsWith('/residuals') || path.startsWith('/capital') || path.startsWith('/retention') || path.startsWith('/documents') || path.startsWith('/payments')) return 'merchants';
   if (path.startsWith('/disputes')) return 'disputes';
   if (path.startsWith('/outreach')) return 'outreach';
@@ -250,6 +252,7 @@ const allCommands: CommandItem[] = [
   { label: 'Workspace', path: '/workspace', group: 'Navigation', icon: Inbox, keywords: 'inbox email sms call messages tasks activity timeline' },
   { label: 'Leads', path: '/leads', group: 'Pipeline', icon: Users, keywords: 'sales pipeline' },
   { label: 'Import Leads', path: '/leads/import', group: 'Pipeline', icon: Upload, keywords: 'upload csv xlsx spreadsheet meta facebook instagram bulk import' },
+  { label: 'Plaid Vault', path: '/plaid', group: 'Pipeline', icon: Banknote, keywords: 'plaid bank credit identity verification financials lending prospects data vault explorer' },
   { label: 'Underwriting', path: '/underwriting', group: 'Pipeline', icon: ClipboardCheck },
   { label: 'Analysis', path: '/analysis', group: 'Pipeline', icon: FileText, keywords: 'deal analysis review cost calculator' },
   { label: 'All Merchants', path: '/merchants', group: 'Merchants', icon: Store },
@@ -410,6 +413,7 @@ export function DeltBackendLayout() {
       case '/onboarding': return <BackendOnboarding />;
       case '/merchants': return <BackendMerchants />;
       case '/retention': return <BackendRetention />;
+      case '/plaid': return <BackendPlaid />;
       case '/underwriting': return <BackendUnderwriting />;
       case '/deals': return <BackendDeals />;
       case '/agents': return <BackendAgents />;

@@ -2,6 +2,18 @@ import { Hono } from "npm:hono";
 import { cors } from "npm:hono/cors";
 import { logger } from "npm:hono/logger";
 import * as kv from "./kv_store.tsx";
+import {
+  plaidConfig,
+  webhookUrl,
+  verifyStaff,
+  createLinkToken,
+  exchangePublicToken,
+  sandboxQuickConnect,
+  syncItem,
+  syncAllItems,
+  removeItem,
+  svc,
+} from "../_shared/plaid.ts";
 const app = new Hono();
 
 // Enable logger
@@ -62,6 +74,122 @@ app.post("/make-server-940653c6/leads/pricing-guide", async (c) => {
   } catch (err) {
     console.error("pricing-guide lead error", err);
     return c.json({ ok: false, error: "Something went wrong. Please try again." }, 500);
+  }
+});
+
+// ────────────────────────────────────────────────────────────────
+// Plaid Data Vault API — staff-only (CRM sends the signed-in user's
+// JWT; verifyStaff mirrors the is_staff() RLS gate).
+// ────────────────────────────────────────────────────────────────
+
+const PLAID_BASE = "/make-server-940653c6/plaid";
+
+// All Plaid routes require a staff user.
+app.use(`${PLAID_BASE}/*`, async (c, next) => {
+  const auth = await verifyStaff(c.req.header("Authorization"));
+  if (!auth.ok) return c.json({ ok: false, error: auth.error }, auth.status as any);
+  c.set("staffUserId" as never, auth.userId as never);
+  await next();
+});
+
+// Config / connection status for the dashboard banner.
+app.get(`${PLAID_BASE}/status`, async (c) => {
+  const cfg = plaidConfig();
+  let items = 0;
+  let prospects = 0;
+  try {
+    const db = svc();
+    const [{ count: itemCount }, { data: leads }] = await Promise.all([
+      db.from("plaid_items").select("*", { count: "exact", head: true }),
+      db.from("plaid_items").select("lead_id"),
+    ]);
+    items = itemCount ?? 0;
+    prospects = new Set((leads ?? []).map((r: any) => r.lead_id).filter(Boolean)).size;
+  } catch { /* status stays best-effort */ }
+  return c.json({
+    ok: true,
+    configured: cfg.configured,
+    env: cfg.env,
+    products: cfg.products,
+    webhook_url: webhookUrl(),
+    items,
+    prospects,
+  });
+});
+
+app.post(`${PLAID_BASE}/link-token`, async (c) => {
+  try {
+    const body = await c.req.json().catch(() => ({}));
+    const leadId = String(body.leadId ?? "");
+    if (!leadId) return c.json({ ok: false, error: "leadId is required" }, 400);
+    const out = await createLinkToken(leadId, String(c.get("staffUserId" as never) ?? ""));
+    return c.json({ ok: true, ...out });
+  } catch (err: any) {
+    console.error("plaid link-token error", err);
+    return c.json({ ok: false, error: String(err?.message ?? err) }, 500);
+  }
+});
+
+app.post(`${PLAID_BASE}/exchange`, async (c) => {
+  try {
+    const body = await c.req.json().catch(() => ({}));
+    const leadId = String(body.leadId ?? "");
+    const publicToken = String(body.publicToken ?? "");
+    if (!leadId || !publicToken) {
+      return c.json({ ok: false, error: "leadId and publicToken are required" }, 400);
+    }
+    const out = await exchangePublicToken(leadId, publicToken, body.institution);
+    return c.json({ ok: true, ...out });
+  } catch (err: any) {
+    console.error("plaid exchange error", err);
+    return c.json({ ok: false, error: String(err?.message ?? err) }, 500);
+  }
+});
+
+app.post(`${PLAID_BASE}/sandbox/quick-connect`, async (c) => {
+  try {
+    const body = await c.req.json().catch(() => ({}));
+    const leadId = String(body.leadId ?? "");
+    if (!leadId) return c.json({ ok: false, error: "leadId is required" }, 400);
+    const out = await sandboxQuickConnect(leadId, body.institutionId || undefined);
+    return c.json({ ok: true, ...out });
+  } catch (err: any) {
+    console.error("plaid sandbox connect error", err);
+    return c.json({ ok: false, error: String(err?.message ?? err) }, 500);
+  }
+});
+
+app.post(`${PLAID_BASE}/sync`, async (c) => {
+  try {
+    const body = await c.req.json().catch(() => ({}));
+    const itemId = String(body.itemId ?? "");
+    if (!itemId) return c.json({ ok: false, error: "itemId is required" }, 400);
+    const out = await syncItem(itemId);
+    return c.json({ ok: true, ...out });
+  } catch (err: any) {
+    console.error("plaid sync error", err);
+    return c.json({ ok: false, error: String(err?.message ?? err) }, 500);
+  }
+});
+
+app.post(`${PLAID_BASE}/sync-all`, async (c) => {
+  try {
+    const body = await c.req.json().catch(() => ({}));
+    const results = await syncAllItems(body.leadId ? String(body.leadId) : undefined);
+    return c.json({ ok: true, results });
+  } catch (err: any) {
+    console.error("plaid sync-all error", err);
+    return c.json({ ok: false, error: String(err?.message ?? err) }, 500);
+  }
+});
+
+app.delete(`${PLAID_BASE}/items/:itemId`, async (c) => {
+  try {
+    const out = await removeItem(c.req.param("itemId"));
+    return c.json({ ok: true, ...out });
+  } catch (err: any) {
+    console.error("plaid remove error", err);
+    return c.json({ ok: false, error: String(err?.message ?? err) }, 500);
   }
 });
 
