@@ -36,27 +36,19 @@ import { capitalActions } from './capitalStore';
 // Types (unchanged — pages depend on this exact shape)
 // ══════════════════════════════════════════════════════════════
 
+// Short CRM sales cycle. Onboarding / underwriting happens outside the CRM,
+// so a lead only moves New → Contacted → Qualified → Converted (handoff).
 export type LeadStage =
   | 'New'
   | 'Contacted'
   | 'Qualified'
-  | 'Application Submitted'
-  | 'Bank Verification'
-  | 'Identity Verification'
-  | 'Underwriting'
-  | 'Docs & E-Sign'
-  | 'Funded';
+  | 'Converted';
 
 export const LEAD_STAGES: LeadStage[] = [
   'New',
   'Contacted',
   'Qualified',
-  'Application Submitted',
-  'Bank Verification',
-  'Identity Verification',
-  'Underwriting',
-  'Docs & E-Sign',
-  'Funded',
+  'Converted',
 ];
 
 export interface LeadStepDetail {
@@ -228,6 +220,9 @@ export interface Lead {
   status: 'New' | 'In Progress' | 'Not Qualified' | 'Won' | 'Lost';
   priority: 'High' | 'Medium' | 'Low';
   lastActivity: string;
+  /** ISO timestamps from Supabase (DB-managed). */
+  createdAt?: string;
+  updatedAt?: string;
   assignedAgent: string;
   stage: LeadStage;
   timeline: TimelineItem[];
@@ -543,6 +538,8 @@ function fromDbLead(r: any): Lead {
     referredBy: r.referred_by ?? undefined,
     bundle: r.bundle ?? null,
     kyb: r.kyb ?? undefined,
+    createdAt: r.created_at ?? undefined,
+    updatedAt: r.updated_at ?? undefined,
   };
 }
 
@@ -1123,6 +1120,8 @@ export const leadActions = {
       notes: lead.notes || '',
       extraNotes: [],
       tasks: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
     const prev = state.leads;
     persist(
@@ -1158,37 +1157,35 @@ export const leadActions = {
     leadActions.addTimeline(id, { title: `Status set to ${status}`, description: 'Updated from pipeline', user: 'You', timestamp: 'just now' });
   },
 
-  advanceStage(id: string) {
+  /** Returns false if the lead can't advance (dead-ended or already at the end). */
+  advanceStage(id: string): boolean {
     const lead = state.leads.find(l => l.id === id);
-    if (!lead) return;
+    if (!lead) return false;
+    // A disqualified/lost lead cannot be progressed or converted.
+    if (lead.status === 'Not Qualified' || lead.status === 'Lost') return false;
     const idx = LEAD_STAGES.indexOf(lead.stage);
-    if (idx < 0 || idx >= LEAD_STAGES.length - 1) return;
+    if (idx < 0 || idx >= LEAD_STAGES.length - 1) return false;
     const next = LEAD_STAGES[idx + 1];
     const patch: Partial<Lead> = { stage: next, lastActivity: 'just now' };
-    if (next === 'Funded') patch.status = 'Won';
+    if (next === 'Converted') patch.status = 'Won';
     else if (lead.status === 'New') patch.status = 'In Progress';
     leadActions.update(id, patch);
     leadActions.addTimeline(id, { title: `Advanced to ${next}`, description: 'Pipeline stage promoted', user: 'You', timestamp: 'just now' });
+    return true;
   },
 
-  submitApplication(id: string) {
+  /**
+   * Convert (win) a lead — the CRM's terminal success, handing off to
+   * onboarding elsewhere. Blocked for disqualified/lost leads.
+   * Returns false if the conversion was refused.
+   */
+  convert(id: string): boolean {
     const lead = state.leads.find(l => l.id === id);
-    if (!lead) return;
-    const patch: Partial<Lead> = {
-      stage: 'Application Submitted',
-      status: 'In Progress',
-      lastActivity: 'just now',
-      stepDetails: lead.stepDetails || [
-        { stage: 'Application Submitted', completedAt: nowStamp() },
-        { stage: 'Bank Verification', completedAt: null },
-        { stage: 'Identity Verification', completedAt: null },
-        { stage: 'Underwriting', completedAt: null },
-        { stage: 'Docs & E-Sign', completedAt: null },
-        { stage: 'Funded', completedAt: null },
-      ],
-    };
-    leadActions.update(id, patch);
-    leadActions.addTimeline(id, { title: 'Application submitted', description: 'Handed off to onboarding', user: 'You', timestamp: 'just now' });
+    if (!lead) return false;
+    if (lead.status === 'Not Qualified' || lead.status === 'Lost') return false;
+    leadActions.update(id, { stage: 'Converted', status: 'Won', lastActivity: 'just now' });
+    leadActions.addTimeline(id, { title: 'Lead converted', description: 'Won — handed off to onboarding', user: 'You', timestamp: 'just now' });
+    return true;
   },
 
   markLost(id: string) {
