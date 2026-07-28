@@ -198,8 +198,7 @@ export function SignInPage() {
           </div>
 
           {/* Footer */}
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-[13px] text-(--dp-text-faint)">© 2005–2026 Delt Pay LLC.</p>
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
             <div className="flex items-center gap-6">
               <Link
                 to="/contact"

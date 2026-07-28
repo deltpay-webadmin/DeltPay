@@ -511,7 +511,21 @@ body.crm-active {
   --dp-warning: #B77310;
   --dp-danger: #DE3D42;
   --dp-capital: #6941C6;
+
+  /* Aliases below are declared as var() references on the scope root, where
+     they resolve against the DARK primitives before descendants inherit
+     them — so they must be re-pinned here with light values. */
+  --canvas: #F6F8FC;
   --canvas-muted: #FBFCFE;
+  --brand-hover: #2458E6;
+  --brand-light: #2458E6;
+  --info: #2458E6;
+  --info-hover: #1D4ED8;
+  --destructive: #DE3D42;
+
+  /* The scope root paints near-white text; descendants without an explicit
+     color class inherit it. Re-anchor inherited color for light. */
+  color: var(--dp-text);
 
   /* neutrals */
   --color-gray-50: #F2F5FA;

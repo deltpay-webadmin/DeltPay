@@ -410,7 +410,7 @@ export function DeltBackendLayout() {
       case '/onboarding': return <BackendOnboarding />;
       case '/merchants': return <BackendMerchants />;
       case '/retention': return <BackendRetention />;
-      case '/underwriting': return <BackendUnderwriting />;
+      case '/underwriting': return <UnderwritingHub />;
       case '/deals': return <BackendDeals />;
       case '/agents': return <BackendAgents />;
       case '/financials': return <BackendFinancials />;
@@ -757,3 +757,36 @@ export function DeltBackendLayout() {
     </NavigationContext.Provider>
   );
 }
+
+// ── Underwriting hub: the Plaid portal is the front door; the scoring
+// pipeline sits behind a second tab. Deep links (/underwriting/:id) still
+// open the case detail directly. ──
+function UnderwritingHub() {
+  const [view, setView] = useState<'portal' | 'pipeline'>('portal');
+  return (
+    <div className="h-full flex flex-col">
+      <div className="shrink-0 flex items-center gap-6 px-4 lg:px-8 pt-4 border-b border-white/[0.06]">
+        {([
+          { key: 'portal' as const, label: 'Plaid Portal' },
+          { key: 'pipeline' as const, label: 'Pipeline' },
+        ]).map(t => (
+          <button
+            key={t.key}
+            onClick={() => setView(t.key)}
+            className={`px-1 pb-3 text-[13px] font-semibold border-b-2 transition-colors ${
+              view === t.key
+                ? 'border-(--dp-accent) text-(--dp-accent-text)'
+                : 'border-transparent text-(--dp-text-muted) hover:text-(--dp-text)'
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+      <div className="flex-1 overflow-y-auto">
+        {view === 'portal' ? <BackendOnboarding /> : <BackendUnderwriting />}
+      </div>
+    </div>
+  );
+}
+

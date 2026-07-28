@@ -283,8 +283,8 @@ export function BackendOnboarding() {
     <div className="px-6 py-6 space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Onboarding Tracker</h1>
-        <p className="text-sm text-gray-500 mt-1">Monitor application progress and step-level SLAs.</p>
+        <h1 className="text-2xl font-bold text-gray-900">Plaid Portal</h1>
+        <p className="text-sm text-gray-500 mt-1">Merchant bank connections, verification progress, and step-level SLAs — powered by Plaid.</p>
       </div>
 
       {/* Summary Cards */}
