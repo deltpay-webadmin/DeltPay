@@ -1165,7 +1165,6 @@ export function BackendLeads({ openImport = false }: { openImport?: boolean } = 
   const inProgressLeads = leads.filter(l => l.status === 'In Progress').length;
   const wonLeads = leads.filter(l => l.status === 'Won').length;
   const conversionRate = totalLeads > 0 ? ((wonLeads / totalLeads) * 100).toFixed(1) : '0.0';
-  const avgTimeToFunded = 5.2;
 
   const filteredLeads = useMemo(() => {
     return leads.filter(l => {
@@ -1367,13 +1366,12 @@ export function BackendLeads({ openImport = false }: { openImport?: boolean } = 
 
       {/* Summary Cards */}
       <div className="px-6 pt-6">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
           <StatCard label="Total Leads" value={totalLeads.toString()} icon={<Users className="w-5 h-5" />} />
           <StatCard label="New" value={newLeads.toString()} trend={{ value: '+2 this week', isPositive: true }} icon={<Star className="w-5 h-5" />} />
           <StatCard label="In Progress" value={inProgressLeads.toString()} icon={<Clock className="w-5 h-5" />} />
           <StatCard label="Won" value={wonLeads.toString()} trend={{ value: '+1 this week', isPositive: true }} icon={<CheckCircle className="w-5 h-5" />} />
           <StatCard label="Conversion Rate" value={`${conversionRate}%`} icon={<TrendingUp className="w-5 h-5" />} />
-          <StatCard label="Avg Time to Funded" value={`${avgTimeToFunded} days`} icon={<Calendar className="w-5 h-5" />} />
         </div>
 
         {/* Tabs: Leads / Referrals */}
