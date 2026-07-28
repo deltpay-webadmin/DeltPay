@@ -1214,7 +1214,51 @@ export const leadActions = {
     const next = order[Math.min(idx + 1, order.length - 1)];
     leadActions.update(id, { bundle: { ...lead.bundle, status: next } });
   },
+
+  /** Permanently delete a single lead (optimistic + Supabase). */
+  remove(id: string) {
+    const prev = state.leads;
+    const lead = state.leads.find(l => l.id === id);
+    if (!lead) return;
+    persist(
+      'delete lead',
+      () => set({ leads: state.leads.filter(l => l.id !== id) }),
+      () => set({ leads: prev }),
+      () => supabase!.from('pipeline_leads').delete().eq('id', id).then(r => ({ error: r.error })),
+    );
+  },
+
+  /** Permanently delete many leads in one shot (optimistic + Supabase). */
+  removeMany(ids: string[]) {
+    if (ids.length === 0) return;
+    const idSet = new Set(ids);
+    const prev = state.leads;
+    persist(
+      'delete leads',
+      () => set({ leads: state.leads.filter(l => !idSet.has(l.id)) }),
+      () => set({ leads: prev }),
+      () => supabase!.from('pipeline_leads').delete().in('id', ids).then(r => ({ error: r.error })),
+    );
+  },
 };
+
+/**
+ * Heuristic: does this lead look like junk / test / placeholder data?
+ * Used by the backend "Find dummy leads" helper so staff can clear
+ * seed and test rows quickly without hand-picking each one.
+ */
+export function isDummyLead(l: Lead): boolean {
+  const name = (l.businessName || '').trim();
+  const lower = name.toLowerCase();
+  if (!name) return true;
+  // Angle-bracket placeholders Meta injects, e.g. "<test lead: dummy data…>"
+  if (name.startsWith('<') || name.includes('dummy') || name.includes('test lead')) return true;
+  // Obvious keyword placeholders
+  if (/\b(test|demo|sample|asdf|qwerty|placeholder|delete\s*me)\b/.test(lower)) return true;
+  // A bare social handle or email fragment with no real business identity
+  if (name.startsWith('@')) return true;
+  return false;
+}
 
 // ── Onboarding actions ──
 export const onboardingActions = {
