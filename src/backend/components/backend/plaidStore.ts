@@ -379,6 +379,55 @@ export const plaidActions = {
     }
   },
 
+  /** Attach an existing Plaid Identity Verification session to a lead. */
+  async attachIdv(leadId: string, identityVerificationId: string) {
+    try {
+      const json = await authFetch('/idv/attach', {
+        method: 'POST',
+        body: JSON.stringify({ leadId, identityVerificationId }),
+      });
+      toast.success(`IDV session attached (status: ${json.status ?? 'unknown'}).`);
+      await plaidActions.refresh();
+      return json;
+    } catch (err: any) {
+      toast.error(`IDV attach failed: ${err.message}`);
+      throw err;
+    }
+  },
+
+  /** Kick off a 90-day verified Asset Report across a lead's connections. */
+  async createAssetReport(leadId: string) {
+    try {
+      const json = await authFetch('/asset-report', {
+        method: 'POST',
+        body: JSON.stringify({ leadId }),
+      });
+      toast.success('Asset report requested — Plaid is generating it (usually under a minute).');
+      await plaidActions.refresh();
+      return json;
+    } catch (err: any) {
+      toast.error(`Asset report failed: ${err.message}`);
+      throw err;
+    }
+  },
+
+  /** Poll a pending asset report (webhook does this automatically too). */
+  async refreshAssetReport(leadId: string) {
+    try {
+      const json = await authFetch('/asset-report/refresh', {
+        method: 'POST',
+        body: JSON.stringify({ leadId }),
+      });
+      if (json.status === 'ready') toast.success('Asset report is ready.');
+      else toast.info?.('Asset report still generating — try again shortly.');
+      await plaidActions.refresh();
+      return json;
+    } catch (err: any) {
+      toast.error(`Asset report refresh failed: ${err.message}`);
+      throw err;
+    }
+  },
+
   /** Disconnect an institution and remove its vault data. */
   async removeItem(itemId: string) {
     markBusy(`remove:${itemId}`, true);

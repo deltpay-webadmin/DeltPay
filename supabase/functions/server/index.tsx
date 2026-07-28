@@ -12,6 +12,9 @@ import {
   syncItem,
   syncAllItems,
   removeItem,
+  attachIdentityVerification,
+  createAssetReport,
+  refreshAssetReport,
   svc,
 } from "../_shared/plaid.ts";
 const app = new Hono();
@@ -179,6 +182,48 @@ app.post(`${PLAID_BASE}/sync-all`, async (c) => {
     return c.json({ ok: true, results });
   } catch (err: any) {
     console.error("plaid sync-all error", err);
+    return c.json({ ok: false, error: String(err?.message ?? err) }, 500);
+  }
+});
+
+app.post(`${PLAID_BASE}/idv/attach`, async (c) => {
+  try {
+    const body = await c.req.json().catch(() => ({}));
+    const leadId = String(body.leadId ?? "");
+    const idvId = String(body.identityVerificationId ?? "").trim();
+    if (!leadId || !idvId) {
+      return c.json({ ok: false, error: "leadId and identityVerificationId are required" }, 400);
+    }
+    const out = await attachIdentityVerification(leadId, idvId);
+    return c.json(out);
+  } catch (err: any) {
+    console.error("plaid idv attach error", err);
+    return c.json({ ok: false, error: String(err?.message ?? err) }, 500);
+  }
+});
+
+app.post(`${PLAID_BASE}/asset-report`, async (c) => {
+  try {
+    const body = await c.req.json().catch(() => ({}));
+    const leadId = String(body.leadId ?? "");
+    if (!leadId) return c.json({ ok: false, error: "leadId is required" }, 400);
+    const out = await createAssetReport(leadId);
+    return c.json(out);
+  } catch (err: any) {
+    console.error("plaid asset-report error", err);
+    return c.json({ ok: false, error: String(err?.message ?? err) }, 500);
+  }
+});
+
+app.post(`${PLAID_BASE}/asset-report/refresh`, async (c) => {
+  try {
+    const body = await c.req.json().catch(() => ({}));
+    const leadId = String(body.leadId ?? "");
+    if (!leadId) return c.json({ ok: false, error: "leadId is required" }, 400);
+    const out = await refreshAssetReport({ leadId });
+    return c.json(out);
+  } catch (err: any) {
+    console.error("plaid asset-report refresh error", err);
     return c.json({ ok: false, error: String(err?.message ?? err) }, 500);
   }
 });

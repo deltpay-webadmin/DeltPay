@@ -5,6 +5,7 @@ import {
   Folder, FolderOpen, FileJson, ShieldCheck, ShieldAlert, Banknote, User,
   CreditCard, TrendingUp, TrendingDown, Minus, ArrowLeft, Trash2, Copy,
   AlertTriangle, CheckCircle2, XCircle, Clock, Zap, Send, Wallet, Activity,
+  PieChart, Repeat,
 } from 'lucide-react';
 import {
   BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid,
@@ -155,9 +156,12 @@ function useProspects(): ProspectRollup[] {
       let prelim: ScoringResult | null = null;
       if (plaidInputs) {
         plaidScore = scorePlaid(plaidInputs);
+        // Seed engine defaults with what Plaid actually observed — including
+        // loan/MCA payment streams detected in recurring transactions.
         const seeded = defaultScoreInputs({
           monthlyRevenue: plaidInputs.monthlyRevenue || undefined,
           avgDailyBalance: plaidInputs.avgDailyBalance || undefined,
+          existingPositions: uwDoc?.detected?.debt_positions || undefined,
         });
         prelim = evaluateApplication({ ...seeded, plaid: plaidInputs });
       }
@@ -274,6 +278,11 @@ function ProspectDetail({
   const accountDocs = nodes.filter(n => n.leadId === lead.id && n.docKind === 'account');
   const identityDocs = nodes.filter(n => n.leadId === lead.id && n.docKind === 'identity');
   const liabilityDocs = nodes.filter(n => n.leadId === lead.id && n.docKind === 'liabilities');
+  const investmentDocs = nodes.filter(n => n.leadId === lead.id && n.docKind === 'investments');
+  const recurringDocs = nodes.filter(n => n.leadId === lead.id && n.docKind === 'recurring');
+  const idvDocs = nodes.filter(n => n.leadId === lead.id && n.docKind === 'identity_verification');
+  const assetReport = nodes.find(n => n.leadId === lead.id && n.docKind === 'asset_report') ?? null;
+  const [idvInput, setIdvInput] = useState('');
   const m = cashFlow?.metrics;
 
   const sendToUnderwriting = () => {
@@ -284,6 +293,7 @@ function ProspectDetail({
       requestedAmount: Number(String(lead.amountRequested).replace(/[^0-9.]/g, '')) || 50000,
       monthlyRevenue: plaidInputs.monthlyRevenue,
       avgDailyBalance: plaidInputs.avgDailyBalance,
+      existingPositions: m?.detectedDebtPositions || 0,
       source: 'Plaid Vault',
     });
     underwritingActions.updateInputs(app.id, { plaidInputs });
@@ -401,10 +411,74 @@ function ProspectDetail({
                   <MetricTile label="Deposit mix" value={m.depositConcentration} sub={`top source ${fmtPct(m.topDepositorSharePct)}`} />
                   <MetricTile label="Revenue volatility" value={fmtPct(m.revenueStdDevPct)} sub="stddev / mean" />
                   <MetricTile label="Data depth" value={`${m.monthsOfData} mo`} sub={`${m.transactionCount} transactions`} />
+                  <MetricTile
+                    label="Monthly debt service"
+                    value={fmtMoney(m.monthlyDebtService ?? 0)}
+                    sub={m.debtServiceToRevenuePct != null ? `${fmtPct(m.debtServiceToRevenuePct)} of revenue` : undefined}
+                  />
+                  <MetricTile
+                    label="Detected loan positions"
+                    value={
+                      <span className={(m.detectedDebtPositions ?? 0) > 1 ? 'text-red-600' : undefined}>
+                        {m.detectedDebtPositions ?? 0}
+                      </span>
+                    }
+                    sub="from recurring outflows"
+                  />
+                  <MetricTile label="Recurring revenue streams" value={m.recurringRevenueStreams ?? 0} />
+                  <MetricTile label="Investment assets" value={fmtMoney(m.investmentsValue ?? 0)} />
                 </div>
               ) : (
                 <p className="text-sm text-gray-400">Sync a connection to compute metrics.</p>
               )}
+
+              {/* Verified Asset Report */}
+              <div className="mt-4 border-t border-gray-100 pt-3">
+                <div className="flex items-center justify-between gap-2">
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900">Verified Asset Report</p>
+                    <p className="text-[11px] text-gray-400">Plaid-certified 90-day balances & ownership</p>
+                  </div>
+                  {!assetReport ? (
+                    <button
+                      onClick={() => plaidActions.createAssetReport(lead.id)}
+                      className="px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-medium text-gray-700 hover:bg-gray-50"
+                    >
+                      Generate
+                    </button>
+                  ) : assetReport.data?.status !== 'ready' ? (
+                    <button
+                      onClick={() => plaidActions.refreshAssetReport(lead.id)}
+                      className="px-3 py-1.5 rounded-lg border border-amber-200 bg-amber-50 text-xs font-medium text-amber-700 hover:bg-amber-100"
+                    >
+                      Generating… check status
+                    </button>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 text-emerald-600 text-xs">
+                      <CheckCircle2 className="w-3.5 h-3.5" /> Ready
+                    </span>
+                  )}
+                </div>
+                {assetReport?.data?.status === 'ready' && (
+                  <div className="mt-2 space-y-1">
+                    {(assetReport.data.items ?? []).map((it: any, i: number) => (
+                      <div key={i} className="text-xs text-gray-600">
+                        <span className="font-medium">{it.institution_name}</span>
+                        {' — '}
+                        {(it.accounts ?? []).map((a: any) =>
+                          `${a.name ?? 'acct'} ••${a.mask ?? ''} (${a.days_available ?? 0}d history)`
+                        ).join(', ')}
+                      </div>
+                    ))}
+                    <button
+                      onClick={() => onOpenInExplorer(`${base}/financials/asset-report`)}
+                      className="text-xs text-blue-600 hover:underline"
+                    >
+                      View full report in Explorer →
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -414,7 +488,32 @@ function ProspectDetail({
               <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
                 <User className="w-4 h-4 text-gray-400" /> Identity verification
               </h3>
-              {identityDocs.length === 0 && <p className="text-sm text-gray-400">No identity data yet.</p>}
+              {identityDocs.length === 0 && idvDocs.length === 0 && (
+                <p className="text-sm text-gray-400">No identity data yet.</p>
+              )}
+              {idvDocs.length > 0 && (
+                <div className="space-y-2 mb-3">
+                  {idvDocs.map(doc => (
+                    <div key={doc.path} className="border border-gray-100 rounded-lg p-3">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm font-medium text-gray-800">{doc.name}</p>
+                        <span className={`text-xs px-2 py-0.5 rounded-full border ${
+                          doc.data?.status === 'success'
+                            ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                            : doc.data?.status === 'failed'
+                              ? 'bg-red-50 border-red-200 text-red-700'
+                              : 'bg-amber-50 border-amber-200 text-amber-700'
+                        }`}>
+                          {doc.data?.status ?? 'pending'}
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">
+                        KYC: {doc.data?.kyc_check?.status ?? '—'} · Docs: {doc.data?.documentary_verification?.status ?? '—'}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
               <div className="space-y-3">
                 {identityDocs.map(doc => (
                   <div key={doc.path} className="border border-gray-100 rounded-lg p-3">
@@ -437,6 +536,31 @@ function ProspectDetail({
                     ))}
                   </div>
                 ))}
+              </div>
+              {/* Attach an IDV session created via your Plaid IDV template */}
+              <div className="mt-3 border-t border-gray-100 pt-3">
+                <p className="text-[11px] text-gray-400 mb-1.5">
+                  Ran a Plaid Identity Verification session elsewhere? Paste its ID (idv_…) to attach it.
+                </p>
+                <div className="flex items-center gap-1.5">
+                  <input
+                    value={idvInput}
+                    onChange={e => setIdvInput(e.target.value)}
+                    placeholder="idv_…"
+                    className="flex-1 min-w-0 px-2.5 py-1.5 text-xs border border-gray-200 rounded-lg font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                  />
+                  <button
+                    onClick={() => {
+                      const v = idvInput.trim();
+                      if (!v) return;
+                      plaidActions.attachIdv(lead.id, v).then(() => setIdvInput(''));
+                    }}
+                    disabled={!idvInput.trim()}
+                    className="px-2.5 py-1.5 rounded-lg bg-gray-900 text-white text-xs font-medium hover:bg-gray-800 disabled:opacity-50"
+                  >
+                    Attach
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -503,6 +627,93 @@ function ProspectDetail({
               </div>
             </div>
           </div>
+
+          {/* Recurring obligations + investments */}
+          {(recurringDocs.length > 0 || investmentDocs.length > 0) && (
+            <div className="grid lg:grid-cols-2 gap-4">
+              <div className="bg-white border border-gray-200 rounded-xl p-4">
+                <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                  <Repeat className="w-4 h-4 text-gray-400" /> Recurring streams & obligations
+                </h3>
+                {recurringDocs.length === 0 ? (
+                  <p className="text-sm text-gray-400">No recurring streams detected yet.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {recurringDocs.map(doc => {
+                      const inflows = (doc.data?.inflow_streams ?? []).filter((s: any) => s.is_active);
+                      const outflows = (doc.data?.outflow_streams ?? []).filter((s: any) => s.is_active);
+                      const isDebt = (s: any) =>
+                        s.category === 'LOAN_PAYMENTS' ||
+                        /loan|advance|capital|lend|funding|mca|leas(e|ing)|financ/i.test(`${s.merchant_name ?? ''} ${s.description ?? ''}`);
+                      return (
+                        <div key={doc.path} className="border border-gray-100 rounded-lg p-3">
+                          <p className="text-xs text-gray-400 mb-2">{doc.data?.institution?.name ?? 'Institution'}</p>
+                          {outflows.filter(isDebt).map((s: any) => (
+                            <div key={s.stream_id} className="flex items-center justify-between py-1 text-sm">
+                              <span className="text-red-700 flex items-center gap-1.5">
+                                <AlertTriangle className="w-3.5 h-3.5" />
+                                {s.merchant_name || s.description || 'Loan payment'}
+                                <span className="text-[10px] text-red-400 uppercase">{s.frequency?.toLowerCase()}</span>
+                              </span>
+                              <span className="font-medium text-red-700">{fmtMoney(Math.abs(s.average_amount ?? 0), 2)}</span>
+                            </div>
+                          ))}
+                          {inflows.slice(0, 4).map((s: any) => (
+                            <div key={s.stream_id} className="flex items-center justify-between py-1 text-sm">
+                              <span className="text-gray-700 flex items-center gap-1.5">
+                                <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />
+                                {s.merchant_name || s.description || 'Recurring deposit'}
+                                <span className="text-[10px] text-gray-400 uppercase">{s.frequency?.toLowerCase()}</span>
+                              </span>
+                              <span className="font-medium text-emerald-600">{fmtMoney(Math.abs(s.average_amount ?? 0), 2)}</span>
+                            </div>
+                          ))}
+                          {outflows.filter((s: any) => !isDebt(s)).length > 0 && (
+                            <p className="text-[11px] text-gray-400 mt-1">
+                              +{outflows.filter((s: any) => !isDebt(s)).length} other recurring outflow(s) — see Data Explorer
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+              <div className="bg-white border border-gray-200 rounded-xl p-4">
+                <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                  <PieChart className="w-4 h-4 text-gray-400" /> Investment holdings
+                </h3>
+                {investmentDocs.length === 0 ? (
+                  <p className="text-sm text-gray-400">No investment accounts on linked institutions.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {investmentDocs.map(doc => (
+                      <div key={doc.path} className="border border-gray-100 rounded-lg p-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="text-xs text-gray-400">{doc.data?.institution?.name ?? 'Institution'}</p>
+                          <p className="text-sm font-semibold text-gray-900">{fmtMoney(doc.data?.total_value)}</p>
+                        </div>
+                        {(doc.data?.holdings ?? []).slice(0, 6).map((h: any, i: number) => (
+                          <div key={i} className="flex items-center justify-between py-0.5 text-sm">
+                            <span className="text-gray-700 truncate mr-3">
+                              {h.ticker ? <span className="font-mono text-xs text-gray-500 mr-1.5">{h.ticker}</span> : null}
+                              {h.name ?? 'Holding'}
+                            </span>
+                            <span className="text-gray-600 whitespace-nowrap">{fmtMoney(h.value, 2)}</span>
+                          </div>
+                        ))}
+                        {(doc.data?.holdings ?? []).length > 6 && (
+                          <p className="text-[11px] text-gray-400 mt-1">
+                            +{(doc.data?.holdings ?? []).length - 6} more — see Data Explorer
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Decisioning */}
           <div className="bg-white border border-gray-200 rounded-xl p-4">
@@ -596,6 +807,10 @@ const KIND_ICONS: Record<string, React.ElementType> = {
   cash_flow: TrendingUp,
   liabilities: CreditCard,
   underwriting_inputs: Zap,
+  investments: PieChart,
+  recurring: Repeat,
+  identity_verification: ShieldCheck,
+  asset_report: FileJson,
 };
 
 function DataExplorer({

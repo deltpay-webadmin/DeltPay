@@ -304,7 +304,7 @@ export async function createLinkToken(leadId: string, userId: string) {
     language: "en",
     country_codes: ["US"],
     products: cfg.products,
-    optional_products: ["liabilities"],
+    optional_products: ["liabilities", "investments"],
   };
   const hook = webhookUrl();
   if (hook) req.webhook = hook;
@@ -372,9 +372,11 @@ export async function sandboxQuickConnect(leadId: string, institutionId = "ins_1
   if (cfg.env !== "sandbox") {
     throw new Error("Sandbox quick-connect is only available when PLAID_ENV=sandbox.");
   }
+  const hook = webhookUrl();
   const out = await plaid("/sandbox/public_token/create", {
     institution_id: institutionId,
     initial_products: cfg.products,
+    ...(hook ? { options: { webhook: hook } } : {}),
   });
   return exchangePublicToken(leadId, out.public_token);
 }
@@ -455,6 +457,58 @@ export async function syncItem(itemId: string) {
       const li = await plaid("/liabilities/get", { access_token: accessToken });
       liabilities = li?.liabilities ?? null;
     } catch { /* liabilities unavailable — fine */ }
+
+    // ── 4b. Investments (holdings) ──
+    let investments: any = null;
+    try {
+      const inv = await plaid("/investments/holdings/get", { access_token: accessToken });
+      const securities = new Map<string, any>(
+        (inv?.securities ?? []).map((s: any) => [s.security_id, s]),
+      );
+      const holdings = (inv?.holdings ?? []).map((h: any) => {
+        const sec = securities.get(h.security_id) ?? {};
+        return {
+          account_id: h.account_id,
+          name: sec.name ?? null,
+          ticker: sec.ticker_symbol ?? null,
+          type: sec.type ?? null,
+          quantity: h.quantity ?? null,
+          price: h.institution_price ?? null,
+          value: h.institution_value ?? null,
+          iso_currency_code: h.iso_currency_code ?? "USD",
+        };
+      });
+      if (holdings.length) {
+        investments = {
+          holdings,
+          total_value:
+            Math.round(holdings.reduce((s: number, h: any) => s + (h.value ?? 0), 0) * 100) / 100,
+          account_count: ((inv?.accounts ?? []) as any[]).filter((a) => a.type === "investment").length,
+        };
+      }
+    } catch { /* investments product unavailable on this item */ }
+
+    // ── 4c. Recurring transaction streams (revenue streams + debt service) ──
+    let recurring: any = null;
+    try {
+      const rec = await plaid("/transactions/recurring/get", { access_token: accessToken });
+      const slimStream = (s: any) => ({
+        stream_id: s.stream_id,
+        description: s.description ?? null,
+        merchant_name: s.merchant_name ?? null,
+        category: s.personal_finance_category?.primary ?? null,
+        frequency: s.frequency ?? "UNKNOWN",
+        average_amount: s.average_amount?.amount ?? null,
+        last_amount: s.last_amount?.amount ?? null,
+        last_date: s.last_date ?? null,
+        is_active: s.is_active !== false,
+        status: s.status ?? null,
+      });
+      recurring = {
+        inflow_streams: (rec?.inflow_streams ?? []).map(slimStream),
+        outflow_streams: (rec?.outflow_streams ?? []).map(slimStream),
+      };
+    } catch { /* recurring not ready / unavailable */ }
 
     // ── 5. Transactions (incremental /transactions/sync) ──
     let cursor: string | null = item.transactions_cursor ?? null;
@@ -619,6 +673,39 @@ export async function syncItem(itemId: string) {
       });
     }
 
+    if (investments) {
+      folders.push(folderRow(`${base}/investments`, "Investments", leadId));
+      docs.push({
+        path: `${base}/investments/${itemKey}`,
+        name: `Holdings — ${inst}`,
+        node_type: "document",
+        doc_kind: "investments",
+        lead_id: leadId,
+        item_id: itemId,
+        data: {
+          institution: { id: item.institution_id, name: item.institution_name },
+          ...investments,
+          as_of: now,
+        },
+      });
+    }
+
+    if (recurring && (recurring.inflow_streams.length || recurring.outflow_streams.length)) {
+      docs.push({
+        path: `${base}/financials/${itemKey}/recurring`,
+        name: "Recurring Streams",
+        node_type: "document",
+        doc_kind: "recurring",
+        lead_id: leadId,
+        item_id: itemId,
+        data: {
+          institution: { id: item.institution_id, name: item.institution_name },
+          ...recurring,
+          as_of: now,
+        },
+      });
+    }
+
     const txMonths = [...byMonth.keys()].sort();
     for (const m of txMonths) {
       const txs = [...byMonth.get(m)!.values()].sort((a, b) => (a.date < b.date ? -1 : 1));
@@ -681,7 +768,60 @@ export async function syncItem(itemId: string) {
       .select("item_id, institution_name, status")
       .eq("lead_id", leadId);
 
-    const m = cashFlow.metrics;
+    // ── Debt service + recurring revenue, across all of this lead's items ──
+    // Outflow streams that look like loan/MCA/financing payments reveal
+    // existing positions (stacking risk) before DataMerch is even pulled.
+    const { data: allRecurringDocs } = await db
+      .from("plaid_nodes")
+      .select("data")
+      .eq("lead_id", leadId)
+      .eq("doc_kind", "recurring");
+    const PER_MONTH: Record<string, number> = {
+      WEEKLY: 4.33, BIWEEKLY: 2.17, SEMI_MONTHLY: 2, MONTHLY: 1, ANNUALLY: 1 / 12, UNKNOWN: 1,
+    };
+    const DEBT_RE = /loan|advance|capital|lend|funding|mca|leas(e|ing)|financ/i;
+    let monthlyDebtService = 0;
+    let detectedDebtPositions = 0;
+    let recurringRevenueStreams = 0;
+    for (const doc of allRecurringDocs ?? []) {
+      const inflows = (doc.data?.inflow_streams ?? []) as any[];
+      const outflows = (doc.data?.outflow_streams ?? []) as any[];
+      recurringRevenueStreams += inflows.filter((s) => s.is_active).length;
+      for (const s of outflows) {
+        if (!s.is_active) continue;
+        const isDebt =
+          s.category === "LOAN_PAYMENTS" ||
+          DEBT_RE.test(`${s.merchant_name ?? ""} ${s.description ?? ""}`);
+        if (!isDebt) continue;
+        detectedDebtPositions++;
+        monthlyDebtService +=
+          Math.abs(s.average_amount ?? 0) * (PER_MONTH[s.frequency ?? "UNKNOWN"] ?? 1);
+      }
+    }
+    monthlyDebtService = Math.round(monthlyDebtService);
+
+    const { data: allInvestmentDocs } = await db
+      .from("plaid_nodes")
+      .select("data")
+      .eq("lead_id", leadId)
+      .eq("doc_kind", "investments");
+    const investmentsValue =
+      Math.round(
+        (allInvestmentDocs ?? []).reduce(
+          (s: number, d: any) => s + (d.data?.total_value ?? 0), 0) * 100) / 100;
+
+    const m = {
+      ...cashFlow.metrics,
+      monthlyDebtService,
+      detectedDebtPositions,
+      recurringRevenueStreams,
+      debtServiceToRevenuePct:
+        cashFlow.metrics.monthlyRevenue > 0
+          ? Math.round((monthlyDebtService / cashFlow.metrics.monthlyRevenue) * 1000) / 1000
+          : 0,
+      investmentsValue,
+    };
+    cashFlow.metrics = m as typeof cashFlow.metrics;
     const analysisDocs: NodeRow[] = [
       {
         path: `${base}/financials/cash-flow-analysis`,
@@ -709,6 +849,14 @@ export async function syncItem(itemId: string) {
             revenueTrend: m.revenueTrend,
             depositConcentration: m.depositConcentration,
             revenueChange3moPct: m.revenueChange3moPct,
+          },
+          // Extra signals for the analyst / DataMerch seeding: recurring
+          // outflows that look like existing loan/MCA payments.
+          detected: {
+            debt_positions: detectedDebtPositions,
+            monthly_debt_service: monthlyDebtService,
+            debt_service_to_revenue_pct: m.debtServiceToRevenuePct,
+            recurring_revenue_streams: recurringRevenueStreams,
           },
           provenance: {
             source: "plaid",
@@ -740,9 +888,14 @@ export async function syncItem(itemId: string) {
           identity_verified: identityVerified,
           bank_verified: allAccounts.some((a: any) => a.verification?.verified),
           has_credit_data: (allLiabilityDocs ?? []).length > 0,
+          has_investments: (allInvestmentDocs ?? []).length > 0,
+          investments_value: investmentsValue,
           monthly_revenue: m.monthlyRevenue,
           avg_daily_balance: m.avgDailyBalance,
           nsf_count_90d: m.nsfCount90d,
+          monthly_debt_service: monthlyDebtService,
+          detected_debt_positions: detectedDebtPositions,
+          recurring_revenue_streams: recurringRevenueStreams,
           last_synced: now,
         },
       },
@@ -796,6 +949,198 @@ export async function syncAllItems(leadId?: string) {
 }
 
 // ══════════════════════════════════════════════════════════════
+// Identity Verification (Plaid IDV product)
+// ══════════════════════════════════════════════════════════════
+
+/**
+ * Attach an existing Plaid IDV session (created via your IDV template /
+ * Link flow) to a lending prospect and file it in the vault.
+ */
+export async function attachIdentityVerification(leadId: string, idvId: string) {
+  const db = svc();
+  const idv = await plaid("/identity_verification/get", { identity_verification_id: idvId });
+
+  const { data: leadRow } = await db
+    .from("pipeline_leads")
+    .select("business_name")
+    .eq("id", leadId)
+    .maybeSingle();
+  const base = `/prospects/${leadId}`;
+  const now = new Date().toISOString();
+
+  const slim = {
+    id: idv.id,
+    client_user_id: idv.client_user_id ?? null,
+    status: idv.status ?? null,
+    steps: idv.steps ?? null,
+    user: {
+      name: idv.user?.name ?? null,
+      email_address: idv.user?.email_address ?? null,
+      phone_number: idv.user?.phone_number ?? null,
+      address: idv.user?.address ?? null,
+      date_of_birth: idv.user?.date_of_birth ?? null,
+    },
+    documentary_verification: idv.documentary_verification
+      ? {
+          status: idv.documentary_verification.status ?? null,
+          documents: (idv.documentary_verification.documents ?? []).length,
+        }
+      : null,
+    kyc_check: idv.kyc_check
+      ? {
+          status: idv.kyc_check.status ?? null,
+          name: idv.kyc_check.name?.summary ?? null,
+          address: idv.kyc_check.address?.summary ?? null,
+          date_of_birth: idv.kyc_check.date_of_birth?.summary ?? null,
+          id_number: idv.kyc_check.id_number?.summary ?? null,
+        }
+      : null,
+    watchlist_screening_id: idv.watchlist_screening_id ?? null,
+    created_at: idv.created_at ?? null,
+    completed_at: idv.completed_at ?? null,
+    attached_at: now,
+  };
+
+  await writeNodes(
+    db,
+    [
+      folderRow("/prospects", "Prospects"),
+      folderRow(base, leadRow?.business_name || leadId, leadId),
+      folderRow(`${base}/identity`, "Identity Verification", leadId),
+    ],
+    [
+      {
+        path: `${base}/identity/idv-${idvId.slice(-8)}`,
+        name: `IDV Session — ${slim.user.name?.given_name ?? ""} ${slim.user.name?.family_name ?? ""}`.trim() || `IDV ${idvId.slice(-8)}`,
+        node_type: "document",
+        doc_kind: "identity_verification",
+        lead_id: leadId,
+        data: slim,
+      },
+    ],
+  );
+  return { ok: true, id: idv.id, status: idv.status };
+}
+
+// ══════════════════════════════════════════════════════════════
+// Asset Reports (verified 90-day report across a lead's banks)
+// ══════════════════════════════════════════════════════════════
+
+export async function createAssetReport(leadId: string) {
+  const db = svc();
+  const { data: items } = await db
+    .from("plaid_items")
+    .select("item_id")
+    .eq("lead_id", leadId)
+    .eq("status", "active");
+  if (!items?.length) throw new Error("No active Plaid connections on this lead");
+
+  const { data: creds } = await db
+    .from("plaid_credentials")
+    .select("access_token")
+    .in("item_id", items.map((i: any) => i.item_id));
+  const tokens = (creds ?? []).map((c: any) => c.access_token);
+  if (!tokens.length) throw new Error("No stored credentials for this lead's connections");
+
+  const hook = webhookUrl();
+  const out = await plaid("/asset_report/create", {
+    access_tokens: tokens,
+    days_requested: 90,
+    options: {
+      client_report_id: leadId,
+      ...(hook ? { webhook: hook } : {}),
+    },
+  });
+
+  const { data: leadRow } = await db
+    .from("pipeline_leads")
+    .select("business_name")
+    .eq("id", leadId)
+    .maybeSingle();
+  const base = `/prospects/${leadId}`;
+  await writeNodes(
+    db,
+    [
+      folderRow("/prospects", "Prospects"),
+      folderRow(base, leadRow?.business_name || leadId, leadId),
+      folderRow(`${base}/financials`, "Financials", leadId),
+    ],
+    [
+      {
+        path: `${base}/financials/asset-report`,
+        name: "Asset Report (90d)",
+        node_type: "document",
+        doc_kind: "asset_report",
+        lead_id: leadId,
+        data: {
+          status: "pending",
+          asset_report_id: out.asset_report_id,
+          asset_report_token: out.asset_report_token,
+          requested_at: new Date().toISOString(),
+        },
+      },
+    ],
+  );
+  return { ok: true, asset_report_id: out.asset_report_id, status: "pending" };
+}
+
+/** Pull a finished asset report into its vault doc (webhook or manual refresh). */
+export async function refreshAssetReport(opts: { leadId?: string; assetReportId?: string }) {
+  const db = svc();
+  let q = db.from("plaid_nodes").select("path, lead_id, data").eq("doc_kind", "asset_report");
+  if (opts.leadId) q = q.eq("lead_id", opts.leadId);
+  if (opts.assetReportId) q = q.eq("data->>asset_report_id", opts.assetReportId);
+  const { data: docs } = await q.limit(1);
+  const doc = docs?.[0];
+  if (!doc) throw new Error("No asset report found to refresh");
+
+  let rep: any;
+  try {
+    rep = await plaid("/asset_report/get", { asset_report_token: doc.data.asset_report_token });
+  } catch (err: any) {
+    if ((err as any)?.plaid?.error_code === "PRODUCT_NOT_READY") {
+      return { ok: true, status: "pending" };
+    }
+    throw err;
+  }
+
+  const report = rep.report ?? {};
+  const summaryItems = (report.items ?? []).map((it: any) => ({
+    institution_name: it.institution_name ?? null,
+    accounts: (it.accounts ?? []).map((a: any) => ({
+      name: a.name ?? null,
+      mask: a.mask ?? null,
+      type: a.type ?? null,
+      subtype: a.subtype ?? null,
+      current_balance: a.balances?.current ?? null,
+      available_balance: a.balances?.available ?? null,
+      days_available: a.days_available ?? null,
+      historical_balances: (a.historical_balances ?? []).slice(0, 92).map((h: any) => ({
+        date: h.date, current: h.current,
+      })),
+      transaction_count: (a.transactions ?? []).length,
+      owners: (a.owners ?? []).map((o: any) => (o.names ?? []).join(", ")),
+    })),
+  }));
+
+  await db
+    .from("plaid_nodes")
+    .update({
+      data: {
+        ...doc.data,
+        status: "ready",
+        generated_time: report.date_generated ?? null,
+        days_requested: report.days_requested ?? 90,
+        user: report.user ?? null,
+        items: summaryItems,
+        refreshed_at: new Date().toISOString(),
+      },
+    })
+    .eq("path", doc.path);
+  return { ok: true, status: "ready", items: summaryItems.length };
+}
+
+// ══════════════════════════════════════════════════════════════
 // Disconnect
 // ══════════════════════════════════════════════════════════════
 
@@ -843,6 +1188,21 @@ export async function handlePlaidWebhook(body: any): Promise<{ handled: string }
   const type = body?.webhook_type ?? "";
   const code = body?.webhook_code ?? "";
   const itemId = body?.item_id ?? "";
+
+  // Asset-report webhooks carry an asset_report_id, not an item_id.
+  if (type === "ASSETS") {
+    if (code === "PRODUCT_READY" && body?.asset_report_id) {
+      try {
+        await refreshAssetReport({ assetReportId: body.asset_report_id });
+        return { handled: `asset-report-ready:${body.asset_report_id}` };
+      } catch (err: any) {
+        console.error("[plaid-webhook] asset report fetch failed:", err?.message ?? err);
+        return { handled: `asset-report-error:${body.asset_report_id}` };
+      }
+    }
+    return { handled: `assets:${code}` };
+  }
+
   if (!itemId) return { handled: "ignored:no-item" };
 
   if (type === "TRANSACTIONS") {
