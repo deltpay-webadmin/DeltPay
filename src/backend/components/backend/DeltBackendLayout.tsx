@@ -72,6 +72,8 @@ import {
   Upload,
   ArrowLeft,
   CalendarDays,
+  Sun,
+  Moon,
 } from 'lucide-react';
 
 // ── Types ──
@@ -279,7 +281,7 @@ const agentUser = { name: 'Marcus Johnson', initials: 'MJ', email: 'marcus.j@del
 const itemBase =
   'w-full flex items-center gap-2.5 h-[34px] px-3 rounded-[8px] text-[13px] transition-colors';
 const itemActive =
-  'text-white bg-white/[0.06] font-semibold shadow-[inset_2px_0_0_var(--dp-accent)]';
+  'text-(--dp-text) bg-white/[0.06] font-semibold shadow-[inset_2px_0_0_var(--dp-accent)]';
 const itemIdle =
   'text-(--dp-text-muted) hover:text-(--dp-text) hover:bg-white/[0.04] font-medium';
 
@@ -294,6 +296,21 @@ export function DeltBackendLayout() {
   const [cmdPaletteOpen, setCmdPaletteOpen] = useState(false);
   const [cmdQuery, setCmdQuery] = useState('');
   const [helpCenterOpen, setHelpCenterOpen] = useState(false);
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+    try {
+      return localStorage.getItem('delt-crm-theme') === 'light' ? 'light' : 'dark';
+    } catch {
+      return 'dark';
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('delt-crm-theme', theme);
+    } catch {
+      /* private mode — theme just won't persist */
+    }
+  }, [theme]);
 
   // ── Command palette keyboard shortcut ──
   useEffect(() => {
@@ -528,7 +545,7 @@ export function DeltBackendLayout() {
 
   return (
     <NavigationContext.Provider value={{ navigate: handleNavigate, currentPage }}>
-      <div className="flex h-screen bg-(--dp-bg-surface) font-sans">
+      <div className={`flex h-screen bg-(--dp-bg-surface) font-sans ${theme === 'light' ? 'dp-light' : ''}`}>
 
         {/* ═══ Left Sidebar — 240px on bg-base ═══ */}
         <aside className="hidden lg:flex flex-col w-[240px] bg-(--dp-bg-base) border-r border-white/[0.06] shrink-0">
@@ -593,6 +610,18 @@ export function DeltBackendLayout() {
                 >
                   <ArrowLeftRight className="w-3.5 h-3.5" />
                   {userRole === 'admin' ? 'Agent' : 'Admin'}
+                </button>
+
+                {/* Theme toggle */}
+                <button
+                  onClick={() => setTheme(t => (t === 'dark' ? 'light' : 'dark'))}
+                  className="p-2 hover:bg-white/[0.06] rounded-full transition-colors"
+                  aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+                  title={theme === 'dark' ? 'Light mode' : 'Dark mode'}
+                >
+                  {theme === 'dark'
+                    ? <Sun className="w-[18px] h-[18px] text-(--dp-text-muted)" />
+                    : <Moon className="w-[18px] h-[18px] text-(--dp-text-muted)" />}
                 </button>
 
                 {/* Notifications */}

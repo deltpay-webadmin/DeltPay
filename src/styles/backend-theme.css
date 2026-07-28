@@ -485,3 +485,199 @@ body.crm-active {
 .delt-backend-scope *::-webkit-scrollbar-track {
   background: transparent;
 }
+
+/* ════════════════════════════════════════════════════════════════
+   Light mode — `.dp-light` on the CRM layout root re-derives every
+   token; the whole app follows because everything resolves through
+   the variables above. Dark remains the default.
+   ════════════════════════════════════════════════════════════════ */
+.delt-backend-scope .dp-light {
+  /* core surfaces */
+  --dp-bg-base: #EDF1F8;
+  --dp-bg-surface: #F6F8FC;
+  --dp-bg-card: #FFFFFF;
+  --dp-bg-raised: #EEF2F9;
+  --dp-border: #E0E6F0;
+  --dp-border-strong: #C4CEDF;
+  --dp-text: #0B1730;
+  --dp-text-secondary: #3A4763;
+  --dp-text-muted: #61708C;
+  --dp-text-faint: #93A0B7;
+  --dp-accent-hover: #2458E6;
+  --dp-accent-press: #1B4FD6;
+  --dp-accent-text: #2458E6;
+  --dp-accent-soft: rgba(46, 107, 255, 0.1);
+  --dp-success: #149655;
+  --dp-warning: #B77310;
+  --dp-danger: #DE3D42;
+  --dp-capital: #6941C6;
+  --canvas-muted: #FBFCFE;
+
+  /* neutrals */
+  --color-gray-50: #F2F5FA;
+  --color-gray-100: #E9EEF6;
+  --color-gray-200: #DDE4EF;
+  --color-gray-300: #C4CEDF;
+  --color-gray-400: #94A0B7;
+  --color-gray-500: #61708C;
+  --color-gray-600: #48566F;
+  --color-gray-700: #33405C;
+  --color-gray-800: #1E2A44;
+  --color-gray-900: #0B1730;
+  --color-gray-950: #060D1E;
+  --color-slate-50: #F2F5FA;
+  --color-slate-100: #E9EEF6;
+  --color-slate-200: #DDE4EF;
+  --color-slate-300: #C4CEDF;
+  --color-slate-400: #94A0B7;
+  --color-slate-500: #61708C;
+  --color-slate-600: #48566F;
+  --color-slate-700: #33405C;
+  --color-slate-800: #1E2A44;
+  --color-slate-900: #0B1730;
+  --color-slate-950: #060D1E;
+  --color-zinc-50: #F2F5FA;
+  --color-zinc-100: #E9EEF6;
+  --color-zinc-200: #DDE4EF;
+  --color-zinc-400: #94A0B7;
+  --color-zinc-500: #61708C;
+  --color-zinc-700: #33405C;
+  --color-zinc-900: #0B1730;
+  --color-neutral-50: #F2F5FA;
+  --color-neutral-100: #E9EEF6;
+  --color-neutral-200: #DDE4EF;
+  --color-neutral-400: #94A0B7;
+  --color-neutral-500: #61708C;
+  --color-neutral-700: #33405C;
+  --color-neutral-900: #0B1730;
+  --color-stone-50: #F2F5FA;
+  --color-stone-100: #E9EEF6;
+  --color-stone-200: #DDE4EF;
+  --color-stone-500: #61708C;
+  --color-stone-900: #0B1730;
+
+  /* hue families: alpha tints (50–300) still read as pastels on white;
+     the 600–900 text shades flip to deep ink so pills stay legible */
+  --color-emerald-600: #0D9455;
+  --color-emerald-700: #067647;
+  --color-emerald-800: #05603A;
+  --color-emerald-900: #054F31;
+  --color-green-600: #0D9455;
+  --color-green-700: #067647;
+  --color-green-800: #05603A;
+  --color-green-900: #054F31;
+  --color-teal-600: #0E9384;
+  --color-teal-700: #107569;
+  --color-teal-800: #125D56;
+  --color-teal-900: #134E48;
+  --color-lime-600: #4CA30D;
+  --color-lime-700: #3B7C0F;
+  --color-red-600: #D92D20;
+  --color-red-700: #B42318;
+  --color-red-800: #912018;
+  --color-red-900: #7A271A;
+  --color-rose-600: #D92D20;
+  --color-rose-700: #B42318;
+  --color-amber-600: #C28A10;
+  --color-amber-700: #93540A;
+  --color-amber-800: #7A4510;
+  --color-amber-900: #633A0C;
+  --color-yellow-600: #C28A10;
+  --color-yellow-700: #93540A;
+  --color-yellow-800: #7A4510;
+  --color-orange-600: #E5620F;
+  --color-orange-700: #B54708;
+  --color-orange-800: #93370D;
+  --color-blue-600: #2E6BFF;
+  --color-blue-700: #1D4ED8;
+  --color-blue-800: #1E40AF;
+  --color-blue-900: #1E3A8A;
+  --color-sky-600: #2E6BFF;
+  --color-sky-700: #1D4ED8;
+  --color-indigo-600: #2E6BFF;
+  --color-indigo-700: #1D4ED8;
+  --color-indigo-800: #2D3282;
+  --color-indigo-900: #1E2470;
+  --color-cyan-600: #0E7090;
+  --color-cyan-700: #155B75;
+  --color-cyan-800: #104A5F;
+  --color-purple-600: #6941C6;
+  --color-purple-700: #53389E;
+  --color-purple-800: #42307D;
+  --color-purple-900: #34255E;
+  --color-violet-600: #6941C6;
+  --color-violet-700: #53389E;
+  --color-fuchsia-600: #C11574;
+  --color-fuchsia-700: #9E165F;
+  --color-pink-600: #C11574;
+  --color-pink-700: #9E165F;
+
+  /* shadcn tokens */
+  --background: var(--dp-bg-surface);
+  --foreground: var(--dp-text);
+  --card: var(--dp-bg-card);
+  --card-foreground: var(--dp-text);
+  --popover: var(--dp-bg-card);
+  --popover-foreground: var(--dp-text);
+  --secondary: var(--dp-bg-raised);
+  --muted: var(--dp-bg-raised);
+  --muted-foreground: var(--dp-text-muted);
+  --accent: #EEF2F9;
+  --accent-foreground: var(--dp-text);
+  --border: rgba(11, 23, 48, 0.1);
+  --input-background: #F2F5FA;
+  --switch-background: #C4CEDF;
+  --sidebar: var(--dp-bg-base);
+  --sidebar-foreground: var(--dp-text);
+  --sidebar-accent: var(--dp-bg-raised);
+  --sidebar-accent-foreground: var(--dp-text);
+  --sidebar-border: rgba(11, 23, 48, 0.08);
+
+  color-scheme: light;
+}
+
+/* Literal white overlays/hairlines flip to ink tints on light */
+.delt-backend-scope .dp-light :is(.bg-white\/\[0\.04\], .bg-white\/\[0\.05\], .bg-white\/\[0\.06\], .bg-white\/\[0\.07\]) {
+  background-color: rgba(13, 32, 77, 0.05);
+}
+.delt-backend-scope .dp-light .bg-white\/\[0\.08\] {
+  background-color: rgba(13, 32, 77, 0.07);
+}
+.delt-backend-scope .dp-light :is(.hover\:bg-white\/\[0\.03\]:hover, .hover\:bg-white\/\[0\.04\]:hover, .hover\:bg-white\/\[0\.05\]:hover, .hover\:bg-white\/\[0\.06\]:hover) {
+  background-color: rgba(13, 32, 77, 0.05);
+}
+.delt-backend-scope .dp-light .hover\:bg-white\/\[0\.1\]:hover {
+  background-color: rgba(13, 32, 77, 0.08);
+}
+.delt-backend-scope .dp-light :is(.border-white\/\[0\.06\], .border-white\/\[0\.08\]) {
+  border-color: var(--dp-border);
+}
+.delt-backend-scope .dp-light :is(.bg-white\/50, .bg-white\/60, .bg-white\/80) {
+  background-color: rgba(13, 32, 77, 0.06);
+}
+.delt-backend-scope .dp-light .bg-white\/20 {
+  background-color: rgba(13, 32, 77, 0.08);
+}
+
+/* Shadows soften to daylight */
+.delt-backend-scope .dp-light .shadow-sm { box-shadow: 0 1px 2px rgba(16, 24, 40, 0.06); }
+.delt-backend-scope .dp-light .shadow-md,
+.delt-backend-scope .dp-light .hover\:shadow-md:hover { box-shadow: 0 4px 12px rgba(16, 24, 40, 0.08); }
+.delt-backend-scope .dp-light .shadow-lg { box-shadow: 0 8px 24px rgba(16, 24, 40, 0.1); }
+.delt-backend-scope .dp-light .shadow-xl,
+.delt-backend-scope .dp-light .shadow-2xl { box-shadow: 0 16px 40px rgba(16, 24, 40, 0.14); }
+
+/* Selection + scrollbars */
+.delt-backend-scope .dp-light ::selection {
+  background: rgba(46, 107, 255, 0.2);
+  color: var(--dp-text);
+}
+.delt-backend-scope .dp-light * {
+  scrollbar-color: #C4CEDF transparent;
+}
+.delt-backend-scope .dp-light *::-webkit-scrollbar-thumb {
+  background: #C4CEDF;
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}

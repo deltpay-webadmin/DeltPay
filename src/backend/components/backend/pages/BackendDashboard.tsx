@@ -99,7 +99,7 @@ export function BackendDashboard() {
                   value={RESIDUALS.netRevenue}
                   className="text-[44px] leading-none font-bold text-white tracking-[-0.02em]"
                 />
-                <DeltaPill value={12.5} className="!bg-white/10 !text-[#7DF5B4]" />
+                <DeltaPill value={12.5} onGlass />
               </div>
               <p className="mt-3 text-[14px] text-white/60">
                 {fmtK(RESIDUALS.totalVolume)} processed across {RESIDUALS.merchants} merchants ·{' '}

@@ -50,20 +50,28 @@ export function DeltaPill({
   value,
   suffix = '%',
   invert = false,
+  onGlass = false,
   className = '',
 }: {
   value: number;
   suffix?: string;
   invert?: boolean;
+  onGlass?: boolean;
   className?: string;
 }) {
   const flat = value === 0;
   const favorable = invert ? value < 0 : value > 0;
-  const tone = flat
-    ? 'text-(--dp-text-muted) bg-white/[0.08]'
-    : favorable
-      ? 'text-(--dp-success) bg-[rgba(52,199,123,0.14)]'
-      : 'text-(--dp-danger) bg-[rgba(242,86,91,0.14)]';
+  const tone = onGlass
+    ? flat
+      ? 'text-white/80 bg-black/25'
+      : favorable
+        ? 'text-[#7DF5B4] bg-black/25'
+        : 'text-[#FFB0B3] bg-black/25'
+    : flat
+      ? 'text-(--dp-text-muted) bg-white/[0.08]'
+      : favorable
+        ? 'text-(--dp-success) bg-[rgba(52,199,123,0.14)]'
+        : 'text-(--dp-danger) bg-[rgba(242,86,91,0.14)]';
   const Icon = flat ? Minus : value > 0 ? ArrowUpRight : ArrowDownRight;
   return (
     <span className={`inline-flex items-center gap-0.5 rounded-[8px] px-1.5 py-0.5 text-[11px] font-bold tabular-nums ${tone} ${className}`}>
@@ -106,7 +114,7 @@ export function KpiTile({
           {value}
         </span>
         {delta !== undefined && (
-          <DeltaPill value={delta} suffix={deltaSuffix} invert={invertDelta} className={glass ? '!bg-white/10' : ''} />
+          <DeltaPill value={delta} suffix={deltaSuffix} invert={invertDelta} onGlass={glass} />
         )}
       </div>
       {sub && <p className={`mt-1 text-[12px] leading-tight ${glass ? 'text-white/50' : 'text-(--dp-text-faint)'}`}>{sub}</p>}
