@@ -1313,6 +1313,16 @@ export const leadActions = {
     if (lead.status === 'Not Qualified' || lead.status === 'Lost') return false;
     leadActions.update(id, { stage: 'Converted', status: 'Won', lastActivity: 'just now' });
     leadActions.addTimeline(id, { title: 'Lead converted', description: 'Won — handed off to onboarding', user: 'You', timestamp: 'just now' });
+    // Hand off into the onboarding pipeline (skip if one already exists).
+    const exists = state.onboarding.some(
+      o => o.merchantName.toLowerCase() === lead.businessName.toLowerCase() && o.currentStep !== 'Funded',
+    );
+    if (!exists) {
+      onboardingActions.create({
+        merchantName: lead.businessName,
+        agent: lead.assignedAgent || 'Unassigned',
+      });
+    }
     return true;
   },
 
@@ -1504,7 +1514,51 @@ export function scoreLead(l: Partial<Lead>): number {
 }
 
 // ── Onboarding actions ──
+const ONB_STEPS: OnbStep[] = ['Application Submitted', 'Bank Verification', 'Identity Verification', 'Underwriting', 'Docs & E-Sign', 'Funded'];
+const ONB_SLA_TARGETS: Record<OnbStep, string> = {
+  'Application Submitted': '—',
+  'Bank Verification': '24 hrs',
+  'Identity Verification': '24 hrs',
+  Underwriting: '48 hrs',
+  'Docs & E-Sign': '72 hrs',
+  Funded: '24 hrs',
+};
+
 export const onboardingActions = {
+  create(partial: Partial<OnboardingApp>): OnboardingApp {
+    const used = new Set(state.onboarding.map(o => o.id));
+    let n = state.onboarding.length + 1;
+    let id = `ONB-${String(n).padStart(3, '0')}`;
+    while (used.has(id)) id = `ONB-${String(++n).padStart(3, '0')}`;
+    const app: OnboardingApp = {
+      id,
+      merchantName: partial.merchantName || 'New Merchant',
+      agent: partial.agent || 'Unassigned',
+      currentStep: 'Application Submitted',
+      currentStepIndex: 0,
+      timeInStep: '0 hrs',
+      timeInStepHours: 0,
+      slaTarget: ONB_SLA_TARGETS['Bank Verification'],
+      slaStatus: 'On Track',
+      submittedDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      blocker: '',
+      steps: ONB_STEPS.map((step, i) => ({
+        step,
+        completedAt: i === 0 ? nowStamp() : null,
+        slaTarget: ONB_SLA_TARGETS[step],
+      })),
+      nudges: 0,
+    };
+    const prev = state.onboarding;
+    persist(
+      'onboarding app',
+      () => set({ onboarding: [...state.onboarding, app] }),
+      () => set({ onboarding: prev }),
+      () => supabase!.from('onboarding_apps').insert(toDbOnb(app)).then(r => ({ error: r.error })),
+    );
+    return app;
+  },
+
   nudge(id: string) {
     const prev = state.onboarding;
     const target = state.onboarding.find(o => o.id === id);
@@ -1535,11 +1589,11 @@ export const onboardingActions = {
   },
 
   advance(id: string) {
-    const STEPS: OnbStep[] = ['Application Submitted', 'Bank Verification', 'Identity Verification', 'Underwriting', 'Docs & E-Sign', 'Funded'];
     const target = state.onboarding.find(o => o.id === id);
     if (!target) return;
-    const nextIdx = Math.min(target.currentStepIndex + 1, STEPS.length - 1);
-    const nextStep = STEPS[nextIdx];
+    const wasFunded = target.currentStep === 'Funded';
+    const nextIdx = Math.min(target.currentStepIndex + 1, ONB_STEPS.length - 1);
+    const nextStep = ONB_STEPS[nextIdx];
     const steps = target.steps.map((s, i) => (i === target.currentStepIndex ? { ...s, completedAt: nowStamp() } : s));
     const patch: Partial<OnboardingApp> = {
       currentStep: nextStep,
@@ -1559,6 +1613,32 @@ export const onboardingActions = {
       () => set({ onboarding: prev }),
       () => supabase!.from('onboarding_apps').update(toDbOnb(patch)).eq('id', id).then(r => ({ error: r.error })),
     );
+
+    // Reaching Funded completes onboarding — promote to an active merchant,
+    // carrying over contact/business data from the source lead when we have it.
+    if (!wasFunded && nextStep === 'Funded') {
+      const already = state.merchants.some(
+        m => m.name.toLowerCase() === target.merchantName.toLowerCase(),
+      );
+      if (!already) {
+        const lead = state.leads.find(
+          l => l.businessName.toLowerCase() === target.merchantName.toLowerCase(),
+        );
+        merchantActions.create({
+          name: target.merchantName,
+          industry: lead?.industry || 'General',
+          status: 'Active',
+          agent: target.agent,
+          monthlyVolume: lead ? parseMoney(lead.monthlySales) : 0,
+          contactName: lead?.contactName || undefined,
+          contactEmail: lead?.contactEmail || undefined,
+          contactPhone: lead?.contactPhone || undefined,
+          state: lead?.kyb?.business.state || undefined,
+          website: lead?.kyb?.business.website || undefined,
+          notes: lead ? `Funded via onboarding ${id} (lead ${lead.id})` : `Funded via onboarding ${id}`,
+        });
+      }
+    }
   },
 };
 
