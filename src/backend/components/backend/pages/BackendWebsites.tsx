@@ -226,7 +226,6 @@ export function BackendWebsites() {
             <Globe className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Websites</h1>
             <p className="text-sm text-gray-500">Manage merchant websites, domains, and analytics</p>
           </div>
         </div>

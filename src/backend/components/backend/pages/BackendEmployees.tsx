@@ -513,7 +513,6 @@ export function BackendEmployees() {
       <div className="bg-white border-b border-gray-200 px-6 py-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Employees</h1>
             <p className="text-sm text-gray-600 mt-1">{totalEmployees} active employees across all departments</p>
           </div>
           <button

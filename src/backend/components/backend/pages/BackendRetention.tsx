@@ -272,7 +272,6 @@ export function BackendRetention() {
     <div className="px-6 py-6 space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Retention &amp; Churn</h1>
         <p className="text-sm text-gray-500 mt-1">Detect at-risk merchants and trigger save workflows.</p>
       </div>
 

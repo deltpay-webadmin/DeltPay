@@ -277,7 +277,6 @@ export function BackendOutreach() {
         {/* ── Header ── */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Outreach</h1>
             <p className="text-sm text-gray-500 mt-0.5">
               Live engagement from deltcapital.com lead emails — sends, opens, clicks, and UTM attribution per lead
             </p>

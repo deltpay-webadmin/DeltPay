@@ -67,7 +67,6 @@ export function AgentCommissions() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Commissions</h1>
           <p className="text-sm text-gray-500 mt-1">Track your earnings and download statements.</p>
         </div>
         <button className="inline-flex items-center gap-2 px-4 py-2.5 border border-gray-300 rounded-[6px] text-sm text-gray-700 bg-white hover:bg-gray-50 transition-colors">

@@ -149,7 +149,6 @@ export function BackendDocuments() {
             <FileText className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Documents & E-Sign</h1>
             <p className="text-sm text-gray-500">{DOCUMENTS.length} documents &middot; {pendingCount} awaiting signature</p>
           </div>
         </div>

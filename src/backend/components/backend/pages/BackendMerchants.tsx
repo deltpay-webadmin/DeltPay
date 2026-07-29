@@ -177,7 +177,6 @@ export function BackendMerchants() {
       {/* ── Header ── */}
       <div className="flex items-center justify-between px-6 pt-6 pb-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">All Merchants</h1>
           <p className="text-sm text-gray-500 mt-0.5">{total} merchants across all products and plans</p>
         </div>
         <button
