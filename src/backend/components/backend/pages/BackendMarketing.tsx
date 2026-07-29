@@ -98,43 +98,53 @@ const TREND = [
 const fmtK = (n: number) => (n >= 1000 ? `$${(n / 1000).toFixed(1)}K` : `$${n}`);
 
 // ── Sculpted funnel geometry ──
-// One SVG path per side story: bands hold a constant width, with soft
-// bezier shoulders at each boundary. Drawn in a 0–100 × pixel space,
-// preserveAspectRatio="none" stretches it to the container.
+// The cone is one continuous silhouette: a Catmull-Rom spline through the
+// stage widths, so the taper is smooth with no stepped shoulders. Drawn in
+// a 0–100 × pixel space, preserveAspectRatio="none" stretches it to fit.
 const BAND_H = 56;
-const SHOULDER = 16;
 const GAP = 14;
 const RETURN_H = 60;
 const FUNNEL_H = STAGES.length * BAND_H;
 
+interface Pt { x: number; y: number }
+
+// Catmull-Rom → cubic bezier segments through pts (starting from pts[0]).
+function splineThrough(pts: Pt[]): string {
+  let d = '';
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[i - 1] ?? pts[i];
+    const p1 = pts[i];
+    const p2 = pts[i + 1];
+    const p3 = pts[i + 2] ?? pts[i + 1];
+    const c1 = { x: p1.x + (p2.x - p0.x) / 6, y: p1.y + (p2.y - p0.y) / 6 };
+    const c2 = { x: p2.x - (p3.x - p1.x) / 6, y: p2.y - (p3.y - p1.y) / 6 };
+    d += `C ${c1.x.toFixed(2)} ${c1.y.toFixed(2)}, ${c2.x.toFixed(2)} ${c2.y.toFixed(2)}, ${p2.x.toFixed(2)} ${p2.y.toFixed(2)} `;
+  }
+  return d;
+}
+
+// Width samples: the top edge, each band boundary (averaging the widths it
+// separates), and the bottom edge — one smooth run, no verticals between.
+function sidePoints(side: 1 | -1): Pt[] {
+  const x = (w: number) => 50 + (side * w) / 2;
+  const pts: Pt[] = [{ x: x(STAGES[0].width), y: 0 }];
+  for (let i = 1; i < STAGES.length; i++) {
+    pts.push({ x: x((STAGES[i - 1].width + STAGES[i].width) / 2), y: i * BAND_H });
+  }
+  pts.push({ x: x(STAGES[STAGES.length - 1].width), y: FUNNEL_H });
+  return pts;
+}
+
 function costPath(): string {
-  const xR = (w: number) => 50 + w / 2;
-  const xL = (w: number) => 50 - w / 2;
-  let d = `M ${xL(STAGES[0].width)} 0 L ${xR(STAGES[0].width)} 0 `;
-  // right side down
-  for (let i = 0; i < STAGES.length; i++) {
-    const yEnd = (i + 1) * BAND_H;
-    const cur = xR(STAGES[i].width);
-    if (i < STAGES.length - 1) {
-      const nxt = xR(STAGES[i + 1].width);
-      d += `L ${cur} ${yEnd - SHOULDER} C ${cur} ${yEnd}, ${nxt} ${yEnd}, ${nxt} ${yEnd + SHOULDER} `;
-    } else {
-      d += `L ${cur} ${yEnd} `;
-    }
-  }
-  // bottom, then left side up
-  d += `L ${xL(STAGES[STAGES.length - 1].width)} ${FUNNEL_H} `;
-  for (let i = STAGES.length - 1; i >= 0; i--) {
-    const yTop = i * BAND_H;
-    const cur = xL(STAGES[i].width);
-    if (i > 0) {
-      const prev = xL(STAGES[i - 1].width);
-      d += `L ${cur} ${yTop + SHOULDER} C ${cur} ${yTop}, ${prev} ${yTop}, ${prev} ${yTop - SHOULDER} `;
-    } else {
-      d += `L ${cur} ${yTop} `;
-    }
-  }
-  return d + 'Z';
+  const right = sidePoints(1);
+  const left = sidePoints(-1).reverse();
+  return (
+    `M ${left[left.length - 1].x} 0 L ${right[0].x} 0 ` +
+    splineThrough(right) +
+    `L ${left[0].x} ${FUNNEL_H} ` +
+    splineThrough(left) +
+    'Z'
+  );
 }
 
 function returnPath(): string {
