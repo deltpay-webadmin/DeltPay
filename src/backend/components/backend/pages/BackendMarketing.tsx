@@ -1,63 +1,53 @@
 import React, { useMemo, useState } from 'react';
-import {
-  Megaphone, Calendar, ChevronDown, Download, Target,
-  MousePointerClick, TrendingUp, DollarSign, Plus,
-} from 'lucide-react';
-import { KpiTile, Card, StatusPill, Btn } from '../../dp';
+import { Link2, Target, TrendingUp, ArrowRight } from 'lucide-react';
+import { Overline, DeltaPill, KpiTile, Card, HeroPanel, Btn } from '../../dp';
 
 // ══════════════════════════════════════
-// Marketing performance — ad spend, CAC, ROAS
+// Marketing performance — the return-on-ad-spend story.
 //
-// Reporting-cycle numbers are entered per cycle from the ad platforms
-// (Google/Meta exports) until the platform API integrations land; revenue
-// is the first-90-day net revenue of merchants funded in the cycle,
-// attributed last-non-direct-touch.
+// Concept surface: sample cycle data stands in until the Google/Meta ad
+// account integrations land. The funnel is drawn as one sculpted shape —
+// spend narrows through conversion, then the return flares back out in
+// green past the cost it took to win it.
 // ══════════════════════════════════════
 
-const PERIOD = 'May 25 – Jun 24, 2026';
-
-// ── Cycle KPIs ──
 const CYCLE = {
+  period: 'May 25 – Jun 24, 2026',
   spend: 18420,
   revenue: 96420,
-  funded: 34,
-  cac: 542,       // spend / funded
-  cacDelta: -6.1, // improving (down)
-  roas: 5.2,      // revenue / spend
+  roas: 5.2,
   roasDelta: 8.4,
-  spendDelta: 8.2,
-  revenueDelta: 12.4,
-  fundedDelta: 13.3,
+  cac: 542,
+  cacDelta: -6.1,
+  paybackDays: 41,
+  funded: 34,
 };
 
-// ── Spend → return funnel ──
-// Widths are compressed (not linear) so the bottom stages stay visible,
-// mirroring the leadership funnel format.
-interface FunnelStage {
+// ── Funnel stages ──
+// Widths are perceptual, not linear — the story is the narrowing, then the
+// green return flaring back out wider than the cost stem that produced it.
+interface Stage {
   key: string;
   label: string;
-  value: number;
-  display?: string;      // override for non-count stages (revenue)
-  pctOfPrev: number | null;
-  width: number;         // % of funnel width, must be monotonically narrowing
-  chip: string;          // unit-cost readout for the stage
-  target?: { label: string; tone: 'success' | 'warning' };
-  final?: boolean;       // green return stage
+  value: string;
+  stepPct: string | null; // conversion from previous stage
+  unit: string;           // unit-cost readout
+  width: number;
 }
 
-const FUNNEL: FunnelStage[] = [
-  { key: 'impressions', label: 'Impressions', value: 1240000, pctOfPrev: null, width: 100, chip: 'CPM $14.85' },
-  { key: 'clicks', label: 'Clicks', value: 38400, pctOfPrev: 3.1, width: 88, chip: 'CPC $0.48' },
-  { key: 'visits', label: 'Site visits', value: 29600, pctOfPrev: 77.1, width: 79, chip: '$0.62 / visit' },
-  { key: 'leads', label: 'Leads', value: 1184, pctOfPrev: 4.0, width: 62, chip: '$15.56 / lead', target: { label: 'target $12 / lead', tone: 'warning' } },
-  { key: 'qualified', label: 'Qualified', value: 342, pctOfPrev: 28.9, width: 47, chip: '$53.86 / qualified' },
-  { key: 'apps', label: 'Applications', value: 128, pctOfPrev: 37.4, width: 35, chip: '$143.91 / application' },
-  { key: 'funded', label: 'Funded', value: 34, pctOfPrev: 26.6, width: 26, chip: 'CAC $541.76', target: { label: 'target $500 · 92%', tone: 'warning' } },
-  { key: 'revenue', label: 'Revenue', value: 96420, display: '$96,420', pctOfPrev: null, width: 26, chip: 'ROAS 5.2×', target: { label: 'target 4.0× · 130%', tone: 'success' }, final: true },
+const STAGES: Stage[] = [
+  { key: 'impressions', label: 'Impressions', value: '1.24M', stepPct: null, unit: '$14.85 CPM', width: 100 },
+  { key: 'clicks', label: 'Clicks', value: '38.4K', stepPct: '3.1%', unit: '$0.48 CPC', width: 82 },
+  { key: 'visits', label: 'Site visits', value: '29.6K', stepPct: '77%', unit: '$0.62 / visit', width: 72 },
+  { key: 'leads', label: 'Leads', value: '1,184', stepPct: '4.0%', unit: '$15.56 / lead', width: 54 },
+  { key: 'qualified', label: 'Qualified', value: '342', stepPct: '29%', unit: '$53.86 / qualified', width: 40 },
+  { key: 'apps', label: 'Applications', value: '128', stepPct: '37%', unit: '$143.91 / application', width: 28 },
+  { key: 'funded', label: 'Funded merchants', value: '34', stepPct: '27%', unit: '$542 CAC', width: 18 },
 ];
 
-// Per-channel contribution for the drill-down strip, keyed by stage.
-const STAGE_CHANNEL_SPLIT: Record<string, { channel: string; share: number }[]> = {
+const RETURN_STAGE = { label: 'Attributed revenue', value: '$96.4K', roas: '5.2× return', widthTop: 18, widthBottom: 46 };
+
+const STAGE_CHANNELS: Record<string, { channel: string; share: number }[]> = {
   impressions: [
     { channel: 'Google Ads', share: 46 }, { channel: 'Meta', share: 34 },
     { channel: 'LinkedIn', share: 12 }, { channel: 'Email', share: 3 }, { channel: 'SMS', share: 5 },
@@ -86,31 +76,16 @@ const STAGE_CHANNEL_SPLIT: Record<string, { channel: string; share: number }[]> 
     { channel: 'Google Ads', share: 44 }, { channel: 'Meta', share: 26 },
     { channel: 'LinkedIn', share: 9 }, { channel: 'Email', share: 12 }, { channel: 'SMS', share: 9 },
   ],
-  revenue: [
-    { channel: 'Google Ads', share: 42 }, { channel: 'Meta', share: 24 },
-    { channel: 'LinkedIn', share: 8 }, { channel: 'Email', share: 15 }, { channel: 'SMS', share: 11 },
-  ],
 };
 
-// ── Channel efficiency ──
-interface ChannelRow {
-  name: string;
-  spend: number;
-  leads: number;
-  funded: number;
-  cac: number | null;   // null → organic-adjacent, spend too low to be meaningful
-  roas: number;
-}
-
-const CHANNELS: ChannelRow[] = [
-  { name: 'Google Ads', spend: 8900, leads: 521, funded: 15, cac: 593, roas: 4.8 },
-  { name: 'Meta', spend: 5200, leads: 320, funded: 9, cac: 578, roas: 4.4 },
-  { name: 'LinkedIn', spend: 2100, leads: 83, funded: 3, cac: 700, roas: 3.1 },
-  { name: 'SMS', spend: 1500, leads: 106, funded: 3, cac: 500, roas: 5.9 },
-  { name: 'Email', spend: 720, leads: 154, funded: 4, cac: 180, roas: 9.6 },
+const CHANNELS = [
+  { name: 'Google Ads', spend: 8900, cac: 593, roas: 4.8 },
+  { name: 'Meta', spend: 5200, cac: 578, roas: 4.4 },
+  { name: 'LinkedIn', spend: 2100, cac: 700, roas: 3.1 },
+  { name: 'SMS', spend: 1500, cac: 500, roas: 5.9 },
+  { name: 'Email', spend: 720, cac: 180, roas: 9.6 },
 ];
 
-// ── Monthly trend: spend vs attributed revenue ──
 const TREND = [
   { month: 'Feb', spend: 11200, revenue: 41800 },
   { month: 'Mar', spend: 13400, revenue: 52300 },
@@ -120,184 +95,231 @@ const TREND = [
   { month: 'Jul', spend: 19800, revenue: 104100 },
 ];
 
-const fmt = (n: number) => n.toLocaleString('en-US');
 const fmtK = (n: number) => (n >= 1000 ? `$${(n / 1000).toFixed(1)}K` : `$${n}`);
 
-// ── Funnel row ──
-// Trapezoid bars via clip-path: each bar tapers from its own width to the
-// next stage's width, so the stack reads as one continuous funnel.
-function FunnelRow({
-  stage,
-  nextWidth,
-  selected,
-  onSelect,
-}: {
-  stage: FunnelStage;
-  nextWidth: number;
-  selected: boolean;
-  onSelect: () => void;
-}) {
-  const wTop = stage.width;
-  const wBottom = stage.final ? stage.width : nextWidth;
-  const xTop = (100 - wTop) / 2;
-  const xBottom = (100 - wBottom) / 2;
-  // Ink ramps with depth; the return stage flips to success green.
-  const depth = 1 - stage.width / 100; // 0 wide → 1 narrow
-  const fill = stage.final
-    ? 'var(--dp-success)'
-    : `color-mix(in srgb, var(--dp-accent) ${Math.round(18 + depth * 74)}%, var(--dp-bg-card))`;
-  const darkInk = depth < 0.3 && !stage.final;
+// ── Sculpted funnel geometry ──
+// One SVG path per side story: bands hold a constant width, with soft
+// bezier shoulders at each boundary. Drawn in a 0–100 × pixel space,
+// preserveAspectRatio="none" stretches it to the container.
+const BAND_H = 56;
+const SHOULDER = 16;
+const GAP = 14;
+const RETURN_H = 60;
+const FUNNEL_H = STAGES.length * BAND_H;
 
+function costPath(): string {
+  const xR = (w: number) => 50 + w / 2;
+  const xL = (w: number) => 50 - w / 2;
+  let d = `M ${xL(STAGES[0].width)} 0 L ${xR(STAGES[0].width)} 0 `;
+  // right side down
+  for (let i = 0; i < STAGES.length; i++) {
+    const yEnd = (i + 1) * BAND_H;
+    const cur = xR(STAGES[i].width);
+    if (i < STAGES.length - 1) {
+      const nxt = xR(STAGES[i + 1].width);
+      d += `L ${cur} ${yEnd - SHOULDER} C ${cur} ${yEnd}, ${nxt} ${yEnd}, ${nxt} ${yEnd + SHOULDER} `;
+    } else {
+      d += `L ${cur} ${yEnd} `;
+    }
+  }
+  // bottom, then left side up
+  d += `L ${xL(STAGES[STAGES.length - 1].width)} ${FUNNEL_H} `;
+  for (let i = STAGES.length - 1; i >= 0; i--) {
+    const yTop = i * BAND_H;
+    const cur = xL(STAGES[i].width);
+    if (i > 0) {
+      const prev = xL(STAGES[i - 1].width);
+      d += `L ${cur} ${yTop + SHOULDER} C ${cur} ${yTop}, ${prev} ${yTop}, ${prev} ${yTop - SHOULDER} `;
+    } else {
+      d += `L ${cur} ${yTop} `;
+    }
+  }
+  return d + 'Z';
+}
+
+function returnPath(): string {
+  const { widthTop: wt, widthBottom: wb } = RETURN_STAGE;
+  const xRt = 50 + wt / 2, xRb = 50 + wb / 2;
+  const xLt = 50 - wt / 2, xLb = 50 - wb / 2;
   return (
-    <div className="grid grid-cols-[110px_1fr_150px] items-center gap-3">
-      {/* Stage label + step conversion */}
-      <div className="text-right">
-        <p className="text-[12px] font-semibold text-(--dp-text) leading-tight">{stage.label}</p>
-        {stage.pctOfPrev !== null && (
-          <p className="text-[10px] text-(--dp-text-faint) tabular-nums">{stage.pctOfPrev.toFixed(1)}% of prev</p>
-        )}
-      </div>
-
-      {/* Trapezoid segment */}
-      <button
-        onClick={onSelect}
-        title={`Drill into ${stage.label.toLowerCase()} by channel`}
-        className={`relative h-[42px] w-full transition-opacity ${selected ? '' : 'hover:opacity-90'}`}
-      >
-        <div
-          className="absolute inset-0"
-          style={{
-            background: fill,
-            clipPath: `polygon(${xTop}% 0, ${100 - xTop}% 0, ${100 - xBottom}% 100%, ${xBottom}% 100%)`,
-          }}
-        />
-        {selected && (
-          <div
-            className="absolute inset-0"
-            style={{
-              boxShadow: 'inset 0 0 0 2px var(--dp-accent-text)',
-              clipPath: `polygon(${xTop}% 0, ${100 - xTop}% 0, ${100 - xBottom}% 100%, ${xBottom}% 100%)`,
-            }}
-          />
-        )}
-        <span
-          className={`absolute inset-0 flex items-center justify-center text-[13px] font-bold tabular-nums ${
-            stage.final ? 'text-white' : darkInk ? 'text-(--dp-text)' : 'text-white'
-          }`}
-        >
-          {stage.display ?? fmt(stage.value)}
-        </span>
-      </button>
-
-      {/* Unit-cost chip + target */}
-      <div className="flex flex-col items-start gap-1">
-        <span className="text-[11px] font-bold tabular-nums text-(--dp-text-secondary) bg-white/[0.06] border border-(--dp-border) rounded-[8px] px-2 py-0.5 whitespace-nowrap">
-          {stage.chip}
-        </span>
-        {stage.target && (
-          <StatusPill tone={stage.target.tone} className="!text-[10px]">{stage.target.label}</StatusPill>
-        )}
-      </div>
-    </div>
+    `M ${xLt} 0 L ${xRt} 0 ` +
+    `C ${xRt} ${RETURN_H * 0.55}, ${xRb} ${RETURN_H * 0.35}, ${xRb} ${RETURN_H} ` +
+    `L ${xLb} ${RETURN_H} ` +
+    `C ${xLb} ${RETURN_H * 0.35}, ${xLt} ${RETURN_H * 0.55}, ${xLt} 0 Z`
   );
 }
 
 // ── Main page ──
 export function BackendMarketing() {
-  const [selectedStage, setSelectedStage] = useState<string | null>(null);
-
+  const [drillKey, setDrillKey] = useState<string | null>(null);
   const totalSpend = useMemo(() => CHANNELS.reduce((s, c) => s + c.spend, 0), []);
   const maxTrend = useMemo(() => Math.max(...TREND.map(t => t.revenue)), []);
-  const drill = selectedStage ? STAGE_CHANNEL_SPLIT[selectedStage] : null;
-  const drillStage = selectedStage ? FUNNEL.find(s => s.key === selectedStage) : null;
+  const drill = drillKey ? STAGE_CHANNELS[drillKey] : null;
+  const drillStage = drillKey ? STAGES.find(s => s.key === drillKey) : null;
+  const bestRoas = Math.max(...CHANNELS.map(c => c.roas));
 
   return (
-    <div className="px-4 lg:px-8 py-6 space-y-5">
-      {/* Header row (topbar owns the h1) */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-[10px] bg-(--dp-accent-soft) flex items-center justify-center">
-            <Megaphone className="w-4.5 h-4.5 text-(--dp-accent-text)" />
+    <div className="h-full overflow-y-auto">
+      <div className="max-w-[1360px] mx-auto px-4 lg:px-8 py-6 space-y-6">
+
+        {/* ═══ HERO — the return is the hero ═══ */}
+        <HeroPanel>
+          <div className="grid grid-cols-1 xl:grid-cols-[1fr_460px] gap-8 p-6 lg:p-8">
+            <div className="flex flex-col justify-center">
+              <Overline className="text-white/60">Return on ad spend · {CYCLE.period}</Overline>
+              <div className="mt-2 flex flex-wrap items-center gap-3">
+                <span className="text-[44px] leading-none font-bold text-white tracking-[-0.02em] tabular-nums">
+                  {CYCLE.roas.toFixed(1)}×
+                </span>
+                <DeltaPill value={CYCLE.roasDelta} onGlass />
+              </div>
+              <p className="mt-3 text-[14px] text-white/60">
+                {fmtK(CYCLE.spend)} invested returned <span className="text-white/90 font-semibold">{fmtK(CYCLE.revenue)}</span> in
+                first-90-day revenue from {CYCLE.funded} funded merchants
+              </p>
+              <div className="mt-6 flex items-center gap-2">
+                <Btn variant="primary" size="sm">
+                  <Link2 className="w-3.5 h-3.5" /> Connect ad accounts
+                </Btn>
+                <button className="inline-flex items-center gap-1.5 h-8 px-4 rounded-[10px] text-[12px] font-bold text-white/80 border border-white/20 hover:bg-white/10 transition-colors">
+                  <Target className="w-3.5 h-3.5" /> Set targets
+                </button>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3 content-center">
+              <KpiTile glass label="Ad spend" value={fmtK(CYCLE.spend)} sub="All paid channels" />
+              <KpiTile glass label="Attributed revenue" value={fmtK(CYCLE.revenue)} sub="First 90 days" />
+              <KpiTile glass label="CAC" value={`$${CYCLE.cac}`} delta={CYCLE.cacDelta} invertDelta sub="Per funded merchant" />
+              <KpiTile glass label="Payback" value={`${CYCLE.paybackDays}d`} sub="Spend recovered" />
+            </div>
           </div>
-          <p className="text-[13px] text-(--dp-text-muted)">
-            Ad spend, acquisition cost, and return across every paid channel — one reporting cycle at a time.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button className="inline-flex items-center gap-2 h-9 px-3.5 rounded-[10px] bg-(--dp-bg-card) border border-(--dp-border) text-[12px] font-semibold text-(--dp-text) hover:border-(--dp-border-strong) transition-colors">
-            <Calendar className="w-3.5 h-3.5 text-(--dp-text-muted)" />
-            {PERIOD}
-            <ChevronDown className="w-3.5 h-3.5 text-(--dp-text-faint)" />
-          </button>
-          <Btn variant="secondary" size="sm"><Target className="w-3.5 h-3.5" /> KPI targets</Btn>
-          <Btn variant="primary" size="sm"><Plus className="w-3.5 h-3.5" /> Reporting cycle</Btn>
-        </div>
-      </div>
+        </HeroPanel>
 
-      {/* KPI row */}
-      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
-        <KpiTile label="Ad spend" value={fmtK(CYCLE.spend)} delta={CYCLE.spendDelta} invertDelta sub="All paid channels, this cycle" />
-        <KpiTile label="Attributed revenue" value={fmtK(CYCLE.revenue)} delta={CYCLE.revenueDelta} sub="First-90-day net revenue" />
-        <KpiTile label="CAC" value={`$${CYCLE.cac}`} delta={CYCLE.cacDelta} invertDelta sub="Blended, per funded merchant" />
-        <KpiTile label="ROAS" value={`${CYCLE.roas.toFixed(1)}×`} delta={CYCLE.roasDelta} sub="Revenue ÷ spend" />
-        <KpiTile label="Funded merchants" value={CYCLE.funded} delta={CYCLE.fundedDelta} sub="Won from paid this cycle" />
-      </div>
-
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-        {/* Spend → return funnel */}
+        {/* ═══ THE FUNNEL — spend narrows, return flares back ═══ */}
         <Card
-          className="xl:col-span-2"
-          title={
-            <span className="inline-flex items-center gap-2">
-              <MousePointerClick className="w-4 h-4 text-(--dp-accent-text)" />
-              Ad spend → return funnel
+          title="Spend → return"
+          action={
+            <span className="text-[11px] text-(--dp-text-faint)">
+              Sample cycle · live once ad accounts connect
             </span>
           }
-          action={
-            <button className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-(--dp-text-muted) hover:text-(--dp-text) transition-colors">
-              <Download className="w-3.5 h-3.5" /> Export
-            </button>
-          }
         >
-          <p className="text-[11px] text-(--dp-text-faint) mb-4 -mt-1">
-            Click any stage to drill into the channel distribution · widths compressed so the bottom stays visible
-          </p>
-          <div className="space-y-0.5">
-            {FUNNEL.map((stage, i) => (
-              <FunnelRow
-                key={stage.key}
-                stage={stage}
-                nextWidth={FUNNEL[i + 1]?.width ?? stage.width}
-                selected={selectedStage === stage.key}
-                onSelect={() => setSelectedStage(s => (s === stage.key ? null : stage.key))}
-              />
-            ))}
+          <div className="grid grid-cols-[minmax(120px,170px)_1fr_minmax(110px,160px)] gap-x-5 pt-2">
+
+            {/* Left column — stage values */}
+            <div>
+              {STAGES.map(s => (
+                <div key={s.key} className="flex flex-col justify-center items-end text-right" style={{ height: BAND_H }}>
+                  <span className="text-[15px] font-bold tabular-nums text-(--dp-text) leading-tight">{s.value}</span>
+                  <span className="text-[11px] text-(--dp-text-faint) leading-tight">
+                    {s.label}
+                    {s.stepPct && <span className="text-(--dp-text-muted)"> · {s.stepPct}</span>}
+                  </span>
+                </div>
+              ))}
+              <div style={{ height: GAP }} />
+              <div className="flex flex-col justify-center items-end text-right" style={{ height: RETURN_H }}>
+                <span className="text-[15px] font-bold tabular-nums text-(--dp-success) leading-tight">{RETURN_STAGE.value}</span>
+                <span className="text-[11px] text-(--dp-text-faint) leading-tight">{RETURN_STAGE.label}</span>
+              </div>
+            </div>
+
+            {/* Center — the sculpted shape */}
+            <div className="relative" style={{ height: FUNNEL_H + GAP + RETURN_H }}>
+              <svg
+                className="absolute inset-x-0 top-0 w-full"
+                style={{ height: FUNNEL_H, filter: 'drop-shadow(0 16px 48px rgba(46,107,255,0.28))' }}
+                viewBox={`0 0 100 ${FUNNEL_H}`}
+                preserveAspectRatio="none"
+                aria-hidden
+              >
+                <defs>
+                  <linearGradient id="mkt-cost" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="var(--dp-accent)" stopOpacity="0.45" />
+                    <stop offset="70%" stopColor="var(--dp-accent)" stopOpacity="0.8" />
+                    <stop offset="100%" stopColor="var(--dp-accent)" stopOpacity="1" />
+                  </linearGradient>
+                </defs>
+                <path d={costPath()} fill="url(#mkt-cost)" />
+              </svg>
+              <svg
+                className="absolute inset-x-0 w-full"
+                style={{ top: FUNNEL_H + GAP, height: RETURN_H, filter: 'drop-shadow(0 12px 36px rgba(52,199,123,0.35))' }}
+                viewBox={`0 0 100 ${RETURN_H}`}
+                preserveAspectRatio="none"
+                aria-hidden
+              >
+                <defs>
+                  <linearGradient id="mkt-return" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="var(--dp-success)" stopOpacity="0.85" />
+                    <stop offset="100%" stopColor="var(--dp-success)" stopOpacity="1" />
+                  </linearGradient>
+                </defs>
+                <path d={returnPath()} fill="url(#mkt-return)" />
+              </svg>
+              {/* ROAS marker inside the return flare */}
+              <div
+                className="absolute inset-x-0 flex items-center justify-center"
+                style={{ top: FUNNEL_H + GAP, height: RETURN_H }}
+              >
+                <span className="text-[13px] font-bold text-white tracking-[-0.01em]">{RETURN_STAGE.roas}</span>
+              </div>
+              {/* Hover / drill bands */}
+              {STAGES.map((s, i) => (
+                <button
+                  key={s.key}
+                  onClick={() => setDrillKey(k => (k === s.key ? null : s.key))}
+                  aria-label={`${s.label} — channel breakdown`}
+                  className={`absolute inset-x-0 transition-colors ${
+                    drillKey === s.key ? 'bg-white/[0.08]' : 'hover:bg-white/[0.05]'
+                  }`}
+                  style={{ top: i * BAND_H, height: BAND_H }}
+                />
+              ))}
+            </div>
+
+            {/* Right column — unit economics, whisper-quiet */}
+            <div>
+              {STAGES.map(s => (
+                <div key={s.key} className="flex items-center" style={{ height: BAND_H }}>
+                  <span className={`text-[11px] tabular-nums ${s.key === 'funded' ? 'font-bold text-(--dp-accent-text)' : 'text-(--dp-text-faint)'}`}>
+                    {s.unit}
+                  </span>
+                </div>
+              ))}
+              <div style={{ height: GAP }} />
+              <div className="flex items-center" style={{ height: RETURN_H }}>
+                <span className="text-[11px] font-bold tabular-nums text-(--dp-success)">{CYCLE.roas.toFixed(1)}× ROAS</span>
+              </div>
+            </div>
           </div>
 
-          {/* Drill-down strip */}
+          {/* Drill-down — channel composition of the selected stage */}
           {drill && drillStage && (
-            <div className="mt-4 rounded-[12px] bg-white/[0.04] border border-(--dp-border) p-3.5">
-              <p className="text-[11px] font-bold text-(--dp-text-secondary) mb-2.5">
-                {drillStage.label} by channel
-              </p>
-              <div className="flex h-3 w-full overflow-hidden rounded-full">
+            <div className="mt-5 pt-4 border-t border-(--dp-border)">
+              <div className="flex items-center justify-between mb-2.5">
+                <p className="text-[11px] font-bold text-(--dp-text-secondary)">{drillStage.label} by channel</p>
+                <button onClick={() => setDrillKey(null)} className="text-[11px] text-(--dp-text-faint) hover:text-(--dp-text)">
+                  Clear
+                </button>
+              </div>
+              <div className="flex h-2 w-full overflow-hidden rounded-full">
                 {drill.map((d, i) => (
                   <div
                     key={d.channel}
                     style={{
                       width: `${d.share}%`,
-                      background: `color-mix(in srgb, var(--dp-accent) ${88 - i * 17}%, var(--dp-bg-card))`,
+                      background: `color-mix(in srgb, var(--dp-accent) ${90 - i * 18}%, var(--dp-bg-card))`,
                     }}
-                    title={`${d.channel} · ${d.share}%`}
                   />
                 ))}
               </div>
-              <div className="mt-2.5 flex flex-wrap gap-x-4 gap-y-1">
+              <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
                 {drill.map((d, i) => (
                   <span key={d.channel} className="inline-flex items-center gap-1.5 text-[11px] text-(--dp-text-muted) tabular-nums">
                     <span
                       className="w-2 h-2 rounded-[3px]"
-                      style={{ background: `color-mix(in srgb, var(--dp-accent) ${88 - i * 17}%, var(--dp-bg-card))` }}
+                      style={{ background: `color-mix(in srgb, var(--dp-accent) ${90 - i * 18}%, var(--dp-bg-card))` }}
                     />
                     {d.channel} <span className="font-bold text-(--dp-text-secondary)">{d.share}%</span>
                   </span>
@@ -305,92 +327,84 @@ export function BackendMarketing() {
               </div>
             </div>
           )}
-
-          <p className="mt-4 text-[10px] leading-relaxed text-(--dp-text-faint)">
-            <DollarSign className="inline w-3 h-3 mr-0.5 -mt-px" />
-            Attribution: last non-direct touch. Spend entered per reporting cycle from Google/Meta exports until the
-            platform APIs land. Revenue = first-90-day net revenue of merchants funded in the cycle.
-          </p>
         </Card>
 
-        {/* Channel efficiency */}
-        <Card
-          title={
-            <span className="inline-flex items-center gap-2">
-              <Target className="w-4 h-4 text-(--dp-accent-text)" />
-              Channel efficiency
-            </span>
-          }
-        >
-          <div className="space-y-4">
-            {CHANNELS.map(ch => {
-              const share = (ch.spend / totalSpend) * 100;
-              return (
-                <div key={ch.name}>
-                  <div className="flex items-baseline justify-between mb-1">
-                    <span className="text-[12px] font-semibold text-(--dp-text)">{ch.name}</span>
-                    <span className="text-[11px] tabular-nums text-(--dp-text-muted)">{fmtK(ch.spend)} · {share.toFixed(0)}%</span>
+        {/* ═══ CHANNELS + CYCLES ═══ */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+          <Card title="Where the spend goes">
+            <div className="space-y-3.5">
+              {CHANNELS.map(ch => {
+                const share = (ch.spend / totalSpend) * 100;
+                return (
+                  <div key={ch.name} className="grid grid-cols-[110px_1fr_auto] items-center gap-4">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <span className="text-[12px] font-semibold text-(--dp-text) truncate">{ch.name}</span>
+                      {ch.roas === bestRoas && (
+                        <span className="text-[9px] font-bold uppercase tracking-wide text-(--dp-success)">Best</span>
+                      )}
+                    </div>
+                    <div className="h-1 rounded-full bg-white/[0.06] overflow-hidden">
+                      <div className="h-full rounded-full bg-(--dp-accent)" style={{ width: `${share}%` }} />
+                    </div>
+                    <div className="flex items-baseline gap-3 tabular-nums">
+                      <span className="text-[11px] text-(--dp-text-muted) w-[52px] text-right">{fmtK(ch.spend)}</span>
+                      <span className="text-[11px] text-(--dp-text-faint) w-[62px] text-right">${ch.cac} CAC</span>
+                      <span className={`text-[12px] font-bold w-[44px] text-right ${ch.roas >= 4 ? 'text-(--dp-success)' : 'text-(--dp-warning)'}`}>
+                        {ch.roas.toFixed(1)}×
+                      </span>
+                    </div>
                   </div>
-                  <div className="h-1.5 w-full rounded-full bg-white/[0.06] overflow-hidden mb-1.5">
-                    <div className="h-full rounded-full bg-(--dp-accent)" style={{ width: `${share}%` }} />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] text-(--dp-text-faint) tabular-nums">
-                      {fmt(ch.leads)} leads · {ch.funded} funded · CAC {ch.cac === null ? '—' : `$${ch.cac}`}
-                    </span>
-                    <StatusPill tone={ch.roas >= 4 ? 'success' : 'warning'} className="!text-[10px]">
-                      {ch.roas.toFixed(1)}× ROAS
-                    </StatusPill>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </Card>
-      </div>
+                );
+              })}
+            </div>
+            <p className="mt-4 text-[11px] text-(--dp-text-faint)">
+              CAC and return per channel, last non-direct touch.
+            </p>
+          </Card>
 
-      {/* Spend vs revenue trend */}
-      <Card
-        title={
-          <span className="inline-flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-(--dp-accent-text)" />
-            Spend vs attributed revenue
-          </span>
-        }
-        action={<span className="text-[11px] text-(--dp-text-faint)">Last 6 cycles · ROAS labeled per cycle</span>}
-      >
-        <div className="grid grid-cols-6 gap-3 items-end h-[190px] pt-6">
-          {TREND.map(t => {
-            const roas = t.revenue / t.spend;
-            return (
-              <div key={t.month} className="flex flex-col items-center justify-end h-full gap-1.5">
-                <span className="text-[10px] font-bold tabular-nums text-(--dp-success)">{roas.toFixed(1)}×</span>
-                <div className="flex items-end gap-1 w-full justify-center flex-1">
-                  <div
-                    className="w-[26%] max-w-[26px] rounded-t-[4px] bg-(--dp-border-strong)"
-                    style={{ height: `${(t.spend / maxTrend) * 100}%` }}
-                    title={`Spend ${fmtK(t.spend)}`}
-                  />
-                  <div
-                    className="w-[26%] max-w-[26px] rounded-t-[4px] bg-(--dp-accent)"
-                    style={{ height: `${(t.revenue / maxTrend) * 100}%` }}
-                    title={`Revenue ${fmtK(t.revenue)}`}
-                  />
+          <Card
+            title={
+              <span className="inline-flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 text-(--dp-accent-text)" /> Spend vs return by cycle
+              </span>
+            }
+          >
+            <div className="grid grid-cols-6 gap-3 items-end h-[150px] pt-5">
+              {TREND.map(t => (
+                <div key={t.month} className="flex flex-col items-center justify-end h-full gap-1.5">
+                  <span className="text-[10px] font-bold tabular-nums text-(--dp-success)">
+                    {(t.revenue / t.spend).toFixed(1)}×
+                  </span>
+                  <div className="flex items-end gap-1 w-full justify-center flex-1">
+                    <div
+                      className="w-[22%] max-w-[18px] rounded-t-[3px] bg-(--dp-border-strong)"
+                      style={{ height: `${(t.spend / maxTrend) * 100}%` }}
+                    />
+                    <div
+                      className="w-[22%] max-w-[18px] rounded-t-[3px] bg-(--dp-accent)"
+                      style={{ height: `${(t.revenue / maxTrend) * 100}%` }}
+                    />
+                  </div>
+                  <span className="text-[10px] text-(--dp-text-muted)">{t.month}</span>
                 </div>
-                <span className="text-[11px] text-(--dp-text-muted)">{t.month}</span>
+              ))}
+            </div>
+            <div className="mt-3 flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <span className="inline-flex items-center gap-1.5 text-[11px] text-(--dp-text-muted)">
+                  <span className="w-2 h-2 rounded-[3px] bg-(--dp-border-strong)" /> Spend
+                </span>
+                <span className="inline-flex items-center gap-1.5 text-[11px] text-(--dp-text-muted)">
+                  <span className="w-2 h-2 rounded-[3px] bg-(--dp-accent)" /> Return
+                </span>
               </div>
-            );
-          })}
+              <span className="inline-flex items-center gap-1 text-[11px] text-(--dp-text-faint)">
+                6 cycles <ArrowRight className="w-3 h-3" />
+              </span>
+            </div>
+          </Card>
         </div>
-        <div className="mt-3 flex items-center gap-4">
-          <span className="inline-flex items-center gap-1.5 text-[11px] text-(--dp-text-muted)">
-            <span className="w-2.5 h-2.5 rounded-[3px] bg-(--dp-border-strong)" /> Ad spend
-          </span>
-          <span className="inline-flex items-center gap-1.5 text-[11px] text-(--dp-text-muted)">
-            <span className="w-2.5 h-2.5 rounded-[3px] bg-(--dp-accent)" /> Attributed revenue
-          </span>
-        </div>
-      </Card>
+      </div>
     </div>
   );
 }
