@@ -1,54 +1,24 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
-  RefreshCw, Zap, AlertTriangle, Landmark, Info, BarChart3, Activity,
+  Zap, AlertTriangle, Landmark, Info, BarChart3, Activity, HeartPulse,
 } from 'lucide-react';
 import { useAppNavigate } from '../NavigationContext';
-import { Money, Overline, DeltaPill, KpiTile, StatusPill, Card, HeroPanel, Btn } from '../../dp';
+import { Money, Overline, KpiTile, StatusPill, Card, HeroPanel, Btn } from '../../dp';
+import { useLeads, useUnderwriting, useMerchants } from '../crmStore';
+import { useCapital, type CapitalDeal } from '../capitalStore';
 
-// ─── ALERTS / NOTIFICATIONS ─────────────────────────────────────
-const ALERTS = [
-  { id: 1, type: 'chargeback' as const, severity: 'critical' as const, time: '12m ago', title: 'Chargeback — Bella Vista Restaurant', body: 'Visa $487.00 · Reason 13.1 (Merch Not Received) · Deadline Apr 25', merchant: 'Bella Vista Restaurant', agent: 'Michael Chen', actions: ['Respond', 'View'] },
-  { id: 2, type: 'chargeback' as const, severity: 'critical' as const, time: '2h ago', title: 'Chargeback — Metro Diner Group', body: 'MC $215.30 · Reason 4837 (No Auth) · Deadline Apr 22', merchant: 'Metro Diner Group', agent: 'James Miller', actions: ['Respond', 'View'] },
-  { id: 3, type: 'interchange' as const, severity: 'warning' as const, time: '3h ago', title: 'IC Padding — Sunrise Cafe', body: 'Visa Qual +14bps ($19.95/mo · $239/yr est. overcharge)', merchant: 'Sunrise Cafe & Bakery', agent: 'Sarah Johnson', actions: ['Verify', 'Flag North'] },
-  { id: 4, type: 'chargeback' as const, severity: 'warning' as const, time: '5h ago', title: 'CB Rate 0.72% — Harbor Marine', body: '3 chargebacks in 30 days. Exceeds 0.5% threshold. VDMP risk.', merchant: 'Harbor Marine Supply', agent: 'James Miller', actions: ['Risk Profile'] },
-  { id: 5, type: 'risk' as const, severity: 'warning' as const, time: '1d ago', title: 'Volume ↓28% — Green Leaf Landscaping', body: '$58.4K → $42.1K MoM. Lens flags attrition risk.', merchant: 'Green Leaf Landscaping', agent: 'Sarah Johnson', actions: ['Lens Report'] },
-  { id: 6, type: 'capital' as const, severity: 'critical' as const, time: '4d ago', title: 'NSF ×3 — Little Havana Barbershop', body: '3rd consecutive NSF on daily ACH ($68). Flagged Slow Pay.', merchant: 'Little Havana Barbershop', agent: null, actions: ['Collection Status'] },
-  { id: 7, type: 'info' as const, severity: 'info' as const, time: '3d ago', title: 'April 2026 IC Schedule Published', body: 'Visa L2 sunset. CEDP Product 3 mandatory. Re-verify portfolio.', merchant: null, agent: null, actions: ['View Changes'] },
-];
+// ─── Derived alert model ────────────────────────────────────────
+type AlertType = 'chargeback' | 'interchange' | 'risk' | 'capital' | 'info';
 
-type AlertType = typeof ALERTS[number]['type'];
-
-// ─── DASHBOARD DATA ─────────────────────────────────────────────
-const PIPELINE = { leads: 8, newThisWeek: 2, inProgress: 5, won: 1, conversionRate: 12.5, avgTimeToFund: 5.2, uwQueue: 4, uwPending: 2 };
-const MERCHANTS_DATA = { total: 8, active: 8, avgHealth: 78, churnRisk: 1, totalVolume: 522700, avgEffRate: 3.42, alertCount: 4 };
-const CAPITAL = { deployed: 115000, outstanding: 72100, grossCollected: 82920, netAfterCOC: -42300, dailyACH: 861, defaultRate: 8.3, activeDeals: 7, renewalPipeline: 4, fundomateComm: 9660 };
-const RESIDUALS = { period: 'March 2026', totalVolume: 522700, netRevenue: 11466.40, agentPayouts: 5733.20, deltRetained: 5733.20, merchants: 8 };
-const TEAM = { agents: 4, topAgent: 'Michael Chen', topAgentVol: 187200, totalCommissions: 5733.20 };
-
-const REVENUE_TREND = [
-  { month: 'Oct', net: 6820, vol: 285000 },
-  { month: 'Nov', net: 7450, vol: 318000 },
-  { month: 'Dec', net: 8100, vol: 355000 },
-  { month: 'Jan', net: 9200, vol: 412000 },
-  { month: 'Feb', net: 10100, vol: 468000 },
-  { month: 'Mar', net: 11466, vol: 522700 },
-];
-const maxRev = Math.max(...REVENUE_TREND.map(r => r.net));
-
-const TOP_MERCHANTS = [
-  { name: 'TechStart Solutions', vol: 125000, net: 2750, health: 92, alerts: 0 },
-  { name: 'Metro Diner Group', vol: 89200, net: 1961, health: 68, alerts: 1 },
-  { name: 'Harbor Marine Supply', vol: 76500, net: 1683, health: 55, alerts: 2 },
-  { name: 'Bella Vista Restaurant', vol: 68900, net: 1515, health: 61, alerts: 1 },
-  { name: 'Urban Fitness Center', vol: 52300, net: 1150, health: 85, alerts: 0 },
-];
-
-const TEAM_SNAP = [
-  { name: 'Sarah Johnson', vol: '$131.9K', merchants: 3 },
-  { name: 'Michael Chen', vol: '$187.2K', merchants: 3 },
-  { name: 'James Miller', vol: '$165.7K', merchants: 2 },
-  { name: 'Lyndon', vol: '$0', merchants: 0 },
-];
+interface DerivedAlert {
+  id: string;
+  type: AlertType;
+  severity: 'critical' | 'warning' | 'info';
+  title: string;
+  body: string;
+  merchant: string | null;
+  to: string;
+}
 
 const TYPE_ICON: Record<string, { Icon: React.ElementType; cls: string }> = {
   chargeback: { Icon: Zap, cls: 'text-(--dp-danger) bg-[rgba(242,86,91,0.12)]' },
@@ -58,7 +28,78 @@ const TYPE_ICON: Record<string, { Icon: React.ElementType; cls: string }> = {
   info: { Icon: Info, cls: 'text-(--dp-text-muted) bg-white/[0.06]' },
 };
 
-const fmtK = (n: number) => `$${(n / 1000).toFixed(0)}K`;
+const fmtK = (n: number) =>
+  n >= 1000 ? `$${(n / 1000).toFixed(n >= 100_000 ? 0 : 1)}K` : `$${Math.round(n)}`;
+
+/** Build live alerts from portfolio state — no canned notifications. */
+function deriveAlerts(deals: CapitalDeal[], merchants: ReturnType<typeof useMerchants>): DerivedAlert[] {
+  const alerts: DerivedAlert[] = [];
+  for (const d of deals) {
+    if (d.status === 'default') {
+      alerts.push({
+        id: `default-${d.id}`, type: 'capital', severity: 'critical',
+        title: `Default — ${d.merchant}`,
+        body: `${d.daysInDefault > 0 ? `${d.daysInDefault} days in default · ` : ''}${fmtK(d.totalOwed - d.collected)} outstanding on ${d.id}`,
+        merchant: d.merchant, to: `/deals/${d.id}`,
+      });
+    } else if (d.achStatus === 'suspended') {
+      alerts.push({
+        id: `ach-susp-${d.id}`, type: 'capital', severity: 'critical',
+        title: `ACH suspended — ${d.merchant}`,
+        body: `Daily debit halted on ${d.id} · ${fmtK(d.totalOwed - d.collected)} outstanding`,
+        merchant: d.merchant, to: `/deals/${d.id}`,
+      });
+    } else if (d.achStatus === 'nsf-retry') {
+      alerts.push({
+        id: `nsf-${d.id}`, type: 'capital', severity: 'warning',
+        title: `NSF retry — ${d.merchant}`,
+        body: `Daily ACH ($${d.dailyDebit || d.dailyPayment || 0}) bouncing on ${d.id}`,
+        merchant: d.merchant, to: `/deals/${d.id}`,
+      });
+    } else if (d.status === 'slow') {
+      alerts.push({
+        id: `slow-${d.id}`, type: 'risk', severity: 'warning',
+        title: `Slow pay — ${d.merchant}`,
+        body: `Collections decelerating on ${d.id}${d.weeksBehind ? ` · ${d.weeksBehind} wks behind` : ''}`,
+        merchant: d.merchant, to: `/deals/${d.id}`,
+      });
+    }
+  }
+  for (const m of merchants) {
+    if (m.status === 'Active' && m.healthScore < 50) {
+      alerts.push({
+        id: `health-${m.id}`, type: 'risk', severity: 'warning',
+        title: `Health ${m.healthScore} — ${m.name}`,
+        body: 'Health score below 50 · churn risk',
+        merchant: m.name, to: `/merchants/${m.id}`,
+      });
+    }
+  }
+  const rank = { critical: 0, warning: 1, info: 2 } as const;
+  return alerts.sort((a, b) => rank[a.severity] - rank[b.severity]);
+}
+
+/** Sum ledger collections by calendar month for the last 6 months. */
+function collectionsTrend(deals: CapitalDeal[]) {
+  const now = new Date();
+  const months: { key: string; month: string; net: number }[] = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    months.push({
+      key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`,
+      month: d.toLocaleDateString('en-US', { month: 'short' }),
+      net: 0,
+    });
+  }
+  const byKey = new Map(months.map(m => [m.key, m]));
+  for (const deal of deals) {
+    for (const p of deal.payments || []) {
+      const bucket = byKey.get(p.payment_date.slice(0, 7));
+      if (bucket) bucket.net += p.amount;
+    }
+  }
+  return months;
+}
 
 // ─── Metric cell for the snapshot cards ─────────────────────────
 function Metric({ label, value, tone }: { label: string; value: string | number; tone?: 'success' | 'danger' | 'warning' | 'accent' }) {
@@ -79,11 +120,79 @@ function Metric({ label, value, tone }: { label: string; value: string | number;
 // ─── COMPONENT ──────────────────────────────────────────────────
 export function BackendDashboard() {
   const { navigate } = useAppNavigate();
-  const [expandedAlert, setExpandedAlert] = useState<number | null>(null);
+  const [expandedAlert, setExpandedAlert] = useState<string | null>(null);
   const [alertFilter, setAlertFilter] = useState<'all' | AlertType>('all');
 
-  const criticalCount = ALERTS.filter(a => a.severity === 'critical').length;
-  const filteredAlerts = alertFilter === 'all' ? ALERTS : ALERTS.filter(a => a.type === alertFilter);
+  const leads = useLeads();
+  const underwriting = useUnderwriting();
+  const merchants = useMerchants();
+  const { deals } = useCapital();
+
+  // ── Pipeline ──
+  const weekAgo = Date.now() - 7 * 86400000;
+  const newThisWeek = leads.filter(l => l.createdAt && new Date(l.createdAt).getTime() >= weekAgo).length;
+  const wonLeads = leads.filter(l => l.status === 'Won').length;
+  const pipeline = {
+    leads: leads.length,
+    newThisWeek,
+    inProgress: leads.filter(l => l.status === 'In Progress').length,
+    won: wonLeads,
+    conversionRate: leads.length > 0 ? Math.round((wonLeads / leads.length) * 1000) / 10 : 0,
+    qualified: leads.filter(l => l.stage === 'Qualified').length,
+    uwQueue: underwriting.filter(a => a.stage !== 'Approved' && a.stage !== 'Declined').length,
+    uwPending: underwriting.filter(a => a.stage === 'Final Review').length,
+  };
+
+  // ── Merchants ──
+  const activeMerchants = merchants.filter(m => m.status === 'Active');
+  const totalVolume = merchants.reduce((s, m) => s + m.monthlyVolume, 0);
+  const subRevenue = merchants.reduce((s, m) => s + m.monthlyFee, 0);
+  const avgHealth = merchants.length > 0
+    ? Math.round(merchants.reduce((s, m) => s + m.healthScore, 0) / merchants.length)
+    : 0;
+  const churnRisk = activeMerchants.filter(m => m.healthScore < 50).length;
+
+  // ── Capital ──
+  const openDeals = deals.filter(d => d.status !== 'paid');
+  const capital = {
+    deployed: openDeals.reduce((s, d) => s + d.fundedAmt, 0),
+    outstanding: openDeals.reduce((s, d) => s + Math.max(0, d.totalOwed - d.collected), 0),
+    grossCollected: deals.reduce((s, d) => s + d.collected, 0),
+    dailyACH: deals.filter(d => d.status === 'active').reduce((s, d) => s + (d.dailyDebit || d.dailyPayment || 0), 0),
+    defaultRate: deals.length > 0 ? Math.round((deals.filter(d => d.status === 'default').length / deals.length) * 1000) / 10 : 0,
+    activeDeals: deals.filter(d => d.status === 'active').length,
+    renewalPipeline: deals.filter(d => d.renewalEligible).length,
+    fundomateComm: deals.filter(d => d.channel === 'fundomate').reduce((s, d) => s + d.referralCommission, 0),
+  };
+
+  // Net revenue: subscriptions + realized factor profit + referral commissions.
+  const factorProfit = deals.reduce((s, d) => s + Math.max(0, d.collected - d.fundedAmt), 0);
+  const netRevenue = subRevenue + factorProfit + capital.fundomateComm;
+
+  const trend = useMemo(() => collectionsTrend(deals), [deals]);
+  const maxTrend = Math.max(1, ...trend.map(r => r.net));
+  const hasTrendData = trend.some(r => r.net > 0);
+
+  const topMerchants = [...merchants].sort((a, b) => b.monthlyVolume - a.monthlyVolume).slice(0, 5);
+
+  // ── Team snapshot (merchants grouped by agent) ──
+  const team = useMemo(() => {
+    const byAgent = new Map<string, { name: string; vol: number; merchants: number }>();
+    for (const m of merchants) {
+      const key = m.agent || 'Unassigned';
+      const row = byAgent.get(key) || { name: key, vol: 0, merchants: 0 };
+      row.vol += m.monthlyVolume;
+      row.merchants += 1;
+      byAgent.set(key, row);
+    }
+    return [...byAgent.values()].sort((a, b) => b.vol - a.vol);
+  }, [merchants]);
+
+  const alerts = useMemo(() => deriveAlerts(deals, merchants), [deals, merchants]);
+  const criticalCount = alerts.filter(a => a.severity === 'critical').length;
+  const filteredAlerts = alertFilter === 'all' ? alerts : alerts.filter(a => a.type === alertFilter);
+
+  const periodLabel = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 
   return (
     <div className="h-full overflow-y-auto">
@@ -93,34 +202,36 @@ export function BackendDashboard() {
         <HeroPanel>
           <div className="grid grid-cols-1 xl:grid-cols-[1fr_460px] gap-8 p-6 lg:p-8">
             <div className="flex flex-col justify-center">
-              <Overline className="text-white/60">Net revenue · {RESIDUALS.period}</Overline>
+              <Overline className="text-white/60">Net revenue · {periodLabel}</Overline>
               <div className="mt-2 flex flex-wrap items-center gap-3">
                 <Money
-                  value={RESIDUALS.netRevenue}
+                  value={netRevenue}
                   className="text-[44px] leading-none font-bold text-white tracking-[-0.02em]"
                 />
-                <DeltaPill value={12.5} onGlass />
               </div>
               <p className="mt-3 text-[14px] text-white/60">
-                {fmtK(RESIDUALS.totalVolume)} processed across {RESIDUALS.merchants} merchants ·{' '}
-                <Money value={RESIDUALS.agentPayouts} cents={false} className="text-white/80" /> paid to {TEAM.agents} agents
+                {fmtK(totalVolume)} monthly volume across {merchants.length} merchant{merchants.length !== 1 ? 's' : ''} ·{' '}
+                {capital.activeDeals} active capital deal{capital.activeDeals !== 1 ? 's' : ''}
               </p>
               <div className="mt-6 flex items-center gap-2">
                 <Btn variant="primary" size="sm" onClick={() => navigate('/financials')}>
                   View financials
                 </Btn>
-                <button className="inline-flex items-center gap-1.5 h-8 px-4 rounded-[10px] text-[12px] font-bold text-white/80 border border-white/20 hover:bg-white/10 transition-colors">
-                  <RefreshCw className="w-3.5 h-3.5" /> Refresh
+                <button
+                  onClick={() => navigate('/capital')}
+                  className="inline-flex items-center gap-1.5 h-8 px-4 rounded-[10px] text-[12px] font-bold text-white/80 border border-white/20 hover:bg-white/10 transition-colors"
+                >
+                  <Landmark className="w-3.5 h-3.5" /> Capital portfolio
                 </button>
               </div>
             </div>
 
             {/* 2×2 glass KPI tiles */}
             <div className="grid grid-cols-2 gap-3 content-center">
-              <KpiTile glass label="Total volume" value={fmtK(RESIDUALS.totalVolume)} delta={11.7} />
-              <KpiTile glass label="Delt retained" value={fmtK(RESIDUALS.deltRetained)} sub="After agent splits" />
-              <KpiTile glass label="Effective rate" value={`${MERCHANTS_DATA.avgEffRate}%`} sub="Portfolio average" />
-              <KpiTile glass label="Avg health" value={MERCHANTS_DATA.avgHealth} delta={-2.1} invertDelta={false} sub={`${MERCHANTS_DATA.churnRisk} churn risk`} />
+              <KpiTile glass label="Total volume" value={fmtK(totalVolume)} sub="Monthly, all merchants" />
+              <KpiTile glass label="Subscriptions" value={fmtK(subRevenue)} sub="Recurring / month" />
+              <KpiTile glass label="Factor profit" value={fmtK(factorProfit)} sub="Realized to date" />
+              <KpiTile glass label="Avg health" value={avgHealth} sub={`${churnRisk} churn risk`} />
             </div>
           </div>
         </HeroPanel>
@@ -131,11 +242,11 @@ export function BackendDashboard() {
             <div className="flex items-center gap-3 min-w-0">
               <StatusPill tone="danger">{criticalCount} critical</StatusPill>
               <p className="text-[13px] text-(--dp-text-secondary) truncate">
-                {ALERTS.filter(a => a.severity === 'critical').map(a => a.merchant || a.title).filter(Boolean).join(' · ')}
+                {alerts.filter(a => a.severity === 'critical').map(a => a.merchant || a.title).filter(Boolean).join(' · ')}
               </p>
             </div>
             <button
-              onClick={() => setAlertFilter('chargeback')}
+              onClick={() => setAlertFilter('capital')}
               className="shrink-0 text-[12px] font-bold text-(--dp-danger) hover:underline"
             >
               Review →
@@ -149,33 +260,39 @@ export function BackendDashboard() {
           {/* ─── LEFT ─── */}
           <div className="space-y-6 min-w-0">
 
-            {/* Revenue trend — title states the insight */}
+            {/* Collections trend from the real payment ledger */}
             <Card
-              title="Net revenue up 13.5% this month"
+              title="Capital collections"
               action={<span className="text-[12px] text-(--dp-text-faint)">Last 6 months</span>}
             >
-              <div className="flex items-end justify-between gap-3 h-[170px] pt-2">
-                {REVENUE_TREND.map((r, i) => {
-                  const pct = (r.net / maxRev) * 100;
-                  const isCurrent = i === REVENUE_TREND.length - 1;
-                  return (
-                    <div key={i} className="flex-1 flex flex-col items-center h-full gap-1.5">
-                      <span className={`text-[11px] font-semibold tabular-nums ${isCurrent ? 'text-(--dp-text)' : 'text-(--dp-text-faint)'}`}>
-                        ${(r.net / 1000).toFixed(1)}K
-                      </span>
-                      <div className="flex-1 w-full flex flex-col justify-end">
-                        <div
-                          className={`w-full rounded-[6px] ${isCurrent ? 'bg-(--dp-accent)' : 'bg-(--dp-accent-soft)'}`}
-                          style={{ height: `${pct}%`, transition: 'height .5s ease', minHeight: 4 }}
-                        />
+              {hasTrendData ? (
+                <div className="flex items-end justify-between gap-3 h-[170px] pt-2">
+                  {trend.map((r, i) => {
+                    const pct = (r.net / maxTrend) * 100;
+                    const isCurrent = i === trend.length - 1;
+                    return (
+                      <div key={i} className="flex-1 flex flex-col items-center h-full gap-1.5">
+                        <span className={`text-[11px] font-semibold tabular-nums ${isCurrent ? 'text-(--dp-text)' : 'text-(--dp-text-faint)'}`}>
+                          {r.net > 0 ? fmtK(r.net) : '—'}
+                        </span>
+                        <div className="flex-1 w-full flex flex-col justify-end">
+                          <div
+                            className={`w-full rounded-[6px] ${isCurrent ? 'bg-(--dp-accent)' : 'bg-(--dp-accent-soft)'}`}
+                            style={{ height: `${Math.max(pct, 2)}%`, transition: 'height .5s ease', minHeight: 4 }}
+                          />
+                        </div>
+                        <span className={`text-[11px] ${isCurrent ? 'text-(--dp-accent-text) font-bold' : 'text-(--dp-text-faint) font-medium'}`}>
+                          {r.month}
+                        </span>
                       </div>
-                      <span className={`text-[11px] ${isCurrent ? 'text-(--dp-accent-text) font-bold' : 'text-(--dp-text-faint) font-medium'}`}>
-                        {r.month}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="h-[170px] flex items-center justify-center text-[13px] text-(--dp-text-faint)">
+                  No payments recorded yet — collections will chart here as they post.
+                </div>
+              )}
             </Card>
 
             {/* Pipeline + Capital snapshots */}
@@ -185,17 +302,17 @@ export function BackendDashboard() {
                 action={<button onClick={() => navigate('/leads')} className="text-[12px] font-bold text-(--dp-accent-text) hover:underline">View →</button>}
               >
                 <div className="grid grid-cols-4 gap-3">
-                  <Metric label="Leads" value={PIPELINE.leads} />
-                  <Metric label="New" value={PIPELINE.newThisWeek} tone="accent" />
-                  <Metric label="Active" value={PIPELINE.inProgress} />
-                  <Metric label="Won" value={PIPELINE.won} tone="success" />
+                  <Metric label="Leads" value={pipeline.leads} />
+                  <Metric label="New (7d)" value={pipeline.newThisWeek} tone="accent" />
+                  <Metric label="Active" value={pipeline.inProgress} />
+                  <Metric label="Won" value={pipeline.won} tone="success" />
                 </div>
                 <div className="h-px bg-(--dp-border) my-3.5" />
                 <div className="grid grid-cols-4 gap-3">
-                  <Metric label="Conversion" value={`${PIPELINE.conversionRate}%`} />
-                  <Metric label="Avg fund" value={`${PIPELINE.avgTimeToFund}d`} />
-                  <Metric label="UW queue" value={PIPELINE.uwQueue} />
-                  <Metric label="UW pending" value={PIPELINE.uwPending} tone="warning" />
+                  <Metric label="Conversion" value={`${pipeline.conversionRate}%`} />
+                  <Metric label="Qualified" value={pipeline.qualified} />
+                  <Metric label="UW queue" value={pipeline.uwQueue} />
+                  <Metric label="UW review" value={pipeline.uwPending} tone={pipeline.uwPending > 0 ? 'warning' : undefined} />
                 </div>
               </Card>
 
@@ -204,17 +321,17 @@ export function BackendDashboard() {
                 action={<button onClick={() => navigate('/capital')} className="text-[12px] font-bold text-(--dp-accent-text) hover:underline">View →</button>}
               >
                 <div className="grid grid-cols-4 gap-3">
-                  <Metric label="Deployed" value={fmtK(CAPITAL.deployed)} />
-                  <Metric label="Outstanding" value={fmtK(CAPITAL.outstanding)} />
-                  <Metric label="Collected" value={fmtK(CAPITAL.grossCollected)} tone="success" />
-                  <Metric label="Daily ACH" value={`$${CAPITAL.dailyACH}`} />
+                  <Metric label="Deployed" value={fmtK(capital.deployed)} />
+                  <Metric label="Outstanding" value={fmtK(capital.outstanding)} />
+                  <Metric label="Collected" value={fmtK(capital.grossCollected)} tone="success" />
+                  <Metric label="Daily ACH" value={`$${Math.round(capital.dailyACH)}`} />
                 </div>
                 <div className="h-px bg-(--dp-border) my-3.5" />
                 <div className="grid grid-cols-4 gap-3">
-                  <Metric label="Default" value={`${CAPITAL.defaultRate}%`} tone={CAPITAL.defaultRate > 5 ? 'danger' : 'success'} />
-                  <Metric label="Active" value={CAPITAL.activeDeals} />
-                  <Metric label="Renewals" value={CAPITAL.renewalPipeline} />
-                  <Metric label="Fundomate" value={`$${(CAPITAL.fundomateComm / 1000).toFixed(1)}K`} tone="accent" />
+                  <Metric label="Default" value={`${capital.defaultRate}%`} tone={capital.defaultRate > 5 ? 'danger' : 'success'} />
+                  <Metric label="Active" value={capital.activeDeals} />
+                  <Metric label="Renewals" value={capital.renewalPipeline} />
+                  <Metric label="Fundomate" value={fmtK(capital.fundomateComm)} tone="accent" />
                 </div>
               </Card>
             </div>
@@ -225,57 +342,70 @@ export function BackendDashboard() {
               action={<button onClick={() => navigate('/merchants')} className="text-[12px] font-bold text-(--dp-accent-text) hover:underline">All merchants →</button>}
               padded={false}
             >
-              <table className="w-full mt-1">
-                <thead>
-                  <tr className="border-b border-(--dp-border)">
-                    <th className="px-5 py-2.5 text-left">Merchant</th>
-                    <th className="px-5 py-2.5 text-right">Volume</th>
-                    <th className="px-5 py-2.5 text-right">Net rev</th>
-                    <th className="px-5 py-2.5 text-left">Health</th>
-                    <th className="px-5 py-2.5 text-right">Alerts</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {TOP_MERCHANTS.map((m, i) => (
-                    <tr
-                      key={i}
-                      className={`h-[52px] hover:bg-(--dp-bg-raised) transition-colors cursor-pointer ${i < TOP_MERCHANTS.length - 1 ? 'border-b border-(--dp-border)' : ''}`}
-                      onClick={() => navigate('/merchants')}
-                    >
-                      <td className="px-5 text-[13px] font-semibold text-(--dp-text)">{m.name}</td>
-                      <td className="px-5 text-[13px] text-right tabular-nums text-(--dp-text-secondary)">{fmtK(m.vol)}</td>
-                      <td className="px-5 text-[13px] text-right tabular-nums font-semibold text-(--dp-text)">${m.net.toLocaleString()}</td>
-                      <td className="px-5">
-                        <div className="flex items-center gap-2">
-                          <div className="w-14 h-1.5 bg-white/[0.07] rounded-full overflow-hidden">
-                            <div
-                              className={`h-full rounded-full ${m.health >= 80 ? 'bg-(--dp-success)' : m.health >= 60 ? 'bg-(--dp-warning)' : 'bg-(--dp-danger)'}`}
-                              style={{ width: `${m.health}%` }}
-                            />
-                          </div>
-                          <span className="text-[12px] font-bold tabular-nums text-(--dp-text-muted)">{m.health}</span>
-                        </div>
-                      </td>
-                      <td className="px-5 text-right">
-                        {m.alerts > 0
-                          ? <StatusPill tone="danger">{m.alerts} open</StatusPill>
-                          : <StatusPill tone="success">Clean</StatusPill>}
-                      </td>
+              {topMerchants.length > 0 ? (
+                <table className="w-full mt-1">
+                  <thead>
+                    <tr className="border-b border-(--dp-border)">
+                      <th className="px-5 py-2.5 text-left">Merchant</th>
+                      <th className="px-5 py-2.5 text-right">Volume</th>
+                      <th className="px-5 py-2.5 text-right">Sub rev</th>
+                      <th className="px-5 py-2.5 text-left">Health</th>
+                      <th className="px-5 py-2.5 text-right">Status</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {topMerchants.map((m, i) => (
+                      <tr
+                        key={m.id}
+                        className={`h-[52px] hover:bg-(--dp-bg-raised) transition-colors cursor-pointer ${i < topMerchants.length - 1 ? 'border-b border-(--dp-border)' : ''}`}
+                        onClick={() => navigate(`/merchants/${m.id}`)}
+                      >
+                        <td className="px-5 text-[13px] font-semibold text-(--dp-text)">{m.name}</td>
+                        <td className="px-5 text-[13px] text-right tabular-nums text-(--dp-text-secondary)">{fmtK(m.monthlyVolume)}</td>
+                        <td className="px-5 text-[13px] text-right tabular-nums font-semibold text-(--dp-text)">${m.monthlyFee.toLocaleString()}/mo</td>
+                        <td className="px-5">
+                          <div className="flex items-center gap-2">
+                            <div className="w-14 h-1.5 bg-white/[0.07] rounded-full overflow-hidden">
+                              <div
+                                className={`h-full rounded-full ${m.healthScore >= 80 ? 'bg-(--dp-success)' : m.healthScore >= 60 ? 'bg-(--dp-warning)' : 'bg-(--dp-danger)'}`}
+                                style={{ width: `${m.healthScore}%` }}
+                              />
+                            </div>
+                            <span className="text-[12px] font-bold tabular-nums text-(--dp-text-muted)">{m.healthScore}</span>
+                          </div>
+                        </td>
+                        <td className="px-5 text-right">
+                          {m.status === 'Active'
+                            ? <StatusPill tone="success">Active</StatusPill>
+                            : m.status === 'Pending'
+                              ? <StatusPill tone="warning">Pending</StatusPill>
+                              : <StatusPill tone="danger">Inactive</StatusPill>}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <div className="py-12 text-center text-[13px] text-(--dp-text-faint)">
+                  No merchants yet — add your first from the Merchants page.
+                </div>
+              )}
             </Card>
           </div>
 
           {/* ─── RIGHT: Alerts + team ─── */}
           <div className="space-y-6 xl:sticky xl:top-6">
             <Card
-              title={<span className="inline-flex items-center gap-2">Alerts<StatusPill tone="danger">{ALERTS.length}</StatusPill></span>}
+              title={
+                <span className="inline-flex items-center gap-2">
+                  Alerts
+                  {alerts.length > 0 && <StatusPill tone={criticalCount > 0 ? 'danger' : 'warning'}>{alerts.length}</StatusPill>}
+                </span>
+              }
               padded={false}
             >
               <div className="flex gap-1.5 px-5 pb-3 pt-1">
-                {(['all', 'chargeback', 'interchange', 'risk'] as const).map(f => (
+                {(['all', 'capital', 'risk'] as const).map(f => (
                   <button
                     key={f}
                     onClick={() => setAlertFilter(f)}
@@ -306,7 +436,7 @@ export function BackendDashboard() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-2 mb-0.5">
-                            <span className="font-mono text-[10px] text-(--dp-text-faint)">{a.time}</span>
+                            <span className="font-mono text-[10px] text-(--dp-text-faint)">live</span>
                             {a.severity === 'critical' && <StatusPill tone="danger">Critical</StatusPill>}
                           </div>
                           <p className="text-[13px] font-bold text-(--dp-text) leading-snug">{a.title}</p>
@@ -315,48 +445,57 @@ export function BackendDashboard() {
                       </div>
                       {isExp && (
                         <div className="mt-3 pt-3 border-t border-(--dp-border)">
-                          {a.merchant && (
-                            <p className="text-[12px] text-(--dp-text-muted) mb-2.5">
-                              {a.merchant}{a.agent ? ` · ${a.agent}` : ''}
-                            </p>
-                          )}
                           <div className="flex gap-1.5">
-                            {a.actions.map((act, ai) => (
-                              <Btn
-                                key={ai}
-                                size="sm"
-                                variant={ai === 0 ? 'primary' : 'ghost'}
-                                onClick={e => e.stopPropagation()}
-                              >
-                                {act}
-                              </Btn>
-                            ))}
+                            <Btn
+                              size="sm"
+                              variant="primary"
+                              onClick={e => {
+                                e.stopPropagation();
+                                navigate(a.to);
+                              }}
+                            >
+                              View
+                            </Btn>
                           </div>
                         </div>
                       )}
                     </div>
                   );
                 })}
+                {filteredAlerts.length === 0 && (
+                  <div className="py-10 px-5 text-center">
+                    <HeartPulse className="w-5 h-5 text-(--dp-success) mx-auto mb-2" />
+                    <p className="text-[13px] text-(--dp-text-muted)">
+                      All clear — no open alerts on the portfolio.
+                    </p>
+                  </div>
+                )}
               </div>
             </Card>
 
             <Card title="Team snapshot">
-              <div className="space-y-3">
-                {TEAM_SNAP.map((a, i) => (
-                  <div key={i} className="flex items-center gap-3">
-                    <div className="w-7 h-7 rounded-full bg-(--dp-accent-soft) flex items-center justify-center shrink-0">
-                      <span className="text-[10px] font-bold text-(--dp-accent-text)">
-                        {a.name.split(' ').map(p => p[0]).join('').slice(0, 2)}
-                      </span>
+              {team.length > 0 ? (
+                <div className="space-y-3">
+                  {team.map((a, i) => (
+                    <div key={i} className="flex items-center gap-3">
+                      <div className="w-7 h-7 rounded-full bg-(--dp-accent-soft) flex items-center justify-center shrink-0">
+                        <span className="text-[10px] font-bold text-(--dp-accent-text)">
+                          {a.name.split(' ').map(p => p[0]).join('').slice(0, 2).toUpperCase()}
+                        </span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[13px] font-semibold text-(--dp-text) truncate">{a.name}</p>
+                        <p className="text-[11px] text-(--dp-text-faint)">{a.merchants} merchant{a.merchants !== 1 ? 's' : ''}</p>
+                      </div>
+                      <span className="text-[13px] font-bold tabular-nums text-(--dp-text-secondary)">{fmtK(a.vol)}</span>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[13px] font-semibold text-(--dp-text) truncate">{a.name}</p>
-                      <p className="text-[11px] text-(--dp-text-faint)">{a.merchants} merchant{a.merchants !== 1 ? 's' : ''}</p>
-                    </div>
-                    <span className="text-[13px] font-bold tabular-nums text-(--dp-text-secondary)">{a.vol}</span>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-[13px] text-(--dp-text-faint) py-2">
+                  Agents appear here once merchants are assigned.
+                </p>
+              )}
             </Card>
           </div>
         </div>

@@ -33,23 +33,7 @@ interface Merchant {
   monthlyFee: number;
 }
 
-// ── Mock Data ──
-const merchants: Merchant[] = [
-  { id: 'merchant-001', name: 'Sunrise Cafe & Bakery', industry: 'Food & Beverage', status: 'Active', monthlyVolume: 37500, mcaBalance: 187500, capitalDeployed: 250000, healthScore: 78, agent: 'Sarah Johnson', products: { processing: true, capital: true, website: false, lens: false }, plan: 'Growth', monthlyFee: 99 },
-  { id: 'merchant-002', name: 'TechStart Solutions', industry: 'Technology', status: 'Active', monthlyVolume: 125000, mcaBalance: 0, capitalDeployed: 0, healthScore: 92, agent: 'Michael Chen', products: { processing: true, capital: false, website: true, lens: true }, plan: 'Custom', monthlyFee: 199 },
-  { id: 'merchant-003', name: 'Urban Fitness Center', industry: 'Health & Wellness', status: 'Active', monthlyVolume: 52300, mcaBalance: 225000, capitalDeployed: 300000, healthScore: 65, agent: 'Sarah Johnson', products: { processing: true, capital: true, website: true, lens: false }, plan: 'Growth', monthlyFee: 99 },
-  { id: 'merchant-004', name: 'Coastal Auto Repair', industry: 'Automotive', status: 'Pending', monthlyVolume: 18400, mcaBalance: 75000, capitalDeployed: 75000, healthScore: 58, agent: 'James Miller', products: { processing: true, capital: true, website: false, lens: false }, plan: 'Free', monthlyFee: 0 },
-  { id: 'merchant-005', name: 'Bella Vista Restaurant', industry: 'Food & Beverage', status: 'Active', monthlyVolume: 68900, mcaBalance: 150000, capitalDeployed: 350000, healthScore: 85, agent: 'Michael Chen', products: { processing: true, capital: true, website: true, lens: true }, plan: 'Custom', monthlyFee: 199 },
-  { id: 'merchant-006', name: 'Green Leaf Landscaping', industry: 'Home Services', status: 'Active', monthlyVolume: 42100, mcaBalance: 0, capitalDeployed: 0, healthScore: 71, agent: 'Sarah Johnson', products: { processing: true, capital: false, website: false, lens: false }, plan: 'Free', monthlyFee: 0 },
-  { id: 'merchant-007', name: 'Metro Diner Group', industry: 'Food & Beverage', status: 'Active', monthlyVolume: 89200, mcaBalance: 320000, capitalDeployed: 500000, healthScore: 88, agent: 'James Miller', products: { processing: true, capital: true, website: true, lens: true }, plan: 'Custom', monthlyFee: 199 },
-  { id: 'merchant-008', name: 'Peak Construction Co', industry: 'Construction', status: 'Inactive', monthlyVolume: 0, mcaBalance: 87050, capitalDeployed: 150000, healthScore: 32, agent: 'Sarah Johnson', products: { processing: false, capital: true, website: false, lens: false }, plan: 'Growth', monthlyFee: 99 },
-  { id: 'merchant-009', name: 'Luxe Nail Studio', industry: 'Beauty & Salon', status: 'Active', monthlyVolume: 31200, mcaBalance: 0, capitalDeployed: 0, healthScore: 80, agent: 'Michael Chen', products: { processing: true, capital: false, website: true, lens: false }, plan: 'Growth', monthlyFee: 99 },
-  { id: 'merchant-010', name: 'Harbor Marine Supply', industry: 'Retail', status: 'Active', monthlyVolume: 76500, mcaBalance: 210000, capitalDeployed: 280000, healthScore: 74, agent: 'James Miller', products: { processing: true, capital: true, website: false, lens: true }, plan: 'Custom', monthlyFee: 199 },
-];
-
 const fmt = (n: number) => n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
-const agents = [...new Set(merchants.map(m => m.agent))];
-const industries = [...new Set(merchants.map(m => m.industry))];
 
 // ── Product Icon ──
 function ProductIcon({ active, children, color, label, onClick }: { active: boolean; children: React.ReactNode; color: string; label: string; onClick?: (e: React.MouseEvent) => void }) {
@@ -105,12 +89,9 @@ export function BackendMerchants() {
   const storeMerchants = useMerchants();
   const [newMerchantOpen, setNewMerchantOpen] = useState(false);
 
-  // Combine newly-created merchants (from the CRM store) with the static sample roster.
-  // Store merchants are displayed first so newly-created ones are visible immediately.
-  const allMerchants: Merchant[] = useMemo(
-    () => [...(storeMerchants as StoreMerchant[]) as Merchant[], ...merchants],
-    [storeMerchants]
-  );
+  const allMerchants: Merchant[] = storeMerchants as StoreMerchant[] as Merchant[];
+  const agents = useMemo(() => [...new Set(allMerchants.map(m => m.agent))], [allMerchants]);
+  const industries = useMemo(() => [...new Set(allMerchants.map(m => m.industry))], [allMerchants]);
 
   const [search, setSearch] = useState('');
   const [productFilters, setProductFilters] = useState<Set<string>>(new Set());

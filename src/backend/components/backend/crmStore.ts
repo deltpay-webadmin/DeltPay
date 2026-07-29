@@ -410,7 +410,6 @@ export interface CrmState {
   underwriting: UWApplication[];
   referrals: Referral[];
   program: ReferralProgram;
-  /** Client-side only — merchants & deals aren't persisted to Supabase yet. */
   merchants: Merchant[];
   deals: Deal[];
 }
@@ -453,6 +452,8 @@ const fallbackSeed: CrmState = {
   underwriting: [],
   referrals: [],
   program: { rewardAmount: '100', freeMonths: '1', planTier: 'Growth' },
+  merchants: [],
+  deals: [],
 };
 
 // ══════════════════════════════════════════════════════════════
@@ -733,6 +734,94 @@ function toDbReferral(r: Partial<Referral>): Record<string, any> {
   return out;
 }
 
+function fromDbMerchant(r: any): Merchant {
+  return {
+    id: r.id,
+    name: r.name,
+    industry: r.industry ?? 'General',
+    status: r.status ?? 'Pending',
+    monthlyVolume: Number(r.monthly_volume ?? 0),
+    mcaBalance: Number(r.mca_balance ?? 0),
+    capitalDeployed: Number(r.capital_deployed ?? 0),
+    healthScore: Number(r.health_score ?? 75),
+    agent: r.agent ?? 'Unassigned',
+    products: r.products ?? { processing: true, capital: false, website: false, lens: false },
+    plan: r.plan ?? 'Free',
+    monthlyFee: Number(r.monthly_fee ?? 0),
+    contactName: r.contact_name ?? undefined,
+    contactEmail: r.contact_email ?? undefined,
+    contactPhone: r.contact_phone ?? undefined,
+    state: r.state ?? undefined,
+    ein: r.ein ?? undefined,
+    website: r.website ?? undefined,
+    notes: r.notes ?? undefined,
+  };
+}
+
+function toDbMerchant(m: Partial<Merchant>): Record<string, any> {
+  const out: Record<string, any> = {};
+  if (m.id !== undefined) out.id = m.id;
+  if (m.name !== undefined) out.name = m.name;
+  if (m.industry !== undefined) out.industry = m.industry;
+  if (m.status !== undefined) out.status = m.status;
+  if (m.monthlyVolume !== undefined) out.monthly_volume = m.monthlyVolume;
+  if (m.mcaBalance !== undefined) out.mca_balance = m.mcaBalance;
+  if (m.capitalDeployed !== undefined) out.capital_deployed = m.capitalDeployed;
+  if (m.healthScore !== undefined) out.health_score = m.healthScore;
+  if (m.agent !== undefined) out.agent = m.agent;
+  if (m.products !== undefined) out.products = m.products;
+  if (m.plan !== undefined) out.plan = m.plan;
+  if (m.monthlyFee !== undefined) out.monthly_fee = m.monthlyFee;
+  if (m.contactName !== undefined) out.contact_name = m.contactName ?? null;
+  if (m.contactEmail !== undefined) out.contact_email = m.contactEmail ?? null;
+  if (m.contactPhone !== undefined) out.contact_phone = m.contactPhone ?? null;
+  if (m.state !== undefined) out.state = m.state ?? null;
+  if (m.ein !== undefined) out.ein = m.ein ?? null;
+  if (m.website !== undefined) out.website = m.website ?? null;
+  if (m.notes !== undefined) out.notes = m.notes ?? null;
+  return out;
+}
+
+function fromDbDeal(r: any): Deal {
+  return {
+    id: r.id,
+    status: r.status ?? 'Current',
+    delinquencyLabel: r.delinquency_label ?? undefined,
+    type: r.type ?? 'MCA',
+    borrower: r.borrower ?? '',
+    loanAmount: Number(r.loan_amount ?? 0),
+    repaymentAmount: Number(r.repayment_amount ?? 0),
+    collected: Number(r.collected ?? 0),
+    outstanding: Number(r.outstanding ?? 0),
+    rate: Number(r.rate ?? 1.35),
+    dailyPayment: Number(r.daily_payment ?? 0),
+    fundedDate: r.funded_date ?? '',
+    dueDate: r.due_date ?? '',
+    agent: r.agent ?? 'Unassigned',
+    notes: r.notes ?? undefined,
+  };
+}
+
+function toDbDeal(d: Partial<Deal>): Record<string, any> {
+  const out: Record<string, any> = {};
+  if (d.id !== undefined) out.id = d.id;
+  if (d.status !== undefined) out.status = d.status;
+  if (d.delinquencyLabel !== undefined) out.delinquency_label = d.delinquencyLabel ?? null;
+  if (d.type !== undefined) out.type = d.type;
+  if (d.borrower !== undefined) out.borrower = d.borrower;
+  if (d.loanAmount !== undefined) out.loan_amount = d.loanAmount;
+  if (d.repaymentAmount !== undefined) out.repayment_amount = d.repaymentAmount;
+  if (d.collected !== undefined) out.collected = d.collected;
+  if (d.outstanding !== undefined) out.outstanding = d.outstanding;
+  if (d.rate !== undefined) out.rate = d.rate;
+  if (d.dailyPayment !== undefined) out.daily_payment = d.dailyPayment;
+  if (d.fundedDate !== undefined) out.funded_date = d.fundedDate || null;
+  if (d.dueDate !== undefined) out.due_date = d.dueDate || null;
+  if (d.agent !== undefined) out.agent = d.agent;
+  if (d.notes !== undefined) out.notes = d.notes ?? null;
+  return out;
+}
+
 function fromDbProgram(r: any): ReferralProgram {
   return {
     rewardAmount: r.reward_amount ?? '100',
@@ -771,16 +860,19 @@ async function maybeHydrate() {
   setSync({ isLoading: true, lastError: null });
 
   try {
-    const [leadsRes, onbRes, uwRes, refRes, progRes] = await Promise.all([
+    const [leadsRes, onbRes, uwRes, refRes, progRes, merchRes, dealsRes] = await Promise.all([
       supabase.from('pipeline_leads').select('*').order('created_at', { ascending: false }),
       supabase.from('onboarding_apps').select('*').order('id', { ascending: true }),
       supabase.from('underwriting_apps').select('*').order('id', { ascending: true }),
       supabase.from('referrals').select('*').order('id', { ascending: true }),
       supabase.from('referral_program').select('*').eq('id', 1).maybeSingle(),
+      supabase.from('merchants').select('*').order('created_at', { ascending: false }),
+      supabase.from('crm_deals').select('*').order('created_at', { ascending: false }),
     ]);
 
     const firstErr =
-      leadsRes.error || onbRes.error || uwRes.error || refRes.error || progRes.error;
+      leadsRes.error || onbRes.error || uwRes.error || refRes.error || progRes.error ||
+      merchRes.error || dealsRes.error;
     if (firstErr) throw firstErr;
 
     set({
@@ -791,6 +883,8 @@ async function maybeHydrate() {
       program: progRes.data
         ? fromDbProgram(progRes.data)
         : { rewardAmount: '100', freeMonths: '1', planTier: 'Growth' },
+      merchants: (merchRes.data || []).map(fromDbMerchant),
+      deals: (dealsRes.data || []).map(fromDbDeal),
     });
 
     hydrated = true;
@@ -836,6 +930,16 @@ function subscribeRealtime() {
       'postgres_changes',
       { event: '*', schema: 'public', table: 'referral_program' },
       payload => applyRealtime('referral_program', payload),
+    )
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'merchants' },
+      payload => applyRealtime('merchants', payload),
+    )
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'crm_deals' },
+      payload => applyRealtime('crm_deals', payload),
     )
     .subscribe();
   // Keep reference so it isn't GC'd.
@@ -894,6 +998,30 @@ function applyRealtime(table: string, payload: any) {
     }
   } else if (table === 'referral_program') {
     if (newRow) set({ program: fromDbProgram(newRow) });
+  } else if (table === 'merchants') {
+    if (eventType === 'DELETE') {
+      set({ merchants: state.merchants.filter(m => m.id !== oldRow?.id) });
+    } else {
+      const mapped = fromDbMerchant(newRow);
+      const exists = state.merchants.some(m => m.id === mapped.id);
+      set({
+        merchants: exists
+          ? state.merchants.map(m => (m.id === mapped.id ? mapped : m))
+          : [mapped, ...state.merchants],
+      });
+    }
+  } else if (table === 'crm_deals') {
+    if (eventType === 'DELETE') {
+      set({ deals: state.deals.filter(d => d.id !== oldRow?.id) });
+    } else {
+      const mapped = fromDbDeal(newRow);
+      const exists = state.deals.some(d => d.id === mapped.id);
+      set({
+        deals: exists
+          ? state.deals.map(d => (d.id === mapped.id ? mapped : d))
+          : [mapped, ...state.deals],
+      });
+    }
   }
 }
 
@@ -1782,7 +1910,7 @@ export const programActions = {
   },
 };
 
-// ── Merchant actions (client-side only — not yet backed by Supabase) ──
+// ── Merchant actions ──
 export const merchantActions = {
   create(partial: Partial<Merchant>): Merchant {
     const used = new Set(state.merchants.map(m => m.id));
@@ -1810,20 +1938,38 @@ export const merchantActions = {
       website: partial.website,
       notes: partial.notes,
     };
-    set({ merchants: [merchant, ...state.merchants] });
+    const prev = state.merchants;
+    persist(
+      'merchant',
+      () => set({ merchants: [merchant, ...state.merchants] }),
+      () => set({ merchants: prev }),
+      () => supabase!.from('merchants').insert(toDbMerchant(merchant)).then(r => ({ error: r.error })),
+    );
     return merchant;
   },
 
   update(id: string, patch: Partial<Merchant>) {
-    set({ merchants: state.merchants.map(m => (m.id === id ? { ...m, ...patch } : m)) });
+    const prev = state.merchants;
+    persist(
+      'merchant',
+      () => set({ merchants: state.merchants.map(m => (m.id === id ? { ...m, ...patch } : m)) }),
+      () => set({ merchants: prev }),
+      () => supabase!.from('merchants').update(toDbMerchant(patch)).eq('id', id).then(r => ({ error: r.error })),
+    );
   },
 
   remove(id: string) {
-    set({ merchants: state.merchants.filter(m => m.id !== id) });
+    const prev = state.merchants;
+    persist(
+      'delete merchant',
+      () => set({ merchants: state.merchants.filter(m => m.id !== id) }),
+      () => set({ merchants: prev }),
+      () => supabase!.from('merchants').delete().eq('id', id).then(r => ({ error: r.error })),
+    );
   },
 };
 
-// ── Deal actions (client-side only — not yet backed by Supabase) ──
+// ── Deal actions ──
 export const dealActions = {
   create(partial: Partial<Deal>): Deal {
     const used = new Set(state.deals.map(d => d.id));
@@ -1855,15 +2001,33 @@ export const dealActions = {
       agent: partial.agent || 'Unassigned',
       notes: partial.notes,
     };
-    set({ deals: [deal, ...state.deals] });
+    const prev = state.deals;
+    persist(
+      'deal',
+      () => set({ deals: [deal, ...state.deals] }),
+      () => set({ deals: prev }),
+      () => supabase!.from('crm_deals').insert(toDbDeal(deal)).then(r => ({ error: r.error })),
+    );
     return deal;
   },
 
   update(id: string, patch: Partial<Deal>) {
-    set({ deals: state.deals.map(d => (d.id === id ? { ...d, ...patch } : d)) });
+    const prev = state.deals;
+    persist(
+      'deal',
+      () => set({ deals: state.deals.map(d => (d.id === id ? { ...d, ...patch } : d)) }),
+      () => set({ deals: prev }),
+      () => supabase!.from('crm_deals').update(toDbDeal(patch)).eq('id', id).then(r => ({ error: r.error })),
+    );
   },
 
   remove(id: string) {
-    set({ deals: state.deals.filter(d => d.id !== id) });
+    const prev = state.deals;
+    persist(
+      'delete deal',
+      () => set({ deals: state.deals.filter(d => d.id !== id) }),
+      () => set({ deals: prev }),
+      () => supabase!.from('crm_deals').delete().eq('id', id).then(r => ({ error: r.error })),
+    );
   },
 };

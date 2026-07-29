@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { useDeals, type Deal as StoreDeal } from '../crmStore';
 import { NewDealFlow } from '../flows/NewDealFlow';
 import {
@@ -11,11 +11,7 @@ import {
   Wallet,
   AlertTriangle,
   MoreHorizontal,
-  Eye,
-  Edit,
   ChevronDown,
-  Calendar,
-  Filter,
   BarChart3,
 } from 'lucide-react';
 import { useAppNavigate } from '../NavigationContext';
@@ -39,132 +35,6 @@ interface Deal {
   dueDate: string;
   agent: string;
 }
-
-const deals: Deal[] = [
-  {
-    id: 'D-1001',
-    status: 'Current',
-    type: 'MCA',
-    borrower: 'Metro Diner Group',
-    loanAmount: 75000,
-    repaymentAmount: 101250,
-    collected: 54800,
-    outstanding: 46450,
-    rate: 1.35,
-    dailyPayment: 675,
-    fundedDate: '2026-01-15',
-    dueDate: '2026-08-12',
-    agent: 'Marcus J.',
-  },
-  {
-    id: 'D-1002',
-    status: 'Current',
-    type: 'Residual',
-    borrower: 'Bright Auto Sales',
-    loanAmount: 120000,
-    repaymentAmount: 163200,
-    collected: 98400,
-    outstanding: 64800,
-    rate: 1.36,
-    dailyPayment: 1088,
-    fundedDate: '2025-11-03',
-    dueDate: '2026-06-28',
-    agent: 'Sarah K.',
-  },
-  {
-    id: 'D-1003',
-    status: 'Delinquent',
-    delinquencyLabel: 'Early 5d',
-    type: 'MCA',
-    borrower: 'Sunset Logistics LLC',
-    loanAmount: 50000,
-    repaymentAmount: 67500,
-    collected: 22100,
-    outstanding: 45400,
-    rate: 1.35,
-    dailyPayment: 450,
-    fundedDate: '2026-02-10',
-    dueDate: '2026-09-15',
-    agent: 'Marcus J.',
-  },
-  {
-    id: 'D-1004',
-    status: 'Delinquent',
-    delinquencyLabel: 'Mid 22d',
-    type: 'Lease',
-    borrower: 'Peak Construction Co',
-    loanAmount: 95000,
-    repaymentAmount: 128250,
-    collected: 41200,
-    outstanding: 87050,
-    rate: 1.35,
-    dailyPayment: 855,
-    fundedDate: '2025-12-20',
-    dueDate: '2026-07-18',
-    agent: 'Devon R.',
-  },
-  {
-    id: 'D-1005',
-    status: 'Default',
-    type: 'MCA',
-    borrower: 'Greenfield Markets',
-    loanAmount: 60000,
-    repaymentAmount: 81000,
-    collected: 18900,
-    outstanding: 62100,
-    rate: 1.35,
-    dailyPayment: 540,
-    fundedDate: '2025-09-05',
-    dueDate: '2026-04-02',
-    agent: 'Sarah K.',
-  },
-  {
-    id: 'D-1006',
-    status: 'Paid Off',
-    type: 'MCA',
-    borrower: 'Apex Fitness Studio',
-    loanAmount: 40000,
-    repaymentAmount: 52000,
-    collected: 52000,
-    outstanding: 0,
-    rate: 1.30,
-    dailyPayment: 520,
-    fundedDate: '2025-07-12',
-    dueDate: '2025-12-08',
-    agent: 'Devon R.',
-  },
-  {
-    id: 'D-1007',
-    status: 'Workout',
-    type: 'Residual',
-    borrower: 'Coastal Seafood Dist.',
-    loanAmount: 85000,
-    repaymentAmount: 114750,
-    collected: 34200,
-    outstanding: 80550,
-    rate: 1.35,
-    dailyPayment: 380,
-    fundedDate: '2025-10-18',
-    dueDate: '2026-10-10',
-    agent: 'Marcus J.',
-  },
-  {
-    id: 'D-1008',
-    status: 'Delinquent',
-    delinquencyLabel: 'Late 45d',
-    type: 'Lease',
-    borrower: 'Riverdale Dental Care',
-    loanAmount: 110000,
-    repaymentAmount: 148500,
-    collected: 61200,
-    outstanding: 87300,
-    rate: 1.35,
-    dailyPayment: 990,
-    fundedDate: '2025-11-28',
-    dueDate: '2026-08-25',
-    agent: 'Sarah K.',
-  },
-];
 
 function getStatusStyle(status: DealStatus) {
   switch (status) {
@@ -202,12 +72,26 @@ export function BackendDeals() {
   const [newDealOpen, setNewDealOpen] = useState(false);
   const { navigate } = useAppNavigate();
   const storeDeals = useDeals();
+  const allDeals: Deal[] = storeDeals as StoreDeal[] as Deal[];
 
-  // Merge newly-created deals with the static sample portfolio.
-  const allDeals: Deal[] = useMemo(
-    () => [...(storeDeals as StoreDeal[]) as Deal[], ...deals],
-    [storeDeals]
-  );
+  const exportCsv = () => {
+    const header = ['ID', 'Status', 'Type', 'Borrower', 'Loan Amount', 'Repayment', 'Collected', 'Outstanding', 'Rate', 'Daily Payment', 'Funded', 'Due Date', 'Agent'];
+    const escape = (v: string | number) => {
+      const s = String(v ?? '');
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const rows = filtered.map(d => [
+      d.id, d.status, d.type, d.borrower, d.loanAmount, d.repaymentAmount,
+      d.collected, d.outstanding, d.rate, d.dailyPayment, d.fundedDate, d.dueDate, d.agent,
+    ].map(escape).join(','));
+    const blob = new Blob([[header.join(','), ...rows].join('\n')], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `delt-deals-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   const filtered = allDeals.filter((d) => {
     if (statusFilter !== 'All' && d.status !== statusFilter) return false;
@@ -230,7 +114,11 @@ export function BackendDeals() {
           <p className="text-sm text-gray-500 mt-1">Capital deployment and deal management across all merchants.</p>
         </div>
         <div className="flex items-center gap-3">
-          <button className="inline-flex items-center gap-2 px-4 py-2.5 border border-gray-300 rounded-[6px] text-sm text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+          <button
+            onClick={exportCsv}
+            disabled={filtered.length === 0}
+            className="inline-flex items-center gap-2 px-4 py-2.5 border border-gray-300 rounded-[6px] text-sm text-gray-700 bg-white hover:bg-gray-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          >
             <Download className="w-4 h-4" />
             Export Portfolio
           </button>
@@ -246,11 +134,11 @@ export function BackendDeals() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-        <SummaryCard label="Total Funded" value={fmt(totalFunded)} icon={<DollarSign className="w-5 h-5" />} trend="+12.3% vs last quarter" trendPositive variant="emerald" />
-        <SummaryCard label="Total Deployed" value={fmt(totalDeployed)} icon={<Wallet className="w-5 h-5" />} trend="+8.1% this month" trendPositive variant="blue" />
-        <SummaryCard label="Gross Profit" value={fmt(grossProfit)} icon={<TrendingUp className="w-5 h-5" />} trend="+15.7% vs target" trendPositive variant="purple" />
+        <SummaryCard label="Total Funded" value={fmt(totalFunded)} icon={<DollarSign className="w-5 h-5" />} variant="emerald" />
+        <SummaryCard label="Total Deployed" value={fmt(totalDeployed)} icon={<Wallet className="w-5 h-5" />} variant="blue" />
+        <SummaryCard label="Gross Profit" value={fmt(grossProfit)} icon={<TrendingUp className="w-5 h-5" />} variant="purple" />
         <SummaryCard label="Outstanding Balance" value={fmt(outstandingBalance)} icon={<BarChart3 className="w-5 h-5" />} variant="orange" />
-        <SummaryCard label="Default Rate" value={`${defaultRate}%`} icon={<AlertTriangle className="w-5 h-5" />} trend="-0.4% vs last month" trendPositive variant="red" />
+        <SummaryCard label="Default Rate" value={`${defaultRate}%`} icon={<AlertTriangle className="w-5 h-5" />} variant="red" />
       </div>
 
       {/* Filter Bar */}
@@ -279,10 +167,6 @@ export function BackendDeals() {
               onChange={setTypeFilter}
               options={['All', 'MCA', 'Lease', 'Residual']}
             />
-            <div className="flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-[6px] text-sm text-gray-600 bg-white cursor-pointer hover:bg-gray-50">
-              <Calendar className="w-4 h-4" />
-              <span>Date Range</span>
-            </div>
           </div>
         </div>
       </div>
@@ -333,6 +217,15 @@ export function BackendDeals() {
                   </td>
                 </tr>
               ))}
+              {filtered.length === 0 && (
+                <tr>
+                  <td colSpan={13} className="py-16 text-center text-sm text-gray-400">
+                    {allDeals.length === 0
+                      ? 'No deals yet — fund your first deal to see it here.'
+                      : 'No deals match the current filters.'}
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

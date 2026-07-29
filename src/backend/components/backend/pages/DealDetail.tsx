@@ -1,20 +1,20 @@
 import React, { useState, useMemo } from 'react';
 import {
-  ArrowLeft, DollarSign, Calendar, TrendingUp, TrendingDown, AlertTriangle,
-  CheckCircle, Clock, FileText, ChevronRight, Shield, Building2, Percent,
-  Download, ExternalLink, CreditCard, Activity, Zap, RotateCcw, Eye,
-  ArrowUpRight, ArrowDownRight, Ban, RefreshCw, Info,
+  ArrowLeft, DollarSign, TrendingUp, AlertTriangle,
+  CheckCircle, Clock, FileText, Shield,
+  Download, ExternalLink, CreditCard, Activity,
+  ArrowUpRight, ArrowDownRight, Ban, RefreshCw,
 } from 'lucide-react';
 import { useAppNavigate } from '../NavigationContext';
+import { useCapital, type CapitalDeal, type LoanPayment } from '../capitalStore';
+import { useDeals, type Deal as CrmDeal } from '../crmStore';
 
 // ── Helpers ──
 const fmt = (n: number) => n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
-const fmtFull = (n: number) => n.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 });
-const fmtPct = (n: number) => `${(n * 100).toFixed(1)}%`;
-const fmtDate = (d: string) => new Date(d + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-const fmtDateShort = (d: string) => new Date(d + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+const fmtDate = (d?: string) => (d ? new Date(d + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—');
+const fmtDateShort = (d?: string) => (d ? new Date(d + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—');
 const daysBetween = (a: string, b: string) => Math.round((new Date(b + 'T12:00:00').getTime() - new Date(a + 'T12:00:00').getTime()) / 86400000);
-const today = '2026-04-14';
+const today = new Date().toISOString().slice(0, 10);
 const COST_RATE = 0.02;
 
 type DealStatus = 'active' | 'paid' | 'slow' | 'default';
@@ -28,62 +28,106 @@ interface Deal {
   avg7d: number; avg30d: number; stackCount: number; renewalEligible: boolean;
   uccFiled: string; uccExpires: string; costOfCapitalPaid: number;
   referralCommission: number; commissionRate?: number; commissionPaid?: boolean;
+  ledger?: LoanPayment[];
 }
 
-const DEALS: Deal[] = [
-  { id:"MCA-2026-001", merchant:"Havana Bites Cafe", type:"Restaurant", channel:"self", funded:"2026-01-15", fundedAmt:18000, factor:1.35, totalOwed:24300, collected:17820, holdback:15, dailyDebit:145, status:"active", daysInDefault:0, lastPayment:"2026-04-12", achStatus:"current", avg7d:141, avg30d:148, stackCount:0, renewalEligible:true, uccFiled:"2026-01-14", uccExpires:"2031-01-14", costOfCapitalPaid:2160, referralCommission:0 },
-  { id:"MCA-2026-002", merchant:"Coral Reef Auto Spa", type:"Auto Services", channel:"self", funded:"2026-02-03", fundedAmt:25000, factor:1.38, totalOwed:34500, collected:18400, holdback:18, dailyDebit:210, status:"active", daysInDefault:0, lastPayment:"2026-04-14", achStatus:"current", avg7d:215, avg30d:208, stackCount:1, renewalEligible:true, uccFiled:"2026-02-02", uccExpires:"2031-02-02", costOfCapitalPaid:2500, referralCommission:0 },
-  { id:"MCA-2026-003", merchant:"Wynwood Ink Studio", type:"Retail", channel:"self", funded:"2025-11-20", fundedAmt:12000, factor:1.32, totalOwed:15840, collected:15840, holdback:12, dailyDebit:0, status:"paid", daysInDefault:0, lastPayment:"2026-03-28", achStatus:"completed", avg7d:0, avg30d:0, stackCount:0, renewalEligible:false, uccFiled:"2025-11-19", uccExpires:"2030-11-19", costOfCapitalPaid:1440, referralCommission:0 },
-  { id:"MCA-2026-004", merchant:"SoBe Cycle & Fitness", type:"Health & Fitness", channel:"self", funded:"2026-03-01", fundedAmt:20000, factor:1.36, totalOwed:27200, collected:5440, holdback:15, dailyDebit:165, status:"active", daysInDefault:0, lastPayment:"2026-04-13", achStatus:"current", avg7d:162, avg30d:167, stackCount:0, renewalEligible:false, uccFiled:"2026-02-28", uccExpires:"2031-02-28", costOfCapitalPaid:800, referralCommission:0 },
-  { id:"MCA-2026-005", merchant:"Little Havana Barbershop", type:"Personal Services", channel:"self", funded:"2025-12-10", fundedAmt:8000, factor:1.30, totalOwed:10400, collected:7280, holdback:10, dailyDebit:68, status:"slow", daysInDefault:5, lastPayment:"2026-04-08", achStatus:"nsf-retry", avg7d:42, avg30d:63, stackCount:2, renewalEligible:false, uccFiled:"2025-12-09", uccExpires:"2030-12-09", costOfCapitalPaid:960, referralCommission:0 },
-  { id:"MCA-2026-006", merchant:"Doral Fresh Market", type:"Grocery", channel:"self", funded:"2026-01-28", fundedAmt:22000, factor:1.34, totalOwed:29480, collected:14150, holdback:16, dailyDebit:188, status:"active", daysInDefault:0, lastPayment:"2026-04-14", achStatus:"current", avg7d:192, avg30d:186, stackCount:0, renewalEligible:false, uccFiled:"2026-01-27", uccExpires:"2031-01-27", costOfCapitalPaid:1760, referralCommission:0 },
-  { id:"MCA-2026-007", merchant:"Brickell Dry Cleaners", type:"Services", channel:"self", funded:"2026-02-20", fundedAmt:10000, factor:1.33, totalOwed:13300, collected:3990, holdback:12, dailyDebit:85, status:"default", daysInDefault:14, lastPayment:"2026-03-31", achStatus:"suspended", avg7d:0, avg30d:28, stackCount:3, renewalEligible:false, uccFiled:"2026-02-19", uccExpires:"2031-02-19", costOfCapitalPaid:600, referralCommission:0 },
-  { id:"FDM-2026-001", merchant:"Midtown Taqueria", type:"Restaurant", channel:"fundomate", funded:"2026-02-10", fundedAmt:35000, factor:1.40, totalOwed:49000, collected:22050, holdback:17, dailyDebit:310, status:"active", daysInDefault:0, lastPayment:"2026-04-14", achStatus:"current", avg7d:305, avg30d:312, stackCount:0, renewalEligible:true, uccFiled:"2026-02-09", uccExpires:"2031-02-09", costOfCapitalPaid:0, referralCommission:2450, commissionRate:0.07, commissionPaid:true },
-  { id:"FDM-2026-002", merchant:"Kendall Pet Grooming", type:"Personal Services", channel:"fundomate", funded:"2026-03-05", fundedAmt:18000, factor:1.36, totalOwed:24480, collected:6120, holdback:14, dailyDebit:155, status:"active", daysInDefault:0, lastPayment:"2026-04-13", achStatus:"current", avg7d:158, avg30d:153, stackCount:0, renewalEligible:false, uccFiled:"2026-03-04", uccExpires:"2031-03-04", costOfCapitalPaid:0, referralCommission:1260, commissionRate:0.07, commissionPaid:true },
-  { id:"FDM-2026-003", merchant:"Aventura Nail Lounge", type:"Personal Services", channel:"fundomate", funded:"2026-03-18", fundedAmt:28000, factor:1.38, totalOwed:38640, collected:4636, holdback:15, dailyDebit:245, status:"active", daysInDefault:0, lastPayment:"2026-04-14", achStatus:"current", avg7d:248, avg30d:241, stackCount:1, renewalEligible:false, uccFiled:"2026-03-17", uccExpires:"2031-03-17", costOfCapitalPaid:0, referralCommission:1960, commissionRate:0.07, commissionPaid:false },
-  { id:"FDM-2026-004", merchant:"Hialeah Tire & Brake", type:"Auto Services", channel:"fundomate", funded:"2026-01-22", fundedAmt:42000, factor:1.42, totalOwed:59640, collected:35784, holdback:20, dailyDebit:380, status:"active", daysInDefault:0, lastPayment:"2026-04-14", achStatus:"current", avg7d:375, avg30d:382, stackCount:0, renewalEligible:true, uccFiled:"2026-01-21", uccExpires:"2031-01-21", costOfCapitalPaid:0, referralCommission:2940, commissionRate:0.07, commissionPaid:true },
-  { id:"FDM-2026-005", merchant:"Palmetto Bay Bakery", type:"Restaurant", channel:"fundomate", funded:"2026-04-01", fundedAmt:15000, factor:1.32, totalOwed:19800, collected:1188, holdback:12, dailyDebit:126, status:"active", daysInDefault:0, lastPayment:"2026-04-14", achStatus:"current", avg7d:126, avg30d:126, stackCount:0, renewalEligible:false, uccFiled:"2026-03-31", uccExpires:"2031-03-31", costOfCapitalPaid:0, referralCommission:1050, commissionRate:0.07, commissionPaid:false },
-];
+/** Map a CRM pipeline deal (D-xxxx) onto the richer detail shape. */
+function fromCrmDeal(d: CrmDeal): Deal {
+  const status: DealStatus =
+    d.status === 'Paid Off' ? 'paid' :
+    d.status === 'Default' ? 'default' :
+    d.status === 'Delinquent' || d.status === 'Workout' ? 'slow' : 'active';
+  return {
+    id: d.id,
+    merchant: d.borrower,
+    type: d.type,
+    channel: 'self',
+    funded: d.fundedDate,
+    fundedAmt: d.loanAmount,
+    factor: d.rate,
+    totalOwed: d.repaymentAmount,
+    collected: d.collected,
+    holdback: 0,
+    dailyDebit: d.dailyPayment,
+    status,
+    daysInDefault: 0,
+    lastPayment: '',
+    achStatus: 'current',
+    avg7d: 0,
+    avg30d: 0,
+    stackCount: 0,
+    renewalEligible: d.repaymentAmount > 0 && d.collected / d.repaymentAmount >= 0.5,
+    uccFiled: '',
+    uccExpires: '',
+    costOfCapitalPaid: 0,
+    referralCommission: 0,
+  };
+}
 
-// Also map legacy IDs from the Capital table
-const LEGACY_MAP: Record<string, string> = {
-  'MCA-1001': 'MCA-2026-001', 'MCA-1002': 'MCA-2026-002', 'MCA-1003': 'MCA-2026-005',
-  'MCA-1004': 'MCA-2026-004', 'MCA-1005': 'MCA-2026-003', 'MCA-1006': 'MCA-2026-006',
-  'MCA-1007': 'MCA-2026-007', 'MCA-1008': 'FDM-2026-001', 'MCA-1009': 'FDM-2026-002',
-  'MCA-1010': 'FDM-2026-003', 'MCA-1011': 'FDM-2026-004', 'MCA-1012': 'FDM-2026-005',
-};
+function fromCapitalDeal(d: CapitalDeal): Deal {
+  return { ...d, dailyDebit: d.dailyDebit || d.dailyPayment || 0, ledger: d.payments };
+}
 
-// ── Generate mock payment schedule ──
-function generatePayments(deal: Deal) {
-  const payments: { date: string; expected: number; actual: number; balance: number; status: string }[] = [];
-  let balance = deal.totalOwed;
-  const startDate = new Date(deal.funded + 'T12:00:00');
-  const numPayments = Math.min(30, daysBetween(deal.funded, today));
-  
-  for (let i = 1; i <= numPayments; i++) {
-    const d = new Date(startDate);
-    d.setDate(d.getDate() + i);
-    // Skip weekends
-    if (d.getDay() === 0 || d.getDay() === 6) continue;
-    const dateStr = d.toISOString().split('T')[0];
-    const expected = deal.dailyDebit || Math.round(deal.totalOwed / 150);
-    // Simulate some missed payments for slow/default
-    let actual = expected;
-    if (deal.status === 'default' && i > numPayments - 20) actual = 0;
-    else if (deal.status === 'slow' && i > numPayments - 8 && Math.random() > 0.5) actual = Math.round(expected * 0.5);
-    balance = Math.max(0, balance - actual);
-    payments.push({ date: dateStr, expected, actual, balance, status: actual >= expected ? 'paid' : actual > 0 ? 'partial' : 'missed' });
-  }
-  return payments.reverse().slice(0, 15);
+/**
+ * Build display rows from the deal's real payment ledger. Expected amount is
+ * the deal's daily debit; the running balance is totalOwed minus cumulative
+ * collections up to each payment.
+ */
+function buildPaymentRows(deal: Deal) {
+  const ledger = (deal.ledger || []).slice().sort((a, b) => a.payment_date.localeCompare(b.payment_date));
+  const expected = deal.dailyDebit || 0;
+  let collected = 0;
+  const rows = ledger.map(p => {
+    collected += p.amount;
+    const status = p.amount >= expected && p.amount > 0 ? 'paid' : p.amount > 0 ? 'partial' : 'missed';
+    return {
+      date: p.payment_date,
+      expected,
+      actual: p.amount,
+      balance: Math.max(0, deal.totalOwed - collected),
+      status,
+    };
+  });
+  return rows.reverse();
 }
 
 export function DealDetail() {
   const { navigate, currentPage } = useAppNavigate();
   const [activeTab, setActiveTab] = useState<'overview' | 'payments' | 'financials'>('overview');
+  const { deals: capitalDeals, isLoading } = useCapital();
+  const crmDeals = useDeals();
 
-  const dealId = currentPage.split('/deals/')[1] || '';
-  const mappedId = LEGACY_MAP[dealId] || dealId;
-  const deal = DEALS.find(d => d.id === mappedId || d.id === dealId) || DEALS[0];
+  const dealId = decodeURIComponent(currentPage.split('/deals/')[1] || '');
+  const deal: Deal | null = useMemo(() => {
+    const cap = capitalDeals.find(d => d.id === dealId);
+    if (cap) return fromCapitalDeal(cap);
+    const crm = crmDeals.find(d => d.id === dealId);
+    if (crm) return fromCrmDeal(crm);
+    return null;
+  }, [capitalDeals, crmDeals, dealId]);
+
+  if (!deal) {
+    return (
+      <div className="min-h-full bg-canvas flex items-center justify-center py-24">
+        <div className="text-center">
+          <p className="text-lg font-semibold text-gray-900 mb-1">
+            {isLoading ? 'Loading deal…' : 'Deal not found'}
+          </p>
+          {!isLoading && (
+            <p className="text-sm text-gray-500 mb-4">
+              No deal with ID <span className="font-mono">{dealId || '(none)'}</span> exists in the portfolio.
+            </p>
+          )}
+          <button
+            onClick={() => navigate('/capital')}
+            className="inline-flex items-center gap-1.5 text-sm text-brand hover:underline"
+          >
+            <ArrowLeft className="w-4 h-4" /> Back to Capital
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const outstanding = deal.totalOwed - deal.collected;
   const pctCollected = deal.totalOwed > 0 ? deal.collected / deal.totalOwed : 0;
@@ -103,7 +147,7 @@ export function DealDetail() {
   const velocitySignal = deal.avg7d === 0 ? 'Stopped' : velocityDelta < -0.15 ? 'Decelerating' : velocityDelta < 0 ? 'Softening' : 'Stable';
   const velocityColor = deal.avg7d === 0 ? 'text-red-600' : velocityDelta < -0.15 ? 'text-red-600' : velocityDelta < 0 ? 'text-amber-600' : 'text-emerald-600';
 
-  const payments = useMemo(() => generatePayments(deal), [deal.id]);
+  const payments = buildPaymentRows(deal);
 
   const statusConfig: Record<DealStatus, { label: string; bg: string; text: string; dot: string }> = {
     active: { label: 'Active', bg: 'bg-emerald-50', text: 'text-emerald-700', dot: 'bg-emerald-500' },
@@ -121,7 +165,29 @@ export function DealDetail() {
 
   const st = statusConfig[deal.status];
   const ach = achConfig[deal.achStatus] || { label: deal.achStatus, color: 'text-gray-500' };
-  const uccDaysLeft = daysBetween(today, deal.uccExpires);
+  const uccDaysLeft = deal.uccExpires ? daysBetween(today, deal.uccExpires) : null;
+
+  const exportDeal = () => {
+    const lines = [
+      ['Field', 'Value'].join(','),
+      ...Object.entries({
+        ID: deal.id, Merchant: deal.merchant, Type: deal.type, Channel: deal.channel,
+        Status: deal.status, Funded: deal.funded, 'Funded Amount': deal.fundedAmt,
+        Factor: deal.factor, 'Total Owed': deal.totalOwed, Collected: deal.collected,
+        Outstanding: outstanding, 'Daily Payment': deal.dailyDebit, 'Holdback %': deal.holdback,
+      }).map(([k, v]) => `${k},"${String(v).replace(/"/g, '""')}"`),
+      '',
+      ['Payment Date', 'Amount', 'Running Balance', 'Status'].join(','),
+      ...payments.map(p => [p.date, p.actual, p.balance, p.status].join(',')),
+    ];
+    const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `deal-${deal.id}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <div className="min-h-full bg-canvas pb-16">
@@ -164,10 +230,16 @@ export function DealDetail() {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <button className="px-3.5 py-2 border border-gray-200 rounded-[6px] text-sm text-gray-600 bg-white hover:bg-gray-50 inline-flex items-center gap-2 transition-colors">
+              <button
+                onClick={exportDeal}
+                className="px-3.5 py-2 border border-gray-200 rounded-[6px] text-sm text-gray-600 bg-white hover:bg-gray-50 inline-flex items-center gap-2 transition-colors"
+              >
                 <Download className="w-4 h-4" /> Export
               </button>
-              <button className="px-3.5 py-2 bg-brand text-white rounded-[6px] text-sm font-medium hover:bg-brand-hover inline-flex items-center gap-2 transition-colors">
+              <button
+                onClick={() => navigate('/merchants')}
+                className="px-3.5 py-2 bg-brand text-white rounded-[6px] text-sm font-medium hover:bg-brand-hover inline-flex items-center gap-2 transition-colors"
+              >
                 <ExternalLink className="w-4 h-4" /> View Merchant
               </button>
             </div>
@@ -293,6 +365,13 @@ export function DealDetail() {
                             <td className="py-2.5 text-sm text-gray-600 tabular-nums text-right">{fmt(p.balance)}</td>
                           </tr>
                         ))}
+                        {payments.length === 0 && (
+                          <tr>
+                            <td colSpan={5} className="py-8 text-center text-sm text-gray-400">
+                              No payments recorded yet. Payments logged in Capital will appear here.
+                            </td>
+                          </tr>
+                        )}
                       </tbody>
                     </table>
                   </div>
@@ -327,8 +406,8 @@ export function DealDetail() {
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-500">UCC Expires</span>
-                      <span className={`text-sm font-medium ${uccDaysLeft < 365 ? 'text-red-600' : uccDaysLeft < 730 ? 'text-amber-600' : 'text-gray-900'}`}>
-                        {fmtDate(deal.uccExpires)} ({Math.floor(uccDaysLeft / 365)}y {Math.floor((uccDaysLeft % 365) / 30)}m)
+                      <span className={`text-sm font-medium ${uccDaysLeft == null ? 'text-gray-900' : uccDaysLeft < 365 ? 'text-red-600' : uccDaysLeft < 730 ? 'text-amber-600' : 'text-gray-900'}`}>
+                        {fmtDate(deal.uccExpires)}{uccDaysLeft != null && ` (${Math.floor(uccDaysLeft / 365)}y ${Math.floor((uccDaysLeft % 365) / 30)}m)`}
                       </span>
                     </div>
                     {deal.daysInDefault > 0 && (
@@ -532,6 +611,13 @@ export function DealDetail() {
                         </tr>
                       );
                     })}
+                    {payments.length === 0 && (
+                      <tr>
+                        <td colSpan={6} className="py-10 text-center text-sm text-gray-400">
+                          No payments recorded yet. Payments logged in Capital will appear here.
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
