@@ -38,6 +38,7 @@ import { BackendDocuments } from './pages/BackendDocuments';
 import { BackendPayments } from './pages/BackendPayments';
 import { BackendReports } from './pages/BackendReports';
 import { BackendPlaid } from './pages/BackendPlaid';
+import { BackendMarketing } from './pages/BackendMarketing';
 import {
   LayoutDashboard,
   Users,
@@ -66,7 +67,7 @@ import {
   Home,
   FileText,
   Package,
-  Send,
+  Megaphone,
   Inbox,
   Globe,
   BarChart3,
@@ -121,7 +122,7 @@ const adminGroups: NavGroup[] = [
     label: 'Operations',
     items: [
       { label: 'Disputes', path: '/disputes', icon: ShieldAlert },
-      { label: 'Outreach', path: '/outreach', icon: Send },
+      { label: 'Marketing', path: '/marketing', icon: Megaphone },
       { label: 'Compliance', path: '/compliance', icon: ShieldCheck },
     ],
   },
@@ -180,7 +181,8 @@ const PAGE_TITLES: Record<string, string> = {
   '/capital': 'Capital',
   '/retention': 'Retention & Churn',
   '/disputes': 'Disputes',
-  '/outreach': 'Outreach',
+  '/marketing': 'Marketing Hub',
+  '/outreach': 'Marketing Hub',
   '/compliance': 'Compliance',
   '/agents': 'Agents',
   '/employees': 'Employees',
@@ -260,7 +262,7 @@ const allCommands: CommandItem[] = [
   { label: 'Capital', path: '/capital', group: 'Merchants', icon: Banknote },
   { label: 'Retention', path: '/retention', group: 'Merchants', icon: Heart },
   { label: 'Disputes', path: '/disputes', group: 'Operations', icon: ShieldAlert, keywords: 'chargeback representment evidence' },
-  { label: 'Outreach', path: '/outreach', group: 'Operations', icon: Send, keywords: 'email sms campaign automation bulk send' },
+  { label: 'Marketing Hub', path: '/marketing', group: 'Operations', icon: Megaphone, keywords: 'ads ad spend cac roas funnel google meta outreach email sms campaign automation bulk send' },
   { label: 'Compliance', path: '/compliance', group: 'Operations', icon: ShieldCheck, keywords: 'compliance rules' },
   { label: 'Agents', path: '/agents', group: 'Team', icon: UserCircle },
   { label: 'Employees', path: '/employees', group: 'Team', icon: Briefcase },
@@ -426,7 +428,8 @@ export function DeltBackendLayout() {
       case '/residuals': return <BackendResiduals />;
       case '/capital': return <BackendCapital />;
       case '/disputes': return <BackendDisputes />;
-      case '/outreach': return <BackendOutreach />;
+      case '/marketing': return <MarketingHub />;
+      case '/outreach': return <MarketingHub initialView="outreach" />;
       case '/compliance': return <BackendCompliance />;
       case '/activity-timeline': return <BackendActivityTimeline />;
       case '/tasks': return <BackendTasks />;
@@ -786,6 +789,38 @@ function UnderwritingHub() {
       </div>
       <div className="flex-1 overflow-y-auto">
         {view === 'portal' ? <BackendPlaid /> : <BackendUnderwriting />}
+      </div>
+    </div>
+  );
+}
+
+// ── Marketing hub: paid performance (ad spend / CAC / ROAS) is the front
+// door; the outreach campaign engine sits behind a second tab. The legacy
+// /outreach path deep-links straight to that tab. ──
+function MarketingHub({ initialView = 'performance' }: { initialView?: 'performance' | 'outreach' }) {
+  const [view, setView] = useState<'performance' | 'outreach'>(initialView);
+  return (
+    <div className="h-full flex flex-col">
+      <div className="shrink-0 flex items-center gap-6 px-4 lg:px-8 pt-4 border-b border-white/[0.06]">
+        {([
+          { key: 'performance' as const, label: 'Performance' },
+          { key: 'outreach' as const, label: 'Outreach' },
+        ]).map(t => (
+          <button
+            key={t.key}
+            onClick={() => setView(t.key)}
+            className={`px-1 pb-3 text-[13px] font-semibold border-b-2 transition-colors ${
+              view === t.key
+                ? 'border-(--dp-accent) text-(--dp-accent-text)'
+                : 'border-transparent text-(--dp-text-muted) hover:text-(--dp-text)'
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+      <div className="flex-1 overflow-y-auto">
+        {view === 'performance' ? <BackendMarketing /> : <BackendOutreach />}
       </div>
     </div>
   );
