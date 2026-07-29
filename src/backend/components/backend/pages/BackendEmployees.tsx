@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { toast } from 'sonner@2.0.3';
 import {
   Plus,
   Search,
@@ -461,15 +462,46 @@ function EmployeeDetailPanel({ employee, onClose }: { employee: Employee; onClos
 // Main Component
 // ════════════════════════════════════════
 export function BackendEmployees() {
+  const [employeeList, setEmployeeList] = useState<Employee[]>(employees);
+  const [addOpen, setAddOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const totalEmployees = employees.filter(e => e.status !== 'Terminated').length;
+  const handleAdd = (e: {
+    name: string; email: string; phone: string; role: string;
+    department: Department; employmentType: EmploymentType;
+    compensation: string; compensationType: 'Salary' | 'Hourly'; startDate: string;
+  }) => {
+    const created: Employee = {
+      id: `EMP-${String(employeeList.length + 1).padStart(3, '0')}`,
+      name: e.name,
+      initials: e.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase(),
+      email: e.email,
+      phone: e.phone || '—',
+      role: e.role,
+      department: e.department,
+      employmentType: e.employmentType,
+      startDate: e.startDate,
+      compensation: e.compensation,
+      compensationType: e.compensationType,
+      status: 'Active',
+      address: '—',
+      manager: 'John Doe',
+      timeOffBalance: { vacation: 10, sick: 5, personal: 3 },
+      documents: [{ name: 'Offer Letter', date: e.startDate, status: 'Missing' }],
+      notes: [],
+    };
+    setEmployeeList(prev => [created, ...prev]);
+    setAddOpen(false);
+    toast.success(`${created.name} added`, { description: `${created.role} · ${created.department}` });
+  };
+
+  const totalEmployees = employeeList.filter(e => e.status !== 'Terminated').length;
   const monthlyPayroll = 52_416;
   const openPositions = 3;
   const avgTenure = 18;
 
-  const filtered = employees.filter(e =>
+  const filtered = employeeList.filter(e =>
     e.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     e.role.toLowerCase().includes(searchQuery.toLowerCase()) ||
     e.department.toLowerCase().includes(searchQuery.toLowerCase())
@@ -481,14 +513,18 @@ export function BackendEmployees() {
       <div className="bg-white border-b border-gray-200 px-6 py-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Employees</h1>
             <p className="text-sm text-gray-600 mt-1">{totalEmployees} active employees across all departments</p>
           </div>
-          <button className="px-4 py-2 bg-brand text-white text-sm font-medium rounded-[6px] hover:bg-brand-hover transition-colors flex items-center gap-2">
+          <button
+            onClick={() => setAddOpen(true)}
+            className="px-4 py-2 bg-brand text-white text-sm font-medium rounded-[6px] hover:bg-brand-hover transition-colors flex items-center gap-2"
+          >
             <Plus className="w-4 h-4" /> Add Employee
           </button>
         </div>
       </div>
+
+      {addOpen && <AddEmployeeModal onClose={() => setAddOpen(false)} onCreate={handleAdd} />}
 
       <div className="px-6 py-6 flex-1 overflow-y-auto space-y-6">
         {/* Summary Cards */}
@@ -586,6 +622,113 @@ export function BackendEmployees() {
 
       {/* Detail Panel */}
       {selectedEmployee && <EmployeeDetailPanel employee={selectedEmployee} onClose={() => setSelectedEmployee(null)} />}
+    </div>
+  );
+}
+
+// ── Add Employee modal ──
+function AddEmployeeModal({
+  onClose,
+  onCreate,
+}: {
+  onClose: () => void;
+  onCreate: (e: {
+    name: string; email: string; phone: string; role: string;
+    department: Department; employmentType: EmploymentType;
+    compensation: string; compensationType: 'Salary' | 'Hourly'; startDate: string;
+  }) => void;
+}) {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [role, setRole] = useState('');
+  const [department, setDepartment] = useState<Department>('Engineering');
+  const [employmentType, setEmploymentType] = useState<EmploymentType>('Full-Time');
+  const [compensationType, setCompensationType] = useState<'Salary' | 'Hourly'>('Salary');
+  const [compensation, setCompensation] = useState('');
+  const [startDate, setStartDate] = useState('');
+
+  const inputCls =
+    'w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-[8px] text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500';
+
+  const submit = (ev: React.FormEvent) => {
+    ev.preventDefault();
+    if (!name.trim() || !email.trim() || !role.trim()) return;
+    onCreate({
+      name: name.trim(),
+      email: email.trim(),
+      phone: phone.trim(),
+      role: role.trim(),
+      department,
+      employmentType,
+      compensation: compensation.trim() || (compensationType === 'Salary' ? '$0/yr' : '$0/hr'),
+      compensationType,
+      startDate: startDate || new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+    });
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
+      <form onClick={e => e.stopPropagation()} onSubmit={submit} className="bg-white rounded-[12px] shadow-xl w-full max-w-lg overflow-hidden">
+        <div className="px-5 py-4 border-b border-gray-200 flex items-center justify-between">
+          <h2 className="text-base font-semibold text-gray-900">Add Employee</h2>
+          <button type="button" onClick={onClose} className="p-1.5 hover:bg-gray-100 rounded-[8px] text-gray-400 hover:text-gray-600">✕</button>
+        </div>
+        <div className="px-5 py-4 grid grid-cols-2 gap-3">
+          <div className="col-span-2">
+            <label className="block text-[12px] font-medium text-gray-600 mb-1">Full name</label>
+            <input required autoFocus value={name} onChange={e => setName(e.target.value)} placeholder="Alex Morgan" className={inputCls} />
+          </div>
+          <div>
+            <label className="block text-[12px] font-medium text-gray-600 mb-1">Email</label>
+            <input required type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="alex.m@deltpay.com" className={inputCls} />
+          </div>
+          <div>
+            <label className="block text-[12px] font-medium text-gray-600 mb-1">Phone</label>
+            <input value={phone} onChange={e => setPhone(e.target.value)} placeholder="(555) 123-4567" className={inputCls} />
+          </div>
+          <div>
+            <label className="block text-[12px] font-medium text-gray-600 mb-1">Role / title</label>
+            <input required value={role} onChange={e => setRole(e.target.value)} placeholder="Support Specialist" className={inputCls} />
+          </div>
+          <div>
+            <label className="block text-[12px] font-medium text-gray-600 mb-1">Department</label>
+            <select value={department} onChange={e => setDepartment(e.target.value as Department)} className={inputCls}>
+              <option>Engineering</option>
+              <option>Sales</option>
+              <option>Operations</option>
+              <option>Support</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-[12px] font-medium text-gray-600 mb-1">Employment type</label>
+            <select value={employmentType} onChange={e => setEmploymentType(e.target.value as EmploymentType)} className={inputCls}>
+              <option>Full-Time</option>
+              <option>Part-Time</option>
+              <option>Contractor</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-[12px] font-medium text-gray-600 mb-1">Start date</label>
+            <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className={inputCls} />
+          </div>
+          <div>
+            <label className="block text-[12px] font-medium text-gray-600 mb-1">Pay type</label>
+            <select value={compensationType} onChange={e => setCompensationType(e.target.value as 'Salary' | 'Hourly')} className={inputCls}>
+              <option>Salary</option>
+              <option>Hourly</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-[12px] font-medium text-gray-600 mb-1">Compensation</label>
+            <input value={compensation} onChange={e => setCompensation(e.target.value)} placeholder={compensationType === 'Salary' ? '$85,000/yr' : '$40/hr'} className={inputCls} />
+          </div>
+        </div>
+        <div className="px-5 py-3 border-t border-gray-200 bg-gray-50 flex items-center justify-end gap-2">
+          <button type="button" onClick={onClose} className="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-300 rounded-[10px] hover:bg-white">Cancel</button>
+          <button type="submit" className="px-4 py-2 text-sm font-bold text-white bg-indigo-600 rounded-[10px] hover:bg-indigo-700">Add Employee</button>
+        </div>
+      </form>
     </div>
   );
 }

@@ -183,7 +183,6 @@ export function BackendActivityTimeline() {
             <Activity className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Activity Timeline</h1>
             <p className="text-sm text-gray-500">Every interaction across all merchants and deals</p>
           </div>
         </div>

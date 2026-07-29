@@ -1,24 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
-  Brain,
-  ShieldCheck,
   TrendingUp,
   AlertTriangle,
   RotateCcw,
-  ChevronRight,
-  Send,
   Sparkles,
   Zap,
   Eye,
   Phone,
   DollarSign,
   Users,
-  BarChart3,
-  ArrowRight,
-  MessageSquare,
-  Clock,
-  Activity,
   Target,
+  ArrowUp,
 } from 'lucide-react';
 import {
   AreaChart,
@@ -38,12 +30,12 @@ function HealthRing({ score, size = 100 }: { score: number; size?: number }) {
   const r = (size - stroke) / 2;
   const circ = 2 * Math.PI * r;
   const offset = circ - (score / 100) * circ;
-  const color = score >= 75 ? '#10B981' : score >= 50 ? '#F59E0B' : '#EF4444';
+  const color = score >= 75 ? '#34C77B' : score >= 50 ? '#F0B429' : '#F2565B';
 
   return (
     <div className="relative" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90">
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#F1F5F9" strokeWidth={stroke} />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth={stroke} />
         <circle
           cx={size / 2}
           cy={size / 2}
@@ -58,7 +50,7 @@ function HealthRing({ score, size = 100 }: { score: number; size?: number }) {
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-2xl font-bold text-gray-900">{score}</span>
+        <span className="text-2xl font-bold text-gray-900 tabular-nums">{score}</span>
         <span className="text-[10px] text-gray-500 -mt-0.5">/ 100</span>
       </div>
     </div>
@@ -100,9 +92,9 @@ const alerts = [
 ];
 
 const sevConfig = {
-  critical: { bg: 'bg-red-50 border-red-200', iconBg: 'bg-red-100', icon: 'text-red-600', badge: 'bg-red-600 text-white' },
-  warning: { bg: 'bg-amber-50 border-amber-200', iconBg: 'bg-amber-100', icon: 'text-amber-600', badge: 'bg-amber-500 text-white' },
-  info: { bg: 'bg-indigo-50/60 border-indigo-200', iconBg: 'bg-indigo-100', icon: 'text-indigo-600', badge: 'bg-indigo-600 text-white' },
+  critical: { bg: 'bg-red-50 border-red-200', iconBg: 'bg-red-100', icon: 'text-red-500', badge: 'bg-red-500 text-white' },
+  warning: { bg: 'bg-amber-50 border-amber-200', iconBg: 'bg-amber-100', icon: 'text-amber-500', badge: 'bg-amber-500 text-white' },
+  info: { bg: 'bg-indigo-50/60 border-indigo-200', iconBg: 'bg-indigo-100', icon: 'text-indigo-600', badge: 'bg-indigo-500 text-white' },
 };
 
 const flowCastData = [
@@ -154,11 +146,12 @@ export function BackendLensAI() {
   const [tab, setTab] = useState<Tab>('dashboard');
   const [chatInput, setChatInput] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [thinking, setThinking] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  }, [messages, thinking]);
 
   const handleSend = (text?: string) => {
     const msg = text || chatInput.trim();
@@ -167,58 +160,65 @@ export function BackendLensAI() {
     setMessages((prev) => [...prev, userMsg]);
     setChatInput('');
     // Simulate AI response
+    setThinking(true);
     setTimeout(() => {
+      setThinking(false);
       setMessages((prev) => [...prev, sampleResponse]);
-    }, 800);
+    }, 900);
   };
+
+  if (tab === 'ask') {
+    return (
+      <AskLens
+        messages={messages}
+        thinking={thinking}
+        chatInput={chatInput}
+        setChatInput={setChatInput}
+        handleSend={handleSend}
+        chatEndRef={chatEndRef}
+        onBack={() => setTab('dashboard')}
+      />
+    );
+  }
 
   return (
     <div className="h-full overflow-y-auto">
-      <div className="max-w-[1440px] mx-auto px-6 py-6 space-y-6">
+      <div className="max-w-[1360px] mx-auto px-4 lg:px-8 py-6 space-y-6">
         {/* ── Header ── */}
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Lens AI</h1>
-            <p className="text-sm text-gray-500 mt-0.5">Predictive intelligence for your portfolio</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="flex bg-gray-100 rounded-[6px] p-0.5">
-              <button
-                onClick={() => setTab('dashboard')}
-                className={`px-4 py-2 text-sm font-medium rounded-[4px] transition-all ${
-                  tab === 'dashboard'
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                Dashboard
-              </button>
-              <button
-                onClick={() => setTab('ask')}
-                className={`px-4 py-2 text-sm font-medium rounded-[4px] transition-all flex items-center gap-1.5 ${
-                  tab === 'ask'
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                <Sparkles className="w-3.5 h-3.5" />
-                Ask Lens
-              </button>
-            </div>
-          </div>
+          <p className="text-[13px] text-gray-500">Predictive intelligence for your portfolio</p>
+          <TabSwitch tab={tab} setTab={setTab} />
         </div>
-
-        {/* ── Content ── */}
-        {tab === 'dashboard' ? <DashboardTab /> : (
-          <AskTab
-            messages={messages}
-            chatInput={chatInput}
-            setChatInput={setChatInput}
-            handleSend={handleSend}
-            chatEndRef={chatEndRef}
-          />
-        )}
+        <DashboardTab />
       </div>
+    </div>
+  );
+}
+
+function TabSwitch({ tab, setTab }: { tab: Tab; setTab: (t: Tab) => void }) {
+  return (
+    <div className="flex rounded-[10px] border border-(--dp-border) p-0.5">
+      <button
+        onClick={() => setTab('dashboard')}
+        className={`px-4 py-1.5 text-[13px] font-semibold rounded-[8px] transition-all ${
+          tab === 'dashboard'
+            ? 'bg-(--dp-accent-soft) text-(--dp-accent-text)'
+            : 'text-(--dp-text-muted) hover:text-(--dp-text)'
+        }`}
+      >
+        Dashboard
+      </button>
+      <button
+        onClick={() => setTab('ask')}
+        className={`px-4 py-1.5 text-[13px] font-semibold rounded-[8px] transition-all flex items-center gap-1.5 ${
+          tab === 'ask'
+            ? 'bg-(--dp-accent-soft) text-(--dp-accent-text)'
+            : 'text-(--dp-text-muted) hover:text-(--dp-text)'
+        }`}
+      >
+        <Sparkles className="w-3.5 h-3.5" />
+        Ask Lens
+      </button>
     </div>
   );
 }
@@ -246,7 +246,7 @@ function DashboardTab() {
             </div>
             <span className="text-xs text-emerald-600 font-medium bg-emerald-50 px-2 py-0.5 rounded-full">+8.2%</span>
           </div>
-          <p className="text-2xl font-bold text-gray-900">$142K</p>
+          <p className="text-2xl font-bold text-gray-900 tabular-nums">$142K</p>
           <p className="text-sm text-gray-500 mt-1">Predicted Collections</p>
           <p className="text-xs text-gray-400 mt-0.5">Next 30 days</p>
         </div>
@@ -255,11 +255,11 @@ function DashboardTab() {
         <div className="bg-white rounded-[8px] border border-gray-200 p-5">
           <div className="flex items-center justify-between mb-3">
             <div className="w-9 h-9 bg-amber-50 rounded-lg flex items-center justify-center">
-              <AlertTriangle className="w-5 h-5 text-amber-600" />
+              <AlertTriangle className="w-5 h-5 text-amber-500" />
             </div>
-            <span className="text-xs text-red-600 font-medium bg-red-50 px-2 py-0.5 rounded-full">+1 this week</span>
+            <span className="text-xs text-red-500 font-medium bg-red-50 px-2 py-0.5 rounded-full">+1 this week</span>
           </div>
-          <p className="text-2xl font-bold text-gray-900">5</p>
+          <p className="text-2xl font-bold text-gray-900 tabular-nums">5</p>
           <p className="text-sm text-gray-500 mt-1">At-Risk Deals</p>
           <p className="text-xs text-gray-400 mt-0.5">$214K total exposure</p>
         </div>
@@ -272,7 +272,7 @@ function DashboardTab() {
             </div>
             <span className="text-xs text-indigo-600 font-medium bg-indigo-50 px-2 py-0.5 rounded-full">$340K potential</span>
           </div>
-          <p className="text-2xl font-bold text-gray-900">4</p>
+          <p className="text-2xl font-bold text-gray-900 tabular-nums">4</p>
           <p className="text-sm text-gray-500 mt-1">Renewal Opportunities</p>
           <p className="text-xs text-gray-400 mt-0.5">&gt;50% repaid</p>
         </div>
@@ -357,25 +357,25 @@ function DashboardTab() {
               <AreaChart data={chartData}>
                 <defs>
                   <linearGradient id="bandGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#6366F1" stopOpacity={0.12} />
-                    <stop offset="95%" stopColor="#6366F1" stopOpacity={0.02} />
+                    <stop offset="5%" stopColor="#2E6BFF" stopOpacity={0.12} />
+                    <stop offset="95%" stopColor="#2E6BFF" stopOpacity={0.02} />
                   </linearGradient>
                   <linearGradient id="projGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#6366F1" stopOpacity={0.2} />
-                    <stop offset="95%" stopColor="#6366F1" stopOpacity={0} />
+                    <stop offset="5%" stopColor="#2E6BFF" stopOpacity={0.2} />
+                    <stop offset="95%" stopColor="#2E6BFF" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
-                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#94A3B8' }} />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
+                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#98A6C2' }} />
                 <YAxis
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fontSize: 12, fill: '#94A3B8' }}
+                  tick={{ fontSize: 12, fill: '#98A6C2' }}
                   tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`}
                   domain={[80000, 'auto']}
                 />
                 <Tooltip
-                  contentStyle={{ backgroundColor: '#fff', border: '1px solid #E2E8F0', borderRadius: '8px', fontSize: '13px' }}
+                  contentStyle={{ backgroundColor: '#20305A', border: '1px solid #435687', borderRadius: '8px', fontSize: '13px' }}
                   formatter={(value: number, name: string) => {
                     const labels: Record<string, string> = { projected: 'Projected', high: 'High', low: 'Low', actual: 'Actual' };
                     return [`$${value.toLocaleString()}`, labels[name] || name];
@@ -383,13 +383,13 @@ function DashboardTab() {
                 />
                 {/* Confidence band */}
                 <Area key="area-high" type="monotone" dataKey="high" stroke="none" fill="url(#bandGrad)" stackId="band" />
-                <Area key="area-low" type="monotone" dataKey="low" stroke="none" fill="#fff" stackId="band-low" />
+                <Area key="area-low" type="monotone" dataKey="low" stroke="none" fill="transparent" stackId="band-low" />
                 {/* Projected line */}
-                <Area key="area-projected" type="monotone" dataKey="projected" stroke="#6366F1" strokeWidth={2.5} fill="url(#projGrad)" />
+                <Area key="area-projected" type="monotone" dataKey="projected" stroke="#2E6BFF" strokeWidth={2.5} fill="url(#projGrad)" />
                 {/* Actuals */}
-                <Area key="area-actual" type="monotone" dataKey="actual" stroke="#10B981" strokeWidth={2.5} fill="none" dot={(props: any) => {
+                <Area key="area-actual" type="monotone" dataKey="actual" stroke="#34C77B" strokeWidth={2.5} fill="none" dot={(props: any) => {
                   if (props.payload?.actual == null) return null;
-                  return <circle key={`dot-actual-${props.cx}-${props.cy}`} cx={props.cx} cy={props.cy} r={4} fill="#10B981" stroke="#fff" strokeWidth={2} />;
+                  return <circle key={`dot-actual-${props.cx}-${props.cy}`} cx={props.cx} cy={props.cy} r={4} fill="#34C77B" stroke="#172341" strokeWidth={2} />;
                 }} connectNulls={false} />
               </AreaChart>
             </ResponsiveContainer>
@@ -401,146 +401,246 @@ function DashboardTab() {
 }
 
 // ════════════════════════════════════════
-// Ask Lens Tab
+// Ask Lens — conversational surface
 // ════════════════════════════════════════
-function AskTab({
+function Composer({
+  chatInput,
+  setChatInput,
+  handleSend,
+  autoFocus,
+}: {
+  chatInput: string;
+  setChatInput: (v: string) => void;
+  handleSend: () => void;
+  autoFocus?: boolean;
+}) {
+  const taRef = useRef<HTMLTextAreaElement>(null);
+
+  // Auto-grow up to ~6 lines
+  useEffect(() => {
+    const ta = taRef.current;
+    if (!ta) return;
+    ta.style.height = 'auto';
+    ta.style.height = `${Math.min(ta.scrollHeight, 152)}px`;
+  }, [chatInput]);
+
+  return (
+    <div className="rounded-[20px] bg-(--dp-bg-card) border border-(--dp-border) focus-within:border-(--dp-accent) focus-within:shadow-[0_0_0_3px_var(--dp-accent-soft)] transition-shadow">
+      <textarea
+        ref={taRef}
+        rows={1}
+        autoFocus={autoFocus}
+        value={chatInput}
+        onChange={(e) => setChatInput(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            handleSend();
+          }
+        }}
+        placeholder="Ask Lens about your portfolio…"
+        className="w-full resize-none bg-transparent px-5 pt-4 pb-2 text-[15px] leading-relaxed text-(--dp-text) placeholder:text-(--dp-text-faint) outline-none"
+      />
+      <div className="flex items-center justify-between px-3 pb-3 pl-5">
+        <span className="text-[11px] text-(--dp-text-faint)">
+          Enter to send · Shift+Enter for a new line
+        </span>
+        <button
+          onClick={handleSend}
+          disabled={!chatInput.trim()}
+          aria-label="Send"
+          className={`w-9 h-9 rounded-full flex items-center justify-center transition-all ${
+            chatInput.trim()
+              ? 'bg-(--dp-accent) hover:bg-(--dp-accent-hover) text-white'
+              : 'bg-white/[0.06] text-(--dp-text-faint)'
+          }`}
+        >
+          <ArrowUp className="w-4.5 h-4.5" strokeWidth={2.5} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function LensAvatar() {
+  return (
+    <div className="w-7 h-7 rounded-full bg-(--dp-accent-soft) border border-(--dp-border) flex items-center justify-center shrink-0">
+      <Sparkles className="w-3.5 h-3.5 text-(--dp-accent-text)" />
+    </div>
+  );
+}
+
+function AskLens({
   messages,
+  thinking,
   chatInput,
   setChatInput,
   handleSend,
   chatEndRef,
+  onBack,
 }: {
   messages: ChatMessage[];
+  thinking: boolean;
   chatInput: string;
   setChatInput: (v: string) => void;
   handleSend: (text?: string) => void;
   chatEndRef: React.RefObject<HTMLDivElement | null>;
+  onBack: () => void;
 }) {
+  const empty = messages.length === 0;
+
   return (
-    <div className="flex flex-col" style={{ minHeight: 'calc(100vh - 260px)' }}>
-      {/* Chat Area */}
-      <div className="flex-1 overflow-y-auto">
-        {messages.length === 0 ? (
-          /* Empty State */
-          <div className="flex flex-col items-center justify-center py-16 max-w-xl mx-auto text-center">
-            <div className="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center mb-5">
-              <Sparkles className="w-7 h-7 text-brand" />
+    <div className="h-full flex flex-col">
+      {/* Slim header — just the mode switch */}
+      <div className="shrink-0 flex items-center justify-between px-4 lg:px-8 pt-4">
+        <p className="text-[13px] text-(--dp-text-muted)">Predictive intelligence for your portfolio</p>
+        <div className="flex rounded-[10px] border border-(--dp-border) p-0.5">
+          <button
+            onClick={onBack}
+            className="px-4 py-1.5 text-[13px] font-semibold rounded-[8px] text-(--dp-text-muted) hover:text-(--dp-text) transition-all"
+          >
+            Dashboard
+          </button>
+          <button className="px-4 py-1.5 text-[13px] font-semibold rounded-[8px] bg-(--dp-accent-soft) text-(--dp-accent-text) flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5" />
+            Ask Lens
+          </button>
+        </div>
+      </div>
+
+      {empty ? (
+        /* ── Home state: greeting + centered composer + suggestions ── */
+        <div className="flex-1 flex items-center justify-center px-4">
+          <div className="w-full max-w-[720px] -mt-10">
+            <div className="text-center mb-8">
+              <div className="mx-auto w-12 h-12 rounded-[14px] bg-(--dp-accent-soft) border border-(--dp-border) flex items-center justify-center mb-5">
+                <Sparkles className="w-6 h-6 text-(--dp-accent-text)" />
+              </div>
+              <h2 className="text-[30px] font-bold text-(--dp-text) tracking-[-0.02em]">
+                What can Lens find for you?
+              </h2>
+              <p className="mt-2 text-[14px] text-(--dp-text-muted)">
+                Ask about deals, merchants, agents, or projections — in plain language.
+              </p>
             </div>
-            <h2 className="text-xl font-bold text-gray-900 mb-2">Ask Lens anything</h2>
-            <p className="text-sm text-gray-500 mb-8">
-              Query your portfolio data using natural language. Lens analyzes deals, merchants, agents, and financial projections in real time.
-            </p>
-            <div className="w-full space-y-2.5">
+
+            <Composer chatInput={chatInput} setChatInput={setChatInput} handleSend={() => handleSend()} autoFocus />
+
+            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               {suggestedPrompts.map((prompt, i) => {
                 const Icon = prompt.icon;
                 return (
                   <button
                     key={i}
                     onClick={() => handleSend(prompt.text)}
-                    className="w-full flex items-center gap-3 px-4 py-3.5 bg-white border border-gray-200 rounded-[8px] text-left hover:border-brand/30 hover:bg-indigo-50/30 transition-all group"
+                    className="flex items-center gap-2.5 px-4 py-3 rounded-[14px] border border-(--dp-border) text-left text-[13px] text-(--dp-text-secondary) hover:border-(--dp-border-strong) hover:bg-white/[0.03] transition-colors"
                   >
-                    <div className="w-8 h-8 bg-indigo-50 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-indigo-100 transition-colors">
-                      <Icon className="w-4 h-4 text-brand" />
-                    </div>
-                    <span className="text-sm text-gray-700 group-hover:text-gray-900">{prompt.text}</span>
-                    <ArrowRight className="w-4 h-4 text-gray-300 ml-auto group-hover:text-brand transition-colors" />
+                    <Icon className="w-4 h-4 shrink-0 text-(--dp-accent-text)" />
+                    {prompt.text}
                   </button>
                 );
               })}
             </div>
+
+            <p className="mt-6 text-center text-[11px] text-(--dp-text-faint)">
+              Lens analyzes your live portfolio data. Responses are generated insights, not financial advice.
+            </p>
           </div>
-        ) : (
-          /* Chat Messages */
-          <div className="max-w-3xl mx-auto space-y-6 py-2">
-            {messages.map((msg, i) => (
-              <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                {msg.role === 'user' ? (
-                  <div className="max-w-md px-4 py-3 bg-brand text-white rounded-2xl rounded-br-md text-sm">
-                    {msg.content}
-                  </div>
-                ) : (
-                  <div className="max-w-2xl">
-                    <div className="flex items-start gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0 mt-1">
-                        <Brain className="w-4 h-4 text-brand" />
-                      </div>
-                      <div className="bg-white border border-gray-200 rounded-2xl rounded-tl-md px-5 py-4">
-                        {/* Markdown-ish render */}
-                        <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
-                          {msg.content.split('**').map((part, j) =>
-                            j % 2 === 1 ? (
-                              <span key={j} className="font-semibold text-gray-900">{part}</span>
-                            ) : (
-                              <span key={j}>{part}</span>
-                            )
-                          )}
-                        </p>
-                        {msg.table && (
-                          <div className="mt-4 overflow-x-auto rounded-md border border-gray-200">
-                            <table className="w-full text-xs">
-                              <thead>
-                                <tr className="bg-gray-50">
-                                  {msg.table.headers.map((h, j) => (
-                                    <th key={j} className="text-left px-3 py-2 text-gray-500 font-medium">{h}</th>
-                                  ))}
-                                </tr>
-                              </thead>
-                              <tbody className="divide-y divide-gray-100">
-                                {msg.table.rows.map((row, j) => (
-                                  <tr key={j}>
-                                    {row.map((cell, k) => (
-                                      <td key={k} className="px-3 py-2 text-gray-700 whitespace-nowrap">{cell}</td>
-                                    ))}
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
-                        )}
-                        {msg.source && (
-                          <p className="mt-3 pt-3 border-t border-gray-100 text-xs text-gray-400 flex items-center gap-1.5">
-                            <Eye className="w-3 h-3" />
-                            {msg.source}
-                          </p>
-                        )}
-                      </div>
+        </div>
+      ) : (
+        /* ── Conversation state ── */
+        <>
+          <div className="flex-1 overflow-y-auto">
+            <div className="max-w-[760px] mx-auto px-4 py-8 space-y-7">
+              {messages.map((msg, i) =>
+                msg.role === 'user' ? (
+                  <div key={i} className="flex justify-end">
+                    <div className="max-w-[80%] rounded-[18px] rounded-br-[6px] bg-(--dp-bg-raised) border border-(--dp-border) px-4 py-2.5 text-[14px] leading-relaxed text-(--dp-text)">
+                      {msg.content}
                     </div>
                   </div>
-                )}
-              </div>
-            ))}
-            <div ref={chatEndRef} />
-          </div>
-        )}
-      </div>
+                ) : (
+                  <div key={i} className="flex gap-3">
+                    <LensAvatar />
+                    <div className="min-w-0 flex-1 pt-0.5">
+                      <p className="text-[14.5px] leading-[1.7] text-(--dp-text-secondary) whitespace-pre-wrap">
+                        {msg.content.split('**').map((part, j) =>
+                          j % 2 === 1 ? (
+                            <span key={j} className="font-bold text-(--dp-text)">{part}</span>
+                          ) : (
+                            <span key={j}>{part}</span>
+                          )
+                        )}
+                      </p>
+                      {msg.table && (
+                        <div className="mt-4 overflow-x-auto rounded-[12px] border border-(--dp-border)">
+                          <table className="w-full text-[12.5px]">
+                            <thead>
+                              <tr className="border-b border-(--dp-border)">
+                                {msg.table.headers.map((h, j) => (
+                                  <th key={j} className={`px-3.5 py-2.5 ${j === 0 ? 'text-left' : 'text-right'}`}>{h}</th>
+                                ))}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {msg.table.rows.map((row, j) => (
+                                <tr key={j} className={j < msg.table!.rows.length - 1 ? 'border-b border-(--dp-border)' : ''}>
+                                  {row.map((cell, k) => (
+                                    <td
+                                      key={k}
+                                      className={`px-3.5 py-2.5 whitespace-nowrap tabular-nums ${
+                                        k === 0 ? 'text-left font-semibold text-(--dp-text)' : 'text-right text-(--dp-text-secondary)'
+                                      }`}
+                                    >
+                                      {cell}
+                                    </td>
+                                  ))}
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                      {msg.source && (
+                        <p className="mt-3 text-[11.5px] text-(--dp-text-faint) flex items-center gap-1.5">
+                          <Eye className="w-3 h-3" />
+                          {msg.source}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )
+              )}
 
-      {/* Input Bar */}
-      <div className="border-t border-gray-200 bg-white rounded-b-[8px] px-5 py-4 mt-4">
-        <div className="max-w-3xl mx-auto">
-          <div className="flex items-center gap-3">
-            <div className="flex-1 relative">
-              <input
-                type="text"
-                value={chatInput}
-                onChange={(e) => setChatInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                placeholder="Ask Lens about your portfolio..."
-                className="w-full pl-4 pr-12 py-3 bg-gray-50 border border-gray-200 rounded-[8px] text-sm focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand focus:bg-white transition-colors"
-              />
-              <button
-                onClick={() => handleSend()}
-                disabled={!chatInput.trim()}
-                className={`absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-[6px] flex items-center justify-center transition-all ${
-                  chatInput.trim() ? 'bg-brand hover:bg-brand-hover' : 'bg-gray-200'
-                }`}
-              >
-                <Send className="w-4 h-4 text-white" />
-              </button>
+              {thinking && (
+                <div className="flex gap-3 items-center">
+                  <LensAvatar />
+                  <div className="flex items-center gap-1 pt-0.5">
+                    {[0, 1, 2].map(d => (
+                      <span
+                        key={d}
+                        className="w-1.5 h-1.5 rounded-full bg-(--dp-text-faint) animate-bounce"
+                        style={{ animationDelay: `${d * 150}ms` }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div ref={chatEndRef} />
             </div>
           </div>
-          <p className="text-[11px] text-gray-400 mt-2 text-center">Lens AI analyzes your live portfolio data. Responses are generated insights, not financial advice.</p>
-        </div>
-      </div>
+
+          {/* Pinned composer */}
+          <div className="shrink-0 px-4 pb-5">
+            <div className="max-w-[760px] mx-auto">
+              <Composer chatInput={chatInput} setChatInput={setChatInput} handleSend={() => handleSend()} />
+              <p className="mt-2 text-center text-[11px] text-(--dp-text-faint)">
+                Lens analyzes your live portfolio data. Responses are generated insights, not financial advice.
+              </p>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

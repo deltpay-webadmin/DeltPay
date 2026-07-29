@@ -2537,7 +2537,7 @@ export function DealDetails({ deal, onBack, onUpdate }: DealDetailsProps) {
                                 cx="75"
                                 cy="75"
                                 r={radius}
-                                stroke="#10b981"
+                                stroke="#34C77B"
                                 strokeWidth="10"
                                 fill="none"
                                 strokeDasharray={circumference}

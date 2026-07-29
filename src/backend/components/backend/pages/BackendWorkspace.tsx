@@ -183,7 +183,6 @@ export function BackendWorkspace() {
             <Inbox className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Workspace</h1>
             <p className="text-sm text-gray-500">Inbox, activity, and tasks — all in one place</p>
           </div>
         </div>
@@ -205,21 +204,22 @@ export function BackendWorkspace() {
       </div>
 
       {/* Panel Tabs */}
-      <div className="flex items-center gap-1 bg-gray-100 rounded-[8px] p-1 w-fit mb-4">
+      <div className="flex items-center gap-6 border-b border-gray-200 mb-4">
         {([
           { key: 'inbox' as const, label: 'Inbox', icon: Mail, badge: unreadCount > 0 ? unreadCount : undefined },
           { key: 'activity' as const, label: 'Activity', icon: Activity, badge: undefined },
           { key: 'tasks' as const, label: 'Tasks', icon: CheckSquare, badge: overdueCount > 0 ? overdueCount : undefined },
         ]).map(tab => {
           const Icon = tab.icon;
+          const active = activePanel === tab.key;
           return (
             <button key={tab.key} onClick={() => setActivePanel(tab.key)}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-[6px] text-xs font-medium transition-all ${
-                activePanel === tab.key ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'
+              className={`flex items-center gap-1.5 px-1 pb-3 -mb-px text-[13px] font-semibold border-b-2 transition-colors ${
+                active ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}>
               <Icon className="w-3.5 h-3.5" />
               {tab.label}
-              {tab.badge && <span className="ml-1 px-1.5 py-0.5 bg-red-100 text-red-700 text-[9px] font-bold rounded-full">{tab.badge}</span>}
+              {tab.badge && <span className="ml-0.5 px-1.5 py-0.5 bg-red-100 text-red-700 text-[9px] font-bold rounded-full">{tab.badge}</span>}
             </button>
           );
         })}

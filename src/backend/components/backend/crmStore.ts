@@ -273,11 +273,11 @@ export interface OnboardingApp {
 
 // ── Underwriting ──
 export type UWStage =
-  | 'Received'
-  | 'Doc Collection'
-  | 'Bank Review'
-  | 'Credit Analysis'
-  | 'Committee'
+  | 'Intake'
+  | 'Plaid Verification'
+  | 'Credit Check'
+  | 'MCA History'
+  | 'Final Review'
   | 'Approved'
   | 'Declined';
 
@@ -616,21 +616,21 @@ function toDbOnb(o: Partial<OnboardingApp>): Record<string, any> {
 type UWDbStage = 'intake' | 'plaid' | 'crs' | 'datamerch' | 'review' | 'approved' | 'declined' | 'funded';
 
 const UW_STAGE_TO_DB: Record<UWStage, UWDbStage> = {
-  Received: 'intake',
-  'Doc Collection': 'plaid',
-  'Bank Review': 'crs',
-  'Credit Analysis': 'datamerch',
-  Committee: 'review',
+  Intake: 'intake',
+  'Plaid Verification': 'plaid',
+  'Credit Check': 'crs',
+  'MCA History': 'datamerch',
+  'Final Review': 'review',
   Approved: 'approved',
   Declined: 'declined',
 };
 
 const UW_DB_TO_STAGE: Record<UWDbStage, UWStage> = {
-  intake: 'Received',
-  plaid: 'Doc Collection',
-  crs: 'Bank Review',
-  datamerch: 'Credit Analysis',
-  review: 'Committee',
+  intake: 'Intake',
+  plaid: 'Plaid Verification',
+  crs: 'Credit Check',
+  datamerch: 'MCA History',
+  review: 'Final Review',
   approved: 'Approved',
   funded: 'Approved',
   declined: 'Declined',
@@ -660,7 +660,7 @@ function fromDbUw(r: any): UWApplication {
       .slice(0, 2)
       .toUpperCase(),
     riskScore: composite ?? 0,
-    stage: UW_DB_TO_STAGE[(r.stage as UWDbStage)] ?? 'Received',
+    stage: UW_DB_TO_STAGE[(r.stage as UWDbStage)] ?? 'Intake',
     daysInStage: 0,
     slaThreshold: 2,
     disclosureState: undefined,
@@ -1517,7 +1517,7 @@ export const underwritingActions = {
       reviewer: partial.reviewer || '',
       reviewerInitials: '',
       riskScore: 0,
-      stage: 'Received',
+      stage: 'Intake',
       daysInStage: 0,
       slaThreshold: 2,
       source: partial.source || 'Manual',

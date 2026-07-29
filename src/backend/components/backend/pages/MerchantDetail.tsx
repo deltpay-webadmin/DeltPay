@@ -24,7 +24,7 @@ function StatCard({ label, value, trend, subtitle }: { label: string; value: str
 
 function HealthScoreCard({ score }: { score: number }) {
   const getColor = (s: number) => s >= 80 ? 'text-emerald-600' : s >= 60 ? 'text-amber-600' : 'text-red-600';
-  const getStroke = (s: number) => s >= 80 ? '#10B981' : s >= 60 ? '#F59E0B' : '#EF4444';
+  const getStroke = (s: number) => s >= 80 ? '#34C77B' : s >= 60 ? '#F0B429' : '#F2565B';
   const c = 2 * Math.PI * 36;
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-5">

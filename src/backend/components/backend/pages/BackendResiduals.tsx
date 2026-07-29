@@ -154,7 +154,6 @@ export function BackendResiduals() {
         {/* ── Header ── */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Residual Reports</h1>
             <p className="text-sm text-gray-500 mt-0.5">Upload processor residual reports and distribute agent commissions.</p>
           </div>
           <button
@@ -511,7 +510,6 @@ export function AgentResiduals() {
       <div className="max-w-[1200px] mx-auto px-6 py-6 space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">My Residuals</h1>
           <p className="text-sm text-gray-500 mt-0.5">Your residual income from merchant processing portfolios.</p>
         </div>
 

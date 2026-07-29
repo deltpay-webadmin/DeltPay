@@ -146,7 +146,7 @@ function verifyLine(line: InterchangeRow, avgTicket: number): Verification {
 }
 
 const statusIcon = (s: string) => s === 'verified' || s === 'acceptable' ? '✓' : s === 'review' ? '?' : s === 'flag' ? '⚑' : s === 'alert' ? '✕' : '—';
-const statusColor = (s: string) => s === 'verified' || s === 'acceptable' ? '#22c55e' : s === 'review' ? '#f59e0b' : s === 'flag' ? '#f97316' : s === 'alert' ? '#ef4444' : '#6b7280';
+const statusColor = (s: string) => s === 'verified' || s === 'acceptable' ? '#34C77B' : s === 'review' ? '#F0B429' : s === 'flag' ? '#F59849' : s === 'alert' ? '#F2565B' : '#6b7280';
 
 const FEE_SCHEDULE: FeeItem[] = [
   { fee: 'Monthly Minimum', amount: 25.00, type: 'fixed' },
@@ -618,7 +618,7 @@ export function MerchantResidualDetail() {
                                 <td className="px-3 py-2.5 text-sm tabular-nums text-gray-400">{v.publishedRate.toFixed(2)}% + ${v.publishedTxnFee.toFixed(2)}</td>
                               )}
                               {verifyMode && (
-                                <td className="px-3 py-2.5 text-sm tabular-nums font-semibold" style={{ color: v.diffBps > 5 ? '#ef4444' : v.diffBps > 0 ? '#f59e0b' : '#22c55e' }}>
+                                <td className="px-3 py-2.5 text-sm tabular-nums font-semibold" style={{ color: v.diffBps > 5 ? '#F2565B' : v.diffBps > 0 ? '#F0B429' : '#34C77B' }}>
                                   {v.diffBps > 0 ? '+' : ''}{v.diffBps} bps
                                 </td>
                               )}
@@ -649,15 +649,15 @@ export function MerchantResidualDetail() {
                                         <div className="space-y-1.5 text-xs">
                                           <div className="flex justify-between">
                                             <span className="text-gray-600">Rate padding:</span>
-                                            <span className="font-mono font-semibold" style={{ color: v.ratePadding > 0 ? '#ef4444' : '#22c55e' }}>${v.ratePadding.toFixed(2)}/mo</span>
+                                            <span className="font-mono font-semibold" style={{ color: v.ratePadding > 0 ? '#F2565B' : '#34C77B' }}>${v.ratePadding.toFixed(2)}/mo</span>
                                           </div>
                                           <div className="flex justify-between">
                                             <span className="text-gray-600">Txn fee padding:</span>
-                                            <span className="font-mono font-semibold" style={{ color: v.txnPadding > 0 ? '#ef4444' : '#22c55e' }}>${v.txnPadding.toFixed(2)}/mo</span>
+                                            <span className="font-mono font-semibold" style={{ color: v.txnPadding > 0 ? '#F2565B' : '#34C77B' }}>${v.txnPadding.toFixed(2)}/mo</span>
                                           </div>
                                           <div className="flex justify-between pt-1.5 border-t border-gray-200 font-semibold">
                                             <span className="text-gray-700">Annual impact:</span>
-                                            <span className="font-mono" style={{ color: v.annualImpact > 0 ? '#ef4444' : '#22c55e' }}>${v.annualImpact.toFixed(0)}/yr</span>
+                                            <span className="font-mono" style={{ color: v.annualImpact > 0 ? '#F2565B' : '#34C77B' }}>${v.annualImpact.toFixed(0)}/yr</span>
                                           </div>
                                         </div>
                                       </div>
@@ -684,7 +684,7 @@ export function MerchantResidualDetail() {
                         <td className="px-3 py-2.5" />
                         {verifyMode && <td className="px-3 py-2.5" />}
                         {verifyMode && (
-                          <td className="px-3 py-2.5 text-sm tabular-nums font-bold" style={{ color: totalPadding > 0 ? '#ef4444' : '#22c55e' }}>
+                          <td className="px-3 py-2.5 text-sm tabular-nums font-bold" style={{ color: totalPadding > 0 ? '#F2565B' : '#34C77B' }}>
                             {totalPadding > 0 ? `$${totalPadding.toFixed(2)}/mo` : 'Clean'}
                           </td>
                         )}

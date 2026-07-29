@@ -261,7 +261,7 @@ export function NewMerchantFlow({ open, onClose, onCreated }: NewMerchantFlowPro
                 label="Internal notes"
                 value={form.notes}
                 onChange={v => update('notes', v)}
-                placeholder="Anything your team should know\u2026"
+                placeholder="Anything your team should know…"
                 optional
               />
             </div>

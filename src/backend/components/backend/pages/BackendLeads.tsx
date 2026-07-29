@@ -1342,7 +1342,6 @@ export function BackendLeads({ openImport = false }: { openImport?: boolean } = 
       <div className="bg-white border-b border-gray-200 px-6 py-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Sales Leads</h1>
             <p className="text-sm text-gray-600 mt-1">{totalLeads} total leads in pipeline</p>
           </div>
           <div className="flex items-center gap-2">

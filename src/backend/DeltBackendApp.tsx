@@ -14,7 +14,7 @@ import { DeltBackendLayout } from './components/backend/DeltBackendLayout';
 export default function DeltBackendApp() {
   return (
     <>
-      <Toaster position="top-right" richColors />
+      <Toaster position="top-right" richColors theme="dark" />
       <DeltBackendLayout />
     </>
   );

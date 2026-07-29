@@ -123,7 +123,6 @@ export function BackendReports() {
             <BarChart3 className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Reports & Export Center</h1>
             <p className="text-sm text-gray-500">{REPORTS.length} reports &middot; {REPORTS.filter(r => r.schedule).length} scheduled</p>
           </div>
         </div>

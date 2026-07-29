@@ -116,7 +116,7 @@ const isoTenants: ISOTenant[] = [
   },
   {
     id: 'ISO-003', name: 'Pinnacle Merchant Solutions', tier: 'Standard', monthlyFee: 499, residualOverride: 1100, mcaCommission: 2200, lensAIFees: 180, totalRevenue: 3979, agents: 3, merchants: 12, status: 'Trial', onboardDate: 'Mar 2026',
-    logo: 'PM', primaryColor: '#6B21A8', secondaryColor: '#A855F7', customDomain: '—',
+    logo: 'PM', primaryColor: '#6B21A8', secondaryColor: '#7C5BFF', customDomain: '—',
     contactName: 'Derek Williams', contactEmail: 'derek@pinnaclemso.com', contactPhone: '(404) 555-0267',
     usageData: [
       { month: 'Nov', saas: 0, residual: 0, mca: 0, lens: 0 },
@@ -129,7 +129,7 @@ const isoTenants: ISOTenant[] = [
   },
   {
     id: 'ISO-004', name: 'Trident Financial Group', tier: 'Professional', monthlyFee: 999, residualOverride: 4100, mcaCommission: 6800, lensAIFees: 920, totalRevenue: 12819, agents: 8, merchants: 47, status: 'Active', onboardDate: 'Nov 2024',
-    logo: 'TF', primaryColor: '#B91C1C', secondaryColor: '#F87171', customDomain: 'dash.tridentfg.com',
+    logo: 'TF', primaryColor: '#B91C1C', secondaryColor: '#F87F83', customDomain: 'dash.tridentfg.com',
     contactName: 'Angela Morrison', contactEmail: 'angela@tridentfg.com', contactPhone: '(713) 555-0331',
     usageData: [
       { month: 'Nov', saas: 999, residual: 2800, mca: 4600, lens: 560 },
@@ -237,7 +237,6 @@ export function BackendSubscriptions() {
         <>
           {/* Header */}
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Merchant Subscriptions</h1>
             <p className="text-sm text-gray-500 mt-1">Track plan tiers, billing, and upgrades across all merchants.</p>
           </div>
 

@@ -12,6 +12,8 @@ import {
   ShieldAlert,
   FileText,
   Printer,
+  RefreshCw,
+  Link2,
 } from 'lucide-react';
 import { useAppNavigate } from '../NavigationContext';
 import { useUnderwriting, underwritingActions, type UWApplication, type UWStage } from '../crmStore';
@@ -107,6 +109,46 @@ function BoolField({ label, value, onChange }: { label: string; value: boolean; 
       >
         <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform ${value ? 'translate-x-4' : ''}`} />
       </button>
+    </div>
+  );
+}
+
+function VendorField({ label, value, good }: { label: string; value: React.ReactNode; good?: boolean }) {
+  return (
+    <div>
+      <p className="text-[11px] text-gray-400">{label}</p>
+      <p className={`text-sm font-semibold mt-0.5 tabular-nums ${good ? 'text-emerald-700' : 'text-gray-900'}`}>{value}</p>
+    </div>
+  );
+}
+
+function VendorCard({
+  title, meta, lastPulled, onPull, children,
+}: { title: string; meta: string; lastPulled: string; onPull: () => void; children?: React.ReactNode }) {
+  return (
+    <div className="bg-white border border-gray-200 rounded-[8px]">
+      <div className="px-4 py-3 flex items-center justify-between border-b border-gray-100">
+        <div className="flex items-center gap-2.5">
+          <span className="text-sm font-bold text-gray-900">{title}</span>
+          <span className="inline-flex items-center gap-1.5 rounded-[8px] px-2 py-0.5 text-[10px] font-bold bg-emerald-50 text-emerald-700">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+            Connected
+          </span>
+        </div>
+        <button
+          onClick={onPull}
+          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-[8px] text-[11px] font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 transition-colors"
+        >
+          <RefreshCw className="w-3 h-3" />
+          Pull data
+        </button>
+      </div>
+      <div className="px-4 py-3">
+        {children}
+        <p className={`text-[11px] text-gray-400 ${children ? 'mt-3 pt-3 border-t border-gray-100' : ''}`}>
+          {meta} · Last pulled {lastPulled}
+        </p>
+      </div>
     </div>
   );
 }
@@ -257,8 +299,8 @@ export function UnderwritingDetail() {
   const moveToReview = () => {
     if (!app) return;
     saveDraft(true);
-    underwritingActions.setStage(app.id, 'Committee');
-    toast.success('Moved to Review');
+    underwritingActions.setStage(app.id, 'Final Review');
+    toast.success('Moved to Final Review');
   };
 
   const confirmApprove = async () => {
@@ -298,7 +340,7 @@ export function UnderwritingDetail() {
   const stageDone = app.stage === 'Approved' || app.stage === 'Declined';
 
   return (
-    <div className="h-full overflow-y-auto bg-gray-50">
+    <div className="h-full overflow-y-auto bg-canvas">
       <div className="max-w-[1440px] mx-auto px-6 py-5 pb-28">
         {/* Header */}
         <div className="flex items-center justify-between mb-5">
@@ -325,6 +367,55 @@ export function UnderwritingDetail() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
           {/* ── LEFT: Inputs ── */}
           <div className="lg:col-span-7 space-y-4">
+            {/* Data sources — underwriting runs in-house off these connections */}
+            <div>
+              <div className="flex items-center gap-2 px-1 pb-2">
+                <Link2 className="w-3.5 h-3.5 text-gray-400" />
+                <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-gray-500">Data sources</span>
+              </div>
+              <div className="space-y-3">
+                <VendorCard
+                  title="Plaid"
+                  meta="Bank verification, cash flow, identity"
+                  lastPulled="Apr 9, 2026 at 10:23 AM"
+                  onPull={() => { saveDraft(true); toast.success('Plaid data refreshed', { description: 'Cash flow inputs updated from the linked account.' }); }}
+                >
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-3">
+                    <VendorField label="Bank verification" good value={<span className="inline-flex items-center gap-1"><Check className="w-3.5 h-3.5" />Verified</span>} />
+                    <VendorField label="IDV status" good value={<span className="inline-flex items-center gap-1"><Check className="w-3.5 h-3.5" />Verified</span>} />
+                    <VendorField label="OFAC screening" good value={<span className="inline-flex items-center gap-1"><Check className="w-3.5 h-3.5" />Clear</span>} />
+                    <VendorField label="3-mo avg revenue" value={fmt$(plaid.monthlyRevenue || 0)} />
+                    <VendorField label="NSF count (90d)" good={plaid.nsfCount90d === 0} value={plaid.nsfCount90d} />
+                    <VendorField label="Avg daily balance" value={fmt$(plaid.avgDailyBalance || 0)} />
+                  </div>
+                </VendorCard>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <VendorCard
+                    title="CRS Credit"
+                    meta="Personal + business credit"
+                    lastPulled="Apr 9, 2026"
+                    onPull={() => toast.success('CRS credit data refreshed')}
+                  >
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                      <VendorField label="Personal FICO" value={crs.fico} />
+                      <VendorField label="Derogatory marks" good={crs.derogatoryMarks === 0} value={crs.derogatoryMarks} />
+                    </div>
+                  </VendorCard>
+                  <VendorCard
+                    title="DataMerch"
+                    meta="MCA industry database"
+                    lastPulled="Apr 9, 2026"
+                    onPull={() => toast.success('DataMerch data refreshed')}
+                  >
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                      <VendorField label="Open positions" good={dm.currentOpenPositions === 0} value={dm.currentOpenPositions} />
+                      <VendorField label="Prior defaults" good={dm.priorDefaults === 0} value={dm.priorDefaults} />
+                    </div>
+                  </VendorCard>
+                </div>
+              </div>
+            </div>
+
             <Section
               title="Plaid Cash Flow Inputs"
               open={openPlaid}
@@ -425,20 +516,17 @@ export function UnderwritingDetail() {
             <div className="lg:sticky lg:top-4 space-y-4">
               {/* Composite + tier */}
               <div className="bg-white border border-gray-200 rounded-[8px] p-5">
-                <div className="flex items-center gap-4">
-                  <div className={`w-20 h-20 rounded-full ring-4 ${ts.ring} flex flex-col items-center justify-center`}>
-                    <span className="text-2xl font-bold text-gray-900 tabular-nums">{result.composite}</span>
-                    <span className="text-[9px] text-gray-400 uppercase">/ 100</span>
-                  </div>
-                  <div>
-                    <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-bold text-white ${ts.bg}`}>{tierLabel}</span>
-                    <p className="text-xs text-gray-500 mt-1.5">{result.terms.label}</p>
-                  </div>
+                <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-gray-500">Composite score</p>
+                <div className="mt-2 flex flex-wrap items-baseline gap-3">
+                  <span className="text-[44px] leading-none font-bold text-gray-900 tabular-nums tracking-[-0.02em]">{result.composite}</span>
+                  <span className="text-sm text-gray-400 tabular-nums">/ 100</span>
+                  <span className={`inline-block px-2.5 py-1 rounded-[8px] text-xs font-bold text-white ${ts.bg}`}>{tierLabel}</span>
                 </div>
+                <p className="text-xs text-gray-500 mt-2">{result.terms.label}</p>
                 <div className="mt-5 space-y-3">
-                  <ScoreBar label="Plaid Cash Flow" raw={result.p.total} weightPct={WEIGHTS.plaid * 100} color="bg-indigo-500" />
-                  <ScoreBar label="CRS Credit" raw={result.c.total} weightPct={WEIGHTS.crs * 100} color="bg-violet-500" />
-                  <ScoreBar label="DataMerch MCA" raw={result.d.total} weightPct={WEIGHTS.dataMerch * 100} color="bg-cyan-500" />
+                  <ScoreBar label="Plaid Cash Flow" raw={result.p.total} weightPct={WEIGHTS.plaid * 100} color="bg-[#2E6BFF]" />
+                  <ScoreBar label="CRS Credit" raw={result.c.total} weightPct={WEIGHTS.crs * 100} color="bg-[#7C5BFF]" />
+                  <ScoreBar label="DataMerch MCA" raw={result.d.total} weightPct={WEIGHTS.dataMerch * 100} color="bg-[#3CC9E3]" />
                 </div>
               </div>
 
@@ -544,16 +632,16 @@ export function UnderwritingDetail() {
             Composite <strong className="text-gray-900">{result.composite}</strong> · <span className={ts.text}>{tierLabel}</span>
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={() => saveDraft()} className="px-3 py-2 text-sm font-medium text-gray-600 border border-gray-200 rounded-[6px] hover:bg-gray-50">
+            <button onClick={() => saveDraft()} className="h-10 px-5 text-sm font-bold text-gray-900 border border-gray-300 rounded-[10px] hover:bg-white/[0.04] transition-colors">
               Save Draft
             </button>
             {!stageDone && (
-              <button onClick={moveToReview} className="px-3 py-2 text-sm font-medium text-indigo-600 border border-indigo-200 rounded-[6px] hover:bg-indigo-50">
-                Move to Review
+              <button onClick={moveToReview} className="h-10 px-5 text-sm font-bold text-indigo-600 border border-indigo-200 rounded-[10px] hover:bg-indigo-50 transition-colors">
+                Move to Final Review
               </button>
             )}
             {!stageDone && (
-              <button onClick={() => setDeclineOpen(true)} className="px-3 py-2 text-sm font-medium text-red-600 border border-red-200 rounded-[6px] hover:bg-red-50">
+              <button onClick={() => setDeclineOpen(true)} className="h-10 px-5 text-sm font-bold text-red-500 border border-red-200 rounded-[10px] hover:bg-red-50 transition-colors">
                 Decline
               </button>
             )}
@@ -562,7 +650,7 @@ export function UnderwritingDetail() {
                 onClick={() => setApproveOpen(true)}
                 disabled={!canApprove}
                 title={canApprove ? '' : 'Requires Tier ≤ 3, no disqualifiers, passing stress test'}
-                className="px-4 py-2 text-sm font-semibold text-white bg-emerald-600 rounded-[6px] hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5"
+                className="h-10 px-5 text-sm font-bold text-white bg-emerald-600 rounded-[10px] hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5 transition-colors"
               >
                 <Check className="w-4 h-4" /> Approve &amp; Fund
               </button>

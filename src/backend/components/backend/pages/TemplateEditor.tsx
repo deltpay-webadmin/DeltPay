@@ -64,8 +64,8 @@ const mergeTags = [
 
 // Color presets for email design
 const colorPresets = [
-  { name: 'Indigo', primary: '#4318FF', bg: '#F8F9FF' },
-  { name: 'Emerald', primary: '#059669', bg: '#F0FDF4' },
+  { name: 'Indigo', primary: '#2E6BFF', bg: '#F8F9FF' },
+  { name: 'Emerald', primary: '#2BB56D', bg: '#F0FDF4' },
   { name: 'Slate', primary: '#334155', bg: '#F8FAFC' },
   { name: 'Rose', primary: '#E11D48', bg: '#FFF1F2' },
   { name: 'Amber', primary: '#D97706', bg: '#FFFBEB' },
