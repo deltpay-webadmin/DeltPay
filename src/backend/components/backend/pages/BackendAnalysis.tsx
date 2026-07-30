@@ -103,12 +103,13 @@ const pctf = (n: number, d = 2) => `${n.toFixed(d)}%`;
 // Statement Intelligence walks the analysis in its natural order:
 // what you pay (breakdown) → what's wrong (issues/fat) → what to do
 // (suggestions) → how we know (modeling).
-type IntelTabKey = 'breakdown' | 'issues' | 'suggestions' | 'modeling';
-const INTEL_TABS: { key: IntelTabKey; label: string; icon: React.ElementType }[] = [
+type IntelTabKey = 'breakdown' | 'issues' | 'suggestions' | 'modeling' | 'economics';
+const INTEL_TABS: { key: IntelTabKey; label: string; icon: React.ElementType; internal?: boolean }[] = [
   { key: 'breakdown', label: 'Breakdown', icon: FileText },
   { key: 'issues', label: 'Issues & Fat', icon: Flame },
   { key: 'suggestions', label: 'Suggestions', icon: Lightbulb },
   { key: 'modeling', label: 'Modeling', icon: BarChart3 },
+  { key: 'economics', label: 'Deal Economics', icon: DollarSign, internal: true },
 ];
 
 // ══════════════════════════════════════
@@ -550,6 +551,9 @@ export function BackendAnalysis() {
                           >
                             <t.icon className="w-3.5 h-3.5" />
                             {t.label}
+                            {t.internal && (
+                              <span className="px-1.5 py-px rounded-full bg-gray-200 text-gray-500 text-[10px] font-semibold">Internal</span>
+                            )}
                           </button>
                         ))}
                       </div>
@@ -559,6 +563,7 @@ export function BackendAnalysis() {
                       {intelTab === 'issues' && <IntelIssues extracted={extracted} intel={intel} />}
                       {intelTab === 'suggestions' && <IntelSuggestions intel={intel} />}
                       {intelTab === 'modeling' && <IntelModeling extracted={extracted} proposal={proposal} intel={intel} />}
+                      {intelTab === 'economics' && <IntelEconomics intel={intel} />}
                     </div>
                   </div>
                 )}
@@ -740,9 +745,11 @@ function IntelIssues({ extracted, intel }: { extracted: ExtractedData; intel: Pr
           sub="Non-qualified billbacks recoverable via clean qualification"
         />
         <FatCard
-          label="Junk fees"
+          label="Incumbent's pure-profit fees"
           value={`${fmt(intel.junkFeesMonthly)}/mo`}
-          sub={intel.junkFeeLabels.length ? intel.junkFeeLabels.join(' · ') : 'None detected'}
+          sub={intel.junkFeeLabels.length
+            ? `${intel.junkFeeLabels.join(' · ')} — their margin, our wedge in the pitch`
+            : 'None detected'}
         />
       </div>
 
@@ -936,6 +943,94 @@ function IntelModeling({ extracted, proposal, intel }: { extracted: ExtractedDat
           {intel.assumptions.map(a => <li key={a}>{a}</li>)}
         </ul>
       </details>
+    </div>
+  );
+}
+
+/** 5 — Deal Economics (internal): the value-pool split and the profit/retention balance. */
+function IntelEconomics({ intel }: { intel: ProcessingIntelligence }) {
+  const eco = intel.economics;
+  const riskTone = (r: 'Low' | 'Moderate' | 'High') =>
+    r === 'Low' ? 'bg-emerald-50 text-emerald-700' : r === 'Moderate' ? 'bg-amber-50 text-amber-700' : 'bg-red-50 text-red-600';
+  return (
+    <div className="space-y-5">
+      <p className="text-xs text-gray-400 flex items-center gap-1.5">
+        <ShieldAlert className="w-3.5 h-3.5" />
+        Internal view — deal profitability and retention balance. Never included in the merchant proposal.
+      </p>
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="border border-gray-200 bg-gray-50 rounded-[6px] px-4 py-3">
+          <p className="text-[11px] text-gray-500 font-medium">Value pool (spread above wholesale floor)</p>
+          <p className="text-sm font-bold text-gray-900 mt-0.5 tabular-nums">{fmt(eco.valuePoolMonthly)}/mo</p>
+          <p className="text-[11px] text-gray-500 mt-1">Everything the incumbent charges above true cost — the pot being split</p>
+        </div>
+        <div className="border border-emerald-200 bg-emerald-50/60 rounded-[6px] px-4 py-3">
+          <p className="text-[11px] text-gray-500 font-medium">Delt share (our margin)</p>
+          <p className="text-sm font-bold text-emerald-700 mt-0.5 tabular-nums">
+            {fmt(eco.deltShareMonthly)}/mo · {pctf(eco.deltSharePct, 0)}
+          </p>
+          <p className="text-[11px] text-gray-500 mt-1">{fmtWhole(eco.deltAnnualRevenue)}/yr recurring revenue on this account</p>
+        </div>
+        <div className="border border-blue-200 bg-blue-50/60 rounded-[6px] px-4 py-3">
+          <p className="text-[11px] text-gray-500 font-medium">Merchant share (delivered savings)</p>
+          <p className="text-sm font-bold text-blue-700 mt-0.5 tabular-nums">
+            {fmt(eco.merchantShareMonthly)}/mo · {pctf(eco.merchantSharePct, 0)}
+          </p>
+          <p className="text-[11px] text-gray-500 mt-1">The retention moat — what keeps the next audit from flipping them</p>
+        </div>
+      </div>
+
+      <div>
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Pricing Scenarios — Profit vs Retention</p>
+        <div className="border border-gray-200 rounded-[6px] overflow-x-auto">
+          <table className="w-full min-w-[760px]">
+            <thead>
+              <tr className="bg-gray-50">
+                <th className={intelTh}>Scenario</th>
+                <th className={intelThRight}>Merchant rate</th>
+                <th className={intelThRight}>Savings</th>
+                <th className={intelThRight}>Delt margin</th>
+                <th className={intelTh}>Churn risk</th>
+                <th className={intelThRight}>Est. life</th>
+                <th className={intelThRight}>Lifetime value</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {eco.scenarios.map(s => (
+                <tr key={s.name} className={s.isRecommended ? 'bg-emerald-50/50' : ''}>
+                  <td className="px-3 py-2 text-sm text-gray-900 whitespace-nowrap">
+                    <span className={s.isRecommended || s.isCurrent ? 'font-semibold' : ''}>{s.name}</span>
+                    {s.isCurrent && <span className="ml-2 px-1.5 py-px rounded-full bg-brand/10 text-brand text-[10px] font-semibold">Current</span>}
+                    {s.isRecommended && <span className="ml-2 px-1.5 py-px rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-semibold">LTV-optimal</span>}
+                  </td>
+                  <td className="px-3 py-2 text-sm text-gray-700 text-right tabular-nums">{pctf(s.effectiveRatePct)}</td>
+                  <td className="px-3 py-2 text-sm text-gray-700 text-right tabular-nums">{pctf(s.merchantSavingsPct, 1)}</td>
+                  <td className="px-3 py-2 text-sm text-gray-900 text-right font-medium tabular-nums whitespace-nowrap">
+                    {fmt(s.deltMarginMonthly)}/mo <span className="text-gray-400 font-normal">({s.deltMarginBps.toFixed(0)} bps)</span>
+                  </td>
+                  <td className="px-3 py-2">
+                    <span className={`inline-block px-2 py-0.5 rounded-full text-[11px] font-medium ${riskTone(s.churnRisk)}`}>{s.churnRisk}</span>
+                  </td>
+                  <td className="px-3 py-2 text-sm text-gray-500 text-right tabular-nums">{s.expectedLifeMonths} mo</td>
+                  <td className="px-3 py-2 text-sm font-semibold text-right tabular-nums text-gray-900">{fmtWhole(s.lifetimeValue)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+        <div className="bg-gray-50 border border-gray-200 rounded-[6px] px-4 py-3">
+          <p className="text-xs font-semibold text-gray-600 mb-1">Retention math</p>
+          <p className="text-xs text-gray-500">{eco.retentionNote}</p>
+        </div>
+        <div className="bg-gray-50 border border-gray-200 rounded-[6px] px-4 py-3">
+          <p className="text-xs font-semibold text-gray-600 mb-1">Where our profit actually lives</p>
+          <p className="text-xs text-gray-500">{eco.passThroughNote}</p>
+        </div>
+      </div>
     </div>
   );
 }
