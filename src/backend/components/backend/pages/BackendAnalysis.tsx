@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { useAppNavigate } from '../NavigationContext';
 import { BackendCostCalculator } from './BackendCostCalculator';
+import { generateProposalPdf } from '../proposalPdf';
 
 // ── Types ──
 type AnalysisStatus = 'idle' | 'uploading' | 'analyzing' | 'done';
@@ -163,6 +164,16 @@ export function BackendAnalysis() {
         setHistory(prev => [newEntry, ...prev]);
       }, 2200);
     }, 800);
+  };
+
+  const handleGenerateProposal = () => {
+    if (!extracted || !proposal) return;
+    generateProposalPdf({
+      merchantName: autoLeadName || 'Merchant',
+      sourceFileName: files[0]?.name || 'statement.pdf',
+      statement: extracted,
+      proposal,
+    });
   };
 
   const reset = () => {
@@ -448,7 +459,10 @@ export function BackendAnalysis() {
 
                       {/* CTA buttons */}
                       <div className="mt-auto pt-5 flex items-center gap-3">
-                        <button className="flex-1 px-4 py-2.5 bg-brand text-white text-sm font-medium rounded-[6px] hover:bg-brand-hover transition-colors flex items-center justify-center gap-2">
+                        <button
+                          onClick={handleGenerateProposal}
+                          className="flex-1 px-4 py-2.5 bg-brand text-white text-sm font-medium rounded-[6px] hover:bg-brand-hover transition-colors flex items-center justify-center gap-2"
+                        >
                           <Download className="w-4 h-4" />
                           Generate Proposal PDF
                         </button>
