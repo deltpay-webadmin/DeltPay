@@ -352,7 +352,11 @@ function LeadReconCard() {
   const { adLeads } = useMarketing();
   const { isBusy } = useMarketingSync();
 
+  // Meta's form-testing tool submits dummy entries — surface them but never bulk-import.
+  const isTest = (l: { email: string | null; fullName: string | null }) =>
+    l.email === 'test@meta.com' || (l.fullName || '').startsWith('<test lead');
   const missing = adLeads.filter(l => !l.matchedLeadId);
+  const missingReal = missing.filter(l => !isTest(l));
   const matched = adLeads.length - missing.length;
   const synced = adLeads.length > 0;
 
@@ -397,18 +401,23 @@ function LeadReconCard() {
             <div className="flex items-center gap-2.5 text-[13px] text-(--dp-text)">
               <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
               <span>
-                <span className="font-bold">{missing.length}</span> paid{' '}
-                lead{missing.length === 1 ? '' : 's'} never made it into the pipeline.
+                <span className="font-bold">{missingReal.length}</span> paid{' '}
+                lead{missingReal.length === 1 ? '' : 's'} never made it into the pipeline
+                {missing.length > missingReal.length &&
+                  ` (plus ${missing.length - missingReal.length} Meta test submission${missing.length - missingReal.length === 1 ? '' : 's'}, excluded from bulk import)`}
+                .
               </span>
             </div>
-            <Btn
-              variant="primary"
-              size="sm"
-              disabled={isBusy}
-              onClick={() => marketingActions.importMetaLeads(missing.map(l => l.leadId))}
-            >
-              <Download className="w-3.5 h-3.5" /> Import all
-            </Btn>
+            {missingReal.length > 0 && (
+              <Btn
+                variant="primary"
+                size="sm"
+                disabled={isBusy}
+                onClick={() => marketingActions.importMetaLeads(missingReal.map(l => l.leadId))}
+              >
+                <Download className="w-3.5 h-3.5" /> Import all
+              </Btn>
+            )}
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-[12.5px]">
@@ -425,10 +434,12 @@ function LeadReconCard() {
                 {missing.map(l => (
                   <tr key={l.leadId} className="border-t border-(--dp-border)">
                     <td className="py-2 pr-3 font-semibold text-(--dp-text)">
-                      {l.fullName || '—'}
-                      {l.isOrganic && (
+                      {isTest(l) ? 'Meta test submission' : l.fullName || '—'}
+                      {isTest(l) ? (
+                        <span className="ml-1.5 text-[10px] font-bold text-amber-500">TEST</span>
+                      ) : l.isOrganic ? (
                         <span className="ml-1.5 text-[10px] font-bold text-(--dp-text-faint)">ORGANIC</span>
-                      )}
+                      ) : null}
                     </td>
                     <td className="py-2 pr-3 text-(--dp-text-faint)">
                       {[l.email, l.phone].filter(Boolean).join(' · ') || '—'}
