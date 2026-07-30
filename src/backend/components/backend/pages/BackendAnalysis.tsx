@@ -3,7 +3,7 @@ import {
   Upload, FileText, Sparkles, Download, UserPlus, Clock,
   CheckCircle2, XCircle, Send, TrendingDown, DollarSign,
   AlertCircle, Loader2, X, File, ArrowRight, ExternalLink,
-  Flame, Lightbulb, BarChart3, ShieldCheck, ShieldAlert,
+  Flame, Lightbulb, BarChart3, ShieldCheck, ShieldAlert, Eye, Briefcase,
 } from 'lucide-react';
 import { useAppNavigate } from '../NavigationContext';
 import { BackendCostCalculator } from './BackendCostCalculator';
@@ -132,6 +132,10 @@ export function BackendAnalysis() {
   const [leadBannerVisible, setLeadBannerVisible] = useState(false);
   const [history, setHistory] = useState<HistoryRow[]>(historyData);
   const [intelTab, setIntelTab] = useState<IntelTabKey>('breakdown');
+  // Merchant view is presentation mode: everything internal (margins, deal
+  // economics, CRM chrome, other merchants' history) disappears so the
+  // analysis can be shown to the merchant directly.
+  const [viewMode, setViewMode] = useState<'agent' | 'merchant'>('agent');
   const inputRef = useRef<HTMLInputElement>(null);
   // Subscribe to the CRM store so it hydrates from Supabase before we
   // create/dedupe leads against it.
@@ -172,6 +176,7 @@ export function BackendAnalysis() {
     setLeadBannerVisible(false);
     setIntelTab('breakdown');
     setProgramKey('interchange-plus');
+    setViewMode('agent');
     setTimeout(() => {
       setStatus('analyzing');
       setTimeout(() => {
@@ -379,18 +384,42 @@ export function BackendAnalysis() {
             {status === 'done' && extracted && proposal && (
               <>
                 {/* Reset bar */}
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between flex-wrap gap-3">
                   <div className="flex items-center gap-2 text-sm text-emerald-600 font-medium">
                     <CheckCircle2 className="w-4 h-4" />
                     Analysis complete — {files[0]?.name}
                   </div>
-                  <button onClick={reset} className="text-sm text-gray-500 hover:text-gray-700 underline underline-offset-2">
-                    Analyze another statement
-                  </button>
+                  <div className="flex items-center gap-3">
+                    <div className="flex gap-1 bg-gray-100 rounded-[6px] p-1">
+                      {([
+                        { key: 'agent' as const, label: 'Agent view', icon: Briefcase },
+                        { key: 'merchant' as const, label: 'Merchant view', icon: Eye },
+                      ]).map(v => (
+                        <button
+                          key={v.key}
+                          onClick={() => {
+                            setViewMode(v.key);
+                            if (v.key === 'merchant' && intelTab === 'economics') setIntelTab('breakdown');
+                          }}
+                          className={`px-3 py-1.5 text-xs font-medium rounded-[5px] flex items-center gap-1.5 transition-colors ${
+                            viewMode === v.key ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                          }`}
+                        >
+                          <v.icon className="w-3.5 h-3.5" />
+                          {v.label}
+                        </button>
+                      ))}
+                    </div>
+                    {viewMode === 'agent' && (
+                      <button onClick={reset} className="text-sm text-gray-500 hover:text-gray-700 underline underline-offset-2">
+                        Analyze another statement
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 {/* Auto-lead created banner */}
-                {leadBannerVisible && autoLeadCreated && (
+                {viewMode === 'agent' && leadBannerVisible && autoLeadCreated && (
                   <div className="bg-brand/5 border border-brand/20 rounded-[8px] px-5 py-4 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="w-9 h-9 rounded-lg bg-brand/10 flex items-center justify-center shrink-0">
@@ -514,12 +543,14 @@ export function BackendAnalysis() {
                                 <p className="text-[11px] font-medium text-emerald-600 mt-0.5 tabular-nums">
                                   Saves {fmtWhole(pg.annualSavings)}/yr ({pg.savingsPct.toFixed(0)}%)
                                 </p>
-                                <p className="text-[11px] text-gray-400 mt-0.5 tabular-nums">
-                                  Margin {fmt(pg.deltMarginMonthly)}/mo
-                                  {pg.deltMarginMonthly === maxProgramMargin && (
-                                    <span className="ml-1.5 px-1.5 py-px rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-semibold">Highest margin</span>
-                                  )}
-                                </p>
+                                {viewMode === 'agent' && (
+                                  <p className="text-[11px] text-gray-400 mt-0.5 tabular-nums">
+                                    Margin {fmt(pg.deltMarginMonthly)}/mo
+                                    {pg.deltMarginMonthly === maxProgramMargin && (
+                                      <span className="ml-1.5 px-1.5 py-px rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-semibold">Highest margin</span>
+                                    )}
+                                  </p>
+                                )}
                               </button>
                             ))}
                           </div>
@@ -602,7 +633,7 @@ export function BackendAnalysis() {
                           <Download className="w-4 h-4" />
                           Generate Proposal PDF
                         </button>
-                        {autoLeadCreated ? (
+                        {viewMode === 'agent' && (autoLeadCreated ? (
                           <button
                             onClick={() => navigate('/leads')}
                             className="flex-1 px-4 py-2.5 bg-emerald-50 text-emerald-700 text-sm font-medium rounded-[6px] border border-emerald-200 hover:bg-emerald-100 transition-colors flex items-center justify-center gap-2"
@@ -615,7 +646,7 @@ export function BackendAnalysis() {
                             <UserPlus className="w-4 h-4" />
                             Create Lead
                           </button>
-                        )}
+                        ))}
                       </div>
                     </div>
                   </div>
@@ -630,7 +661,7 @@ export function BackendAnalysis() {
                         Statement Intelligence
                       </h2>
                       <div className="flex gap-1 bg-gray-100 rounded-[6px] p-1">
-                        {INTEL_TABS.map(t => (
+                        {INTEL_TABS.filter(t => viewMode === 'agent' || !t.internal).map(t => (
                           <button
                             key={t.key}
                             onClick={() => setIntelTab(t.key)}
@@ -651,17 +682,18 @@ export function BackendAnalysis() {
                     </div>
                     <div className="px-5 py-4">
                       {intelTab === 'breakdown' && <IntelBreakdown extracted={extracted} proposal={proposal} intel={intel} />}
-                      {intelTab === 'issues' && <IntelIssues extracted={extracted} intel={intel} />}
+                      {intelTab === 'issues' && <IntelIssues extracted={extracted} intel={intel} merchantView={viewMode === 'merchant'} />}
                       {intelTab === 'suggestions' && <IntelSuggestions intel={intel} />}
                       {intelTab === 'modeling' && <IntelModeling extracted={extracted} proposal={proposal} intel={intel} />}
-                      {intelTab === 'economics' && <IntelEconomics intel={intel} />}
+                      {intelTab === 'economics' && viewMode === 'agent' && <IntelEconomics intel={intel} />}
                     </div>
                   </div>
                 )}
               </>
             )}
 
-            {/* ── History Table ── */}
+            {/* ── History Table (internal — hidden in merchant view) ── */}
+            {(status !== 'done' || viewMode === 'agent') && (
             <div className="bg-white rounded-[8px] border border-gray-200 overflow-hidden">
               <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
                 <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
@@ -703,6 +735,7 @@ export function BackendAnalysis() {
                 </table>
               </div>
             </div>
+            )}
           </>
         )}
       </div>
@@ -811,7 +844,7 @@ function IntelBreakdown({ extracted, proposal, intel }: { extracted: ExtractedDa
 }
 
 /** 2 — Issues & Fat: what's wrong and what it costs. */
-function IntelIssues({ extracted, intel }: { extracted: ExtractedData; intel: ProcessingIntelligence }) {
+function IntelIssues({ extracted, intel, merchantView = false }: { extracted: ExtractedData; intel: ProcessingIntelligence; merchantView?: boolean }) {
   const cb = intel.chargebacks;
   const cbOk = cb.status === 'healthy';
   return (
@@ -836,10 +869,12 @@ function IntelIssues({ extracted, intel }: { extracted: ExtractedData; intel: Pr
           sub="Non-qualified billbacks recoverable via clean qualification"
         />
         <FatCard
-          label="Incumbent's pure-profit fees"
+          label={merchantView ? 'Junk fees you\'re paying today' : 'Incumbent\'s pure-profit fees'}
           value={`${fmt(intel.junkFeesMonthly)}/mo`}
           sub={intel.junkFeeLabels.length
-            ? `${intel.junkFeeLabels.join(' · ')} — their margin, our wedge in the pitch`
+            ? merchantView
+              ? `${intel.junkFeeLabels.join(' · ')} — all waived on Delt`
+              : `${intel.junkFeeLabels.join(' · ')} — their margin, our wedge in the pitch`
             : 'None detected'}
         />
       </div>
