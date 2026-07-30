@@ -63,10 +63,11 @@ export function renderAgreementHtml(t: AgreementTerms): string {
   ];
 
   const scheduleTable = scheduleRows
-    .map(([k, v]) => `<tr><td style="border:1px solid #999;padding:6px 10px;width:45%;font-weight:bold;">${k}</td><td style="border:1px solid #999;padding:6px 10px;">${v}</td></tr>`)
+    .map(([k, v]) => `<tr><td style="border:1px solid #c7c9e8;padding:6px 10px;width:45%;font-weight:bold;background:#f4f4ff;color:#121E3E;">${k}</td><td style="border:1px solid #c7c9e8;padding:6px 10px;">${v}</td></tr>`)
     .join('\n');
 
-  const h = (text: string) => `<h2 style="font-size:13px;margin:22px 0 8px;">${text}</h2>`;
+  const h = (text: string) =>
+    `<h2 style="font-size:13px;margin:22px 0 8px;color:#121E3E;border-bottom:2px solid #4945FF;padding-bottom:3px;letter-spacing:0.3px;">${text}</h2>`;
   const p = (text: string) => `<p style="margin:0 0 10px;">${text}</p>`;
 
   // Always rendered as its own signature block (matching the source PDF):
@@ -74,8 +75,8 @@ export function renderAgreementHtml(t: AgreementTerms): string {
   // /gua_*/ anchors only become live signature tabs when a guarantor
   // recipient is on the envelope; otherwise they stay inert blank lines.
   const guarantorBlock = `
-    <h3 style="font-size:12px;margin:26px 0 6px;">GUARANTOR
-      <span style="font-weight:normal;font-size:10px;color:#444;">(execute below only if a Guarantor is required by Schedule A)</span></h3>
+    <h3 style="font-size:12px;margin:26px 0 6px;color:#121E3E;">GUARANTOR
+      <span style="font-weight:normal;font-size:10px;color:#666;">(execute below only if a Guarantor is required by Schedule A)</span></h3>
     <p style="margin:0 0 12px;">Guarantor Full Legal Name: ${t.hasGuarantor && t.guarantorName ? `<b>${esc(t.guarantorName)}</b>` : '___________________________________'}</p>
     <table style="width:100%;border-collapse:collapse;font-size:11px;">
       <tr>
@@ -89,18 +90,18 @@ export function renderAgreementHtml(t: AgreementTerms): string {
   return `<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"></head>
-<body style="font-family:Helvetica,Arial,sans-serif;font-size:11px;color:#111;line-height:1.45;margin:36px 48px;">
+<body style="font-family:Helvetica,Arial,sans-serif;font-size:11px;color:#1a2138;line-height:1.45;margin:36px 48px;">
 
-<div style="text-align:center;margin-bottom:18px;">
-  <div style="font-size:18px;font-weight:bold;letter-spacing:1px;">DELT PAY LLC</div>
-  <div style="font-size:10px;color:#444;">deltpay.com &nbsp;·&nbsp; Miami, Florida</div>
-  <div style="font-size:14px;font-weight:bold;margin-top:14px;">PURCHASE AND SALE OF FUTURE RECEIVABLES AGREEMENT</div>
-  <div style="font-size:10px;color:#444;">Merchant Cash Advance &nbsp;·&nbsp; Receivables Purchase Agreement</div>
+<div style="text-align:center;margin-bottom:18px;border-bottom:3px solid #4945FF;padding-bottom:14px;">
+  <div style="font-size:19px;font-weight:bold;letter-spacing:2px;color:#121E3E;">DELT <span style="color:#4945FF;">PAY</span> LLC</div>
+  <div style="font-size:10px;color:#4945FF;letter-spacing:1px;">deltpay.com &nbsp;·&nbsp; Miami, Florida</div>
+  <div style="font-size:14px;font-weight:bold;margin-top:14px;color:#121E3E;">PURCHASE AND SALE OF FUTURE RECEIVABLES AGREEMENT</div>
+  <div style="font-size:10px;color:#666;">Merchant Cash Advance &nbsp;·&nbsp; Receivables Purchase Agreement</div>
 </div>
 
 ${h('SCHEDULE A — KEY DEAL TERMS')}
 <table style="width:100%;border-collapse:collapse;font-size:11px;">
-<tr><td style="border:1px solid #999;padding:6px 10px;background:#f0f0f0;font-weight:bold;">FIELD</td><td style="border:1px solid #999;padding:6px 10px;background:#f0f0f0;font-weight:bold;">VALUE</td></tr>
+<tr><td style="border:1px solid #121E3E;padding:6px 10px;background:#121E3E;color:#ffffff;font-weight:bold;letter-spacing:0.5px;">FIELD</td><td style="border:1px solid #121E3E;padding:6px 10px;background:#121E3E;color:#ffffff;font-weight:bold;letter-spacing:0.5px;">VALUE</td></tr>
 ${scheduleTable}
 </table>
 
@@ -196,7 +197,7 @@ ${p(`IN WITNESS WHEREOF, the parties have executed this Purchase and Sale of Fut
 <table style="width:100%;border-collapse:collapse;font-size:11px;margin-top:14px;">
   <tr>
     <td style="width:50%;vertical-align:top;padding-right:24px;">
-      <b>PURCHASER</b><br>
+      <b style="color:#121E3E;border-bottom:2px solid #4945FF;padding-bottom:1px;">PURCHASER</b><br>
       Delt Pay LLC, a Florida limited liability company<br><br>
       Signature: ${anchor('/pur_sig/')}________________________<br><br>
       Name: ${anchor('/pur_name/')}____________________________<br><br>
@@ -204,7 +205,7 @@ ${p(`IN WITNESS WHEREOF, the parties have executed this Purchase and Sale of Fut
       Date: ${anchor('/pur_date/')}_____________________________
     </td>
     <td style="width:50%;vertical-align:top;">
-      <b>MERCHANT</b><br>
+      <b style="color:#121E3E;border-bottom:2px solid #4945FF;padding-bottom:1px;">MERCHANT</b><br>
       ${esc(t.merchantLegalName)}<br><br>
       Signature: ${anchor('/mer_sig/')}________________________<br><br>
       Name: ${anchor('/mer_name/')}____________________________<br><br>
@@ -216,11 +217,11 @@ ${p(`IN WITNESS WHEREOF, the parties have executed this Purchase and Sale of Fut
 
 ${guarantorBlock}
 
-<p style="margin-top:26px;border:1px solid #999;padding:10px;font-size:10px;">
+<p style="margin-top:26px;border:1.5px solid #4945FF;border-left:5px solid #4945FF;background:#f4f4ff;padding:10px;font-size:10px;color:#121E3E;">
 <b>IMPORTANT NOTICE:</b> This Agreement constitutes a sale of future receivables and not a loan. The Purchased Amount is not a principal balance and the factor rate is not an interest rate. Merchant should review this Agreement carefully and consult independent legal and financial advisors before executing.
 </p>
 
-<p style="font-size:9px;color:#666;margin-top:16px;">CONFIDENTIAL — This agreement constitutes a sale of receivables, not a loan.</p>
+<p style="font-size:9px;color:#4945FF;margin-top:16px;letter-spacing:0.5px;">CONFIDENTIAL — This agreement constitutes a sale of receivables, not a loan. &nbsp;·&nbsp; Delt Pay LLC &nbsp;·&nbsp; deltpay.com</p>
 
 </body>
 </html>`;
