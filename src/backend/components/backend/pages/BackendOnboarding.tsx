@@ -39,154 +39,9 @@ const STEP_SHORT: Record<StepName, string> = {
   'Funded': 'Funded',
 };
 
-// ── Pipeline summary per step ──
-const pipelineData: { step: StepName; count: number; avgTime: string; sla: SLAStatus }[] = [
-  { step: 'Application Submitted', count: 8, avgTime: '2.1 hrs', sla: 'On Track' },
-  { step: 'Bank Verification', count: 5, avgTime: '18 hrs', sla: 'On Track' },
-  { step: 'Identity Verification', count: 4, avgTime: '14 hrs', sla: 'At Risk' },
-  { step: 'Underwriting', count: 6, avgTime: '1.8 days', sla: 'On Track' },
-  { step: 'Docs & E-Sign', count: 3, avgTime: '2.4 days', sla: 'At Risk' },
-  { step: 'Funded', count: 12, avgTime: '—', sla: 'On Track' },
-];
-
 // Team members available for reassignment
 const AGENTS = ['Marcus Johnson', 'Priya Patel', 'Jamal Foster', 'Devon Richards', 'Sarah Kim', 'Alex Rivera'];
 
-// Legacy seed kept here as reference only (store now owns the source of truth).
-const _legacySeed: OnboardingApp[] = [
-  {
-    id: 'ONB-001',
-    merchantName: 'Sunrise Bakery LLC',
-    agent: 'Marcus Johnson',
-    currentStep: 'Bank Verification',
-    currentStepIndex: 1,
-    timeInStep: '22 hrs',
-    timeInStepHours: 22,
-    slaTarget: '24 hrs',
-    slaStatus: 'At Risk',
-    submittedDate: 'Apr 7, 2026',
-    blocker: 'Awaiting Plaid link — merchant has not connected bank account',
-    steps: [
-      { step: 'Application Submitted', completedAt: 'Apr 7, 10:30 AM', slaTarget: '—' },
-      { step: 'Bank Verification', completedAt: null, slaTarget: '24 hrs' },
-      { step: 'Identity Verification', completedAt: null, slaTarget: '24 hrs' },
-      { step: 'Underwriting', completedAt: null, slaTarget: '48 hrs' },
-      { step: 'Docs & E-Sign', completedAt: null, slaTarget: '72 hrs' },
-      { step: 'Funded', completedAt: null, slaTarget: '24 hrs' },
-    ],
-  },
-  {
-    id: 'ONB-002',
-    merchantName: 'Peak Construction Co',
-    agent: 'Priya Patel',
-    currentStep: 'Underwriting',
-    currentStepIndex: 3,
-    timeInStep: '3.2 days',
-    timeInStepHours: 76.8,
-    slaTarget: '48 hrs',
-    slaStatus: 'Breached',
-    submittedDate: 'Apr 2, 2026',
-    blocker: 'Missing tax return — requested from merchant twice, no response',
-    steps: [
-      { step: 'Application Submitted', completedAt: 'Apr 2, 9:15 AM', slaTarget: '—' },
-      { step: 'Bank Verification', completedAt: 'Apr 2, 3:40 PM', slaTarget: '24 hrs' },
-      { step: 'Identity Verification', completedAt: 'Apr 3, 11:20 AM', slaTarget: '24 hrs' },
-      { step: 'Underwriting', completedAt: null, slaTarget: '48 hrs' },
-      { step: 'Docs & E-Sign', completedAt: null, slaTarget: '72 hrs' },
-      { step: 'Funded', completedAt: null, slaTarget: '24 hrs' },
-    ],
-  },
-  {
-    id: 'ONB-003',
-    merchantName: 'Coastal Seafood Inc',
-    agent: 'Jamal Foster',
-    currentStep: 'Docs & E-Sign',
-    currentStepIndex: 4,
-    timeInStep: '1.5 days',
-    timeInStepHours: 36,
-    slaTarget: '72 hrs',
-    slaStatus: 'On Track',
-    submittedDate: 'Apr 4, 2026',
-    blocker: 'E-sign link sent — awaiting merchant signature on funding agreement',
-    steps: [
-      { step: 'Application Submitted', completedAt: 'Apr 4, 2:10 PM', slaTarget: '—' },
-      { step: 'Bank Verification', completedAt: 'Apr 4, 6:30 PM', slaTarget: '24 hrs' },
-      { step: 'Identity Verification', completedAt: 'Apr 5, 8:45 AM', slaTarget: '24 hrs' },
-      { step: 'Underwriting', completedAt: 'Apr 6, 10:00 AM', slaTarget: '48 hrs' },
-      { step: 'Docs & E-Sign', completedAt: null, slaTarget: '72 hrs' },
-      { step: 'Funded', completedAt: null, slaTarget: '24 hrs' },
-    ],
-  },
-  {
-    id: 'ONB-004',
-    merchantName: 'Metro Diner Group',
-    agent: 'Marcus Johnson',
-    currentStep: 'Identity Verification',
-    currentStepIndex: 2,
-    timeInStep: '26 hrs',
-    timeInStepHours: 26,
-    slaTarget: '24 hrs',
-    slaStatus: 'Breached',
-    submittedDate: 'Apr 6, 2026',
-    blocker: 'ID photo blurry — re-upload requested via SMS',
-    steps: [
-      { step: 'Application Submitted', completedAt: 'Apr 6, 11:00 AM', slaTarget: '—' },
-      { step: 'Bank Verification', completedAt: 'Apr 6, 5:15 PM', slaTarget: '24 hrs' },
-      { step: 'Identity Verification', completedAt: null, slaTarget: '24 hrs' },
-      { step: 'Underwriting', completedAt: null, slaTarget: '48 hrs' },
-      { step: 'Docs & E-Sign', completedAt: null, slaTarget: '72 hrs' },
-      { step: 'Funded', completedAt: null, slaTarget: '24 hrs' },
-    ],
-  },
-  {
-    id: 'ONB-005',
-    merchantName: 'Bright Auto Sales',
-    agent: 'Devon Richards',
-    currentStep: 'Application Submitted',
-    currentStepIndex: 0,
-    timeInStep: '4 hrs',
-    timeInStepHours: 4,
-    slaTarget: '—',
-    slaStatus: 'On Track',
-    submittedDate: 'Apr 9, 2026',
-    blocker: 'Application under initial review — all fields complete',
-    steps: [
-      { step: 'Application Submitted', completedAt: null, slaTarget: '—' },
-      { step: 'Bank Verification', completedAt: null, slaTarget: '24 hrs' },
-      { step: 'Identity Verification', completedAt: null, slaTarget: '24 hrs' },
-      { step: 'Underwriting', completedAt: null, slaTarget: '48 hrs' },
-      { step: 'Docs & E-Sign', completedAt: null, slaTarget: '72 hrs' },
-      { step: 'Funded', completedAt: null, slaTarget: '24 hrs' },
-    ],
-  },
-  {
-    id: 'ONB-006',
-    merchantName: 'Lakeside Catering',
-    agent: 'Sarah Kim',
-    currentStep: 'Bank Verification',
-    currentStepIndex: 1,
-    timeInStep: '12 hrs',
-    timeInStepHours: 12,
-    slaTarget: '24 hrs',
-    slaStatus: 'On Track',
-    submittedDate: 'Apr 8, 2026',
-    blocker: 'Plaid connected — awaiting 3-day transaction pull to complete',
-    steps: [
-      { step: 'Application Submitted', completedAt: 'Apr 8, 9:00 AM', slaTarget: '—' },
-      { step: 'Bank Verification', completedAt: null, slaTarget: '24 hrs' },
-      { step: 'Identity Verification', completedAt: null, slaTarget: '24 hrs' },
-      { step: 'Underwriting', completedAt: null, slaTarget: '48 hrs' },
-      { step: 'Docs & E-Sign', completedAt: null, slaTarget: '72 hrs' },
-      { step: 'Funded', completedAt: null, slaTarget: '24 hrs' },
-    ],
-  },
-];
-
-// silence unused warning
-void _legacySeed;
-
-const avgTimeToFunded = 6.3; // days
-const completionRate = 78;
 
 function slaDot(status: SLAStatus) {
   switch (status) {
@@ -245,6 +100,8 @@ export function BackendOnboarding() {
 
   const activeApps = applications.filter(a => a.currentStep !== 'Funded').length;
   const slaBreaches = applications.filter(a => a.slaStatus === 'Breached').length;
+  const fundedApps = applications.filter(a => a.currentStep === 'Funded').length;
+  const completionRate = applications.length > 0 ? Math.round((fundedApps / applications.length) * 100) : 0;
 
   // Derive pipeline data from live state
   const livePipelineData = useMemo(() => {
@@ -298,9 +155,9 @@ export function BackendOnboarding() {
         />
         <SummaryCard
           icon={Clock}
-          label="Avg Time to Funded"
-          value={`${avgTimeToFunded} days`}
-          sub="From submission to funded"
+          label="Funded"
+          value={String(fundedApps)}
+          sub="Completed onboarding"
           variant="blue"
         />
         <SummaryCard

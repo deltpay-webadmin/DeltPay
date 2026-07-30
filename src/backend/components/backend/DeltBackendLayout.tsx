@@ -76,6 +76,7 @@ import {
   CalendarDays,
   Sun,
   Moon,
+  PenTool,
 } from 'lucide-react';
 
 // ── Types ──
@@ -121,6 +122,7 @@ const adminGroups: NavGroup[] = [
   {
     label: 'Operations',
     items: [
+      { label: 'Documents & E-Sign', path: '/documents', icon: PenTool },
       { label: 'Disputes', path: '/disputes', icon: ShieldAlert },
       { label: 'Marketing', path: '/marketing', icon: Megaphone },
       { label: 'Compliance', path: '/compliance', icon: ShieldCheck },

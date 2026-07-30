@@ -410,7 +410,6 @@ export interface CrmState {
   underwriting: UWApplication[];
   referrals: Referral[];
   program: ReferralProgram;
-  /** Client-side only — merchants & deals aren't persisted to Supabase yet. */
   merchants: Merchant[];
   deals: Deal[];
 }
@@ -453,6 +452,8 @@ const fallbackSeed: CrmState = {
   underwriting: [],
   referrals: [],
   program: { rewardAmount: '100', freeMonths: '1', planTier: 'Growth' },
+  merchants: [],
+  deals: [],
 };
 
 // ══════════════════════════════════════════════════════════════
@@ -733,6 +734,94 @@ function toDbReferral(r: Partial<Referral>): Record<string, any> {
   return out;
 }
 
+function fromDbMerchant(r: any): Merchant {
+  return {
+    id: r.id,
+    name: r.name,
+    industry: r.industry ?? 'General',
+    status: r.status ?? 'Pending',
+    monthlyVolume: Number(r.monthly_volume ?? 0),
+    mcaBalance: Number(r.mca_balance ?? 0),
+    capitalDeployed: Number(r.capital_deployed ?? 0),
+    healthScore: Number(r.health_score ?? 75),
+    agent: r.agent ?? 'Unassigned',
+    products: r.products ?? { processing: true, capital: false, website: false, lens: false },
+    plan: r.plan ?? 'Free',
+    monthlyFee: Number(r.monthly_fee ?? 0),
+    contactName: r.contact_name ?? undefined,
+    contactEmail: r.contact_email ?? undefined,
+    contactPhone: r.contact_phone ?? undefined,
+    state: r.state ?? undefined,
+    ein: r.ein ?? undefined,
+    website: r.website ?? undefined,
+    notes: r.notes ?? undefined,
+  };
+}
+
+function toDbMerchant(m: Partial<Merchant>): Record<string, any> {
+  const out: Record<string, any> = {};
+  if (m.id !== undefined) out.id = m.id;
+  if (m.name !== undefined) out.name = m.name;
+  if (m.industry !== undefined) out.industry = m.industry;
+  if (m.status !== undefined) out.status = m.status;
+  if (m.monthlyVolume !== undefined) out.monthly_volume = m.monthlyVolume;
+  if (m.mcaBalance !== undefined) out.mca_balance = m.mcaBalance;
+  if (m.capitalDeployed !== undefined) out.capital_deployed = m.capitalDeployed;
+  if (m.healthScore !== undefined) out.health_score = m.healthScore;
+  if (m.agent !== undefined) out.agent = m.agent;
+  if (m.products !== undefined) out.products = m.products;
+  if (m.plan !== undefined) out.plan = m.plan;
+  if (m.monthlyFee !== undefined) out.monthly_fee = m.monthlyFee;
+  if (m.contactName !== undefined) out.contact_name = m.contactName ?? null;
+  if (m.contactEmail !== undefined) out.contact_email = m.contactEmail ?? null;
+  if (m.contactPhone !== undefined) out.contact_phone = m.contactPhone ?? null;
+  if (m.state !== undefined) out.state = m.state ?? null;
+  if (m.ein !== undefined) out.ein = m.ein ?? null;
+  if (m.website !== undefined) out.website = m.website ?? null;
+  if (m.notes !== undefined) out.notes = m.notes ?? null;
+  return out;
+}
+
+function fromDbDeal(r: any): Deal {
+  return {
+    id: r.id,
+    status: r.status ?? 'Current',
+    delinquencyLabel: r.delinquency_label ?? undefined,
+    type: r.type ?? 'MCA',
+    borrower: r.borrower ?? '',
+    loanAmount: Number(r.loan_amount ?? 0),
+    repaymentAmount: Number(r.repayment_amount ?? 0),
+    collected: Number(r.collected ?? 0),
+    outstanding: Number(r.outstanding ?? 0),
+    rate: Number(r.rate ?? 1.35),
+    dailyPayment: Number(r.daily_payment ?? 0),
+    fundedDate: r.funded_date ?? '',
+    dueDate: r.due_date ?? '',
+    agent: r.agent ?? 'Unassigned',
+    notes: r.notes ?? undefined,
+  };
+}
+
+function toDbDeal(d: Partial<Deal>): Record<string, any> {
+  const out: Record<string, any> = {};
+  if (d.id !== undefined) out.id = d.id;
+  if (d.status !== undefined) out.status = d.status;
+  if (d.delinquencyLabel !== undefined) out.delinquency_label = d.delinquencyLabel ?? null;
+  if (d.type !== undefined) out.type = d.type;
+  if (d.borrower !== undefined) out.borrower = d.borrower;
+  if (d.loanAmount !== undefined) out.loan_amount = d.loanAmount;
+  if (d.repaymentAmount !== undefined) out.repayment_amount = d.repaymentAmount;
+  if (d.collected !== undefined) out.collected = d.collected;
+  if (d.outstanding !== undefined) out.outstanding = d.outstanding;
+  if (d.rate !== undefined) out.rate = d.rate;
+  if (d.dailyPayment !== undefined) out.daily_payment = d.dailyPayment;
+  if (d.fundedDate !== undefined) out.funded_date = d.fundedDate || null;
+  if (d.dueDate !== undefined) out.due_date = d.dueDate || null;
+  if (d.agent !== undefined) out.agent = d.agent;
+  if (d.notes !== undefined) out.notes = d.notes ?? null;
+  return out;
+}
+
 function fromDbProgram(r: any): ReferralProgram {
   return {
     rewardAmount: r.reward_amount ?? '100',
@@ -771,16 +860,19 @@ async function maybeHydrate() {
   setSync({ isLoading: true, lastError: null });
 
   try {
-    const [leadsRes, onbRes, uwRes, refRes, progRes] = await Promise.all([
+    const [leadsRes, onbRes, uwRes, refRes, progRes, merchRes, dealsRes] = await Promise.all([
       supabase.from('pipeline_leads').select('*').order('created_at', { ascending: false }),
       supabase.from('onboarding_apps').select('*').order('id', { ascending: true }),
       supabase.from('underwriting_apps').select('*').order('id', { ascending: true }),
       supabase.from('referrals').select('*').order('id', { ascending: true }),
       supabase.from('referral_program').select('*').eq('id', 1).maybeSingle(),
+      supabase.from('merchants').select('*').order('created_at', { ascending: false }),
+      supabase.from('crm_deals').select('*').order('created_at', { ascending: false }),
     ]);
 
     const firstErr =
-      leadsRes.error || onbRes.error || uwRes.error || refRes.error || progRes.error;
+      leadsRes.error || onbRes.error || uwRes.error || refRes.error || progRes.error ||
+      merchRes.error || dealsRes.error;
     if (firstErr) throw firstErr;
 
     set({
@@ -791,6 +883,8 @@ async function maybeHydrate() {
       program: progRes.data
         ? fromDbProgram(progRes.data)
         : { rewardAmount: '100', freeMonths: '1', planTier: 'Growth' },
+      merchants: (merchRes.data || []).map(fromDbMerchant),
+      deals: (dealsRes.data || []).map(fromDbDeal),
     });
 
     hydrated = true;
@@ -836,6 +930,16 @@ function subscribeRealtime() {
       'postgres_changes',
       { event: '*', schema: 'public', table: 'referral_program' },
       payload => applyRealtime('referral_program', payload),
+    )
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'merchants' },
+      payload => applyRealtime('merchants', payload),
+    )
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'crm_deals' },
+      payload => applyRealtime('crm_deals', payload),
     )
     .subscribe();
   // Keep reference so it isn't GC'd.
@@ -894,6 +998,30 @@ function applyRealtime(table: string, payload: any) {
     }
   } else if (table === 'referral_program') {
     if (newRow) set({ program: fromDbProgram(newRow) });
+  } else if (table === 'merchants') {
+    if (eventType === 'DELETE') {
+      set({ merchants: state.merchants.filter(m => m.id !== oldRow?.id) });
+    } else {
+      const mapped = fromDbMerchant(newRow);
+      const exists = state.merchants.some(m => m.id === mapped.id);
+      set({
+        merchants: exists
+          ? state.merchants.map(m => (m.id === mapped.id ? mapped : m))
+          : [mapped, ...state.merchants],
+      });
+    }
+  } else if (table === 'crm_deals') {
+    if (eventType === 'DELETE') {
+      set({ deals: state.deals.filter(d => d.id !== oldRow?.id) });
+    } else {
+      const mapped = fromDbDeal(newRow);
+      const exists = state.deals.some(d => d.id === mapped.id);
+      set({
+        deals: exists
+          ? state.deals.map(d => (d.id === mapped.id ? mapped : d))
+          : [mapped, ...state.deals],
+      });
+    }
   }
 }
 
@@ -1185,6 +1313,16 @@ export const leadActions = {
     if (lead.status === 'Not Qualified' || lead.status === 'Lost') return false;
     leadActions.update(id, { stage: 'Converted', status: 'Won', lastActivity: 'just now' });
     leadActions.addTimeline(id, { title: 'Lead converted', description: 'Won — handed off to onboarding', user: 'You', timestamp: 'just now' });
+    // Hand off into the onboarding pipeline (skip if one already exists).
+    const exists = state.onboarding.some(
+      o => o.merchantName.toLowerCase() === lead.businessName.toLowerCase() && o.currentStep !== 'Funded',
+    );
+    if (!exists) {
+      onboardingActions.create({
+        merchantName: lead.businessName,
+        agent: lead.assignedAgent || 'Unassigned',
+      });
+    }
     return true;
   },
 
@@ -1376,7 +1514,51 @@ export function scoreLead(l: Partial<Lead>): number {
 }
 
 // ── Onboarding actions ──
+const ONB_STEPS: OnbStep[] = ['Application Submitted', 'Bank Verification', 'Identity Verification', 'Underwriting', 'Docs & E-Sign', 'Funded'];
+const ONB_SLA_TARGETS: Record<OnbStep, string> = {
+  'Application Submitted': '—',
+  'Bank Verification': '24 hrs',
+  'Identity Verification': '24 hrs',
+  Underwriting: '48 hrs',
+  'Docs & E-Sign': '72 hrs',
+  Funded: '24 hrs',
+};
+
 export const onboardingActions = {
+  create(partial: Partial<OnboardingApp>): OnboardingApp {
+    const used = new Set(state.onboarding.map(o => o.id));
+    let n = state.onboarding.length + 1;
+    let id = `ONB-${String(n).padStart(3, '0')}`;
+    while (used.has(id)) id = `ONB-${String(++n).padStart(3, '0')}`;
+    const app: OnboardingApp = {
+      id,
+      merchantName: partial.merchantName || 'New Merchant',
+      agent: partial.agent || 'Unassigned',
+      currentStep: 'Application Submitted',
+      currentStepIndex: 0,
+      timeInStep: '0 hrs',
+      timeInStepHours: 0,
+      slaTarget: ONB_SLA_TARGETS['Bank Verification'],
+      slaStatus: 'On Track',
+      submittedDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      blocker: '',
+      steps: ONB_STEPS.map((step, i) => ({
+        step,
+        completedAt: i === 0 ? nowStamp() : null,
+        slaTarget: ONB_SLA_TARGETS[step],
+      })),
+      nudges: 0,
+    };
+    const prev = state.onboarding;
+    persist(
+      'onboarding app',
+      () => set({ onboarding: [...state.onboarding, app] }),
+      () => set({ onboarding: prev }),
+      () => supabase!.from('onboarding_apps').insert(toDbOnb(app)).then(r => ({ error: r.error })),
+    );
+    return app;
+  },
+
   nudge(id: string) {
     const prev = state.onboarding;
     const target = state.onboarding.find(o => o.id === id);
@@ -1407,11 +1589,11 @@ export const onboardingActions = {
   },
 
   advance(id: string) {
-    const STEPS: OnbStep[] = ['Application Submitted', 'Bank Verification', 'Identity Verification', 'Underwriting', 'Docs & E-Sign', 'Funded'];
     const target = state.onboarding.find(o => o.id === id);
     if (!target) return;
-    const nextIdx = Math.min(target.currentStepIndex + 1, STEPS.length - 1);
-    const nextStep = STEPS[nextIdx];
+    const wasFunded = target.currentStep === 'Funded';
+    const nextIdx = Math.min(target.currentStepIndex + 1, ONB_STEPS.length - 1);
+    const nextStep = ONB_STEPS[nextIdx];
     const steps = target.steps.map((s, i) => (i === target.currentStepIndex ? { ...s, completedAt: nowStamp() } : s));
     const patch: Partial<OnboardingApp> = {
       currentStep: nextStep,
@@ -1431,6 +1613,32 @@ export const onboardingActions = {
       () => set({ onboarding: prev }),
       () => supabase!.from('onboarding_apps').update(toDbOnb(patch)).eq('id', id).then(r => ({ error: r.error })),
     );
+
+    // Reaching Funded completes onboarding — promote to an active merchant,
+    // carrying over contact/business data from the source lead when we have it.
+    if (!wasFunded && nextStep === 'Funded') {
+      const already = state.merchants.some(
+        m => m.name.toLowerCase() === target.merchantName.toLowerCase(),
+      );
+      if (!already) {
+        const lead = state.leads.find(
+          l => l.businessName.toLowerCase() === target.merchantName.toLowerCase(),
+        );
+        merchantActions.create({
+          name: target.merchantName,
+          industry: lead?.industry || 'General',
+          status: 'Active',
+          agent: target.agent,
+          monthlyVolume: lead ? parseMoney(lead.monthlySales) : 0,
+          contactName: lead?.contactName || undefined,
+          contactEmail: lead?.contactEmail || undefined,
+          contactPhone: lead?.contactPhone || undefined,
+          state: lead?.kyb?.business.state || undefined,
+          website: lead?.kyb?.business.website || undefined,
+          notes: lead ? `Funded via onboarding ${id} (lead ${lead.id})` : `Funded via onboarding ${id}`,
+        });
+      }
+    }
   },
 };
 
@@ -1782,7 +1990,7 @@ export const programActions = {
   },
 };
 
-// ── Merchant actions (client-side only — not yet backed by Supabase) ──
+// ── Merchant actions ──
 export const merchantActions = {
   create(partial: Partial<Merchant>): Merchant {
     const used = new Set(state.merchants.map(m => m.id));
@@ -1810,20 +2018,38 @@ export const merchantActions = {
       website: partial.website,
       notes: partial.notes,
     };
-    set({ merchants: [merchant, ...state.merchants] });
+    const prev = state.merchants;
+    persist(
+      'merchant',
+      () => set({ merchants: [merchant, ...state.merchants] }),
+      () => set({ merchants: prev }),
+      () => supabase!.from('merchants').insert(toDbMerchant(merchant)).then(r => ({ error: r.error })),
+    );
     return merchant;
   },
 
   update(id: string, patch: Partial<Merchant>) {
-    set({ merchants: state.merchants.map(m => (m.id === id ? { ...m, ...patch } : m)) });
+    const prev = state.merchants;
+    persist(
+      'merchant',
+      () => set({ merchants: state.merchants.map(m => (m.id === id ? { ...m, ...patch } : m)) }),
+      () => set({ merchants: prev }),
+      () => supabase!.from('merchants').update(toDbMerchant(patch)).eq('id', id).then(r => ({ error: r.error })),
+    );
   },
 
   remove(id: string) {
-    set({ merchants: state.merchants.filter(m => m.id !== id) });
+    const prev = state.merchants;
+    persist(
+      'delete merchant',
+      () => set({ merchants: state.merchants.filter(m => m.id !== id) }),
+      () => set({ merchants: prev }),
+      () => supabase!.from('merchants').delete().eq('id', id).then(r => ({ error: r.error })),
+    );
   },
 };
 
-// ── Deal actions (client-side only — not yet backed by Supabase) ──
+// ── Deal actions ──
 export const dealActions = {
   create(partial: Partial<Deal>): Deal {
     const used = new Set(state.deals.map(d => d.id));
@@ -1855,15 +2081,33 @@ export const dealActions = {
       agent: partial.agent || 'Unassigned',
       notes: partial.notes,
     };
-    set({ deals: [deal, ...state.deals] });
+    const prev = state.deals;
+    persist(
+      'deal',
+      () => set({ deals: [deal, ...state.deals] }),
+      () => set({ deals: prev }),
+      () => supabase!.from('crm_deals').insert(toDbDeal(deal)).then(r => ({ error: r.error })),
+    );
     return deal;
   },
 
   update(id: string, patch: Partial<Deal>) {
-    set({ deals: state.deals.map(d => (d.id === id ? { ...d, ...patch } : d)) });
+    const prev = state.deals;
+    persist(
+      'deal',
+      () => set({ deals: state.deals.map(d => (d.id === id ? { ...d, ...patch } : d)) }),
+      () => set({ deals: prev }),
+      () => supabase!.from('crm_deals').update(toDbDeal(patch)).eq('id', id).then(r => ({ error: r.error })),
+    );
   },
 
   remove(id: string) {
-    set({ deals: state.deals.filter(d => d.id !== id) });
+    const prev = state.deals;
+    persist(
+      'delete deal',
+      () => set({ deals: state.deals.filter(d => d.id !== id) }),
+      () => set({ deals: prev }),
+      () => supabase!.from('crm_deals').delete().eq('id', id).then(r => ({ error: r.error })),
+    );
   },
 };
