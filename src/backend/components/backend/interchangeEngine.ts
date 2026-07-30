@@ -79,6 +79,141 @@ export interface ChargebackPosture {
   note: string;
 }
 
+// ── Pricing programs ──
+// The same wholesale floor can be packaged four ways depending on the
+// merchant's fee-passing appetite: absorb fees transparently (interchange-
+// plus), absorb them predictably (flat rate), pass credit fees to the
+// cardholder (surcharge), or price the fee into the shelf price (dual
+// pricing). Each program computes its own merchant cost, savings, Delt
+// margin, fit profile, and card-brand compliance obligations.
+export type PricingProgramKey = 'interchange-plus' | 'flat-rate' | 'surcharge' | 'dual-pricing';
+
+export interface PricingProgram {
+  key: PricingProgramKey;
+  name: string;
+  tagline: string;
+  /** True when processing cost is funded by the cardholder, not the merchant. */
+  passThrough: boolean;
+  merchantMonthlyCost: number;
+  effectiveRatePct: number;
+  monthlySavings: number;
+  annualSavings: number;
+  savingsPct: number;
+  deltMarginMonthly: number;
+  cardholderImpact: string;
+  bestFor: string;
+  compliance: string[];
+  headlineRate: string; // what the merchant is quoted
+  isDefault: boolean;
+}
+
+const SURCHARGE_CAP_PCT = 3.0;         // Visa/MC credit surcharge cap
+const DUAL_PRICING_PROGRAM_FEE = 49;   // flat monthly program fee
+const FLAT_RATE_PER_ITEM = 0.10;
+
+export function buildPricingPrograms(
+  input: StatementInput,
+  proposal: ProposalInput,
+  intel: ProcessingIntelligence,
+): PricingProgram[] {
+  const vol = input.totalVolume || 1;
+  const current = input.currentMonthlyCost;
+  const wholesale = intel.wholesaleTotal;
+  const margin = intel.deltMarkup;
+
+  const debitRows = intel.cardMix.filter(m => m.category.includes('Debit'));
+  const debitVol = debitRows.reduce((a, m) => a + m.volume, 0);
+  const debitShare = debitVol / vol;
+  const debitInterchange = debitRows.reduce((a, m) => a + m.cost, 0);
+  const debitWholesale = debitInterchange + intel.assessmentsTotal * debitShare;
+
+  const mk = (p: Omit<PricingProgram, 'monthlySavings' | 'annualSavings' | 'savingsPct' | 'effectiveRatePct'>): PricingProgram => {
+    const monthlySavings = Math.max(0, current - p.merchantMonthlyCost);
+    return {
+      ...p,
+      effectiveRatePct: (p.merchantMonthlyCost / vol) * 100,
+      monthlySavings,
+      annualSavings: monthlySavings * 12,
+      savingsPct: current > 0 ? (monthlySavings / current) * 100 : 0,
+    };
+  };
+
+  // 2 — Flat rate: one clean number covering wholesale + margin + a small
+  // buffer for mix drift, rounded up to the nearest 0.25%.
+  const flatPct = Math.ceil((((wholesale + margin) / vol) * 100 + 0.10) * 4) / 4;
+  const flatCost = vol * (flatPct / 100) + input.totalTransactions * FLAT_RATE_PER_ITEM;
+
+  // 3 — Surcharge: credit-side acceptance cost (including our credit-share
+  // margin) is funded by the cardholder surcharge; the merchant pays only the
+  // debit side, which Reg II prohibits surcharging.
+  const surchargeMerchantCost = debitWholesale + margin * debitShare;
+
+  return [
+    mk({
+      key: 'interchange-plus',
+      name: 'Interchange-Plus',
+      tagline: 'Transparent cost-plus — merchant absorbs fees',
+      passThrough: false,
+      merchantMonthlyCost: proposal.deltMonthlyCost,
+      deltMarginMonthly: margin,
+      cardholderImpact: 'None — customers see no fee, merchant absorbs processing cost.',
+      bestFor: 'Rate shoppers and statement auditors who want published interchange at cost and a fully disclosed margin.',
+      compliance: ['Published interchange and assessments passed through at cost; margin disclosed on every statement.'],
+      headlineRate: `IC + ${intel.deltMarkupBps.toFixed(0)} bps`,
+      isDefault: true,
+    }),
+    mk({
+      key: 'flat-rate',
+      name: 'Flat Rate',
+      tagline: 'One predictable number — merchant absorbs fees',
+      passThrough: false,
+      merchantMonthlyCost: flatCost,
+      deltMarginMonthly: Math.max(0, flatCost - wholesale),
+      cardholderImpact: 'None — customers see no fee, merchant absorbs processing cost.',
+      bestFor: 'Simplicity-first merchants who value a fixed, budgetable rate over squeezing the last basis point.',
+      compliance: ['No downgrade or mix risk to the merchant — the quoted rate is fixed regardless of card type.'],
+      headlineRate: `${flatPct.toFixed(2)}% + $${FLAT_RATE_PER_ITEM.toFixed(2)}/txn`,
+      isDefault: false,
+    }),
+    mk({
+      key: 'surcharge',
+      name: 'Credit Surcharge',
+      tagline: 'Credit fees passed to the cardholder',
+      passThrough: true,
+      merchantMonthlyCost: surchargeMerchantCost,
+      deltMarginMonthly: margin,
+      cardholderImpact: `${SURCHARGE_CAP_PCT.toFixed(0)}% surcharge on credit purchases; debit cards are unaffected.`,
+      bestFor: 'Merchants with price-insensitive customers (B2B, professional services) where passing credit fees won\'t cost sales.',
+      compliance: [
+        'Credit cards only — Regulation II prohibits surcharging debit and prepaid.',
+        `Capped at ${SURCHARGE_CAP_PCT.toFixed(0)}% and never above the cost of acceptance (Visa/Mastercard rules).`,
+        'Disclosure required at store entry and point of sale; surcharge itemized on the receipt.',
+        'Prohibited in CT, MA, and PR — use dual pricing in those markets.',
+        'Card networks and acquirer must be notified 30 days before the program starts.',
+      ],
+      headlineRate: `${SURCHARGE_CAP_PCT.toFixed(0)}% credit surcharge · merchant pays debit only`,
+      isDefault: false,
+    }),
+    mk({
+      key: 'dual-pricing',
+      name: 'Dual Pricing',
+      tagline: 'Cash price vs card price — near-zero merchant cost',
+      passThrough: true,
+      merchantMonthlyCost: DUAL_PRICING_PROGRAM_FEE,
+      deltMarginMonthly: margin,
+      cardholderImpact: 'Card price runs ≈ 4% above the posted cash price; paying cash avoids it entirely.',
+      bestFor: 'Merchants who want zero processing cost — including where surcharging is banned or would feel hostile to customers.',
+      compliance: [
+        'Both cash and card prices must be posted — dual pricing is a displayed price, not a hidden fee.',
+        'Compliant in all 50 states when both prices are clearly presented.',
+        'Receipts show the price the customer actually paid.',
+      ],
+      headlineRate: `$${DUAL_PRICING_PROGRAM_FEE}/mo program fee · card price funds processing`,
+      isDefault: false,
+    }),
+  ];
+}
+
 // ── Delt-side deal economics (internal only — never merchant-facing) ──
 // The spread between the merchant's current cost and the wholesale floor is a
 // value pool. The merchant's "savings" and Delt's margin are the two shares of

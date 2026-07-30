@@ -7,6 +7,7 @@
 import {
   analyzeProcessing,
   auditFeeLine,
+  type PricingProgram,
   type ProcessingIntelligence,
   type ProposalInput,
   type StatementInput,
@@ -39,6 +40,8 @@ export interface ProposalPdfOptions {
   sourceFileName: string;
   statement: StatementInput;
   proposal: ProposalInput;
+  /** Selected pricing program; the proposal numbers should already reflect it. */
+  program?: PricingProgram;
   preparedBy?: string;
 }
 
@@ -119,6 +122,18 @@ function buildDocument(opts: ProposalPdfOptions, intel: ProcessingIntelligence):
       <b>${usd0(intel.additionalUpsideLow * 12)}–${usd0(intel.additionalUpsideHigh * 12)}/yr</b> of upside, a stretch
       effective rate of ≈ <b>${pct(intel.stretchEffectiveRatePct)}</b>.
     </p>
+    ${
+      opts.program
+        ? `<div style="border:1px solid ${BORDER};border-left:4px solid ${INDIGO};background:${TINT};padding:8px 10px;margin:8px 0;">
+            <b style="color:${NAVY};font-size:10.5px;">Pricing program: ${esc(opts.program.name)}</b>
+            <span style="font-size:10px;color:${NAVY};"> — ${esc(opts.program.tagline)}. Quoted as <b>${esc(opts.program.headlineRate)}</b>.</span>
+            <div style="font-size:9.5px;color:#3a4160;margin-top:3px;"><b>Cardholder impact:</b> ${esc(opts.program.cardholderImpact)}</div>
+            ${opts.program.compliance.length > 1
+              ? `<div style="font-size:8.5px;color:#5a6180;margin-top:3px;"><b>Program requirements:</b> ${opts.program.compliance.map(esc).join(' · ')}</div>`
+              : ''}
+          </div>`
+        : ''
+    }
     <p style="border:1.5px solid ${INDIGO};border-left:5px solid ${INDIGO};background:${TINT};padding:8px 10px;font-size:10px;color:${NAVY};">
       <b>Three-year value:</b> ${usd0(p.annualSavings * 3)} at the guaranteed rate alone;
       up to ${usd0((p.annualSavings + intel.additionalUpsideHigh * 12) * 3)} with full interchange optimization.
@@ -147,14 +162,25 @@ function buildDocument(opts: ProposalPdfOptions, intel: ProcessingIntelligence):
     <p style="margin-top:8px;"><b>Pricing model diagnosis — ${esc(intel.pricingModelDiagnosis)}.</b> ${esc(intel.pricingModelDetail)}</p>`;
 
   // ── Page 2: True cost decomposition ──
+  const passThrough = opts.program?.passThrough ?? false;
   const decompRows: Array<[string, string, string]> = [
     ['Modeled interchange (optimized qualification)', usd(intel.interchangeTotal), pct(intel.interchangeRatePct)],
     ['Network assessments & fixed fees', usd(intel.assessmentsTotal), pct((intel.assessmentsTotal / s.totalVolume) * 100)],
     ['<b>Wholesale cost floor (identical on any processor)</b>', `<b>${usd(intel.wholesaleTotal)}</b>`, `<b>${pct(intel.wholesaleRatePct)}</b>`],
     [`Current processor spread + downgrade leakage + junk fees`, usd(intel.currentMarkup), `${intel.currentMarkupBps.toFixed(0)} bps`],
     ['<b>Current all-in cost</b>', `<b>${usd(s.currentMonthlyCost)}</b>`, `<b>${pct(s.effectiveRate)}</b>`],
-    [`Delt transparent margin (all-inclusive: PCI, support, dispute tooling)`, usd(intel.deltMarkup), `${intel.deltMarkupBps.toFixed(0)} bps`],
-    ['<b>Delt all-in cost</b>', `<b>${usd(p.deltMonthlyCost)}</b>`, `<b>${pct(p.deltRate)}</b>`],
+    ...(passThrough
+      ? ([
+          [
+            `Cardholder-funded acceptance cost under ${esc(opts.program!.name)} (credit-side wholesale + service margin)`,
+            'Funded by cardholder', '—',
+          ],
+          [`<b>Delt merchant-paid cost — ${esc(opts.program!.name)}</b>`, `<b>${usd(p.deltMonthlyCost)}</b>`, `<b>${pct(p.deltRate)}</b>`],
+        ] as Array<[string, string, string]>)
+      : ([
+          [`Delt transparent margin (all-inclusive: PCI, support, dispute tooling)`, usd(intel.deltMarkup), `${intel.deltMarkupBps.toFixed(0)} bps`],
+          ['<b>Delt all-in cost</b>', `<b>${usd(p.deltMonthlyCost)}</b>`, `<b>${pct(p.deltRate)}</b>`],
+        ] as Array<[string, string, string]>)),
   ];
 
   const assessRows = intel.assessments
@@ -293,8 +319,10 @@ function buildDocument(opts: ProposalPdfOptions, intel: ProcessingIntelligence):
     <div style="margin-top:12px;border:1.5px solid ${INDIGO};border-left:5px solid ${INDIGO};background:${TINT};padding:10px 12px;">
       <b style="color:${NAVY};">The Delt commitment.</b>
       <span style="font-size:10px;color:${NAVY};">
-        Published interchange and assessments passed through at cost. One transparent margin line
-        (${intel.deltMarkupBps.toFixed(0)} bps all-in equivalent on this profile). No PCI, statement, batch, or annual fees.
+        ${passThrough
+          ? `Under the ${esc(opts.program!.name)} program, acceptance cost is funded at the point of sale — the merchant is quoted ${esc(opts.program!.headlineRate)}.`
+          : `Published interchange and assessments passed through at cost. One transparent margin line
+        (${intel.deltMarkupBps.toFixed(0)} bps all-in equivalent on this profile).`} No PCI, statement, batch, or annual fees.
         Interchange-optimization engineering — daily auto-batch, Level 2/3 enrichment, least-cost debit routing,
         dispute alerts with Visa CE 3.0 workflows — included, with every recovered basis point flowing to ${merchant}.
       </span>

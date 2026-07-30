@@ -12,7 +12,10 @@ import { leadActions, useLeads } from '../crmStore';
 import {
   analyzeProcessing,
   auditFeeLine,
+  buildPricingPrograms,
   type ProcessingIntelligence,
+  type PricingProgram,
+  type PricingProgramKey,
 } from '../interchangeEngine';
 
 // ── Types ──
@@ -139,6 +142,13 @@ export function BackendAnalysis() {
     [extracted, proposal],
   );
 
+  const [programKey, setProgramKey] = useState<PricingProgramKey>('interchange-plus');
+  const programs = useMemo(
+    () => (extracted && proposal && intel ? buildPricingPrograms(extracted, proposal, intel) : null),
+    [extracted, proposal, intel],
+  );
+  const activeProgram = programs?.find(p => p.key === programKey) ?? programs?.[0] ?? null;
+
   const handleFiles = useCallback((incoming: FileList | File[]) => {
     const valid = Array.from(incoming).filter(f =>
       f.type === 'application/pdf' || f.type.startsWith('image/')
@@ -160,6 +170,7 @@ export function BackendAnalysis() {
     setAutoLeadCreated(false);
     setLeadBannerVisible(false);
     setIntelTab('breakdown');
+    setProgramKey('interchange-plus');
     setTimeout(() => {
       setStatus('analyzing');
       setTimeout(() => {
@@ -211,11 +222,23 @@ export function BackendAnalysis() {
 
   const handleGenerateProposal = () => {
     if (!extracted || !proposal) return;
+    // The proposal document reflects the pricing program the agent selected.
+    const effective = activeProgram
+      ? {
+          ...proposal,
+          deltRate: Number(activeProgram.effectiveRatePct.toFixed(2)),
+          deltMonthlyCost: activeProgram.merchantMonthlyCost,
+          deltAnnualCost: activeProgram.merchantMonthlyCost * 12,
+          annualSavings: activeProgram.annualSavings,
+          savingsPercent: Number(activeProgram.savingsPct.toFixed(1)),
+        }
+      : proposal;
     generateProposalPdf({
       merchantName: autoLeadName || 'Merchant',
       sourceFileName: files[0]?.name || 'statement.pdf',
       statement: extracted,
-      proposal,
+      proposal: effective,
+      program: activeProgram ?? undefined,
     });
   };
 
@@ -463,6 +486,51 @@ export function BackendAnalysis() {
                     </div>
 
                     <div className="px-5 py-4 flex-1 flex flex-col">
+                      {/* Pricing program selector */}
+                      {programs && activeProgram && (
+                        <div className="mb-4">
+                          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Pricing Program</p>
+                          <div className="grid grid-cols-2 gap-2">
+                            {programs.map(pg => (
+                              <button
+                                key={pg.key}
+                                onClick={() => setProgramKey(pg.key)}
+                                className={`text-left px-3 py-2.5 rounded-[6px] border transition-colors ${
+                                  pg.key === activeProgram.key
+                                    ? 'border-brand bg-brand/5 ring-1 ring-brand'
+                                    : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                                }`}
+                              >
+                                <div className="flex items-center justify-between gap-2">
+                                  <span className={`text-xs font-semibold ${pg.key === activeProgram.key ? 'text-brand' : 'text-gray-800'}`}>{pg.name}</span>
+                                  <span className={`px-1.5 py-px rounded-full text-[10px] font-semibold whitespace-nowrap ${
+                                    pg.passThrough ? 'bg-amber-50 text-amber-700' : 'bg-gray-100 text-gray-500'
+                                  }`}>
+                                    {pg.passThrough ? 'Customer pays' : 'Merchant pays'}
+                                  </span>
+                                </div>
+                                <p className="text-[11px] text-gray-500 mt-1">{pg.headlineRate}</p>
+                                <p className="text-[11px] font-medium text-emerald-600 mt-0.5 tabular-nums">
+                                  Saves {fmtWhole(pg.annualSavings)}/yr ({pg.savingsPct.toFixed(0)}%)
+                                </p>
+                              </button>
+                            ))}
+                          </div>
+                          <div className="mt-2 bg-gray-50 rounded-[6px] px-3 py-2.5 space-y-1">
+                            <p className="text-[11px] text-gray-600"><span className="font-semibold">Best for:</span> {activeProgram.bestFor}</p>
+                            <p className="text-[11px] text-gray-600"><span className="font-semibold">Cardholder impact:</span> {activeProgram.cardholderImpact}</p>
+                            {activeProgram.compliance.length > 1 && (
+                              <details className="text-[11px] text-gray-500">
+                                <summary className="cursor-pointer font-semibold text-gray-600 select-none">Compliance requirements ({activeProgram.compliance.length})</summary>
+                                <ul className="mt-1 list-disc pl-4 space-y-0.5">
+                                  {activeProgram.compliance.map(c => <li key={c}>{c}</li>)}
+                                </ul>
+                              </details>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
                       {/* Comparison table */}
                       <div className="border border-gray-200 rounded-[6px] overflow-hidden">
                         <table className="w-full">
@@ -474,21 +542,35 @@ export function BackendAnalysis() {
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-gray-100">
-                            <CompareRow label="Effective Rate" current={`${proposal.currentRate}%`} delt={`${proposal.deltRate}%`} />
-                            <CompareRow label="Monthly Cost" current={fmt(proposal.currentMonthlyCost)} delt={fmt(proposal.deltMonthlyCost)} />
-                            <CompareRow label="Annual Cost" current={fmtWhole(proposal.currentAnnualCost)} delt={fmtWhole(proposal.deltAnnualCost)} />
+                            <CompareRow
+                              label="Effective Rate"
+                              current={`${proposal.currentRate}%`}
+                              delt={`${(activeProgram?.effectiveRatePct ?? proposal.deltRate).toFixed(2)}%`}
+                            />
+                            <CompareRow
+                              label="Monthly Cost"
+                              current={fmt(proposal.currentMonthlyCost)}
+                              delt={fmt(activeProgram?.merchantMonthlyCost ?? proposal.deltMonthlyCost)}
+                            />
+                            <CompareRow
+                              label="Annual Cost"
+                              current={fmtWhole(proposal.currentAnnualCost)}
+                              delt={fmtWhole(activeProgram ? activeProgram.merchantMonthlyCost * 12 : proposal.deltAnnualCost)}
+                            />
                             <tr className="bg-emerald-50/50">
                               <td className="px-3 py-3 text-sm font-semibold text-gray-900">Annual Savings</td>
                               <td className="px-3 py-3 text-right"></td>
                               <td className="px-3 py-3 text-right">
-                                <span className="text-base font-bold text-emerald-600">{fmtWhole(proposal.annualSavings)}</span>
+                                <span className="text-base font-bold text-emerald-600">{fmtWhole(activeProgram?.annualSavings ?? proposal.annualSavings)}</span>
                               </td>
                             </tr>
                             <tr className="bg-emerald-50/50">
                               <td className="px-3 py-3 text-sm font-semibold text-gray-900">Savings %</td>
                               <td className="px-3 py-3 text-right"></td>
                               <td className="px-3 py-3 text-right">
-                                <span className="inline-block px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-sm font-bold">{proposal.savingsPercent}%</span>
+                                <span className="inline-block px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-sm font-bold">
+                                  {(activeProgram?.savingsPct ?? proposal.savingsPercent).toFixed(1)}%
+                                </span>
                               </td>
                             </tr>
                           </tbody>
@@ -497,9 +579,11 @@ export function BackendAnalysis() {
 
                       {/* Savings callout */}
                       <div className="mt-4 bg-emerald-50 border border-emerald-200 rounded-[8px] p-4 text-center">
-                        <p className="text-xs text-emerald-600 font-medium mb-1">Projected Annual Savings</p>
-                        <p className="text-3xl font-bold text-emerald-700">{fmtWhole(proposal.annualSavings)}</p>
-                        <p className="text-xs text-emerald-500 mt-1">{proposal.savingsPercent}% reduction in processing costs</p>
+                        <p className="text-xs text-emerald-600 font-medium mb-1">Projected Annual Savings — {activeProgram?.name ?? 'Interchange-Plus'}</p>
+                        <p className="text-3xl font-bold text-emerald-700">{fmtWhole(activeProgram?.annualSavings ?? proposal.annualSavings)}</p>
+                        <p className="text-xs text-emerald-500 mt-1">
+                          {(activeProgram?.savingsPct ?? proposal.savingsPercent).toFixed(1)}% reduction in processing costs
+                        </p>
                       </div>
 
                       {/* CTA buttons */}
