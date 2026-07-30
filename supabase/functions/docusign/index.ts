@@ -161,6 +161,30 @@ function signerTabs(prefix: string) {
   };
 }
 
+/**
+ * Collapse recipients that are the same human (same email + name) into one,
+ * merging their signature tabs. Common case: the owner signs both the
+ * merchant block and the personal-guarantor block — DocuSign rejects them
+ * as duplicate recipients unless merged.
+ */
+function dedupeSigners(signers: any[]): any[] {
+  const seen = new Map<string, any>();
+  const out: any[] = [];
+  for (const s of signers) {
+    const key = `${String(s.email).trim().toLowerCase()}|${String(s.name).trim().toLowerCase()}`;
+    const existing = seen.get(key);
+    if (!existing) {
+      seen.set(key, s);
+      out.push(s);
+      continue;
+    }
+    for (const tabKind of ["signHereTabs", "dateSignedTabs", "fullNameTabs", "textTabs"]) {
+      existing.tabs[tabKind] = [...(existing.tabs[tabKind] ?? []), ...(s.tabs?.[tabKind] ?? [])];
+    }
+  }
+  return out;
+}
+
 interface SendPayload {
   merchantId?: string;
   merchantName: string;
@@ -231,7 +255,7 @@ async function createEnvelope(
         documentBase64,
       },
     ],
-    recipients: { signers },
+    recipients: { signers: dedupeSigners(signers) },
     status: "sent",
   };
 

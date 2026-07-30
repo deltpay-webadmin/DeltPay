@@ -38,8 +38,12 @@ const formatEin = (v: string) => {
   return d.length > 2 ? `${d.slice(0, 2)}-${d.slice(2)}` : d;
 };
 
-/** ~21 banking days per month — the MCA convention for daily ACH estimates. */
-const BIZ_DAYS_PER_MONTH = 21;
+/** Remittance periods per month by frequency (21 banking days is the MCA convention). */
+const PERIODS_PER_MONTH: Record<'Daily' | 'Weekly' | 'Monthly', number> = {
+  Daily: 21,
+  Weekly: 13 / 3, // 52 weeks ÷ 12 months
+  Monthly: 1,
+};
 const fmtDate = (d?: string | null) =>
   d ? new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
 
@@ -65,6 +69,7 @@ interface ComposerForm {
   termMonths: string;
   remittancePct: string;
   dailyRemittance: string;
+  remittanceFrequency: 'Daily' | 'Weekly' | 'Monthly';
   remittanceMethod: 'ACH' | 'Split Funding' | 'Lockbox';
   effectiveDate: string;
   principalState: string;
@@ -76,6 +81,7 @@ const emptyForm = (): ComposerForm => ({
   hasGuarantor: false, guarantorName: '', guarantorEmail: '',
   merchantLegalName: '', dbaName: '', stateOfFormation: '', ein: '', businessAddress: '',
   purchasePrice: '', factorRate: '1.35', termMonths: '6', remittancePct: '', dailyRemittance: '',
+  remittanceFrequency: 'Daily',
   remittanceMethod: 'ACH', effectiveDate: new Date().toISOString().slice(0, 10), principalState: '',
 });
 
@@ -103,6 +109,7 @@ function draftToForm(d: Partial<SendContractRequest>): ComposerForm {
     f.factorRate = t.factorRate ? String(t.factorRate) : f.factorRate;
     f.remittancePct = t.remittancePct != null ? String(t.remittancePct) : '';
     f.dailyRemittance = t.dailyRemittance != null ? String(t.dailyRemittance) : '';
+    f.remittanceFrequency = t.remittanceFrequency ?? 'Daily';
     f.remittanceMethod = t.remittanceMethod ?? 'ACH';
     f.effectiveDate = t.effectiveDate || f.effectiveDate;
     f.principalState = t.principalState ?? '';
@@ -128,8 +135,9 @@ function ComposerModal({ initial, onClose }: { initial: ComposerForm; onClose: (
   const factor = parseFloat(form.factorRate) || 0;
   const purchasedAmount = Math.round(price * factor * 100) / 100;
   const months = parseFloat(form.termMonths) || 0;
+  const periodsPerMonth = PERIODS_PER_MONTH[form.remittanceFrequency];
   const autoDailyAch = purchasedAmount > 0 && months > 0
-    ? Math.round(purchasedAmount / (months * BIZ_DAYS_PER_MONTH))
+    ? Math.round(purchasedAmount / (months * periodsPerMonth))
     : 0;
   const dailyAchValue = achManual ? form.dailyRemittance : (autoDailyAch ? String(autoDailyAch) : '');
 
@@ -179,6 +187,7 @@ function ComposerModal({ initial, onClose }: { initial: ComposerForm; onClose: (
           factorRate: factor,
           remittancePct: parseFloat(form.remittancePct) || undefined,
           dailyRemittance: parseFloat(dailyAchValue) || undefined,
+          remittanceFrequency: form.remittanceFrequency,
           remittanceMethod: form.remittanceMethod,
           effectiveDate: form.effectiveDate,
           principalState: form.principalState.trim() || undefined,
@@ -283,8 +292,18 @@ function ComposerModal({ initial, onClose }: { initial: ComposerForm; onClose: (
                 <input type="number" step="0.5" min="0" max="100" value={form.remittancePct} onChange={e => up({ remittancePct: e.target.value })} className={inputCls} placeholder="12" />
               </div>
               <div>
+                <label className={labelCls}>ACH Frequency</label>
+                <select value={form.remittanceFrequency}
+                  onChange={e => up({ remittanceFrequency: e.target.value as ComposerForm['remittanceFrequency'] })}
+                  className={inputCls}>
+                  <option>Daily</option>
+                  <option>Weekly</option>
+                  <option>Monthly</option>
+                </select>
+              </div>
+              <div>
                 <label className={labelCls}>
-                  Est. Daily ACH
+                  Est. {form.remittanceFrequency} ACH
                   {achManual ? (
                     <button type="button" onClick={() => { setAchManual(false); up({ dailyRemittance: '' }); }}
                       className="ml-1.5 text-brand normal-case font-semibold hover:underline">auto</button>
@@ -298,7 +317,11 @@ function ComposerModal({ initial, onClose }: { initial: ComposerForm; onClose: (
                 <p className="text-[9px] text-gray-400 mt-0.5">
                   {achManual
                     ? 'Manual — click “auto” to recalculate'
-                    : `Payback ÷ (${months || '—'} mo × ${BIZ_DAYS_PER_MONTH} banking days)`}
+                    : form.remittanceFrequency === 'Daily'
+                      ? `Payback ÷ (${months || '—'} mo × 21 banking days)`
+                      : form.remittanceFrequency === 'Weekly'
+                        ? `Payback ÷ (${months || '—'} mo × 4.33 weeks)`
+                        : `Payback ÷ ${months || '—'} months`}
                 </p>
               </div>
               <div>
@@ -437,6 +460,12 @@ export function BackendDocuments() {
     const draft = consumeEsignDraft();
     if (draft) setComposer(draftToForm(draft));
   }, []);
+
+  // Once contracts load, silently sync every in-flight envelope with DocuSign
+  // so statuses are current without manual refresh clicks.
+  useEffect(() => {
+    if (!isLoading) contractActions.refreshInFlight();
+  }, [isLoading]);
 
   const filtered = useMemo(() => {
     return contracts.filter(c => {

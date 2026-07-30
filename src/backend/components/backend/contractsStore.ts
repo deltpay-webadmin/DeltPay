@@ -32,6 +32,7 @@ export interface AgreementTerms {
   factorRate: number;
   remittancePct?: number;
   dailyRemittance?: number;
+  remittanceFrequency?: 'Daily' | 'Weekly' | 'Monthly';
   remittanceMethod?: 'ACH' | 'Split Funding' | 'Lockbox';
   effectiveDate: string; // YYYY-MM-DD
   principalState?: string;
@@ -312,7 +313,7 @@ export const contractActions = {
   },
 
   /** Pull the envelope's live status from DocuSign and sync the row. */
-  async refreshStatus(contractId: string): Promise<Contract | null> {
+  async refreshStatus(contractId: string, opts?: { silent?: boolean }): Promise<Contract | null> {
     markBusy(contractId, true);
     try {
       const json = await callDocusign({ action: 'status', contractId });
@@ -320,11 +321,29 @@ export const contractActions = {
       set({ contracts: state.contracts.map(c => (c.id === contract.id ? contract : c)) });
       return contract;
     } catch (err: any) {
-      toast.error(`Status refresh failed: ${err.message}`);
+      if (!opts?.silent) toast.error(`Status refresh failed: ${err.message}`);
       return null;
     } finally {
       markBusy(contractId, false);
     }
+  },
+
+  /**
+   * Background-sync every in-flight envelope (sent/delivered) with DocuSign.
+   * Runs once per page visit so statuses update without manual refreshes.
+   */
+  async refreshInFlight(): Promise<void> {
+    const inFlight = state.contracts
+      .filter(c => (c.status === 'sent' || c.status === 'delivered') && c.envelopeId)
+      .slice(0, 10);
+    if (!inFlight.length) return;
+    const results = await Promise.allSettled(
+      inFlight.map(c => contractActions.refreshStatus(c.id, { silent: true })),
+    );
+    const changed = results.filter(
+      (r, i) => r.status === 'fulfilled' && r.value && r.value.status !== inFlight[i].status,
+    ).length;
+    if (changed) toast.info?.(`${changed} agreement${changed === 1 ? '' : 's'} changed status.`);
   },
 
   /** Void an in-flight envelope. */

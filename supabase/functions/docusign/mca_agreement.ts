@@ -18,7 +18,8 @@ export interface AgreementTerms {
   purchasedAmount: number;      // total receivables
   factorRate: number;
   remittancePct?: number;       // estimated remittance percentage
-  dailyRemittance?: number;     // estimated daily ACH
+  dailyRemittance?: number;     // estimated ACH amount per remittance period
+  remittanceFrequency?: 'Daily' | 'Weekly' | 'Monthly';
   remittanceMethod?: 'ACH' | 'Split Funding' | 'Lockbox';
   effectiveDate: string;        // YYYY-MM-DD
   principalState?: string;
@@ -55,7 +56,7 @@ export function renderAgreementHtml(t: AgreementTerms): string {
     ['Purchased Amount (Total Receivables)', usd(t.purchasedAmount)],
     ['Factor Rate', t.factorRate.toFixed(4).replace(/0+$/, '').replace(/\.$/, '.0')],
     ['Estimated Remittance Percentage', t.remittancePct != null ? `${t.remittancePct}%` : '—'],
-    ['Estimated Daily ACH Remittance', usd(t.dailyRemittance)],
+    [`Estimated ${t.remittanceFrequency ?? 'Daily'} ACH Remittance`, usd(t.dailyRemittance)],
     ['Remittance Method', `${checkbox(t.remittanceMethod, 'ACH')} &nbsp; ${checkbox(t.remittanceMethod, 'Split Funding')} &nbsp; ${checkbox(t.remittanceMethod, 'Lockbox')}`],
     ['Effective Date', esc(fmtDate(t.effectiveDate))],
     ['Principal State of Operations', esc(t.principalState)],
@@ -134,7 +135,7 @@ ${p(`2.5 <b>No Right of Setoff.</b> Merchant expressly waives any right of setof
 
 ${h('ARTICLE 3 — REMITTANCE AND COLLECTION')}
 ${p(`3.1 <b>Remittance Method.</b> The parties shall collect the Specific Receivables through the method specified in Schedule A, which may include: (a) ACH debit from Merchant's designated bank account; (b) split funding through Merchant's Processor; or (c) lockbox or other arrangement as agreed. Merchant authorizes Purchaser to initiate ACH debits from Merchant's designated bank account in accordance with the remittance schedule set forth in Schedule A.`)}
-${p(`3.2 <b>Estimated Remittance Amount.</b> The estimated daily or weekly remittance amount set forth in Schedule A is an estimate only, calculated by applying the Remittance Percentage to Merchant's estimated average daily Receivables. The actual amount collected shall reflect Merchant's actual Receivables collected during the applicable period. The estimated remittance amount is not a fixed payment obligation.`)}
+${p(`3.2 <b>Estimated Remittance Amount.</b> The estimated daily, weekly, or monthly remittance amount set forth in Schedule A is an estimate only, calculated by applying the Remittance Percentage to Merchant's estimated average Receivables for the applicable period. The actual amount collected shall reflect Merchant's actual Receivables collected during the applicable period. The estimated remittance amount is not a fixed payment obligation.`)}
 ${p(`3.3 <b>ACH Authorization.</b> Merchant hereby authorizes Purchaser and its designated payment processor or ACH originator to initiate debit entries to Merchant's designated bank account(s) for the purpose of collecting Remittances. This authorization is irrevocable except upon full collection of the Purchased Amount or as otherwise provided herein. Merchant agrees to maintain sufficient funds in the designated account(s) to cover scheduled Remittances.`)}
 ${p(`3.4 <b>Reconciliation.</b> Either party may request a reconciliation of Remittances to actual Receivables at any time, but no more frequently than once per calendar month unless an Event of Default has occurred. Upon request, Merchant shall provide bank statements, Processor statements, or other documentation within five (5) Business Days. If Remittances have exceeded the Remittance Percentage of actual collected Receivables, Purchaser shall credit the excess against future Remittances or refund within ten (10) Business Days. If Remittances have been less than the applicable percentage, Merchant shall pay the shortfall within five (5) Business Days. Reconciliation is the sole and exclusive remedy for Remittance disputes.`)}
 ${p(`3.5 <b>Revenue Decline Adjustment.</b> If Merchant experiences a verifiable decline in Receivables exceeding thirty percent (30%) for thirty (30) or more consecutive days due to seasonal variation, economic conditions, force majeure, or other factors outside Merchant's control (excluding fraud or breach), Merchant may request an adjustment to the estimated Remittance amount with supporting documentation. Purchaser shall respond within five (5) Business Days. Any adjustment applies to the estimated ACH debit only; the Purchased Amount and Remittance Percentage remain unchanged.`)}
