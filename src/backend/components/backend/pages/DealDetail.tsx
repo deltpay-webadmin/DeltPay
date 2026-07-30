@@ -3,11 +3,12 @@ import {
   ArrowLeft, DollarSign, TrendingUp, AlertTriangle,
   CheckCircle, Clock, FileText, Shield,
   Download, ExternalLink, CreditCard, Activity,
-  ArrowUpRight, ArrowDownRight, Ban, RefreshCw,
+  ArrowUpRight, ArrowDownRight, Ban, RefreshCw, PenTool,
 } from 'lucide-react';
 import { useAppNavigate } from '../NavigationContext';
 import { useCapital, type CapitalDeal, type LoanPayment } from '../capitalStore';
-import { useDeals, type Deal as CrmDeal } from '../crmStore';
+import { useDeals, useMerchants, type Deal as CrmDeal } from '../crmStore';
+import { stageEsignDraft } from '../contractsStore';
 
 // ── Helpers ──
 const fmt = (n: number) => n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
@@ -96,6 +97,7 @@ export function DealDetail() {
   const [activeTab, setActiveTab] = useState<'overview' | 'payments' | 'financials'>('overview');
   const { deals: capitalDeals, isLoading } = useCapital();
   const crmDeals = useDeals();
+  const merchants = useMerchants();
 
   const dealId = decodeURIComponent(currentPage.split('/deals/')[1] || '');
   const deal: Deal | null = useMemo(() => {
@@ -230,6 +232,36 @@ export function DealDetail() {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  const m = merchants.find(x => x.name === deal.merchant);
+                  stageEsignDraft({
+                    merchantId: m?.id,
+                    merchantName: deal.merchant,
+                    dealId: deal.id,
+                    signerName: m?.contactName || '',
+                    signerEmail: m?.contactEmail || '',
+                    terms: {
+                      merchantLegalName: deal.merchant,
+                      ein: m?.ein,
+                      stateOfFormation: m?.state,
+                      principalState: m?.state,
+                      purchasePrice: deal.fundedAmt,
+                      purchasedAmount: deal.totalOwed,
+                      factorRate: deal.factor,
+                      remittancePct: deal.holdback || undefined,
+                      dailyRemittance: deal.dailyDebit || undefined,
+                      remittanceMethod: 'ACH',
+                      effectiveDate: today,
+                      hasGuarantor: false,
+                    },
+                  });
+                  navigate('/documents');
+                }}
+                className="px-3.5 py-2 border border-gray-200 rounded-[6px] text-sm text-gray-600 bg-white hover:bg-gray-50 inline-flex items-center gap-2 transition-colors"
+              >
+                <PenTool className="w-4 h-4" /> Send for E-Sign
+              </button>
               <button
                 onClick={exportDeal}
                 className="px-3.5 py-2 border border-gray-200 rounded-[6px] text-sm text-gray-600 bg-white hover:bg-gray-50 inline-flex items-center gap-2 transition-colors"
