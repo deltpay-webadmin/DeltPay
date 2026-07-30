@@ -9,6 +9,7 @@ import { useAppNavigate } from '../NavigationContext';
 import { BackendCostCalculator } from './BackendCostCalculator';
 import { generateProposalPdf } from '../proposalPdf';
 import { leadActions, useLeads } from '../crmStore';
+import { MerchantPresentation } from './MerchantPresentation';
 import {
   analyzeProcessing,
   auditFeeLine,
@@ -454,6 +455,19 @@ export function BackendAnalysis() {
                   </div>
                 )}
 
+                {/* Merchant view is its own simple presentation: cost, savings, graphs. */}
+                {viewMode === 'merchant' && intel && programs && activeProgram ? (
+                  <MerchantPresentation
+                    statement={extracted}
+                    proposal={proposal}
+                    intel={intel}
+                    programs={programs}
+                    activeProgram={activeProgram}
+                    onSelectProgram={setProgramKey}
+                    onGeneratePdf={handleGenerateProposal}
+                  />
+                ) : (
+                <>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {/* ── Left: Extracted Data ── */}
                   <div className="bg-white rounded-[8px] border border-gray-200 overflow-hidden">
@@ -688,6 +702,8 @@ export function BackendAnalysis() {
                       {intelTab === 'economics' && viewMode === 'agent' && <IntelEconomics intel={intel} />}
                     </div>
                   </div>
+                )}
+                </>
                 )}
               </>
             )}
