@@ -31,6 +31,15 @@ const STATUS_CONFIG: Record<ContractStatus, { color: string; bg: string; label: 
 
 const usd = (n?: number | null) =>
   n == null ? '—' : n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+
+/** Mask an EIN as XX-XXXXXXX, digits only, capped at 9. */
+const formatEin = (v: string) => {
+  const d = v.replace(/\D/g, '').slice(0, 9);
+  return d.length > 2 ? `${d.slice(0, 2)}-${d.slice(2)}` : d;
+};
+
+/** ~21 banking days per month — the MCA convention for daily ACH estimates. */
+const BIZ_DAYS_PER_MONTH = 21;
 const fmtDate = (d?: string | null) =>
   d ? new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
 
@@ -53,6 +62,7 @@ interface ComposerForm {
   businessAddress: string;
   purchasePrice: string;
   factorRate: string;
+  termMonths: string;
   remittancePct: string;
   dailyRemittance: string;
   remittanceMethod: 'ACH' | 'Split Funding' | 'Lockbox';
@@ -65,7 +75,7 @@ const emptyForm = (): ComposerForm => ({
   signerName: '', signerEmail: '', signerTitle: '',
   hasGuarantor: false, guarantorName: '', guarantorEmail: '',
   merchantLegalName: '', dbaName: '', stateOfFormation: '', ein: '', businessAddress: '',
-  purchasePrice: '', factorRate: '1.35', remittancePct: '', dailyRemittance: '',
+  purchasePrice: '', factorRate: '1.35', termMonths: '6', remittancePct: '', dailyRemittance: '',
   remittanceMethod: 'ACH', effectiveDate: new Date().toISOString().slice(0, 10), principalState: '',
 });
 
@@ -87,7 +97,7 @@ function draftToForm(d: Partial<SendContractRequest>): ComposerForm {
     f.merchantLegalName = t.merchantLegalName ?? f.merchantName;
     f.dbaName = t.dbaName ?? '';
     f.stateOfFormation = t.stateOfFormation ?? '';
-    f.ein = t.ein ?? '';
+    f.ein = formatEin(t.ein ?? '');
     f.businessAddress = t.businessAddress ?? '';
     f.purchasePrice = t.purchasePrice ? String(t.purchasePrice) : '';
     f.factorRate = t.factorRate ? String(t.factorRate) : f.factorRate;
@@ -107,6 +117,8 @@ const labelCls = 'text-[10px] font-semibold text-gray-500 uppercase tracking-wid
 function ComposerModal({ initial, onClose }: { initial: ComposerForm; onClose: () => void }) {
   const [form, setForm] = useState<ComposerForm>(initial);
   const [sending, setSending] = useState(false);
+  // Daily ACH auto-calculates from payback ÷ term until the user types their own number.
+  const [achManual, setAchManual] = useState(initial.dailyRemittance !== '');
   const merchants = useMerchants();
   const deals = useDeals();
 
@@ -115,6 +127,11 @@ function ComposerModal({ initial, onClose }: { initial: ComposerForm; onClose: (
   const price = parseFloat(form.purchasePrice) || 0;
   const factor = parseFloat(form.factorRate) || 0;
   const purchasedAmount = Math.round(price * factor * 100) / 100;
+  const months = parseFloat(form.termMonths) || 0;
+  const autoDailyAch = purchasedAmount > 0 && months > 0
+    ? Math.round(purchasedAmount / (months * BIZ_DAYS_PER_MONTH))
+    : 0;
+  const dailyAchValue = achManual ? form.dailyRemittance : (autoDailyAch ? String(autoDailyAch) : '');
 
   const pickMerchant = (id: string) => {
     const m = merchants.find(x => x.id === id);
@@ -125,7 +142,7 @@ function ComposerModal({ initial, onClose }: { initial: ComposerForm; onClose: (
       merchantLegalName: form.merchantLegalName || m.name,
       signerName: form.signerName || m.contactName || '',
       signerEmail: form.signerEmail || m.contactEmail || '',
-      ein: form.ein || m.ein || '',
+      ein: form.ein || formatEin(m.ein || ''),
       principalState: form.principalState || m.state || '',
       stateOfFormation: form.stateOfFormation || m.state || '',
     });
@@ -161,7 +178,7 @@ function ComposerModal({ initial, onClose }: { initial: ComposerForm; onClose: (
           purchasedAmount,
           factorRate: factor,
           remittancePct: parseFloat(form.remittancePct) || undefined,
-          dailyRemittance: parseFloat(form.dailyRemittance) || undefined,
+          dailyRemittance: parseFloat(dailyAchValue) || undefined,
           remittanceMethod: form.remittanceMethod,
           effectiveDate: form.effectiveDate,
           principalState: form.principalState.trim() || undefined,
@@ -221,7 +238,8 @@ function ComposerModal({ initial, onClose }: { initial: ComposerForm; onClose: (
               </div>
               <div>
                 <label className={labelCls}>Federal EIN</label>
-                <input value={form.ein} onChange={e => up({ ein: e.target.value })} className={inputCls} placeholder="XX-XXXXXXX" />
+                <input value={form.ein} onChange={e => up({ ein: formatEin(e.target.value) })}
+                  inputMode="numeric" maxLength={10} className={inputCls} placeholder="12-3456789" />
               </div>
               <div>
                 <label className={labelCls}>State of Formation</label>
@@ -257,12 +275,31 @@ function ComposerModal({ initial, onClose }: { initial: ComposerForm; onClose: (
                 </div>
               </div>
               <div>
+                <label className={labelCls}>Est. Term (months)</label>
+                <input type="number" step="1" min="1" max="36" value={form.termMonths} onChange={e => up({ termMonths: e.target.value })} className={inputCls} />
+              </div>
+              <div>
                 <label className={labelCls}>Remittance %</label>
                 <input type="number" step="0.5" min="0" max="100" value={form.remittancePct} onChange={e => up({ remittancePct: e.target.value })} className={inputCls} placeholder="12" />
               </div>
               <div>
-                <label className={labelCls}>Est. Daily ACH</label>
-                <input type="number" min="0" value={form.dailyRemittance} onChange={e => up({ dailyRemittance: e.target.value })} className={inputCls} placeholder="450" />
+                <label className={labelCls}>
+                  Est. Daily ACH
+                  {achManual ? (
+                    <button type="button" onClick={() => { setAchManual(false); up({ dailyRemittance: '' }); }}
+                      className="ml-1.5 text-brand normal-case font-semibold hover:underline">auto</button>
+                  ) : (
+                    <span className="ml-1.5 text-brand/70 normal-case">auto</span>
+                  )}
+                </label>
+                <input type="number" min="0" value={dailyAchValue}
+                  onChange={e => { setAchManual(true); up({ dailyRemittance: e.target.value }); }}
+                  className={`${inputCls} ${!achManual ? 'bg-indigo-50/50 border-indigo-100' : ''}`} placeholder="—" />
+                <p className="text-[9px] text-gray-400 mt-0.5">
+                  {achManual
+                    ? 'Manual — click “auto” to recalculate'
+                    : `Payback ÷ (${months || '—'} mo × ${BIZ_DAYS_PER_MONTH} banking days)`}
+                </p>
               </div>
               <div>
                 <label className={labelCls}>Remittance Method</label>

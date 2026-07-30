@@ -43,6 +43,7 @@ import {
   ArrowDown,
   ArrowUpDown,
   Sparkles,
+  PenTool,
 } from 'lucide-react';
 import {
   useLeads,
@@ -55,6 +56,8 @@ import {
   scoreLead,
   type Lead as StoreLead,
 } from '../crmStore';
+import { stageEsignDraft } from '../contractsStore';
+import { useAppNavigate } from '../NavigationContext';
 
 // ── CRM sales cycle (short) ──
 // Onboarding / underwriting lives outside the CRM; a lead only moves through
@@ -367,7 +370,39 @@ function LeadDetailPanel({ lead, onClose, onEdit, onDelete }: { lead: Lead | nul
   const [activeTab, setActiveTab] = useState<'activity' | 'notes' | 'tasks'>('activity');
   const [newNote, setNewNote] = useState('');
   const [newTask, setNewTask] = useState('');
+  const { navigate } = useAppNavigate();
   if (!lead) return null;
+
+  // Stage a prefilled MCA agreement from everything the lead already told us
+  // (KYB intake, contact, requested amount) and jump to the e-sign composer.
+  const handleSendEsign = () => {
+    const biz = lead.kyb?.business;
+    const rep = lead.kyb?.representative;
+    const address = biz
+      ? [biz.addressLine1, biz.addressLine2, [biz.city, biz.state].filter(Boolean).join(', ') + (biz.postalCode ? ` ${biz.postalCode}` : '')]
+          .map(s => (s || '').trim()).filter(s => s && s !== ',').join(', ')
+      : undefined;
+    const requested = parseFloat((lead.amountRequested || '').replace(/[^0-9.]/g, '')) || 0;
+    stageEsignDraft({
+      merchantName: lead.businessName,
+      signerName: lead.contactName || [rep?.firstName, rep?.lastName].filter(Boolean).join(' '),
+      signerEmail: lead.contactEmail || rep?.email || '',
+      signerTitle: rep?.title || undefined,
+      terms: {
+        merchantLegalName: biz?.legalName || lead.businessName,
+        dbaName: biz?.dba || undefined,
+        stateOfFormation: biz?.stateOfIncorporation || undefined,
+        businessAddress: address || undefined,
+        principalState: biz?.state || undefined,
+        purchasePrice: requested,
+        purchasedAmount: 0,
+        factorRate: 0,
+        effectiveDate: new Date().toISOString().slice(0, 10),
+        hasGuarantor: false,
+      },
+    });
+    navigate('/documents');
+  };
 
   const isDeadEnd = lead.status === 'Not Qualified' || lead.status === 'Lost';
 
@@ -653,6 +688,14 @@ function LeadDetailPanel({ lead, onClose, onEdit, onDelete }: { lead: Lead | nul
               className="flex-1 px-4 py-2.5 bg-emerald-600 text-white text-sm font-medium rounded-[6px] hover:bg-emerald-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Convert
+            </button>
+            <button
+              onClick={handleSendEsign}
+              disabled={isDeadEnd}
+              title={isDeadEnd ? 'Change the status before sending an agreement' : 'Send the MCA agreement for e-signature, prefilled from this lead'}
+              className="px-4 py-2.5 bg-white border border-indigo-300 text-indigo-700 text-sm font-medium rounded-[6px] hover:bg-indigo-50 transition-colors whitespace-nowrap inline-flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <PenTool className="w-4 h-4" /> E-Sign
             </button>
             <button
               onClick={handleMarkNotQualified}
