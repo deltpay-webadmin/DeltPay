@@ -1,13 +1,19 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useMemo } from 'react';
 import {
   Upload, FileText, Sparkles, Download, UserPlus, Clock,
   CheckCircle2, XCircle, Send, TrendingDown, DollarSign,
   AlertCircle, Loader2, X, File, ArrowRight, ExternalLink,
+  Flame, Lightbulb, BarChart3, ShieldCheck, ShieldAlert,
 } from 'lucide-react';
 import { useAppNavigate } from '../NavigationContext';
 import { BackendCostCalculator } from './BackendCostCalculator';
 import { generateProposalPdf } from '../proposalPdf';
 import { leadActions, useLeads } from '../crmStore';
+import {
+  analyzeProcessing,
+  auditFeeLine,
+  type ProcessingIntelligence,
+} from '../interchangeEngine';
 
 // ── Types ──
 type AnalysisStatus = 'idle' | 'uploading' | 'analyzing' | 'done';
@@ -92,6 +98,18 @@ const historyData: HistoryRow[] = [
 
 const fmt = (n: number) => n.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 });
 const fmtWhole = (n: number) => n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+const pctf = (n: number, d = 2) => `${n.toFixed(d)}%`;
+
+// Statement Intelligence walks the analysis in its natural order:
+// what you pay (breakdown) → what's wrong (issues/fat) → what to do
+// (suggestions) → how we know (modeling).
+type IntelTabKey = 'breakdown' | 'issues' | 'suggestions' | 'modeling';
+const INTEL_TABS: { key: IntelTabKey; label: string; icon: React.ElementType }[] = [
+  { key: 'breakdown', label: 'Breakdown', icon: FileText },
+  { key: 'issues', label: 'Issues & Fat', icon: Flame },
+  { key: 'suggestions', label: 'Suggestions', icon: Lightbulb },
+  { key: 'modeling', label: 'Modeling', icon: BarChart3 },
+];
 
 // ══════════════════════════════════════
 // Main Component
@@ -109,10 +127,16 @@ export function BackendAnalysis() {
   const [autoLeadIsNew, setAutoLeadIsNew] = useState(true);
   const [leadBannerVisible, setLeadBannerVisible] = useState(false);
   const [history, setHistory] = useState<HistoryRow[]>(historyData);
+  const [intelTab, setIntelTab] = useState<IntelTabKey>('breakdown');
   const inputRef = useRef<HTMLInputElement>(null);
   // Subscribe to the CRM store so it hydrates from Supabase before we
   // create/dedupe leads against it.
   useLeads();
+
+  const intel = useMemo(
+    () => (extracted && proposal ? analyzeProcessing(extracted, proposal) : null),
+    [extracted, proposal],
+  );
 
   const handleFiles = useCallback((incoming: FileList | File[]) => {
     const valid = Array.from(incoming).filter(f =>
@@ -134,6 +158,7 @@ export function BackendAnalysis() {
     setStatus('uploading');
     setAutoLeadCreated(false);
     setLeadBannerVisible(false);
+    setIntelTab('breakdown');
     setTimeout(() => {
       setStatus('analyzing');
       setTimeout(() => {
@@ -503,6 +528,40 @@ export function BackendAnalysis() {
                     </div>
                   </div>
                 </div>
+
+                {/* ── Statement Intelligence: breakdown → issues/fat → suggestions → modeling ── */}
+                {intel && (
+                  <div className="bg-white rounded-[8px] border border-gray-200 overflow-hidden">
+                    <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between flex-wrap gap-3">
+                      <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 text-brand" />
+                        Statement Intelligence
+                      </h2>
+                      <div className="flex gap-1 bg-gray-100 rounded-[6px] p-1">
+                        {INTEL_TABS.map(t => (
+                          <button
+                            key={t.key}
+                            onClick={() => setIntelTab(t.key)}
+                            className={`px-3 py-1.5 text-xs font-medium rounded-[5px] flex items-center gap-1.5 transition-colors ${
+                              intelTab === t.key
+                                ? 'bg-white text-gray-900 shadow-sm'
+                                : 'text-gray-500 hover:text-gray-700'
+                            }`}
+                          >
+                            <t.icon className="w-3.5 h-3.5" />
+                            {t.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="px-5 py-4">
+                      {intelTab === 'breakdown' && <IntelBreakdown extracted={extracted} proposal={proposal} intel={intel} />}
+                      {intelTab === 'issues' && <IntelIssues extracted={extracted} intel={intel} />}
+                      {intelTab === 'suggestions' && <IntelSuggestions intel={intel} />}
+                      {intelTab === 'modeling' && <IntelModeling extracted={extracted} proposal={proposal} intel={intel} />}
+                    </div>
+                  </div>
+                )}
               </>
             )}
 
@@ -580,5 +639,313 @@ function CompareRow({ label, current, delt }: { label: string; current: string; 
       <td className="px-3 py-2.5 text-sm text-gray-500 text-right tabular-nums">{current}</td>
       <td className="px-3 py-2.5 text-sm text-gray-900 text-right font-medium tabular-nums">{delt}</td>
     </tr>
+  );
+}
+
+// ══════════════════════════════════════
+// Statement Intelligence tabs
+// ══════════════════════════════════════
+
+const intelTh = 'text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wide px-3 py-2';
+const intelThRight = 'text-right text-[11px] font-semibold text-gray-500 uppercase tracking-wide px-3 py-2';
+
+/** 1 — Breakdown: where every dollar of the current cost goes. */
+function IntelBreakdown({ extracted, proposal, intel }: { extracted: ExtractedData; proposal: SavingsProposal; intel: ProcessingIntelligence }) {
+  const rows: { label: string; amount: string; rate: string; tone?: 'floor' | 'fat' | 'delt' }[] = [
+    { label: 'Modeled interchange (optimized qualification)', amount: fmt(intel.interchangeTotal), rate: pctf(intel.interchangeRatePct) },
+    { label: 'Network assessments & fixed fees', amount: fmt(intel.assessmentsTotal), rate: pctf((intel.assessmentsTotal / extracted.totalVolume) * 100) },
+    { label: 'Wholesale cost floor — identical on any processor', amount: fmt(intel.wholesaleTotal), rate: pctf(intel.wholesaleRatePct), tone: 'floor' },
+    { label: 'Current processor spread + downgrade leakage + junk fees', amount: fmt(intel.currentMarkup), rate: `${intel.currentMarkupBps.toFixed(0)} bps`, tone: 'fat' },
+    { label: 'Current all-in cost', amount: fmt(extracted.currentMonthlyCost), rate: pctf(extracted.effectiveRate), tone: 'floor' },
+    { label: 'Delt transparent margin (all-inclusive)', amount: fmt(intel.deltMarkup), rate: `${intel.deltMarkupBps.toFixed(0)} bps`, tone: 'delt' },
+    { label: 'Delt all-in cost', amount: fmt(proposal.deltMonthlyCost), rate: pctf(proposal.deltRate), tone: 'delt' },
+  ];
+  return (
+    <div className="space-y-5">
+      <div>
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Cost Layers</p>
+        <div className="border border-gray-200 rounded-[6px] overflow-hidden">
+          <table className="w-full">
+            <thead>
+              <tr className="bg-gray-50">
+                <th className={intelTh}>Layer</th>
+                <th className={intelThRight}>Monthly</th>
+                <th className={intelThRight}>Rate</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {rows.map(r => (
+                <tr key={r.label} className={r.tone === 'floor' ? 'bg-gray-50/70' : r.tone === 'delt' ? 'bg-emerald-50/50' : ''}>
+                  <td className={`px-3 py-2 text-sm ${r.tone ? 'font-medium text-gray-900' : 'text-gray-700'}`}>{r.label}</td>
+                  <td className={`px-3 py-2 text-sm text-right tabular-nums ${r.tone === 'fat' ? 'text-red-600 font-semibold' : 'text-gray-900 font-medium'}`}>{r.amount}</td>
+                  <td className="px-3 py-2 text-sm text-gray-500 text-right tabular-nums">{r.rate}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div>
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Fee-Line Audit</p>
+        <div className="border border-gray-200 rounded-[6px] overflow-x-auto">
+          <table className="w-full min-w-[640px]">
+            <thead>
+              <tr className="bg-gray-50">
+                <th className={intelTh}>Fee line</th>
+                <th className={intelThRight}>Amount</th>
+                <th className={intelThRight}>% of volume</th>
+                <th className={intelTh}>Audit note</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {extracted.fees.map(f => (
+                <tr key={f.label}>
+                  <td className="px-3 py-2 text-sm text-gray-700 whitespace-nowrap">{f.label}</td>
+                  <td className="px-3 py-2 text-sm text-gray-900 text-right font-medium tabular-nums">{fmt(f.amount)}</td>
+                  <td className="px-3 py-2 text-sm text-gray-500 text-right tabular-nums">{pctf((f.amount / extracted.totalVolume) * 100)}</td>
+                  <td className="px-3 py-2 text-xs text-gray-500">{auditFeeLine(f.label, f.amount, extracted, intel)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** 2 — Issues & Fat: what's wrong and what it costs. */
+function IntelIssues({ extracted, intel }: { extracted: ExtractedData; intel: ProcessingIntelligence }) {
+  const cb = intel.chargebacks;
+  const cbOk = cb.status === 'healthy';
+  return (
+    <div className="space-y-5">
+      <div className="bg-amber-50 border border-amber-200 rounded-[6px] px-4 py-3">
+        <p className="text-sm font-semibold text-amber-800 flex items-center gap-2">
+          <AlertCircle className="w-4 h-4" />
+          {intel.pricingModelDiagnosis}
+        </p>
+        <p className="text-xs text-amber-700 mt-1">{intel.pricingModelDetail}</p>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <FatCard
+          label="Processor spread above floor"
+          value={`${fmt(intel.currentMarkup)}/mo`}
+          sub={`${intel.currentMarkupBps.toFixed(0)} bps over the wholesale cost floor`}
+        />
+        <FatCard
+          label="Downgrade & surcharge leakage"
+          value={`${fmt(intel.downgradeLeakLow)}–${fmt(intel.downgradeLeakHigh)}/mo`}
+          sub="Non-qualified billbacks recoverable via clean qualification"
+        />
+        <FatCard
+          label="Junk fees"
+          value={`${fmt(intel.junkFeesMonthly)}/mo`}
+          sub={intel.junkFeeLabels.length ? intel.junkFeeLabels.join(' · ') : 'None detected'}
+        />
+      </div>
+
+      <div>
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Downgrade Exposure</p>
+        <div className="border border-gray-200 rounded-[6px] overflow-x-auto">
+          <table className="w-full min-w-[680px]">
+            <thead>
+              <tr className="bg-gray-50">
+                <th className={intelTh}>Downgrade path</th>
+                <th className={intelTh}>Trigger</th>
+                <th className={intelTh}>Penalty</th>
+                <th className={intelTh}>Remediation</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {intel.downgradeFindings.map(d => (
+                <tr key={d.program}>
+                  <td className="px-3 py-2 text-sm font-medium text-gray-900 whitespace-nowrap">{d.program}</td>
+                  <td className="px-3 py-2 text-xs text-gray-600">{d.trigger}</td>
+                  <td className="px-3 py-2 text-xs text-red-600 font-medium whitespace-nowrap">{d.penalty}</td>
+                  <td className="px-3 py-2 text-xs text-gray-600">{d.remediation}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div className={`rounded-[6px] border px-4 py-3 flex items-start gap-3 ${
+        cbOk ? 'bg-emerald-50 border-emerald-200' : 'bg-amber-50 border-amber-200'
+      }`}>
+        {cbOk
+          ? <ShieldCheck className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" />
+          : <ShieldAlert className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />}
+        <div>
+          <p className={`text-sm font-semibold ${cbOk ? 'text-emerald-800' : 'text-amber-800'}`}>
+            Dispute posture: {cb.status === 'healthy' ? 'Healthy' : cb.status === 'watch' ? 'Watch' : 'At risk'} — {cb.count} chargeback{cb.count === 1 ? '' : 's'} ({pctf(cb.ratioPct)}) on {extracted.totalTransactions.toLocaleString()} transactions
+          </p>
+          <p className={`text-xs mt-0.5 ${cbOk ? 'text-emerald-700' : 'text-amber-700'}`}>{cb.note}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** 3 — Suggestions: prioritized actions with estimated value. */
+function IntelSuggestions({ intel }: { intel: ProcessingIntelligence }) {
+  return (
+    <div className="space-y-3">
+      {intel.opportunities.map(o => (
+        <div key={o.title} className="border border-gray-200 rounded-[6px] px-4 py-3">
+          <div className="flex items-start justify-between gap-3 flex-wrap">
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-gray-900">{o.title}</p>
+              <p className="text-[11px] text-gray-400 mt-0.5">{o.rule}</p>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="text-sm font-semibold text-emerald-600 tabular-nums">
+                {o.estLowMonthly === o.estHighMonthly ? fmt(o.estLowMonthly) : `${fmt(o.estLowMonthly)}–${fmt(o.estHighMonthly)}`}/mo
+              </span>
+              <span className={`px-2 py-0.5 rounded-full text-[11px] font-medium ${
+                o.includedInPricing ? 'bg-brand/10 text-brand' : 'bg-emerald-50 text-emerald-700'
+              }`}>
+                {o.includedInPricing ? 'In Delt rate' : 'Additional upside'}
+              </span>
+            </div>
+          </div>
+          <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-2">
+            <p className="text-xs text-gray-500"><span className="font-semibold text-gray-600">Evidence:</span> {o.evidence}</p>
+            <p className="text-xs text-gray-500"><span className="font-semibold text-gray-600">Action:</span> {o.action}</p>
+          </div>
+        </div>
+      ))}
+      <p className="text-xs text-gray-400">
+        Additional upside beyond the guaranteed Delt rate: {fmtWhole(intel.additionalUpsideLow * 12)}–{fmtWhole(intel.additionalUpsideHigh * 12)}/yr,
+        a stretch effective rate of ≈ {pctf(intel.stretchEffectiveRatePct)}.
+      </p>
+    </div>
+  );
+}
+
+/** 4 — Modeling: the card mix, assessments, and assumptions behind the numbers. */
+function IntelModeling({ extracted, proposal, intel }: { extracted: ExtractedData; proposal: SavingsProposal; intel: ProcessingIntelligence }) {
+  const upsideMid = (intel.additionalUpsideLow + intel.additionalUpsideHigh) / 2;
+  return (
+    <div className="space-y-5">
+      <div>
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Estimated Card Mix at Published Interchange</p>
+        <div className="border border-gray-200 rounded-[6px] overflow-x-auto">
+          <table className="w-full min-w-[640px]">
+            <thead>
+              <tr className="bg-gray-50">
+                <th className={intelTh}>Interchange program</th>
+                <th className={intelThRight}>Share</th>
+                <th className={intelThRight}>Volume</th>
+                <th className={intelThRight}>Published rate</th>
+                <th className={intelThRight}>Cost</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {intel.cardMix.map(m => (
+                <tr key={`${m.network}-${m.category}`}>
+                  <td className="px-3 py-2 text-sm text-gray-700 whitespace-nowrap">{m.network} — {m.category}</td>
+                  <td className="px-3 py-2 text-sm text-gray-500 text-right tabular-nums">{pctf(m.sharePct, 1)}</td>
+                  <td className="px-3 py-2 text-sm text-gray-700 text-right tabular-nums">{fmtWhole(m.volume)}</td>
+                  <td className="px-3 py-2 text-sm text-gray-500 text-right tabular-nums whitespace-nowrap">{pctf(m.ratePct)} + {fmt(m.perItem)}</td>
+                  <td className="px-3 py-2 text-sm text-gray-900 text-right font-medium tabular-nums">{fmt(m.cost)}</td>
+                </tr>
+              ))}
+              <tr className="bg-gray-50/70">
+                <td className="px-3 py-2 text-sm font-semibold text-gray-900">Modeled interchange total</td>
+                <td className="px-3 py-2 text-sm text-gray-500 text-right">100%</td>
+                <td className="px-3 py-2 text-sm font-semibold text-gray-900 text-right tabular-nums">{fmtWhole(extracted.totalVolume)}</td>
+                <td className="px-3 py-2"></td>
+                <td className="px-3 py-2 text-sm font-semibold text-gray-900 text-right tabular-nums">{fmt(intel.interchangeTotal)}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <div>
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Network Assessments (Modeled)</p>
+          <div className="border border-gray-200 rounded-[6px] overflow-hidden">
+            <table className="w-full">
+              <tbody className="divide-y divide-gray-100">
+                {intel.assessments.map(a => (
+                  <tr key={a.label}>
+                    <td className="px-3 py-2">
+                      <p className="text-sm text-gray-700">{a.label}</p>
+                      <p className="text-[11px] text-gray-400">{a.basis}</p>
+                    </td>
+                    <td className="px-3 py-2 text-sm text-gray-900 text-right font-medium tabular-nums align-top">{fmt(a.amount)}</td>
+                  </tr>
+                ))}
+                <tr className="bg-gray-50/70">
+                  <td className="px-3 py-2 text-sm font-semibold text-gray-900">Total</td>
+                  <td className="px-3 py-2 text-sm font-semibold text-gray-900 text-right tabular-nums">{fmt(intel.assessmentsTotal)}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div>
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Savings Projection</p>
+          <div className="border border-gray-200 rounded-[6px] overflow-hidden">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-gray-50">
+                  <th className={intelTh}></th>
+                  <th className={intelThRight}>Monthly</th>
+                  <th className={intelThRight}>Year 1</th>
+                  <th className={intelThRight}>3 Years</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                <tr>
+                  <td className="px-3 py-2 text-sm text-gray-700">Guaranteed pricing</td>
+                  <td className="px-3 py-2 text-sm text-gray-900 text-right font-medium tabular-nums">{fmt(proposal.annualSavings / 12)}</td>
+                  <td className="px-3 py-2 text-sm text-gray-900 text-right font-medium tabular-nums">{fmtWhole(proposal.annualSavings)}</td>
+                  <td className="px-3 py-2 text-sm text-gray-900 text-right font-medium tabular-nums">{fmtWhole(proposal.annualSavings * 3)}</td>
+                </tr>
+                <tr>
+                  <td className="px-3 py-2 text-sm text-gray-700">Optimization upside (mid)</td>
+                  <td className="px-3 py-2 text-sm text-gray-900 text-right font-medium tabular-nums">{fmt(upsideMid)}</td>
+                  <td className="px-3 py-2 text-sm text-gray-900 text-right font-medium tabular-nums">{fmtWhole(upsideMid * 12)}</td>
+                  <td className="px-3 py-2 text-sm text-gray-900 text-right font-medium tabular-nums">{fmtWhole(upsideMid * 36)}</td>
+                </tr>
+                <tr className="bg-emerald-50/50">
+                  <td className="px-3 py-2 text-sm font-semibold text-gray-900">Total potential</td>
+                  <td className="px-3 py-2 text-sm font-bold text-emerald-600 text-right tabular-nums">{fmt(proposal.annualSavings / 12 + upsideMid)}</td>
+                  <td className="px-3 py-2 text-sm font-bold text-emerald-600 text-right tabular-nums">{fmtWhole(proposal.annualSavings + upsideMid * 12)}</td>
+                  <td className="px-3 py-2 text-sm font-bold text-emerald-600 text-right tabular-nums">{fmtWhole((proposal.annualSavings + upsideMid * 12) * 3)}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div className="mt-3 bg-gray-50 rounded-[6px] px-3 py-2.5">
+            <p className="text-[11px] text-gray-500 font-medium mb-0.5">Stretch effective rate with full optimization</p>
+            <p className="text-sm font-semibold text-brand">{pctf(intel.stretchEffectiveRatePct)}</p>
+          </div>
+        </div>
+      </div>
+
+      <details className="text-xs text-gray-500">
+        <summary className="cursor-pointer font-semibold text-gray-600 select-none">Methodology & assumptions</summary>
+        <ul className="mt-2 space-y-1 list-disc pl-5">
+          {intel.assumptions.map(a => <li key={a}>{a}</li>)}
+        </ul>
+      </details>
+    </div>
+  );
+}
+
+function FatCard({ label, value, sub }: { label: string; value: string; sub: string }) {
+  return (
+    <div className="border border-red-100 bg-red-50/50 rounded-[6px] px-4 py-3">
+      <p className="text-[11px] text-gray-500 font-medium">{label}</p>
+      <p className="text-sm font-bold text-red-600 mt-0.5 tabular-nums">{value}</p>
+      <p className="text-[11px] text-gray-500 mt-1">{sub}</p>
+    </div>
   );
 }

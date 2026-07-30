@@ -6,6 +6,7 @@
 
 import {
   analyzeProcessing,
+  auditFeeLine,
   type ProcessingIntelligence,
   type ProposalInput,
   type StatementInput,
@@ -351,20 +352,4 @@ ${assumptions}
 </div>
 </body>
 </html>`;
-}
-
-// Per-line audit commentary for the statement fee table.
-function auditFeeLine(label: string, amount: number, s: StatementInput, intel: ProcessingIntelligence): string {
-  const pctVol = (amount / s.totalVolume) * 100;
-  if (/discount/i.test(label))
-    return `Blended ${pctVol.toFixed(2)}% base rate vs a ${intel.interchangeRatePct.toFixed(2)}% modeled interchange floor — the spread is processor margin.`;
-  if (/transaction/i.test(label))
-    return `${(amount / Math.max(1, s.totalTransactions)).toFixed(2)}/txn authorization fee; network per-item cost is ≈ $0.02.`;
-  if (/pci/i.test(label)) return 'Junk fee — PCI compliance tooling should be included, not billed. Waived on Delt.';
-  if (/statement/i.test(label)) return 'Junk fee — paper/portal statement charge. Waived on Delt.';
-  if (/batch/i.test(label)) return 'Per-batch settlement fee; also hints at settlement timing that risks downgrades. Waived on Delt.';
-  if (/monthly|service|regulatory|annual/i.test(label)) return 'Recurring processor fee with no interchange basis. Waived on Delt.';
-  if (/other|misc|non.?qual|surcharge/i.test(label))
-    return `${pctVol.toFixed(2)}% of volume — the classic tiered-pricing bucket for non-qualified surcharges and downgrade billbacks. Primary leakage source.`;
-  return 'Reviewed against published network fee schedules.';
 }
