@@ -38,6 +38,13 @@ export interface AgreementTerms {
   principalState?: string;
   hasGuarantor: boolean;
   guarantorName?: string;
+  noticeEmail?: string; // defaults server-side to the merchant signer's email
+  // Exhibit B designated bank account — optional; when omitted the merchant
+  // fills them as required DocuSign text tabs at signing time
+  bankName?: string;
+  bankRoutingNumber?: string;
+  bankAccountNumber?: string;
+  bankAccountType?: string;
 }
 
 export type ContractStatus =

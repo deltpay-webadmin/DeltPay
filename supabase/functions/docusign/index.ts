@@ -204,13 +204,34 @@ async function createEnvelope(
   token: string,
   p: SendPayload,
 ): Promise<{ envelopeId: string } | { error: string }> {
-  const html = renderAgreementHtml({ ...p.terms, hasGuarantor: Boolean(p.guarantorName && p.guarantorEmail) });
+  const html = renderAgreementHtml({
+    ...p.terms,
+    noticeEmail: p.terms.noticeEmail ?? p.signerEmail,
+    hasGuarantor: Boolean(p.guarantorName && p.guarantorEmail),
+  });
   const htmlBytes = new TextEncoder().encode(html);
   let binary = "";
   for (let i = 0; i < htmlBytes.length; i += 8192) {
     binary += String.fromCharCode(...htmlBytes.subarray(i, i + 8192));
   }
   const documentBase64 = btoa(binary);
+
+  // Exhibit B bank fields the CRM didn't supply become required text tabs,
+  // so the merchant cannot execute the ACH authorization with a blank account.
+  const merTabs = signerTabs("mer");
+  const bankTab = (anchorString: string, tabLabel: string, width: number, required: string) => ({
+    anchorString,
+    anchorUnits: "pixels",
+    anchorXOffset: "4",
+    anchorYOffset: "-6",
+    tabLabel,
+    width,
+    required,
+  });
+  if (!p.terms.bankName) merTabs.textTabs.push(bankTab("/mer_bank/", "bank_name", 220, "true"));
+  if (!p.terms.bankRoutingNumber) merTabs.textTabs.push(bankTab("/mer_routing/", "bank_routing", 140, "true"));
+  if (!p.terms.bankAccountNumber) merTabs.textTabs.push(bankTab("/mer_acct/", "bank_account", 160, "true"));
+  if (!p.terms.bankAccountType) merTabs.textTabs.push(bankTab("/mer_accttype/", "bank_account_type", 140, "false"));
 
   const signers: any[] = [
     {
@@ -219,7 +240,7 @@ async function createEnvelope(
       name: p.signerName,
       email: p.signerEmail,
       roleName: "Merchant",
-      tabs: signerTabs("mer"),
+      tabs: merTabs,
     },
   ];
   if (p.guarantorName && p.guarantorEmail) {
