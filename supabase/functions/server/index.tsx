@@ -17,6 +17,7 @@ import {
   refreshAssetReport,
   svc,
 } from "../_shared/plaid.ts";
+import { adsStatus, connectMeta, syncMeta, disconnectMeta } from "../_shared/meta.ts";
 const app = new Hono();
 
 // Enable logger
@@ -234,6 +235,74 @@ app.delete(`${PLAID_BASE}/items/:itemId`, async (c) => {
     return c.json({ ok: true, ...out });
   } catch (err: any) {
     console.error("plaid remove error", err);
+    return c.json({ ok: false, error: String(err?.message ?? err) }, 500);
+  }
+});
+
+// ────────────────────────────────────────────────────────────────
+// Ad accounts API (Meta) — staff-only, same gate as Plaid. Tokens
+// are stored server-side (ad_credentials) and never returned.
+// ────────────────────────────────────────────────────────────────
+
+const ADS_BASE = "/make-server-940653c6/ads";
+
+app.use(`${ADS_BASE}/*`, async (c, next) => {
+  const auth = await verifyStaff(c.req.header("Authorization"));
+  if (!auth.ok) return c.json({ ok: false, error: auth.error }, auth.status as any);
+  c.set("staffUserId" as never, auth.userId as never);
+  await next();
+});
+
+app.get(`${ADS_BASE}/status`, async (c) => {
+  try {
+    const out = await adsStatus();
+    return c.json({ ok: true, ...out });
+  } catch (err: any) {
+    console.error("ads status error", err);
+    return c.json({ ok: false, error: String(err?.message ?? err) }, 500);
+  }
+});
+
+app.post(`${ADS_BASE}/meta/connect`, async (c) => {
+  try {
+    const body = await c.req.json().catch(() => ({}));
+    const accessToken = String(body.accessToken ?? "");
+    const adAccountId = String(body.adAccountId ?? "");
+    if (!accessToken || !adAccountId) {
+      return c.json({ ok: false, error: "accessToken and adAccountId are required" }, 400);
+    }
+    const account = await connectMeta(
+      accessToken,
+      adAccountId,
+      String(c.get("staffUserId" as never) ?? ""),
+    );
+    // First pull immediately so the page goes live without a second click.
+    const sync = await syncMeta(90).catch((err: any) => ({ error: String(err?.message ?? err) }));
+    return c.json({ ok: true, account, sync });
+  } catch (err: any) {
+    console.error("meta connect error", err);
+    return c.json({ ok: false, error: String(err?.message ?? err) }, 500);
+  }
+});
+
+app.post(`${ADS_BASE}/meta/sync`, async (c) => {
+  try {
+    const body = await c.req.json().catch(() => ({}));
+    const days = Number(body.days) || 90;
+    const out = await syncMeta(days);
+    return c.json({ ok: true, ...out });
+  } catch (err: any) {
+    console.error("meta sync error", err);
+    return c.json({ ok: false, error: String(err?.message ?? err) }, 500);
+  }
+});
+
+app.delete(`${ADS_BASE}/meta`, async (c) => {
+  try {
+    await disconnectMeta();
+    return c.json({ ok: true });
+  } catch (err: any) {
+    console.error("meta disconnect error", err);
     return c.json({ ok: false, error: String(err?.message ?? err) }, 500);
   }
 });
