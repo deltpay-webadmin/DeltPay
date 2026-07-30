@@ -148,6 +148,7 @@ export function BackendAnalysis() {
     [extracted, proposal, intel],
   );
   const activeProgram = programs?.find(p => p.key === programKey) ?? programs?.[0] ?? null;
+  const maxProgramMargin = programs ? Math.max(...programs.map(p => p.deltMarginMonthly)) : 0;
 
   const handleFiles = useCallback((incoming: FileList | File[]) => {
     const valid = Array.from(incoming).filter(f =>
@@ -512,6 +513,12 @@ export function BackendAnalysis() {
                                 <p className="text-[11px] text-gray-500 mt-1">{pg.headlineRate}</p>
                                 <p className="text-[11px] font-medium text-emerald-600 mt-0.5 tabular-nums">
                                   Saves {fmtWhole(pg.annualSavings)}/yr ({pg.savingsPct.toFixed(0)}%)
+                                </p>
+                                <p className="text-[11px] text-gray-400 mt-0.5 tabular-nums">
+                                  Margin {fmt(pg.deltMarginMonthly)}/mo
+                                  {pg.deltMarginMonthly === maxProgramMargin && (
+                                    <span className="ml-1.5 px-1.5 py-px rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-semibold">Highest margin</span>
+                                  )}
                                 </p>
                               </button>
                             ))}

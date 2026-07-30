@@ -109,6 +109,7 @@ export interface PricingProgram {
 
 const SURCHARGE_CAP_PCT = 3.0;         // Visa/MC credit surcharge cap
 const DUAL_PRICING_PROGRAM_FEE = 49;   // flat monthly program fee
+const DUAL_PRICING_UPLIFT_PCT = 4.0;   // typical posted card-price uplift (3% variants exist)
 const FLAT_RATE_PER_ITEM = 0.10;
 
 export function buildPricingPrograms(
@@ -145,8 +146,16 @@ export function buildPricingPrograms(
 
   // 3 — Surcharge: credit-side acceptance cost (including our credit-share
   // margin) is funded by the cardholder surcharge; the merchant pays only the
-  // debit side, which Reg II prohibits surcharging.
+  // debit side, which Reg II prohibits surcharging. The network cost-of-
+  // acceptance cap keeps the surcharge itself from being a profit center, so
+  // margin stays at the interchange-plus level.
   const surchargeMerchantCost = debitWholesale + margin * debitShare;
+
+  // 4 — Dual pricing: the card-price uplift collects against the full card
+  // volume while our cost stays at the wholesale floor — the spread between
+  // them is why this is typically the highest-margin program in the lineup.
+  const dualUpliftRevenue = vol * (DUAL_PRICING_UPLIFT_PCT / 100);
+  const dualMargin = Math.max(0, dualUpliftRevenue - wholesale) + DUAL_PRICING_PROGRAM_FEE;
 
   return [
     mk({
@@ -200,15 +209,15 @@ export function buildPricingPrograms(
       tagline: 'Cash price vs card price — near-zero merchant cost',
       passThrough: true,
       merchantMonthlyCost: DUAL_PRICING_PROGRAM_FEE,
-      deltMarginMonthly: margin,
-      cardholderImpact: 'Card price runs ≈ 4% above the posted cash price; paying cash avoids it entirely.',
+      deltMarginMonthly: dualMargin,
+      cardholderImpact: `Card price posted ≈ ${DUAL_PRICING_UPLIFT_PCT.toFixed(0)}% above the cash price (${(DUAL_PRICING_UPLIFT_PCT - 1).toFixed(0)}% variants available for price-sensitive bases); paying cash avoids it entirely.`,
       bestFor: 'Merchants who want zero processing cost — including where surcharging is banned or would feel hostile to customers.',
       compliance: [
         'Both cash and card prices must be posted — dual pricing is a displayed price, not a hidden fee.',
         'Compliant in all 50 states when both prices are clearly presented.',
         'Receipts show the price the customer actually paid.',
       ],
-      headlineRate: `$${DUAL_PRICING_PROGRAM_FEE}/mo program fee · card price funds processing`,
+      headlineRate: `$${DUAL_PRICING_PROGRAM_FEE}/mo + ${DUAL_PRICING_UPLIFT_PCT.toFixed(0)}% card-price uplift`,
       isDefault: false,
     }),
   ];
