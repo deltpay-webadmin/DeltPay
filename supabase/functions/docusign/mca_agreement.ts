@@ -29,8 +29,10 @@ export interface AgreementTerms {
   principalState?: string;
   hasGuarantor: boolean;
   guarantorName?: string;
-  // Exhibit B — designated bank account (rendered as blank lines when absent
-  // so the exhibit can be completed by hand or in a later composer update)
+  noticeEmail?: string;         // defaults to the merchant signer's email
+  // Exhibit B — designated bank account (when absent, the exhibit renders
+  // /mer_bank/-style anchors that index.ts turns into required DocuSign
+  // text tabs, so the merchant must fill them before signing)
   bankName?: string;
   bankRoutingNumber?: string;
   bankAccountNumber?: string;
@@ -50,8 +52,9 @@ function checkbox(method: AgreementTerms['remittanceMethod'], label: string): st
   return `[${method === label ? 'X' : '&nbsp;&nbsp;'}] ${label}`;
 }
 
-const blank = (v: string | undefined, width = 38) =>
-  v ? `<b>${esc(v)}</b>` : '_'.repeat(width);
+/** Bank field: printed value, or an anchor that becomes a required DocuSign text tab. */
+const bankField = (v: string | undefined, tag: string, hint = '') =>
+  v ? `<b>${esc(v)}</b>` : `${anchor(tag)}${'_'.repeat(28)}${hint}`;
 
 export function renderAgreementHtml(t: AgreementTerms): string {
   const fmtDate = (d: string) => {
@@ -59,13 +62,23 @@ export function renderAgreementHtml(t: AgreementTerms): string {
     return isNaN(dt.getTime()) ? d : dt.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
   };
 
-  // Estimated collection term for the Exhibit C disclosure summary.
-  const estTerm = (() => {
+  // Estimated collection term (Exhibit C) and the Outside Collection Date
+  // backstop (Section 2.4): the later of 18 months after the Effective Date
+  // and twice the estimated collection term implied by Schedule A.
+  const estTermMonths = (() => {
     if (!t.dailyRemittance || t.dailyRemittance <= 0) return null;
     const periods = t.purchasedAmount / t.dailyRemittance;
     const perMonth = t.remittanceFrequency === 'Weekly' ? 4.33 : t.remittanceFrequency === 'Monthly' ? 1 : 21;
-    const months = periods / perMonth;
-    return months >= 1 ? `Approximately ${(Math.round(months * 10) / 10)} months` : `Approximately ${Math.ceil(periods)} remittance periods`;
+    return periods / perMonth;
+  })();
+  const estTerm = estTermMonths == null
+    ? null
+    : `Approximately ${Math.max(Math.round(estTermMonths * 10) / 10, 0.1)} months`;
+  const outsideDate = (() => {
+    const dt = new Date(t.effectiveDate + 'T12:00:00');
+    if (isNaN(dt.getTime())) return null;
+    dt.setMonth(dt.getMonth() + Math.max(18, estTermMonths ? Math.ceil(estTermMonths * 2) : 0));
+    return dt.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
   })();
 
   const scheduleRows: [string, string][] = [
@@ -82,6 +95,8 @@ export function renderAgreementHtml(t: AgreementTerms): string {
     ['Remittance Method', `${checkbox(t.remittanceMethod, 'ACH')} &nbsp; ${checkbox(t.remittanceMethod, 'Split Funding')} &nbsp; ${checkbox(t.remittanceMethod, 'Lockbox')}`],
     ['Effective Date', esc(fmtDate(t.effectiveDate))],
     ['Principal State of Operations', esc(t.principalState)],
+    ['Merchant Notice Email (Section 10.8)', esc(t.noticeEmail)],
+    ['Outside Collection Date (Section 2.4)', esc(outsideDate ?? undefined)],
   ];
 
   const scheduleTable = scheduleRows
@@ -104,10 +119,10 @@ export function renderAgreementHtml(t: AgreementTerms): string {
     .join('\n');
 
   const bankRows: [string, string][] = [
-    ['Bank Name', blank(t.bankName)],
-    ['ABA Routing Number', blank(t.bankRoutingNumber, 24)],
-    ['Account Number', blank(t.bankAccountNumber, 24)],
-    ['Account Type', t.bankAccountType ? `<b>${esc(t.bankAccountType)}</b>` : '[&nbsp;&nbsp;] Business Checking &nbsp; [&nbsp;&nbsp;] Business Savings'],
+    ['Bank Name', bankField(t.bankName, '/mer_bank/')],
+    ['ABA Routing Number', bankField(t.bankRoutingNumber, '/mer_routing/')],
+    ['Account Number', bankField(t.bankAccountNumber, '/mer_acct/')],
+    ['Account Type', bankField(t.bankAccountType, '/mer_accttype/', ' &nbsp;<span style="color:#666;">(Business Checking / Savings)</span>')],
     ['Account Holder (must match Merchant Legal Name)', esc(t.merchantLegalName)],
   ];
   const bankTable = bankRows
@@ -141,7 +156,7 @@ export function renderAgreementHtml(t: AgreementTerms): string {
       </tr>
     </table>
     <p style="margin:8px 0 0;">Address: ${anchor('/gua_addr/')}_____________________________________________________________________</p>
-    <p style="margin:6px 0 0;">By signing above, Guarantor agrees to be bound by the Absolute and Unconditional Guarantee of Payment and Performance in Article 7.</p>`;
+    <p style="margin:6px 0 0;">By signing above, Guarantor agrees to be bound by the Absolute and Unconditional Guarantee of Payment and Performance in Article 7 and, as a Principal, by the Successor Entity covenants in Section 2.6.</p>`;
 
   return `<!DOCTYPE html>
 <html>
@@ -185,13 +200,17 @@ ${p(`1.12 <b>"Guarantor"</b> means any individual or entity executing a guarante
 ${p(`1.13 <b>"Reconciliation"</b> has the meaning set forth in Section 3.4.`)}
 ${p(`1.14 <b>"Stacking"</b> means entering into any additional merchant cash advance, revenue-based financing, or similar transaction with any third party while amounts remain outstanding under this Agreement.`)}
 ${p(`1.15 <b>"Obligations"</b> means all obligations of Merchant under this Agreement, including delivery of the full Purchased Amount, payment of all fees set forth in Section 8.4, costs of enforcement, and performance of all covenants.`)}
+${p(`1.16 <b>"Principal"</b> means each owner, member, shareholder, officer, or manager of Merchant holding twenty percent (20%) or more of the equity of Merchant or otherwise exercising control over Merchant, including each Guarantor.`)}
+${p(`1.17 <b>"Successor Entity"</b> means any corporation, limited liability company, or other entity, other than Merchant, that is owned or controlled by, or under common ownership or control with, Merchant or any Principal and that conducts a business substantially similar to Merchant's business, serves Merchant's customers, or receives revenue derived from Merchant's business operations.`)}
+${p(`1.18 <b>"Outside Collection Date"</b> means the date set forth in Schedule A, being the later of (i) eighteen (18) months after the Effective Date and (ii) twice the estimated collection term implied by the estimated Remittance amount in Schedule A.`)}
 
 ${h('ARTICLE 2 — PURCHASE AND SALE OF RECEIVABLES')}
 ${p(`2.1 <b>Sale of Receivables.</b> Subject to the terms and conditions of this Agreement, Merchant hereby sells, assigns, transfers, and conveys to Purchaser, and Purchaser hereby purchases from Merchant, the Specific Receivables. Title to the Specific Receivables shall vest in Purchaser upon execution of this Agreement and payment of the Purchase Price. The sale of the Specific Receivables is absolute, irrevocable, and unconditional.`)}
 ${p(`2.2 <b>Purchase Price.</b> In consideration of the sale of the Specific Receivables, Purchaser shall pay to Merchant the Purchase Price set forth in Schedule A. Disbursement shall be made by ACH or wire to Merchant's designated bank account within one (1) to three (3) Business Days following execution and satisfaction of all conditions precedent.`)}
 ${p(`2.3 <b>Characterization.</b> The parties document this transaction as a purchase and sale of receivables. The Purchased Amount is not stated as a principal amount subject to interest, the factor rate is not stated as an interest rate or APR, and there is no fixed maturity date; Remittances are calculated by reference to Merchant's Receivables as set forth in Article 3.`)}
-${p(`2.4 <b>Full Recourse; Obligations Absolute and Unconditional.</b> MERCHANT'S OBLIGATION TO DELIVER THE FULL PURCHASED AMOUNT TO PURCHASER IS ABSOLUTE, UNCONDITIONAL, AND IRREVOCABLE, AND IS NOT CONTINGENT ON THE CONTINUED OPERATION, PROFITABILITY, OR SUCCESS OF MERCHANT'S BUSINESS. No decline in revenue, loss of customers or contracts, market or economic conditions, seasonality, act of God, casualty, or cessation, suspension, sale, or transfer of Merchant's business shall reduce, delay, or excuse Merchant's Obligations. This Agreement is made with <b>FULL RECOURSE</b> to Merchant: if the Specific Receivables are not generated or collected for any reason whatsoever, Merchant shall remain liable for, and shall pay to Purchaser on demand, the entire uncollected balance of the Purchased Amount, together with all fees and costs provided herein, and Purchaser may proceed against Merchant and any and all of Merchant's assets. Merchant's Obligations survive the cessation of Merchant's business, any sale or transfer of Merchant's assets, and, to the fullest extent permitted by law, any bankruptcy or insolvency proceeding.`)}
+${p(`2.4 <b>Full Recourse; Obligations Absolute and Unconditional.</b> MERCHANT'S OBLIGATION TO DELIVER THE FULL PURCHASED AMOUNT TO PURCHASER IS ABSOLUTE, UNCONDITIONAL, AND IRREVOCABLE, AND IS NOT CONTINGENT ON THE CONTINUED OPERATION, PROFITABILITY, OR SUCCESS OF MERCHANT'S BUSINESS. No decline in revenue, loss of customers or contracts, market or economic conditions, seasonality, act of God, casualty, or cessation, suspension, sale, or transfer of Merchant's business shall reduce, delay, or excuse Merchant's Obligations. This Agreement is made with <b>FULL RECOURSE</b> to Merchant: if the Specific Receivables are not generated or collected for any reason whatsoever, Merchant shall remain liable for, and shall pay to Purchaser on demand, the entire uncollected balance of the Purchased Amount, together with all fees and costs provided herein, and Purchaser may proceed against Merchant and any and all of Merchant's assets. Merchant's Obligations survive the cessation of Merchant's business, any sale or transfer of Merchant's assets, and, to the fullest extent permitted by law, any bankruptcy or insolvency proceeding. Without limiting the foregoing, the entire uncollected balance of the Purchased Amount, together with all fees and costs, shall become immediately due and payable upon the earliest of: (i) the occurrence of any Event of Default; (ii) Merchant ceasing to generate or deposit Receivables into the designated account(s) for fifteen (15) or more consecutive days; or (iii) the Outside Collection Date.`)}
 ${p(`2.5 <b>No Right of Setoff.</b> Merchant expressly waives any right of setoff, defense, counterclaim, or recoupment against Purchaser's right to collect the Specific Receivables, except as expressly provided in Section 3.4.`)}
+${p(`2.6 <b>Successor Entities.</b> Merchant's Obligations extend to and are binding upon Merchant's successors and assigns and upon any Successor Entity. If Merchant or any Principal conducts Merchant's business, or routes revenue derived from Merchant's business or customers, through a Successor Entity while any Obligations remain outstanding, then: (a) such Successor Entity shall be deemed jointly and severally liable for the Obligations; (b) the receivables of such Successor Entity shall be deemed Receivables hereunder and subject to Purchaser's security interest under Article 6; and (c) such conduct shall constitute an Event of Default. Merchant and each Principal covenant not to organize, participate in, or transfer business or revenue to any Successor Entity for the purpose or with the effect of impairing Purchaser's collection of the Obligations.`)}
 
 ${h('ARTICLE 3 — REMITTANCE AND COLLECTION')}
 ${p(`3.1 <b>Remittance Method.</b> The parties shall collect the Specific Receivables through the method specified in Schedule A, which may include: (a) ACH debit from Merchant's designated bank account; (b) split funding through Merchant's Processor; or (c) lockbox or other arrangement as agreed. Merchant authorizes Purchaser to initiate ACH debits from Merchant's designated bank account in accordance with the remittance schedule set forth in Schedule A.`)}
@@ -210,7 +229,7 @@ ${p(`4.3 <b>Usury Savings.</b> If, notwithstanding the intent of the parties, an
 ${h('ARTICLE 5 — MERCHANT REPRESENTATIONS, WARRANTIES, AND COVENANTS')}
 ${p(`5.1 <b>Representations and Warranties.</b> Merchant represents and warrants on a continuing basis that: (a) Merchant is duly organized and in good standing; (b) Merchant has full authority to enter this Agreement; (c) this Agreement is a valid, binding, enforceable obligation; (d) execution does not violate any law or agreement; (e) all information provided is true and complete in all material respects; (f) Merchant has no undisclosed outstanding MCAs or revenue-based financing except as disclosed in Schedule A; (g) the designated bank account(s) identified in Exhibit B are Merchant's primary operating account(s); (h) Merchant is not contemplating bankruptcy or cessation of operations; (i) there is no pending or threatened litigation, judgment, garnishment, or tax lien against Merchant or any Guarantor except as disclosed to Purchaser in writing; and (j) all federal, state, and local taxes of Merchant are current or subject to an approved payment plan disclosed to Purchaser in writing.`)}
 ${p(`5.2 <b>Affirmative Covenants.</b> During the term, Merchant shall: (a) deposit all Receivables into the designated bank account(s) and not divert Receivables without prior written consent; (b) maintain designated account(s) in good standing and provide ten (10) Business Days' notice before closing or changing such account(s); (c) continue to operate its business in the ordinary course; (d) promptly notify Purchaser of any material change in operations, ownership, or financial condition; (e) provide bank and Processor statements within five (5) Business Days of request; (f) notify Purchaser immediately upon any garnishment or levy against Merchant's accounts; and (g) comply with all applicable laws including Nacha Operating Rules.`)}
-${p(`5.3 <b>Negative Covenants; Stacking Restriction.</b> Without Purchaser's prior written consent, Merchant shall not: (a) enter into any Stacking arrangement; (b) sell, assign, or encumber any Receivables other than pursuant to this Agreement; (c) change Merchant's primary Processor(s) without thirty (30) days' prior written notice; (d) permit any lien to attach to the Specific Receivables; (e) make any material change to Merchant's business or ownership that would impair Receivable generation; or (f) use the Purchase Price for purposes other than legitimate business operations.`)}
+${p(`5.3 <b>Negative Covenants; Stacking Restriction.</b> Without Purchaser's prior written consent, Merchant shall not: (a) enter into any Stacking arrangement; (b) sell, assign, or encumber any Receivables other than pursuant to this Agreement; (c) change Merchant's primary Processor(s) without thirty (30) days' prior written notice; (d) permit any lien to attach to the Specific Receivables; (e) make any material change to Merchant's business or ownership that would impair Receivable generation; (f) use the Purchase Price for purposes other than legitimate business operations; or (g) conduct Merchant's business, or route revenue derived from Merchant's business or customers, through any Successor Entity.`)}
 ${p(`5.4 <b>Nacha Compliance.</b> Merchant acknowledges that ACH debits under this Agreement are governed by the Nacha Operating Rules. Merchant agrees not to dispute, return, or cause the return of any ACH debit initiated in accordance with this Agreement as unauthorized.`)}
 
 ${h('ARTICLE 6 — SECURITY INTEREST, UCC FILING, AND POWER OF ATTORNEY')}
@@ -226,7 +245,7 @@ ${p(`7.2 <b>Waivers.</b> Guarantor waives: presentment, demand, protest, notice 
 ${p(`7.3 <b>Continuing Guarantee; Joint and Several Liability.</b> This guarantee is continuing, remains in full force until the Obligations are indefeasibly paid and performed in full, and is binding on Guarantor's heirs, successors, and assigns. Guarantor is jointly and severally liable with Merchant for all Obligations, plus all costs of collection including reasonable attorneys' fees. If more than one Guarantor executes this Agreement, their liability is joint and several.`)}
 
 ${h('ARTICLE 8 — EVENTS OF DEFAULT AND REMEDIES')}
-${p(`8.1 <b>Events of Default.</b> Each of the following constitutes an Event of Default: (a) failure to remit any amount due under this Agreement when due; (b) diversion of Receivables to any account other than the designated account(s); (c) closure or material change to designated bank account(s) without ten (10) Business Days' notice; (d) three (3) or more returned ACH debits within any thirty (30) day period; (e) breach of the Stacking restriction; (f) any misrepresentation in connection with this Agreement; (g) bankruptcy filing or general assignment for the benefit of creditors; (h) cessation or suspension of business operations for any reason; (i) a judgment, garnishment, levy, or attachment against Merchant or its accounts; (j) any attempt to revoke, or any challenge to the enforceability of, the guarantee in Article 7; or (k) breach of any other covenant not cured within five (5) Business Days of written notice.`)}
+${p(`8.1 <b>Events of Default.</b> Each of the following constitutes an Event of Default: (a) failure to remit any amount due under this Agreement when due; (b) diversion of Receivables to any account other than the designated account(s); (c) closure or material change to designated bank account(s) without ten (10) Business Days' notice; (d) three (3) or more returned ACH debits within any thirty (30) day period; (e) breach of the Stacking restriction; (f) any misrepresentation in connection with this Agreement; (g) bankruptcy filing or general assignment for the benefit of creditors; (h) cessation or suspension of business operations for any reason; (i) a judgment, garnishment, levy, or attachment against Merchant or its accounts; (j) any attempt to revoke, or any challenge to the enforceability of, the guarantee in Article 7; (k) Merchant or any Principal conducting business, or routing revenue, through a Successor Entity in violation of Section 2.6; (l) aggregate Remittances during any sixty (60) consecutive days totaling less than twenty percent (20%) of the amount projected by the estimated Remittance schedule in Schedule A for such period, unless attributable to a Receivables decline verified through Reconciliation under Section 3.4 or covered by an adjustment granted under Section 3.5; (m) failure to deliver the full Purchased Amount by the Outside Collection Date; or (n) breach of any other covenant not cured within five (5) Business Days of written notice.`)}
 ${p(`8.2 <b>Remedies.</b> Upon an Event of Default, Purchaser may, without notice or demand: (a) declare the entire uncollected balance of the Purchased Amount, together with all fees and costs, immediately due and payable; (b) debit any account of Merchant by ACH for all amounts due; (c) enforce the security interest granted in Article 6; (d) enforce the guarantee in Article 7 directly against Guarantor; (e) exercise the power of attorney granted in Section 6.5; (f) notify Merchant's Processor(s) and account debtors to redirect payments to Purchaser; (g) seek injunctive relief to prevent diversion of Receivables; and (h) pursue any other remedy available at law or in equity. All remedies are cumulative.`)}
 ${p(`8.3 <b>Costs of Enforcement.</b> Merchant and Guarantor shall reimburse Purchaser for all costs of enforcement and collection, including reasonable attorneys' fees, court and arbitration costs, expert fees, and collection agency fees.`)}
 ${p(`8.4 <b>Fee Schedule.</b> Merchant shall pay the following fees, which the parties agree are reasonable liquidated administrative fees and not penalties, and which Purchaser may collect by ACH debit:`)}
@@ -235,7 +254,7 @@ ${feeTable}
 </table>
 
 ${h('ARTICLE 9 — DISPUTE RESOLUTION; ARBITRATION')}
-${p(`9.1 <b>Mandatory Arbitration.</b> EXCEPT AS OTHERWISE PROVIDED IN SECTION 9.3, ANY DISPUTE, CLAIM, OR CONTROVERSY ARISING OUT OF OR RELATING TO THIS AGREEMENT SHALL BE RESOLVED BY BINDING ARBITRATION ADMINISTERED BY THE AMERICAN ARBITRATION ASSOCIATION (AAA) UNDER ITS COMMERCIAL ARBITRATION RULES. THE ARBITRATION SHALL BE CONDUCTED BY A SINGLE ARBITRATOR. THE ARBITRATOR'S AWARD SHALL BE FINAL AND BINDING AND MAY BE ENTERED AS A JUDGMENT IN ANY COURT OF COMPETENT JURISDICTION.`)}
+${p(`9.1 <b>Arbitration.</b> ANY DISPUTE, CLAIM, OR CONTROVERSY ARISING OUT OF OR RELATING TO THIS AGREEMENT THAT IS ASSERTED BY MERCHANT OR ANY GUARANTOR SHALL BE RESOLVED BY BINDING ARBITRATION ADMINISTERED BY THE AMERICAN ARBITRATION ASSOCIATION (AAA) UNDER ITS COMMERCIAL ARBITRATION RULES BEFORE A SINGLE ARBITRATOR. PURCHASER MAY, AT ITS SOLE ELECTION, SUBMIT ANY OF ITS CLAIMS TO SUCH ARBITRATION OR BRING THEM IN A COURT SPECIFIED IN SECTION 9.5; ACTIONS BY PURCHASER TO COLLECT THE OBLIGATIONS, ENFORCE THE SECURITY INTEREST OR THE GUARANTEE, OR OBTAIN EQUITABLE RELIEF ARE NOT SUBJECT TO MANDATORY ARBITRATION. THE ARBITRATOR SHALL ALLOCATE THE FEES AND COSTS OF ARBITRATION, INCLUDING REASONABLE ATTORNEYS' FEES, TO THE NON-PREVAILING PARTY. THE ARBITRATOR'S AWARD SHALL BE FINAL AND BINDING AND MAY BE ENTERED AS A JUDGMENT IN ANY COURT OF COMPETENT JURISDICTION.`)}
 ${p(`9.2 <b>No Confession of Judgment.</b> This Agreement does not include and Merchant does not agree to any confession of judgment, cognovit provision, or pre-authorized judgment. No judgment may be entered against Merchant without service of process and an opportunity to be heard.`)}
 ${p(`9.3 <b>Equitable Relief.</b> Either party may seek emergency injunctive or other equitable relief from a court of competent jurisdiction to prevent irreparable harm pending arbitration, including an injunction preventing diversion of Receivables.`)}
 ${p(`9.4 <b>Class Action Waiver.</b> THE PARTIES WAIVE ANY RIGHT TO BRING OR PARTICIPATE IN ANY CLASS ACTION, COLLECTIVE ACTION, OR REPRESENTATIVE PROCEEDING IN ARBITRATION OR IN COURT.`)}
@@ -249,7 +268,7 @@ ${p(`10.4 <b>Amendment.</b> This Agreement may not be amended except by a writte
 ${p(`10.5 <b>Severability.</b> If any provision is held invalid or unenforceable, the remaining provisions shall continue in full force and effect.`)}
 ${p(`10.6 <b>Waiver.</b> No failure or delay by Purchaser in exercising any right shall constitute a waiver thereof.`)}
 ${p(`10.7 <b>Assignment.</b> Purchaser may assign this Agreement without Merchant's consent. Merchant may not assign this Agreement without Purchaser's prior written consent.`)}
-${p(`10.8 <b>Notices.</b> All notices shall be in writing and delivered by email with confirmation, overnight courier, or certified mail to the addresses in Schedule A. Notices to Purchaser: Delt Pay LLC, Miami, Florida, legal@deltpay.com.`)}
+${p(`10.8 <b>Notices.</b> All notices shall be in writing and delivered by email, overnight courier, or certified mail. Notices to Merchant are effective when sent by email to the Merchant Notice Email set forth in Schedule A unless the sender receives an automated non-delivery notice, or when delivered to the Principal Business Address in Schedule A. Merchant shall keep the Merchant Notice Email current and monitored; notice to the Merchant Notice Email is effective notwithstanding any change Merchant fails to communicate under this Section. Notices to Purchaser: Delt Pay LLC, Miami, Florida, legal@deltpay.com.`)}
 ${p(`10.9 <b>Counterparts; Electronic Signature.</b> This Agreement may be executed in counterparts. Electronic signatures via DocuSign or similar platforms shall be deemed original signatures for all purposes.`)}
 ${p(`10.10 <b>Independent Legal Counsel.</b> Merchant acknowledges it has had the opportunity to review this Agreement with independent legal counsel. Merchant acknowledges that Purchaser's counsel prepared this Agreement and does not represent Merchant.`)}
 
