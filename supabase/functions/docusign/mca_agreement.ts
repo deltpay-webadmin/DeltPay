@@ -69,20 +69,22 @@ export function renderAgreementHtml(t: AgreementTerms): string {
   const h = (text: string) => `<h2 style="font-size:13px;margin:22px 0 8px;">${text}</h2>`;
   const p = (text: string) => `<p style="margin:0 0 10px;">${text}</p>`;
 
-  const guarantorBlock = t.hasGuarantor
-    ? `
-    <h3 style="font-size:12px;margin:26px 0 6px;">GUARANTOR</h3>
-    <p style="margin:0 0 12px;">Guarantor Full Legal Name: <b>${esc(t.guarantorName)}</b></p>
+  // Always rendered as its own signature block (matching the source PDF):
+  // "execute below only if a Guarantor is required by Schedule A". The
+  // /gua_*/ anchors only become live signature tabs when a guarantor
+  // recipient is on the envelope; otherwise they stay inert blank lines.
+  const guarantorBlock = `
+    <h3 style="font-size:12px;margin:26px 0 6px;">GUARANTOR
+      <span style="font-weight:normal;font-size:10px;color:#444;">(execute below only if a Guarantor is required by Schedule A)</span></h3>
+    <p style="margin:0 0 12px;">Guarantor Full Legal Name: ${t.hasGuarantor && t.guarantorName ? `<b>${esc(t.guarantorName)}</b>` : '___________________________________'}</p>
     <table style="width:100%;border-collapse:collapse;font-size:11px;">
       <tr>
         <td style="width:55%;padding:8px 0;">Signature: ${anchor('/gua_sig/')}________________________</td>
         <td style="padding:8px 0;">Date: ${anchor('/gua_date/')}______________</td>
       </tr>
     </table>
-    <p style="margin:6px 0 0;">By signing above, Guarantor agrees to be bound by the Limited Performance Guarantee in Article 7.</p>`
-    : `
-    <h3 style="font-size:12px;margin:26px 0 6px;">GUARANTOR</h3>
-    <p style="margin:0 0 12px;">No Guarantor is required for this Agreement per Schedule A.</p>`;
+    <p style="margin:8px 0 0;">Address: ${anchor('/gua_addr/')}_____________________________________________________________________</p>
+    <p style="margin:6px 0 0;">By signing above, Guarantor agrees to be bound by the Limited Performance Guarantee in Article 7.</p>`;
 
   return `<!DOCTYPE html>
 <html>

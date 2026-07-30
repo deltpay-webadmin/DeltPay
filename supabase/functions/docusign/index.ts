@@ -223,13 +223,23 @@ async function createEnvelope(
     },
   ];
   if (p.guarantorName && p.guarantorEmail) {
+    const guaTabs = signerTabs("gua");
+    guaTabs.textTabs.push({
+      anchorString: "/gua_addr/",
+      anchorUnits: "pixels",
+      anchorXOffset: "60",
+      anchorYOffset: "-6",
+      tabLabel: "gua_address",
+      width: 300,
+      required: "false",
+    });
     signers.push({
       recipientId: "2",
       routingOrder: "1",
       name: p.guarantorName,
       email: p.guarantorEmail,
       roleName: "Guarantor",
-      tabs: signerTabs("gua"),
+      tabs: guaTabs,
     });
   }
   const csName = Deno.env.get("DOCUSIGN_COUNTERSIGNER_NAME");
