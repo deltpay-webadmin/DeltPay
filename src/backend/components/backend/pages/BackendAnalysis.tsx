@@ -7,6 +7,7 @@ import {
 import { useAppNavigate } from '../NavigationContext';
 import { BackendCostCalculator } from './BackendCostCalculator';
 import { generateProposalPdf } from '../proposalPdf';
+import { leadActions, useLeads } from '../crmStore';
 
 // ── Types ──
 type AnalysisStatus = 'idle' | 'uploading' | 'analyzing' | 'done';
@@ -105,9 +106,13 @@ export function BackendAnalysis() {
   const [proposal, setProposal] = useState<SavingsProposal | null>(null);
   const [autoLeadCreated, setAutoLeadCreated] = useState(false);
   const [autoLeadName, setAutoLeadName] = useState('');
+  const [autoLeadIsNew, setAutoLeadIsNew] = useState(true);
   const [leadBannerVisible, setLeadBannerVisible] = useState(false);
   const [history, setHistory] = useState<HistoryRow[]>(historyData);
   const inputRef = useRef<HTMLInputElement>(null);
+  // Subscribe to the CRM store so it hydrates from Supabase before we
+  // create/dedupe leads against it.
+  useLeads();
 
   const handleFiles = useCallback((incoming: FileList | File[]) => {
     const valid = Array.from(incoming).filter(f =>
@@ -147,7 +152,19 @@ export function BackendAnalysis() {
           ? merchantName.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ')
           : 'New Prospect';
 
+        // Persist to the pipeline: scrapes the statement's processing profile
+        // into the lead's KYB intake, attaches the statement document, and
+        // links the savings proposal. Dedupes against existing leads by name.
+        const { isNew } = leadActions.createFromStatement({
+          merchantName: derivedName,
+          fileName,
+          fileSize: files[0]?.size || 0,
+          statement: mockExtracted,
+          proposal: mockProposal,
+        });
+
         setAutoLeadName(derivedName);
+        setAutoLeadIsNew(isNew);
         setAutoLeadCreated(true);
         setLeadBannerVisible(true);
 
@@ -331,10 +348,12 @@ export function BackendAnalysis() {
                       </div>
                       <div>
                         <p className="text-sm font-semibold text-gray-900">
-                          Lead auto-created: <span className="text-brand">{autoLeadName}</span>
+                          {autoLeadIsNew ? 'Lead auto-created' : 'Existing lead updated'}: <span className="text-brand">{autoLeadName}</span>
                         </p>
                         <p className="text-xs text-gray-500 mt-0.5">
-                          Added to pipeline as <span className="font-medium">New Lead</span> · Statement attached · Savings proposal linked
+                          {autoLeadIsNew
+                            ? <>Added to pipeline as <span className="font-medium">New Lead</span> · Statement attached · Savings proposal linked</>
+                            : <>Matched in pipeline · Statement attached · Processing profile refreshed · Savings proposal linked</>}
                         </p>
                       </div>
                     </div>

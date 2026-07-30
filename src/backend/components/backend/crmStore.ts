@@ -31,6 +31,7 @@ import {
   type DataMerchInputs,
 } from './underwritingScore';
 import { capitalActions } from './capitalStore';
+import type { StatementInput, ProposalInput } from './interchangeEngine';
 
 // ══════════════════════════════════════════════════════════════
 // Types (unchanged — pages depend on this exact shape)
@@ -1193,6 +1194,68 @@ const nowStamp = () =>
   });
 
 // ── Lead actions ──
+/**
+ * KYB intake scaffold for a lead born from a statement upload: the processing
+ * profile and statement document are real scraped data; identity/bank fields
+ * stay blank until the merchant completes intake.
+ */
+function blankKybFromStatement(
+  businessName: string,
+  processing: ProcessingProfile,
+  documents: UploadedDoc[],
+): KybIntake {
+  return {
+    business: {
+      legalName: businessName,
+      dba: businessName,
+      structure: 'LLC',
+      taxIdType: 'EIN',
+      taxIdLast4: '',
+      stateOfIncorporation: '',
+      yearFounded: '',
+      website: '',
+      phone: '',
+      addressLine1: '',
+      addressLine2: '',
+      city: '',
+      state: '',
+      postalCode: '',
+      mcc: '',
+      industry: '',
+      productDescription: '',
+    },
+    representative: {
+      firstName: '',
+      lastName: '',
+      title: '',
+      email: '',
+      phone: '',
+      dobMasked: '',
+      ssnLast4: '',
+      ownershipPct: 0,
+      isOwner: false,
+      isController: false,
+      addressLine1: '',
+      city: '',
+      state: '',
+      postalCode: '',
+    },
+    owners: [],
+    processing,
+    funding: { requested: false, amount: '', useOfFunds: '', timeInBusinessMonths: '' },
+    bank: {
+      bankName: '',
+      accountHolder: '',
+      routingLast4: '',
+      accountLast4: '',
+      accountType: 'Checking',
+      verificationMethod: 'Manual',
+    },
+    documents,
+    attestation: { certifiedAccurate: false, authorizedToSign: false, signedAt: '', signedByName: '' },
+  };
+}
+
 export const leadActions = {
   create(lead: Partial<Lead>): Lead {
     // Generate an ID that's unique against current state.
@@ -1244,10 +1307,13 @@ export const leadActions = {
       lastActivity: 'just now',
       assignedAgent: lead.assignedAgent || 'Unassigned',
       stage: 'New',
-      timeline: [{ title: 'Lead created', description: 'Manually added via CRM', user: lead.assignedAgent || 'System', timestamp: 'just now' }],
+      timeline: lead.timeline?.length
+        ? lead.timeline
+        : [{ title: 'Lead created', description: 'Manually added via CRM', user: lead.assignedAgent || 'System', timestamp: 'just now' }],
       notes: lead.notes || '',
-      extraNotes: [],
+      extraNotes: lead.extraNotes ?? [],
       tasks: [],
+      kyb: lead.kyb,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -1259,6 +1325,108 @@ export const leadActions = {
       () => supabase!.from('pipeline_leads').insert(toDbLead(created)).then(r => ({ error: r.error })),
     );
     return created;
+  },
+
+  /**
+   * Create (or enrich) a pipeline lead from an analyzed processing statement.
+   * Everything the statement discloses is scraped into the lead: processing
+   * profile (volume, ticket, processor, effective rate, chargebacks) lands in
+   * the KYB intake, the statement file is attached as a Processing Statement
+   * document, and the savings proposal is linked via timeline + note. If a
+   * lead with the same business name already exists, it is updated in place
+   * instead of duplicated.
+   */
+  createFromStatement(input: {
+    merchantName: string;
+    fileName: string;
+    fileSize: number;
+    statement: StatementInput;
+    proposal: ProposalInput;
+  }): { lead: Lead; isNew: boolean } {
+    const { statement: s, proposal: p } = input;
+    const fmt0 = (n: number) =>
+      n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+    const cbRate =
+      s.totalTransactions > 0 ? ((s.chargebackCount / s.totalTransactions) * 100).toFixed(2) : '0.00';
+
+    const processing: ProcessingProfile = {
+      monthlyVolume: String(Math.round(s.totalVolume)),
+      avgTicket: s.avgTicket.toFixed(2),
+      highTicket: '',
+      cardPresentPct: 100,
+      currentProcessor: s.currentProcessor,
+      currentEffectiveRate: s.effectiveRate.toFixed(2),
+      acceptsAmex: true,
+      hasChargebacks: s.chargebackCount > 0,
+      chargebackRatePct: cbRate,
+      seasonalBusiness: false,
+    };
+
+    const doc: UploadedDoc = {
+      id: `doc-${Date.now()}`,
+      kind: 'Processing Statement',
+      filename: input.fileName,
+      size: input.fileSize,
+      uploadedAt: new Date().toISOString(),
+    };
+
+    const summary = [
+      `Statement analysis — ${s.statementPeriod} (${s.currentProcessor})`,
+      `Volume ${fmt0(s.totalVolume)} · ${s.totalTransactions.toLocaleString()} txns · avg ticket $${s.avgTicket.toFixed(2)}`,
+      `Effective rate ${s.effectiveRate}% → Delt ${p.deltRate}% · projected savings ${fmt0(p.annualSavings)}/yr (${p.savingsPercent}%)`,
+      `Chargebacks: ${s.chargebackCount} (${cbRate}%)`,
+      'Fee breakdown:',
+      ...s.fees.map(f => `  • ${f.label}: ${f.amount.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}`),
+    ].join('\n');
+
+    const existing = state.leads.find(
+      l => l.businessName.trim().toLowerCase() === input.merchantName.trim().toLowerCase(),
+    );
+    if (existing) {
+      const kyb: KybIntake = existing.kyb
+        ? { ...existing.kyb, processing, documents: [...existing.kyb.documents, doc] }
+        : blankKybFromStatement(input.merchantName, processing, [doc]);
+      leadActions.update(existing.id, {
+        monthlySales: fmt0(s.totalVolume),
+        kyb,
+        lastActivity: 'just now',
+      });
+      leadActions.addNote(existing.id, summary, 'Statement Analyzer');
+      leadActions.addTimeline(existing.id, {
+        title: 'Statement analyzed',
+        description: `${input.fileName} — ${fmt0(p.annualSavings)}/yr projected savings at ${p.deltRate}%`,
+        user: 'Statement Analyzer',
+        timestamp: 'just now',
+      });
+      const lead = state.leads.find(l => l.id === existing.id) ?? existing;
+      return { lead, isNew: false };
+    }
+
+    const created = leadActions.create({
+      businessName: input.merchantName,
+      industry: 'General',
+      type: 'Processing',
+      source: 'Statement Analyzer',
+      monthlySales: fmt0(s.totalVolume),
+      notes: `Auto-created from statement analysis (${s.statementPeriod}, ${s.currentProcessor}).`,
+      kyb: blankKybFromStatement(input.merchantName, processing, [doc]),
+      timeline: [
+        {
+          title: 'Lead created from statement analysis',
+          description: `${input.fileName} · ${s.statementPeriod} · ${s.currentProcessor}`,
+          user: 'Statement Analyzer',
+          timestamp: 'just now',
+        },
+        {
+          title: 'Savings proposal linked',
+          description: `${p.deltRate}% proposed vs ${p.currentRate}% current — ${fmt0(p.annualSavings)}/yr projected savings`,
+          user: 'Statement Analyzer',
+          timestamp: 'just now',
+        },
+      ],
+      extraNotes: [{ id: `note-${Date.now()}`, body: summary, author: 'Statement Analyzer', timestamp: 'just now' }],
+    });
+    return { lead: created, isNew: true };
   },
 
   update(id: string, patch: Partial<Lead>) {
