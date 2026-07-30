@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Link2, Target, TrendingUp, ArrowRight, RefreshCw, X, Unplug } from 'lucide-react';
+import { Link2, Target, TrendingUp, ArrowRight, RefreshCw, X, Unplug, AlertTriangle, Download, CheckCircle2 } from 'lucide-react';
 import { Overline, DeltaPill, KpiTile, Card, HeroPanel, Btn } from '../../dp';
 import { useMarketing, useMarketingSync, marketingActions } from '../marketingStore';
 import { useLeads } from '../crmStore';
@@ -341,6 +341,120 @@ function MetaConnectDialog({
         </div>
       </div>
     </div>
+  );
+}
+
+// ══════════════════════════════════════
+// Lead reconciliation — Meta's lead list vs the CRM
+// ══════════════════════════════════════
+
+function LeadReconCard() {
+  const { adLeads } = useMarketing();
+  const { isBusy } = useMarketingSync();
+
+  const missing = adLeads.filter(l => !l.matchedLeadId);
+  const matched = adLeads.length - missing.length;
+  const synced = adLeads.length > 0;
+
+  const fmtDate = (iso: string | null) =>
+    iso ? new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—';
+
+  return (
+    <Card
+      title="Lead reconciliation · Meta forms vs CRM"
+      action={
+        <div className="flex items-center gap-2">
+          {synced && (
+            <span className="text-[11px] text-(--dp-text-faint)">
+              {adLeads.length} submissions · {matched} in CRM ·{' '}
+              <span className={missing.length ? 'text-amber-500 font-bold' : ''}>
+                {missing.length} missing
+              </span>
+            </span>
+          )}
+          <Btn variant="ghost" size="sm" onClick={() => marketingActions.syncMetaLeads()} disabled={isBusy}>
+            <RefreshCw className={`w-3.5 h-3.5 ${isBusy ? 'animate-spin' : ''}`} />
+            {synced ? 'Re-check' : 'Pull lead forms'}
+          </Btn>
+        </div>
+      }
+    >
+      {!synced ? (
+        <p className="text-[13px] text-(--dp-text-faint) py-2">
+          Pull the actual form submissions from Meta's Lead Ads API and cross-check them against the
+          pipeline — any paid lead that never reached the CRM (a dropped Zapier run, a deleted row)
+          shows up here with a one-click import. Requires the Facebook Page to be assigned to the
+          system user that generated the token.
+        </p>
+      ) : missing.length === 0 ? (
+        <div className="flex items-center gap-2.5 py-2 text-[13px] text-(--dp-text-faint)">
+          <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+          Every lead Meta reported is present in the pipeline. Nothing has been dropped.
+        </div>
+      ) : (
+        <>
+          <div className="flex items-center justify-between gap-3 mb-3">
+            <div className="flex items-center gap-2.5 text-[13px] text-(--dp-text)">
+              <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
+              <span>
+                <span className="font-bold">{missing.length}</span> paid{' '}
+                lead{missing.length === 1 ? '' : 's'} never made it into the pipeline.
+              </span>
+            </div>
+            <Btn
+              variant="primary"
+              size="sm"
+              disabled={isBusy}
+              onClick={() => marketingActions.importMetaLeads(missing.map(l => l.leadId))}
+            >
+              <Download className="w-3.5 h-3.5" /> Import all
+            </Btn>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-[12.5px]">
+              <thead>
+                <tr className="text-left text-[11px] uppercase tracking-wide text-(--dp-text-faint)">
+                  <th className="py-1.5 pr-3 font-bold">Lead</th>
+                  <th className="py-1.5 pr-3 font-bold">Contact</th>
+                  <th className="py-1.5 pr-3 font-bold">Campaign / form</th>
+                  <th className="py-1.5 pr-3 font-bold">Submitted</th>
+                  <th className="py-1.5 font-bold" />
+                </tr>
+              </thead>
+              <tbody>
+                {missing.map(l => (
+                  <tr key={l.leadId} className="border-t border-(--dp-border)">
+                    <td className="py-2 pr-3 font-semibold text-(--dp-text)">
+                      {l.fullName || '—'}
+                      {l.isOrganic && (
+                        <span className="ml-1.5 text-[10px] font-bold text-(--dp-text-faint)">ORGANIC</span>
+                      )}
+                    </td>
+                    <td className="py-2 pr-3 text-(--dp-text-faint)">
+                      {[l.email, l.phone].filter(Boolean).join(' · ') || '—'}
+                    </td>
+                    <td className="py-2 pr-3 text-(--dp-text-faint)">
+                      {l.campaignName || l.adName || l.formName || '—'}
+                    </td>
+                    <td className="py-2 pr-3 text-(--dp-text-faint) whitespace-nowrap">{fmtDate(l.createdTime)}</td>
+                    <td className="py-2 text-right">
+                      <Btn
+                        variant="ghost"
+                        size="sm"
+                        disabled={isBusy}
+                        onClick={() => marketingActions.importMetaLeads([l.leadId])}
+                      >
+                        Import
+                      </Btn>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+    </Card>
   );
 }
 
@@ -726,6 +840,9 @@ export function BackendMarketing() {
             </div>
           )}
         </Card>
+
+        {/* ═══ LEAD RECONCILIATION ═══ */}
+        {live && <LeadReconCard />}
 
         {/* ═══ CHANNELS / CAMPAIGNS + CYCLES ═══ */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">

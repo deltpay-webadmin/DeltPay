@@ -19,6 +19,7 @@ import { useSyncExternalStore } from 'react';
 import { toast } from 'sonner@2.0.3';
 import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 import { serverBaseUrl } from '../../../app/lib/supabase';
+import { refreshLeads } from './crmStore';
 
 // ══════════════════════════════════════════════════════════════
 // Types
@@ -46,9 +47,24 @@ export interface AdInsightRow {
   leads: number;
 }
 
+export interface AdLead {
+  leadId: string;
+  createdTime: string | null;
+  fullName: string | null;
+  email: string | null;
+  phone: string | null;
+  formName: string | null;
+  campaignName: string | null;
+  adName: string | null;
+  isOrganic: boolean;
+  matchedLeadId: string | null;
+  matchBasis: string | null;
+}
+
 interface MarketingState {
   connections: AdConnection[];
   insights: AdInsightRow[];
+  adLeads: AdLead[];
 }
 
 interface MarketingSyncState {
@@ -61,7 +77,7 @@ interface MarketingSyncState {
 // Store
 // ══════════════════════════════════════════════════════════════
 
-let state: MarketingState = { connections: [], insights: [] };
+let state: MarketingState = { connections: [], insights: [], adLeads: [] };
 let sync: MarketingSyncState = { isLoading: isSupabaseConfigured, isBusy: false, lastError: null };
 
 const listeners = new Set<() => void>();
@@ -101,6 +117,22 @@ function fromDbConnection(r: any): AdConnection {
   };
 }
 
+function fromDbAdLead(r: any): AdLead {
+  return {
+    leadId: r.lead_id,
+    createdTime: r.created_time ?? null,
+    fullName: r.full_name ?? null,
+    email: r.email ?? null,
+    phone: r.phone ?? null,
+    formName: r.form_name ?? null,
+    campaignName: r.campaign_name ?? null,
+    adName: r.ad_name ?? null,
+    isOrganic: Boolean(r.is_organic),
+    matchedLeadId: r.matched_lead_id ?? null,
+    matchBasis: r.match_basis ?? null,
+  };
+}
+
 function fromDbInsight(r: any): AdInsightRow {
   return {
     provider: r.provider,
@@ -137,19 +169,21 @@ async function maybeHydrate() {
   hydrating = true;
   setSync({ isLoading: true, lastError: null });
   try {
-    const [connRes, insRes] = await Promise.all([
+    const [connRes, insRes, leadRes] = await Promise.all([
       supabase.from('ad_connections').select('*'),
       supabase
         .from('ad_insights_daily')
         .select('*')
         .gte('day', windowStart())
         .order('day', { ascending: true }),
+      supabase.from('ad_leads').select('*').order('created_time', { ascending: false }),
     ]);
-    const firstErr = connRes.error || insRes.error;
+    const firstErr = connRes.error || insRes.error || leadRes.error;
     if (firstErr) throw firstErr;
     set({
       connections: (connRes.data || []).map(fromDbConnection),
       insights: (insRes.data || []).map(fromDbInsight),
+      adLeads: (leadRes.data || []).map(fromDbAdLead),
     });
     hydrated = true;
     setSync({ isLoading: false, lastError: null });
@@ -224,16 +258,58 @@ async function authFetch(route: string, options: RequestInit = {}): Promise<any>
 export const marketingActions = {
   async refreshInsights() {
     if (!supabase) return;
-    const [connRes, insRes] = await Promise.all([
+    const [connRes, insRes, leadRes] = await Promise.all([
       supabase.from('ad_connections').select('*'),
       supabase
         .from('ad_insights_daily')
         .select('*')
         .gte('day', windowStart())
         .order('day', { ascending: true }),
+      supabase.from('ad_leads').select('*').order('created_time', { ascending: false }),
     ]);
     if (!connRes.error && connRes.data) set({ connections: connRes.data.map(fromDbConnection) });
     if (!insRes.error && insRes.data) set({ insights: insRes.data.map(fromDbInsight) });
+    if (!leadRes.error && leadRes.data) set({ adLeads: leadRes.data.map(fromDbAdLead) });
+  },
+
+  /** Pull actual lead-form submissions from Meta and reconcile vs the CRM. */
+  async syncMetaLeads() {
+    setSync({ isBusy: true });
+    try {
+      const json = await authFetch('/meta/leads/sync', { method: 'POST', body: '{}' });
+      toast.success(
+        `Lead forms synced — ${json.total} submissions, ${json.matched} in CRM, ${json.missing} missing.`,
+      );
+      await marketingActions.refreshInsights();
+      return json;
+    } catch (err: any) {
+      toast.error(`Lead sync failed: ${err.message}`);
+      throw err;
+    } finally {
+      setSync({ isBusy: false });
+    }
+  },
+
+  /** Import missing Meta submissions into the pipeline. */
+  async importMetaLeads(leadIds: string[]) {
+    setSync({ isBusy: true });
+    try {
+      const json = await authFetch('/meta/leads/import', {
+        method: 'POST',
+        body: JSON.stringify({ leadIds }),
+      });
+      toast.success(
+        `Imported ${json.imported} lead${json.imported === 1 ? '' : 's'} into the pipeline` +
+          (json.skipped ? ` (${json.skipped} already present)` : '') + '.',
+      );
+      await Promise.all([marketingActions.refreshInsights(), refreshLeads()]);
+      return json;
+    } catch (err: any) {
+      toast.error(`Import failed: ${err.message}`);
+      throw err;
+    } finally {
+      setSync({ isBusy: false });
+    }
   },
 
   /** Validate + store the Meta token server-side, then run the first sync. */

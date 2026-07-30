@@ -17,7 +17,7 @@ import {
   refreshAssetReport,
   svc,
 } from "../_shared/plaid.ts";
-import { adsStatus, connectMeta, syncMeta, disconnectMeta } from "../_shared/meta.ts";
+import { adsStatus, connectMeta, syncMeta, disconnectMeta, syncMetaLeads, importMetaLeads } from "../_shared/meta.ts";
 const app = new Hono();
 
 // Enable logger
@@ -293,6 +293,29 @@ app.post(`${ADS_BASE}/meta/sync`, async (c) => {
     return c.json({ ok: true, ...out });
   } catch (err: any) {
     console.error("meta sync error", err);
+    return c.json({ ok: false, error: String(err?.message ?? err) }, 500);
+  }
+});
+
+app.post(`${ADS_BASE}/meta/leads/sync`, async (c) => {
+  try {
+    const out = await syncMetaLeads();
+    return c.json({ ok: true, ...out });
+  } catch (err: any) {
+    console.error("meta leads sync error", err);
+    return c.json({ ok: false, error: String(err?.message ?? err) }, 500);
+  }
+});
+
+app.post(`${ADS_BASE}/meta/leads/import`, async (c) => {
+  try {
+    const body = await c.req.json().catch(() => ({}));
+    const leadIds = Array.isArray(body.leadIds) ? body.leadIds.map(String) : [];
+    if (!leadIds.length) return c.json({ ok: false, error: "leadIds is required" }, 400);
+    const out = await importMetaLeads(leadIds);
+    return c.json({ ok: true, ...out });
+  } catch (err: any) {
+    console.error("meta leads import error", err);
     return c.json({ ok: false, error: String(err?.message ?? err) }, 500);
   }
 });
