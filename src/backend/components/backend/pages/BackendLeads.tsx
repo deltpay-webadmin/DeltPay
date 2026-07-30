@@ -641,7 +641,7 @@ function LeadDetailPanel({ lead, onClose, onEdit, onDelete }: { lead: Lead | nul
                     type="checkbox"
                     checked={t.done}
                     onChange={() => leadActions.toggleTask(lead.id, t.id)}
-                    className="mt-1 w-4 h-4 text-indigo-600 border-gray-300 rounded cursor-pointer"
+                    className="mt-1 w-4 h-4 accent-indigo-600 border-gray-300 rounded cursor-pointer"
                   />
                   <div className="flex-1">
                     <p className={`text-sm font-medium ${t.done ? 'text-gray-500 line-through' : 'text-gray-900'}`}>{t.title}</p>
@@ -1612,7 +1612,7 @@ export function BackendLeads({ openImport = false }: { openImport?: boolean } = 
                         checked={allVisibleSelected}
                         ref={el => { if (el) el.indeterminate = selectedVisibleCount > 0 && !allVisibleSelected; }}
                         onChange={toggleSelectAll}
-                        className="w-4 h-4 text-indigo-600 border-gray-300 rounded cursor-pointer"
+                        className="w-4 h-4 accent-indigo-600 border-gray-300 rounded cursor-pointer"
                         title="Select all"
                       />
                     </th>
@@ -1647,7 +1647,7 @@ export function BackendLeads({ openImport = false }: { openImport?: boolean } = 
                             type="checkbox"
                             checked={isSelected}
                             onChange={() => toggleSelect(lead.id)}
-                            className="w-4 h-4 text-indigo-600 border-gray-300 rounded cursor-pointer"
+                            className="w-4 h-4 accent-indigo-600 border-gray-300 rounded cursor-pointer"
                           />
                         </td>
                         <td className="px-5 py-4">
