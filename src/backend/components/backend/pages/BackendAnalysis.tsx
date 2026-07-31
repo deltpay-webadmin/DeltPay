@@ -124,6 +124,7 @@ export function BackendAnalysis() {
   const [autoLeadName, setAutoLeadName] = useState('');
   const [leadBannerVisible, setLeadBannerVisible] = useState(false);
   const [history, setHistory] = useState<HistoryRow[]>([]);
+  const [savedAnalysisId, setSavedAnalysisId] = useState<string | null>(null);
   const [historyView, setHistoryView] = useState<'all' | 'merchant'>('all');
   const [merchantFilter, setMerchantFilter] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -223,7 +224,7 @@ export function BackendAnalysis() {
       setStatus('done');
 
       // Persist so the history / merchant view survives reloads.
-      const { error: insErr } = await supabase.from('statement_analyses').insert({
+      const { data: saved, error: insErr } = await supabase.from('statement_analyses').insert({
         merchant_name: ex.merchantName,
         filename: file.name,
         extraction: raw,
@@ -232,8 +233,9 @@ export function BackendAnalysis() {
         annual_savings: prop.annualSavings,
         status: 'Analyzed',
         model: data.model ?? null,
-      });
+      }).select('id').single();
       if (insErr) console.error('[analysis] save failed:', insErr.message);
+      setSavedAnalysisId(saved?.id ?? null);
       void loadHistory();
     } catch (err: any) {
       console.error('[analysis] extraction failed:', err);
@@ -242,10 +244,13 @@ export function BackendAnalysis() {
     }
   };
 
-  // ── Real lead creation from the analyzed statement ──
-  const createLead = () => {
+  // ── Real lead creation from the analyzed statement. The analysis is also
+  //    filed into the new lead's Data Vault (/prospects/{leadId}/
+  //    statement-analysis/...), so it sits with the prospect's other files
+  //    in the Plaid Portal. ──
+  const createLead = async () => {
     if (!extracted || !proposal) return;
-    leadActions.create({
+    const lead = leadActions.create({
       businessName: extracted.merchantName,
       type: 'Processing' as any,
       source: 'Statement Analyzer',
@@ -258,13 +263,40 @@ export function BackendAnalysis() {
     setAutoLeadName(extracted.merchantName);
     setAutoLeadCreated(true);
     setLeadBannerVisible(true);
-    // Reflect the pipeline hand-off on the newest saved analysis.
-    const latest = history.find(h => h.merchantName === extracted.merchantName);
-    if (latest && supabase) {
-      void supabase.from('statement_analyses').update({ status: 'Lead Created' }).eq('id', latest.id)
-        .then(() => loadHistory());
-    }
     toast.success(`Lead created for ${extracted.merchantName}`);
+
+    if (supabase) {
+      try {
+        // Folders first (no-op when they already exist), then the document.
+        await supabase.from('plaid_nodes').upsert([
+          { path: `/prospects/${lead.id}`, name: extracted.merchantName, node_type: 'folder', lead_id: lead.id },
+          { path: `/prospects/${lead.id}/statement-analysis`, name: 'Statement Analysis', node_type: 'folder', lead_id: lead.id },
+        ], { onConflict: 'path', ignoreDuplicates: true });
+        const { error: docErr } = await supabase.from('plaid_nodes').insert({
+          path: `/prospects/${lead.id}/statement-analysis/${savedAnalysisId ?? crypto.randomUUID()}`,
+          name: files[0]?.name ?? `Statement analysis — ${extracted.statementPeriod}`,
+          node_type: 'document',
+          doc_kind: 'statement_analysis',
+          lead_id: lead.id,
+          data: {
+            extraction: extracted,
+            proposal,
+            filename: files[0]?.name ?? null,
+            analyzedAt: new Date().toISOString(),
+          },
+        });
+        if (docErr) throw docErr;
+        if (savedAnalysisId) {
+          await supabase.from('statement_analyses')
+            .update({ lead_id: lead.id, status: 'Lead Created' })
+            .eq('id', savedAnalysisId);
+        }
+        void loadHistory();
+      } catch (err: any) {
+        console.error('[analysis] vault filing failed:', err);
+        toast.error(`Lead created, but filing the analysis failed: ${err?.message ?? err}`);
+      }
+    }
   };
 
   const updateStatus = async (id: string, next: HistoryStatus) => {
@@ -282,6 +314,7 @@ export function BackendAnalysis() {
     setFiles([]);
     setExtracted(null);
     setProposal(null);
+    setSavedAnalysisId(null);
   };
 
   // ── Merchant rollup for the "By merchant" view ──
@@ -614,7 +647,7 @@ export function BackendAnalysis() {
                           </button>
                         ) : (
                           <button
-                            onClick={createLead}
+                            onClick={() => void createLead()}
                             className="flex-1 px-4 py-2.5 bg-white text-brand text-sm font-medium rounded-[6px] border border-brand hover:bg-brand/5 transition-colors flex items-center justify-center gap-2"
                           >
                             <UserPlus className="w-4 h-4" />
