@@ -134,6 +134,65 @@ export async function recordUsage(args: UsageArgs): Promise<void> {
   }
 }
 
+export interface QuotaDecision {
+  allowed: boolean;
+  /** The cap that applied, when one did. */
+  capUsd?: number;
+  /** Month-to-date spend at decision time. */
+  spentUsd?: number;
+}
+
+/**
+ * Soft monthly spend cap, resolved user row → subject-type default row →
+ * no cap. Month boundary is UTC first-of-month, matching the CRM store's
+ * MTD math.
+ *
+ * Fails OPEN: any error here allows the call. Blocking a user because the
+ * quota lookup broke would violate the never-break-the-feature rule above —
+ * the cap is a budget guardrail, not a security boundary.
+ */
+export async function checkQuota(caller: Caller | null): Promise<QuotaDecision> {
+  try {
+    if (!caller) return { allowed: true }; // unattributed calls can't be capped
+
+    const db = svc();
+    const { data: rows, error } = await db
+      .from("ai_quotas")
+      .select("scope, scope_id, monthly_cost_cap_usd")
+      .or(
+        `and(scope.eq.user,scope_id.eq.${caller.userId}),and(scope.eq.default,scope_id.eq.${caller.subjectType})`,
+      );
+    if (error) throw error;
+
+    const quota =
+      (rows ?? []).find(r => r.scope === "user") ??
+      (rows ?? []).find(r => r.scope === "default");
+    if (!quota || quota.monthly_cost_cap_usd == null) return { allowed: true };
+    const capUsd = Number(quota.monthly_cost_cap_usd);
+
+    const monthStart = new Date();
+    monthStart.setUTCDate(1);
+    monthStart.setUTCHours(0, 0, 0, 0);
+
+    // Sum in JS: per-user monthly row counts are small, and this avoids
+    // PostgREST aggregate configuration. Rides the (user_id, created_at) index.
+    const { data: usage, error: usageErr } = await db
+      .from("ai_usage")
+      .select("cost_usd")
+      .eq("user_id", caller.userId)
+      .eq("status", "ok")
+      .gte("created_at", monthStart.toISOString());
+    if (usageErr) throw usageErr;
+
+    const spentUsd = (usage ?? []).reduce((sum, r) => sum + Number(r.cost_usd ?? 0), 0);
+    if (spentUsd >= capUsd) return { allowed: false, capUsd, spentUsd };
+    return { allowed: true, capUsd, spentUsd };
+  } catch (err) {
+    console.error("[metering] checkQuota failed (allowing call):", (err as Error).message);
+    return { allowed: true };
+  }
+}
+
 /**
  * Model tier for a caller. Resolved server-side from subject type — never
  * from the request body, or a customer could ask for the expensive model.

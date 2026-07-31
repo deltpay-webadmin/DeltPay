@@ -18,7 +18,7 @@
  */
 
 import Anthropic from "npm:@anthropic-ai/sdk";
-import { type Caller, recordUsage, resolveCaller } from "../_shared/metering.ts";
+import { type Caller, checkQuota, recordUsage, resolveCaller } from "../_shared/metering.ts";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -206,6 +206,28 @@ Deno.serve(async (req) => {
 
   // Identify the caller so every extraction lands in the usage ledger.
   const caller = await resolveCaller(req);
+
+  // Soft monthly budget: over-cap callers get a 402 and a zero-token
+  // 'blocked' ledger row. Checked once, before provider branching, against
+  // the provider/model that would serve the request.
+  const quota = await checkQuota(caller);
+  if (!quota.allowed) {
+    await recordUsage({
+      caller,
+      feature: "statement_analyzer",
+      provider: anthropicKey ? "anthropic" : "nebius",
+      model: anthropicKey
+        ? "claude-opus-5"
+        : (Deno.env.get("NEBIUS_VISION_MODEL") ?? "Qwen/Qwen2.5-VL-72B-Instruct"),
+      inputTokens: 0,
+      outputTokens: 0,
+      status: "blocked",
+    });
+    return json({
+      error: "quota_exceeded",
+      message: `Monthly AI budget of $${quota.capUsd} reached for this account.`,
+    }, 402);
+  }
 
   // Provider resolution: Claude when configured (reads PDFs natively);
   // otherwise the cheaper Nebius vision model, which handles images only.

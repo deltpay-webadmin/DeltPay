@@ -11,6 +11,7 @@ import {
   Users,
   Target,
   ArrowUp,
+  Gauge,
 } from 'lucide-react';
 import {
   AreaChart,
@@ -24,8 +25,10 @@ import {
 import { useCrm } from '../crmStore';
 import { askLens } from '../lensAI';
 import { AIError } from '../aiErrors';
+import { useStaffRole } from '../staffStore';
+import { AiManagementTab } from '../AiManagementTab';
 
-type Tab = 'dashboard' | 'ask';
+type Tab = 'dashboard' | 'ask' | 'manage';
 
 // ── Health Score Ring ──
 function HealthRing({ score, size = 100 }: { score: number; size?: number }) {
@@ -153,10 +156,21 @@ export function BackendLensAI() {
   const chatEndRef = useRef<HTMLDivElement>(null);
   // Live CRM state — Lens answers against this snapshot.
   const crm = useCrm();
+  // Real signed-in role, not the layout's cosmetic view-switcher. The
+  // Management tab is admin-only; the enforcing gate is the RLS policy
+  // on ai_quotas — this just hides a tab non-admins couldn't use.
+  const { role } = useStaffRole();
+  const isAdmin = role === 'admin';
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, thinking]);
+
+  // Role can resolve (or change) after the tab was opened — kick non-admins
+  // back to the dashboard rather than rendering an empty Management view.
+  useEffect(() => {
+    if (tab === 'manage' && !isAdmin) setTab('dashboard');
+  }, [tab, isAdmin]);
 
   const handleSend = async (text?: string) => {
     const msg = text || chatInput.trim();
@@ -213,7 +227,8 @@ export function BackendLensAI() {
         setChatInput={setChatInput}
         handleSend={handleSend}
         chatEndRef={chatEndRef}
-        onBack={() => setTab('dashboard')}
+        setTab={setTab}
+        isAdmin={isAdmin}
       />
     );
   }
@@ -224,15 +239,15 @@ export function BackendLensAI() {
         {/* ── Header ── */}
         <div className="flex items-center justify-between">
           <p className="text-[13px] text-gray-500">Predictive intelligence for your portfolio</p>
-          <TabSwitch tab={tab} setTab={setTab} />
+          <TabSwitch tab={tab} setTab={setTab} isAdmin={isAdmin} />
         </div>
-        <DashboardTab />
+        {tab === 'manage' && isAdmin ? <AiManagementTab /> : <DashboardTab />}
       </div>
     </div>
   );
 }
 
-function TabSwitch({ tab, setTab }: { tab: Tab; setTab: (t: Tab) => void }) {
+function TabSwitch({ tab, setTab, isAdmin }: { tab: Tab; setTab: (t: Tab) => void; isAdmin?: boolean }) {
   return (
     <div className="flex rounded-[10px] border border-(--dp-border) p-0.5">
       <button
@@ -256,6 +271,19 @@ function TabSwitch({ tab, setTab }: { tab: Tab; setTab: (t: Tab) => void }) {
         <Sparkles className="w-3.5 h-3.5" />
         Ask Lens
       </button>
+      {isAdmin && (
+        <button
+          onClick={() => setTab('manage')}
+          className={`px-4 py-1.5 text-[13px] font-semibold rounded-[8px] transition-all flex items-center gap-1.5 ${
+            tab === 'manage'
+              ? 'bg-(--dp-accent-soft) text-(--dp-accent-text)'
+              : 'text-(--dp-text-muted) hover:text-(--dp-text)'
+          }`}
+        >
+          <Gauge className="w-3.5 h-3.5" />
+          Management
+        </button>
+      )}
     </div>
   );
 }
@@ -514,7 +542,8 @@ function AskLens({
   setChatInput,
   handleSend,
   chatEndRef,
-  onBack,
+  setTab,
+  isAdmin,
 }: {
   messages: ChatMessage[];
   thinking: boolean;
@@ -522,7 +551,8 @@ function AskLens({
   setChatInput: (v: string) => void;
   handleSend: (text?: string) => void;
   chatEndRef: React.RefObject<HTMLDivElement | null>;
-  onBack: () => void;
+  setTab: (t: Tab) => void;
+  isAdmin: boolean;
 }) {
   const empty = messages.length === 0;
 
@@ -531,18 +561,7 @@ function AskLens({
       {/* Slim header — just the mode switch */}
       <div className="shrink-0 flex items-center justify-between px-4 lg:px-8 pt-4">
         <p className="text-[13px] text-(--dp-text-muted)">Predictive intelligence for your portfolio</p>
-        <div className="flex rounded-[10px] border border-(--dp-border) p-0.5">
-          <button
-            onClick={onBack}
-            className="px-4 py-1.5 text-[13px] font-semibold rounded-[8px] text-(--dp-text-muted) hover:text-(--dp-text) transition-all"
-          >
-            Dashboard
-          </button>
-          <button className="px-4 py-1.5 text-[13px] font-semibold rounded-[8px] bg-(--dp-accent-soft) text-(--dp-accent-text) flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5" />
-            Ask Lens
-          </button>
-        </div>
+        <TabSwitch tab="ask" setTab={setTab} isAdmin={isAdmin} />
       </div>
 
       {empty ? (

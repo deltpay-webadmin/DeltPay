@@ -29,7 +29,7 @@
  *     Falls back to the premium model until one is chosen.
  */
 
-import { recordUsage, resolveCaller, tierFor } from "../_shared/metering.ts";
+import { checkQuota, recordUsage, resolveCaller, tierFor } from "../_shared/metering.ts";
 
 const NEBIUS_URL = "https://api.studio.nebius.com/v1/chat/completions";
 const DEFAULT_TEXT_MODEL = "Qwen/Qwen3-235B-A22B-Instruct-2507";
@@ -78,6 +78,25 @@ Deno.serve(async (req) => {
   const model = tierFor(caller) === "premium"
     ? premiumModel
     : (Deno.env.get("NEBIUS_TEXT_MODEL_STANDARD") ?? premiumModel);
+
+  // Soft monthly budget: over-cap callers get a 402 and a zero-token
+  // 'blocked' ledger row so the attempt stays visible in the CRM.
+  const quota = await checkQuota(caller);
+  if (!quota.allowed) {
+    await recordUsage({
+      caller,
+      feature: "lens_chat",
+      provider: "nebius",
+      model,
+      inputTokens: 0,
+      outputTokens: 0,
+      status: "blocked",
+    });
+    return json({
+      error: "quota_exceeded",
+      message: `Monthly AI budget of $${quota.capUsd} reached for this account.`,
+    }, 402);
+  }
 
   try {
     const upstream = await fetch(NEBIUS_URL, {
