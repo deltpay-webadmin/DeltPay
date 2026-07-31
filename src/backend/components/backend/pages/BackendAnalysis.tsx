@@ -97,6 +97,39 @@ function fileToBase64(file: File): Promise<string> {
   });
 }
 
+interface PageImage {
+  mediaType: string;
+  dataBase64: string;
+}
+
+/**
+ * Render a PDF's pages to JPEGs in the browser (pdfjs) so extraction can run
+ * on the cheap Nebius vision model instead of requiring the Claude provider.
+ * Statements are short; 8 pages covers them with headroom.
+ */
+async function pdfToImages(file: File, maxPages = 8): Promise<PageImage[]> {
+  const pdfjs = await import('pdfjs-dist');
+  const worker = await import('pdfjs-dist/build/pdf.worker.min.mjs?url');
+  pdfjs.GlobalWorkerOptions.workerSrc = worker.default;
+
+  const doc = await pdfjs.getDocument({ data: await file.arrayBuffer() }).promise;
+  const pages = Math.min(doc.numPages, maxPages);
+  const out: PageImage[] = [];
+  for (let i = 1; i <= pages; i++) {
+    const page = await doc.getPage(i);
+    const viewport = page.getViewport({ scale: 2 }); // ~1200x1600 for letter pages
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.ceil(viewport.width);
+    canvas.height = Math.ceil(viewport.height);
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Canvas rendering unavailable');
+    await page.render({ canvasContext: ctx, viewport }).promise;
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+    out.push({ mediaType: 'image/jpeg', dataBase64: dataUrl.slice(dataUrl.indexOf(',') + 1) });
+  }
+  return out;
+}
+
 function fromDbAnalysis(row: any): HistoryRow {
   return {
     id: row.id,
@@ -184,11 +217,19 @@ export function BackendAnalysis() {
     setAutoLeadCreated(false);
     setLeadBannerVisible(false);
     try {
-      const dataBase64 = await fileToBase64(file);
+      // PDFs are rendered to page images client-side so the cheap Nebius
+      // vision model reads them; single images pass through as-is.
+      const payload: Record<string, unknown> = { filename: file.name };
+      if (file.type === 'application/pdf') {
+        payload.images = await pdfToImages(file);
+      } else {
+        payload.mediaType = file.type || 'image/png';
+        payload.dataBase64 = await fileToBase64(file);
+      }
       setStatus('analyzing');
 
       const { data, error } = await supabase.functions.invoke('analyze-statement', {
-        body: { filename: file.name, mediaType: file.type || 'application/pdf', dataBase64 },
+        body: payload,
       });
 
       if (error) {

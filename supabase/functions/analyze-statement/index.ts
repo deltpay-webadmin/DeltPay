@@ -9,10 +9,14 @@
  * Auth: caller must be signed in (verify_jwt). Provider keys never leave
  * this function.
  *
- * Providers (first configured wins):
- *   ANTHROPIC_API_KEY — Claude (claude-opus-5). Reads PDFs and images.
- *   NEBIUS_API_KEY    — Nebius AI Studio vision model (cheaper). Images
- *                       only — PDF reading requires the Claude provider.
+ * Accepts either a single file { mediaType, dataBase64 } or a pre-rendered
+ * page set { images: [{ mediaType, dataBase64 }] } — the CRM renders PDF
+ * pages to JPEGs client-side (pdfjs) so the cheap vision model can read
+ * statements without the Claude provider.
+ *
+ * Provider preference: NEBIUS_API_KEY (cheap, images/pages) is used whenever
+ * the input is imagery; ANTHROPIC_API_KEY (claude-opus-5) is the fallback and
+ * the only provider that reads raw PDF bytes directly.
  * Optional:
  *   NEBIUS_VISION_MODEL — default Qwen/Qwen2.5-VL-72B-Instruct
  */
@@ -102,10 +106,14 @@ Rules:
 // ── Nebius fallback: vision extraction for image statements ──
 const NEBIUS_URL = "https://api.studio.nebius.com/v1/chat/completions";
 
+interface PageImage {
+  mediaType: string;
+  dataBase64: string;
+}
+
 async function extractWithNebius(
   apiKey: string,
-  mediaType: string,
-  dataBase64: string,
+  images: PageImage[],
   filename: string,
   caller: Caller | null,
 ): Promise<Response> {
@@ -123,11 +131,15 @@ async function extractWithNebius(
         {
           role: "user",
           content: [
-            { type: "image_url", image_url: { url: `data:${mediaType};base64,${dataBase64}` } },
+            ...images.map(img => ({
+              type: "image_url",
+              image_url: { url: `data:${img.mediaType};base64,${img.dataBase64}` },
+            })),
             {
               type: "text",
               text:
-                `Extract the processing economics from this merchant statement (file: ${filename}). ` +
+                `Extract the processing economics from this merchant statement ` +
+                `(file: ${filename}, ${images.length} page${images.length > 1 ? "s" : ""}). ` +
                 `Respond with ONLY a JSON object matching this schema (all fields required):\n` +
                 JSON.stringify(EXTRACTION_SCHEMA),
             },
@@ -188,7 +200,12 @@ Deno.serve(async (req) => {
     return json({ error: "not_configured", message: "Set ANTHROPIC_API_KEY (PDFs + images) or NEBIUS_API_KEY (images) to enable extraction" }, 503);
   }
 
-  let body: { filename?: string; mediaType?: string; dataBase64?: string };
+  let body: {
+    filename?: string;
+    mediaType?: string;
+    dataBase64?: string;
+    images?: PageImage[];
+  };
   try {
     body = await req.json();
   } catch {
@@ -196,13 +213,30 @@ Deno.serve(async (req) => {
   }
 
   const { filename = "statement", mediaType = "application/pdf", dataBase64 } = body;
-  if (!dataBase64) return json({ error: "missing_file" }, 400);
-  // The Messages API caps requests at 32MB; leave headroom for the rest of the body.
-  if (dataBase64.length > 28_000_000) return json({ error: "file_too_large", message: "Statement exceeds 20MB" }, 413);
+  // Pre-rendered page set (the CRM converts PDFs to JPEGs client-side).
+  const images: PageImage[] | null =
+    Array.isArray(body.images) && body.images.length
+      ? body.images
+          .filter(i => i && typeof i.dataBase64 === "string" && /^image\/(png|jpeg|webp|gif)$/.test(i.mediaType))
+          .slice(0, 8)
+      : null;
 
-  const isPdf = mediaType === "application/pdf";
-  const isImage = /^image\/(png|jpeg|webp|gif)$/.test(mediaType);
+  if (!images && !dataBase64) return json({ error: "missing_file" }, 400);
+  // The Messages API caps requests at 32MB; leave headroom for the rest of the body.
+  const totalBytes = images
+    ? images.reduce((sum, i) => sum + i.dataBase64.length, 0)
+    : (dataBase64?.length ?? 0);
+  if (totalBytes > 28_000_000) return json({ error: "file_too_large", message: "Statement exceeds 20MB" }, 413);
+
+  const isPdf = !images && mediaType === "application/pdf";
+  const isImage = !!images || /^image\/(png|jpeg|webp|gif)$/.test(mediaType);
   if (!isPdf && !isImage) return json({ error: "unsupported_media_type", message: mediaType }, 415);
+
+  // Nebius (cheap) serves anything that's imagery; Claude handles raw PDFs
+  // and is the fallback when Nebius isn't configured.
+  const pageImages: PageImage[] | null =
+    images ?? (isImage && dataBase64 ? [{ mediaType, dataBase64 }] : null);
+  const useNebius = Boolean(nebiusKey && pageImages);
 
   // Identify the caller so every extraction lands in the usage ledger.
   const caller = await resolveCaller(req);
@@ -215,10 +249,10 @@ Deno.serve(async (req) => {
     await recordUsage({
       caller,
       feature: "statement_analyzer",
-      provider: anthropicKey ? "anthropic" : "nebius",
-      model: anthropicKey
-        ? "claude-opus-5"
-        : (Deno.env.get("NEBIUS_VISION_MODEL") ?? "Qwen/Qwen2.5-VL-72B-Instruct"),
+      provider: useNebius ? "nebius" : "anthropic",
+      model: useNebius
+        ? (Deno.env.get("NEBIUS_VISION_MODEL") ?? "Qwen/Qwen2.5-VL-72B-Instruct")
+        : "claude-opus-5",
       inputTokens: 0,
       outputTokens: 0,
       status: "blocked",
@@ -229,17 +263,9 @@ Deno.serve(async (req) => {
     }, 402);
   }
 
-  // Provider resolution: Claude when configured (reads PDFs natively);
-  // otherwise the cheaper Nebius vision model, which handles images only.
-  if (!anthropicKey) {
-    if (isPdf) {
-      return json({
-        error: "pdf_requires_claude",
-        message: "PDF statements need the Claude provider (ANTHROPIC_API_KEY). Upload a statement photo/screenshot, or configure Claude.",
-      }, 415);
-    }
+  if (useNebius) {
     try {
-      return await extractWithNebius(nebiusKey!, mediaType, dataBase64, filename, caller);
+      return await extractWithNebius(nebiusKey!, pageImages!, filename, caller);
     } catch (err) {
       const e = err as { message?: string };
       console.error("[analyze-statement:nebius]", e.message);
@@ -247,11 +273,22 @@ Deno.serve(async (req) => {
     }
   }
 
+  if (!anthropicKey) {
+    // No Nebius-compatible input and no Claude key: raw PDF with Nebius-only config.
+    return json({
+      error: "pdf_requires_claude",
+      message: "This PDF couldn't be rendered to images for the Nebius provider, and ANTHROPIC_API_KEY is not set. Re-upload as a photo/screenshot, or configure Claude.",
+    }, 415);
+  }
+
   const client = new Anthropic({ apiKey: anthropicKey });
 
-  const fileBlock = isPdf
-    ? { type: "document" as const, source: { type: "base64" as const, media_type: "application/pdf" as const, data: dataBase64 } }
-    : { type: "image" as const, source: { type: "base64" as const, media_type: mediaType as "image/png", data: dataBase64 } };
+  const fileBlocks = pageImages
+    ? pageImages.map(img => ({
+        type: "image" as const,
+        source: { type: "base64" as const, media_type: img.mediaType as "image/png", data: img.dataBase64 },
+      }))
+    : [{ type: "document" as const, source: { type: "base64" as const, media_type: "application/pdf" as const, data: dataBase64! } }];
 
   try {
     const response = await client.beta.messages.create({
@@ -267,7 +304,7 @@ Deno.serve(async (req) => {
         {
           role: "user",
           content: [
-            fileBlock,
+            ...fileBlocks,
             {
               type: "text",
               text: `Extract the processing economics from this merchant statement (file: ${filename}).`,
