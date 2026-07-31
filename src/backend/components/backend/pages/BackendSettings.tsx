@@ -71,6 +71,7 @@ const INTEGRATIONS = [
   { id: 'ficoso', name: 'FiCoSo', category: 'Legal', status: 'disconnected', lastSync: '—', health: 0, description: 'UCC filing and lien management' },
   { id: 'datamerch', name: 'DataMerch', category: 'Risk', status: 'disconnected', lastSync: '—', health: 0, description: 'MCA industry default database' },
   { id: '10web', name: '10Web', category: 'Websites', status: 'disconnected', lastSync: '—', health: 0, description: 'AI website builder — white-label merchant sites' },
+  { id: 'tinta', name: 'Tinta Group', category: 'Printing', status: 'disconnected', lastSync: '—', health: 0, description: 'Print fulfillment — signage, banners, flags, and merchandise' },
   { id: 'qbo', name: 'QuickBooks Online', category: 'Accounting', status: 'disconnected', lastSync: '—', health: 0, description: 'Chart of accounts, MCA journal entries' },
   { id: 'ollama', name: 'Ollama / Qwen', category: 'AI', status: 'disconnected', lastSync: '—', health: 0, description: 'Local LLM for Lens AI intelligence layer' },
   { id: 'stripe', name: 'Stripe', category: 'Billing', status: 'disconnected', lastSync: '—', health: 0, description: 'Platform billing and subscription management' },

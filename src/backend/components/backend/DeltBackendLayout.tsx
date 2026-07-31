@@ -39,6 +39,7 @@ import { BackendEmployees } from './pages/BackendEmployees';
 import { BackendPayroll } from './pages/BackendPayroll';
 import { BackendWebsites } from './pages/BackendWebsites';
 import { BackendSubscriptions } from './pages/BackendSubscriptions';
+import { BackendPrinting } from './pages/BackendPrinting';
 import { BackendLensAI } from './pages/BackendLensAI';
 import { BackendFinancials } from './pages/BackendFinancials';
 import { BackendReports } from './pages/BackendReports';
@@ -68,6 +69,7 @@ import {
   FileText,
   Package,
   Megaphone,
+  Printer,
   Inbox,
   Globe,
   BarChart3,
@@ -198,6 +200,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/reports': 'Reports & Export Center',
   '/websites': 'Products',
   '/subscriptions': 'Products',
+  '/printing': 'Products',
   '/settings': 'Settings',
   '/settings/integrations': 'Integrations',
   '/settings/roles': 'Roles & Permissions',
@@ -275,7 +278,7 @@ const allCommands: CommandItem[] = [
   { label: 'Marketing Hub', path: '/marketing', group: 'Operations', icon: Megaphone, keywords: 'ads ad spend cac roas funnel google meta outreach email sms campaign automation bulk send', perm: 'integrations.view' },
   { label: 'Compliance', path: '/compliance', group: 'Operations', icon: ShieldCheck, keywords: 'compliance rules', perm: 'general.view' },
   { label: 'Team', path: '/team', group: 'Company', icon: UserCircle, keywords: 'agents employees payroll commissions splits headcount', perm: 'agents.view' },
-  { label: 'Products', path: '/products', group: 'Company', icon: Globe, keywords: 'websites subscriptions billing sites MRR plans', perm: 'merchants.view' },
+  { label: 'Products', path: '/products', group: 'Company', icon: Globe, keywords: 'websites subscriptions billing sites MRR plans printing signage banners flags merch apparel', perm: 'merchants.view' },
   { label: 'Lens AI', path: '/lens-ai', group: 'Intelligence', icon: Sparkles, keywords: 'ai analysis', perm: 'lens_ai.view' },
   { label: 'Financials', path: '/financials', group: 'Intelligence', icon: DollarSign, keywords: 'revenue profit', perm: 'financials.view' },
   { label: 'Reports', path: '/reports', group: 'Intelligence', icon: BarChart3, keywords: 'data visualization', perm: 'financials.view' },
@@ -670,6 +673,7 @@ export function DeltBackendLayout() {
               <Route path="products" element={<Guard perm="merchants.view"><ProductsHub /></Guard>} />
               <Route path="websites" element={<Guard perm="merchants.view"><ProductsHub /></Guard>} />
               <Route path="subscriptions" element={<Guard perm="billing.view"><ProductsHub initialView="subscriptions" /></Guard>} />
+              <Route path="printing" element={<Guard perm="merchants.view"><ProductsHub initialView="printing" /></Guard>} />
               <Route path="commissions" element={<Guard perm="compensation.view"><AgentCommissions /></Guard>} />
               <Route path="support" element={<SupportPage />} />
               <Route path="settings" element={<Guard perm="general.view"><BackendSettings /></Guard>} />
@@ -926,20 +930,21 @@ function TeamHub({ initialView = 'agents' }: { initialView?: TeamView }) {
 }
 
 // ── Products hub: merchant websites and subscription billing. ──
-type ProductsView = 'websites' | 'subscriptions';
+type ProductsView = 'websites' | 'subscriptions' | 'printing';
 function ProductsHub({ initialView = 'websites' }: { initialView?: ProductsView }) {
   const { can } = useSession();
   const [view, setView] = useState<ProductsView>(initialView);
   const tabs = ([
     { key: 'websites' as const, label: 'Websites', perm: 'merchants.view' },
     { key: 'subscriptions' as const, label: 'Subscriptions', perm: 'billing.view' },
+    { key: 'printing' as const, label: 'Printing', perm: 'merchants.view' },
   ]).filter(t => can(t.perm));
 
   return (
     <div className="h-full flex flex-col">
       <HubTabs tabs={tabs} view={view} onChange={setView} />
       <div className="flex-1 overflow-y-auto">
-        {view === 'subscriptions' ? <BackendSubscriptions /> : <BackendWebsites />}
+        {view === 'subscriptions' ? <BackendSubscriptions /> : view === 'printing' ? <BackendPrinting /> : <BackendWebsites />}
       </div>
     </div>
   );
