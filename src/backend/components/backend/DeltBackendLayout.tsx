@@ -1,5 +1,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router';
 import { NavigationContext } from './NavigationContext';
+import { useSession } from './SessionContext';
+import { useOrgTheme } from './useOrgTheme';
 import { SyncIndicator } from './SyncIndicator';
 import { BackendDashboard } from './pages/BackendDashboard';
 import { BackendLeads } from './pages/BackendLeads';
@@ -53,7 +56,6 @@ import {
   X,
   Banknote,
   HelpCircle,
-  ArrowLeftRight,
   CreditCard,
   ShieldAlert,
   Heart,
@@ -77,15 +79,17 @@ import {
   Sun,
   Moon,
   PenTool,
+  LogOut,
 } from 'lucide-react';
 
 // ── Types ──
-type UserRole = 'admin' | 'agent';
 
 interface NavItem {
   label: string;
   path: string;
   icon: React.ElementType;
+  /** '<module>.view' key from the RBAC matrix; undefined → visible to all roles */
+  perm?: string;
 }
 
 interface NavGroup {
@@ -93,7 +97,8 @@ interface NavGroup {
   items: NavItem[];
 }
 
-// ── Admin sidebar: flat groups under overline headers (spec §4.2) ──
+// ── Admin sidebar: flat groups under overline headers (spec §4.2).
+//    Items are filtered per-user by the RBAC matrix (see visibleGroups). ──
 const adminGroups: NavGroup[] = [
   {
     label: null,
@@ -105,55 +110,60 @@ const adminGroups: NavGroup[] = [
   {
     label: 'Pipeline',
     items: [
-      { label: 'Leads', path: '/leads', icon: Users },
-      { label: 'Underwriting', path: '/underwriting', icon: ClipboardCheck },
-      { label: 'Analysis', path: '/analysis', icon: FileText },
+      { label: 'Leads', path: '/leads', icon: Users, perm: 'leads.view' },
+      { label: 'Onboarding', path: '/onboarding', icon: Package, perm: 'merchants.view' },
+      { label: 'Underwriting', path: '/underwriting', icon: ClipboardCheck, perm: 'underwriting.view' },
+      { label: 'Analysis', path: '/analysis', icon: FileText, perm: 'analysis.view' },
     ],
   },
   {
     label: 'Merchants',
     items: [
-      { label: 'All Merchants', path: '/merchants', icon: Store },
-      { label: 'Residuals', path: '/residuals', icon: Receipt },
-      { label: 'Capital', path: '/capital', icon: Banknote },
-      { label: 'Retention', path: '/retention', icon: Heart },
+      { label: 'All Merchants', path: '/merchants', icon: Store, perm: 'merchants.view' },
+      { label: 'Portfolio', path: '/deals', icon: LayoutDashboard, perm: 'capital.view' },
+      { label: 'Residuals', path: '/residuals', icon: Receipt, perm: 'residuals.view' },
+      { label: 'Capital', path: '/capital', icon: Banknote, perm: 'capital.view' },
+      { label: 'Retention', path: '/retention', icon: Heart, perm: 'health.view' },
     ],
   },
   {
     label: 'Operations',
     items: [
-      { label: 'Documents & E-Sign', path: '/documents', icon: PenTool },
-      { label: 'Disputes', path: '/disputes', icon: ShieldAlert },
-      { label: 'Marketing', path: '/marketing', icon: Megaphone },
-      { label: 'Compliance', path: '/compliance', icon: ShieldCheck },
+      // Tasks/Inbox/Activity Timeline stay URL-reachable but are not listed:
+      // Workspace is the one-stop inbox+tasks+activity hub.
+      { label: 'Payments', path: '/payments', icon: CreditCard, perm: 'capital.view' },
+      { label: 'Documents & E-Sign', path: '/documents', icon: PenTool, perm: 'merchants.view' },
+      { label: 'Disputes', path: '/disputes', icon: ShieldAlert, perm: 'merchants.view' },
+      { label: 'Marketing', path: '/marketing', icon: Megaphone, perm: 'integrations.view' },
+      { label: 'Compliance', path: '/compliance', icon: ShieldCheck, perm: 'general.view' },
     ],
   },
   {
     label: 'Team',
     items: [
-      { label: 'Agents', path: '/agents', icon: UserCircle },
-      { label: 'Employees', path: '/employees', icon: Briefcase },
-      { label: 'Payroll', path: '/payroll', icon: Receipt },
+      { label: 'Agents', path: '/agents', icon: UserCircle, perm: 'agents.view' },
+      { label: 'Employees', path: '/employees', icon: Briefcase, perm: 'employees.view' },
+      { label: 'Payroll', path: '/payroll', icon: Receipt, perm: 'payroll.view' },
     ],
   },
   {
     label: 'Intelligence',
     items: [
-      { label: 'Lens AI', path: '/lens-ai', icon: Sparkles },
-      { label: 'Financials', path: '/financials', icon: DollarSign },
-      { label: 'Reports', path: '/reports', icon: BarChart3 },
+      { label: 'Lens AI', path: '/lens-ai', icon: Sparkles, perm: 'lens_ai.view' },
+      { label: 'Financials', path: '/financials', icon: DollarSign, perm: 'financials.view' },
+      { label: 'Reports', path: '/reports', icon: BarChart3, perm: 'financials.view' },
     ],
   },
   {
     label: 'Products',
     items: [
-      { label: 'Websites', path: '/websites', icon: Globe },
-      { label: 'Subscriptions', path: '/subscriptions', icon: CreditCard },
+      { label: 'Websites', path: '/websites', icon: Globe, perm: 'merchants.view' },
+      { label: 'Subscriptions', path: '/subscriptions', icon: CreditCard, perm: 'billing.view' },
     ],
   },
   {
     label: null,
-    items: [{ label: 'Settings', path: '/settings', icon: Wrench }],
+    items: [{ label: 'Settings', path: '/settings', icon: Wrench, perm: 'general.view' }],
   },
 ];
 
@@ -163,9 +173,10 @@ const agentGroups: NavGroup[] = [
     label: null,
     items: [
       { label: 'Dashboard', path: '/', icon: LayoutDashboard },
-      { label: 'My Merchants', path: '/merchants', icon: Store },
-      { label: 'My Leads', path: '/leads', icon: Users },
-      { label: 'Commissions', path: '/commissions', icon: Banknote },
+      { label: 'My Merchants', path: '/merchants', icon: Store, perm: 'merchants.view' },
+      { label: 'My Leads', path: '/leads', icon: Users, perm: 'leads.view' },
+      { label: 'My Residuals', path: '/my-residuals', icon: Receipt, perm: 'residuals.view' },
+      { label: 'Commissions', path: '/commissions', icon: Banknote, perm: 'compensation.view' },
     ],
   },
 ];
@@ -250,37 +261,39 @@ interface CommandItem {
   group: string;
   icon: React.ElementType;
   keywords?: string;
+  perm?: string;
 }
 
 const allCommands: CommandItem[] = [
   { label: 'Overview', path: '/', group: 'Navigation', icon: Home },
   { label: 'Workspace', path: '/workspace', group: 'Navigation', icon: Inbox, keywords: 'inbox email sms call messages tasks activity timeline' },
-  { label: 'Leads', path: '/leads', group: 'Pipeline', icon: Users, keywords: 'sales pipeline' },
-  { label: 'Import Leads', path: '/leads/import', group: 'Pipeline', icon: Upload, keywords: 'upload csv xlsx spreadsheet meta facebook instagram bulk import' },
-  { label: 'Underwriting', path: '/underwriting', group: 'Pipeline', icon: ClipboardCheck, keywords: 'plaid portal vault lending prospects bank credit identity verification' },
-  { label: 'Analysis', path: '/analysis', group: 'Pipeline', icon: FileText, keywords: 'deal analysis review cost calculator' },
-  { label: 'All Merchants', path: '/merchants', group: 'Merchants', icon: Store },
-  { label: 'Residuals', path: '/residuals', group: 'Merchants', icon: Receipt },
-  { label: 'Capital', path: '/capital', group: 'Merchants', icon: Banknote },
-  { label: 'Retention', path: '/retention', group: 'Merchants', icon: Heart },
-  { label: 'Disputes', path: '/disputes', group: 'Operations', icon: ShieldAlert, keywords: 'chargeback representment evidence' },
-  { label: 'Marketing Hub', path: '/marketing', group: 'Operations', icon: Megaphone, keywords: 'ads ad spend cac roas funnel google meta outreach email sms campaign automation bulk send' },
-  { label: 'Compliance', path: '/compliance', group: 'Operations', icon: ShieldCheck, keywords: 'compliance rules' },
-  { label: 'Agents', path: '/agents', group: 'Team', icon: UserCircle },
-  { label: 'Employees', path: '/employees', group: 'Team', icon: Briefcase },
-  { label: 'Payroll', path: '/payroll', group: 'Team', icon: Receipt },
-  { label: 'Lens AI', path: '/lens-ai', group: 'Intelligence', icon: Sparkles, keywords: 'ai analysis' },
-  { label: 'Financials', path: '/financials', group: 'Intelligence', icon: DollarSign, keywords: 'revenue profit' },
-  { label: 'Reports', path: '/reports', group: 'Intelligence', icon: BarChart3, keywords: 'data visualization' },
-  { label: 'Websites', path: '/websites', group: 'Products', icon: Globe, keywords: 'sites domain builder analytics' },
-  { label: 'Subscriptions', path: '/subscriptions', group: 'Products', icon: CreditCard, keywords: 'billing plans MRR SaaS' },
-  { label: 'Integrations', path: '/settings/integrations', group: 'Settings', icon: Link2 },
-  { label: 'Roles & Permissions', path: '/settings/roles', group: 'Settings', icon: Shield },
-  { label: 'General Settings', path: '/settings', group: 'Settings', icon: Wrench },
+  { label: 'Leads', path: '/leads', group: 'Pipeline', icon: Users, keywords: 'sales pipeline', perm: 'leads.view' },
+  { label: 'Import Leads', path: '/leads/import', group: 'Pipeline', icon: Upload, keywords: 'upload csv xlsx spreadsheet meta facebook instagram bulk import', perm: 'leads.create' },
+  { label: 'Onboarding', path: '/onboarding', group: 'Pipeline', icon: Package, keywords: 'merchant setup sla bank connections activation', perm: 'merchants.view' },
+  { label: 'Underwriting', path: '/underwriting', group: 'Pipeline', icon: ClipboardCheck, keywords: 'plaid portal vault lending prospects bank credit identity verification', perm: 'underwriting.view' },
+  { label: 'Analysis', path: '/analysis', group: 'Pipeline', icon: FileText, keywords: 'deal analysis review cost calculator', perm: 'analysis.view' },
+  { label: 'All Merchants', path: '/merchants', group: 'Merchants', icon: Store, perm: 'merchants.view' },
+  { label: 'Portfolio', path: '/deals', group: 'Merchants', icon: LayoutDashboard, keywords: 'deals capital deployment book', perm: 'capital.view' },
+  { label: 'Residuals', path: '/residuals', group: 'Merchants', icon: Receipt, perm: 'residuals.view' },
+  { label: 'Capital', path: '/capital', group: 'Merchants', icon: Banknote, perm: 'capital.view' },
+  { label: 'Retention', path: '/retention', group: 'Merchants', icon: Heart, perm: 'health.view' },
+  { label: 'Payments', path: '/payments', group: 'Operations', icon: CreditCard, keywords: 'ach collections fundings payment health', perm: 'capital.view' },
+  { label: 'Documents & E-Sign', path: '/documents', group: 'Operations', icon: PenTool, keywords: 'contracts docusign envelopes esign', perm: 'merchants.view' },
+  { label: 'Disputes', path: '/disputes', group: 'Operations', icon: ShieldAlert, keywords: 'chargeback representment evidence', perm: 'merchants.view' },
+  { label: 'Marketing Hub', path: '/marketing', group: 'Operations', icon: Megaphone, keywords: 'ads ad spend cac roas funnel google meta outreach email sms campaign automation bulk send', perm: 'integrations.view' },
+  { label: 'Compliance', path: '/compliance', group: 'Operations', icon: ShieldCheck, keywords: 'compliance rules', perm: 'general.view' },
+  { label: 'Agents', path: '/agents', group: 'Team', icon: UserCircle, perm: 'agents.view' },
+  { label: 'Employees', path: '/employees', group: 'Team', icon: Briefcase, perm: 'employees.view' },
+  { label: 'Payroll', path: '/payroll', group: 'Team', icon: Receipt, perm: 'payroll.view' },
+  { label: 'Lens AI', path: '/lens-ai', group: 'Intelligence', icon: Sparkles, keywords: 'ai analysis', perm: 'lens_ai.view' },
+  { label: 'Financials', path: '/financials', group: 'Intelligence', icon: DollarSign, keywords: 'revenue profit', perm: 'financials.view' },
+  { label: 'Reports', path: '/reports', group: 'Intelligence', icon: BarChart3, keywords: 'data visualization', perm: 'financials.view' },
+  { label: 'Websites', path: '/websites', group: 'Products', icon: Globe, keywords: 'sites domain builder analytics', perm: 'merchants.view' },
+  { label: 'Subscriptions', path: '/subscriptions', group: 'Products', icon: CreditCard, keywords: 'billing plans MRR SaaS', perm: 'billing.view' },
+  { label: 'Integrations', path: '/settings/integrations', group: 'Settings', icon: Link2, perm: 'integrations.view' },
+  { label: 'Roles & Permissions', path: '/settings/roles', group: 'Settings', icon: Shield, perm: 'roles.view' },
+  { label: 'General Settings', path: '/settings', group: 'Settings', icon: Wrench, perm: 'general.view' },
 ];
-
-const adminUser = { name: 'John Doe', initials: 'JD', email: 'john.doe@delt.com', role: 'Operations Manager' };
-const agentUser = { name: 'Marcus Johnson', initials: 'MJ', email: 'marcus.j@delt.com', role: 'Senior Sales Agent' };
 
 // ── Shared row styles ──
 const itemBase =
@@ -290,14 +303,45 @@ const itemActive =
 const itemIdle =
   'text-(--dp-text-muted) hover:text-(--dp-text) hover:bg-white/[0.04] font-medium';
 
+const ROLE_LABELS: Record<string, string> = {
+  super_admin: 'Super Admin',
+  admin: 'Admin',
+  agent: 'Agent',
+  viewer: 'Viewer',
+};
+
+function initialsOf(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return '?';
+  return parts
+    .slice(0, 2)
+    .map(p => p[0]!.toUpperCase())
+    .join('');
+}
+
+/** Route guard: RLS enforces this server-side; the redirect is just UX. */
+function Guard({ perm, children }: { perm?: string; children: React.ReactElement }) {
+  const { can } = useSession();
+  if (perm && !can(perm)) return <Navigate to="/dashboard" replace />;
+  return children;
+}
+
 // ════════════════════════════════════════
 // Main Layout
 // ════════════════════════════════════════
 export function DeltBackendLayout() {
-  const [currentPage, setCurrentPage] = useState('/');
+  const location = useLocation();
+  const routerNavigate = useNavigate();
+  const session = useSession();
+  const { role, can, org, displayName, email, signOut } = session;
+  useOrgTheme(org);
+
+  // The CRM mounts under /dashboard/* — internal paths stay in the legacy
+  // '/leads' shape so useAppNavigate() consumers keep working unchanged.
+  const currentPage = location.pathname.replace(/^\/dashboard/, '') || '/';
+
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const [userRole, setUserRole] = useState<UserRole>('admin');
   const [cmdPaletteOpen, setCmdPaletteOpen] = useState(false);
   const [cmdQuery, setCmdQuery] = useState('');
   const [helpCenterOpen, setHelpCenterOpen] = useState(false);
@@ -331,15 +375,20 @@ export function DeltBackendLayout() {
     return () => window.removeEventListener('keydown', handler);
   }, []);
 
+  const permittedCommands = useMemo(
+    () => allCommands.filter(c => !c.perm || can(c.perm)),
+    [can],
+  );
+
   const filteredCommands = useMemo(() => {
-    if (!cmdQuery) return allCommands;
+    if (!cmdQuery) return permittedCommands;
     const q = cmdQuery.toLowerCase();
-    return allCommands.filter(c =>
+    return permittedCommands.filter(c =>
       c.label.toLowerCase().includes(q) ||
       c.group.toLowerCase().includes(q) ||
       (c.keywords && c.keywords.toLowerCase().includes(q))
     );
-  }, [cmdQuery]);
+  }, [cmdQuery, permittedCommands]);
 
   const cmdGroups = useMemo(() => {
     const map = new Map<string, CommandItem[]>();
@@ -351,14 +400,8 @@ export function DeltBackendLayout() {
   }, [filteredCommands]);
 
   const handleNavigate = (page: string) => {
-    setCurrentPage(page);
+    routerNavigate(page === '/' ? '/dashboard' : `/dashboard${page}`);
     setIsMobileMenuOpen(false);
-  };
-
-  const toggleRole = () => {
-    setUserRole(r => (r === 'admin' ? 'agent' : 'admin'));
-    setCurrentPage('/');
-    setIsUserMenuOpen(false);
   };
 
   const isActivePath = (path: string) => {
@@ -367,87 +410,21 @@ export function DeltBackendLayout() {
     return currentPage === path || currentPage.startsWith(path + '/');
   };
 
-  // ── Render page content ──
-  const renderPage = () => {
-    if (userRole === 'agent') {
-      if (currentPage.startsWith('/templates/')) return <TemplateEditor />;
-      if (currentPage.startsWith('/merchants/')) return <MerchantDetail />;
-      switch (currentPage) {
-        case '/': return <AgentDashboard />;
-        case '/merchants': return <BackendMerchants />;
-        case '/leads': return <BackendLeads />;
-        case '/commissions': return <AgentCommissions />;
-        case '/my-residuals': return <AgentResiduals />;
-        case '/support': return (
-          <div className="px-6 py-6 space-y-6">
-            <h1 className="text-2xl font-bold text-gray-900">Support</h1>
-            <div className="bg-white rounded-[8px] border border-gray-200 p-6">
-              <div className="max-w-lg">
-                <p className="text-sm text-gray-600 mb-4">Need help? Contact the operations team or submit a support ticket.</p>
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 rounded-[6px]">
-                    <HelpCircle className="w-5 h-5 text-indigo-600" />
-                    <div><p className="text-sm font-medium text-gray-900">Email Support</p><p className="text-xs text-gray-500">support@deltpay.com</p></div>
-                  </div>
-                  <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 rounded-[6px]">
-                    <HelpCircle className="w-5 h-5 text-indigo-600" />
-                    <div><p className="text-sm font-medium text-gray-900">Phone</p><p className="text-xs text-gray-500">(800) 555-DELT</p></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-        default: return <AgentDashboard />;
-      }
-    }
-
-    // Admin routes
-    if (currentPage.startsWith('/templates/')) return <TemplateEditor />;
-    if (currentPage.startsWith('/merchants/')) return <MerchantDetail />;
-    if (currentPage.startsWith('/underwriting/')) return <UnderwritingDetail />;
-    if (currentPage.startsWith('/deals/')) return <DealDetail />;
-    if (currentPage.startsWith('/residuals/')) return <MerchantResidualDetail />;
-    switch (currentPage) {
-      case '/': return <BackendDashboard />;
-      case '/leads': return <BackendLeads />;
-      case '/leads/import': return <BackendLeads openImport />;
-      case '/onboarding': return <BackendOnboarding />;
-      case '/merchants': return <BackendMerchants />;
-      case '/retention': return <BackendRetention />;
-      case '/underwriting': return <UnderwritingHub />;
-      case '/deals': return <BackendDeals />;
-      case '/agents': return <BackendAgents />;
-      case '/financials': return <BackendFinancials />;
-      case '/lens-ai': return <BackendLensAI />;
-      case '/settings': return <BackendSettings />;
-      case '/settings/integrations': return <BackendSettings />;
-      case '/settings/roles': return <BackendSettings />;
-      case '/settings/bundles': return <BackendSettings />;
-      case '/employees': return <BackendEmployees />;
-      case '/payroll': return <BackendPayroll />;
-      case '/analysis': return <BackendAnalysis />;
-      case '/residuals': return <BackendResiduals />;
-      case '/capital': return <BackendCapital />;
-      case '/disputes': return <BackendDisputes />;
-      case '/marketing': return <MarketingHub />;
-      case '/outreach': return <MarketingHub initialView="outreach" />;
-      case '/compliance': return <BackendCompliance />;
-      case '/activity-timeline': return <BackendActivityTimeline />;
-      case '/tasks': return <BackendTasks />;
-      case '/inbox': return <BackendInbox />;
-      case '/workspace': return <BackendWorkspace />;
-      case '/websites': return <BackendWebsites />;
-      case '/subscriptions': return <BackendSubscriptions />;
-      case '/documents': return <BackendDocuments />;
-      case '/payments': return <BackendPayments />;
-      case '/reports': return <BackendReports />;
-      default: return <BackendDashboard />;
-    }
+  const user = {
+    name: displayName || 'Team member',
+    initials: initialsOf(displayName || email || '?'),
+    email,
+    role: ROLE_LABELS[role] ?? role,
   };
 
-  const user = userRole === 'admin' ? adminUser : agentUser;
-  const groups = userRole === 'admin' ? adminGroups : agentGroups;
+  // Agents get the focused agent workspace; admins/viewers get the full
+  // sidebar filtered down to what their role can see.
+  const groups = useMemo<NavGroup[]>(() => {
+    const source = role === 'agent' ? agentGroups : adminGroups;
+    return source
+      .map(g => ({ ...g, items: g.items.filter(item => !item.perm || can(item.perm)) }))
+      .filter(g => g.items.length > 0);
+  }, [role, can]);
 
   // ── Sidebar nav body (shared desktop/mobile) ──
   const navBody = (
@@ -519,15 +496,14 @@ export function DeltBackendLayout() {
                   <p className="text-[11px] text-(--dp-text-muted)">{user.email}</p>
                 </div>
                 <button className="w-full px-4 py-2 text-left text-[13px] text-(--dp-text-secondary) hover:bg-white/[0.05]">Profile Settings</button>
-                <button
-                  onClick={toggleRole}
-                  className="w-full px-4 py-2 text-left text-[13px] text-(--dp-text-secondary) hover:bg-white/[0.05] flex items-center gap-2"
-                >
-                  <ArrowLeftRight className="w-3.5 h-3.5" />
-                  Switch to {userRole === 'admin' ? 'Agent' : 'Admin'} View
-                </button>
                 <div className="border-t border-white/[0.06] mt-1 pt-1">
-                  <button className="w-full px-4 py-2 text-left text-[13px] text-(--dp-danger) hover:bg-[rgba(242,86,91,.08)]">Log Out</button>
+                  <button
+                    onClick={() => { setIsUserMenuOpen(false); void signOut(); }}
+                    className="w-full px-4 py-2 text-left text-[13px] text-(--dp-danger) hover:bg-[rgba(242,86,91,.08)] flex items-center gap-2"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                    Log Out
+                  </button>
                 </div>
               </div>
             </>
@@ -539,15 +515,20 @@ export function DeltBackendLayout() {
 
   const logo = (
     <button onClick={() => handleNavigate('/')} className="flex items-center gap-2.5 group">
-      {/* Placeholder mark — swapped for the real Delt logo when supplied */}
-      <div className="w-7 h-7 bg-(--dp-accent) rounded-[8px] flex items-center justify-center">
-        <span className="text-white text-xs font-black">D</span>
-      </div>
+      {org?.logoUrl ? (
+        <img src={org.logoUrl} alt={org.name} className="w-7 h-7 rounded-[8px] object-contain" />
+      ) : (
+        <div className="w-7 h-7 bg-(--dp-accent) rounded-[8px] flex items-center justify-center">
+          <span className="text-white text-xs font-black">{(org?.name ?? 'Delt')[0]}</span>
+        </div>
+      )}
       <span className="text-[15px] font-bold text-(--dp-text) group-hover:text-(--dp-accent-text) transition-colors">
-        Delt
+        {org?.name ?? 'Delt'}
       </span>
     </button>
   );
+
+  const roleHome = role === 'agent' ? <AgentDashboard /> : <BackendDashboard />;
 
   return (
     <NavigationContext.Provider value={{ navigate: handleNavigate, currentPage }}>
@@ -608,16 +589,6 @@ export function DeltBackendLayout() {
                   Last 30 days
                 </span>
 
-                {/* Role toggle */}
-                <button
-                  onClick={toggleRole}
-                  className="hidden sm:inline-flex items-center gap-1.5 h-9 px-3 rounded-full border border-(--dp-border) text-[12px] font-semibold text-(--dp-text-muted) hover:text-(--dp-text) hover:border-(--dp-border-strong) transition-colors"
-                  title="Switch view"
-                >
-                  <ArrowLeftRight className="w-3.5 h-3.5" />
-                  {userRole === 'admin' ? 'Agent' : 'Admin'}
-                </button>
-
                 {/* Theme toggle */}
                 <button
                   onClick={() => setTheme(t => (t === 'dark' ? 'light' : 'dark'))}
@@ -671,9 +642,53 @@ export function DeltBackendLayout() {
             </div>
           )}
 
-          {/* ── Content ── */}
+          {/* ── Content: real routes under /dashboard/* — deep links and the
+                back button work, and every page is reachable by URL ── */}
           <main className="flex-1 overflow-y-auto">
-            {renderPage()}
+            <Routes>
+              <Route index element={roleHome} />
+              <Route path="workspace" element={<BackendWorkspace />} />
+              <Route path="leads" element={<Guard perm="leads.view"><BackendLeads /></Guard>} />
+              <Route path="leads/import" element={<Guard perm="leads.create"><BackendLeads openImport /></Guard>} />
+              <Route path="onboarding" element={<Guard perm="merchants.view"><BackendOnboarding /></Guard>} />
+              <Route path="merchants" element={<Guard perm="merchants.view"><BackendMerchants /></Guard>} />
+              <Route path="merchants/:merchantId/*" element={<Guard perm="merchants.view"><MerchantDetail /></Guard>} />
+              <Route path="underwriting" element={<Guard perm="underwriting.view"><UnderwritingHub /></Guard>} />
+              <Route path="underwriting/:caseId" element={<Guard perm="underwriting.view"><UnderwritingDetail /></Guard>} />
+              <Route path="deals" element={<Guard perm="capital.view"><BackendDeals /></Guard>} />
+              <Route path="deals/:dealId" element={<Guard perm="capital.view"><DealDetail /></Guard>} />
+              <Route path="residuals" element={<Guard perm="residuals.view"><BackendResiduals /></Guard>} />
+              <Route path="residuals/:merchantId" element={<Guard perm="residuals.view"><MerchantResidualDetail /></Guard>} />
+              <Route path="my-residuals" element={<Guard perm="residuals.view"><AgentResiduals /></Guard>} />
+              <Route path="capital" element={<Guard perm="capital.view"><BackendCapital /></Guard>} />
+              <Route path="retention" element={<Guard perm="health.view"><BackendRetention /></Guard>} />
+              <Route path="templates/:templateId" element={<TemplateEditor />} />
+              <Route path="tasks" element={<BackendTasks />} />
+              <Route path="inbox" element={<BackendInbox />} />
+              <Route path="payments" element={<Guard perm="capital.view"><BackendPayments /></Guard>} />
+              <Route path="activity-timeline" element={<Guard perm="leads.view"><BackendActivityTimeline /></Guard>} />
+              <Route path="documents" element={<Guard perm="merchants.view"><BackendDocuments /></Guard>} />
+              <Route path="disputes" element={<Guard perm="merchants.view"><BackendDisputes /></Guard>} />
+              <Route path="marketing" element={<Guard perm="integrations.view"><MarketingHub /></Guard>} />
+              <Route path="outreach" element={<Guard perm="integrations.view"><MarketingHub initialView="outreach" /></Guard>} />
+              <Route path="compliance" element={<Guard perm="general.view"><BackendCompliance /></Guard>} />
+              <Route path="agents" element={<Guard perm="agents.view"><BackendAgents /></Guard>} />
+              <Route path="employees" element={<Guard perm="employees.view"><BackendEmployees /></Guard>} />
+              <Route path="payroll" element={<Guard perm="payroll.view"><BackendPayroll /></Guard>} />
+              <Route path="analysis" element={<Guard perm="analysis.view"><BackendAnalysis /></Guard>} />
+              <Route path="lens-ai" element={<Guard perm="lens_ai.view"><BackendLensAI /></Guard>} />
+              <Route path="financials" element={<Guard perm="financials.view"><BackendFinancials /></Guard>} />
+              <Route path="reports" element={<Guard perm="financials.view"><BackendReports /></Guard>} />
+              <Route path="websites" element={<Guard perm="merchants.view"><BackendWebsites /></Guard>} />
+              <Route path="subscriptions" element={<Guard perm="billing.view"><BackendSubscriptions /></Guard>} />
+              <Route path="commissions" element={<Guard perm="compensation.view"><AgentCommissions /></Guard>} />
+              <Route path="support" element={<SupportPage />} />
+              <Route path="settings" element={<Guard perm="general.view"><BackendSettings /></Guard>} />
+              <Route path="settings/integrations" element={<Guard perm="integrations.view"><BackendSettings /></Guard>} />
+              <Route path="settings/roles" element={<Guard perm="roles.view"><BackendSettings /></Guard>} />
+              <Route path="settings/bundles" element={<Guard perm="general.view"><BackendSettings /></Guard>} />
+              <Route path="*" element={<Navigate to="/dashboard" replace />} />
+            </Routes>
           </main>
         </div>
 
@@ -764,6 +779,30 @@ export function DeltBackendLayout() {
   );
 }
 
+// ── Agent support page ──
+function SupportPage() {
+  return (
+    <div className="px-6 py-6 space-y-6">
+      <h1 className="text-2xl font-bold text-gray-900">Support</h1>
+      <div className="bg-white rounded-[8px] border border-gray-200 p-6">
+        <div className="max-w-lg">
+          <p className="text-sm text-gray-600 mb-4">Need help? Contact the operations team or submit a support ticket.</p>
+          <div className="space-y-3">
+            <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 rounded-[6px]">
+              <HelpCircle className="w-5 h-5 text-indigo-600" />
+              <div><p className="text-sm font-medium text-gray-900">Email Support</p><p className="text-xs text-gray-500">support@deltpay.com</p></div>
+            </div>
+            <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 rounded-[6px]">
+              <HelpCircle className="w-5 h-5 text-indigo-600" />
+              <div><p className="text-sm font-medium text-gray-900">Phone</p><p className="text-xs text-gray-500">(800) 555-DELT</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Underwriting hub: the Plaid portal is the front door; the scoring
 // pipeline sits behind a second tab. Deep links (/underwriting/:id) still
 // open the case detail directly. ──
@@ -827,4 +866,3 @@ function MarketingHub({ initialView = 'performance' }: { initialView?: 'performa
     </div>
   );
 }
-

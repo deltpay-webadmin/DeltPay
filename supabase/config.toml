@@ -1,0 +1,22 @@
+# Function-level config, committed so the JWT-verification posture of each
+# endpoint is reproducible instead of living only as dashboard state.
+#
+# verify_jwt = false is ONLY for endpoints that authenticate another way:
+#   - plaid-webhook:    called by Plaid (no Supabase JWT); guards by ignoring
+#                       unknown item_ids. TODO: verify Plaid-Verification JWT.
+#   - docusign-connect: called by DocuSign Connect; HMAC-verified
+#                       (DOCUSIGN_CONNECT_HMAC_KEY), fails closed.
+#   - plaid-config-check: public config self-check (returns booleans only).
+#
+# The pg_cron jobs dispatcher lives INSIDE make-server-940653c6 (POST /jobs,
+# gated by x-cron-secret); pg_cron sends the public anon key to satisfy the
+# platform JWT check, so that function keeps verify_jwt = true.
+
+[functions.plaid-webhook]
+verify_jwt = false
+
+[functions.docusign-connect]
+verify_jwt = false
+
+[functions.plaid-config-check]
+verify_jwt = false

@@ -10,7 +10,8 @@
  *   • status       — poll the envelope's live status and sync the row.
  *   • void         — void an in-flight envelope and mark the row.
  *
- * Auth: caller must be signed in and pass is_staff(); writes to
+ * Auth: caller must hold merchants.view (check-config/status) or
+ * merchants.edit (send/void) via _shared/auth.ts requirePerm; writes to
  * public.contracts use the service-role client.
  *
  * Required function secrets:
@@ -26,6 +27,8 @@
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { renderAgreementHtml, type AgreementTerms } from "./mca_agreement.ts";
+import { requirePerm } from "../_shared/auth.ts";
+import { getAccessToken, getAccount, oauthHost, STATUS_MAP } from "../_shared/docusign_status.ts";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -36,112 +39,7 @@ const CORS = {
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...CORS, "Content-Type": "application/json" } });
 
-// ── DocuSign OAuth (JWT grant) ────────────────────────────────
-
-function oauthHost(): string {
-  return (Deno.env.get("DOCUSIGN_ENV") ?? "demo").toLowerCase() === "production"
-    ? "account.docusign.com"
-    : "account-d.docusign.com";
-}
-
-const b64url = (bytes: Uint8Array) =>
-  btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-
-const b64urlJson = (obj: unknown) => b64url(new TextEncoder().encode(JSON.stringify(obj)));
-
-/** Wrap a PKCS#1 RSAPrivateKey DER in a PKCS#8 PrivateKeyInfo envelope. */
-function pkcs1ToPkcs8(pkcs1: Uint8Array): Uint8Array {
-  const derLen = (n: number): number[] => {
-    if (n < 0x80) return [n];
-    const bytes: number[] = [];
-    let v = n;
-    while (v > 0) { bytes.unshift(v & 0xff); v >>= 8; }
-    return [0x80 | bytes.length, ...bytes];
-  };
-  // AlgorithmIdentifier for rsaEncryption (1.2.840.113549.1.1.1) + NULL params
-  const algId = [0x30, 0x0d, 0x06, 0x09, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01, 0x01, 0x05, 0x00];
-  const octet = [0x04, ...derLen(pkcs1.length), ...pkcs1];
-  const version = [0x02, 0x01, 0x00];
-  const inner = [...version, ...algId, ...octet];
-  return new Uint8Array([0x30, ...derLen(inner.length), ...inner]);
-}
-
-async function importPrivateKey(pem: string): Promise<CryptoKey> {
-  const isPkcs1 = pem.includes("RSA PRIVATE KEY");
-  const b64 = pem.replace(/-----[^-]+-----/g, "").replace(/\s+/g, "");
-  let der = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
-  if (isPkcs1) der = pkcs1ToPkcs8(der);
-  return crypto.subtle.importKey(
-    "pkcs8",
-    der.buffer as ArrayBuffer,
-    { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
-    false,
-    ["sign"],
-  );
-}
-
-async function getAccessToken(): Promise<{ token: string } | { error: string }> {
-  const integrationKey = Deno.env.get("DOCUSIGN_INTEGRATION_KEY") ?? "";
-  const userId = Deno.env.get("DOCUSIGN_USER_ID") ?? "";
-  const privateKeyPem = Deno.env.get("DOCUSIGN_PRIVATE_KEY") ?? "";
-  if (!integrationKey || !userId || !privateKeyPem) {
-    return { error: "DocuSign is not configured — set DOCUSIGN_INTEGRATION_KEY, DOCUSIGN_USER_ID, and DOCUSIGN_PRIVATE_KEY." };
-  }
-  const host = oauthHost();
-  const now = Math.floor(Date.now() / 1000);
-  const header = b64urlJson({ alg: "RS256", typ: "JWT" });
-  const payload = b64urlJson({
-    iss: integrationKey,
-    sub: userId,
-    aud: host,
-    iat: now,
-    exp: now + 3600,
-    scope: "signature impersonation",
-  });
-  let signature: string;
-  try {
-    const key = await importPrivateKey(privateKeyPem);
-    const sig = await crypto.subtle.sign(
-      "RSASSA-PKCS1-v1_5",
-      key,
-      new TextEncoder().encode(`${header}.${payload}`),
-    );
-    signature = b64url(new Uint8Array(sig));
-  } catch (err) {
-    return { error: `Invalid DOCUSIGN_PRIVATE_KEY: ${String(err)}` };
-  }
-  const res = await fetch(`https://${host}/oauth/token`, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
-      assertion: `${header}.${payload}.${signature}`,
-    }),
-  });
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    const reason = body?.error === "consent_required"
-      ? "Consent required — open the one-time consent URL for this integration key (see the Contracts page setup note)."
-      : body?.error_description || body?.error || `HTTP ${res.status}`;
-    return { error: `DocuSign token request failed: ${reason}` };
-  }
-  return { token: body.access_token as string };
-}
-
-async function getAccount(token: string): Promise<{ accountId: string; baseUri: string } | { error: string }> {
-  const res = await fetch(`https://${oauthHost()}/oauth/userinfo`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) return { error: `DocuSign userinfo failed: HTTP ${res.status}` };
-  const accounts: any[] = body?.accounts ?? [];
-  const wanted = Deno.env.get("DOCUSIGN_ACCOUNT_ID");
-  const account = wanted
-    ? accounts.find((a) => a.account_id === wanted)
-    : accounts.find((a) => a.is_default) ?? accounts[0];
-  if (!account) return { error: wanted ? `Account ${wanted} not found for this user.` : "No DocuSign accounts on this user." };
-  return { accountId: account.account_id, baseUri: `${account.base_uri}/restapi` };
-}
+// ── DocuSign OAuth + status mapping live in ../_shared/docusign_status.ts ──
 
 // ── Envelope helpers ──────────────────────────────────────────
 
@@ -300,14 +198,6 @@ async function createEnvelope(
   return { envelopeId: body.envelopeId as string };
 }
 
-const STATUS_MAP: Record<string, string> = {
-  sent: "sent",
-  delivered: "delivered",
-  completed: "completed",
-  declined: "declined",
-  voided: "voided",
-};
-
 // ── Request handling ──────────────────────────────────────────
 
 Deno.serve(async (req) => {
@@ -315,18 +205,7 @@ Deno.serve(async (req) => {
   if (req.method !== "POST") return json({ error: "POST only" }, 405);
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-  const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-
-  // Staff gate: run is_staff() as the caller.
-  const authHeader = req.headers.get("Authorization") ?? "";
-  const asCaller = createClient(supabaseUrl, anonKey, {
-    global: { headers: { Authorization: authHeader } },
-  });
-  const { data: isStaff, error: staffErr } = await asCaller.rpc("is_staff");
-  if (staffErr || !isStaff) return json({ error: "Not authorized — staff only." }, 403);
-
-  const admin = createClient(supabaseUrl, serviceKey);
 
   let body: any;
   try {
@@ -336,6 +215,14 @@ Deno.serve(async (req) => {
   }
 
   const action = body?.action as string;
+
+  // RBAC gate: reads need merchants.view, envelope mutations need
+  // merchants.edit (mirrors the contracts RLS policies).
+  const neededPerm = action === "send" || action === "void" ? "merchants.edit" : "merchants.view";
+  const auth = await requirePerm(req.headers.get("Authorization") ?? undefined, neededPerm);
+  if (!auth.ok) return json({ error: auth.error }, auth.status);
+
+  const admin = createClient(supabaseUrl, serviceKey);
 
   // ── check-config ──
   if (action === "check-config") {
@@ -382,7 +269,6 @@ Deno.serve(async (req) => {
     const env = await createEnvelope(acct.baseUri, acct.accountId, tok.token, p);
     if ("error" in env) return json({ error: env.error }, 400);
 
-    const { data: userData } = await asCaller.auth.getUser();
     const { data: row, error: insErr } = await admin
       .from("contracts")
       .insert({
@@ -399,7 +285,8 @@ Deno.serve(async (req) => {
         status: "sent",
         docusign_status: "sent",
         sent_at: new Date().toISOString(),
-        created_by: userData?.user?.id ?? null,
+        created_by: auth.ctx.userId,
+        org_id: auth.ctx.orgId,
       })
       .select("*")
       .single();

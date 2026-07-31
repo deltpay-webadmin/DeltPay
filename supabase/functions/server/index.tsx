@@ -5,7 +5,6 @@ import * as kv from "./kv_store.tsx";
 import {
   plaidConfig,
   webhookUrl,
-  verifyStaff,
   createLinkToken,
   exchangePublicToken,
   sandboxQuickConnect,
@@ -18,7 +17,21 @@ import {
   svc,
 } from "../_shared/plaid.ts";
 import { adsStatus, connectMeta, syncMeta, disconnectMeta, syncMetaLeads, importMetaLeads } from "../_shared/meta.ts";
+import { requireUser, hasPerm, verifyCronSecret, type AuthContext } from "../_shared/auth.ts";
+import { sweepInFlightEnvelopes } from "../_shared/docusign_status.ts";
 const app = new Hono();
+
+// Per-route RBAC gate. The group middleware below resolves the caller once
+// (requireUser) and stashes the AuthContext; needPerm checks a specific
+// permission key from the org's role_permissions matrix.
+const needPerm = (perm: string) => async (c: any, next: () => Promise<void>) => {
+  const ctx = c.get("authCtx") as AuthContext | undefined;
+  if (!ctx) return c.json({ ok: false, error: "Sign in required" }, 401);
+  if (!hasPerm(ctx, perm)) {
+    return c.json({ ok: false, error: `Missing permission: ${perm}` }, 403);
+  }
+  await next();
+};
 
 // Enable logger
 app.use('*', logger(console.log));
@@ -38,6 +51,51 @@ app.use(
 // Health check endpoint
 app.get("/make-server-940653c6/health", (c) => {
   return c.json({ status: "ok" });
+});
+
+// ────────────────────────────────────────────────────────────────
+// Scheduled jobs dispatcher — the pg_cron target.
+//
+// POST { task } with header x-cron-secret: <CRON_SECRET>. No user JWT:
+// pg_cron sends the public anon key as Authorization (to pass platform
+// JWT verification) and verifyCronSecret (timing-safe, fails closed when
+// the secret is unset) is the real gate. Invoked nightly via
+// public.invoke_job() (supabase/migrations/20260731_05_cron.sql); for a
+// manual run:
+//   curl -X POST .../functions/v1/make-server-940653c6/jobs \
+//        -H 'Authorization: Bearer <anon key>' \
+//        -H 'x-cron-secret: ...' -d '{"task":"docusign-sweep"}'
+// ────────────────────────────────────────────────────────────────
+
+const JOB_TASKS: Record<string, () => Promise<unknown>> = {
+  "plaid-sync-all": () => syncAllItems(),
+  "meta-insights": () => syncMeta(90),
+  // syncMetaLeads already reconciles matches against pipeline_leads
+  "meta-leads": () => syncMetaLeads(),
+  "docusign-sweep": () => sweepInFlightEnvelopes(50),
+};
+
+app.post("/make-server-940653c6/jobs", async (c) => {
+  if (!verifyCronSecret(c.req.raw)) {
+    return c.json({ ok: false, error: "Forbidden" }, 403);
+  }
+  const body = await c.req.json().catch(() => ({}));
+  const task = String(body?.task ?? "");
+  const run = JOB_TASKS[task];
+  if (!run) {
+    return c.json({ ok: false, error: `Unknown task: ${task}`, tasks: Object.keys(JOB_TASKS) }, 400);
+  }
+  const started = Date.now();
+  try {
+    const summary = await run();
+    const ms = Date.now() - started;
+    console.log(`jobs: ${task} ok in ${ms}ms`, summary);
+    return c.json({ ok: true, task, ms, summary });
+  } catch (err: any) {
+    const ms = Date.now() - started;
+    console.error(`jobs: ${task} failed in ${ms}ms`, err);
+    return c.json({ ok: false, task, ms, error: String(err?.message ?? err) }, 500);
+  }
 });
 
 // Pricing guide email opt-in (lead capture)
@@ -82,22 +140,25 @@ app.post("/make-server-940653c6/leads/pricing-guide", async (c) => {
 });
 
 // ────────────────────────────────────────────────────────────────
-// Plaid Data Vault API — staff-only (CRM sends the signed-in user's
-// JWT; verifyStaff mirrors the is_staff() RLS gate).
+// Plaid Data Vault API — the CRM sends the signed-in user's JWT;
+// requireUser resolves org membership + permission set, and each
+// route enforces its permission key (underwriting.view to look,
+// underwriting.review to act — mirrors the RLS matrix).
 // ────────────────────────────────────────────────────────────────
 
 const PLAID_BASE = "/make-server-940653c6/plaid";
 
-// All Plaid routes require a staff user.
+// All Plaid routes require an org member.
 app.use(`${PLAID_BASE}/*`, async (c, next) => {
-  const auth = await verifyStaff(c.req.header("Authorization"));
+  const auth = await requireUser(c.req.header("Authorization"));
   if (!auth.ok) return c.json({ ok: false, error: auth.error }, auth.status as any);
-  c.set("staffUserId" as never, auth.userId as never);
+  c.set("authCtx" as never, auth.ctx as never);
+  c.set("staffUserId" as never, auth.ctx.userId as never);
   await next();
 });
 
 // Config / connection status for the dashboard banner.
-app.get(`${PLAID_BASE}/status`, async (c) => {
+app.get(`${PLAID_BASE}/status`, needPerm("underwriting.view"), async (c) => {
   const cfg = plaidConfig();
   let items = 0;
   let prospects = 0;
@@ -121,7 +182,7 @@ app.get(`${PLAID_BASE}/status`, async (c) => {
   });
 });
 
-app.post(`${PLAID_BASE}/link-token`, async (c) => {
+app.post(`${PLAID_BASE}/link-token`, needPerm("underwriting.review"), async (c) => {
   try {
     const body = await c.req.json().catch(() => ({}));
     const leadId = String(body.leadId ?? "");
@@ -134,7 +195,7 @@ app.post(`${PLAID_BASE}/link-token`, async (c) => {
   }
 });
 
-app.post(`${PLAID_BASE}/exchange`, async (c) => {
+app.post(`${PLAID_BASE}/exchange`, needPerm("underwriting.review"), async (c) => {
   try {
     const body = await c.req.json().catch(() => ({}));
     const leadId = String(body.leadId ?? "");
@@ -150,7 +211,7 @@ app.post(`${PLAID_BASE}/exchange`, async (c) => {
   }
 });
 
-app.post(`${PLAID_BASE}/sandbox/quick-connect`, async (c) => {
+app.post(`${PLAID_BASE}/sandbox/quick-connect`, needPerm("underwriting.review"), async (c) => {
   try {
     const body = await c.req.json().catch(() => ({}));
     const leadId = String(body.leadId ?? "");
@@ -163,7 +224,7 @@ app.post(`${PLAID_BASE}/sandbox/quick-connect`, async (c) => {
   }
 });
 
-app.post(`${PLAID_BASE}/sync`, async (c) => {
+app.post(`${PLAID_BASE}/sync`, needPerm("underwriting.review"), async (c) => {
   try {
     const body = await c.req.json().catch(() => ({}));
     const itemId = String(body.itemId ?? "");
@@ -176,7 +237,7 @@ app.post(`${PLAID_BASE}/sync`, async (c) => {
   }
 });
 
-app.post(`${PLAID_BASE}/sync-all`, async (c) => {
+app.post(`${PLAID_BASE}/sync-all`, needPerm("underwriting.review"), async (c) => {
   try {
     const body = await c.req.json().catch(() => ({}));
     const results = await syncAllItems(body.leadId ? String(body.leadId) : undefined);
@@ -187,7 +248,7 @@ app.post(`${PLAID_BASE}/sync-all`, async (c) => {
   }
 });
 
-app.post(`${PLAID_BASE}/idv/attach`, async (c) => {
+app.post(`${PLAID_BASE}/idv/attach`, needPerm("underwriting.review"), async (c) => {
   try {
     const body = await c.req.json().catch(() => ({}));
     const leadId = String(body.leadId ?? "");
@@ -203,7 +264,7 @@ app.post(`${PLAID_BASE}/idv/attach`, async (c) => {
   }
 });
 
-app.post(`${PLAID_BASE}/asset-report`, async (c) => {
+app.post(`${PLAID_BASE}/asset-report`, needPerm("underwriting.review"), async (c) => {
   try {
     const body = await c.req.json().catch(() => ({}));
     const leadId = String(body.leadId ?? "");
@@ -216,7 +277,7 @@ app.post(`${PLAID_BASE}/asset-report`, async (c) => {
   }
 });
 
-app.post(`${PLAID_BASE}/asset-report/refresh`, async (c) => {
+app.post(`${PLAID_BASE}/asset-report/refresh`, needPerm("underwriting.review"), async (c) => {
   try {
     const body = await c.req.json().catch(() => ({}));
     const leadId = String(body.leadId ?? "");
@@ -229,7 +290,7 @@ app.post(`${PLAID_BASE}/asset-report/refresh`, async (c) => {
   }
 });
 
-app.delete(`${PLAID_BASE}/items/:itemId`, async (c) => {
+app.delete(`${PLAID_BASE}/items/:itemId`, needPerm("underwriting.review"), async (c) => {
   try {
     const out = await removeItem(c.req.param("itemId"));
     return c.json({ ok: true, ...out });
@@ -247,13 +308,14 @@ app.delete(`${PLAID_BASE}/items/:itemId`, async (c) => {
 const ADS_BASE = "/make-server-940653c6/ads";
 
 app.use(`${ADS_BASE}/*`, async (c, next) => {
-  const auth = await verifyStaff(c.req.header("Authorization"));
+  const auth = await requireUser(c.req.header("Authorization"));
   if (!auth.ok) return c.json({ ok: false, error: auth.error }, auth.status as any);
-  c.set("staffUserId" as never, auth.userId as never);
+  c.set("authCtx" as never, auth.ctx as never);
+  c.set("staffUserId" as never, auth.ctx.userId as never);
   await next();
 });
 
-app.get(`${ADS_BASE}/status`, async (c) => {
+app.get(`${ADS_BASE}/status`, needPerm("integrations.view"), async (c) => {
   try {
     const out = await adsStatus();
     return c.json({ ok: true, ...out });
@@ -263,7 +325,7 @@ app.get(`${ADS_BASE}/status`, async (c) => {
   }
 });
 
-app.post(`${ADS_BASE}/meta/connect`, async (c) => {
+app.post(`${ADS_BASE}/meta/connect`, needPerm("integrations.configure"), async (c) => {
   try {
     const body = await c.req.json().catch(() => ({}));
     const accessToken = String(body.accessToken ?? "");
@@ -285,7 +347,7 @@ app.post(`${ADS_BASE}/meta/connect`, async (c) => {
   }
 });
 
-app.post(`${ADS_BASE}/meta/sync`, async (c) => {
+app.post(`${ADS_BASE}/meta/sync`, needPerm("integrations.configure"), async (c) => {
   try {
     const body = await c.req.json().catch(() => ({}));
     const days = Number(body.days) || 90;
@@ -297,7 +359,7 @@ app.post(`${ADS_BASE}/meta/sync`, async (c) => {
   }
 });
 
-app.post(`${ADS_BASE}/meta/leads/sync`, async (c) => {
+app.post(`${ADS_BASE}/meta/leads/sync`, needPerm("integrations.configure"), async (c) => {
   try {
     const out = await syncMetaLeads();
     return c.json({ ok: true, ...out });
@@ -307,7 +369,7 @@ app.post(`${ADS_BASE}/meta/leads/sync`, async (c) => {
   }
 });
 
-app.post(`${ADS_BASE}/meta/leads/import`, async (c) => {
+app.post(`${ADS_BASE}/meta/leads/import`, needPerm("leads.create"), async (c) => {
   try {
     const body = await c.req.json().catch(() => ({}));
     const leadIds = Array.isArray(body.leadIds) ? body.leadIds.map(String) : [];
@@ -320,7 +382,7 @@ app.post(`${ADS_BASE}/meta/leads/import`, async (c) => {
   }
 });
 
-app.delete(`${ADS_BASE}/meta`, async (c) => {
+app.delete(`${ADS_BASE}/meta`, needPerm("integrations.configure"), async (c) => {
   try {
     await disconnectMeta();
     return c.json({ ok: true });

@@ -877,25 +877,28 @@ async function maybeHydrate() {
       supabase.from('crm_deals').select('*').order('created_at', { ascending: false }),
     ]);
 
-    const firstErr =
-      leadsRes.error || onbRes.error || uwRes.error || refRes.error || progRes.error ||
-      merchRes.error || dealsRes.error;
-    if (firstErr) throw firstErr;
+    // Per-table results: an RLS denial on one table must not blank the whole
+    // CRM — apply what loaded, surface the first error, and only go offline
+    // when every query failed.
+    const results = [leadsRes, onbRes, uwRes, refRes, progRes, merchRes, dealsRes];
+    const firstErr = results.find(r => r.error)?.error ?? null;
+    const allFailed = results.every(r => r.error);
+    if (allFailed) throw firstErr;
 
     set({
-      leads: (leadsRes.data || []).map(fromDbLead),
-      onboarding: (onbRes.data || []).map(fromDbOnb),
-      underwriting: (uwRes.data || []).map(fromDbUw),
-      referrals: (refRes.data || []).map(fromDbReferral),
-      program: progRes.data
+      leads: leadsRes.error ? [] : (leadsRes.data || []).map(fromDbLead),
+      onboarding: onbRes.error ? [] : (onbRes.data || []).map(fromDbOnb),
+      underwriting: uwRes.error ? [] : (uwRes.data || []).map(fromDbUw),
+      referrals: refRes.error ? [] : (refRes.data || []).map(fromDbReferral),
+      program: !progRes.error && progRes.data
         ? fromDbProgram(progRes.data)
         : { rewardAmount: '100', freeMonths: '1', planTier: 'Growth' },
-      merchants: (merchRes.data || []).map(fromDbMerchant),
-      deals: (dealsRes.data || []).map(fromDbDeal),
+      merchants: merchRes.error ? [] : (merchRes.data || []).map(fromDbMerchant),
+      deals: dealsRes.error ? [] : (dealsRes.data || []).map(fromDbDeal),
     });
 
     hydrated = true;
-    setSync({ isLoading: false, isOnline: true, lastError: null });
+    setSync({ isLoading: false, isOnline: true, lastError: firstErr?.message ?? null });
     subscribeRealtime();
   } catch (err: any) {
     // eslint-disable-next-line no-console
