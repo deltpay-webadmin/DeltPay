@@ -5,6 +5,7 @@
 // ask time, so answers cite real data instead of canned copy.
 
 import { supabase, isSupabaseConfigured } from '../../lib/supabase';
+import { AIError, unwrapInvokeError } from './aiErrors';
 import type { Lead, Deal, Merchant, UWApplication, OnboardingApp } from './crmStore';
 
 export interface LensAnswer {
@@ -104,7 +105,7 @@ export async function askLens(
   crm: CrmSnapshotInput,
 ): Promise<LensAnswer> {
   if (!isSupabaseConfigured || !supabase) {
-    throw new Error('Lens AI unavailable: Supabase is not configured');
+    throw new AIError('supabase_unconfigured', 'Supabase is not configured');
   }
 
   const { data, error } = await supabase.functions.invoke('nebius-chat', {
@@ -123,9 +124,9 @@ export async function askLens(
     },
   });
 
-  if (error) throw new Error(`Lens AI failed: ${error.message ?? 'edge function error'}`);
-  if (data?.error) throw new Error(`Lens AI failed: ${data.message ?? data.error}`);
-  if (typeof data?.content !== 'string') throw new Error('Lens AI failed: empty response');
+  if (error) throw await unwrapInvokeError(error);
+  if (data?.error) throw new AIError(data.error, data.message ?? data.error);
+  if (typeof data?.content !== 'string') throw new AIError('empty_response', 'Lens returned an empty response');
 
   let parsed: { content?: string; table?: LensAnswer['table'] | null; source?: string };
   try {

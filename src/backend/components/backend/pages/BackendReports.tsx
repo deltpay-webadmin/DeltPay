@@ -7,6 +7,7 @@ import {
   Printer, Share2, Star, StarOff, Zap, Settings, FolderOpen,
   Shield, Wallet, Globe, CreditCard, AlertTriangle,
 } from 'lucide-react';
+import { AiUsageCard } from '../AiUsageCard';
 
 // ── Types ──
 type ReportCategory = 'financial' | 'portfolio' | 'compliance' | 'operations' | 'products';
@@ -130,6 +131,9 @@ export function BackendReports() {
           <Plus className="w-3.5 h-3.5" /> Custom Report
         </button>
       </div>
+
+      {/* Live AI spend — backs report RPT-022 */}
+      <AiUsageCard />
 
       {/* Tabs */}
       <div className="flex items-center gap-1 bg-gray-100 rounded-[8px] p-1 w-fit">

@@ -18,12 +18,18 @@
  *
  * Required function secrets:
  *   NEBIUS_API_KEY    — Nebius AI Studio API key
+ * Every call is metered to the calling user (see _shared/metering.ts).
+ *
  * Optional:
- *   NEBIUS_TEXT_MODEL — chat model id. Defaults to Qwen3-235B-A22B-Instruct:
- *     a 235B MoE (22B active) chosen for structured-data reasoning and
- *     strict JSON compliance, which is what Lens needs. Non-thinking
- *     variant keeps chat latency low.
+ *   NEBIUS_TEXT_MODEL          — premium chat model id. Defaults to
+ *     Qwen3-235B-A22B-Instruct: a 235B MoE (22B active) chosen for
+ *     structured-data reasoning and strict JSON compliance, which is what
+ *     Lens needs. Non-thinking variant keeps chat latency low.
+ *   NEBIUS_TEXT_MODEL_STANDARD — cheaper model for customer traffic.
+ *     Falls back to the premium model until one is chosen.
  */
+
+import { recordUsage, resolveCaller, tierFor } from "../_shared/metering.ts";
 
 const NEBIUS_URL = "https://api.studio.nebius.com/v1/chat/completions";
 const DEFAULT_TEXT_MODEL = "Qwen/Qwen3-235B-A22B-Instruct-2507";
@@ -65,7 +71,13 @@ Deno.serve(async (req) => {
     return json({ error: "invalid_messages" }, 400);
   }
 
-  const model = Deno.env.get("NEBIUS_TEXT_MODEL") ?? DEFAULT_TEXT_MODEL;
+  // Identify the caller for metering, and pick the model tier from what they
+  // are (staff vs customer) — never from the request body.
+  const caller = await resolveCaller(req);
+  const premiumModel = Deno.env.get("NEBIUS_TEXT_MODEL") ?? DEFAULT_TEXT_MODEL;
+  const model = tierFor(caller) === "premium"
+    ? premiumModel
+    : (Deno.env.get("NEBIUS_TEXT_MODEL_STANDARD") ?? premiumModel);
 
   try {
     const upstream = await fetch(NEBIUS_URL, {
@@ -95,14 +107,22 @@ Deno.serve(async (req) => {
     const content: string | undefined = data?.choices?.[0]?.message?.content;
     if (!content) return json({ error: "empty_response" }, 502);
 
-    return json({
-      content,
-      model: data.model ?? model,
-      usage: {
-        input_tokens: data?.usage?.prompt_tokens ?? 0,
-        output_tokens: data?.usage?.completion_tokens ?? 0,
-      },
+    const usage = {
+      input_tokens: data?.usage?.prompt_tokens ?? 0,
+      output_tokens: data?.usage?.completion_tokens ?? 0,
+    };
+    // Log the model the provider actually served, not the one requested.
+    const servedModel = data.model ?? model;
+    await recordUsage({
+      caller,
+      feature: "lens_chat",
+      provider: "nebius",
+      model: servedModel,
+      inputTokens: usage.input_tokens,
+      outputTokens: usage.output_tokens,
     });
+
+    return json({ content, model: servedModel, usage });
   } catch (err) {
     const e = err as { message?: string };
     console.error("[nebius-chat]", e.message);

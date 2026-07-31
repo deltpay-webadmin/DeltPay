@@ -18,6 +18,7 @@
  */
 
 import Anthropic from "npm:@anthropic-ai/sdk";
+import { type Caller, recordUsage, resolveCaller } from "../_shared/metering.ts";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -106,6 +107,7 @@ async function extractWithNebius(
   mediaType: string,
   dataBase64: string,
   filename: string,
+  caller: Caller | null,
 ): Promise<Response> {
   const model = Deno.env.get("NEBIUS_VISION_MODEL") ?? "Qwen/Qwen2.5-VL-72B-Instruct";
   const upstream = await fetch(NEBIUS_URL, {
@@ -159,14 +161,21 @@ async function extractWithNebius(
     return json({ error: "extraction_failed", message: "Extraction missing required fields" }, 502);
   }
 
-  return json({
-    extraction,
-    model: data.model ?? model,
-    usage: {
-      input_tokens: data?.usage?.prompt_tokens ?? 0,
-      output_tokens: data?.usage?.completion_tokens ?? 0,
-    },
+  const usage = {
+    input_tokens: data?.usage?.prompt_tokens ?? 0,
+    output_tokens: data?.usage?.completion_tokens ?? 0,
+  };
+  const servedModel = data.model ?? model;
+  await recordUsage({
+    caller,
+    feature: "statement_analyzer",
+    provider: "nebius",
+    model: servedModel,
+    inputTokens: usage.input_tokens,
+    outputTokens: usage.output_tokens,
   });
+
+  return json({ extraction, model: servedModel, usage });
 }
 
 Deno.serve(async (req) => {
@@ -195,6 +204,9 @@ Deno.serve(async (req) => {
   const isImage = /^image\/(png|jpeg|webp|gif)$/.test(mediaType);
   if (!isPdf && !isImage) return json({ error: "unsupported_media_type", message: mediaType }, 415);
 
+  // Identify the caller so every extraction lands in the usage ledger.
+  const caller = await resolveCaller(req);
+
   // Provider resolution: Claude when configured (reads PDFs natively);
   // otherwise the cheaper Nebius vision model, which handles images only.
   if (!anthropicKey) {
@@ -205,7 +217,7 @@ Deno.serve(async (req) => {
       }, 415);
     }
     try {
-      return await extractWithNebius(nebiusKey!, mediaType, dataBase64, filename);
+      return await extractWithNebius(nebiusKey!, mediaType, dataBase64, filename, caller);
     } catch (err) {
       const e = err as { message?: string };
       console.error("[analyze-statement:nebius]", e.message);
@@ -254,11 +266,23 @@ Deno.serve(async (req) => {
     if (!text?.text) return json({ error: "empty_response" }, 502);
 
     const extraction = JSON.parse(text.text);
-    return json({
-      extraction,
+    const usage = {
+      input_tokens: response.usage.input_tokens,
+      output_tokens: response.usage.output_tokens,
+    };
+    // response.model is authoritative — server-side fallbacks may have
+    // served this on a different model than the one requested.
+    await recordUsage({
+      caller,
+      feature: "statement_analyzer",
+      provider: "anthropic",
       model: response.model,
-      usage: { input_tokens: response.usage.input_tokens, output_tokens: response.usage.output_tokens },
+      inputTokens: usage.input_tokens,
+      outputTokens: usage.output_tokens,
+      cachedInputTokens: (response.usage as { cache_read_input_tokens?: number }).cache_read_input_tokens ?? 0,
     });
+
+    return json({ extraction, model: response.model, usage });
   } catch (err) {
     const e = err as { status?: number; message?: string };
     console.error("[analyze-statement]", e.status, e.message);

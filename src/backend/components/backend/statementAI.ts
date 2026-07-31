@@ -5,6 +5,7 @@
 // configured — callers fall back to demo data.
 
 import { supabase, isSupabaseConfigured } from '../../lib/supabase';
+import { AIError, unwrapInvokeError } from './aiErrors';
 import type { StatementInput } from './interchangeEngine';
 
 export type ExtractionConfidence = 'high' | 'medium' | 'low';
@@ -44,9 +45,12 @@ function fileToBase64(file: File): Promise<string> {
   });
 }
 
+/** Re-exported under the old name so existing imports keep working. */
+export { AIError as StatementAIError } from './aiErrors';
+
 export async function analyzeStatementWithAI(file: File): Promise<AIExtraction> {
   if (!isSupabaseConfigured || !supabase) {
-    throw new Error('AI extraction unavailable: Supabase is not configured');
+    throw new AIError('supabase_unconfigured', 'Supabase is not configured');
   }
 
   const dataBase64 = await fileToBase64(file);
@@ -58,11 +62,11 @@ export async function analyzeStatementWithAI(file: File): Promise<AIExtraction> 
     },
   });
 
-  if (error) throw new Error(`AI extraction failed: ${error.message ?? 'edge function error'}`);
-  if (data?.error) throw new Error(`AI extraction failed: ${data.message ?? data.error}`);
+  if (error) throw await unwrapInvokeError(error);
+  if (data?.error) throw new AIError(data.error, data.message ?? data.error);
   const x = data?.extraction as WireExtraction | undefined;
   if (!x || typeof x.totalVolume !== 'number' || !Array.isArray(x.fees)) {
-    throw new Error('AI extraction failed: malformed response');
+    throw new AIError('malformed_response', 'Extraction response was malformed');
   }
 
   return {

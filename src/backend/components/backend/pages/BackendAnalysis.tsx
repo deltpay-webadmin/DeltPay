@@ -20,6 +20,7 @@ import {
   type PricingProgramKey,
 } from '../interchangeEngine';
 import { analyzeStatementWithAI, type ExtractionConfidence } from '../statementAI';
+import { AIError } from '../aiErrors';
 
 // ── Types ──
 type AnalysisStatus = 'idle' | 'uploading' | 'analyzing' | 'done';
@@ -146,6 +147,9 @@ export function BackendAnalysis() {
     notes: string;
     model?: string;
   } | null>(null);
+  // A real extraction failure (rate limit, future quota rejection) — shown
+  // rather than silently swapped for demo data.
+  const [analysisError, setAnalysisError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   // Subscribe to the CRM store so it hydrates from Supabase before we
   // create/dedupe leads against it.
@@ -188,6 +192,7 @@ export function BackendAnalysis() {
     setProgramKey('interchange-plus');
     setViewMode('agent');
     setAiMeta(null);
+    setAnalysisError(null);
 
     const file = files[0];
     const fileName = file?.name || 'Statement';
@@ -215,8 +220,23 @@ export function BackendAnalysis() {
       if (result.merchantName) merchantName = result.merchantName;
       ai = { used: true, confidence: result.confidence, notes: result.notes, model: result.model };
     } catch (err) {
+      // Only an unconfigured provider justifies silently showing demo data.
+      // A rate limit, a quota rejection, or a genuine extraction failure has
+      // to be visible — otherwise it looks like a successful analysis.
+      const notConfigured = err instanceof AIError && err.isNotConfigured;
+      if (!notConfigured) {
+        console.error('[statement-analyzer] extraction failed:', err);
+        const quota = err instanceof AIError && err.isQuotaExceeded;
+        setAnalysisError(
+          quota
+            ? "You've reached the AI usage limit for this period. Analysis will resume next cycle, or an admin can raise the limit."
+            : err instanceof Error ? err.message : 'Extraction failed',
+        );
+        setStatus('idle');
+        return;
+      }
       // Demo fallback — keep a beat of latency so the flow reads naturally.
-      console.warn('[statement-analyzer] AI extraction unavailable, using demo data:', err);
+      console.warn('[statement-analyzer] AI extraction not configured, using demo data:', err);
       await new Promise(res => setTimeout(res, 1500));
       ai = { used: false, confidence: 'low', notes: err instanceof Error ? err.message : 'AI extraction unavailable', model: undefined };
     }
@@ -225,6 +245,15 @@ export function BackendAnalysis() {
     setProposal(proposalData);
     setAiMeta(ai);
     setStatus('done');
+
+    // Only a real extraction may touch the pipeline. On the demo path the
+    // numbers are fabricated, and writing them to a lead would put invented
+    // merchant economics into the CRM as though they came off a statement.
+    if (!ai?.used) {
+      setAutoLeadCreated(false);
+      setLeadBannerVisible(false);
+      return;
+    }
 
     // Persist to the pipeline: scrapes the statement's processing profile
     // into the lead's KYB intake, attaches the statement document, and
@@ -405,6 +434,16 @@ export function BackendAnalysis() {
                     </p>
                   )}
                 </div>
+
+                {analysisError && (
+                  <div className="mt-4 flex items-start gap-2.5 px-4 py-3 rounded-[6px] bg-red-50 border border-red-200">
+                    <AlertCircle className="w-4 h-4 text-red-600 mt-0.5 shrink-0" />
+                    <div>
+                      <p className="text-sm font-medium text-red-700">Analysis failed</p>
+                      <p className="text-xs text-red-600 mt-0.5">{analysisError}</p>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 

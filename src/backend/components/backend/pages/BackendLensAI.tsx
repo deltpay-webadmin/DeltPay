@@ -23,6 +23,7 @@ import {
 } from 'recharts';
 import { useCrm } from '../crmStore';
 import { askLens } from '../lensAI';
+import { AIError } from '../aiErrors';
 
 type Tab = 'dashboard' | 'ask';
 
@@ -168,15 +169,36 @@ export function BackendLensAI() {
       const answer = await askLens(msg, history, crm);
       setMessages((prev) => [...prev, { role: 'assistant', ...answer }]);
     } catch (err) {
-      // Not configured / offline — fall back to the demo answer, labeled as such.
-      console.warn('[lens-ai] live answer unavailable:', err);
-      setMessages((prev) => [
-        ...prev,
-        {
-          ...sampleResponse,
-          source: 'Demo response — connect Lens (NEBIUS_API_KEY function secret) for live portfolio analysis.',
-        },
-      ]);
+      // Only an unconfigured Lens justifies the canned sample answer. Every
+      // other failure must show as a failure: sampleResponse asserts specific
+      // agents, default rates, and dollar figures, so rendering it after a
+      // rate limit or quota rejection presents invented portfolio analytics
+      // as though Lens had actually read the data.
+      const notConfigured = err instanceof AIError && err.isNotConfigured;
+      if (notConfigured) {
+        console.warn('[lens-ai] not configured, showing demo answer:', err);
+        setMessages((prev) => [
+          ...prev,
+          {
+            ...sampleResponse,
+            content: `**Demo response — not real portfolio data.**\n\n${sampleResponse.content}`,
+            source: 'Demo response — set the NEBIUS_API_KEY function secret for live portfolio analysis.',
+          },
+        ]);
+      } else {
+        console.error('[lens-ai] answer failed:', err);
+        const quota = err instanceof AIError && err.isQuotaExceeded;
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: 'assistant',
+            content: quota
+              ? "**You've reached the AI usage limit for this period.** Lens will resume next cycle, or an admin can raise the limit."
+              : `**Lens couldn't answer that.** ${err instanceof Error ? err.message : 'Unknown error'}\n\nNo data was analyzed — try again in a moment.`,
+            source: 'Error — no portfolio data was read.',
+          },
+        ]);
+      }
     } finally {
       setThinking(false);
     }
