@@ -106,10 +106,19 @@ export function RouteTransitionLoader() {
   const { pathname } = useLocation();
   const [phase, setPhase] = useState<'hidden' | 'shown' | 'fading'>('hidden');
   const firstRender = useRef(true);
+  const prevPath = useRef(pathname);
 
   useEffect(() => {
+    const from = prevPath.current;
+    prevPath.current = pathname;
     if (firstRender.current) {
       firstRender.current = false;
+      return;
+    }
+    // Navigation WITHIN the CRM is an app tab switch, not a page visit —
+    // the branded splash there reads as lag. Keep it for marketing-site
+    // navigation and for entering/leaving the dashboard.
+    if (from.startsWith('/dashboard') && pathname.startsWith('/dashboard')) {
       return;
     }
     const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;

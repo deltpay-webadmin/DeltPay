@@ -1,31 +1,39 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import {
   Upload, FileText, Sparkles, Download, UserPlus, Clock,
-  CheckCircle2, XCircle, Send, TrendingDown, DollarSign,
-  AlertCircle, Loader2, X, File, ArrowRight, ExternalLink,
+  CheckCircle2, TrendingDown, Store,
+  AlertCircle, Loader2, X, File, ArrowRight,
 } from 'lucide-react';
+import { toast } from 'sonner@2.0.3';
 import { useAppNavigate } from '../NavigationContext';
 import { BackendCostCalculator } from './BackendCostCalculator';
+import { supabase } from '../../../lib/supabase';
+import { leadActions } from '../crmStore';
 
 // ── Types ──
 type AnalysisStatus = 'idle' | 'uploading' | 'analyzing' | 'done';
-type HistoryStatus = 'Lead Created' | 'Proposal Sent' | 'Won' | 'Lost';
+type HistoryStatus = 'Analyzed' | 'Lead Created' | 'Proposal Sent' | 'Won' | 'Lost';
+const HISTORY_STATUSES: HistoryStatus[] = ['Analyzed', 'Lead Created', 'Proposal Sent', 'Won', 'Lost'];
 
 interface FeeRow {
   label: string;
   amount: number;
 }
 
+/** Shape returned by the analyze-statement edge function's extraction. */
 interface ExtractedData {
+  merchantName: string;
   currentProcessor: string;
   statementPeriod: string;
   totalVolume: number;
   totalTransactions: number;
   avgTicket: number;
-  effectiveRate: number;
+  effectiveRatePct: number;
   fees: FeeRow[];
   chargebackCount: number;
   currentMonthlyCost: number;
+  confidence: 'high' | 'medium' | 'low';
+  notes: string;
 }
 
 interface SavingsProposal {
@@ -49,47 +57,57 @@ interface HistoryRow {
   status: HistoryStatus;
 }
 
-// ── Mock parsed result ──
-const mockExtracted: ExtractedData = {
-  currentProcessor: 'First Data / Clover',
-  statementPeriod: 'March 2026',
-  totalVolume: 87432,
-  totalTransactions: 1847,
-  avgTicket: 47.33,
-  effectiveRate: 3.42,
-  fees: [
-    { label: 'Discount Rate', amount: 1842.18 },
-    { label: 'Transaction Fees', amount: 369.40 },
-    { label: 'Monthly Fees', amount: 25.00 },
-    { label: 'PCI Fees', amount: 19.95 },
-    { label: 'Statement Fees', amount: 10.00 },
-    { label: 'Batch Fees', amount: 55.41 },
-    { label: 'Other', amount: 668.24 },
-  ],
-  chargebackCount: 2,
-  currentMonthlyCost: 2990.18,
-};
-
-const mockProposal: SavingsProposal = {
-  currentRate: 3.42,
-  deltRate: 2.61,
-  currentMonthlyCost: 2990.18,
-  deltMonthlyCost: 2282.18,
-  currentAnnualCost: 35882.16,
-  deltAnnualCost: 27386.16,
-  annualSavings: 8496.00,
-  savingsPercent: 23.7,
-};
-
-const historyData: HistoryRow[] = [
-  { id: 'h1', merchantName: 'Mario\'s Pizzeria', dateAnalyzed: 'Apr 2, 2026', currentRate: 3.81, proposedRate: 2.74, savings: 7640, status: 'Won' },
-  { id: 'h2', merchantName: 'Apex Plumbing LLC', dateAnalyzed: 'Mar 28, 2026', currentRate: 3.15, proposedRate: 2.48, savings: 4920, status: 'Proposal Sent' },
-  { id: 'h3', merchantName: 'Bloom Florist', dateAnalyzed: 'Mar 21, 2026', currentRate: 4.02, proposedRate: 2.85, savings: 9360, status: 'Lead Created' },
-  { id: 'h4', merchantName: 'QuickLube Auto Care', dateAnalyzed: 'Mar 14, 2026', currentRate: 3.55, proposedRate: 2.63, savings: 6120, status: 'Lost' },
-];
-
 const fmt = (n: number) => n.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 });
 const fmtWhole = (n: number) => n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+
+/**
+ * Delt pricing heuristic pending the full interchange engine: undercut the
+ * merchant's current effective rate by ~22% with a 2.15% floor. Numbers stay
+ * consistent with the Cost Calculator's positioning.
+ */
+function buildProposal(ex: ExtractedData): SavingsProposal {
+  const currentRate = ex.effectiveRatePct;
+  const deltRate = Math.max(2.15, Math.round(currentRate * 0.78 * 100) / 100);
+  const deltMonthlyCost = Math.round(ex.totalVolume * deltRate) / 100;
+  const monthlySavings = Math.max(0, ex.currentMonthlyCost - deltMonthlyCost);
+  const annualSavings = Math.round(monthlySavings * 12);
+  return {
+    currentRate,
+    deltRate,
+    currentMonthlyCost: ex.currentMonthlyCost,
+    deltMonthlyCost,
+    currentAnnualCost: Math.round(ex.currentMonthlyCost * 12),
+    deltAnnualCost: Math.round(deltMonthlyCost * 12),
+    annualSavings,
+    savingsPercent: ex.currentMonthlyCost > 0
+      ? Math.round((monthlySavings / ex.currentMonthlyCost) * 1000) / 10
+      : 0,
+  };
+}
+
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const url = String(reader.result ?? '');
+      resolve(url.slice(url.indexOf(',') + 1)); // strip the data: prefix
+    };
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+}
+
+function fromDbAnalysis(row: any): HistoryRow {
+  return {
+    id: row.id,
+    merchantName: row.merchant_name,
+    dateAnalyzed: new Date(row.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+    currentRate: Number(row.current_rate ?? 0),
+    proposedRate: Number(row.proposed_rate ?? 0),
+    savings: Number(row.annual_savings ?? 0),
+    status: (row.status as HistoryStatus) ?? 'Analyzed',
+  };
+}
 
 // ══════════════════════════════════════
 // Main Component
@@ -105,8 +123,27 @@ export function BackendAnalysis() {
   const [autoLeadCreated, setAutoLeadCreated] = useState(false);
   const [autoLeadName, setAutoLeadName] = useState('');
   const [leadBannerVisible, setLeadBannerVisible] = useState(false);
-  const [history, setHistory] = useState<HistoryRow[]>(historyData);
+  const [history, setHistory] = useState<HistoryRow[]>([]);
+  const [historyView, setHistoryView] = useState<'all' | 'merchant'>('all');
+  const [merchantFilter, setMerchantFilter] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // ── Load saved analyses ──
+  const loadHistory = useCallback(async () => {
+    if (!supabase) return;
+    const { data, error } = await supabase
+      .from('statement_analyses')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(200);
+    if (error) {
+      console.error('[analysis] history load failed:', error.message);
+      return;
+    }
+    setHistory((data ?? []).map(fromDbAnalysis));
+  }, []);
+
+  useEffect(() => { void loadHistory(); }, [loadHistory]);
 
   const handleFiles = useCallback((incoming: FileList | File[]) => {
     const valid = Array.from(incoming).filter(f =>
@@ -123,46 +160,121 @@ export function BackendAnalysis() {
 
   const removeFile = (idx: number) => setFiles(prev => prev.filter((_, i) => i !== idx));
 
-  const analyze = () => {
-    if (!files.length) return;
+  /** Fallback merchant name derived from the filename when the statement doesn't show one. */
+  const nameFromFile = (fileName: string) => {
+    const cleaned = fileName
+      .replace(/\.(pdf|png|jpg|jpeg|webp|gif|tiff?)$/i, '')
+      .replace(/[-_]/g, ' ')
+      .replace(/statement|stmt|processing/gi, '')
+      .trim();
+    return cleaned.length > 2
+      ? cleaned.split(' ').filter(Boolean).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ')
+      : 'New Prospect';
+  };
+
+  // ── Real extraction via the analyze-statement edge function ──
+  const analyze = async () => {
+    const file = files[0];
+    if (!file || !supabase) {
+      if (!supabase) toast.error('Statement analysis needs a Supabase connection.');
+      return;
+    }
     setStatus('uploading');
     setAutoLeadCreated(false);
     setLeadBannerVisible(false);
-    setTimeout(() => {
+    try {
+      const dataBase64 = await fileToBase64(file);
       setStatus('analyzing');
-      setTimeout(() => {
-        setExtracted(mockExtracted);
-        setProposal(mockProposal);
-        setStatus('done');
 
-        // Auto-create lead from the uploaded statement
-        const fileName = files[0]?.name || 'Statement';
-        const merchantName = fileName
-          .replace(/\.(pdf|png|jpg|jpeg|tiff?)$/i, '')
-          .replace(/[-_]/g, ' ')
-          .replace(/statement|stmt|processing/gi, '')
-          .trim();
-        const derivedName = merchantName.length > 2
-          ? merchantName.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ')
-          : 'New Prospect';
+      const { data, error } = await supabase.functions.invoke('analyze-statement', {
+        body: { filename: file.name, mediaType: file.type || 'application/pdf', dataBase64 },
+      });
 
-        setAutoLeadName(derivedName);
-        setAutoLeadCreated(true);
-        setLeadBannerVisible(true);
+      if (error) {
+        // FunctionsHttpError carries the JSON error body from the function.
+        let message = error.message;
+        try {
+          const body = await (error as any).context?.json?.();
+          if (body?.message) message = body.message;
+          else if (body?.error) message = body.error;
+        } catch { /* keep the generic message */ }
+        throw new Error(message);
+      }
+      if (data?.error) throw new Error(data.message || data.error);
 
-        // Add to history
-        const newEntry: HistoryRow = {
-          id: `h-auto-${Date.now()}`,
-          merchantName: derivedName,
-          dateAnalyzed: 'Apr 9, 2026',
-          currentRate: mockProposal.currentRate,
-          proposedRate: mockProposal.deltRate,
-          savings: mockProposal.annualSavings,
-          status: 'Lead Created',
-        };
-        setHistory(prev => [newEntry, ...prev]);
-      }, 2200);
-    }, 800);
+      const raw = data.extraction as Partial<ExtractedData> & { effectiveRatePct?: number };
+      const ex: ExtractedData = {
+        merchantName: raw.merchantName?.trim() || nameFromFile(file.name),
+        currentProcessor: raw.currentProcessor || 'Unknown',
+        statementPeriod: raw.statementPeriod || '—',
+        totalVolume: Number(raw.totalVolume ?? 0),
+        totalTransactions: Number(raw.totalTransactions ?? 0),
+        avgTicket: Number(raw.avgTicket ?? 0),
+        effectiveRatePct: Number(raw.effectiveRatePct ?? 0),
+        fees: Array.isArray(raw.fees) ? raw.fees : [],
+        chargebackCount: Number(raw.chargebackCount ?? 0),
+        currentMonthlyCost: Number(raw.currentMonthlyCost ?? 0),
+        confidence: (raw.confidence as ExtractedData['confidence']) ?? 'medium',
+        notes: raw.notes || '',
+      };
+      const prop = buildProposal(ex);
+      setExtracted(ex);
+      setProposal(prop);
+      setStatus('done');
+
+      // Persist so the history / merchant view survives reloads.
+      const { error: insErr } = await supabase.from('statement_analyses').insert({
+        merchant_name: ex.merchantName,
+        filename: file.name,
+        extraction: raw,
+        current_rate: prop.currentRate,
+        proposed_rate: prop.deltRate,
+        annual_savings: prop.annualSavings,
+        status: 'Analyzed',
+        model: data.model ?? null,
+      });
+      if (insErr) console.error('[analysis] save failed:', insErr.message);
+      void loadHistory();
+    } catch (err: any) {
+      console.error('[analysis] extraction failed:', err);
+      toast.error(err?.message || 'Statement analysis failed — try again.');
+      setStatus('idle');
+    }
+  };
+
+  // ── Real lead creation from the analyzed statement ──
+  const createLead = () => {
+    if (!extracted || !proposal) return;
+    leadActions.create({
+      businessName: extracted.merchantName,
+      type: 'Processing' as any,
+      source: 'Statement Analyzer',
+      monthlySales: fmtWhole(extracted.totalVolume),
+      notes:
+        `Statement analysis (${extracted.statementPeriod}, ${extracted.currentProcessor}): ` +
+        `effective rate ${proposal.currentRate}% → Delt ${proposal.deltRate}%, ` +
+        `projected savings ${fmtWhole(proposal.annualSavings)}/yr.`,
+    });
+    setAutoLeadName(extracted.merchantName);
+    setAutoLeadCreated(true);
+    setLeadBannerVisible(true);
+    // Reflect the pipeline hand-off on the newest saved analysis.
+    const latest = history.find(h => h.merchantName === extracted.merchantName);
+    if (latest && supabase) {
+      void supabase.from('statement_analyses').update({ status: 'Lead Created' }).eq('id', latest.id)
+        .then(() => loadHistory());
+    }
+    toast.success(`Lead created for ${extracted.merchantName}`);
+  };
+
+  const updateStatus = async (id: string, next: HistoryStatus) => {
+    setHistory(prev => prev.map(h => (h.id === id ? { ...h, status: next } : h)));
+    if (!supabase) return;
+    const { error } = await supabase.from('statement_analyses').update({ status: next }).eq('id', id);
+    if (error) {
+      toast.error(`Couldn't update status: ${error.message}`);
+      void loadHistory();
+    }
   };
 
   const reset = () => {
@@ -172,8 +284,32 @@ export function BackendAnalysis() {
     setProposal(null);
   };
 
+  // ── Merchant rollup for the "By merchant" view ──
+  const merchants = useMemo(() => {
+    const map = new Map<string, { name: string; analyses: HistoryRow[] }>();
+    for (const row of history) {
+      const key = row.merchantName.toLowerCase();
+      if (!map.has(key)) map.set(key, { name: row.merchantName, analyses: [] });
+      map.get(key)!.analyses.push(row);
+    }
+    return [...map.values()].map(m => ({
+      name: m.name,
+      count: m.analyses.length,
+      latest: m.analyses[0],
+      bestSavings: Math.max(...m.analyses.map(a => a.savings)),
+    }));
+  }, [history]);
+
+  const visibleHistory = useMemo(
+    () => (merchantFilter
+      ? history.filter(h => h.merchantName.toLowerCase() === merchantFilter.toLowerCase())
+      : history),
+    [history, merchantFilter],
+  );
+
   const statusBadge = (s: HistoryStatus) => {
     const cfg: Record<HistoryStatus, string> = {
+      'Analyzed': 'bg-gray-100 text-gray-600',
       'Lead Created': 'bg-blue-50 text-blue-700',
       'Proposal Sent': 'bg-amber-50 text-amber-700',
       'Won': 'bg-emerald-50 text-emerald-700',
@@ -277,7 +413,7 @@ export function BackendAnalysis() {
                 {/* Actions */}
                 <div className="mt-4 flex items-center gap-3">
                   <button
-                    onClick={analyze}
+                    onClick={() => void analyze()}
                     disabled={!files.length || status === 'uploading' || status === 'analyzing'}
                     className="px-5 py-2.5 bg-brand text-white text-sm font-medium rounded-[6px] hover:bg-brand-hover transition-colors flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
                   >
@@ -286,11 +422,11 @@ export function BackendAnalysis() {
                     ) : (
                       <Sparkles className="w-4 h-4" />
                     )}
-                    {status === 'uploading' ? 'Uploading...' : status === 'analyzing' ? 'Analyzing...' : 'Analyze Statement'}
+                    {status === 'uploading' ? 'Reading file...' : status === 'analyzing' ? 'Analyzing...' : 'Analyze Statement'}
                   </button>
                   {(status === 'uploading' || status === 'analyzing') && (
                     <p className="text-xs text-gray-400">
-                      {status === 'uploading' ? 'Uploading file...' : 'AI is extracting fees and calculating savings...'}
+                      {status === 'uploading' ? 'Preparing the statement…' : 'AI is reading the statement and extracting every fee line…'}
                     </p>
                   )}
                 </div>
@@ -305,13 +441,28 @@ export function BackendAnalysis() {
                   <div className="flex items-center gap-2 text-sm text-emerald-600 font-medium">
                     <CheckCircle2 className="w-4 h-4" />
                     Analysis complete — {files[0]?.name}
+                    {extracted.confidence !== 'high' && (
+                      <span className={`ml-1 inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
+                        extracted.confidence === 'medium' ? 'bg-amber-50 text-amber-700' : 'bg-red-50 text-red-700'
+                      }`}>
+                        {extracted.confidence} confidence
+                      </span>
+                    )}
                   </div>
                   <button onClick={reset} className="text-sm text-gray-500 hover:text-gray-700 underline underline-offset-2">
                     Analyze another statement
                   </button>
                 </div>
 
-                {/* Auto-lead created banner */}
+                {/* AI notes on the extraction */}
+                {extracted.notes && (
+                  <div className="bg-gray-50 border border-gray-200 rounded-[8px] px-4 py-3 text-xs text-gray-600 flex items-start gap-2">
+                    <AlertCircle className="w-4 h-4 text-gray-400 shrink-0 mt-[1px]" />
+                    <span>{extracted.notes}</span>
+                  </div>
+                )}
+
+                {/* Lead created banner */}
                 {leadBannerVisible && autoLeadCreated && (
                   <div className="bg-brand/5 border border-brand/20 rounded-[8px] px-5 py-4 flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -320,10 +471,10 @@ export function BackendAnalysis() {
                       </div>
                       <div>
                         <p className="text-sm font-semibold text-gray-900">
-                          Lead auto-created: <span className="text-brand">{autoLeadName}</span>
+                          Lead created: <span className="text-brand">{autoLeadName}</span>
                         </p>
                         <p className="text-xs text-gray-500 mt-0.5">
-                          Added to pipeline as <span className="font-medium">New Lead</span> · Statement attached · Savings proposal linked
+                          Added to pipeline as <span className="font-medium">New Lead</span> · Savings proposal noted
                         </p>
                       </div>
                     </div>
@@ -358,12 +509,12 @@ export function BackendAnalysis() {
                     <div className="px-5 py-4 space-y-4">
                       {/* Meta */}
                       <div className="grid grid-cols-2 gap-3">
+                        <MetaField label="Merchant" value={extracted.merchantName} highlight />
                         <MetaField label="Current Processor" value={extracted.currentProcessor} />
                         <MetaField label="Statement Period" value={extracted.statementPeriod} />
                         <MetaField label="Total Volume" value={fmtWhole(extracted.totalVolume)} />
                         <MetaField label="Total Transactions" value={extracted.totalTransactions.toLocaleString()} />
                         <MetaField label="Avg Ticket" value={fmt(extracted.avgTicket)} />
-                        <MetaField label="Effective Rate" value={`${extracted.effectiveRate}%`} />
                       </div>
 
                       {/* Fee breakdown */}
@@ -378,8 +529,8 @@ export function BackendAnalysis() {
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
-                              {extracted.fees.map(f => (
-                                <tr key={f.label}>
+                              {extracted.fees.map((f, i) => (
+                                <tr key={`${f.label}-${i}`}>
                                   <td className="px-3 py-2 text-sm text-gray-700">{f.label}</td>
                                   <td className="px-3 py-2 text-sm text-gray-900 text-right font-medium tabular-nums">{fmt(f.amount)}</td>
                                 </tr>
@@ -391,7 +542,8 @@ export function BackendAnalysis() {
 
                       {/* Bottom stats */}
                       <div className="grid grid-cols-2 gap-3">
-                        <MetaField label="Chargeback Count" value={extracted.chargebackCount.toString()} warn={extracted.chargebackCount > 0} />
+                        <MetaField label="Effective Rate" value={`${extracted.effectiveRatePct}%`} />
+                        <MetaField label="Chargebacks" value={extracted.chargebackCount.toString()} warn={extracted.chargebackCount > 0} />
                         <MetaField label="Current Monthly Cost" value={fmt(extracted.currentMonthlyCost)} highlight />
                       </div>
                     </div>
@@ -461,7 +613,10 @@ export function BackendAnalysis() {
                             Lead Created — View
                           </button>
                         ) : (
-                          <button className="flex-1 px-4 py-2.5 bg-white text-brand text-sm font-medium rounded-[6px] border border-brand hover:bg-brand/5 transition-colors flex items-center justify-center gap-2">
+                          <button
+                            onClick={createLead}
+                            className="flex-1 px-4 py-2.5 bg-white text-brand text-sm font-medium rounded-[6px] border border-brand hover:bg-brand/5 transition-colors flex items-center justify-center gap-2"
+                          >
                             <UserPlus className="w-4 h-4" />
                             Create Lead
                           </button>
@@ -473,47 +628,137 @@ export function BackendAnalysis() {
               </>
             )}
 
-            {/* ── History Table ── */}
+            {/* ── History: all analyses / by merchant ── */}
             <div className="bg-white rounded-[8px] border border-gray-200 overflow-hidden">
               <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
                 <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
                   <Clock className="w-4 h-4 text-gray-400" />
                   Analysis History
+                  {merchantFilter && (
+                    <button
+                      onClick={() => setMerchantFilter(null)}
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-brand/10 text-brand text-xs font-medium hover:bg-brand/20 transition-colors"
+                    >
+                      {merchantFilter}
+                      <X className="w-3 h-3" />
+                    </button>
+                  )}
                 </h2>
-                <span className="text-xs text-gray-400">{history.length} analyses</span>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[700px]">
-                  <thead>
-                    <tr className="bg-gray-50 border-b border-gray-200">
-                      <th className="text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wide pl-5 pr-3 py-2.5">Merchant Name</th>
-                      <th className="text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wide px-3 py-2.5">Date Analyzed</th>
-                      <th className="text-right text-[11px] font-semibold text-gray-500 uppercase tracking-wide px-3 py-2.5">Current Rate</th>
-                      <th className="text-right text-[11px] font-semibold text-gray-500 uppercase tracking-wide px-3 py-2.5">Proposed Rate</th>
-                      <th className="text-right text-[11px] font-semibold text-gray-500 uppercase tracking-wide px-3 py-2.5">Savings</th>
-                      <th className="text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wide pl-3 pr-5 py-2.5">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {history.map(row => (
-                      <tr key={row.id} className="hover:bg-gray-50/60 transition-colors">
-                        <td className="pl-5 pr-3 py-3 text-sm font-medium text-gray-900">{row.merchantName}</td>
-                        <td className="px-3 py-3 text-sm text-gray-500">{row.dateAnalyzed}</td>
-                        <td className="px-3 py-3 text-sm text-gray-700 text-right tabular-nums">{row.currentRate}%</td>
-                        <td className="px-3 py-3 text-sm text-brand text-right font-medium tabular-nums">{row.proposedRate}%</td>
-                        <td className="px-3 py-3 text-right">
-                          <span className="text-sm font-medium text-emerald-600 tabular-nums">{fmtWhole(row.savings)}/yr</span>
-                        </td>
-                        <td className="pl-3 pr-5 py-3">
-                          <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${statusBadge(row.status)}`}>
-                            {row.status}
-                          </span>
-                        </td>
-                      </tr>
+                <div className="flex items-center gap-3">
+                  <div className="flex rounded-[6px] border border-gray-200 overflow-hidden">
+                    {([
+                      { key: 'all' as const, label: 'All analyses' },
+                      { key: 'merchant' as const, label: 'By merchant' },
+                    ]).map(t => (
+                      <button
+                        key={t.key}
+                        onClick={() => { setHistoryView(t.key); setMerchantFilter(null); }}
+                        className={`px-3 py-1.5 text-xs font-medium transition-colors ${
+                          historyView === t.key
+                            ? 'bg-brand text-white'
+                            : 'bg-white text-gray-500 hover:text-gray-700'
+                        }`}
+                      >
+                        {t.label}
+                      </button>
                     ))}
-                  </tbody>
-                </table>
+                  </div>
+                  <span className="text-xs text-gray-400">
+                    {historyView === 'merchant' ? `${merchants.length} merchants` : `${visibleHistory.length} analyses`}
+                  </span>
+                </div>
               </div>
+
+              {history.length === 0 ? (
+                <div className="py-12 text-center">
+                  <FileText className="w-8 h-8 text-gray-300 mx-auto mb-3" />
+                  <p className="text-sm font-medium text-gray-700">No analyses yet</p>
+                  <p className="text-xs text-gray-400 mt-1">Upload a merchant statement above — every analysis is saved here.</p>
+                </div>
+              ) : historyView === 'merchant' ? (
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[700px]">
+                    <thead>
+                      <tr className="bg-gray-50 border-b border-gray-200">
+                        <th className="text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wide pl-5 pr-3 py-2.5">Merchant</th>
+                        <th className="text-right text-[11px] font-semibold text-gray-500 uppercase tracking-wide px-3 py-2.5">Analyses</th>
+                        <th className="text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wide px-3 py-2.5">Last Analyzed</th>
+                        <th className="text-right text-[11px] font-semibold text-gray-500 uppercase tracking-wide px-3 py-2.5">Current → Proposed</th>
+                        <th className="text-right text-[11px] font-semibold text-gray-500 uppercase tracking-wide px-3 py-2.5">Best Savings</th>
+                        <th className="text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wide pl-3 pr-5 py-2.5">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {merchants.map(m => (
+                        <tr
+                          key={m.name}
+                          onClick={() => { setHistoryView('all'); setMerchantFilter(m.name); }}
+                          className="hover:bg-gray-50/60 transition-colors cursor-pointer"
+                        >
+                          <td className="pl-5 pr-3 py-3">
+                            <span className="flex items-center gap-2 text-sm font-medium text-gray-900">
+                              <Store className="w-4 h-4 text-gray-300" />
+                              {m.name}
+                            </span>
+                          </td>
+                          <td className="px-3 py-3 text-sm text-gray-700 text-right tabular-nums">{m.count}</td>
+                          <td className="px-3 py-3 text-sm text-gray-500">{m.latest.dateAnalyzed}</td>
+                          <td className="px-3 py-3 text-sm text-right tabular-nums">
+                            <span className="text-gray-700">{m.latest.currentRate}%</span>
+                            <span className="text-gray-300 mx-1">→</span>
+                            <span className="text-brand font-medium">{m.latest.proposedRate}%</span>
+                          </td>
+                          <td className="px-3 py-3 text-right">
+                            <span className="text-sm font-medium text-emerald-600 tabular-nums">{fmtWhole(m.bestSavings)}/yr</span>
+                          </td>
+                          <td className="pl-3 pr-5 py-3">
+                            <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${statusBadge(m.latest.status)}`}>
+                              {m.latest.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[700px]">
+                    <thead>
+                      <tr className="bg-gray-50 border-b border-gray-200">
+                        <th className="text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wide pl-5 pr-3 py-2.5">Merchant Name</th>
+                        <th className="text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wide px-3 py-2.5">Date Analyzed</th>
+                        <th className="text-right text-[11px] font-semibold text-gray-500 uppercase tracking-wide px-3 py-2.5">Current Rate</th>
+                        <th className="text-right text-[11px] font-semibold text-gray-500 uppercase tracking-wide px-3 py-2.5">Proposed Rate</th>
+                        <th className="text-right text-[11px] font-semibold text-gray-500 uppercase tracking-wide px-3 py-2.5">Savings</th>
+                        <th className="text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wide pl-3 pr-5 py-2.5">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {visibleHistory.map(row => (
+                        <tr key={row.id} className="hover:bg-gray-50/60 transition-colors">
+                          <td className="pl-5 pr-3 py-3 text-sm font-medium text-gray-900">{row.merchantName}</td>
+                          <td className="px-3 py-3 text-sm text-gray-500">{row.dateAnalyzed}</td>
+                          <td className="px-3 py-3 text-sm text-gray-700 text-right tabular-nums">{row.currentRate}%</td>
+                          <td className="px-3 py-3 text-sm text-brand text-right font-medium tabular-nums">{row.proposedRate}%</td>
+                          <td className="px-3 py-3 text-right">
+                            <span className="text-sm font-medium text-emerald-600 tabular-nums">{fmtWhole(row.savings)}/yr</span>
+                          </td>
+                          <td className="pl-3 pr-5 py-3">
+                            <select
+                              value={row.status}
+                              onChange={e => void updateStatus(row.id, e.target.value as HistoryStatus)}
+                              className={`px-2 py-1 rounded-full text-xs font-medium border-0 cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand/20 ${statusBadge(row.status)}`}
+                            >
+                              {HISTORY_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+                            </select>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           </>
         )}
