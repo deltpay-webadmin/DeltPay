@@ -7,8 +7,13 @@ import {
 import { toast } from 'sonner@2.0.3';
 import { useAppNavigate } from '../NavigationContext';
 import { BackendCostCalculator } from './BackendCostCalculator';
+import {
+  BarChart, Bar, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContainer,
+  LineChart, Line, CartesianGrid, Cell, LabelList,
+} from 'recharts';
 import { supabase } from '../../../lib/supabase';
 import { leadActions } from '../crmStore';
+import { quotePrograms, RISK_TIERS, type ProgramQuote, type RiskTierKey } from '../pricingPrograms';
 
 // ── Types ──
 type AnalysisStatus = 'idle' | 'uploading' | 'analyzing' | 'done';
@@ -51,10 +56,12 @@ interface HistoryRow {
   id: string;
   merchantName: string;
   dateAnalyzed: string;
+  createdAt: string;
   currentRate: number;
   proposedRate: number;
   savings: number;
   status: HistoryStatus;
+  leadId: string | null;
 }
 
 const fmt = (n: number) => n.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 });
@@ -135,10 +142,12 @@ function fromDbAnalysis(row: any): HistoryRow {
     id: row.id,
     merchantName: row.merchant_name,
     dateAnalyzed: new Date(row.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+    createdAt: row.created_at,
     currentRate: Number(row.current_rate ?? 0),
     proposedRate: Number(row.proposed_rate ?? 0),
     savings: Number(row.annual_savings ?? 0),
     status: (row.status as HistoryStatus) ?? 'Analyzed',
+    leadId: row.lead_id ?? null,
   };
 }
 
@@ -160,6 +169,7 @@ export function BackendAnalysis() {
   const [savedAnalysisId, setSavedAnalysisId] = useState<string | null>(null);
   const [historyView, setHistoryView] = useState<'all' | 'merchant'>('all');
   const [merchantFilter, setMerchantFilter] = useState<string | null>(null);
+  const [riskTier, setRiskTier] = useState<RiskTierKey>('medium');
   const inputRef = useRef<HTMLInputElement>(null);
 
   // ── Load saved analyses ──
@@ -357,6 +367,21 @@ export function BackendAnalysis() {
     setProposal(null);
     setSavedAnalysisId(null);
   };
+
+  // ── Delt program quotes against the extracted statement ──
+  const programs: ProgramQuote[] = useMemo(() => {
+    if (!extracted) return [];
+    return quotePrograms({
+      monthlyVolume: extracted.totalVolume,
+      monthlyTransactions: extracted.totalTransactions,
+      currentMonthlyCost: extracted.currentMonthlyCost,
+      riskTier,
+    });
+  }, [extracted, riskTier]);
+  const bestProgram = useMemo(
+    () => programs.reduce<ProgramQuote | null>((best, p) => (!best || p.annualSavings > best.annualSavings ? p : best), null),
+    [programs],
+  );
 
   // ── Merchant rollup for the "By merchant" view ──
   const merchants = useMemo(() => {
@@ -614,6 +639,33 @@ export function BackendAnalysis() {
                         </div>
                       </div>
 
+                      {/* Fee composition — where the money goes */}
+                      {extracted.fees.length > 1 && (
+                        <div>
+                          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Fee Composition</p>
+                          <div className="border border-gray-200 rounded-[6px] p-3" style={{ height: Math.max(120, extracted.fees.length * 34) }}>
+                            <ResponsiveContainer width="100%" height="100%">
+                              <BarChart data={extracted.fees} layout="vertical" margin={{ top: 0, right: 56, bottom: 0, left: 8 }}>
+                                <XAxis type="number" hide />
+                                <YAxis
+                                  type="category" dataKey="label" width={110}
+                                  tickLine={false} axisLine={false}
+                                  tick={{ fontSize: 11, fill: '#6b7280' }}
+                                />
+                                <ChartTooltip
+                                  cursor={{ fill: 'rgba(0,0,0,0.03)' }}
+                                  formatter={(v: number) => [fmt(v), 'Amount']}
+                                  contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e5e7eb' }}
+                                />
+                                <Bar dataKey="amount" fill="#2E6BFF" radius={[0, 4, 4, 0]} barSize={16}>
+                                  <LabelList dataKey="amount" position="right" formatter={(v: number) => fmtWhole(v)} style={{ fontSize: 11, fill: '#374151' }} />
+                                </Bar>
+                              </BarChart>
+                            </ResponsiveContainer>
+                          </div>
+                        </div>
+                      )}
+
                       {/* Bottom stats */}
                       <div className="grid grid-cols-2 gap-3">
                         <MetaField label="Effective Rate" value={`${extracted.effectiveRatePct}%`} />
@@ -699,6 +751,110 @@ export function BackendAnalysis() {
                     </div>
                   </div>
                 </div>
+
+                {/* ── Delt Pricing Programs ── */}
+                <div className="bg-white rounded-[8px] border border-gray-200 overflow-hidden">
+                  <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+                    <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-brand" />
+                      Delt Pricing Programs
+                    </h2>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-gray-400">Risk tier</span>
+                      <div className="flex rounded-[6px] border border-gray-200 overflow-hidden">
+                        {RISK_TIERS.map(t => (
+                          <button
+                            key={t.key}
+                            onClick={() => setRiskTier(t.key as RiskTierKey)}
+                            className={`px-3 py-1.5 text-xs font-medium transition-colors ${
+                              riskTier === t.key ? 'bg-brand text-white' : 'bg-white text-gray-500 hover:text-gray-700'
+                            }`}
+                            title={t.desc}
+                          >
+                            {t.label.replace(' Risk', '')}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-5 grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    {programs.map(p => {
+                      const recommended = bestProgram?.key === p.key;
+                      return (
+                        <div
+                          key={p.key}
+                          className={`rounded-[8px] border p-4 flex flex-col ${
+                            recommended ? 'border-brand bg-brand/[0.03] shadow-[0_0_0_1px_var(--brand,#2E6BFF)]' : 'border-gray-200'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <p className="text-sm font-semibold text-gray-900">{p.name}</p>
+                            {recommended && (
+                              <span className="px-2 py-0.5 rounded-full bg-brand text-white text-[10px] font-bold uppercase tracking-wide">
+                                Recommended
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-gray-500 mt-1 leading-snug">{p.tagline}</p>
+                          <p className="mt-3 inline-block text-xs font-mono text-gray-600 bg-gray-100 px-2 py-1 rounded-[6px] self-start">{p.terms}</p>
+                          <div className="mt-4 pt-3 border-t border-gray-100 grid grid-cols-2 gap-2">
+                            <div>
+                              <p className="text-[11px] text-gray-500">Merchant pays</p>
+                              <p className="text-sm font-bold text-gray-900 tabular-nums">{fmt(p.monthlyCost)}<span className="text-[11px] font-medium text-gray-400">/mo</span></p>
+                            </div>
+                            <div>
+                              <p className="text-[11px] text-gray-500">Annual savings</p>
+                              <p className="text-sm font-bold text-emerald-600 tabular-nums">{fmtWhole(p.annualSavings)}</p>
+                            </div>
+                          </div>
+                          <div className="mt-2">
+                            <span className="inline-block px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold">
+                              {p.savingsPct}% less than today
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Annual cost comparison */}
+                  <div className="px-5 pb-5">
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Annual Processing Cost</p>
+                    <div className="border border-gray-200 rounded-[6px] p-3" style={{ height: 180 }}>
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart
+                          data={[
+                            { name: 'Current', cost: Math.round(extracted.currentMonthlyCost * 12), kind: 'current' },
+                            ...programs.map(p => ({ name: p.name, cost: p.annualCost, kind: p.key })),
+                          ]}
+                          margin={{ top: 20, right: 12, bottom: 0, left: 12 }}
+                        >
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
+                          <XAxis dataKey="name" tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: '#6b7280' }} />
+                          <YAxis hide />
+                          <ChartTooltip
+                            cursor={{ fill: 'rgba(0,0,0,0.03)' }}
+                            formatter={(v: number) => [fmtWhole(v), 'Annual cost']}
+                            contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e5e7eb' }}
+                          />
+                          <Bar dataKey="cost" radius={[4, 4, 0, 0]} barSize={44}>
+                            <LabelList dataKey="cost" position="top" formatter={(v: number) => fmtWhole(v)} style={{ fontSize: 11, fill: '#374151' }} />
+                            {[
+                              { kind: 'current' },
+                              ...programs,
+                            ].map((entry: any, i) => (
+                              <Cell key={i} fill={i === 0 ? '#9ca3af' : '#2E6BFF'} />
+                            ))}
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                    <p className="text-[11px] text-gray-400 mt-2">
+                      Cash Discount shows the merchant's own cost — the {'\u2248'}4% service fee is customer-paid. Program pricing keyed to this statement's volume band and the selected risk tier.
+                    </p>
+                  </div>
+                </div>
               </>
             )}
 
@@ -742,6 +898,69 @@ export function BackendAnalysis() {
                   </span>
                 </div>
               </div>
+
+              {/* Merchant drill-in summary */}
+              {merchantFilter && visibleHistory.length > 0 && (() => {
+                const rows = [...visibleHistory].sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+                const latest = rows[rows.length - 1];
+                const best = rows.reduce((m, r) => Math.max(m, r.savings), 0);
+                const linkedLead = rows.map(r => r.leadId).find(Boolean) ?? null;
+                const trend = rows.map(r => ({
+                  date: new Date(r.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                  rate: r.currentRate,
+                }));
+                return (
+                  <div className="px-5 py-4 border-b border-gray-100 bg-gray-50/50">
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                      <div>
+                        <p className="text-[11px] text-gray-500 font-medium">Statements analyzed</p>
+                        <p className="text-lg font-bold text-gray-900 tabular-nums">{rows.length}</p>
+                      </div>
+                      <div>
+                        <p className="text-[11px] text-gray-500 font-medium">Latest effective rate</p>
+                        <p className="text-lg font-bold text-gray-900 tabular-nums">{latest.currentRate}%</p>
+                      </div>
+                      <div>
+                        <p className="text-[11px] text-gray-500 font-medium">Best annual savings</p>
+                        <p className="text-lg font-bold text-emerald-600 tabular-nums">{fmtWhole(best)}</p>
+                      </div>
+                      <div className="flex items-center justify-end gap-2">
+                        {linkedLead && (
+                          <button
+                            onClick={() => navigate('/leads')}
+                            className="px-3 py-2 bg-brand text-white text-xs font-medium rounded-[6px] hover:bg-brand-hover transition-colors flex items-center gap-1.5"
+                          >
+                            Open Lead
+                            <ArrowRight className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    {trend.length >= 2 && (
+                      <div className="mt-3" style={{ height: 110 }}>
+                        <p className="text-[11px] text-gray-500 font-medium mb-1">Effective rate over time</p>
+                        <ResponsiveContainer width="100%" height={90}>
+                          <LineChart data={trend} margin={{ top: 6, right: 12, bottom: 0, left: 0 }}>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eef0f3" />
+                            <XAxis dataKey="date" tickLine={false} axisLine={false} tick={{ fontSize: 10, fill: '#9ca3af' }} />
+                            <YAxis
+                              width={40} tickLine={false} axisLine={false}
+                              tick={{ fontSize: 10, fill: '#9ca3af' }}
+                              domain={['dataMin - 0.2', 'dataMax + 0.2']}
+                              tickFormatter={(v: number) => `${v}%`}
+                            />
+                            <ChartTooltip
+                              formatter={(v: number) => [`${v}%`, 'Effective rate']}
+                              contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e5e7eb' }}
+                            />
+                            <Line type="monotone" dataKey="rate" stroke="#2E6BFF" strokeWidth={2} dot={{ r: 3, fill: '#2E6BFF' }} />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
 
               {history.length === 0 ? (
                 <div className="py-12 text-center">

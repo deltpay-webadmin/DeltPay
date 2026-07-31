@@ -5,37 +5,10 @@ import {
   Building2, ShoppingCart, Wrench, Scissors, Heart, Briefcase,
   Package, BarChart3, ArrowRight,
 } from 'lucide-react';
+import { CASH_DISCOUNT_MATRIX, FLAT_RATE_MATRIX, VOLUME_BANDS, RISK_TIERS } from '../pricingPrograms';
 
-// ─── PRICING MATRICES ───
-const CASH_DISCOUNT_MATRIX: Record<string, Record<string, { serviceFee: number; monthlyFee: number }>> = {
-  '0-10k':    { low: { serviceFee: 3.99, monthlyFee: 49 }, medium: { serviceFee: 3.99, monthlyFee: 69 }, high: { serviceFee: 4.00, monthlyFee: 99 } },
-  '10k-25k':  { low: { serviceFee: 3.99, monthlyFee: 49 }, medium: { serviceFee: 3.99, monthlyFee: 69 }, high: { serviceFee: 4.00, monthlyFee: 89 } },
-  '25k-50k':  { low: { serviceFee: 3.99, monthlyFee: 39 }, medium: { serviceFee: 3.99, monthlyFee: 59 }, high: { serviceFee: 4.00, monthlyFee: 79 } },
-  '50k-100k': { low: { serviceFee: 3.99, monthlyFee: 29 }, medium: { serviceFee: 3.99, monthlyFee: 49 }, high: { serviceFee: 4.00, monthlyFee: 69 } },
-  '100k+':    { low: { serviceFee: 3.99, monthlyFee: 0 },  medium: { serviceFee: 3.99, monthlyFee: 29 }, high: { serviceFee: 4.00, monthlyFee: 49 } },
-};
-
-const FLAT_RATE_MATRIX: Record<string, Record<string, { rate: number; perTxn: number }>> = {
-  '0-10k':    { low: { rate: 2.95, perTxn: 0.15 }, medium: { rate: 3.25, perTxn: 0.18 }, high: { rate: 3.65, perTxn: 0.22 } },
-  '10k-25k':  { low: { rate: 2.75, perTxn: 0.12 }, medium: { rate: 3.05, perTxn: 0.15 }, high: { rate: 3.45, perTxn: 0.20 } },
-  '25k-50k':  { low: { rate: 2.55, perTxn: 0.10 }, medium: { rate: 2.85, perTxn: 0.12 }, high: { rate: 3.25, perTxn: 0.18 } },
-  '50k-100k': { low: { rate: 2.40, perTxn: 0.08 }, medium: { rate: 2.65, perTxn: 0.10 }, high: { rate: 3.05, perTxn: 0.15 } },
-  '100k+':    { low: { rate: 2.25, perTxn: 0.06 }, medium: { rate: 2.50, perTxn: 0.08 }, high: { rate: 2.85, perTxn: 0.12 } },
-};
-
-const VOLUME_BANDS = [
-  { key: '0-10k', label: 'Under $10K', midpoint: 5000 },
-  { key: '10k-25k', label: '$10K – $25K', midpoint: 17500 },
-  { key: '25k-50k', label: '$25K – $50K', midpoint: 37500 },
-  { key: '50k-100k', label: '$50K – $100K', midpoint: 75000 },
-  { key: '100k+', label: '$100K+', midpoint: 150000 },
-];
-
-const RISK_TIERS = [
-  { key: 'low', label: 'Low Risk', desc: 'Retail, professional svcs, healthcare', color: '#34C77B', bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-300' },
-  { key: 'medium', label: 'Medium Risk', desc: 'Restaurants, e-comm, subscription', color: '#F0B429', bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-300' },
-  { key: 'high', label: 'High Risk', desc: 'CBD, nutra, travel, high-chargeback', color: '#F2565B', bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-300' },
-];
+// ─── PRICING MATRICES: shared with the Statement Analyzer ───
+// (see ../pricingPrograms.ts)
 
 const MERCHANT_TYPES = [
   { key: 'restaurant', label: 'Restaurant / Bar', icon: '🍽️', cdScore: 92, cardRatioDefault: 65 },
