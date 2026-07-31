@@ -112,6 +112,9 @@ export async function askLens(
       system: `${LENS_SYSTEM_PROMPT}\n\nCRM snapshot:\n${buildCrmSnapshot(crm)}`,
       json: true,
       maxTokens: 2048,
+      // Analytical Q&A over fixed data — keep it near-deterministic so the
+      // same question doesn't produce different figures run to run.
+      temperature: 0.1,
       messages: [
         // Keep a short conversational window so follow-ups have context.
         ...history.slice(-6).map(m => ({ role: m.role, content: m.content })),

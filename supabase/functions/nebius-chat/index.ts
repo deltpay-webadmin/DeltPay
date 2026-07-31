@@ -19,11 +19,14 @@
  * Required function secrets:
  *   NEBIUS_API_KEY    — Nebius AI Studio API key
  * Optional:
- *   NEBIUS_TEXT_MODEL — chat model id (default meta-llama/Llama-3.3-70B-Instruct)
+ *   NEBIUS_TEXT_MODEL — chat model id. Defaults to Qwen3-235B-A22B-Instruct:
+ *     a 235B MoE (22B active) chosen for structured-data reasoning and
+ *     strict JSON compliance, which is what Lens needs. Non-thinking
+ *     variant keeps chat latency low.
  */
 
 const NEBIUS_URL = "https://api.studio.nebius.com/v1/chat/completions";
-const DEFAULT_TEXT_MODEL = "meta-llama/Llama-3.3-70B-Instruct";
+const DEFAULT_TEXT_MODEL = "Qwen/Qwen3-235B-A22B-Instruct-2507";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
