@@ -106,46 +106,71 @@ export function JuspayHero() {
           vignette so the lines cover the whole plate uniformly and only
           soften at the very edges.
 
-          The site renders under a global zoom (--site-zoom, 1.08), which
-          would scale a raw 1px/4px pattern to fractional device pixels and
-          alias the lines into uneven moiré bands. Every occurrence of the
-          pattern (here and in the lit layer's masks below) divides by the
-          zoom so the lines land on exact 1px/4px after scaling — same
-          crisp render as Delt Capital, which runs unzoomed. */}
+          The site renders under a global zoom (--site-zoom, 1.08). Scaling a
+          1px/4px pattern by 1.08 puts the lines on fractional device pixels
+          and they alias into uneven moiré bands; dividing the pattern by the
+          zoom (the previous fix) still left visible banding because the
+          quotient isn't representable in the browser's fixed-point units.
+          The robust fix: paint the lines inside an inner element that
+          carries `zoom: 1/--site-zoom`, cancelling the global zoom entirely,
+          so the pattern rasterizes at exactly 1px/4px — the same unzoomed
+          render as Delt Capital, whose lines are crisp. The wrapper keeps
+          the vignette mask and clips the oversized inner. */}
       <div
         aria-hidden
         style={{
           position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none',
-          background:
-            'repeating-linear-gradient(180deg, rgba(125,160,205,0.10) 0px, rgba(125,160,205,0.10) calc(1px / var(--site-zoom, 1)), transparent calc(1px / var(--site-zoom, 1)), transparent calc(4px / var(--site-zoom, 1)))',
+          overflow: 'hidden',
           WebkitMaskImage:
             'radial-gradient(120% 130% at 50% 50%, black 55%, rgba(0,0,0,0.55) 78%, rgba(0,0,0,0.12) 95%, transparent 100%)',
           maskImage:
             'radial-gradient(120% 130% at 50% 50%, black 55%, rgba(0,0,0,0.55) 78%, rgba(0,0,0,0.12) 95%, transparent 100%)',
         }}
-      />
+      >
+        <div
+          style={{
+            position: 'absolute', left: 0, top: 0,
+            zoom: 'calc(1 / var(--site-zoom, 1))',
+            width: 'calc(100% * var(--site-zoom, 1) * var(--site-zoom, 1))',
+            height: 'calc(100% * var(--site-zoom, 1) * var(--site-zoom, 1))',
+            background:
+              'repeating-linear-gradient(180deg, rgba(125,160,205,0.10) 0px, rgba(125,160,205,0.10) 1px, transparent 1px, transparent 4px)',
+          }}
+        />
+      </div>
       {/* Cursor-revealed illumination. The lines carry a cyan→sky→indigo→
-          ivory gradient; two mask layers are composited with `intersect`:
-          the 1px line pattern AND a large, soft regional glow that follows
-          the cursor — so the lit area reads as a broad wash over the
-          linework rather than a tight spotlight. */}
+          ivory gradient; the inner unzoomed element paints the gradient
+          masked to the exact-pixel 1px/4px line pattern (same trick as the
+          base layer above), while the wrapper masks it all to a large, soft
+          regional glow that follows the cursor — so the lit area reads as a
+          broad wash over the linework rather than a tight spotlight. */}
       <div
         aria-hidden
         style={{
           position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none',
+          overflow: 'hidden',
           opacity: 'var(--illum-op, 0)',
-          background:
-            'linear-gradient(105deg, #6EE7F9 0%, #7DD3FC 25%, #A5B4FC 55%, #C7D2FE 78%, #F7F5F0 100%)',
           WebkitMaskImage:
-            'repeating-linear-gradient(180deg, #000 0px, #000 calc(1px / var(--site-zoom, 1)), transparent calc(1px / var(--site-zoom, 1)), transparent calc(4px / var(--site-zoom, 1))), radial-gradient(circle 640px at var(--mx, 50%) var(--my, 40%), #000 0%, rgba(0,0,0,0.82) 32%, rgba(0,0,0,0.4) 62%, rgba(0,0,0,0.12) 84%, transparent 100%)',
-          WebkitMaskRepeat: 'repeat, no-repeat',
-          WebkitMaskComposite: 'source-in',
+            'radial-gradient(circle 640px at var(--mx, 50%) var(--my, 40%), #000 0%, rgba(0,0,0,0.82) 32%, rgba(0,0,0,0.4) 62%, rgba(0,0,0,0.12) 84%, transparent 100%)',
           maskImage:
-            'repeating-linear-gradient(180deg, #000 0px, #000 calc(1px / var(--site-zoom, 1)), transparent calc(1px / var(--site-zoom, 1)), transparent calc(4px / var(--site-zoom, 1))), radial-gradient(circle 640px at var(--mx, 50%) var(--my, 40%), #000 0%, rgba(0,0,0,0.82) 32%, rgba(0,0,0,0.4) 62%, rgba(0,0,0,0.12) 84%, transparent 100%)',
-          maskRepeat: 'repeat, no-repeat',
-          maskComposite: 'intersect',
+            'radial-gradient(circle 640px at var(--mx, 50%) var(--my, 40%), #000 0%, rgba(0,0,0,0.82) 32%, rgba(0,0,0,0.4) 62%, rgba(0,0,0,0.12) 84%, transparent 100%)',
         }}
-      />
+      >
+        <div
+          style={{
+            position: 'absolute', left: 0, top: 0,
+            zoom: 'calc(1 / var(--site-zoom, 1))',
+            width: 'calc(100% * var(--site-zoom, 1) * var(--site-zoom, 1))',
+            height: 'calc(100% * var(--site-zoom, 1) * var(--site-zoom, 1))',
+            background:
+              'linear-gradient(105deg, #6EE7F9 0%, #7DD3FC 25%, #A5B4FC 55%, #C7D2FE 78%, #F7F5F0 100%)',
+            WebkitMaskImage:
+              'repeating-linear-gradient(180deg, #000 0px, #000 1px, transparent 1px, transparent 4px)',
+            maskImage:
+              'repeating-linear-gradient(180deg, #000 0px, #000 1px, transparent 1px, transparent 4px)',
+          }}
+        />
+      </div>
 
       {/* Washington cutout — transparent WebP (phone held screen-toward-
           George), absolutely positioned on the right. Anchored to the
