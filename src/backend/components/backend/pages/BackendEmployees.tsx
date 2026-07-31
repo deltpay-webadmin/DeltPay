@@ -48,139 +48,7 @@ interface Employee {
   notes: { text: string; author: string; date: string }[];
 }
 
-const employees: Employee[] = [
-  {
-    id: 'EMP-001',
-    name: 'Carlos Rivera',
-    initials: 'CR',
-    email: 'carlos.r@deltpay.com',
-    phone: '(555) 301-4420',
-    role: 'Senior Software Engineer',
-    department: 'Engineering',
-    employmentType: 'Full-Time',
-    startDate: 'Jan 15, 2023',
-    compensation: '$145,000/yr',
-    compensationType: 'Salary',
-    status: 'Active',
-    address: 'Austin, TX',
-    manager: 'John Doe',
-    timeOffBalance: { vacation: 12, sick: 5, personal: 3 },
-    documents: [
-      { name: 'W-4', date: 'Jan 15, 2023', status: 'Complete' },
-      { name: 'I-9', date: 'Jan 15, 2023', status: 'Complete' },
-      { name: 'Offer Letter', date: 'Dec 28, 2022', status: 'Complete' },
-      { name: 'NDA', date: 'Jan 15, 2023', status: 'Complete' },
-    ],
-    notes: [
-      { text: 'Promoted to Senior Engineer — effective Q1 2025. Outstanding performance on Lens AI module.', author: 'John Doe', date: 'Jan 5, 2025' },
-      { text: 'Completed AWS Solutions Architect certification.', author: 'HR System', date: 'Sep 12, 2024' },
-    ],
-  },
-  {
-    id: 'EMP-002',
-    name: 'Patrick Oduya',
-    initials: 'PO',
-    email: 'patrick.o@deltpay.com',
-    phone: '(555) 302-8817',
-    role: 'Full-Stack Developer',
-    department: 'Engineering',
-    employmentType: 'Full-Time',
-    startDate: 'Mar 22, 2024',
-    compensation: '$125,000/yr',
-    compensationType: 'Salary',
-    status: 'Active',
-    address: 'Brooklyn, NY',
-    manager: 'Carlos Rivera',
-    timeOffBalance: { vacation: 8, sick: 4, personal: 2 },
-    documents: [
-      { name: 'W-4', date: 'Mar 22, 2024', status: 'Complete' },
-      { name: 'I-9', date: 'Mar 22, 2024', status: 'Complete' },
-      { name: 'Offer Letter', date: 'Mar 1, 2024', status: 'Complete' },
-      { name: 'NDA', date: 'Mar 22, 2024', status: 'Complete' },
-    ],
-    notes: [
-      { text: 'Ramping up well on merchant portal codebase. Paired with Carlos on onboarding tracker feature.', author: 'Carlos Rivera', date: 'Apr 15, 2024' },
-    ],
-  },
-  {
-    id: 'EMP-003',
-    name: 'Jason Park',
-    initials: 'JP',
-    email: 'jason.p@deltpay.com',
-    phone: '(555) 303-5590',
-    role: 'Sales Manager',
-    department: 'Sales',
-    employmentType: 'Full-Time',
-    startDate: 'Aug 10, 2022',
-    compensation: '$110,000/yr',
-    compensationType: 'Salary',
-    status: 'Active',
-    address: 'Miami, FL',
-    manager: 'John Doe',
-    timeOffBalance: { vacation: 15, sick: 6, personal: 3 },
-    documents: [
-      { name: 'W-4', date: 'Aug 10, 2022', status: 'Complete' },
-      { name: 'I-9', date: 'Aug 10, 2022', status: 'Complete' },
-      { name: 'Offer Letter', date: 'Jul 20, 2022', status: 'Complete' },
-      { name: 'NDA', date: 'Aug 10, 2022', status: 'Complete' },
-    ],
-    notes: [
-      { text: 'Exceeded Q4 sales target by 140%. Leading new ISO partner onboarding initiative.', author: 'John Doe', date: 'Jan 8, 2025' },
-    ],
-  },
-  {
-    id: 'EMP-004',
-    name: 'Lyndon Tate',
-    initials: 'LT',
-    email: 'lyndon.t@deltpay.com',
-    phone: '(555) 304-7712',
-    role: 'Operations Lead',
-    department: 'Operations',
-    employmentType: 'Full-Time',
-    startDate: 'Jun 5, 2023',
-    compensation: '$98,000/yr',
-    compensationType: 'Salary',
-    status: 'On Leave',
-    address: 'Chicago, IL',
-    manager: 'John Doe',
-    timeOffBalance: { vacation: 3, sick: 2, personal: 0 },
-    documents: [
-      { name: 'W-4', date: 'Jun 5, 2023', status: 'Complete' },
-      { name: 'I-9', date: 'Jun 5, 2023', status: 'Complete' },
-      { name: 'Offer Letter', date: 'May 18, 2023', status: 'Complete' },
-      { name: 'NDA', date: 'Jun 5, 2023', status: 'Missing' },
-    ],
-    notes: [
-      { text: 'On parental leave — returning May 1, 2026. Coverage handled by Sarah K.', author: 'HR System', date: 'Mar 15, 2026' },
-    ],
-  },
-  {
-    id: 'EMP-005',
-    name: 'Nina Voskresenskaya',
-    initials: 'NV',
-    email: 'nina.v@contractor.deltpay.com',
-    phone: '(555) 305-9934',
-    role: 'QA Engineer',
-    department: 'Engineering',
-    employmentType: 'Contractor',
-    startDate: 'Nov 1, 2025',
-    compensation: '$85/hr',
-    compensationType: 'Hourly',
-    status: 'Active',
-    address: 'Remote — Portland, OR',
-    manager: 'Carlos Rivera',
-    timeOffBalance: { vacation: 0, sick: 0, personal: 0 },
-    documents: [
-      { name: 'W-4', date: 'N/A', status: 'Missing' },
-      { name: 'I-9', date: 'N/A', status: 'Missing' },
-      { name: 'Offer Letter', date: 'Oct 20, 2025', status: 'Complete' },
-      { name: '1099 Agreement', date: 'Nov 1, 2025', status: 'Complete' },
-    ],
-    notes: [
-      { text: 'Contractor — 1099. Engaged for 6-month QA engagement on merchant portal.', author: 'Carlos Rivera', date: 'Nov 1, 2025' },
-    ],
-  },
-];
+const employees: Employee[] = [];
 
 // ── Helpers ──
 const empTypeCls = (t: EmploymentType) => {
@@ -497,9 +365,9 @@ export function BackendEmployees() {
   };
 
   const totalEmployees = employeeList.filter(e => e.status !== 'Terminated').length;
-  const monthlyPayroll = 52_416;
-  const openPositions = 3;
-  const avgTenure = 18;
+  const monthlyPayroll = 0;
+  const openPositions = 0;
+  const avgTenure = 0;
 
   const filtered = employeeList.filter(e =>
     e.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -529,10 +397,10 @@ export function BackendEmployees() {
       <div className="px-6 py-6 flex-1 overflow-y-auto space-y-6">
         {/* Summary Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard label="Total Employees" value={totalEmployees.toString()} icon={<Users className="w-5 h-5" />} sub="+1 this month" />
+          <StatCard label="Total Employees" value={totalEmployees.toString()} icon={<Users className="w-5 h-5" />} sub="Active headcount" />
           <StatCard label="Monthly Payroll Cost" value={`$${monthlyPayroll.toLocaleString()}`} icon={<DollarSign className="w-5 h-5" />} sub="Semi-monthly cycle" />
-          <StatCard label="Open Positions" value={openPositions.toString()} icon={<Briefcase className="w-5 h-5" />} sub="2 Engineering, 1 Support" />
-          <StatCard label="Avg Tenure" value={`${avgTenure} mo`} icon={<Clock className="w-5 h-5" />} sub="Across all departments" />
+          <StatCard label="Open Positions" value={openPositions.toString()} icon={<Briefcase className="w-5 h-5" />} sub="Across all departments" />
+          <StatCard label="Avg Tenure" value={avgTenure > 0 ? `${avgTenure} mo` : '—'} icon={<Clock className="w-5 h-5" />} sub="Across all departments" />
         </div>
 
         {/* Search */}
@@ -614,6 +482,13 @@ export function BackendEmployees() {
                     </td>
                   </tr>
                 ))}
+                {filtered.length === 0 && (
+                  <tr>
+                    <td colSpan={8} className="px-5 py-12 text-center text-sm text-gray-400">
+                      No employees yet — add your first team member to get started.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
