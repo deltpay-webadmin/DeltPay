@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import {
   TrendingUp,
   AlertTriangle,
@@ -13,16 +13,9 @@ import {
   ArrowUp,
   Gauge,
 } from 'lucide-react';
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from 'recharts';
 import { useCrm } from '../crmStore';
+import type { Deal, Merchant, UWApplication } from '../crmStore';
+import { useAppNavigate } from '../NavigationContext';
 import { askLens } from '../lensAI';
 import { AIError } from '../aiErrors';
 import { useStaffRole } from '../staffStore';
@@ -63,39 +56,20 @@ function HealthRing({ score, size = 100 }: { score: number; size?: number }) {
   );
 }
 
-// ── Data ──
-const alerts = [
-  {
-    severity: 'critical' as const,
-    title: 'Cash Shortfall Projected in 47 Days',
-    desc: 'Based on current collection rates and upcoming capital obligations, net cash position will fall below the $50K safety threshold by late May. Three large COC payments due in the same week.',
-    actions: ['View Forecast', 'Adjust Reserves'],
-  },
-  {
-    severity: 'warning' as const,
-    title: '3 Merchants Declining — Not Contacted 30+ Days',
-    desc: 'Sunset Logistics, Coastal Seafood, and Riverdale Dental show declining ACH volumes with no agent touch-points in 30+ days. Estimated revenue at risk: $12,400/mo.',
-    actions: ['Assign Outreach', 'View Merchants'],
-  },
-  {
-    severity: 'warning' as const,
-    title: 'Agent Commission Spike — Marcus J. +38% MoM',
-    desc: 'Commission payout for Marcus J. increased 38% month-over-month. Driven by two large MCA deals funded in the same week. Review for compliance.',
-    actions: ['Review Deals', 'Dismiss'],
-  },
-  {
-    severity: 'info' as const,
-    title: '4 Renewal Opportunities Ready',
-    desc: 'Metro Diner, Bright Auto, Apex Fitness, and Peak Construction have all crossed the 50% repayment threshold. Combined renewal potential: $340K in new funding.',
-    actions: ['Generate Offers', 'View Details'],
-  },
-  {
-    severity: 'info' as const,
-    title: 'Portfolio Concentration Alert — Transportation 28%',
-    desc: 'Transportation & Logistics now represents 28% of deployed capital, exceeding the 25% sector concentration guideline. Consider diversifying new deal flow.',
-    actions: ['View Breakdown', 'Acknowledge'],
-  },
-];
+// ── Derived intelligence ──
+// Everything on the dashboard is computed from the live CRM store. An empty
+// pipeline renders an empty state, never canned numbers: fabricated
+// analytics presented as insight would poison every decision made off them.
+
+type Severity = 'critical' | 'warning' | 'info';
+
+interface LensAlert {
+  severity: Severity;
+  title: string;
+  desc: string;
+  to?: string;
+  actionLabel?: string;
+}
 
 const sevConfig = {
   critical: { bg: 'bg-red-50 border-red-200', iconBg: 'bg-red-100', icon: 'text-red-500', badge: 'bg-red-500 text-white' },
@@ -103,21 +77,102 @@ const sevConfig = {
   info: { bg: 'bg-indigo-50/60 border-indigo-200', iconBg: 'bg-indigo-100', icon: 'text-indigo-600', badge: 'bg-indigo-500 text-white' },
 };
 
-const flowCastData = [
-  { month: 'May', projected: 142000, low: 118000, high: 166000, actual: null },
-  { month: 'Jun', projected: 155000, low: 125000, high: 185000, actual: null },
-  { month: 'Jul', projected: 148000, low: 112000, high: 184000, actual: null },
-  { month: 'Aug', projected: 162000, low: 128000, high: 196000, actual: null },
-  { month: 'Sep', projected: 170000, low: 134000, high: 206000, actual: null },
-  { month: 'Oct', projected: 178000, low: 140000, high: 216000, actual: null },
-];
+const fmtUsd = (n: number) =>
+  n >= 1000 ? `$${Math.round(n / 1000).toLocaleString()}K` : `$${Math.round(n).toLocaleString()}`;
 
-// prepend 2 months of actuals
-const chartData = [
-  { month: 'Mar', projected: 138000, low: 138000, high: 138000, actual: 138000 },
-  { month: 'Apr', projected: 145000, low: 145000, high: 145000, actual: 131000 },
-  ...flowCastData,
-];
+const dealOutstanding = (d: Deal) => Math.max(0, d.repaymentAmount - d.collected);
+
+const nameList = (names: string[], max = 3) =>
+  names.slice(0, max).join(', ') + (names.length > max ? ` and ${names.length - max} more` : '');
+
+interface CrmSlice {
+  deals: Deal[];
+  merchants: Merchant[];
+  underwriting: UWApplication[];
+}
+
+function deriveLensAlerts(crm: CrmSlice): LensAlert[] {
+  const alerts: LensAlert[] = [];
+
+  const defaults = crm.deals.filter(d => d.status === 'Default');
+  if (defaults.length) {
+    alerts.push({
+      severity: 'critical',
+      title: `${defaults.length} deal${defaults.length === 1 ? '' : 's'} in default`,
+      desc: `${nameList(defaults.map(d => d.borrower))} — ${fmtUsd(defaults.reduce((s, d) => s + dealOutstanding(d), 0))} outstanding exposure.`,
+      to: '/capital',
+      actionLabel: 'View Capital',
+    });
+  }
+
+  const delinquent = crm.deals.filter(d => d.status === 'Delinquent' || d.status === 'Workout');
+  if (delinquent.length) {
+    alerts.push({
+      severity: 'warning',
+      title: `${delinquent.length} deal${delinquent.length === 1 ? '' : 's'} delinquent or in workout`,
+      desc: `${nameList(delinquent.map(d => d.borrower))} — ${fmtUsd(delinquent.reduce((s, d) => s + dealOutstanding(d), 0))} outstanding.`,
+      to: '/capital',
+      actionLabel: 'View Capital',
+    });
+  }
+
+  const declining = crm.merchants.filter(m => m.healthScore > 0 && m.healthScore < 50);
+  if (declining.length) {
+    alerts.push({
+      severity: 'warning',
+      title: `${declining.length} merchant${declining.length === 1 ? '' : 's'} with declining health`,
+      desc: `${nameList(declining.map(m => m.name))} — health scores below 50. Worth an agent touch-point before volume slips.`,
+      to: '/retention',
+      actionLabel: 'View Retention',
+    });
+  }
+
+  const overSla = crm.underwriting.filter(
+    u => u.stage !== 'Approved' && u.stage !== 'Declined' && u.daysInStage > u.slaThreshold,
+  );
+  if (overSla.length) {
+    alerts.push({
+      severity: 'warning',
+      title: `${overSla.length} underwriting file${overSla.length === 1 ? '' : 's'} past SLA`,
+      desc: `${nameList(overSla.map(u => u.businessName))} — sitting in stage longer than the SLA threshold.`,
+      to: '/underwriting',
+      actionLabel: 'View Underwriting',
+    });
+  }
+
+  const renewals = crm.deals.filter(
+    d => d.status === 'Current' && d.repaymentAmount > 0 && d.collected / d.repaymentAmount >= 0.5,
+  );
+  if (renewals.length) {
+    alerts.push({
+      severity: 'info',
+      title: `${renewals.length} renewal opportunit${renewals.length === 1 ? 'y' : 'ies'} ready`,
+      desc: `${nameList(renewals.map(d => d.borrower))} crossed the 50% repayment threshold. Combined renewal potential: ${fmtUsd(renewals.reduce((s, d) => s + d.loanAmount, 0))}.`,
+      to: '/capital',
+      actionLabel: 'View Deals',
+    });
+  }
+
+  // Sector concentration only means something once there is a real book.
+  const totalVol = crm.merchants.reduce((s, m) => s + (m.monthlyVolume || 0), 0);
+  if (totalVol > 0 && crm.merchants.length >= 4) {
+    const byIndustry = new Map<string, number>();
+    crm.merchants.forEach(m => byIndustry.set(m.industry, (byIndustry.get(m.industry) ?? 0) + (m.monthlyVolume || 0)));
+    const [topIndustry, topVol] = [...byIndustry.entries()].sort((a, b) => b[1] - a[1])[0];
+    const share = topVol / totalVol;
+    if (share >= 0.25) {
+      alerts.push({
+        severity: 'info',
+        title: `Portfolio concentration — ${topIndustry} ${(share * 100).toFixed(0)}%`,
+        desc: `${topIndustry} represents ${(share * 100).toFixed(0)}% of processing volume, above the 25% sector guideline. Consider diversifying new deal flow.`,
+        to: '/merchants',
+        actionLabel: 'View Merchants',
+      });
+    }
+  }
+
+  return alerts;
+}
 
 const suggestedPrompts = [
   { icon: Users, text: 'Which agents have the highest default rate over $50K?' },
@@ -237,7 +292,7 @@ export function BackendLensAI() {
     <div className="h-full overflow-y-auto">
       <div className="max-w-[1360px] mx-auto px-4 lg:px-8 py-6 space-y-6">
         {/* ── Header ── */}
-        <div className="flex items-center justify-between">
+        <div className="space-y-3">
           <p className="text-[13px] text-gray-500">Predictive intelligence for your portfolio</p>
           <TabSwitch tab={tab} setTab={setTab} isAdmin={isAdmin} />
         </div>
@@ -247,43 +302,34 @@ export function BackendLensAI() {
   );
 }
 
+// Underline tab nav, same pattern as the Disputes page.
 function TabSwitch({ tab, setTab, isAdmin }: { tab: Tab; setTab: (t: Tab) => void; isAdmin?: boolean }) {
+  const tabs: { key: Tab; label: string; icon?: React.ElementType }[] = [
+    { key: 'dashboard', label: 'Dashboard' },
+    { key: 'ask', label: 'Ask Lens', icon: Sparkles },
+    ...(isAdmin ? [{ key: 'manage' as Tab, label: 'Management', icon: Gauge }] : []),
+  ];
   return (
-    <div className="flex rounded-[10px] border border-(--dp-border) p-0.5">
-      <button
-        onClick={() => setTab('dashboard')}
-        className={`px-4 py-1.5 text-[13px] font-semibold rounded-[8px] transition-all ${
-          tab === 'dashboard'
-            ? 'bg-(--dp-accent-soft) text-(--dp-accent-text)'
-            : 'text-(--dp-text-muted) hover:text-(--dp-text)'
-        }`}
-      >
-        Dashboard
-      </button>
-      <button
-        onClick={() => setTab('ask')}
-        className={`px-4 py-1.5 text-[13px] font-semibold rounded-[8px] transition-all flex items-center gap-1.5 ${
-          tab === 'ask'
-            ? 'bg-(--dp-accent-soft) text-(--dp-accent-text)'
-            : 'text-(--dp-text-muted) hover:text-(--dp-text)'
-        }`}
-      >
-        <Sparkles className="w-3.5 h-3.5" />
-        Ask Lens
-      </button>
-      {isAdmin && (
-        <button
-          onClick={() => setTab('manage')}
-          className={`px-4 py-1.5 text-[13px] font-semibold rounded-[8px] transition-all flex items-center gap-1.5 ${
-            tab === 'manage'
-              ? 'bg-(--dp-accent-soft) text-(--dp-accent-text)'
-              : 'text-(--dp-text-muted) hover:text-(--dp-text)'
-          }`}
-        >
-          <Gauge className="w-3.5 h-3.5" />
-          Management
-        </button>
-      )}
+    <div className="border-b border-(--dp-border)">
+      <div className="flex gap-1">
+        {tabs.map(t => {
+          const Icon = t.icon;
+          return (
+            <button
+              key={t.key}
+              onClick={() => setTab(t.key)}
+              className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-[1px] flex items-center gap-2 ${
+                tab === t.key
+                  ? 'text-(--dp-accent-text) border-(--dp-accent)'
+                  : 'text-(--dp-text-muted) border-transparent hover:text-(--dp-text)'
+              }`}
+            >
+              {Icon && <Icon className="w-3.5 h-3.5" />}
+              {t.label}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -292,173 +338,195 @@ function TabSwitch({ tab, setTab, isAdmin }: { tab: Tab; setTab: (t: Tab) => voi
 // Dashboard Tab
 // ════════════════════════════════════════
 function DashboardTab() {
+  const crm = useCrm();
+  const { navigate } = useAppNavigate();
+
+  const stats = useMemo(() => {
+    const activeDeals = crm.deals.filter(d => d.status !== 'Paid Off');
+    const outstanding = activeDeals.reduce((s, d) => s + dealOutstanding(d), 0);
+    const atRisk = crm.deals.filter(d => d.status === 'Delinquent' || d.status === 'Default' || d.status === 'Workout');
+    const atRiskExposure = atRisk.reduce((s, d) => s + dealOutstanding(d), 0);
+    const renewals = crm.deals.filter(
+      d => d.status === 'Current' && d.repaymentAmount > 0 && d.collected / d.repaymentAmount >= 0.5,
+    );
+    const renewalPotential = renewals.reduce((s, d) => s + d.loanAmount, 0);
+    const health = crm.merchants.length
+      ? Math.round(crm.merchants.reduce((s, m) => s + (m.healthScore || 0), 0) / crm.merchants.length)
+      : null;
+    return { activeDeals, outstanding, atRisk, atRiskExposure, renewals, renewalPotential, health };
+  }, [crm]);
+
+  const alerts = useMemo(() => deriveLensAlerts(crm), [crm]);
+
+  const hasData =
+    crm.merchants.length > 0 || crm.deals.length > 0 || crm.leads.length > 0 || crm.underwriting.length > 0;
+  if (!hasData) {
+    return (
+      <div className="bg-white rounded-[8px] border border-gray-200 px-6 py-16 text-center">
+        <div className="mx-auto w-12 h-12 rounded-[14px] bg-indigo-50 flex items-center justify-center mb-4">
+          <Sparkles className="w-6 h-6 text-indigo-600" />
+        </div>
+        <h2 className="text-lg font-semibold text-gray-900">Lens has nothing to analyze yet</h2>
+        <p className="mt-1 text-sm text-gray-500 max-w-md mx-auto">
+          Portfolio health, at-risk deals, and intelligent alerts appear here once the CRM has real
+          leads, merchants, or deals — add a lead or analyze a statement to get started.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      {/* Portfolio Health Cards */}
+      {/* Portfolio stat cards — live CRM figures */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Health Score */}
         <div className="bg-white rounded-[8px] border border-gray-200 p-5 flex flex-col items-center">
-          <HealthRing score={74} size={96} />
+          {stats.health != null ? (
+            <HealthRing score={stats.health} size={96} />
+          ) : (
+            <div className="h-24 flex items-center text-2xl font-bold text-gray-300">—</div>
+          )}
           <p className="text-sm font-semibold text-gray-900 mt-3">Portfolio Health</p>
-          <p className="text-xs text-gray-500">Good — 2 items need attention</p>
+          <p className="text-xs text-gray-500">
+            {stats.health != null
+              ? `Average across ${crm.merchants.length} merchant${crm.merchants.length === 1 ? '' : 's'}`
+              : 'No merchants yet'}
+          </p>
         </div>
 
-        {/* Predicted Collections */}
         <div className="bg-white rounded-[8px] border border-gray-200 p-5">
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-9 h-9 bg-emerald-50 rounded-lg flex items-center justify-center">
-              <TrendingUp className="w-5 h-5 text-emerald-600" />
-            </div>
-            <span className="text-xs text-emerald-600 font-medium bg-emerald-50 px-2 py-0.5 rounded-full">+8.2%</span>
+          <div className="w-9 h-9 bg-emerald-50 rounded-lg flex items-center justify-center mb-3">
+            <TrendingUp className="w-5 h-5 text-emerald-600" />
           </div>
-          <p className="text-2xl font-bold text-gray-900 tabular-nums">$142K</p>
-          <p className="text-sm text-gray-500 mt-1">Predicted Collections</p>
-          <p className="text-xs text-gray-400 mt-0.5">Next 30 days</p>
+          <p className="text-2xl font-bold text-gray-900 tabular-nums">{fmtUsd(stats.outstanding)}</p>
+          <p className="text-sm text-gray-500 mt-1">Outstanding Collections</p>
+          <p className="text-xs text-gray-400 mt-0.5">
+            Across {stats.activeDeals.length} active deal{stats.activeDeals.length === 1 ? '' : 's'}
+          </p>
         </div>
 
-        {/* At-Risk Deals */}
         <div className="bg-white rounded-[8px] border border-gray-200 p-5">
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-9 h-9 bg-amber-50 rounded-lg flex items-center justify-center">
-              <AlertTriangle className="w-5 h-5 text-amber-500" />
-            </div>
-            <span className="text-xs text-red-500 font-medium bg-red-50 px-2 py-0.5 rounded-full">+1 this week</span>
+          <div className="w-9 h-9 bg-amber-50 rounded-lg flex items-center justify-center mb-3">
+            <AlertTriangle className="w-5 h-5 text-amber-500" />
           </div>
-          <p className="text-2xl font-bold text-gray-900 tabular-nums">5</p>
+          <p className="text-2xl font-bold text-gray-900 tabular-nums">{stats.atRisk.length}</p>
           <p className="text-sm text-gray-500 mt-1">At-Risk Deals</p>
-          <p className="text-xs text-gray-400 mt-0.5">$214K total exposure</p>
+          <p className="text-xs text-gray-400 mt-0.5">{fmtUsd(stats.atRiskExposure)} total exposure</p>
         </div>
 
-        {/* Renewal Opportunities */}
         <div className="bg-white rounded-[8px] border border-gray-200 p-5">
           <div className="flex items-center justify-between mb-3">
             <div className="w-9 h-9 bg-indigo-50 rounded-lg flex items-center justify-center">
               <RotateCcw className="w-5 h-5 text-indigo-600" />
             </div>
-            <span className="text-xs text-indigo-600 font-medium bg-indigo-50 px-2 py-0.5 rounded-full">$340K potential</span>
+            {stats.renewalPotential > 0 && (
+              <span className="text-xs text-indigo-600 font-medium bg-indigo-50 px-2 py-0.5 rounded-full">
+                {fmtUsd(stats.renewalPotential)} potential
+              </span>
+            )}
           </div>
-          <p className="text-2xl font-bold text-gray-900 tabular-nums">4</p>
+          <p className="text-2xl font-bold text-gray-900 tabular-nums">{stats.renewals.length}</p>
           <p className="text-sm text-gray-500 mt-1">Renewal Opportunities</p>
           <p className="text-xs text-gray-400 mt-0.5">&gt;50% repaid</p>
         </div>
       </div>
 
-      {/* Alerts Section */}
+      {/* Alerts Section — derived from live pipeline state */}
       <div>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-gray-900">Intelligent Alerts</h2>
           <span className="text-xs text-gray-500">{alerts.length} active</span>
         </div>
-        <div className="space-y-3">
-          {alerts.map((alert, i) => {
-            const sev = sevConfig[alert.severity];
-            return (
-              <div key={i} className={`${sev.bg} border rounded-[8px] p-4 sm:p-5 transition-all hover:shadow-sm`}>
-                <div className="flex gap-4">
-                  <div className={`w-9 h-9 ${sev.iconBg} rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5`}>
-                    {alert.severity === 'critical' ? (
-                      <Zap className={`w-5 h-5 ${sev.icon}`} />
-                    ) : alert.severity === 'warning' ? (
-                      <AlertTriangle className={`w-5 h-5 ${sev.icon}`} />
-                    ) : (
-                      <Sparkles className={`w-5 h-5 ${sev.icon}`} />
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className={`px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded ${sev.badge}`}>
-                        {alert.severity}
-                      </span>
-                      <h3 className="text-sm font-semibold text-gray-900">{alert.title}</h3>
+        {alerts.length === 0 ? (
+          <div className="bg-emerald-50 border border-emerald-200 rounded-[8px] px-5 py-4 text-sm text-emerald-700">
+            No active alerts — nothing in the portfolio needs attention right now.
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {alerts.map((alert, i) => {
+              const sev = sevConfig[alert.severity];
+              return (
+                <div key={i} className={`${sev.bg} border rounded-[8px] p-4 sm:p-5 transition-all hover:shadow-sm`}>
+                  <div className="flex gap-4">
+                    <div className={`w-9 h-9 ${sev.iconBg} rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5`}>
+                      {alert.severity === 'critical' ? (
+                        <Zap className={`w-5 h-5 ${sev.icon}`} />
+                      ) : alert.severity === 'warning' ? (
+                        <AlertTriangle className={`w-5 h-5 ${sev.icon}`} />
+                      ) : (
+                        <Sparkles className={`w-5 h-5 ${sev.icon}`} />
+                      )}
                     </div>
-                    <p className="text-sm text-gray-600 mb-3">{alert.desc}</p>
-                    <div className="flex items-center gap-2">
-                      {alert.actions.map((action, j) => (
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className={`px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded ${sev.badge}`}>
+                          {alert.severity}
+                        </span>
+                        <h3 className="text-sm font-semibold text-gray-900">{alert.title}</h3>
+                      </div>
+                      <p className="text-sm text-gray-600 mb-3">{alert.desc}</p>
+                      {alert.to && (
                         <button
-                          key={j}
-                          className={`px-3 py-1.5 text-xs font-medium rounded-[6px] transition-colors ${
-                            j === 0
-                              ? 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm'
-                              : 'text-gray-500 hover:text-gray-700'
-                          }`}
+                          onClick={() => navigate(alert.to!)}
+                          className="px-3 py-1.5 text-xs font-medium rounded-[6px] bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm transition-colors"
                         >
-                          {action}
+                          {alert.actionLabel ?? 'View'}
                         </button>
-                      ))}
+                      )}
                     </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
-      {/* FlowCast Chart */}
+      {/* Collections Progress — real repayment state per active deal */}
       <div className="bg-white rounded-[8px] border border-gray-200">
-        <div className="px-5 py-4 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900">FlowCast</h2>
-            <p className="text-xs text-gray-500">Projected collections — 6 month outlook with confidence bands</p>
-          </div>
-          <div className="flex items-center gap-4 text-xs">
-            <div className="flex items-center gap-1.5">
-              <div className="w-3 h-0.5 bg-indigo-600 rounded" />
-              <span className="text-gray-600">Projected</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <div className="w-3 h-3 bg-indigo-100 rounded-sm border border-indigo-200" />
-              <span className="text-gray-600">Confidence Band</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <div className="w-3 h-3 rounded-full bg-emerald-500" />
-              <span className="text-gray-600">Actuals</span>
-            </div>
-          </div>
+        <div className="px-5 py-4 border-b border-gray-200">
+          <h2 className="text-lg font-semibold text-gray-900">Collections Progress</h2>
+          <p className="text-xs text-gray-500">Repayment progress across active deals, largest outstanding first</p>
         </div>
         <div className="px-5 py-4">
-          <div className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={chartData}>
-                <defs>
-                  <linearGradient id="bandGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#2E6BFF" stopOpacity={0.12} />
-                    <stop offset="95%" stopColor="#2E6BFF" stopOpacity={0.02} />
-                  </linearGradient>
-                  <linearGradient id="projGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#2E6BFF" stopOpacity={0.2} />
-                    <stop offset="95%" stopColor="#2E6BFF" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
-                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#98A6C2' }} />
-                <YAxis
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 12, fill: '#98A6C2' }}
-                  tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`}
-                  domain={[80000, 'auto']}
-                />
-                <Tooltip
-                  contentStyle={{ backgroundColor: '#20305A', border: '1px solid #435687', borderRadius: '8px', fontSize: '13px' }}
-                  formatter={(value: number, name: string) => {
-                    const labels: Record<string, string> = { projected: 'Projected', high: 'High', low: 'Low', actual: 'Actual' };
-                    return [`$${value.toLocaleString()}`, labels[name] || name];
-                  }}
-                />
-                {/* Confidence band */}
-                <Area key="area-high" type="monotone" dataKey="high" stroke="none" fill="url(#bandGrad)" stackId="band" />
-                <Area key="area-low" type="monotone" dataKey="low" stroke="none" fill="transparent" stackId="band-low" />
-                {/* Projected line */}
-                <Area key="area-projected" type="monotone" dataKey="projected" stroke="#2E6BFF" strokeWidth={2.5} fill="url(#projGrad)" />
-                {/* Actuals */}
-                <Area key="area-actual" type="monotone" dataKey="actual" stroke="#34C77B" strokeWidth={2.5} fill="none" dot={(props: any) => {
-                  if (props.payload?.actual == null) return null;
-                  return <circle key={`dot-actual-${props.cx}-${props.cy}`} cx={props.cx} cy={props.cy} r={4} fill="#34C77B" stroke="#172341" strokeWidth={2} />;
-                }} connectNulls={false} />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
+          {stats.activeDeals.length === 0 ? (
+            <p className="py-6 text-sm text-gray-400 text-center">
+              No active deals to track yet — funded deals appear here with live repayment progress.
+            </p>
+          ) : (
+            <div className="space-y-4">
+              {[...stats.activeDeals]
+                .sort((a, b) => dealOutstanding(b) - dealOutstanding(a))
+                .slice(0, 8)
+                .map(d => {
+                  const pct = d.repaymentAmount > 0 ? Math.min(100, (d.collected / d.repaymentAmount) * 100) : 0;
+                  const risky = d.status !== 'Current';
+                  return (
+                    <div key={d.id}>
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <p className="text-sm font-medium text-gray-800 truncate">{d.borrower}</p>
+                          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-500">{d.type}</span>
+                          {risky && (
+                            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-red-50 text-red-600 font-medium">
+                              {d.status}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-gray-500 tabular-nums shrink-0 ml-3">
+                          {fmtUsd(d.collected)} of {fmtUsd(d.repaymentAmount)} · {fmtUsd(dealOutstanding(d))} left
+                        </p>
+                      </div>
+                      <div className="h-1.5 rounded-full bg-gray-100 overflow-hidden">
+                        <div
+                          className={`h-full rounded-full ${risky ? 'bg-red-400' : pct >= 50 ? 'bg-emerald-500' : 'bg-indigo-500'}`}
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -559,15 +627,17 @@ function AskLens({
   return (
     <div className="h-full flex flex-col">
       {/* Slim header — just the mode switch */}
-      <div className="shrink-0 flex items-center justify-between px-4 lg:px-8 pt-4">
+      <div className="shrink-0 px-4 lg:px-8 pt-4 space-y-3">
         <p className="text-[13px] text-(--dp-text-muted)">Predictive intelligence for your portfolio</p>
         <TabSwitch tab="ask" setTab={setTab} isAdmin={isAdmin} />
       </div>
 
       {empty ? (
-        /* ── Home state: greeting + centered composer + suggestions ── */
-        <div className="flex-1 flex items-center justify-center px-4">
-          <div className="w-full max-w-[720px] -mt-10">
+        /* ── Home state: greeting + centered composer + suggestions ──
+           m-auto centers when there's room and scrolls (instead of
+           overlapping the tab bar) when there isn't. */
+        <div className="flex-1 overflow-y-auto flex px-4">
+          <div className="w-full max-w-[720px] m-auto py-8">
             <div className="text-center mb-8">
               <div className="mx-auto w-12 h-12 rounded-[14px] bg-(--dp-accent-soft) border border-(--dp-border) flex items-center justify-center mb-5">
                 <Sparkles className="w-6 h-6 text-(--dp-accent-text)" />
