@@ -13,11 +13,13 @@ import { MerchantPresentation } from './MerchantPresentation';
 import {
   analyzeProcessing,
   auditFeeLine,
+  buildDeltProposal,
   buildPricingPrograms,
   type ProcessingIntelligence,
   type PricingProgram,
   type PricingProgramKey,
 } from '../interchangeEngine';
+import { analyzeStatementWithAI, type ExtractionConfidence } from '../statementAI';
 
 // ── Types ──
 type AnalysisStatus = 'idle' | 'uploading' | 'analyzing' | 'done';
@@ -137,6 +139,13 @@ export function BackendAnalysis() {
   // economics, CRM chrome, other merchants' history) disappears so the
   // analysis can be shown to the merchant directly.
   const [viewMode, setViewMode] = useState<'agent' | 'merchant'>('agent');
+  // Whether the current results came from real AI extraction or demo data.
+  const [aiMeta, setAiMeta] = useState<{
+    used: boolean;
+    confidence: ExtractionConfidence;
+    notes: string;
+    model?: string;
+  } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   // Subscribe to the CRM store so it hydrates from Supabase before we
   // create/dedupe leads against it.
@@ -170,7 +179,7 @@ export function BackendAnalysis() {
 
   const removeFile = (idx: number) => setFiles(prev => prev.filter((_, i) => i !== idx));
 
-  const analyze = () => {
+  const analyze = async () => {
     if (!files.length) return;
     setStatus('uploading');
     setAutoLeadCreated(false);
@@ -178,53 +187,71 @@ export function BackendAnalysis() {
     setIntelTab('breakdown');
     setProgramKey('interchange-plus');
     setViewMode('agent');
-    setTimeout(() => {
-      setStatus('analyzing');
-      setTimeout(() => {
-        setExtracted(mockExtracted);
-        setProposal(mockProposal);
-        setStatus('done');
+    setAiMeta(null);
 
-        // Auto-create lead from the uploaded statement
-        const fileName = files[0]?.name || 'Statement';
-        const merchantName = fileName
-          .replace(/\.(pdf|png|jpg|jpeg|tiff?)$/i, '')
-          .replace(/[-_]/g, ' ')
-          .replace(/statement|stmt|processing/gi, '')
-          .trim();
-        const derivedName = merchantName.length > 2
-          ? merchantName.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ')
-          : 'New Prospect';
+    const file = files[0];
+    const fileName = file?.name || 'Statement';
+    const nameFromFile = fileName
+      .replace(/\.(pdf|png|jpg|jpeg|tiff?)$/i, '')
+      .replace(/[-_]/g, ' ')
+      .replace(/statement|stmt|processing/gi, '')
+      .trim();
+    const derivedName = nameFromFile.length > 2
+      ? nameFromFile.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ')
+      : 'New Prospect';
 
-        // Persist to the pipeline: scrapes the statement's processing profile
-        // into the lead's KYB intake, attaches the statement document, and
-        // links the savings proposal. Dedupes against existing leads by name.
-        const { isNew } = leadActions.createFromStatement({
-          merchantName: derivedName,
-          fileName,
-          fileSize: files[0]?.size || 0,
-          statement: mockExtracted,
-          proposal: mockProposal,
-        });
+    // Real AI extraction via the analyze-statement edge function (Claude
+    // reads the document). Falls back to demo data when the function or
+    // key isn't configured, so the tool always works.
+    let statementData = mockExtracted;
+    let proposalData = mockProposal;
+    let merchantName = derivedName;
+    let ai: typeof aiMeta = null;
+    setStatus('analyzing');
+    try {
+      const result = await analyzeStatementWithAI(file);
+      statementData = result.statement;
+      proposalData = buildDeltProposal(result.statement);
+      if (result.merchantName) merchantName = result.merchantName;
+      ai = { used: true, confidence: result.confidence, notes: result.notes, model: result.model };
+    } catch (err) {
+      // Demo fallback — keep a beat of latency so the flow reads naturally.
+      console.warn('[statement-analyzer] AI extraction unavailable, using demo data:', err);
+      await new Promise(res => setTimeout(res, 1500));
+      ai = { used: false, confidence: 'low', notes: err instanceof Error ? err.message : 'AI extraction unavailable', model: undefined };
+    }
 
-        setAutoLeadName(derivedName);
-        setAutoLeadIsNew(isNew);
-        setAutoLeadCreated(true);
-        setLeadBannerVisible(true);
+    setExtracted(statementData);
+    setProposal(proposalData);
+    setAiMeta(ai);
+    setStatus('done');
 
-        // Add to history
-        const newEntry: HistoryRow = {
-          id: `h-auto-${Date.now()}`,
-          merchantName: derivedName,
-          dateAnalyzed: 'Apr 9, 2026',
-          currentRate: mockProposal.currentRate,
-          proposedRate: mockProposal.deltRate,
-          savings: mockProposal.annualSavings,
-          status: 'Lead Created',
-        };
-        setHistory(prev => [newEntry, ...prev]);
-      }, 2200);
-    }, 800);
+    // Persist to the pipeline: scrapes the statement's processing profile
+    // into the lead's KYB intake, attaches the statement document, and
+    // links the savings proposal. Dedupes against existing leads by name.
+    const { isNew } = leadActions.createFromStatement({
+      merchantName,
+      fileName,
+      fileSize: file?.size || 0,
+      statement: statementData,
+      proposal: proposalData,
+    });
+
+    setAutoLeadName(merchantName);
+    setAutoLeadIsNew(isNew);
+    setAutoLeadCreated(true);
+    setLeadBannerVisible(true);
+
+    const newEntry: HistoryRow = {
+      id: `h-auto-${Date.now()}`,
+      merchantName,
+      dateAnalyzed: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      currentRate: proposalData.currentRate,
+      proposedRate: proposalData.deltRate,
+      savings: proposalData.annualSavings,
+      status: 'Lead Created',
+    };
+    setHistory(prev => [newEntry, ...prev]);
   };
 
   const handleGenerateProposal = () => {
@@ -374,7 +401,7 @@ export function BackendAnalysis() {
                   </button>
                   {(status === 'uploading' || status === 'analyzing') && (
                     <p className="text-xs text-gray-400">
-                      {status === 'uploading' ? 'Uploading file...' : 'AI is extracting fees and calculating savings...'}
+                      {status === 'uploading' ? 'Uploading file...' : 'Claude is reading the statement and extracting fee economics...'}
                     </p>
                   )}
                 </div>
@@ -386,9 +413,29 @@ export function BackendAnalysis() {
               <>
                 {/* Reset bar */}
                 <div className="flex items-center justify-between flex-wrap gap-3">
-                  <div className="flex items-center gap-2 text-sm text-emerald-600 font-medium">
+                  <div className="flex items-center gap-2 text-sm text-emerald-600 font-medium flex-wrap">
                     <CheckCircle2 className="w-4 h-4" />
                     Analysis complete — {files[0]?.name}
+                    {aiMeta && viewMode === 'agent' && (
+                      aiMeta.used ? (
+                        <span
+                          className={`px-2 py-0.5 rounded-full text-[11px] font-semibold ${
+                            aiMeta.confidence === 'high'
+                              ? 'bg-emerald-50 text-emerald-700'
+                              : aiMeta.confidence === 'medium'
+                                ? 'bg-amber-50 text-amber-700'
+                                : 'bg-red-50 text-red-600'
+                          }`}
+                          title={aiMeta.notes}
+                        >
+                          AI-extracted · {aiMeta.confidence} confidence
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-gray-100 text-gray-500" title={aiMeta.notes}>
+                          Demo data — AI extraction not configured
+                        </span>
+                      )
+                    )}
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="flex gap-1 bg-gray-100 rounded-[6px] p-1">

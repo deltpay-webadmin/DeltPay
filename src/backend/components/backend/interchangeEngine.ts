@@ -500,6 +500,37 @@ function buildAssessments(input: StatementInput, mix: CardMixRow[]): AssessmentR
 const feeMatch = (fees: StatementFeeRow[], re: RegExp) =>
   fees.filter(f => re.test(f.label)).reduce((a, f) => a + f.amount, 0);
 
+/**
+ * Derive the Delt interchange-plus offer from a statement's modeled
+ * economics: price at the wholesale floor plus a margin that splits the
+ * incumbent's markup with the merchant (55% of the current markup, floored
+ * at 40 bps so thin deals stay viable, capped at 110 bps so fat deals stay
+ * honest). Never proposes a cost above what the merchant pays today.
+ */
+export function buildDeltProposal(input: StatementInput): ProposalInput {
+  const vol = input.totalVolume || 1;
+  const mix = buildCardMix(input);
+  const interchange = mix.reduce((a, m) => a + m.cost, 0);
+  const assessments = buildAssessments(input, mix).reduce((a, r) => a + r.amount, 0);
+  const wholesale = interchange + assessments;
+
+  const currentMarkupBps = Math.max(0, ((input.currentMonthlyCost - wholesale) / vol) * 10000);
+  const marginBps = Math.min(110, Math.max(40, currentMarkupBps * 0.55));
+  const deltMonthlyCost = Math.min(wholesale + (vol * marginBps) / 10000, input.currentMonthlyCost);
+  const monthlySavings = input.currentMonthlyCost - deltMonthlyCost;
+
+  return {
+    currentRate: Number(input.effectiveRate.toFixed(2)),
+    deltRate: Number(((deltMonthlyCost / vol) * 100).toFixed(2)),
+    currentMonthlyCost: input.currentMonthlyCost,
+    deltMonthlyCost: Number(deltMonthlyCost.toFixed(2)),
+    currentAnnualCost: Number((input.currentMonthlyCost * 12).toFixed(2)),
+    deltAnnualCost: Number((deltMonthlyCost * 12).toFixed(2)),
+    annualSavings: Number((monthlySavings * 12).toFixed(2)),
+    savingsPercent: Number(((monthlySavings / Math.max(1, input.currentMonthlyCost)) * 100).toFixed(1)),
+  };
+}
+
 export function analyzeProcessing(input: StatementInput, proposal: ProposalInput): ProcessingIntelligence {
   const vol = input.totalVolume || 1;
   const mix = buildCardMix(input);
