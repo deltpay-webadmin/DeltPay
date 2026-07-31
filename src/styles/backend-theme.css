@@ -455,6 +455,11 @@ body.crm-active {
 .delt-backend-scope textarea {
   color-scheme: dark;
 }
+.delt-backend-scope .dp-light input,
+.delt-backend-scope .dp-light select,
+.delt-backend-scope .dp-light textarea {
+  color-scheme: light;
+}
 .delt-backend-scope ::placeholder {
   color: var(--dp-text-faint);
 }
