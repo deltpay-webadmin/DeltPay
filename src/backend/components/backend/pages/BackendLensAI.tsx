@@ -21,6 +21,8 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
+import { useCrm } from '../crmStore';
+import { askLens } from '../lensAI';
 
 type Tab = 'dashboard' | 'ask';
 
@@ -148,23 +150,36 @@ export function BackendLensAI() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [thinking, setThinking] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  // Live CRM state — Lens answers against this snapshot.
+  const crm = useCrm();
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, thinking]);
 
-  const handleSend = (text?: string) => {
+  const handleSend = async (text?: string) => {
     const msg = text || chatInput.trim();
-    if (!msg) return;
-    const userMsg: ChatMessage = { role: 'user', content: msg };
-    setMessages((prev) => [...prev, userMsg]);
+    if (!msg || thinking) return;
+    const history = messages;
+    setMessages((prev) => [...prev, { role: 'user', content: msg }]);
     setChatInput('');
-    // Simulate AI response
     setThinking(true);
-    setTimeout(() => {
+    try {
+      const answer = await askLens(msg, history, crm);
+      setMessages((prev) => [...prev, { role: 'assistant', ...answer }]);
+    } catch (err) {
+      // Not configured / offline — fall back to the demo answer, labeled as such.
+      console.warn('[lens-ai] live answer unavailable:', err);
+      setMessages((prev) => [
+        ...prev,
+        {
+          ...sampleResponse,
+          source: 'Demo response — connect Lens (NEBIUS_API_KEY function secret) for live portfolio analysis.',
+        },
+      ]);
+    } finally {
       setThinking(false);
-      setMessages((prev) => [...prev, sampleResponse]);
-    }, 900);
+    }
   };
 
   if (tab === 'ask') {

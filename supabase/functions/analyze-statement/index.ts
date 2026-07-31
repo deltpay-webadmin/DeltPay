@@ -6,11 +6,15 @@
  * extraction data (processor, volume, transactions, fee lines, chargebacks)
  * that the client-side interchange engine consumes.
  *
- * Auth: caller must be signed in (verify_jwt). The Anthropic key never
- * leaves this function.
+ * Auth: caller must be signed in (verify_jwt). Provider keys never leave
+ * this function.
  *
- * Required function secrets:
- *   ANTHROPIC_API_KEY — Anthropic API key
+ * Providers (first configured wins):
+ *   ANTHROPIC_API_KEY — Claude (claude-opus-5). Reads PDFs and images.
+ *   NEBIUS_API_KEY    — Nebius AI Studio vision model (cheaper). Images
+ *                       only — PDF reading requires the Claude provider.
+ * Optional:
+ *   NEBIUS_VISION_MODEL — default Qwen/Qwen2.5-VL-72B-Instruct
  */
 
 import Anthropic from "npm:@anthropic-ai/sdk";
@@ -94,12 +98,86 @@ Rules:
 - Tiered statements often bury downgrade surcharges in vague lines — put those in 'Other' and mention them in notes.
 - If the document is not a merchant processing statement, set confidence to "low" and explain in notes.`;
 
+// ── Nebius fallback: vision extraction for image statements ──
+const NEBIUS_URL = "https://api.studio.nebius.com/v1/chat/completions";
+
+async function extractWithNebius(
+  apiKey: string,
+  mediaType: string,
+  dataBase64: string,
+  filename: string,
+): Promise<Response> {
+  const model = Deno.env.get("NEBIUS_VISION_MODEL") ?? "Qwen/Qwen2.5-VL-72B-Instruct";
+  const upstream = await fetch(NEBIUS_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+    body: JSON.stringify({
+      model,
+      max_tokens: 4096,
+      temperature: 0,
+      response_format: { type: "json_object" },
+      messages: [
+        { role: "system", content: SYSTEM_PROMPT },
+        {
+          role: "user",
+          content: [
+            { type: "image_url", image_url: { url: `data:${mediaType};base64,${dataBase64}` } },
+            {
+              type: "text",
+              text:
+                `Extract the processing economics from this merchant statement (file: ${filename}). ` +
+                `Respond with ONLY a JSON object matching this schema (all fields required):\n` +
+                JSON.stringify(EXTRACTION_SCHEMA),
+            },
+          ],
+        },
+      ],
+    }),
+  });
+
+  if (!upstream.ok) {
+    const errText = await upstream.text();
+    console.error("[analyze-statement:nebius]", upstream.status, errText.slice(0, 500));
+    if (upstream.status === 401) return json({ error: "bad_api_key", message: "NEBIUS_API_KEY is invalid" }, 502);
+    if (upstream.status === 429) return json({ error: "rate_limited", message: "Nebius rate limit hit — retry shortly" }, 429);
+    return json({ error: "extraction_failed", message: `Nebius returned ${upstream.status}` }, 502);
+  }
+
+  const data = await upstream.json();
+  const content: string | undefined = data?.choices?.[0]?.message?.content;
+  if (!content) return json({ error: "empty_response" }, 502);
+
+  let extraction: Record<string, unknown>;
+  try {
+    extraction = JSON.parse(content);
+  } catch {
+    return json({ error: "extraction_failed", message: "Model returned malformed JSON" }, 502);
+  }
+  // Open-source JSON mode has no schema enforcement — validate the essentials.
+  if (typeof extraction.totalVolume !== "number" || !Array.isArray(extraction.fees) ||
+      typeof extraction.currentMonthlyCost !== "number") {
+    return json({ error: "extraction_failed", message: "Extraction missing required fields" }, 502);
+  }
+
+  return json({
+    extraction,
+    model: data.model ?? model,
+    usage: {
+      input_tokens: data?.usage?.prompt_tokens ?? 0,
+      output_tokens: data?.usage?.completion_tokens ?? 0,
+    },
+  });
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: CORS });
   if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
 
-  const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
-  if (!apiKey) return json({ error: "not_configured", message: "ANTHROPIC_API_KEY secret is not set" }, 503);
+  const anthropicKey = Deno.env.get("ANTHROPIC_API_KEY");
+  const nebiusKey = Deno.env.get("NEBIUS_API_KEY");
+  if (!anthropicKey && !nebiusKey) {
+    return json({ error: "not_configured", message: "Set ANTHROPIC_API_KEY (PDFs + images) or NEBIUS_API_KEY (images) to enable extraction" }, 503);
+  }
 
   let body: { filename?: string; mediaType?: string; dataBase64?: string };
   try {
@@ -117,7 +195,25 @@ Deno.serve(async (req) => {
   const isImage = /^image\/(png|jpeg|webp|gif)$/.test(mediaType);
   if (!isPdf && !isImage) return json({ error: "unsupported_media_type", message: mediaType }, 415);
 
-  const client = new Anthropic({ apiKey });
+  // Provider resolution: Claude when configured (reads PDFs natively);
+  // otherwise the cheaper Nebius vision model, which handles images only.
+  if (!anthropicKey) {
+    if (isPdf) {
+      return json({
+        error: "pdf_requires_claude",
+        message: "PDF statements need the Claude provider (ANTHROPIC_API_KEY). Upload a statement photo/screenshot, or configure Claude.",
+      }, 415);
+    }
+    try {
+      return await extractWithNebius(nebiusKey!, mediaType, dataBase64, filename);
+    } catch (err) {
+      const e = err as { message?: string };
+      console.error("[analyze-statement:nebius]", e.message);
+      return json({ error: "extraction_failed", message: e.message ?? "unknown" }, 502);
+    }
+  }
+
+  const client = new Anthropic({ apiKey: anthropicKey });
 
   const fileBlock = isPdf
     ? { type: "document" as const, source: { type: "base64" as const, media_type: "application/pdf" as const, data: dataBase64 } }
