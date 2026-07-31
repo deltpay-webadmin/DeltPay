@@ -40,37 +40,37 @@ const FORMAT_LABELS: Record<ReportFormat, { label: string; icon: React.ElementTy
 
 const REPORTS: Report[] = [
   // Financial
-  { id: 'RPT-001', name: 'Revenue Summary', description: 'Total revenue breakdown by product line: MCA, Residuals, Websites, Subscriptions, Lens AI. Includes MoM and YoY trends.', category: 'financial', lastRun: '2026-04-17 06:00', schedule: 'Daily @ 6:00 AM', starred: true, formats: ['pdf', 'xlsx'], estimatedRows: 120 },
-  { id: 'RPT-002', name: 'Profit & Loss Statement', description: 'Full P&L with revenue, cost of capital (2%/mo), commissions, operational expenses, and net profit.', category: 'financial', lastRun: '2026-04-01 06:00', schedule: 'Monthly — 1st', starred: true, formats: ['pdf', 'xlsx'] },
-  { id: 'RPT-003', name: 'Commission Report', description: 'Agent commission detail: deals funded, residual splits, bonus tiers, clawbacks, and net payout per agent.', category: 'financial', lastRun: '2026-04-15 06:00', schedule: 'Bi-weekly — Fri', starred: false, formats: ['pdf', 'xlsx', 'csv'], estimatedRows: 45 },
-  { id: 'RPT-004', name: 'Cost of Capital Analysis', description: 'Borrowing cost at 2%/mo applied to all funded deals. Shows blended cost, margin per deal, and payback timeline.', category: 'financial', lastRun: '2026-04-17 06:00', schedule: 'Daily @ 6:00 AM', starred: false, formats: ['pdf', 'xlsx'] },
-  { id: 'RPT-005', name: 'Profit Distribution', description: 'How profits are allocated: funder share, agent splits, operational reserve, and owner distributions.', category: 'financial', lastRun: '2026-04-01 06:00', schedule: 'Monthly — 1st', starred: false, formats: ['pdf'] },
+  { id: 'RPT-001', name: 'Revenue Summary', description: 'Total revenue breakdown by product line: MCA, Residuals, Websites, Subscriptions, Lens AI. Includes MoM and YoY trends.', category: 'financial', schedule: 'Daily @ 6:00 AM', starred: false, formats: ['pdf', 'xlsx'] },
+  { id: 'RPT-002', name: 'Profit & Loss Statement', description: 'Full P&L with revenue, cost of capital (2%/mo), commissions, operational expenses, and net profit.', category: 'financial', schedule: 'Monthly — 1st', starred: false, formats: ['pdf', 'xlsx'] },
+  { id: 'RPT-003', name: 'Commission Report', description: 'Agent commission detail: deals funded, residual splits, bonus tiers, clawbacks, and net payout per agent.', category: 'financial', schedule: 'Bi-weekly — Fri', starred: false, formats: ['pdf', 'xlsx', 'csv'] },
+  { id: 'RPT-004', name: 'Cost of Capital Analysis', description: 'Borrowing cost at 2%/mo applied to all funded deals. Shows blended cost, margin per deal, and payback timeline.', category: 'financial', schedule: 'Daily @ 6:00 AM', starred: false, formats: ['pdf', 'xlsx'] },
+  { id: 'RPT-005', name: 'Profit Distribution', description: 'How profits are allocated: funder share, agent splits, operational reserve, and owner distributions.', category: 'financial', schedule: 'Monthly — 1st', starred: false, formats: ['pdf'] },
 
   // Portfolio
-  { id: 'RPT-006', name: 'Active Portfolio Summary', description: 'All active MCAs: funded amounts, repayment status, collection rates, and projected completion dates.', category: 'portfolio', lastRun: '2026-04-17 06:00', schedule: 'Daily @ 6:00 AM', starred: true, formats: ['pdf', 'xlsx', 'csv'], estimatedRows: 284 },
-  { id: 'RPT-007', name: 'Default & Delinquency Report', description: 'Accounts in Slow Pay, Default, or Workout status. Includes NSF history, days past due, and collection attempts.', category: 'portfolio', lastRun: '2026-04-17 06:00', schedule: 'Daily @ 6:00 AM', starred: true, formats: ['pdf', 'xlsx', 'csv'], estimatedRows: 18 },
-  { id: 'RPT-008', name: 'Renewal Pipeline', description: 'Merchants approaching renewal eligibility (>60% repaid). Includes projected offer amounts and factor rates.', category: 'portfolio', lastRun: '2026-04-17 08:00', schedule: 'Daily @ 8:00 AM', starred: false, formats: ['pdf', 'csv'], estimatedRows: 42 },
-  { id: 'RPT-009', name: 'Stacking Risk Report', description: 'Merchants with multiple active positions from DataMerch consortium data. Cross-referenced with Delt positions.', category: 'portfolio', lastRun: '2026-04-15 06:00', schedule: 'Weekly — Mon', starred: false, formats: ['pdf', 'xlsx'], estimatedRows: 12 },
-  { id: 'RPT-010', name: 'Amortization Schedule Export', description: 'Full amortization schedules for all active deals. Includes daily/weekly/monthly breakdowns.', category: 'portfolio', lastRun: '2026-04-01 06:00', schedule: 'Monthly — 1st', starred: false, formats: ['xlsx', 'csv'], estimatedRows: 8400 },
+  { id: 'RPT-006', name: 'Active Portfolio Summary', description: 'All active MCAs: funded amounts, repayment status, collection rates, and projected completion dates.', category: 'portfolio', schedule: 'Daily @ 6:00 AM', starred: false, formats: ['pdf', 'xlsx', 'csv'] },
+  { id: 'RPT-007', name: 'Default & Delinquency Report', description: 'Accounts in Slow Pay, Default, or Workout status. Includes NSF history, days past due, and collection attempts.', category: 'portfolio', schedule: 'Daily @ 6:00 AM', starred: false, formats: ['pdf', 'xlsx', 'csv'] },
+  { id: 'RPT-008', name: 'Renewal Pipeline', description: 'Merchants approaching renewal eligibility (>60% repaid). Includes projected offer amounts and factor rates.', category: 'portfolio', schedule: 'Daily @ 8:00 AM', starred: false, formats: ['pdf', 'csv'] },
+  { id: 'RPT-009', name: 'Stacking Risk Report', description: 'Merchants with multiple active positions from DataMerch consortium data. Cross-referenced with Delt positions.', category: 'portfolio', schedule: 'Weekly — Mon', starred: false, formats: ['pdf', 'xlsx'] },
+  { id: 'RPT-010', name: 'Amortization Schedule Export', description: 'Full amortization schedules for all active deals. Includes daily/weekly/monthly breakdowns.', category: 'portfolio', schedule: 'Monthly — 1st', starred: false, formats: ['xlsx', 'csv'] },
 
   // Compliance
-  { id: 'RPT-011', name: 'State Disclosure Audit', description: 'All disclosure packages sent: NY CFDL, VA HB 1027, CA SB 1235, UT. Tracks delivery, acknowledgment, and compliance gaps.', category: 'compliance', lastRun: '2026-04-17 06:00', schedule: 'Daily @ 6:00 AM', starred: true, formats: ['pdf', 'xlsx', 'csv'], estimatedRows: 67 },
-  { id: 'RPT-012', name: 'VAMP / ECM Monitoring', description: 'Visa VAMP and Mastercard ECM threshold proximity for all merchants. Flags at-risk accounts.', category: 'compliance', lastRun: '2026-04-17 06:00', schedule: 'Daily @ 6:00 AM', starred: false, formats: ['pdf', 'xlsx'] },
-  { id: 'RPT-013', name: 'PCI Compliance Status', description: 'SAQ completion, ASV scan status, and P2PE validation across all merchants. Highlights expirations.', category: 'compliance', lastRun: '2026-04-15 06:00', schedule: 'Weekly — Mon', starred: false, formats: ['pdf', 'csv'] },
-  { id: 'RPT-014', name: 'UCC Filing Register', description: 'All UCC-1 filings: status, expiration dates, amendments, and terminations.', category: 'compliance', lastRun: '2026-04-01 06:00', schedule: 'Monthly — 1st', starred: false, formats: ['pdf', 'xlsx'], estimatedRows: 156 },
-  { id: 'RPT-015', name: 'MATCH / OFAC Screening Log', description: 'Quarterly re-screening results for MATCH/TMF and OFAC compliance across merchant portfolio.', category: 'compliance', lastRun: '2026-04-01 06:00', schedule: 'Quarterly', starred: false, formats: ['pdf', 'csv'] },
+  { id: 'RPT-011', name: 'State Disclosure Audit', description: 'All disclosure packages sent: NY CFDL, VA HB 1027, CA SB 1235, UT. Tracks delivery, acknowledgment, and compliance gaps.', category: 'compliance', schedule: 'Daily @ 6:00 AM', starred: false, formats: ['pdf', 'xlsx', 'csv'] },
+  { id: 'RPT-012', name: 'VAMP / ECM Monitoring', description: 'Visa VAMP and Mastercard ECM threshold proximity for all merchants. Flags at-risk accounts.', category: 'compliance', schedule: 'Daily @ 6:00 AM', starred: false, formats: ['pdf', 'xlsx'] },
+  { id: 'RPT-013', name: 'PCI Compliance Status', description: 'SAQ completion, ASV scan status, and P2PE validation across all merchants. Highlights expirations.', category: 'compliance', schedule: 'Weekly — Mon', starred: false, formats: ['pdf', 'csv'] },
+  { id: 'RPT-014', name: 'UCC Filing Register', description: 'All UCC-1 filings: status, expiration dates, amendments, and terminations.', category: 'compliance', schedule: 'Monthly — 1st', starred: false, formats: ['pdf', 'xlsx'] },
+  { id: 'RPT-015', name: 'MATCH / OFAC Screening Log', description: 'Quarterly re-screening results for MATCH/TMF and OFAC compliance across merchant portfolio.', category: 'compliance', schedule: 'Quarterly', starred: false, formats: ['pdf', 'csv'] },
 
   // Operations
-  { id: 'RPT-016', name: 'Pipeline Conversion Funnel', description: 'Lead → Application → Underwriting → Funded conversion rates. Includes avg time-to-fund and drop-off analysis.', category: 'operations', lastRun: '2026-04-17 06:00', schedule: 'Daily @ 6:00 AM', starred: false, formats: ['pdf', 'xlsx'] },
-  { id: 'RPT-017', name: 'Agent Performance Scorecard', description: 'Per-agent metrics: deals funded, volume, approval rate, avg factor, retention, and portfolio health.', category: 'operations', lastRun: '2026-04-15 06:00', schedule: 'Weekly — Mon', starred: true, formats: ['pdf', 'xlsx'], estimatedRows: 12 },
-  { id: 'RPT-018', name: 'Dispute & Chargeback Summary', description: 'All disputes filed, won, lost. Win rate, total dollars recovered, and cost-per-dispute analysis.', category: 'operations', lastRun: '2026-04-15 06:00', schedule: 'Weekly — Mon', starred: false, formats: ['pdf', 'xlsx'] },
-  { id: 'RPT-019', name: 'Outreach Campaign Performance', description: 'Email/SMS campaign metrics: sent, opened, clicked, converted. Includes drip sequence completion rates.', category: 'operations', lastRun: '2026-04-14 06:00', schedule: 'Weekly — Mon', starred: false, formats: ['pdf', 'csv'] },
+  { id: 'RPT-016', name: 'Pipeline Conversion Funnel', description: 'Lead → Application → Underwriting → Funded conversion rates. Includes avg time-to-fund and drop-off analysis.', category: 'operations', schedule: 'Daily @ 6:00 AM', starred: false, formats: ['pdf', 'xlsx'] },
+  { id: 'RPT-017', name: 'Agent Performance Scorecard', description: 'Per-agent metrics: deals funded, volume, approval rate, avg factor, retention, and portfolio health.', category: 'operations', schedule: 'Weekly — Mon', starred: false, formats: ['pdf', 'xlsx'] },
+  { id: 'RPT-018', name: 'Dispute & Chargeback Summary', description: 'All disputes filed, won, lost. Win rate, total dollars recovered, and cost-per-dispute analysis.', category: 'operations', schedule: 'Weekly — Mon', starred: false, formats: ['pdf', 'xlsx'] },
+  { id: 'RPT-019', name: 'Outreach Campaign Performance', description: 'Email/SMS campaign metrics: sent, opened, clicked, converted. Includes drip sequence completion rates.', category: 'operations', schedule: 'Weekly — Mon', starred: false, formats: ['pdf', 'csv'] },
 
   // Products
-  { id: 'RPT-020', name: 'Website Analytics Summary', description: 'All merchant websites: page views, unique visitors, conversion rates, mobile scores, and SEO health.', category: 'products', lastRun: '2026-04-17 06:00', schedule: 'Daily @ 6:00 AM', starred: false, formats: ['pdf', 'xlsx'] },
-  { id: 'RPT-021', name: 'Subscription MRR Report', description: 'Monthly recurring revenue by plan tier, churn rate, expansion revenue, and lifetime value projections.', category: 'products', lastRun: '2026-04-01 06:00', schedule: 'Monthly — 1st', starred: false, formats: ['pdf', 'xlsx'] },
-  { id: 'RPT-022', name: 'Lens AI Usage Report', description: 'Lens AI queries, analysis runs, merchant-facing vs internal usage, and accuracy metrics.', category: 'products', lastRun: '2026-04-15 06:00', schedule: 'Weekly — Mon', starred: false, formats: ['pdf', 'csv'] },
-  { id: 'RPT-023', name: 'Cross-Sell Opportunity Report', description: 'Merchants using 1 product who are candidates for others. Ranked by propensity score.', category: 'products', lastRun: '2026-04-17 08:00', schedule: 'Daily @ 8:00 AM', starred: true, formats: ['pdf', 'xlsx', 'csv'], estimatedRows: 89 },
+  { id: 'RPT-020', name: 'Website Analytics Summary', description: 'All merchant websites: page views, unique visitors, conversion rates, mobile scores, and SEO health.', category: 'products', schedule: 'Daily @ 6:00 AM', starred: false, formats: ['pdf', 'xlsx'] },
+  { id: 'RPT-021', name: 'Subscription MRR Report', description: 'Monthly recurring revenue by plan tier, churn rate, expansion revenue, and lifetime value projections.', category: 'products', schedule: 'Monthly — 1st', starred: false, formats: ['pdf', 'xlsx'] },
+  { id: 'RPT-022', name: 'Lens AI Usage Report', description: 'Lens AI queries, analysis runs, merchant-facing vs internal usage, and accuracy metrics.', category: 'products', schedule: 'Weekly — Mon', starred: false, formats: ['pdf', 'csv'] },
+  { id: 'RPT-023', name: 'Cross-Sell Opportunity Report', description: 'Merchants using 1 product who are candidates for others. Ranked by propensity score.', category: 'products', schedule: 'Daily @ 8:00 AM', starred: false, formats: ['pdf', 'xlsx', 'csv'] },
 ];
 
 // ── Recent Exports ──
@@ -83,13 +83,7 @@ interface RecentExport {
   status: 'ready' | 'generating' | 'failed';
 }
 
-const RECENT_EXPORTS: RecentExport[] = [
-  { id: 'EXP-101', reportName: 'Revenue Summary', format: 'xlsx', generatedAt: '2026-04-17 06:02', size: '1.2 MB', status: 'ready' },
-  { id: 'EXP-100', reportName: 'Active Portfolio Summary', format: 'csv', generatedAt: '2026-04-17 06:01', size: '340 KB', status: 'ready' },
-  { id: 'EXP-099', reportName: 'Default & Delinquency Report', format: 'pdf', generatedAt: '2026-04-17 06:01', size: '890 KB', status: 'ready' },
-  { id: 'EXP-098', reportName: 'State Disclosure Audit', format: 'xlsx', generatedAt: '2026-04-17 06:00', size: '2.1 MB', status: 'ready' },
-  { id: 'EXP-097', reportName: 'Cross-Sell Opportunity Report', format: 'csv', generatedAt: '2026-04-17 08:01', size: '180 KB', status: 'generating' },
-];
+const RECENT_EXPORTS: RecentExport[] = [];
 
 // ── Main ──
 export function BackendReports() {
@@ -294,6 +288,12 @@ export function BackendReports() {
               </div>
             </div>
           ))}
+          {RECENT_EXPORTS.length === 0 && (
+            <div className="px-5 py-16 text-center">
+              <FolderOpen className="w-8 h-8 text-gray-300 mx-auto mb-3" />
+              <p className="text-sm text-gray-400">No exports yet — generated reports will appear here.</p>
+            </div>
+          )}
         </div>
       )}
     </div>

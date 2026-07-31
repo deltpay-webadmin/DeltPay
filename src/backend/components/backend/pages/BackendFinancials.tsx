@@ -34,10 +34,10 @@ type Period = 'month' | 'quarter' | 'year' | 'custom';
 
 // ── Summary Data ──
 const summaryCards = [
-  { label: 'Total Revenue', value: '$536K', raw: 536000, trend: '+12.5%', positive: true, icon: DollarSign, variant: 'emerald' as const },
-  { label: 'Total Expenses', value: '$185K', raw: 185000, trend: '-3.2%', positive: true, icon: CreditCard, variant: 'red' as const },
-  { label: 'Net Profit', value: '$242K', raw: 242000, trend: '+18.7%', positive: true, icon: TrendingUp, variant: 'indigo' as const },
-  { label: 'Cash Flow', value: '$215K', raw: 215000, trend: '+8.4%', positive: true, icon: Activity, variant: 'blue' as const },
+  { label: 'Total Revenue', value: '$0', raw: 0, trend: '—', positive: true, icon: DollarSign, variant: 'emerald' as const },
+  { label: 'Total Expenses', value: '$0', raw: 0, trend: '—', positive: true, icon: CreditCard, variant: 'red' as const },
+  { label: 'Net Profit', value: '$0', raw: 0, trend: '—', positive: true, icon: TrendingUp, variant: 'indigo' as const },
+  { label: 'Cash Flow', value: '$0', raw: 0, trend: '—', positive: true, icon: Activity, variant: 'blue' as const },
 ];
 
 const variantStyles: Record<string, { bg: string; icon: string }> = {
@@ -48,45 +48,32 @@ const variantStyles: Record<string, { bg: string; icon: string }> = {
 };
 
 // ── Revenue & Expense Breakdowns ──
-const revenueBreakdown = [
-  { label: 'MCA Interest Income', value: 285000, pct: 53.2, color: 'bg-indigo-500' },
-  { label: 'Lease Commissions', value: 95000, pct: 17.7, color: 'bg-sky-500' },
-  { label: 'Residual Income', value: 47000, pct: 8.8, color: 'bg-teal-500' },
-  { label: 'Merchant SaaS Subscriptions', value: 72000, pct: 13.4, color: 'bg-violet-500' },
-  { label: 'Lens AI Fees', value: 37000, pct: 6.9, color: 'bg-purple-500' },
-];
+interface BreakdownRow { label: string; value: number; pct: number; color: string }
 
-const expenseBreakdown = [
-  { label: 'Sales Commissions', value: 75000, pct: 40.5, color: 'bg-red-500' },
-  { label: 'Cost of Capital', value: 65000, pct: 35.1, color: 'bg-orange-500' },
-  { label: 'Deployment Fees', value: 28000, pct: 15.1, color: 'bg-amber-500' },
-  { label: 'Operating', value: 17000, pct: 9.2, color: 'bg-gray-400' },
-];
+const revenueBreakdown: BreakdownRow[] = [];
+
+const expenseBreakdown: BreakdownRow[] = [];
 
 // ── Cash Flow Forecast (90 days) ──
-const cashFlowData = Array.from({ length: 13 }, (_, i) => {
-  const week = i;
-  const baseIn = 52000 + Math.sin(i * 0.7) * 12000 + (i > 8 ? -8000 : 0);
-  const baseOut = 38000 + Math.cos(i * 0.5) * 8000 + (i > 6 ? 5000 : 0);
-  const net = baseIn - baseOut;
-  return {
-    week: `W${week + 1}`,
-    label: `Week ${week + 1}`,
-    inflows: Math.round(baseIn),
-    outflows: Math.round(baseOut),
-    net: Math.round(net),
-    threshold: 10000,
-  };
-});
+const cashFlowData = Array.from({ length: 13 }, (_, i) => ({
+  week: `W${i + 1}`,
+  label: `Week ${i + 1}`,
+  inflows: 0,
+  outflows: 0,
+  net: 0,
+  threshold: 10000,
+}));
 
-const alertWeeks = cashFlowData.filter((d) => d.net < d.threshold);
+// Only flag a shortfall once there is real forecast activity — an all-zero
+// forecast means "no data yet", not "every week is below threshold".
+const alertWeeks = cashFlowData.filter((d) => (d.inflows > 0 || d.outflows > 0) && d.net < d.threshold);
 
 // ── Capital Deployment ──
 const capitalCards = [
-  { label: 'Available Capital', value: '$340K', icon: PiggyBank, variant: 'emerald' as const },
-  { label: 'Deployed', value: '$1.26M', icon: Zap, variant: 'indigo' as const },
-  { label: 'Utilization', value: '78.8%', icon: Percent, variant: 'blue' as const },
-  { label: '30-Day Need', value: '$185K', icon: Briefcase, variant: 'orange' as const },
+  { label: 'Available Capital', value: '$0', icon: PiggyBank, variant: 'emerald' as const },
+  { label: 'Deployed', value: '$0', icon: Zap, variant: 'indigo' as const },
+  { label: 'Utilization', value: '0.0%', icon: Percent, variant: 'blue' as const },
+  { label: '30-Day Need', value: '$0', icon: Briefcase, variant: 'orange' as const },
 ];
 
 const capitalVariants: Record<string, { bg: string; icon: string }> = {
@@ -94,24 +81,14 @@ const capitalVariants: Record<string, { bg: string; icon: string }> = {
   orange: { bg: 'bg-orange-50 border-orange-100', icon: 'text-orange-600' },
 };
 
-const fundingSources = [
-  { name: 'Pinnacle Funding Group', committed: 600000, deployed: 485000, available: 115000, coc: 2.0, returnPct: 14.2 },
-  { name: 'Atlantic Capital Partners', committed: 400000, deployed: 320000, available: 80000, coc: 1.8, returnPct: 16.1 },
-  { name: 'Summit Finance Corp', committed: 350000, deployed: 290000, available: 60000, coc: 2.2, returnPct: 12.8 },
-  { name: 'Delt Internal Reserve', committed: 250000, deployed: 165000, available: 85000, coc: 0, returnPct: 22.5 },
-];
+interface FundingSource { name: string; committed: number; deployed: number; available: number; coc: number; returnPct: number }
+
+const fundingSources: FundingSource[] = [];
 
 // ── Recent Transactions ──
-const transactions = [
-  { date: '2026-04-09', desc: 'Metro Diner Group — daily ACH', type: 'Income' as const, amount: 675, category: 'MCA Repayment' },
-  { date: '2026-04-09', desc: 'Bright Auto Sales — daily ACH', type: 'Income' as const, amount: 1088, category: 'Residual Repayment' },
-  { date: '2026-04-08', desc: 'Marcus J. — commission payout', type: 'Expense' as const, amount: -1575, category: 'Sales Commission' },
-  { date: '2026-04-08', desc: 'Pinnacle Funding — monthly COC', type: 'Expense' as const, amount: -9700, category: 'Cost of Capital' },
-  { date: '2026-04-07', desc: 'Peak Construction — lease payment', type: 'Income' as const, amount: 855, category: 'Lease Payment' },
-  { date: '2026-04-07', desc: 'UCC filing fee — Coastal Seafood', type: 'Expense' as const, amount: -125, category: 'Deployment Fee' },
-  { date: '2026-04-06', desc: 'Apex Fitness — final payoff', type: 'Income' as const, amount: 2600, category: 'MCA Repayment' },
-  { date: '2026-04-05', desc: 'Atlantic Capital — quarterly draw', type: 'Expense' as const, amount: -50000, category: 'Capital Draw' },
-];
+interface LedgerTxn { date: string; desc: string; type: 'Income' | 'Expense'; amount: number; category: string }
+
+const transactions: LedgerTxn[] = [];
 
 const fmt = (n: number) =>
   n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
@@ -123,6 +100,14 @@ const fmtK = (n: number) => {
 
 export function BackendFinancials() {
   const [period, setPeriod] = useState<Period>('month');
+
+  const cocSources = fundingSources.filter((f) => f.coc > 0);
+  const avgCoc = cocSources.length > 0
+    ? cocSources.reduce((s, f) => s + f.coc, 0) / cocSources.length
+    : null;
+  const avgReturn = fundingSources.length > 0
+    ? fundingSources.reduce((s, f) => s + f.returnPct, 0) / fundingSources.length
+    : null;
 
   const periods: { key: Period; label: string }[] = [
     { key: 'month', label: 'This Month' },
@@ -176,10 +161,14 @@ export function BackendFinancials() {
                 <div className={v.icon}><Icon className="w-5 h-5" /></div>
               </div>
               <p className="text-xl sm:text-2xl font-bold text-gray-900">{card.value}</p>
-              <p className={`text-xs mt-2 flex items-center gap-1 ${card.positive ? 'text-emerald-600' : 'text-red-600'}`}>
-                {card.positive ? <ArrowUpRight className="w-3.5 h-3.5" /> : <ArrowDownRight className="w-3.5 h-3.5" />}
-                {card.trend} vs last period
-              </p>
+              {card.trend === '—' ? (
+                <p className="text-xs mt-2 text-gray-400">No prior period to compare</p>
+              ) : (
+                <p className={`text-xs mt-2 flex items-center gap-1 ${card.positive ? 'text-emerald-600' : 'text-red-600'}`}>
+                  {card.positive ? <ArrowUpRight className="w-3.5 h-3.5" /> : <ArrowDownRight className="w-3.5 h-3.5" />}
+                  {card.trend} vs last period
+                </p>
+              )}
             </div>
           );
         })}
@@ -208,6 +197,11 @@ export function BackendFinancials() {
                 </div>
               </div>
             ))}
+            {revenueBreakdown.length === 0 && (
+              <p className="py-8 text-center text-sm text-gray-400">
+                No revenue recorded yet — income streams will appear here.
+              </p>
+            )}
           </div>
         </div>
 
@@ -232,6 +226,11 @@ export function BackendFinancials() {
                 </div>
               </div>
             ))}
+            {expenseBreakdown.length === 0 && (
+              <p className="py-8 text-center text-sm text-gray-400">
+                No expenses recorded yet — cost categories will appear here.
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -361,6 +360,13 @@ export function BackendFinancials() {
                     </tr>
                   );
                 })}
+                {fundingSources.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="px-4 py-12 text-center text-sm text-gray-400">
+                      No funding sources yet — capital providers will appear here once added.
+                    </td>
+                  </tr>
+                )}
               </tbody>
               <tfoot>
                 <tr className="bg-gray-50 border-t-2 border-gray-200">
@@ -368,8 +374,8 @@ export function BackendFinancials() {
                   <td className="px-4 py-3 text-right font-semibold text-gray-900">{fmt(fundingSources.reduce((s, f) => s + f.committed, 0))}</td>
                   <td className="px-4 py-3 text-right font-semibold text-gray-900">{fmt(fundingSources.reduce((s, f) => s + f.deployed, 0))}</td>
                   <td className="px-4 py-3 text-right font-semibold text-emerald-600">{fmt(fundingSources.reduce((s, f) => s + f.available, 0))}</td>
-                  <td className="px-4 py-3 text-right text-gray-500">Avg {(fundingSources.filter(f => f.coc > 0).reduce((s, f) => s + f.coc, 0) / fundingSources.filter(f => f.coc > 0).length).toFixed(1)}%</td>
-                  <td className="px-4 py-3 text-right font-semibold text-indigo-600">{(fundingSources.reduce((s, f) => s + f.returnPct, 0) / fundingSources.length).toFixed(1)}%</td>
+                  <td className="px-4 py-3 text-right text-gray-500">{avgCoc !== null ? `Avg ${avgCoc.toFixed(1)}%` : '—'}</td>
+                  <td className="px-4 py-3 text-right font-semibold text-indigo-600">{avgReturn !== null ? `${avgReturn.toFixed(1)}%` : '—'}</td>
                 </tr>
               </tfoot>
             </table>
@@ -415,11 +421,18 @@ export function BackendFinancials() {
                   <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{tx.category}</td>
                 </tr>
               ))}
+              {transactions.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="px-4 py-12 text-center text-sm text-gray-400">
+                    No transactions yet — ledger activity will appear here.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
         <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 text-sm text-gray-500">
-          <span>Showing 8 most recent</span>
+          <span>Showing {transactions.length} most recent</span>
           <button className="text-indigo-600 hover:text-indigo-700 text-sm font-medium">View All Transactions</button>
         </div>
       </div>
