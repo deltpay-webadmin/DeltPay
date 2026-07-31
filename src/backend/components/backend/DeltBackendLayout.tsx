@@ -79,8 +79,6 @@ import {
   Sun,
   Moon,
   PenTool,
-  ListChecks,
-  Activity,
   LogOut,
 } from 'lucide-react';
 
@@ -131,8 +129,8 @@ const adminGroups: NavGroup[] = [
   {
     label: 'Operations',
     items: [
-      { label: 'Tasks', path: '/tasks', icon: ListChecks },
-      { label: 'Inbox', path: '/inbox', icon: Inbox },
+      // Tasks/Inbox/Activity Timeline stay URL-reachable but are not listed:
+      // Workspace is the one-stop inbox+tasks+activity hub.
       { label: 'Payments', path: '/payments', icon: CreditCard, perm: 'capital.view' },
       { label: 'Documents & E-Sign', path: '/documents', icon: PenTool, perm: 'merchants.view' },
       { label: 'Disputes', path: '/disputes', icon: ShieldAlert, perm: 'merchants.view' },
@@ -153,7 +151,6 @@ const adminGroups: NavGroup[] = [
     items: [
       { label: 'Lens AI', path: '/lens-ai', icon: Sparkles, perm: 'lens_ai.view' },
       { label: 'Financials', path: '/financials', icon: DollarSign, perm: 'financials.view' },
-      { label: 'Activity Timeline', path: '/activity-timeline', icon: Activity, perm: 'leads.view' },
       { label: 'Reports', path: '/reports', icon: BarChart3, perm: 'financials.view' },
     ],
   },
@@ -270,8 +267,6 @@ interface CommandItem {
 const allCommands: CommandItem[] = [
   { label: 'Overview', path: '/', group: 'Navigation', icon: Home },
   { label: 'Workspace', path: '/workspace', group: 'Navigation', icon: Inbox, keywords: 'inbox email sms call messages tasks activity timeline' },
-  { label: 'Tasks', path: '/tasks', group: 'Navigation', icon: ListChecks, keywords: 'todo follow up overdue reminders' },
-  { label: 'Inbox', path: '/inbox', group: 'Navigation', icon: Inbox, keywords: 'email sms call threads messages compose' },
   { label: 'Leads', path: '/leads', group: 'Pipeline', icon: Users, keywords: 'sales pipeline', perm: 'leads.view' },
   { label: 'Import Leads', path: '/leads/import', group: 'Pipeline', icon: Upload, keywords: 'upload csv xlsx spreadsheet meta facebook instagram bulk import', perm: 'leads.create' },
   { label: 'Onboarding', path: '/onboarding', group: 'Pipeline', icon: Package, keywords: 'merchant setup sla bank connections activation', perm: 'merchants.view' },
@@ -292,7 +287,6 @@ const allCommands: CommandItem[] = [
   { label: 'Payroll', path: '/payroll', group: 'Team', icon: Receipt, perm: 'payroll.view' },
   { label: 'Lens AI', path: '/lens-ai', group: 'Intelligence', icon: Sparkles, keywords: 'ai analysis', perm: 'lens_ai.view' },
   { label: 'Financials', path: '/financials', group: 'Intelligence', icon: DollarSign, keywords: 'revenue profit', perm: 'financials.view' },
-  { label: 'Activity Timeline', path: '/activity-timeline', group: 'Intelligence', icon: Activity, keywords: 'audit history feed events', perm: 'leads.view' },
   { label: 'Reports', path: '/reports', group: 'Intelligence', icon: BarChart3, keywords: 'data visualization', perm: 'financials.view' },
   { label: 'Websites', path: '/websites', group: 'Products', icon: Globe, keywords: 'sites domain builder analytics', perm: 'merchants.view' },
   { label: 'Subscriptions', path: '/subscriptions', group: 'Products', icon: CreditCard, keywords: 'billing plans MRR SaaS', perm: 'billing.view' },
