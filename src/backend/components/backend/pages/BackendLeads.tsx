@@ -64,6 +64,11 @@ const PRODUCT_TAGS: ProductTag[] = ['Capital', 'Processing'];
 const productChipCls = (tag: ProductTag) =>
   tag === 'Capital' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-sky-50 text-sky-700 border-sky-200';
 
+/** Product tags worth showing next to the type badge — a tag that just repeats
+ *  the deal type (e.g. type "Processing" + tag "Processing") adds nothing. */
+const distinctProducts = (lead: StoreLead): ProductTag[] =>
+  (lead.products ?? []).filter(t => t !== lead.type);
+
 /** Read-only product badges shown in table rows and kanban cards. */
 function ProductBadges({ products, size = 'xs' }: { products?: ProductTag[]; size?: 'xs' | 'xxs' }) {
   if (!products?.length) return null;
@@ -1666,7 +1671,7 @@ export function BackendLeads({ openImport = false }: { openImport?: boolean } = 
                             <p className="text-xs text-gray-500 mb-2">{lead.contactName}</p>
                             <div className="flex items-center gap-1.5 flex-wrap">
                               <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${getTypeColor(lead.type)}`}>{lead.type}</span>
-                              <ProductBadges products={lead.products} size="xxs" />
+                              <ProductBadges products={distinctProducts(lead)} size="xxs" />
                             </div>
                             {lead.blocker && (
                               <p className="text-[10px] text-red-600 mt-2 line-clamp-1">{lead.blocker}</p>
@@ -1749,7 +1754,7 @@ export function BackendLeads({ openImport = false }: { openImport?: boolean } = 
                           <div className="flex flex-col items-start gap-1.5">
                             <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${getTypeColor(lead.type)}`}>{lead.type}</span>
                             <div className="flex items-center gap-1">
-                              <ProductBadges products={lead.products} />
+                              <ProductBadges products={distinctProducts(lead)} />
                             </div>
                           </div>
                         </td>
