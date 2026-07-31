@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { useResiduals, residualActions, type ResidualRow } from '../residualsStore';
 import { useMerchants } from '../crmStore';
+import { useSession } from '../SessionContext';
 
 // ── Types ──
 type UploadStep = 'idle' | 'uploaded' | 'mapping' | 'processing' | 'done';
@@ -650,12 +651,18 @@ export function BackendResiduals() {
 // ══════════════════════════════════════
 export function AgentResiduals() {
   const { rows, isLoading } = useResiduals();
+  const { role, agentName } = useSession();
 
   const agents = useMemo(() => [...new Set(rows.map(r => r.agent))].filter(a => a !== 'Unassigned').sort(), [rows]);
   const [agentChoice, setAgentChoice] = useState<string>('');
-  const agent = agentChoice || agents[0] || '';
+  // Agents are pinned to their own identity (RLS already scopes their rows
+  // server-side); admins previewing this page can browse any agent.
+  const agent = role === 'agent' ? (agentName ?? '') : (agentChoice || agents[0] || '');
 
-  const myRows = useMemo(() => rows.filter(r => r.agent === agent), [rows, agent]);
+  const myRows = useMemo(
+    () => (role === 'agent' ? rows : rows.filter(r => r.agent === agent)),
+    [rows, agent, role],
+  );
   const periods = useMemo(() => [...new Set(myRows.map(r => r.period))].sort().reverse(), [myRows]);
   const currentPeriod = periods[0] ?? null;
   const currentRows = myRows.filter(r => r.period === currentPeriod);
@@ -715,7 +722,7 @@ export function AgentResiduals() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <p className="text-sm text-gray-500 mt-0.5">Your residual income from merchant processing portfolios.</p>
-          {agents.length > 1 && (
+          {role !== 'agent' && agents.length > 1 && (
             <select
               value={agent}
               onChange={e => setAgentChoice(e.target.value)}

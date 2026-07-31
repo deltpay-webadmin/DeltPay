@@ -7,6 +7,7 @@ import {
   FileText,
 } from 'lucide-react';
 import { useCapital, type CapitalDeal } from '../capitalStore';
+import { useSession } from '../SessionContext';
 
 const fmt = (n: number) =>
   n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
@@ -27,8 +28,10 @@ function periodLabelOf(period: string): string {
 
 export function AgentCommissions() {
   const { deals, isLoading } = useCapital();
+  const { role, agentName } = useSession();
 
-  // Deals that carry a commission for a rep/agent.
+  // Deals that carry a commission for a rep/agent. For agents, RLS already
+  // scoped `deals` to their own rows server-side.
   const commissionDeals = useMemo(
     () => deals.filter(d => dealCommission(d) > 0),
     [deals],
@@ -39,12 +42,17 @@ export function AgentCommissions() {
     [commissionDeals],
   );
   const [repChoice, setRepChoice] = useState('');
-  const rep = repChoice || reps[0] || '';
+  // Agents are pinned to their own identity; admins can browse any rep.
+  const rep = role === 'agent' ? (agentName ?? '') : (repChoice || reps[0] || '');
 
-  // If deals aren't attributed to reps, show the whole book so the page stays useful.
   const myDeals = useMemo(
-    () => (rep ? commissionDeals.filter(d => d.rep === rep) : commissionDeals),
-    [commissionDeals, rep],
+    () =>
+      role === 'agent'
+        ? commissionDeals // server-side scoped to the signed-in agent
+        : rep
+          ? commissionDeals.filter(d => d.rep === rep)
+          : commissionDeals,
+    [commissionDeals, rep, role],
   );
 
   const periods = useMemo(
@@ -110,7 +118,7 @@ export function AgentCommissions() {
           <p className="text-sm text-gray-500 mt-1">Track your earnings and download statements.</p>
         </div>
         <div className="flex items-center gap-3">
-          {reps.length > 1 && (
+          {role !== 'agent' && reps.length > 1 && (
             <select
               value={rep}
               onChange={e => setRepChoice(e.target.value)}

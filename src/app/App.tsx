@@ -93,8 +93,9 @@ export default function App() {
         <Suspense fallback={<PageLoader />}>
         <Routes>
           <Route path="/sandbox" element={<SandboxPage />} />
-          {/* Authenticated Delt back-office CRM (Supabase-gated). */}
-          <Route path="/dashboard" element={<DashboardPage />} />
+          {/* Authenticated Delt back-office CRM (Supabase-gated). The splat
+              lets the CRM own real sub-routes: #/dashboard/leads, etc. */}
+          <Route path="/dashboard/*" element={<DashboardPage />} />
           <Route path="/demo" element={<SandboxPage />} />
           <Route path="/get-a-quote" element={<GetAQuotePage />} />
           <Route path="/signin" element={<SignInPage />} />
