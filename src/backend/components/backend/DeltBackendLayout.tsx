@@ -9,9 +9,6 @@ import { BackendLeads } from './pages/BackendLeads';
 import { BackendMerchants } from './pages/BackendMerchants';
 import { BackendUnderwriting } from './pages/BackendUnderwriting';
 import { BackendDeals } from './pages/BackendDeals';
-import { BackendAgents } from './pages/BackendAgents';
-import { BackendFinancials } from './pages/BackendFinancials';
-import { BackendLensAI } from './pages/BackendLensAI';
 import { BackendSettings } from './pages/BackendSettings';
 import { MerchantDetail } from './pages/MerchantDetail';
 import { UnderwritingDetail } from './pages/UnderwritingDetail';
@@ -19,29 +16,20 @@ import { DealDetail } from './pages/DealDetail';
 import { AgentDashboard } from './pages/AgentDashboard';
 import { AgentCommissions } from './pages/AgentCommissions';
 import { BackendOnboarding } from './pages/BackendOnboarding';
-import { BackendRetention } from './pages/BackendRetention';
-import { BackendEmployees } from './pages/BackendEmployees';
-import { BackendPayroll } from './pages/BackendPayroll';
 import { BackendAnalysis } from './pages/BackendAnalysis';
 import { BackendResiduals, AgentResiduals } from './pages/BackendResiduals';
 import { BackendCapital } from './pages/BackendCapital';
 import { HelpCenter } from './pages/HelpCenter';
 import { TemplateEditor } from './pages/TemplateEditor';
 import { MerchantResidualDetail } from './pages/MerchantResidualDetail';
-import { BackendDisputes } from './pages/BackendDisputes';
 import { BackendOutreach } from './pages/BackendOutreach';
-import { BackendCompliance } from './pages/BackendCompliance';
-import { BackendWorkspace } from './pages/BackendWorkspace';
 import { BackendActivityTimeline } from './pages/BackendActivityTimeline';
 import { BackendTasks } from './pages/BackendTasks';
 import { BackendInbox } from './pages/BackendInbox';
-import { BackendWebsites } from './pages/BackendWebsites';
-import { BackendSubscriptions } from './pages/BackendSubscriptions';
 import { BackendDocuments } from './pages/BackendDocuments';
-import { BackendPayments } from './pages/BackendPayments';
-import { BackendReports } from './pages/BackendReports';
 import { BackendPlaid } from './pages/BackendPlaid';
 import { BackendMarketing } from './pages/BackendMarketing';
+import { ComingSoon } from './ComingSoon';
 import {
   LayoutDashboard,
   Users,
@@ -59,8 +47,6 @@ import {
   CreditCard,
   ShieldAlert,
   Heart,
-  Link2,
-  Shield,
   ShieldCheck,
   Wrench,
   Briefcase,
@@ -102,10 +88,7 @@ interface NavGroup {
 const adminGroups: NavGroup[] = [
   {
     label: null,
-    items: [
-      { label: 'Overview', path: '/', icon: Home },
-      { label: 'Workspace', path: '/workspace', icon: Inbox },
-    ],
+    items: [{ label: 'Overview', path: '/', icon: Home }],
   },
   {
     label: 'Pipeline',
@@ -123,14 +106,12 @@ const adminGroups: NavGroup[] = [
       { label: 'Portfolio', path: '/deals', icon: LayoutDashboard, perm: 'capital.view' },
       { label: 'Residuals', path: '/residuals', icon: Receipt, perm: 'residuals.view' },
       { label: 'Capital', path: '/capital', icon: Banknote, perm: 'capital.view' },
-      { label: 'Retention', path: '/retention', icon: Heart, perm: 'health.view' },
     ],
   },
   {
     label: 'Operations',
     items: [
-      // Tasks/Inbox/Activity Timeline stay URL-reachable but are not listed:
-      // Workspace is the one-stop inbox+tasks+activity hub.
+      // Tasks/Inbox/Activity Timeline/Workspace stay URL-reachable but are not listed.
       { label: 'Payments', path: '/payments', icon: CreditCard, perm: 'capital.view' },
       { label: 'Documents & E-Sign', path: '/documents', icon: PenTool, perm: 'merchants.view' },
       { label: 'Disputes', path: '/disputes', icon: ShieldAlert, perm: 'merchants.view' },
@@ -140,11 +121,7 @@ const adminGroups: NavGroup[] = [
   },
   {
     label: 'Team',
-    items: [
-      { label: 'Agents', path: '/agents', icon: UserCircle, perm: 'agents.view' },
-      { label: 'Employees', path: '/employees', icon: Briefcase, perm: 'employees.view' },
-      { label: 'Payroll', path: '/payroll', icon: Receipt, perm: 'payroll.view' },
-    ],
+    items: [{ label: 'Agents', path: '/agents', icon: UserCircle, perm: 'agents.view' }],
   },
   {
     label: 'Intelligence',
@@ -152,13 +129,6 @@ const adminGroups: NavGroup[] = [
       { label: 'Lens AI', path: '/lens-ai', icon: Sparkles, perm: 'lens_ai.view' },
       { label: 'Financials', path: '/financials', icon: DollarSign, perm: 'financials.view' },
       { label: 'Reports', path: '/reports', icon: BarChart3, perm: 'financials.view' },
-    ],
-  },
-  {
-    label: 'Products',
-    items: [
-      { label: 'Websites', path: '/websites', icon: Globe, perm: 'merchants.view' },
-      { label: 'Subscriptions', path: '/subscriptions', icon: CreditCard, perm: 'billing.view' },
     ],
   },
   {
@@ -266,7 +236,6 @@ interface CommandItem {
 
 const allCommands: CommandItem[] = [
   { label: 'Overview', path: '/', group: 'Navigation', icon: Home },
-  { label: 'Workspace', path: '/workspace', group: 'Navigation', icon: Inbox, keywords: 'inbox email sms call messages tasks activity timeline' },
   { label: 'Leads', path: '/leads', group: 'Pipeline', icon: Users, keywords: 'sales pipeline', perm: 'leads.view' },
   { label: 'Import Leads', path: '/leads/import', group: 'Pipeline', icon: Upload, keywords: 'upload csv xlsx spreadsheet meta facebook instagram bulk import', perm: 'leads.create' },
   { label: 'Onboarding', path: '/onboarding', group: 'Pipeline', icon: Package, keywords: 'merchant setup sla bank connections activation', perm: 'merchants.view' },
@@ -276,22 +245,15 @@ const allCommands: CommandItem[] = [
   { label: 'Portfolio', path: '/deals', group: 'Merchants', icon: LayoutDashboard, keywords: 'deals capital deployment book', perm: 'capital.view' },
   { label: 'Residuals', path: '/residuals', group: 'Merchants', icon: Receipt, perm: 'residuals.view' },
   { label: 'Capital', path: '/capital', group: 'Merchants', icon: Banknote, perm: 'capital.view' },
-  { label: 'Retention', path: '/retention', group: 'Merchants', icon: Heart, perm: 'health.view' },
   { label: 'Payments', path: '/payments', group: 'Operations', icon: CreditCard, keywords: 'ach collections fundings payment health', perm: 'capital.view' },
   { label: 'Documents & E-Sign', path: '/documents', group: 'Operations', icon: PenTool, keywords: 'contracts docusign envelopes esign', perm: 'merchants.view' },
   { label: 'Disputes', path: '/disputes', group: 'Operations', icon: ShieldAlert, keywords: 'chargeback representment evidence', perm: 'merchants.view' },
   { label: 'Marketing Hub', path: '/marketing', group: 'Operations', icon: Megaphone, keywords: 'ads ad spend cac roas funnel google meta outreach email sms campaign automation bulk send', perm: 'integrations.view' },
   { label: 'Compliance', path: '/compliance', group: 'Operations', icon: ShieldCheck, keywords: 'compliance rules', perm: 'general.view' },
   { label: 'Agents', path: '/agents', group: 'Team', icon: UserCircle, perm: 'agents.view' },
-  { label: 'Employees', path: '/employees', group: 'Team', icon: Briefcase, perm: 'employees.view' },
-  { label: 'Payroll', path: '/payroll', group: 'Team', icon: Receipt, perm: 'payroll.view' },
   { label: 'Lens AI', path: '/lens-ai', group: 'Intelligence', icon: Sparkles, keywords: 'ai analysis', perm: 'lens_ai.view' },
   { label: 'Financials', path: '/financials', group: 'Intelligence', icon: DollarSign, keywords: 'revenue profit', perm: 'financials.view' },
   { label: 'Reports', path: '/reports', group: 'Intelligence', icon: BarChart3, keywords: 'data visualization', perm: 'financials.view' },
-  { label: 'Websites', path: '/websites', group: 'Products', icon: Globe, keywords: 'sites domain builder analytics', perm: 'merchants.view' },
-  { label: 'Subscriptions', path: '/subscriptions', group: 'Products', icon: CreditCard, keywords: 'billing plans MRR SaaS', perm: 'billing.view' },
-  { label: 'Integrations', path: '/settings/integrations', group: 'Settings', icon: Link2, perm: 'integrations.view' },
-  { label: 'Roles & Permissions', path: '/settings/roles', group: 'Settings', icon: Shield, perm: 'roles.view' },
   { label: 'General Settings', path: '/settings', group: 'Settings', icon: Wrench, perm: 'general.view' },
 ];
 
@@ -647,7 +609,7 @@ export function DeltBackendLayout() {
           <main className="flex-1 overflow-y-auto">
             <Routes>
               <Route index element={roleHome} />
-              <Route path="workspace" element={<BackendWorkspace />} />
+              <Route path="workspace" element={<ComingSoon icon={Inbox} title="Workspace" description="The unified inbox, tasks, and activity hub is in development." />} />
               <Route path="leads" element={<Guard perm="leads.view"><BackendLeads /></Guard>} />
               <Route path="leads/import" element={<Guard perm="leads.create"><BackendLeads openImport /></Guard>} />
               <Route path="onboarding" element={<Guard perm="merchants.view"><BackendOnboarding /></Guard>} />
@@ -661,26 +623,26 @@ export function DeltBackendLayout() {
               <Route path="residuals/:merchantId" element={<Guard perm="residuals.view"><MerchantResidualDetail /></Guard>} />
               <Route path="my-residuals" element={<Guard perm="residuals.view"><AgentResiduals /></Guard>} />
               <Route path="capital" element={<Guard perm="capital.view"><BackendCapital /></Guard>} />
-              <Route path="retention" element={<Guard perm="health.view"><BackendRetention /></Guard>} />
+              <Route path="retention" element={<Guard perm="health.view"><ComingSoon icon={Heart} title="Retention & Churn" description="Merchant health scoring and churn prevention are in development." /></Guard>} />
               <Route path="templates/:templateId" element={<TemplateEditor />} />
               <Route path="tasks" element={<BackendTasks />} />
               <Route path="inbox" element={<BackendInbox />} />
-              <Route path="payments" element={<Guard perm="capital.view"><BackendPayments /></Guard>} />
+              <Route path="payments" element={<Guard perm="capital.view"><ComingSoon icon={CreditCard} title="Payments & Collections" description="ACH collections, fundings, and payment health are on the way." /></Guard>} />
               <Route path="activity-timeline" element={<Guard perm="leads.view"><BackendActivityTimeline /></Guard>} />
               <Route path="documents" element={<Guard perm="merchants.view"><BackendDocuments /></Guard>} />
-              <Route path="disputes" element={<Guard perm="merchants.view"><BackendDisputes /></Guard>} />
+              <Route path="disputes" element={<Guard perm="merchants.view"><ComingSoon icon={ShieldAlert} title="Disputes" description="Chargeback tracking and representment workflows are in development." /></Guard>} />
               <Route path="marketing" element={<Guard perm="integrations.view"><MarketingHub /></Guard>} />
               <Route path="outreach" element={<Guard perm="integrations.view"><MarketingHub initialView="outreach" /></Guard>} />
-              <Route path="compliance" element={<Guard perm="general.view"><BackendCompliance /></Guard>} />
-              <Route path="agents" element={<Guard perm="agents.view"><BackendAgents /></Guard>} />
-              <Route path="employees" element={<Guard perm="employees.view"><BackendEmployees /></Guard>} />
-              <Route path="payroll" element={<Guard perm="payroll.view"><BackendPayroll /></Guard>} />
+              <Route path="compliance" element={<Guard perm="general.view"><ComingSoon icon={ShieldCheck} title="Compliance" description="Compliance monitoring and rule management are in development." /></Guard>} />
+              <Route path="agents" element={<Guard perm="agents.view"><ComingSoon icon={UserCircle} title="Agents" description="Agent management and performance tracking are in development." /></Guard>} />
+              <Route path="employees" element={<Guard perm="employees.view"><ComingSoon icon={Briefcase} title="Employees" description="Employee directory and management are in development." /></Guard>} />
+              <Route path="payroll" element={<Guard perm="payroll.view"><ComingSoon icon={Receipt} title="Payroll" description="Payroll runs and compensation tracking are in development." /></Guard>} />
               <Route path="analysis" element={<Guard perm="analysis.view"><BackendAnalysis /></Guard>} />
-              <Route path="lens-ai" element={<Guard perm="lens_ai.view"><BackendLensAI /></Guard>} />
-              <Route path="financials" element={<Guard perm="financials.view"><BackendFinancials /></Guard>} />
-              <Route path="reports" element={<Guard perm="financials.view"><BackendReports /></Guard>} />
-              <Route path="websites" element={<Guard perm="merchants.view"><BackendWebsites /></Guard>} />
-              <Route path="subscriptions" element={<Guard perm="billing.view"><BackendSubscriptions /></Guard>} />
+              <Route path="lens-ai" element={<Guard perm="lens_ai.view"><ComingSoon icon={Sparkles} title="Lens AI" description="AI-powered portfolio intelligence is in development." /></Guard>} />
+              <Route path="financials" element={<Guard perm="financials.view"><ComingSoon icon={DollarSign} title="Financials" description="Revenue, P&L, and projections are in development." /></Guard>} />
+              <Route path="reports" element={<Guard perm="financials.view"><ComingSoon icon={BarChart3} title="Reports & Export Center" description="Custom reports and exports are in development." /></Guard>} />
+              <Route path="websites" element={<Guard perm="merchants.view"><ComingSoon icon={Globe} title="Websites" description="Merchant website builder and analytics are in development." /></Guard>} />
+              <Route path="subscriptions" element={<Guard perm="billing.view"><ComingSoon icon={CreditCard} title="Subscriptions" description="Subscription billing and plan management are in development." /></Guard>} />
               <Route path="commissions" element={<Guard perm="compensation.view"><AgentCommissions /></Guard>} />
               <Route path="support" element={<SupportPage />} />
               <Route path="settings" element={<Guard perm="general.view"><BackendSettings /></Guard>} />

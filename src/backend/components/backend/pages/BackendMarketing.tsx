@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Link2, Target, TrendingUp, ArrowRight, RefreshCw, X, Unplug, AlertTriangle, Download, CheckCircle2 } from 'lucide-react';
+import { Link2, TrendingUp, ArrowRight, RefreshCw, X, Unplug, AlertTriangle, Download, CheckCircle2 } from 'lucide-react';
 import { Overline, DeltaPill, KpiTile, Card, HeroPanel, Btn } from '../../dp';
 import { useMarketing, useMarketingSync, marketingActions } from '../marketingStore';
 import { useLeads } from '../crmStore';
@@ -7,24 +7,11 @@ import { useLeads } from '../crmStore';
 // ══════════════════════════════════════
 // Marketing performance — the return-on-ad-spend story.
 //
-// Two modes:
-//   • Sample — the sculpted demo cycle, until an ad account connects.
-//   • Live — real Meta campaign/day insights (marketingStore) blended with
-//     CRM stages: Meta supplies impressions → clicks → leads; the CRM
-//     supplies qualified → converted for Meta-sourced leads.
+// Real Meta campaign/day insights (marketingStore) blended with CRM stages:
+// Meta supplies impressions → clicks → leads; the CRM supplies
+// qualified → converted for Meta-sourced leads. Until an ad account is
+// connected (and synced), the page shows a connect/sync empty state.
 // ══════════════════════════════════════
-
-const SAMPLE_CYCLE = {
-  period: 'May 25 – Jun 24, 2026',
-  spend: 18420,
-  revenue: 96420,
-  roas: 5.2,
-  roasDelta: 8.4,
-  cac: 542,
-  cacDelta: -6.1,
-  paybackDays: 41,
-  funded: 34,
-};
 
 // ── Funnel stages ──
 // Widths are perceptual, not linear — the story is the narrowing, then the
@@ -38,65 +25,7 @@ interface Stage {
   width: number;
 }
 
-const SAMPLE_STAGES: Stage[] = [
-  { key: 'impressions', label: 'Impressions', value: '1.24M', stepPct: null, unit: '$14.85 CPM', width: 100 },
-  { key: 'clicks', label: 'Clicks', value: '38.4K', stepPct: '3.1%', unit: '$0.48 CPC', width: 82 },
-  { key: 'visits', label: 'Site visits', value: '29.6K', stepPct: '77%', unit: '$0.62 / visit', width: 72 },
-  { key: 'leads', label: 'Leads', value: '1,184', stepPct: '4.0%', unit: '$15.56 / lead', width: 54 },
-  { key: 'qualified', label: 'Qualified', value: '342', stepPct: '29%', unit: '$53.86 / qualified', width: 40 },
-  { key: 'apps', label: 'Applications', value: '128', stepPct: '37%', unit: '$143.91 / application', width: 28 },
-  { key: 'funded', label: 'Funded merchants', value: '34', stepPct: '27%', unit: '$542 CAC', width: 18 },
-];
-
 const RETURN_GEOM = { widthTop: 18, widthBottom: 46 };
-
-const SAMPLE_STAGE_CHANNELS: Record<string, { channel: string; share: number }[]> = {
-  impressions: [
-    { channel: 'Google Ads', share: 46 }, { channel: 'Meta', share: 34 },
-    { channel: 'LinkedIn', share: 12 }, { channel: 'Email', share: 3 }, { channel: 'SMS', share: 5 },
-  ],
-  clicks: [
-    { channel: 'Google Ads', share: 51 }, { channel: 'Meta', share: 29 },
-    { channel: 'LinkedIn', share: 8 }, { channel: 'Email', share: 6 }, { channel: 'SMS', share: 6 },
-  ],
-  visits: [
-    { channel: 'Google Ads', share: 52 }, { channel: 'Meta', share: 28 },
-    { channel: 'LinkedIn', share: 8 }, { channel: 'Email', share: 6 }, { channel: 'SMS', share: 6 },
-  ],
-  leads: [
-    { channel: 'Google Ads', share: 44 }, { channel: 'Meta', share: 27 },
-    { channel: 'LinkedIn', share: 7 }, { channel: 'Email', share: 13 }, { channel: 'SMS', share: 9 },
-  ],
-  qualified: [
-    { channel: 'Google Ads', share: 46 }, { channel: 'Meta', share: 25 },
-    { channel: 'LinkedIn', share: 6 }, { channel: 'Email', share: 14 }, { channel: 'SMS', share: 9 },
-  ],
-  apps: [
-    { channel: 'Google Ads', share: 45 }, { channel: 'Meta', share: 26 },
-    { channel: 'LinkedIn', share: 8 }, { channel: 'Email', share: 12 }, { channel: 'SMS', share: 9 },
-  ],
-  funded: [
-    { channel: 'Google Ads', share: 44 }, { channel: 'Meta', share: 26 },
-    { channel: 'LinkedIn', share: 9 }, { channel: 'Email', share: 12 }, { channel: 'SMS', share: 9 },
-  ],
-};
-
-const SAMPLE_CHANNELS = [
-  { name: 'Google Ads', spend: 8900, cac: 593, roas: 4.8 },
-  { name: 'Meta', spend: 5200, cac: 578, roas: 4.4 },
-  { name: 'LinkedIn', spend: 2100, cac: 700, roas: 3.1 },
-  { name: 'SMS', spend: 1500, cac: 500, roas: 5.9 },
-  { name: 'Email', spend: 720, cac: 180, roas: 9.6 },
-];
-
-const SAMPLE_TREND = [
-  { month: 'Feb', spend: 11200, revenue: 41800 },
-  { month: 'Mar', spend: 13400, revenue: 52300 },
-  { month: 'Apr', spend: 14100, revenue: 61900 },
-  { month: 'May', spend: 16200, revenue: 74500 },
-  { month: 'Jun', spend: 18420, revenue: 96420 },
-  { month: 'Jul', spend: 19800, revenue: 104100 },
-];
 
 const fmtK = (n: number) => (n >= 1000 ? `$${(n / 1000).toFixed(1)}K` : `$${Math.round(n)}`);
 const fmtNum = (n: number) =>
@@ -614,24 +543,67 @@ export function BackendMarketing() {
     };
   }, [metaConn, insights, leads]);
 
-  const stages = live ? live.stages : SAMPLE_STAGES;
+  if (!live) {
+    return (
+      <div className="h-full flex items-center justify-center px-6">
+        <div className="max-w-md text-center">
+          <div className="w-14 h-14 mx-auto rounded-[14px] bg-(--dp-accent-soft) border border-(--dp-border) flex items-center justify-center mb-4">
+            {metaConn ? (
+              <RefreshCw className="w-6 h-6 text-(--dp-accent-text)" strokeWidth={1.75} />
+            ) : (
+              <Link2 className="w-6 h-6 text-(--dp-accent-text)" strokeWidth={1.75} />
+            )}
+          </div>
+          {metaConn ? (
+            <>
+              <h2 className="text-[18px] font-bold text-(--dp-text)">Waiting for campaign data</h2>
+              <p className="mt-1.5 text-[13px] leading-relaxed text-(--dp-text-muted)">
+                {metaConn.accountName || 'Your Meta account'} is connected — run a sync to pull the last 90 days of campaign insights.
+              </p>
+              <div className="mt-5 flex items-center justify-center gap-2">
+                <Btn variant="primary" size="sm" onClick={() => marketingActions.syncMeta(90)} disabled={isBusy}>
+                  <RefreshCw className={`w-3.5 h-3.5 ${isBusy ? 'animate-spin' : ''}`} />
+                  {isBusy ? 'Syncing…' : 'Sync now'}
+                </Btn>
+                <Btn size="sm" onClick={() => setConnectOpen(true)}>
+                  <Link2 className="w-3.5 h-3.5" /> Manage connection
+                </Btn>
+              </div>
+            </>
+          ) : (
+            <>
+              <h2 className="text-[18px] font-bold text-(--dp-text)">Connect your ad account</h2>
+              <p className="mt-1.5 text-[13px] leading-relaxed text-(--dp-text-muted)">
+                Link Meta Ads to see spend, cost per lead, and funnel performance blended with your CRM pipeline.
+              </p>
+              <div className="mt-5">
+                <Btn variant="primary" size="sm" onClick={() => setConnectOpen(true)}>
+                  <Link2 className="w-3.5 h-3.5" /> Connect ad accounts
+                </Btn>
+              </div>
+            </>
+          )}
+        </div>
+        <MetaConnectDialog
+          open={connectOpen}
+          onClose={() => setConnectOpen(false)}
+          connected={metaConn ? { accountId: metaConn.accountId, accountName: metaConn.accountName, lastSyncedAt: metaConn.lastSyncedAt } : null}
+        />
+      </div>
+    );
+  }
+
+  const stages = live.stages;
   const funnelH = stages.length * BAND_H;
-  const stageChannels = live ? live.stageChannels : SAMPLE_STAGE_CHANNELS;
-  const totalSampleSpend = useMemo(() => SAMPLE_CHANNELS.reduce((s, c) => s + c.spend, 0), []);
-  const maxSampleTrend = useMemo(() => Math.max(...SAMPLE_TREND.map(t => t.revenue)), []);
+  const stageChannels = live.stageChannels;
   const drill = drillKey ? stageChannels[drillKey] : null;
   const drillStage = drillKey ? stages.find(s => s.key === drillKey) : null;
-  const bestRoas = Math.max(...SAMPLE_CHANNELS.map(c => c.roas));
-  const maxLiveTrend = live ? Math.max(...live.trend.map(t => t.spend), 1) : 1;
-  const maxCampaignSpend = live ? Math.max(...live.campaigns.map(c => c.spend), 1) : 1;
+  const maxLiveTrend = Math.max(...live.trend.map(t => t.spend), 1);
+  const maxCampaignSpend = Math.max(...live.campaigns.map(c => c.spend), 1);
 
-  const returnValue = live
-    ? (live.pipelineValue > 0 ? fmtK(live.pipelineValue) : '—')
-    : '$96.4K';
-  const returnLabel = live ? 'Attributed monthly volume' : 'Attributed revenue';
-  const returnBadge = live
-    ? (live.converted > 0 ? `${live.converted} converted` : 'awaiting conversions')
-    : '5.2× return';
+  const returnValue = live.pipelineValue > 0 ? fmtK(live.pipelineValue) : '—';
+  const returnLabel = 'Attributed monthly volume';
+  const returnBadge = live.converted > 0 ? `${live.converted} converted` : 'awaiting conversions';
 
   return (
     <div className="h-full overflow-y-auto">
@@ -641,73 +613,38 @@ export function BackendMarketing() {
         <HeroPanel>
           <div className="grid grid-cols-1 xl:grid-cols-[1fr_460px] gap-8 p-6 lg:p-8">
             <div className="flex flex-col justify-center">
-              <Overline className="text-white/60">
-                {live ? `Meta Ads · last 30 days · ${live.period}` : `Return on ad spend · ${SAMPLE_CYCLE.period}`}
-              </Overline>
+              <Overline className="text-white/60">{`Meta Ads · last 30 days · ${live.period}`}</Overline>
               <div className="mt-2 flex flex-wrap items-center gap-3">
                 <span className="text-[44px] leading-none font-bold text-white tracking-[-0.02em] tabular-nums">
-                  {live
-                    ? (live.costPerLead !== null ? fmtMoney(live.costPerLead) : fmtK(live.spend))
-                    : `${SAMPLE_CYCLE.roas.toFixed(1)}×`}
+                  {live.costPerLead !== null ? fmtMoney(live.costPerLead) : fmtK(live.spend)}
                 </span>
-                {live
-                  ? (live.cplDelta !== null && <DeltaPill value={live.cplDelta} invert onGlass />)
-                  : <DeltaPill value={SAMPLE_CYCLE.roasDelta} onGlass />}
+                {live.cplDelta !== null && <DeltaPill value={live.cplDelta} invert onGlass />}
               </div>
               <p className="mt-3 text-[14px] text-white/60">
-                {live ? (
-                  live.costPerLead !== null ? (
-                    <>per lead — {fmtK(live.spend)} brought <span className="text-white/90 font-semibold">{fmtNum(live.leads)} leads</span> from {live.accountLabel} ({live.accountId})</>
-                  ) : (
-                    <>spent on {live.accountLabel} ({live.accountId}) — no lead events reported yet</>
-                  )
+                {live.costPerLead !== null ? (
+                  <>per lead — {fmtK(live.spend)} brought <span className="text-white/90 font-semibold">{fmtNum(live.leads)} leads</span> from {live.accountLabel} ({live.accountId})</>
                 ) : (
-                  <>{fmtK(SAMPLE_CYCLE.spend)} invested returned <span className="text-white/90 font-semibold">{fmtK(SAMPLE_CYCLE.revenue)}</span> in
-                  first-90-day revenue from {SAMPLE_CYCLE.funded} funded merchants</>
+                  <>spent on {live.accountLabel} ({live.accountId}) — no lead events reported yet</>
                 )}
               </p>
               <div className="mt-6 flex items-center gap-2">
-                {live ? (
-                  <>
-                    <Btn variant="primary" size="sm" onClick={() => marketingActions.syncMeta(90)} disabled={isBusy}>
-                      <RefreshCw className={`w-3.5 h-3.5 ${isBusy ? 'animate-spin' : ''}`} />
-                      {isBusy ? 'Syncing…' : 'Sync now'}
-                    </Btn>
-                    <button
-                      onClick={() => setConnectOpen(true)}
-                      className="inline-flex items-center gap-1.5 h-8 px-4 rounded-[10px] text-[12px] font-bold text-white/80 border border-white/20 hover:bg-white/10 transition-colors"
-                    >
-                      <Link2 className="w-3.5 h-3.5" /> Manage connection
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <Btn variant="primary" size="sm" onClick={() => setConnectOpen(true)}>
-                      <Link2 className="w-3.5 h-3.5" /> Connect ad accounts
-                    </Btn>
-                    <button className="inline-flex items-center gap-1.5 h-8 px-4 rounded-[10px] text-[12px] font-bold text-white/80 border border-white/20 hover:bg-white/10 transition-colors">
-                      <Target className="w-3.5 h-3.5" /> Set targets
-                    </button>
-                  </>
-                )}
+                <Btn variant="primary" size="sm" onClick={() => marketingActions.syncMeta(90)} disabled={isBusy}>
+                  <RefreshCw className={`w-3.5 h-3.5 ${isBusy ? 'animate-spin' : ''}`} />
+                  {isBusy ? 'Syncing…' : 'Sync now'}
+                </Btn>
+                <button
+                  onClick={() => setConnectOpen(true)}
+                  className="inline-flex items-center gap-1.5 h-8 px-4 rounded-[10px] text-[12px] font-bold text-white/80 border border-white/20 hover:bg-white/10 transition-colors"
+                >
+                  <Link2 className="w-3.5 h-3.5" /> Manage connection
+                </button>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3 content-center">
-              {live ? (
-                <>
-                  <KpiTile glass label="Ad spend" value={fmtK(live.spend)} delta={live.spendDelta ?? undefined} sub="Last 30 days" />
-                  <KpiTile glass label="Impressions" value={fmtNum(live.impressions)} sub="Meta campaigns" />
-                  <KpiTile glass label="Clicks" value={fmtNum(live.clicks)} sub={live.impressions > 0 ? `${((live.clicks / live.impressions) * 100).toFixed(1)}% CTR` : '—'} />
-                  <KpiTile glass label="Leads" value={fmtNum(live.leads)} delta={live.leadsDelta ?? undefined} sub={live.costPerLead !== null ? `${fmtMoney(live.costPerLead)} each` : '—'} />
-                </>
-              ) : (
-                <>
-                  <KpiTile glass label="Ad spend" value={fmtK(SAMPLE_CYCLE.spend)} sub="All paid channels" />
-                  <KpiTile glass label="Attributed revenue" value={fmtK(SAMPLE_CYCLE.revenue)} sub="First 90 days" />
-                  <KpiTile glass label="CAC" value={`$${SAMPLE_CYCLE.cac}`} delta={SAMPLE_CYCLE.cacDelta} invertDelta sub="Per funded merchant" />
-                  <KpiTile glass label="Payback" value={`${SAMPLE_CYCLE.paybackDays}d`} sub="Spend recovered" />
-                </>
-              )}
+              <KpiTile glass label="Ad spend" value={fmtK(live.spend)} delta={live.spendDelta ?? undefined} sub="Last 30 days" />
+              <KpiTile glass label="Impressions" value={fmtNum(live.impressions)} sub="Meta campaigns" />
+              <KpiTile glass label="Clicks" value={fmtNum(live.clicks)} sub={live.impressions > 0 ? `${((live.clicks / live.impressions) * 100).toFixed(1)}% CTR` : '—'} />
+              <KpiTile glass label="Leads" value={fmtNum(live.leads)} delta={live.leadsDelta ?? undefined} sub={live.costPerLead !== null ? `${fmtMoney(live.costPerLead)} each` : '—'} />
             </div>
           </div>
         </HeroPanel>
@@ -717,9 +654,7 @@ export function BackendMarketing() {
           title="Spend → return"
           action={
             <span className="text-[11px] text-(--dp-text-faint)">
-              {live
-                ? `Live · ${live.accountLabel} · synced ${relTime(live.syncedAt)}`
-                : 'Sample cycle · live once ad accounts connect'}
+              {`Live · ${live.accountLabel} · synced ${relTime(live.syncedAt)}`}
             </span>
           }
         >
@@ -809,7 +744,7 @@ export function BackendMarketing() {
               <div style={{ height: GAP }} />
               <div className="flex items-center" style={{ height: RETURN_H }}>
                 <span className="text-[11px] font-bold tabular-nums text-(--dp-success)">
-                  {live ? (live.converted > 0 ? `${live.converted} merchants` : '—') : `${SAMPLE_CYCLE.roas.toFixed(1)}× ROAS`}
+                  {live.converted > 0 ? `${live.converted} merchants` : '—'}
                 </span>
               </div>
             </div>
@@ -820,7 +755,7 @@ export function BackendMarketing() {
             <div className="mt-5 pt-4 border-t border-(--dp-border)">
               <div className="flex items-center justify-between mb-2.5">
                 <p className="text-[11px] font-bold text-(--dp-text-secondary)">
-                  {drillStage.label} by {live ? 'campaign' : 'channel'}
+                  {drillStage.label} by campaign
                 </p>
                 <button onClick={() => setDrillKey(null)} className="text-[11px] text-(--dp-text-faint) hover:text-(--dp-text)">
                   Clear
@@ -853,144 +788,69 @@ export function BackendMarketing() {
         </Card>
 
         {/* ═══ LEAD RECONCILIATION ═══ */}
-        {live && <LeadReconCard />}
+        <LeadReconCard />
 
         {/* ═══ CHANNELS / CAMPAIGNS + CYCLES ═══ */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-          <Card title={live ? 'Where the spend goes · by campaign' : 'Where the spend goes'}>
-            {live ? (
-              <>
-                <div className="space-y-3.5">
-                  {live.campaigns.map(ch => (
-                    <div key={ch.name} className="grid grid-cols-[150px_1fr_auto] items-center gap-4">
-                      <span className="text-[12px] font-semibold text-(--dp-text) truncate" title={ch.name}>{ch.name}</span>
-                      <div className="h-1 rounded-full bg-white/[0.06] overflow-hidden">
-                        <div className="h-full rounded-full bg-(--dp-accent)" style={{ width: `${(ch.spend / maxCampaignSpend) * 100}%` }} />
-                      </div>
-                      <div className="flex items-baseline gap-3 tabular-nums">
-                        <span className="text-[11px] text-(--dp-text-muted) w-[56px] text-right">{fmtK(ch.spend)}</span>
-                        <span className="text-[11px] text-(--dp-text-faint) w-[58px] text-right">{ch.leads} leads</span>
-                        <span className="text-[12px] font-bold w-[62px] text-right text-(--dp-accent-text)">
-                          {ch.cpl !== null ? fmtMoney(ch.cpl) : '—'}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                  {!live.campaigns.length && (
-                    <p className="text-[12px] text-(--dp-text-muted)">No campaign activity in the last 30 days.</p>
-                  )}
+          <Card title="Where the spend goes · by campaign">
+            <div className="space-y-3.5">
+              {live.campaigns.map(ch => (
+                <div key={ch.name} className="grid grid-cols-[150px_1fr_auto] items-center gap-4">
+                  <span className="text-[12px] font-semibold text-(--dp-text) truncate" title={ch.name}>{ch.name}</span>
+                  <div className="h-1 rounded-full bg-white/[0.06] overflow-hidden">
+                    <div className="h-full rounded-full bg-(--dp-accent)" style={{ width: `${(ch.spend / maxCampaignSpend) * 100}%` }} />
+                  </div>
+                  <div className="flex items-baseline gap-3 tabular-nums">
+                    <span className="text-[11px] text-(--dp-text-muted) w-[56px] text-right">{fmtK(ch.spend)}</span>
+                    <span className="text-[11px] text-(--dp-text-faint) w-[58px] text-right">{ch.leads} leads</span>
+                    <span className="text-[12px] font-bold w-[62px] text-right text-(--dp-accent-text)">
+                      {ch.cpl !== null ? fmtMoney(ch.cpl) : '—'}
+                    </span>
+                  </div>
                 </div>
-                <p className="mt-4 text-[11px] text-(--dp-text-faint)">
-                  Spend, leads, and cost per lead by campaign — trailing 30 days.
-                </p>
-              </>
-            ) : (
-              <>
-                <div className="space-y-3.5">
-                  {SAMPLE_CHANNELS.map(ch => {
-                    const share = (ch.spend / totalSampleSpend) * 100;
-                    return (
-                      <div key={ch.name} className="grid grid-cols-[110px_1fr_auto] items-center gap-4">
-                        <div className="flex items-center gap-1.5 min-w-0">
-                          <span className="text-[12px] font-semibold text-(--dp-text) truncate">{ch.name}</span>
-                          {ch.roas === bestRoas && (
-                            <span className="text-[9px] font-bold uppercase tracking-wide text-(--dp-success)">Best</span>
-                          )}
-                        </div>
-                        <div className="h-1 rounded-full bg-white/[0.06] overflow-hidden">
-                          <div className="h-full rounded-full bg-(--dp-accent)" style={{ width: `${share}%` }} />
-                        </div>
-                        <div className="flex items-baseline gap-3 tabular-nums">
-                          <span className="text-[11px] text-(--dp-text-muted) w-[52px] text-right">{fmtK(ch.spend)}</span>
-                          <span className="text-[11px] text-(--dp-text-faint) w-[62px] text-right">${ch.cac} CAC</span>
-                          <span className={`text-[12px] font-bold w-[44px] text-right ${ch.roas >= 4 ? 'text-(--dp-success)' : 'text-(--dp-warning)'}`}>
-                            {ch.roas.toFixed(1)}×
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-                <p className="mt-4 text-[11px] text-(--dp-text-faint)">
-                  CAC and return per channel, last non-direct touch.
-                </p>
-              </>
-            )}
+              ))}
+              {!live.campaigns.length && (
+                <p className="text-[12px] text-(--dp-text-muted)">No campaign activity in the last 30 days.</p>
+              )}
+            </div>
+            <p className="mt-4 text-[11px] text-(--dp-text-faint)">
+              Spend, leads, and cost per lead by campaign — trailing 30 days.
+            </p>
           </Card>
 
           <Card
             title={
               <span className="inline-flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-(--dp-accent-text)" />
-                {live ? 'Spend vs leads by month' : 'Spend vs return by cycle'}
+                Spend vs leads by month
               </span>
             }
           >
-            {live ? (
-              <>
-                <div className={`grid gap-3 items-end h-[150px] pt-5`} style={{ gridTemplateColumns: `repeat(${Math.max(live.trend.length, 1)}, 1fr)` }}>
-                  {live.trend.map(t => (
-                    <div key={t.month} className="flex flex-col items-center justify-end h-full gap-1.5">
-                      <span className="text-[10px] font-bold tabular-nums text-(--dp-success)">
-                        {t.leads > 0 ? fmtMoney(t.spend / t.leads) : '—'}
-                      </span>
-                      <div className="flex items-end gap-1 w-full justify-center flex-1">
-                        <div
-                          className="w-[36%] max-w-[24px] rounded-t-[3px] bg-(--dp-accent)"
-                          style={{ height: `${Math.max((t.spend / maxLiveTrend) * 100, 2)}%` }}
-                        />
-                      </div>
-                      <span className="text-[10px] text-(--dp-text-muted)">{t.month}</span>
-                      <span className="text-[10px] tabular-nums text-(--dp-text-faint)">{t.leads} leads</span>
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-3 flex items-center justify-between">
-                  <span className="inline-flex items-center gap-1.5 text-[11px] text-(--dp-text-muted)">
-                    <span className="w-2 h-2 rounded-[3px] bg-(--dp-accent)" /> Spend · label = cost per lead
+            <div className={`grid gap-3 items-end h-[150px] pt-5`} style={{ gridTemplateColumns: `repeat(${Math.max(live.trend.length, 1)}, 1fr)` }}>
+              {live.trend.map(t => (
+                <div key={t.month} className="flex flex-col items-center justify-end h-full gap-1.5">
+                  <span className="text-[10px] font-bold tabular-nums text-(--dp-success)">
+                    {t.leads > 0 ? fmtMoney(t.spend / t.leads) : '—'}
                   </span>
-                  <span className="inline-flex items-center gap-1 text-[11px] text-(--dp-text-faint)">
-                    {live.trend.length} months <ArrowRight className="w-3 h-3" />
-                  </span>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="grid grid-cols-6 gap-3 items-end h-[150px] pt-5">
-                  {SAMPLE_TREND.map(t => (
-                    <div key={t.month} className="flex flex-col items-center justify-end h-full gap-1.5">
-                      <span className="text-[10px] font-bold tabular-nums text-(--dp-success)">
-                        {(t.revenue / t.spend).toFixed(1)}×
-                      </span>
-                      <div className="flex items-end gap-1 w-full justify-center flex-1">
-                        <div
-                          className="w-[22%] max-w-[18px] rounded-t-[3px] bg-(--dp-border-strong)"
-                          style={{ height: `${(t.spend / maxSampleTrend) * 100}%` }}
-                        />
-                        <div
-                          className="w-[22%] max-w-[18px] rounded-t-[3px] bg-(--dp-accent)"
-                          style={{ height: `${(t.revenue / maxSampleTrend) * 100}%` }}
-                        />
-                      </div>
-                      <span className="text-[10px] text-(--dp-text-muted)">{t.month}</span>
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-3 flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <span className="inline-flex items-center gap-1.5 text-[11px] text-(--dp-text-muted)">
-                      <span className="w-2 h-2 rounded-[3px] bg-(--dp-border-strong)" /> Spend
-                    </span>
-                    <span className="inline-flex items-center gap-1.5 text-[11px] text-(--dp-text-muted)">
-                      <span className="w-2 h-2 rounded-[3px] bg-(--dp-accent)" /> Return
-                    </span>
+                  <div className="flex items-end gap-1 w-full justify-center flex-1">
+                    <div
+                      className="w-[36%] max-w-[24px] rounded-t-[3px] bg-(--dp-accent)"
+                      style={{ height: `${Math.max((t.spend / maxLiveTrend) * 100, 2)}%` }}
+                    />
                   </div>
-                  <span className="inline-flex items-center gap-1 text-[11px] text-(--dp-text-faint)">
-                    6 cycles <ArrowRight className="w-3 h-3" />
-                  </span>
+                  <span className="text-[10px] text-(--dp-text-muted)">{t.month}</span>
+                  <span className="text-[10px] tabular-nums text-(--dp-text-faint)">{t.leads} leads</span>
                 </div>
-              </>
-            )}
+              ))}
+            </div>
+            <div className="mt-3 flex items-center justify-between">
+              <span className="inline-flex items-center gap-1.5 text-[11px] text-(--dp-text-muted)">
+                <span className="w-2 h-2 rounded-[3px] bg-(--dp-accent)" /> Spend · label = cost per lead
+              </span>
+              <span className="inline-flex items-center gap-1 text-[11px] text-(--dp-text-faint)">
+                {live.trend.length} months <ArrowRight className="w-3 h-3" />
+              </span>
+            </div>
           </Card>
         </div>
       </div>
