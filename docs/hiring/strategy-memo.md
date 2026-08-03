@@ -29,12 +29,14 @@ Advertised framing: **"Start at a 50% split. Earn your way to 70."**
 - **Endowment effect:** "your book," "accounts you own," "lifetime residuals" — ownership language makes the residual base something reps possess and protect, which also drives retention *of the agent*.
 - **The honesty rule:** never advertise "up to 70%" without stating the 50% start in the same breath. "Up to" framing alone is the #1 pattern-match for a scam posting among experienced reps, and it invites the "what's the catch" objection we'd otherwise have to defuse on every call.
 
-## 4. Activation bonus sizing: $150 / $250
+## 4. Activation bonus design: banded $150–$1,000 + Fast Start + momentum kicker
 
-- The merchant referral program already pays **$100 + 1 free month** to ordinary referrers. A professional agent earning 1.5× that ($150) is internally consistent and easy to defend in negotiation ("our referral program pays $100 to a customer who sends a friend — you're a professional, you get more").
-- Payback math: at ~$70–$120/month net program revenue per account, a $150 bonus is recovered in **~2 months** — affordable even at low cash reserves, and the 90-day clawback caps exposure to churn-and-burn signups.
-- The **$250 enhanced bonus** (POS or Delt Capital attached) steers behavior toward multi-product deals — exactly the accounts with the highest revenue and lowest attrition — for $100 of marginal cost on our best deals only.
-- Psychology: the bonus answers the fatal objection for commission-only roles — *"I can't wait six months to eat."* It creates income in month one while the residual base builds.
+A flat bonus has two motivational failures: it is *certain* (no anticipation, no chase) and *flat across deal sizes* (no reason to hunt large merchants). The structure fixes both while holding one discipline constant: **every bonus ≈ ~2 months of that account's expected net program revenue**, so bigger bonuses are funded by the bigger deals that earn them.
+
+- **Volume-banded bonus** ($150 / $250 / $400 / $600 / $1,000 by the same volume bands used in our pricing programs, +$100 POS/Capital kicker): transforms the advertised headline from "$150 per account" to "**$150 to $1,000+ per account**" at no change to payback economics, and aims agents at the high-revenue, low-attrition merchants we want most. Anchor check: the merchant referral program pays ordinary referrers $100 — the agent floor at $150 stays internally consistent. Anti-gaming: bands ≥$400 confirmed by first full month of actual processing.
+- **Fast Start milestones** ($500 for 3 activations in 30 days; $1,000 for 10 in 90; $1,500 lifetime cap): targets the day-30-to-90 valley where commission agents quit. Worst case is known ($1,500) and is only ever paid to an agent who activated 10 real accounts. This is also the answer to the fatal objection — *"I can't wait six months to eat"* — a target-pace agent's month one is now ~$2,000, not ~$900.
+- **Momentum kicker** (8+ activations in a month → +$50 retroactive on every activation that month): retroactive unlocks exploit the goal-gradient effect and loss aversion — an agent at 6 deals on the 25th is chasing +$400 across the whole month, not the next $150. It's self-managing urgency.
+- **Never pay on deal submission** — that buys junk applications and dead accounts. The excitement-at-submission problem is solved in the portal instead: a pipeline tracker (Submitted → Approved → Activated → Paid) showing "pending earnings" (expected bonus + estimated first-year residual) the moment a deal is submitted. Anticipation at submission, cash only at activation.
 
 ## 5. Quasi-benefit inventory: actual cost vs. perceived value
 

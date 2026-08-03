@@ -8,7 +8,7 @@
 | **Company** | Delt |
 | **Location** | Remote — United States |
 | **Job type** | Contract (1099 independent contractor) |
-| **Pay** | Commission-only. $150–$250 activation bonus per account + 50–70% lifetime residual split. Realistic first-year range $15,000–$70,000+ depending on production; top performers and year-two agents reach the $70,000–$160,000 range. No base salary. |
+| **Pay** | Commission-only. $150–$1,000 activation bonus per account (scales with merchant size) + up to $1,500 in Fast Start bonuses in your first 90 days + 50–70% lifetime residual split. Realistic first-year range $17,000–$78,000+ depending on production; top performers and year-two agents reach the $70,000–$160,000 range. No base salary. |
 | **Schedule** | You set your own hours |
 
 > Formatting notes for whoever publishes this: no emojis, no ALL CAPS, no "$$$" in the title — Indeed's algorithm demotes spammy listings. Enter the pay details in Indeed's structured pay fields exactly as above; mismatched pay claims can get the listing flagged.
@@ -25,13 +25,15 @@ Delt is the all-in-one platform Main Street businesses use to run, grow, and fun
 
 ### What you earn
 
-- **$150 activation bonus** for every merchant account you sign that activates and processes its first batch — **$250** when the account also takes our KORONA POS or Delt Capital funding.
+- **Activation bonuses from $150 to $1,000 per account, based on merchant size.** Every account that activates and processes its first batch pays a bonus — $150 for a small shop, up to $1,000 for a $100K+/month merchant. Add **$100 more** on any account that also takes our KORONA POS or Delt Capital funding. Big deals pay like big deals.
+- **Fast Start bonuses: up to $1,500 in your first 90 days.** Activate 3 accounts in your first 30 days and earn an extra **$500**; activate 10 in your first 90 and earn an extra **$1,000**.
+- **Momentum kicker.** Activate 8+ accounts in any calendar month and every activation that month retroactively pays **an extra $50**.
 - **Lifetime residuals: start at a 50% split and earn your way to 70%.** You keep a share of the monthly revenue on every account you sign, for as long as that merchant processes with Delt. Tier 1 starts at 50% — most ISOs start agents at 30–40%. Produce, and you move up the ladder to 60% and 70%.
 - **Residuals are never clawed back.** The only clawback in the entire program: the activation bonus, and only if the merchant cancels within 90 days.
 - **Multiple commissions per relationship.** Processing residuals, POS placements, Delt Capital fundings, and website/software subscriptions each pay — one merchant can generate several income streams.
 - **Paid on the 15th, every month**, with a per-merchant statement in your agent portal. You see every account, every month, down to the penny.
 
-Realistic numbers, not hype: an agent signing ~6 accounts a month is around **$1,700/month by month 3** and **$3,900–$4,500/month by month 12** (roughly $31,000–$40,000 in year one), then starts year two with a residual base already paying before they sell anything. Slower pace earns less; our top producers earn more. Full assumptions and scenario math are in the comp plan we send every serious applicant.
+Realistic numbers, not hype: an agent signing ~6 accounts a month earns around **$2,000 in month one** (bonuses + Fast Start), runs about **$2,100/month by month 3** and **$4,300–$4,800/month by month 12** — roughly **$38,000–$45,000 in year one** — then starts year two with a residual base already paying before they sell anything. Slower pace earns less; our top producers earn more. Full assumptions and scenario math are in the comp plan we send every serious applicant.
 
 ### What we give you (that most ISOs don't)
 

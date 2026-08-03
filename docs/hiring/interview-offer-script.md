@@ -21,7 +21,7 @@ Let them talk. Ex-ISO reps will usually volunteer the exact pain points we solve
 
 *(If they're out, thank them and end warmly — a respectful no builds the brand. If they're in:)*
 
-> "Here's the actual structure: $150 for every account you activate — $250 if it takes POS or Capital with it. Then a lifetime residual split that starts at 50% and climbs to 60 and 70 as your book grows. Residuals are never clawed back — the only clawback in the whole program is the bonus, and only if the merchant cancels inside 90 days. Everything pays on the 15th, and you see every merchant's numbers in your own portal."
+> "Here's the actual structure: activation bonuses from $150 up to $1,000 depending on the merchant's size — a corner shop pays $150, a $100K-a-month account pays $1,000, and POS or Capital on the deal adds $100 more. Your first 90 days have Fast Start milestones worth up to $1,500 on top. Then the engine: a lifetime residual split that starts at 50% and climbs to 60 and 70 as your book grows. Residuals are never clawed back — the only clawback in the whole program is the activation bonus, and only if the merchant cancels inside 90 days. Everything pays on the 15th, and you see every merchant's numbers in your own portal."
 
 ### 3. The show, don't tell (5 min) — this is the wow moment
 
