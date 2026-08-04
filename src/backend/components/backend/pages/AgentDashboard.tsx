@@ -23,6 +23,7 @@ import { useResiduals } from '../residualsStore';
 import { useDealSubmissions } from '../dealSubmissionsStore';
 import { useAppNavigate } from '../NavigationContext';
 import { tierForAccounts, nextTier, fmtUsd } from '../agentComp';
+import { computeHealthFlags } from '../bookHealth';
 import { Target, AlertTriangle, ArrowRight, HeartPulse } from 'lucide-react';
 
 const variantMap = {
@@ -57,27 +58,8 @@ export function AgentDashboard() {
   );
   const pendingBonuses = pendingDeals.reduce((s, d) => s + d.expectedBonus, 0);
 
-  // ── Book health: merchants whose volume dropped >25% vs the prior residual
-  //    period, or who vanished from the latest period entirely ──
-  const healthFlags = useMemo(() => {
-    const periods = [...new Set(residualRows.map(r => r.period))].sort().reverse();
-    if (periods.length < 2) return [];
-    const [latest, prev] = periods;
-    const latestBy = new Map(
-      residualRows.filter(r => r.period === latest).map(r => [r.merchantName, r]),
-    );
-    const flags: { merchant: string; note: string }[] = [];
-    for (const r of residualRows.filter(x => x.period === prev)) {
-      const now = latestBy.get(r.merchantName);
-      if (!now) {
-        flags.push({ merchant: r.merchantName, note: 'No processing in the latest period' });
-      } else if (r.monthlyVolume > 0 && now.monthlyVolume < r.monthlyVolume * 0.75) {
-        const drop = Math.round((1 - now.monthlyVolume / r.monthlyVolume) * 100);
-        flags.push({ merchant: r.merchantName, note: `Volume down ${drop}% month over month` });
-      }
-    }
-    return flags.slice(0, 3);
-  }, [residualRows]);
+  // ── Book health: declining or vanished merchants (pure logic in bookHealth.ts) ──
+  const healthFlags = useMemo(() => computeHealthFlags(residualRows), [residualRows]);
 
   // ── Pipeline by lead status ──
   const pipeline = useMemo(() => {

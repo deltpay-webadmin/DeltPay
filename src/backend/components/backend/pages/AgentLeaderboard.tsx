@@ -3,14 +3,7 @@ import { Trophy, Crown, TrendingUp, Store } from 'lucide-react';
 import { useSession } from '../SessionContext';
 import { useDealSubmissions } from '../dealSubmissionsStore';
 import { useResiduals } from '../residualsStore';
-import { fmtUsd } from '../agentComp';
-
-function quarterOf(dateIso: string): string {
-  const y = dateIso.slice(0, 4);
-  const m = Number(dateIso.slice(5, 7));
-  if (!y || !m) return '';
-  return `Q${Math.ceil(m / 3)} ${y}`;
-}
+import { fmtUsd, quarterOf } from '../agentComp';
 
 function currentQuarter(): string {
   return quarterOf(new Date().toISOString());
@@ -38,7 +31,7 @@ export function AgentLeaderboard() {
     };
 
     for (const s of submissions) {
-      if ((s.status === 'Activated' || s.status === 'Paid') && quarterOf(s.updatedAt || s.createdAt) === quarter) {
+      if ((s.status === 'Activated' || s.status === 'Paid') && quarterOf(s.activatedAt || s.updatedAt || s.createdAt) === quarter) {
         const e = bump(s.agentName);
         if (e) e.activations += 1;
       }

@@ -51,6 +51,7 @@ export interface DealSubmission {
   expectedBonus: number;
   createdAt: string;
   updatedAt: string;
+  activatedAt: string | null;
 }
 
 interface SubmissionsState {
@@ -86,6 +87,7 @@ function fromDb(r: any): DealSubmission {
     expectedBonus: Number(r.expected_bonus) || 0,
     createdAt: r.created_at || '',
     updatedAt: r.updated_at || '',
+    activatedAt: r.activated_at ?? null,
   };
 }
 
@@ -188,14 +190,44 @@ export const dealSubmissionActions = {
 
   async setStatus(id: string, status: SubmissionStatus): Promise<boolean> {
     if (!supabase) return false;
-    const { error } = await supabase
-      .from('deal_submissions')
-      .update({ status, updated_at: new Date().toISOString() })
-      .eq('id', id);
+    const patch: Record<string, unknown> = { status, updated_at: new Date().toISOString() };
+    // Stamp activation once so quarter attribution (leaderboard, Fast Start
+    // windows) survives later edits to the row.
+    const existing = state.submissions.find(s => s.id === id);
+    if (status === 'Activated' && !existing?.activatedAt) {
+      patch.activated_at = new Date().toISOString();
+    }
+    const { error } = await supabase.from('deal_submissions').update(patch).eq('id', id);
     if (error) {
       toast.error(`Couldn't update the deal: ${error.message}`);
       return false;
     }
+    await refresh();
+    return true;
+  },
+
+  /**
+   * Confirm the merchant's actual monthly volume (comp plan: bands ≥$400 are
+   * set by the first full month of real processing) and recompute the bonus.
+   */
+  async reband(id: string, actualMonthlyVolume: number): Promise<boolean> {
+    if (!supabase) return false;
+    const existing = state.submissions.find(s => s.id === id);
+    if (!existing) return false;
+    const expected = activationBonus(actualMonthlyVolume, existing.wantsPos || existing.wantsCapital);
+    const { error } = await supabase
+      .from('deal_submissions')
+      .update({
+        monthly_volume: actualMonthlyVolume,
+        expected_bonus: expected,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', id);
+    if (error) {
+      toast.error(`Couldn't confirm the volume: ${error.message}`);
+      return false;
+    }
+    toast.success(`Bonus re-banded to ${expected.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })}.`);
     await refresh();
     return true;
   },

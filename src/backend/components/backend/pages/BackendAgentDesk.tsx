@@ -11,7 +11,7 @@ import {
 } from '../dealSubmissionsStore';
 import { useDealDesk } from '../dealDeskStore';
 import { AgentDealDesk } from './AgentDealDesk';
-import { fmtUsd } from '../agentComp';
+import { fmtUsd, activationBonus } from '../agentComp';
 import { useSession } from '../SessionContext';
 import { DealDocumentsPanel, CopyButton } from '../DealDocumentsPanel';
 
@@ -42,6 +42,54 @@ function packetText(s: DealSubmission): string {
     `Channel: ${s.channel ?? 'unassigned'}`,
     s.notes ? `Notes: ${s.notes}` : '',
   ].filter(Boolean).join('\n');
+}
+
+/**
+ * Comp-plan rule: bonus bands at $400+ are set by the merchant's first full
+ * month of actual processing, not the application estimate. This confirms
+ * the real volume and recomputes the bonus — keeping the agent's pipeline
+ * number honest before payout.
+ */
+function RebandControl({ submission }: { submission: DealSubmission }) {
+  const [actual, setActual] = useState('');
+  const [busy, setBusy] = useState(false);
+  const volume = Number(actual.replace(/[^0-9.]/g, '')) || 0;
+  const newBonus = volume > 0
+    ? activationBonus(volume, submission.wantsPos || submission.wantsCapital)
+    : null;
+
+  return (
+    <div className="mt-3 rounded-[8px] border border-amber-200 bg-amber-50/60 px-4 py-3">
+      <p className="text-[11px] font-semibold text-amber-700 uppercase tracking-wide mb-1.5">
+        Confirm actual volume
+      </p>
+      <p className="text-[11px] text-amber-700/80 mb-2">
+        Bands $400+ are set by the first full month of real processing. Current bonus: {fmtUsd(submission.expectedBonus)} at {fmtUsd(submission.monthlyVolume)}/mo estimated.
+      </p>
+      <div className="flex items-center gap-2">
+        <input
+          value={actual}
+          onChange={e => setActual(e.target.value)}
+          placeholder="Actual monthly volume"
+          inputMode="numeric"
+          className="flex-1 px-3 py-2 bg-white border border-amber-300 rounded-[6px] text-sm text-gray-800 placeholder-gray-400 focus:outline-none"
+        />
+        <button
+          onClick={async () => {
+            if (!volume || busy) return;
+            setBusy(true);
+            const ok = await dealSubmissionActions.reband(submission.id, volume);
+            setBusy(false);
+            if (ok) setActual('');
+          }}
+          disabled={!volume || busy}
+          className="px-3 py-2 rounded-[6px] text-sm font-semibold text-white bg-amber-600 hover:bg-amber-700 disabled:opacity-40 transition-colors whitespace-nowrap"
+        >
+          {busy ? 'Saving…' : newBonus != null ? `Set bonus ${fmtUsd(newBonus)}` : 'Confirm'}
+        </button>
+      </div>
+    </div>
+  );
 }
 
 function PacketRow({ label, value }: { label: string; value: string }) {
@@ -237,6 +285,9 @@ export function BackendAgentDesk() {
                                   <PacketRow label="Agent" value={s.agentName} />
                                   {s.notes && <PacketRow label="Notes" value={s.notes} />}
                                 </div>
+                                {(s.status === 'Approved' || s.status === 'Activated') && (
+                                  <RebandControl submission={s} />
+                                )}
                               </div>
                               {/* Documents + extracted fields */}
                               <div>

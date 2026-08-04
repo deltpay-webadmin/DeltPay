@@ -9,6 +9,7 @@ import {
 import { useResiduals, residualActions, type ResidualRow } from '../residualsStore';
 import { useMerchants } from '../crmStore';
 import { useSession } from '../SessionContext';
+import { ManualResidualEntry } from '../ManualResidualEntry';
 
 // ── Types ──
 type UploadStep = 'idle' | 'uploaded' | 'mapping' | 'processing' | 'done';
@@ -103,6 +104,7 @@ export function BackendResiduals() {
   const [csvRows, setCsvRows] = useState<string[][]>([]);
   const [dragOver, setDragOver] = useState(false);
   const [showUpload, setShowUpload] = useState(false);
+  const [showManualEntry, setShowManualEntry] = useState(false);
   const [columnMappings, setColumnMappings] = useState<ColumnMapping[]>([]);
   const [importPeriod, setImportPeriod] = useState(defaultPeriod());
   const [importResult, setImportResult] = useState<{ rows: number; agentsMatched: number } | null>(null);
@@ -279,14 +281,26 @@ export function BackendResiduals() {
           <div>
             <p className="text-sm text-gray-500 mt-0.5">Upload processor residual reports and distribute agent commissions.</p>
           </div>
-          <button
-            onClick={() => { setShowUpload(true); setStep('idle'); setFile(null); setCsvRows([]); }}
-            className="px-4 py-2 bg-brand text-white text-sm font-medium rounded-[6px] hover:bg-brand-hover transition-colors flex items-center gap-2"
-          >
-            <Upload className="w-4 h-4" />
-            Upload Report
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => { setShowManualEntry(v => !v); setShowUpload(false); }}
+              className="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-[6px] hover:bg-gray-50 transition-colors flex items-center gap-2"
+            >
+              <Check className="w-4 h-4" />
+              Manual Entry
+            </button>
+            <button
+              onClick={() => { setShowUpload(true); setShowManualEntry(false); setStep('idle'); setFile(null); setCsvRows([]); }}
+              className="px-4 py-2 bg-brand text-white text-sm font-medium rounded-[6px] hover:bg-brand-hover transition-colors flex items-center gap-2"
+            >
+              <Upload className="w-4 h-4" />
+              Upload Report
+            </button>
+          </div>
         </div>
+
+        {/* ── Manual Entry ── */}
+        {showManualEntry && <ManualResidualEntry onClose={() => setShowManualEntry(false)} />}
 
         {/* ── Upload Section ── */}
         {showUpload && (

@@ -73,3 +73,11 @@ export const ACTIVE_PRODUCER = { activations: 3, windowDays: 90 };
 
 export const fmtUsd = (n: number) =>
   n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+
+/** 'YYYY-MM…' → 'Q<n> YYYY' for leaderboard/President's Club attribution. */
+export function quarterOf(dateIso: string): string {
+  const y = dateIso.slice(0, 4);
+  const m = Number(dateIso.slice(5, 7));
+  if (!/^\d{4}$/.test(y) || !m || m < 1 || m > 12) return '';
+  return `Q${Math.ceil(m / 3)} ${y}`;
+}
