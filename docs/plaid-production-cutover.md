@@ -34,7 +34,7 @@ referenced in step 5.
 2. Register the **redirect URI** (API → Allowed redirect URIs):
 
    ```
-   https://deltpay.com/plaid-oauth
+   https://deltpay.com/plaid-oauth-callback
    ```
 
    It must match `PLAID_REDIRECT_URI` **exactly** (scheme, host, path, no
@@ -84,7 +84,7 @@ verification defaults to log-only outside production.
   register the same URI in the dashboard, then connect the sandbox OAuth
   test institution (search "Platypus OAuth" in Link, `ins_127287`).
   Expected: the tab leaves to the bank simulator, returns to
-  `/plaid-oauth?oauth_state_id=…`, bounces into `#/dashboard/underwriting`,
+  `/plaid-oauth-callback?oauth_state_id=…`, bounces into `#/dashboard/underwriting`,
   Link reopens automatically, and the exchange completes for the lead you
   started with. Also test aborting at the bank — no orphaned Link reopen
   on the next visit.
@@ -108,7 +108,7 @@ One batch, so no request runs with a mixed config:
 supabase secrets set \
   PLAID_ENV=production \
   PLAID_SECRET=<production-secret> \
-  PLAID_REDIRECT_URI=https://deltpay.com/plaid-oauth
+  PLAID_REDIRECT_URI=https://deltpay.com/plaid-oauth-callback
 ```
 
 `PLAID_CLIENT_ID` is unchanged. Edge functions pick up new secrets on

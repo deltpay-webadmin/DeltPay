@@ -309,7 +309,7 @@ export const plaidActions = {
       body: JSON.stringify({ leadId }),
     });
     // Stash the resume context: OAuth institutions bounce the whole tab to
-    // the bank and back to /plaid-oauth, and Plaid requires re-initializing
+    // the bank and back to /plaid-oauth-callback, and Plaid requires re-initializing
     // Link with the SAME link_token after the redirect.
     try {
       sessionStorage.setItem(

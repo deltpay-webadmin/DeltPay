@@ -164,7 +164,7 @@ function PlaidLinkButton({
  * Finishes a Plaid Link flow interrupted by an OAuth bank redirect.
  *
  * OAuth institutions (Chase etc.) navigate the tab to the bank and back to
- * /plaid-oauth. The App-level shim stashes the return URL (which carries
+ * /plaid-oauth-callback. The App-level shim stashes the return URL (which carries
  * oauth_state_id) and re-enters the CRM; this component — mounted with the
  * page — picks up the stashed link_token + leadId, re-opens Link with
  * receivedRedirectUri, and runs the normal exchange.
