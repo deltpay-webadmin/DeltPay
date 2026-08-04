@@ -92,50 +92,8 @@ function buildProposal(ex: ExtractedData): SavingsProposal {
   };
 }
 
-function fileToBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const url = String(reader.result ?? '');
-      resolve(url.slice(url.indexOf(',') + 1)); // strip the data: prefix
-    };
-    reader.onerror = () => reject(reader.error);
-    reader.readAsDataURL(file);
-  });
-}
-
-interface PageImage {
-  mediaType: string;
-  dataBase64: string;
-}
-
-/**
- * Render a PDF's pages to JPEGs in the browser (pdfjs) so extraction can run
- * on the cheap Nebius vision model instead of requiring the Claude provider.
- * Statements are short; 8 pages covers them with headroom.
- */
-async function pdfToImages(file: File, maxPages = 8): Promise<PageImage[]> {
-  const pdfjs = await import('pdfjs-dist');
-  const worker = await import('pdfjs-dist/build/pdf.worker.min.mjs?url');
-  pdfjs.GlobalWorkerOptions.workerSrc = worker.default;
-
-  const doc = await pdfjs.getDocument({ data: await file.arrayBuffer() }).promise;
-  const pages = Math.min(doc.numPages, maxPages);
-  const out: PageImage[] = [];
-  for (let i = 1; i <= pages; i++) {
-    const page = await doc.getPage(i);
-    const viewport = page.getViewport({ scale: 2 }); // ~1200x1600 for letter pages
-    const canvas = document.createElement('canvas');
-    canvas.width = Math.ceil(viewport.width);
-    canvas.height = Math.ceil(viewport.height);
-    const ctx = canvas.getContext('2d');
-    if (!ctx) throw new Error('Canvas rendering unavailable');
-    await page.render({ canvasContext: ctx, viewport }).promise;
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-    out.push({ mediaType: 'image/jpeg', dataBase64: dataUrl.slice(dataUrl.indexOf(',') + 1) });
-  }
-  return out;
-}
+// Shared with the deal-documents flow (extract-deal-doc) — one rasterizer.
+import { fileToBase64, pdfToImages } from '../docImaging';
 
 function fromDbAnalysis(row: any): HistoryRow {
   return {

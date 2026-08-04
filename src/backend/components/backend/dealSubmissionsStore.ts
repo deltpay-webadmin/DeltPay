@@ -29,10 +29,15 @@ export const SUBMISSION_PIPELINE: SubmissionStatus[] = [
   'Paid',
 ];
 
+export type BoardingChannel = 'Square' | 'Luqra' | 'Paysafe';
+
+export const BOARDING_CHANNELS: BoardingChannel[] = ['Square', 'Luqra', 'Paysafe'];
+
 export interface DealSubmission {
   id: string;
   agentId: string | null;
   agentName: string;
+  channel: BoardingChannel | null;
   merchantName: string;
   contactName: string;
   phone: string;
@@ -67,6 +72,7 @@ function fromDb(r: any): DealSubmission {
     id: r.id,
     agentId: r.agent_id ?? null,
     agentName: r.agent_name || 'Unassigned',
+    channel: (r.channel as BoardingChannel | null) ?? null,
     merchantName: r.merchant_name,
     contactName: r.contact_name || '',
     phone: r.phone || '',
@@ -160,6 +166,20 @@ export const dealSubmissionActions = {
       // eslint-disable-next-line no-console
       console.error('[DealSubmissions] Submit failed:', error);
       toast.error(`Couldn't submit the deal: ${error.message}`);
+      return false;
+    }
+    await refresh();
+    return true;
+  },
+
+  async setChannel(id: string, channel: BoardingChannel | null): Promise<boolean> {
+    if (!supabase) return false;
+    const { error } = await supabase
+      .from('deal_submissions')
+      .update({ channel, updated_at: new Date().toISOString() })
+      .eq('id', id);
+    if (error) {
+      toast.error(`Couldn't set the channel: ${error.message}`);
       return false;
     }
     await refresh();

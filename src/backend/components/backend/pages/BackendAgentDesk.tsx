@@ -1,14 +1,19 @@
 import React, { useMemo, useState } from 'react';
-import { Inbox, ChevronRight, XCircle } from 'lucide-react';
+import { Inbox, ChevronRight, ChevronDown, XCircle, ClipboardCopy, Paperclip } from 'lucide-react';
 import {
   useDealSubmissions,
   dealSubmissionActions,
   SUBMISSION_PIPELINE,
+  BOARDING_CHANNELS,
   type SubmissionStatus,
+  type BoardingChannel,
+  type DealSubmission,
 } from '../dealSubmissionsStore';
 import { useDealDesk } from '../dealDeskStore';
 import { AgentDealDesk } from './AgentDealDesk';
 import { fmtUsd } from '../agentComp';
+import { useSession } from '../SessionContext';
+import { DealDocumentsPanel, CopyButton } from '../DealDocumentsPanel';
 
 const STATUS_BADGE: Record<SubmissionStatus, string> = {
   Submitted: 'bg-blue-50 text-blue-700 border-blue-200',
@@ -24,11 +29,42 @@ const STATUS_BADGE: Record<SubmissionStatus, string> = {
  * pipeline and answer deal-desk threads. Activating a deal is the trigger
  * that locks in the agent's activation bonus (paid on the next 15th).
  */
+function packetText(s: DealSubmission): string {
+  return [
+    `Merchant: ${s.merchantName}`,
+    `Contact: ${s.contactName}`,
+    `Phone: ${s.phone}`,
+    `Email: ${s.email}`,
+    `Vertical: ${s.vertical}`,
+    `Monthly volume: ${fmtUsd(s.monthlyVolume)}`,
+    `Products: Processing${s.wantsPos ? ' + KORONA POS' : ''}${s.wantsCapital ? ' + Delt Capital' : ''}`,
+    `Agent: ${s.agentName}`,
+    `Channel: ${s.channel ?? 'unassigned'}`,
+    s.notes ? `Notes: ${s.notes}` : '',
+  ].filter(Boolean).join('\n');
+}
+
+function PacketRow({ label, value }: { label: string; value: string }) {
+  if (!value) return null;
+  return (
+    <div className="flex items-center justify-between gap-2 text-sm py-1 border-b border-gray-100 last:border-0">
+      <span className="text-gray-500 shrink-0">{label}</span>
+      <span className="flex items-center gap-0.5 font-medium text-gray-900 text-right truncate">
+        {value}
+        <CopyButton value={value} />
+      </span>
+    </div>
+  );
+}
+
 export function BackendAgentDesk() {
   const [view, setView] = useState<'submissions' | 'desk'>('submissions');
   const { submissions, isLoading } = useDealSubmissions();
   const { threads } = useDealDesk();
   const [statusFilter, setStatusFilter] = useState<'All' | SubmissionStatus>('All');
+  const [openId, setOpenId] = useState<string | null>(null);
+  const [packetCopied, setPacketCopied] = useState(false);
+  const { org, displayName } = useSession();
 
   const openThreads = threads.filter(t => t.status === 'Open').length;
 
@@ -111,10 +147,20 @@ export function BackendAgentDesk() {
                       ? SUBMISSION_PIPELINE[SUBMISSION_PIPELINE.indexOf(s.status) + 1]
                       : null;
                     return (
-                      <tr key={s.id} className="hover:bg-gray-50/50">
+                      <React.Fragment key={s.id}>
+                      <tr
+                        className="hover:bg-gray-50/50 cursor-pointer"
+                        onClick={() => setOpenId(openId === s.id ? null : s.id)}
+                      >
                         <td className="px-4 py-3">
-                          <p className="font-medium text-gray-900">{s.merchantName}</p>
-                          <p className="text-[11px] text-gray-400">
+                          <p className="font-medium text-gray-900 flex items-center gap-1.5">
+                            <ChevronDown className={`w-3.5 h-3.5 text-gray-300 transition-transform ${openId === s.id ? 'rotate-180' : ''}`} />
+                            {s.merchantName}
+                            {s.channel && (
+                              <span className="px-1.5 py-0.5 text-[10px] font-semibold rounded bg-gray-100 text-gray-600 border border-gray-200">{s.channel}</span>
+                            )}
+                          </p>
+                          <p className="text-[11px] text-gray-400 pl-5">
                             {s.vertical}{s.wantsPos ? ' · POS' : ''}{s.wantsCapital ? ' · Capital' : ''}
                             {s.notes ? ` — ${s.notes.slice(0, 60)}${s.notes.length > 60 ? '…' : ''}` : ''}
                           </p>
@@ -131,7 +177,7 @@ export function BackendAgentDesk() {
                         <td className="px-4 py-3 text-right whitespace-nowrap">
                           {nextStatus && (
                             <button
-                              onClick={() => advance(s.id, s.status)}
+                              onClick={e => { e.stopPropagation(); advance(s.id, s.status); }}
                               className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold rounded-md border border-indigo-200 text-indigo-700 bg-indigo-50 hover:bg-indigo-100 transition-colors"
                             >
                               {nextStatus}
@@ -140,7 +186,7 @@ export function BackendAgentDesk() {
                           )}
                           {s.status !== 'Declined' && s.status !== 'Paid' && (
                             <button
-                              onClick={() => void dealSubmissionActions.setStatus(s.id, 'Declined')}
+                              onClick={e => { e.stopPropagation(); void dealSubmissionActions.setStatus(s.id, 'Declined'); }}
                               className="ml-2 p-1.5 rounded-md text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors"
                               title="Decline"
                             >
@@ -149,6 +195,66 @@ export function BackendAgentDesk() {
                           )}
                         </td>
                       </tr>
+                      {openId === s.id && (
+                        <tr>
+                          <td colSpan={7} className="px-6 pb-6 pt-2 bg-gray-50/50">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                              {/* Boarding packet */}
+                              <div>
+                                <div className="flex items-center justify-between mb-2">
+                                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Boarding Packet</p>
+                                  <div className="flex items-center gap-2">
+                                    <select
+                                      value={s.channel ?? ''}
+                                      onClick={e => e.stopPropagation()}
+                                      onChange={e => void dealSubmissionActions.setChannel(s.id, (e.target.value || null) as BoardingChannel | null)}
+                                      className="px-2 py-1.5 bg-white border border-gray-300 rounded-[6px] text-xs text-gray-600 focus:outline-none"
+                                    >
+                                      <option value="">Channel…</option>
+                                      {BOARDING_CHANNELS.map(c => <option key={c} value={c}>{c}</option>)}
+                                    </select>
+                                    <button
+                                      onClick={() => {
+                                        void navigator.clipboard.writeText(packetText(s));
+                                        setPacketCopied(true);
+                                        setTimeout(() => setPacketCopied(false), 1500);
+                                      }}
+                                      className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-md border border-indigo-200 text-indigo-700 bg-indigo-50 hover:bg-indigo-100 transition-colors"
+                                    >
+                                      <ClipboardCopy className="w-3.5 h-3.5" />
+                                      {packetCopied ? 'Copied!' : 'Copy packet'}
+                                    </button>
+                                  </div>
+                                </div>
+                                <div className="rounded-[8px] border border-gray-200 bg-white px-4 py-2">
+                                  <PacketRow label="Merchant" value={s.merchantName} />
+                                  <PacketRow label="Contact" value={s.contactName} />
+                                  <PacketRow label="Phone" value={s.phone} />
+                                  <PacketRow label="Email" value={s.email} />
+                                  <PacketRow label="Vertical" value={s.vertical} />
+                                  <PacketRow label="Monthly volume" value={fmtUsd(s.monthlyVolume)} />
+                                  <PacketRow label="Products" value={`Processing${s.wantsPos ? ' + KORONA POS' : ''}${s.wantsCapital ? ' + Delt Capital' : ''}`} />
+                                  <PacketRow label="Agent" value={s.agentName} />
+                                  {s.notes && <PacketRow label="Notes" value={s.notes} />}
+                                </div>
+                              </div>
+                              {/* Documents + extracted fields */}
+                              <div>
+                                <p className="flex items-center gap-1.5 text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                                  <Paperclip className="w-3.5 h-3.5" /> Documents
+                                </p>
+                                <DealDocumentsPanel
+                                  submissionId={s.id}
+                                  orgId={org?.id ?? ''}
+                                  uploadedBy={displayName}
+                                  copyable
+                                />
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                      </React.Fragment>
                     );
                   })}
                   {filtered.length === 0 && (

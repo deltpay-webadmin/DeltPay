@@ -22,6 +22,8 @@ import {
   estFirstYearResidual,
   fmtUsd,
 } from '../agentComp';
+import { DealDocumentsPanel } from '../DealDocumentsPanel';
+import { Paperclip, ChevronDown } from 'lucide-react';
 
 const VERTICALS = [
   'Restaurant / Food Service',
@@ -75,8 +77,9 @@ const inputCls =
   'w-full px-3 py-2 bg-white border border-gray-300 rounded-[6px] text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand';
 
 export function AgentSubmitDeal() {
-  const { role, agentId, agentName, displayName } = useSession();
+  const { role, agentId, agentName, displayName, org } = useSession();
   const { submissions, isLoading, isOnline } = useDealSubmissions();
+  const [openDealId, setOpenDealId] = useState<string | null>(null);
 
   const [merchantName, setMerchantName] = useState('');
   const [contactName, setContactName] = useState('');
@@ -256,22 +259,47 @@ export function AgentSubmitDeal() {
             </thead>
             <tbody className="divide-y divide-gray-100">
               {mine.map((d: DealSubmission) => (
-                <tr key={d.id} className="hover:bg-gray-50/50">
-                  <td className="px-4 py-3">
-                    <p className="font-medium text-gray-900">{d.merchantName}</p>
-                    <p className="text-[11px] text-gray-400">{d.vertical}{d.wantsPos ? ' · POS' : ''}{d.wantsCapital ? ' · Capital' : ''}</p>
-                  </td>
-                  <td className="px-4 py-3 text-gray-500 text-xs">{(d.createdAt || '').slice(0, 10)}</td>
-                  <td className="px-4 py-3 text-right text-gray-700">{fmtUsd(d.monthlyVolume)}/mo</td>
-                  <td className="px-4 py-3 text-right font-medium text-indigo-600">{fmtUsd(d.expectedBonus)}</td>
-                  <td className="px-4 py-3"><StatusStepper status={d.status} /></td>
-                  <td className="px-4 py-3 text-center">
-                    <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs border rounded-md ${STATUS_STYLES[d.status]}`}>
-                      {(d.status === 'Activated' || d.status === 'Paid') && <CheckCircle className="w-3 h-3" />}
-                      {d.status}
-                    </span>
-                  </td>
-                </tr>
+                <React.Fragment key={d.id}>
+                  <tr
+                    className="hover:bg-gray-50/50 cursor-pointer"
+                    onClick={() => setOpenDealId(openDealId === d.id ? null : d.id)}
+                  >
+                    <td className="px-4 py-3">
+                      <p className="font-medium text-gray-900 flex items-center gap-1.5">
+                        <ChevronDown className={`w-3.5 h-3.5 text-gray-300 transition-transform ${openDealId === d.id ? 'rotate-180' : ''}`} />
+                        {d.merchantName}
+                      </p>
+                      <p className="text-[11px] text-gray-400 pl-5">
+                        {d.vertical}{d.wantsPos ? ' · POS' : ''}{d.wantsCapital ? ' · Capital' : ''}
+                        {d.channel ? ` · via ${d.channel}` : ''}
+                      </p>
+                    </td>
+                    <td className="px-4 py-3 text-gray-500 text-xs">{(d.createdAt || '').slice(0, 10)}</td>
+                    <td className="px-4 py-3 text-right text-gray-700">{fmtUsd(d.monthlyVolume)}/mo</td>
+                    <td className="px-4 py-3 text-right font-medium text-indigo-600">{fmtUsd(d.expectedBonus)}</td>
+                    <td className="px-4 py-3"><StatusStepper status={d.status} /></td>
+                    <td className="px-4 py-3 text-center">
+                      <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs border rounded-md ${STATUS_STYLES[d.status]}`}>
+                        {(d.status === 'Activated' || d.status === 'Paid') && <CheckCircle className="w-3 h-3" />}
+                        {d.status}
+                      </span>
+                    </td>
+                  </tr>
+                  {openDealId === d.id && (
+                    <tr>
+                      <td colSpan={6} className="px-6 pb-5 pt-1 bg-gray-50/50">
+                        <p className="flex items-center gap-1.5 text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                          <Paperclip className="w-3.5 h-3.5" /> Documents
+                        </p>
+                        <DealDocumentsPanel
+                          submissionId={d.id}
+                          orgId={org?.id ?? ''}
+                          uploadedBy={agentName || displayName}
+                        />
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
               ))}
               {mine.length === 0 && (
                 <tr>
