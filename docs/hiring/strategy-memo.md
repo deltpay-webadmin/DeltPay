@@ -53,8 +53,12 @@ Everything in the posting maps to something that exists. That's the point — bu
 | 7 | Multi-product commissions (processing, POS, Capital, websites) | $0 — revenue-share on revenue we want anyway | High | Agents are credited on funded Capital deals; POS and SaaS lines exist |
 | 8 | Inbound referral leads shared with producing agents | Low — leads we already generate | Medium — **must never be framed as guaranteed** | Merchant referral program generates inbound; distribution policy is ours to set |
 | 9 | Account Manager title, @delt email, business cards | ~$50/agent | Disproportionately high — legitimacy for a 1099 rep walking into a merchant | Trivial to provision |
-| 10 | Founders' Circle: portal leaderboard + quarterly founder dinner (Miami) | Low hundreds/quarter | High — status and access motivate top producers more than marginal dollars | Founder is in Miami; leaderboard is a small portal feature |
+| 10 | President's Club: quarterly Miami dinner + leaderboard recognition with the founders for top producers | Low hundreds/quarter, budget-capped | **Very high** — status-per-dollar is unmatched in sales culture | Founder is in Miami; leaderboard is a small portal feature |
 | 11 | "Your schedule, your market, no quotas to keep your book" | $0 — and it's 1099-compliance-*required* anyway | Medium-high | Contractor autonomy is legally necessary (see §7) |
+| 12 | Wellness package: gym reimbursement (≤$15/mo, Planet Fitness/Youfit tier) + telehealth + healthcare enrollment support | ~$30/mo per Active Producer only | High — near-unique among 1099 sales roles; humanizes the package | Gated on production, so cost scales with the margin funding it |
+| 13 | Recruiting override: 10% of recruit's net residuals from house share + $250 at recruit's 5th activation | ~10 pts of house share on production that wouldn't otherwise exist | High — makes the Sub-ISO "build a team" promise concrete | Sub-ISO agent type exists in our systems; single-level only (see §6) |
+
+**The unifying mechanic — Active Producer status (3+ activations in the trailing 90 days):** every recurring-cost perk hangs off this one definition. Perks pause when production lapses and resume on return, so cost scales automatically with the margin that funds it (~$30–35/mo perk cost vs. ~$270+/mo margin from a target-pace agent's book) — and *losing* a $15 gym perk nudges behavior harder than its dollar value suggests (loss aversion).
 
 ## 6. Honesty as strategy — and what we will NOT promise
 
@@ -64,7 +68,8 @@ Our stated company value is: *"We tell merchants the truth about fees, terms, an
 
 - ❌ Guaranteed or provided leads ("we hand you appointments")
 - ❌ Guaranteed income, draws, or minimums of any kind
-- ❌ Health insurance, 401(k), equity, or PTO — the careers page lists these for W-2 employees; they do **not** apply to 1099 agents and must never be implied to
+- ❌ Health insurance, 401(k), equity, or PTO — the careers page lists these for W-2 employees; they do **not** apply to 1099 agents and must never be implied to. The wellness package is a production-based contractor reward (telehealth + gym reimbursement + enrollment support), and every mention of it must avoid the words "benefits" or "insurance"
+- ❌ Multi-level anything. The recruiting override is **single-level and production-based, hard stop**: no override on a recruit's recruits, no payment for recruitment itself (the $250 pays on the recruit's 5th *activation*), and no fees ever charged to agents. Stacked overrides or pay-to-join structurally define an MLM — FTC exposure, and instantly repellent to the experienced reps we want
 - ❌ "Unlimited earning potential" as a substitute for real numbers
 - ❌ Exclusive territories
 - ❌ Anything about a future sale of the company or residual buyouts `[FOUNDER TO CONFIRM if a buyout program is ever offered]`

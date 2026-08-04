@@ -59,6 +59,14 @@ All residual lines below are modeled at the **Tier 1 (50%)** split with $45/acco
 
 **Where "$70K–$160K" comes from:** the top of that range is what a top producer's book supports in year two, when the residual base compounds. A target-pace agent finishes year one with a ~65-account book paying roughly **$2,900/month before selling anything else** — that compounding is the entire point of residual sales.
 
+## Perks & programs (Active Producers)
+
+**Active Producer** = 3 or more activations in the trailing 90 days. Perks pause when status lapses and resume when you're back in production.
+
+- **Wellness package:** gym membership reimbursed up to $15/mo (Planet Fitness/Youfit tier), telehealth membership, and healthcare enrollment support for finding your own coverage.
+- **Recruiting override (Sub-ISO track):** recruit an agent and earn a **10% override on their net residual production** — paid from Delt's share, never deducted from the recruit — for as long as you're both active. Plus **$250** when your recruit reaches 5 activations. One level only: overrides apply to agents you personally recruit, not to their recruits, and nobody ever pays a fee to join.
+- **President's Club:** top producers join the founding team in Miami each quarter for dinner and recognition.
+
 ## Payment terms
 
 - Commissions and residuals are paid **on the 15th of every month**.
@@ -70,5 +78,5 @@ All residual lines below are modeled at the **Tier 1 (50%)** split with $45/acco
 - **Residuals are never clawed back.** Activation bonuses (all bands) are reversed only if the merchant cancels within 90 days of activation. Fast Start and kicker bonuses are never clawed back once earned.
 - Volume bands for $400+ bonuses are set by the merchant's first full month of actual processing volume, not the application estimate.
 - Attrition is real: merchants close, sell, or leave. The ~15% annual assumption is built into the scenarios above.
-- This is a **1099 independent contractor** engagement: no base salary, no employee benefits; you are responsible for self-employment taxes.
+- This is a **1099 independent contractor** engagement: no base salary, no employee benefits; you are responsible for self-employment taxes. Wellness perks and programs are production-based contractor rewards under the agent agreement, not employment benefits, and are reviewed annually.
 - The agent agreement is the controlling document; this one-pager is a summary.

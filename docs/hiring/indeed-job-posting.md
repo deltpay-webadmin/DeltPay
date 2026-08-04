@@ -42,8 +42,9 @@ Realistic numbers, not hype: an agent signing ~6 accounts a month earns around *
 - **Real sales enablement.** A library of tested talk tracks and objection responses for cash-discount selling, plus a cost calculator you can run live in front of a merchant.
 - **Something to sell in almost any door.** 0% processing, free hardware on our entry plan, high-risk approvals (CBD, vape, liquor, nutraceuticals — merchants the aggregators shut down), POS, capital, and websites.
 - **A real title and identity.** Account Manager title, @delt email, and business cards — you represent a platform, not a rate sheet.
-- **A path up.** Tier promotions to 60% and 70%, and a Sub-ISO track for agents who want to recruit and build their own team on our infrastructure.
-- **Founders' Circle.** Top producers get portal leaderboard recognition and a quarterly dinner with the founding team in Miami.
+- **A path up — and an override when you build.** Tier promotions to 60% and 70%, plus a Sub-ISO track: recruit another agent and earn a **10% override on their residual production** — paid from Delt's share, never from theirs — plus **$250** when your recruit hits 5 activations.
+- **A wellness package for active producers.** Gym membership reimbursed (Planet Fitness/Youfit tier), telehealth access, and healthcare enrollment support — earned by staying in production (3+ activations in the trailing 90 days).
+- **President's Club.** Top producers join the founding team in Miami every quarter — dinner, recognition, and the leaderboard crown.
 - **Your business, your rules.** Set your own schedule, work your own market anywhere in the US. No quotas to keep the book you've already built.
 
 ### Who thrives here
@@ -65,7 +66,7 @@ Realistic numbers, not hype: an agent signing ~6 accounts a month earns around *
 
 ### The legal fine print
 
-This is an independent contractor (1099) position. It is 100% commission — no base salary, no hourly pay, and no employee benefits (no health insurance, retirement plan, or paid time off). Contractors are responsible for their own taxes. Residual and bonus terms are defined in the Delt agent agreement; "lifetime residuals" means for as long as the merchant continues processing with Delt under that agreement. Earnings depend on individual production; the figures above are modeled scenarios, not guarantees. Delt is an equal opportunity company.
+This is an independent contractor (1099) position. It is 100% commission — no base salary, no hourly pay, and no employee benefits (no health insurance, retirement plan, or paid time off). The wellness package and other programs described above are production-based contractor rewards under the Delt agent agreement, not employment benefits. Contractors are responsible for their own taxes. Residual and bonus terms are defined in the Delt agent agreement; "lifetime residuals" means for as long as the merchant continues processing with Delt under that agreement. Earnings depend on individual production; the figures above are modeled scenarios, not guarantees. Delt is an equal opportunity company.
 
 ---
 
