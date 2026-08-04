@@ -46,6 +46,13 @@ export function plaidConfig() {
     .split(",")
     .map((p) => p.trim())
     .filter(Boolean);
+  // Extra products requested opportunistically on link tokens. Off by
+  // default: production rejects link-token creation outright when the
+  // account isn't enabled for a listed product, even an optional one.
+  const optionalProducts = (Deno.env.get("PLAID_OPTIONAL_PRODUCTS") ?? "")
+    .split(",")
+    .map((p) => p.trim())
+    .filter(Boolean);
   return {
     clientId,
     secret,
@@ -56,6 +63,7 @@ export function plaidConfig() {
     envSource: (rawEnv == null ? "default" : "env") as "default" | "env",
     envValid: env in PLAID_HOSTS,
     products,
+    optionalProducts,
     host: PLAID_HOSTS[env] ?? "",
     redirectUri: Deno.env.get("PLAID_REDIRECT_URI") ?? "",
     configured: Boolean(clientId && secret),
@@ -325,8 +333,8 @@ export async function createLinkToken(leadId: string, userId: string) {
     language: "en",
     country_codes: ["US"],
     products: cfg.products,
-    optional_products: ["liabilities", "investments"],
   };
+  if (cfg.optionalProducts.length) req.optional_products = cfg.optionalProducts;
   const hook = webhookUrl();
   if (hook) req.webhook = hook;
   // OAuth institutions (Chase etc.) require a redirect_uri that exactly

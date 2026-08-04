@@ -18,7 +18,11 @@ referenced in step 5.
   Compliance/Production. Plaid's review can take days — start early.
 - **Products enabled for production must cover everything the code requests:**
   - `PLAID_PRODUCTS` (default): Auth, Transactions, Identity
-  - `optional_products` on every link token: Liabilities, Investments
+  - Optional extras (Liabilities, Investments) are OFF by default — enable
+    the products in the Plaid dashboard first, then opt in by setting the
+    `PLAID_OPTIONAL_PRODUCTS=liabilities,investments` secret. Listing a
+    product the account isn't enabled for makes production link-token
+    creation fail outright.
   - Assets (`/asset_report/*` — used by the asset-report actions)
   - Identity Verification (`/identity_verification/get` — used by IDV attach)
 
