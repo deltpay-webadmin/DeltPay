@@ -604,8 +604,10 @@ export function DeltBackendLayout() {
           <circle cx="33.3" cy="117.5" r="33.3" fill="#4945FF" />
         </svg>
       )}
-      <span className="text-[15px] font-bold text-(--dp-text) group-hover:text-(--dp-accent-text) transition-colors">
-        {org?.name ?? 'Delt'}
+      {/* Brand lockup reads just "Delt" — the full org legal name lives in
+          Settings, not the sidebar. */}
+      <span className="text-[17px] font-bold tracking-tight text-(--dp-text) group-hover:text-(--dp-accent-text) transition-colors">
+        Delt
       </span>
     </button>
   );
