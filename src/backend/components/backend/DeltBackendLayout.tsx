@@ -591,9 +591,18 @@ export function DeltBackendLayout() {
       {org?.logoUrl ? (
         <img src={org.logoUrl} alt={org.name} className="w-7 h-7 rounded-[8px] object-contain" />
       ) : (
-        <div className="w-7 h-7 bg-(--dp-accent) rounded-[8px] flex items-center justify-center">
-          <span className="text-white text-xs font-black">{(org?.name ?? 'Delt')[0]}</span>
-        </div>
+        /* Delt brand mark — geometry lifted from the official logo asset
+           (rounded bar + dot, brand indigo). Inline SVG so it renders crisp
+           at any DPI; slight baseline nudge optically centers it against
+           the wordmark text. */
+        <svg
+          viewBox="0 0 125.2 168.3"
+          className="h-6 w-auto shrink-0 translate-y-[1px]"
+          aria-hidden="true"
+        >
+          <rect x="74.4" width="50.8" height="168.3" rx="17.2" fill="#4945FF" />
+          <circle cx="33.3" cy="117.5" r="33.3" fill="#4945FF" />
+        </svg>
       )}
       <span className="text-[15px] font-bold text-(--dp-text) group-hover:text-(--dp-accent-text) transition-colors">
         {org?.name ?? 'Delt'}
