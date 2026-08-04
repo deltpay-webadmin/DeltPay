@@ -73,6 +73,9 @@ export interface Contract {
   sentAt: string | null;
   completedAt: string | null;
   createdAt: string;
+  kind: 'mca' | 'deal_application';
+  submissionId: string | null;
+  signedStoragePath: string | null;
 }
 
 export interface DocusignConfig {
@@ -163,6 +166,9 @@ function fromDb(r: any): Contract {
     sentAt: r.sent_at ?? null,
     completedAt: r.completed_at ?? null,
     createdAt: r.created_at ?? '',
+    kind: (r.kind ?? 'mca') as 'mca' | 'deal_application',
+    submissionId: r.submission_id ?? null,
+    signedStoragePath: r.signed_storage_path ?? null,
   };
 }
 
@@ -310,6 +316,28 @@ export const contractActions = {
           : [contract, ...state.contracts],
       });
       toast.success(`Agreement sent to ${req.signerEmail} for signature.`);
+      return contract;
+    } catch (err: any) {
+      toast.error(`Send failed: ${err.message}`);
+      throw err;
+    } finally {
+      markBusy('send', false);
+    }
+  },
+
+  /** Send the Delt merchant application from a deal submission for e-signature. */
+  async sendApplication(req: { submissionId: string; signerName?: string; signerEmail?: string }): Promise<Contract> {
+    markBusy('send', true);
+    try {
+      const json = await callDocusign({ action: 'send-application', ...req });
+      const contract = fromDb(json.contract);
+      const exists = state.contracts.some(c => c.id === contract.id);
+      set({
+        contracts: exists
+          ? state.contracts.map(c => (c.id === contract.id ? contract : c))
+          : [contract, ...state.contracts],
+      });
+      toast.success(`Application sent to ${contract.signerEmail} for signature.`);
       return contract;
     } catch (err: any) {
       toast.error(`Send failed: ${err.message}`);

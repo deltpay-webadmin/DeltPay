@@ -217,9 +217,40 @@ export const dealDocumentActions = {
   refresh,
 };
 
+// Realtime: the docusign-connect webhook inserts signed-application rows
+// server-side; subscribe so they appear in open panels without a refresh.
+let realtimeStarted = false;
+function subscribeRealtime() {
+  if (!supabase || realtimeStarted) return;
+  realtimeStarted = true;
+  const channel = supabase
+    .channel('deal-documents-sync')
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'deal_documents' },
+      payload => {
+        const { eventType, new: newRow, old: oldRow } = payload as any;
+        if (eventType === 'DELETE') {
+          set({ documents: state.documents.filter(d => d.id !== oldRow?.id) });
+        } else {
+          const mapped = fromDb(newRow);
+          const exists = state.documents.some(d => d.id === mapped.id);
+          set({
+            documents: exists
+              ? state.documents.map(d => (d.id === mapped.id ? mapped : d))
+              : [...state.documents, mapped],
+          });
+        }
+      },
+    )
+    .subscribe();
+  (globalThis as any).__deltDealDocsChannel = channel;
+}
+
 const subscribe = (l: () => void) => {
   listeners.add(l);
   void maybeHydrate();
+  subscribeRealtime();
   return () => {
     listeners.delete(l);
   };

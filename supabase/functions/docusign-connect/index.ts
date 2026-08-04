@@ -19,10 +19,72 @@
  * The nightly `docusign-sweep` job remains the safety net for missed events.
  */
 
-import { applyEnvelopeStatus } from "../_shared/docusign_status.ts";
+import { createClient } from "npm:@supabase/supabase-js@2";
+import { applyEnvelopeStatus, getAccessToken, getAccount } from "../_shared/docusign_status.ts";
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
+
+/**
+ * Deal-application envelopes: on completion, pull the signed PDF from
+ * DocuSign and file it on the deal — storage upload into deal-docs plus a
+ * deal_documents row (kind signed_application), so it appears in the deal's
+ * Documents panel via realtime. Failures log and never block the status
+ * update; the nightly sweep re-fires status and this re-runs on the next
+ * completed event or manual status refresh via applyEnvelopeStatus callers.
+ */
+async function captureSignedApplication(contractId: string): Promise<void> {
+  try {
+    const db = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+    const { data: row } = await db
+      .from("contracts")
+      .select("id, kind, submission_id, envelope_id, org_id, merchant_name, signed_storage_path, status")
+      .eq("id", contractId)
+      .single();
+    if (!row || row.kind !== "deal_application" || !row.submission_id) return;
+    if (row.signed_storage_path || row.status !== "completed" || !row.envelope_id) return;
+
+    const tok = await getAccessToken();
+    if ("error" in tok) throw new Error(tok.error);
+    const acct = await getAccount(tok.token);
+    if ("error" in acct) throw new Error(acct.error);
+
+    const res = await fetch(
+      `${acct.baseUri}/v2.1/accounts/${acct.accountId}/envelopes/${row.envelope_id}/documents/combined`,
+      { headers: { Authorization: `Bearer ${tok.token}` } },
+    );
+    if (!res.ok) throw new Error(`Signed document download failed: HTTP ${res.status}`);
+    const bytes = new Uint8Array(await res.arrayBuffer());
+
+    const path = `org/${row.org_id}/${row.submission_id}/signed-application-${row.envelope_id}.pdf`;
+    const { error: upErr } = await db.storage.from("deal-docs").upload(path, bytes, {
+      contentType: "application/pdf",
+      upsert: true,
+    });
+    if (upErr) throw new Error(`Storage upload failed: ${upErr.message}`);
+
+    const { error: docErr } = await db.from("deal_documents").insert({
+      org_id: row.org_id,
+      submission_id: row.submission_id,
+      doc_kind: "signed_application",
+      filename: `Signed Application - ${row.merchant_name}.pdf`,
+      storage_path: path,
+      extract_status: "none",
+      uploaded_by: "DocuSign",
+    });
+    if (docErr && !String(docErr.message).includes("duplicate")) {
+      throw new Error(`deal_documents insert failed: ${docErr.message}`);
+    }
+
+    await db.from("contracts").update({ signed_storage_path: path }).eq("id", row.id);
+    console.log(`docusign-connect: captured signed application for contract ${row.id} → ${path}`);
+  } catch (err) {
+    console.error("docusign-connect: signed-application capture failed:", err);
+  }
+}
 
 async function hmacBase64(key: string, payload: Uint8Array): Promise<string> {
   const cryptoKey = await crypto.subtle.importKey(
@@ -96,6 +158,9 @@ Deno.serve(async (req) => {
       return json({ ok: true, ignored: "unknown envelope" });
     }
     console.log(`docusign-connect: envelope ${envelopeId} → ${status} (contract ${out.contractId})`);
+    if (status.toLowerCase() === "completed" && out.contractId) {
+      await captureSignedApplication(out.contractId);
+    }
     return json({ ok: true, contractId: out.contractId, status });
   } catch (err) {
     console.error("docusign-connect error", err);

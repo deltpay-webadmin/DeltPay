@@ -295,6 +295,8 @@ export function AgentSubmitDeal() {
                           submissionId={d.id}
                           orgId={org?.id ?? ''}
                           uploadedBy={agentName || displayName}
+                          contactName={d.contactName}
+                          contactEmail={d.email}
                         />
                       </td>
                     </tr>

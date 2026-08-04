@@ -27,7 +27,8 @@
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { renderAgreementHtml, type AgreementTerms } from "./mca_agreement.ts";
-import { requirePerm } from "../_shared/auth.ts";
+import { renderApplicationHtml } from "./deal_application.ts";
+import { requirePerm, hasPerm } from "../_shared/auth.ts";
 import { getAccessToken, getAccount, oauthHost, STATUS_MAP } from "../_shared/docusign_status.ts";
 
 const CORS = {
@@ -198,6 +199,40 @@ async function createEnvelope(
   return { envelopeId: body.envelopeId as string };
 }
 
+/** Generic HTML → envelope path used by send-application (the MCA path keeps
+ * its dedicated createEnvelope above). */
+async function createEnvelopeFromHtml(
+  baseUri: string,
+  accountId: string,
+  token: string,
+  args: { html: string; docName: string; emailSubject: string; signers: any[] },
+): Promise<{ envelopeId: string } | { error: string }> {
+  const htmlBytes = new TextEncoder().encode(args.html);
+  let binary = "";
+  for (let i = 0; i < htmlBytes.length; i += 8192) {
+    binary += String.fromCharCode(...htmlBytes.subarray(i, i + 8192));
+  }
+  const envelope = {
+    emailSubject: args.emailSubject,
+    documents: [{
+      documentId: "1",
+      name: args.docName,
+      fileExtension: "html",
+      documentBase64: btoa(binary),
+    }],
+    recipients: { signers: dedupeSigners(args.signers) },
+    status: "sent",
+  };
+  const res = await fetch(`${baseUri}/v2.1/accounts/${accountId}/envelopes`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify(envelope),
+  });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) return { error: `Envelope create failed: ${body?.message || body?.errorCode || `HTTP ${res.status}`}` };
+  return { envelopeId: body.envelopeId as string };
+}
+
 // ── Request handling ──────────────────────────────────────────
 
 Deno.serve(async (req) => {
@@ -217,8 +252,12 @@ Deno.serve(async (req) => {
   const action = body?.action as string;
 
   // RBAC gate: reads need merchants.view, envelope mutations need
-  // merchants.edit (mirrors the contracts RLS policies).
-  const neededPerm = action === "send" || action === "void" ? "merchants.edit" : "merchants.view";
+  // merchants.edit (mirrors the contracts RLS policies). send-application is
+  // agent-facing and gates on leads.create; ownership is checked in-handler.
+  const neededPerm =
+    action === "send" || action === "void" ? "merchants.edit"
+    : action === "send-application" ? "leads.create"
+    : "merchants.view";
   const auth = await requirePerm(req.headers.get("Authorization") ?? undefined, neededPerm);
   if (!auth.ok) return json({ error: auth.error }, auth.status);
 
@@ -287,6 +326,101 @@ Deno.serve(async (req) => {
         sent_at: new Date().toISOString(),
         created_by: auth.ctx.userId,
         org_id: auth.ctx.orgId,
+      })
+      .select("*")
+      .single();
+    if (insErr) {
+      return json({ error: `Envelope ${env.envelopeId} was sent, but recording it failed: ${insErr.message}`, envelopeId: env.envelopeId }, 500);
+    }
+    return json({ ok: true, contract: row });
+  }
+
+  // ── send-application: Delt merchant application from a deal submission ──
+  if (action === "send-application") {
+    const submissionId = body?.submissionId as string;
+    if (!submissionId) return json({ error: "submissionId required" }, 400);
+
+    const { data: sub, error: subErr } = await admin
+      .from("deal_submissions")
+      .select("*")
+      .eq("id", submissionId)
+      .single();
+    if (subErr || !sub) return json({ error: "Deal submission not found" }, 404);
+
+    // Ownership: agents can only send on their own submissions; ops
+    // (agents.edit) can send on any.
+    if (!hasPerm(auth.ctx, "agents.edit") && sub.agent_id !== auth.ctx.agentId) {
+      return json({ error: "You can only send applications for your own deals" }, 403);
+    }
+
+    const signerName = (body?.signerName as string) || sub.contact_name || sub.merchant_name;
+    const signerEmail = (body?.signerEmail as string) || sub.email;
+    if (!signerEmail) {
+      return json({ error: "The merchant has no email on file — add one to the deal or provide signerEmail." }, 400);
+    }
+
+    const html = renderApplicationHtml({
+      merchantName: sub.merchant_name,
+      contactName: sub.contact_name ?? undefined,
+      phone: sub.phone ?? undefined,
+      email: signerEmail,
+      vertical: sub.vertical ?? undefined,
+      monthlyVolume: Number(sub.monthly_volume) || undefined,
+      wantsPos: Boolean(sub.wants_pos),
+      wantsCapital: Boolean(sub.wants_capital),
+      agentName: sub.agent_name ?? undefined,
+      applicationDate: new Date().toISOString().slice(0, 10),
+    });
+
+    const signers: any[] = [{
+      recipientId: "1",
+      routingOrder: "1",
+      name: signerName,
+      email: signerEmail,
+      roleName: "Merchant",
+      tabs: signerTabs("mer"),
+    }];
+    const csName = Deno.env.get("DOCUSIGN_COUNTERSIGNER_NAME");
+    const csEmail = Deno.env.get("DOCUSIGN_COUNTERSIGNER_EMAIL");
+    if (csName && csEmail) {
+      signers.push({
+        recipientId: "2",
+        routingOrder: "2",
+        name: csName,
+        email: csEmail,
+        roleName: "Delt Pay",
+        tabs: signerTabs("pur"),
+      });
+    }
+
+    const tok = await getAccessToken();
+    if ("error" in tok) return json({ error: tok.error }, 400);
+    const acct = await getAccount(tok.token);
+    if ("error" in acct) return json({ error: acct.error }, 400);
+
+    const env = await createEnvelopeFromHtml(acct.baseUri, acct.accountId, tok.token, {
+      html,
+      docName: `Delt Merchant Application - ${sub.merchant_name}.html`,
+      emailSubject: (body?.emailSubject as string) || `Delt Pay Merchant Application — ${sub.merchant_name}`,
+      signers,
+    });
+    if ("error" in env) return json({ error: env.error }, 400);
+
+    const { data: row, error: insErr } = await admin
+      .from("contracts")
+      .insert({
+        kind: "deal_application",
+        submission_id: submissionId,
+        merchant_name: sub.merchant_name,
+        signer_name: signerName,
+        signer_email: signerEmail,
+        terms: {},
+        envelope_id: env.envelopeId,
+        status: "sent",
+        docusign_status: "sent",
+        sent_at: new Date().toISOString(),
+        created_by: auth.ctx.userId,
+        org_id: sub.org_id,
       })
       .select("*")
       .single();

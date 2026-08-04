@@ -248,6 +248,8 @@ export function BackendAgentDesk() {
                                   orgId={org?.id ?? ''}
                                   uploadedBy={displayName}
                                   copyable
+                                  contactName={s.contactName}
+                                  contactEmail={s.email}
                                 />
                               </div>
                             </div>

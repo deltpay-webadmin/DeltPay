@@ -11,9 +11,10 @@ import React, { useState, useMemo, useEffect } from 'react';
 import {
   FileText, Search, Send, X, PenTool, RefreshCw, Ban, Copy,
   File, FileCheck, FileClock, FileX, FolderOpen, AlertTriangle,
-  CheckCircle, ExternalLink, Loader2, ShieldCheck,
+  CheckCircle, ExternalLink, Loader2, ShieldCheck, Download,
 } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
+import { supabase } from '../../../lib/supabase';
 import {
   useContracts, useDocusignConfig, useContractsSync, contractActions,
   consumeEsignDraft, type Contract, type ContractStatus, type SendContractRequest,
@@ -626,7 +627,20 @@ export function BackendDocuments() {
                         <Ban className="w-3.5 h-3.5 text-red-400" />
                       </button>
                     )}
-                    {c.status === 'completed' && <CheckCircle className="w-3.5 h-3.5 text-emerald-500" title="Completed" />}
+                    {c.status === 'completed' && (c.signedStoragePath ? (
+                      <button
+                        onClick={async () => {
+                          const { data } = await supabase!.storage.from('deal-docs').createSignedUrl(c.signedStoragePath!, 3600);
+                          if (data?.signedUrl) window.open(data.signedUrl, '_blank', 'noopener');
+                        }}
+                        className="p-1 hover:bg-emerald-50 rounded"
+                        title="Download signed PDF"
+                      >
+                        <Download className="w-3.5 h-3.5 text-emerald-600" />
+                      </button>
+                    ) : (
+                      <CheckCircle className="w-3.5 h-3.5 text-emerald-500" title="Completed" />
+                    ))}
                   </>
                 )}
               </div>

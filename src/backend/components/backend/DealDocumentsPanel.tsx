@@ -17,6 +17,8 @@ import {
   type DealDocument,
   type DocKind,
 } from './dealDocumentsStore';
+import { useContracts, contractActions } from './contractsStore';
+import { PenTool, Send as SendIcon, Clock, CheckCircle as CheckCircleIcon } from 'lucide-react';
 
 const EXTRACT_LABELS: Record<string, string> = {
   bank_name: 'Bank',
@@ -110,16 +112,49 @@ export function DealDocumentsPanel({
   orgId,
   uploadedBy,
   copyable = false,
+  contactName = '',
+  contactEmail = '',
 }: {
   submissionId: string;
   orgId: string;
   uploadedBy: string;
   copyable?: boolean;
+  /** Prefill for the e-signature signer fields (the submission's contact). */
+  contactName?: string;
+  contactEmail?: string;
 }) {
   const { documents } = useDealDocuments();
+  const contracts = useContracts();
   const [kind, setKind] = useState<DocKind>('voided_check');
   const [busy, setBusy] = useState(false);
+  const [signerName, setSignerName] = useState(contactName);
+  const [signerEmail, setSignerEmail] = useState(contactEmail);
+  const [sending, setSending] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  // Envelopes sent from this deal (realtime via the contracts store).
+  const dealContracts = useMemo(
+    () => contracts.filter(c => c.kind === 'deal_application' && c.submissionId === submissionId),
+    [contracts, submissionId],
+  );
+  const inFlight = dealContracts.find(c => c.status === 'sent' || c.status === 'delivered');
+  const signed = dealContracts.find(c => c.status === 'completed');
+
+  const sendForSignature = async () => {
+    if (sending) return;
+    setSending(true);
+    try {
+      await contractActions.sendApplication({
+        submissionId,
+        signerName: signerName.trim() || undefined,
+        signerEmail: signerEmail.trim() || undefined,
+      });
+    } catch {
+      /* toast already shown by the store */
+    } finally {
+      setSending(false);
+    }
+  };
 
   const docs = useMemo(
     () => documents.filter(d => d.submissionId === submissionId),
@@ -141,6 +176,53 @@ export function DealDocumentsPanel({
 
   return (
     <div className="space-y-3">
+      {/* E-signature: send the Delt application to the merchant */}
+      <div className="rounded-[8px] border border-gray-200 bg-white px-3 py-2.5">
+        <p className="flex items-center gap-1.5 text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-2">
+          <PenTool className="w-3.5 h-3.5" /> Merchant e-signature
+        </p>
+        {signed ? (
+          <p className="flex items-center gap-1.5 text-sm text-emerald-600">
+            <CheckCircleIcon className="w-4 h-4" />
+            Application signed{signed.completedAt ? ` on ${signed.completedAt.slice(0, 10)}` : ''} — the
+            signed PDF is filed below.
+          </p>
+        ) : inFlight ? (
+          <p className="flex items-center gap-1.5 text-sm text-amber-600">
+            <Clock className="w-4 h-4" />
+            Application {inFlight.status === 'delivered' ? 'opened by' : 'sent to'} {inFlight.signerEmail} —
+            the signed PDF files itself here when they finish.
+          </p>
+        ) : (
+          <div className="flex flex-wrap items-center gap-2">
+            <input
+              value={signerName}
+              onChange={e => setSignerName(e.target.value)}
+              placeholder="Signer name"
+              className="flex-1 min-w-[140px] px-3 py-2 bg-white border border-gray-300 rounded-[6px] text-sm text-gray-800 placeholder-gray-400 focus:outline-none"
+            />
+            <input
+              value={signerEmail}
+              onChange={e => setSignerEmail(e.target.value)}
+              placeholder="Signer email"
+              className="flex-1 min-w-[180px] px-3 py-2 bg-white border border-gray-300 rounded-[6px] text-sm text-gray-800 placeholder-gray-400 focus:outline-none"
+            />
+            <button
+              onClick={() => void sendForSignature()}
+              disabled={sending}
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-[6px] text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 transition-colors"
+            >
+              {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <SendIcon className="w-4 h-4" />}
+              {sending ? 'Sending…' : 'Send for signature'}
+            </button>
+            <span className="basis-full text-[11px] text-gray-400">
+              Sends Delt's application via DocuSign, prefilled from this deal. Processor agreements
+              (Square/Luqra/Paysafe) still run in their own flows.
+            </span>
+          </div>
+        )}
+      </div>
+
       <div className="flex flex-wrap items-center gap-2">
         <select
           value={kind}
