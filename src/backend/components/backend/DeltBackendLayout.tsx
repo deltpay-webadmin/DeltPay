@@ -91,6 +91,7 @@ import {
   GraduationCap,
   Trophy,
   MessageSquare,
+  BookOpen,
 } from 'lucide-react';
 
 // ── Types ──
