@@ -34,7 +34,7 @@ referenced in step 5.
 2. Register the **redirect URI** (API → Allowed redirect URIs):
 
    ```
-   https://deltpay.com/plaid-oauth-callback
+   https://www.deltpay.com/plaid-oauth-callback
    ```
 
    It must match `PLAID_REDIRECT_URI` **exactly** (scheme, host, path, no
@@ -110,7 +110,7 @@ One batch, so no request runs with a mixed config:
 supabase secrets set \
   PLAID_ENV=production \
   PLAID_SECRET=<production-secret> \
-  PLAID_REDIRECT_URI=https://deltpay.com/plaid-oauth-callback
+  PLAID_REDIRECT_URI=https://www.deltpay.com/plaid-oauth-callback
 ```
 
 `PLAID_CLIENT_ID` is unchanged. Edge functions pick up new secrets on
