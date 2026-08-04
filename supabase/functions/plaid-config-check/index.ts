@@ -2,48 +2,45 @@
  * Plaid credential self-check.
  *
  * Reads the PLAID_* edge-function secrets and makes one harmless call
- * (institutions/get_by_id) to confirm the client_id/secret pair is valid
- * for the configured environment. Returns booleans + Plaid's error_code
- * only — never the secrets themselves.
+ * (institutions/get, count 1 — read-only, valid in sandbox AND production)
+ * to confirm the client_id/secret pair is valid for the configured
+ * environment. Returns booleans + Plaid's error_code only — never the
+ * secrets themselves.
  */
 
-const HOSTS: Record<string, string> = {
-  sandbox: "https://sandbox.plaid.com",
-  development: "https://development.plaid.com",
-  production: "https://production.plaid.com",
-};
+import { plaidConfig } from "../_shared/plaid.ts";
 
 Deno.serve(async () => {
-  const clientId = Deno.env.get("PLAID_CLIENT_ID") ?? "";
-  const secret = Deno.env.get("PLAID_SECRET") ?? "";
-  const env = (Deno.env.get("PLAID_ENV") ?? "sandbox").toLowerCase();
-  const configured = Boolean(clientId && secret);
+  const cfg = plaidConfig();
 
   const out: Record<string, unknown> = {
-    configured,
-    env,
-    has_client_id: Boolean(clientId),
-    has_secret: Boolean(secret),
-    env_valid: env in HOSTS,
+    configured: cfg.configured,
+    env: cfg.env,
+    env_valid: cfg.envValid,
+    env_source: cfg.envSource,
+    has_client_id: Boolean(cfg.clientId),
+    has_secret: Boolean(cfg.secret),
+    redirect_uri_set: Boolean(cfg.redirectUri),
     credentials_valid: false,
   };
 
-  if (configured && env in HOSTS) {
+  if (cfg.configured && cfg.envValid) {
     try {
-      const res = await fetch(`${HOSTS[env]}/institutions/get_by_id`, {
+      const res = await fetch(`${cfg.host}/institutions/get`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          client_id: clientId,
-          secret,
-          institution_id: "ins_109508",
+          client_id: cfg.clientId,
+          secret: cfg.secret,
+          count: 1,
+          offset: 0,
           country_codes: ["US"],
         }),
       });
       const json = await res.json().catch(() => ({}));
       if (res.ok) {
         out.credentials_valid = true;
-        out.institution_test = json?.institution?.name ?? "ok";
+        out.institution_test = json?.institutions?.[0]?.name ?? "ok";
       } else {
         out.credentials_valid = false;
         out.plaid_error_code = json?.error_code ?? `HTTP_${res.status}`;
