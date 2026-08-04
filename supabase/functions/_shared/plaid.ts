@@ -30,16 +30,18 @@ import { runDecisionModel, MODEL_VERSION, type ModelInput } from "./decision_mod
 // Config
 // ══════════════════════════════════════════════════════════════
 
-const PLAID_HOSTS: Record<string, string> = {
+// Plaid retired the "development" environment in 2024 — sandbox and
+// production are the only valid values for PLAID_ENV.
+export const PLAID_HOSTS: Record<string, string> = {
   sandbox: "https://sandbox.plaid.com",
-  development: "https://development.plaid.com",
   production: "https://production.plaid.com",
 };
 
 export function plaidConfig() {
   const clientId = Deno.env.get("PLAID_CLIENT_ID") ?? "";
   const secret = Deno.env.get("PLAID_SECRET") ?? "";
-  const env = (Deno.env.get("PLAID_ENV") ?? "sandbox").toLowerCase();
+  const rawEnv = Deno.env.get("PLAID_ENV");
+  const env = (rawEnv ?? "sandbox").toLowerCase();
   const products = (Deno.env.get("PLAID_PRODUCTS") ?? "auth,transactions,identity")
     .split(",")
     .map((p) => p.trim())
@@ -48,8 +50,14 @@ export function plaidConfig() {
     clientId,
     secret,
     env,
+    // Unset PLAID_ENV falls back to sandbox (never accidentally production);
+    // an unrecognized value fails closed in plaid() instead of silently
+    // hitting the sandbox host with production credentials.
+    envSource: (rawEnv == null ? "default" : "env") as "default" | "env",
+    envValid: env in PLAID_HOSTS,
     products,
-    host: PLAID_HOSTS[env] ?? PLAID_HOSTS.sandbox,
+    host: PLAID_HOSTS[env] ?? "",
+    redirectUri: Deno.env.get("PLAID_REDIRECT_URI") ?? "",
     configured: Boolean(clientId && secret),
   };
 }
@@ -72,6 +80,11 @@ async function plaid(path: string, body: Record<string, unknown>): Promise<any> 
   if (!cfg.configured) {
     throw new Error(
       "Plaid credentials not configured. Add PLAID_CLIENT_ID and PLAID_SECRET as Edge Function secrets.",
+    );
+  }
+  if (!cfg.envValid) {
+    throw new Error(
+      `PLAID_ENV "${cfg.env}" is not valid. Set the PLAID_ENV edge-function secret to "sandbox" or "production".`,
     );
   }
   const res = await fetch(`${cfg.host}${path}`, {
@@ -316,6 +329,9 @@ export async function createLinkToken(leadId: string, userId: string) {
   };
   const hook = webhookUrl();
   if (hook) req.webhook = hook;
+  // OAuth institutions (Chase etc.) require a redirect_uri that exactly
+  // matches one registered in the Plaid dashboard → API → Allowed redirect URIs.
+  if (cfg.redirectUri) req.redirect_uri = cfg.redirectUri;
   const out = await plaid("/link/token/create", req);
   return { link_token: out.link_token, expiration: out.expiration };
 }

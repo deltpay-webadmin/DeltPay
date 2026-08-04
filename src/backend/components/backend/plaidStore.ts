@@ -20,6 +20,17 @@ import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 import { serverBaseUrl } from '../../../app/lib/supabase';
 
 // ══════════════════════════════════════════════════════════════
+// OAuth resume — sessionStorage keys
+// ══════════════════════════════════════════════════════════════
+// Plaid OAuth banks navigate the whole tab away and back. The link_token +
+// leadId are stashed at token creation; the App-level shim stashes the
+// return URL (carrying oauth_state_id); PlaidOAuthResume in BackendPlaid
+// reads both to finish the flow.
+
+export const PLAID_LINK_SESSION_KEY = 'dp_plaid_link';
+export const PLAID_OAUTH_HREF_KEY = 'dp_plaid_oauth_href';
+
+// ══════════════════════════════════════════════════════════════
 // Types
 // ══════════════════════════════════════════════════════════════
 
@@ -52,6 +63,12 @@ export interface PlaidNode {
 export interface PlaidStatus {
   configured: boolean;
   env: string;
+  /** false when PLAID_ENV is set to an unrecognized value (server fails closed). */
+  envValid: boolean;
+  /** 'default' when PLAID_ENV is unset and the server fell back to sandbox. */
+  envSource: 'env' | 'default';
+  /** true when PLAID_REDIRECT_URI is set (OAuth banks enabled). */
+  redirectUriSet: boolean;
   products: string[];
   webhookUrl: string;
   items: number;
@@ -270,6 +287,9 @@ export const plaidActions = {
       const status: PlaidStatus = {
         configured: Boolean(json.configured),
         env: json.env ?? 'sandbox',
+        envValid: json.env_valid !== false,
+        envSource: json.env_source === 'default' ? 'default' : 'env',
+        redirectUriSet: Boolean(json.redirect_uri_set),
         products: json.products ?? [],
         webhookUrl: json.webhook_url ?? '',
         items: json.items ?? 0,
@@ -288,7 +308,24 @@ export const plaidActions = {
       method: 'POST',
       body: JSON.stringify({ leadId }),
     });
+    // Stash the resume context: OAuth institutions bounce the whole tab to
+    // the bank and back to /plaid-oauth-callback, and Plaid requires re-initializing
+    // Link with the SAME link_token after the redirect.
+    try {
+      sessionStorage.setItem(
+        PLAID_LINK_SESSION_KEY,
+        JSON.stringify({ token: json.link_token, leadId, ts: Date.now() }),
+      );
+    } catch { /* storage unavailable — OAuth resume just won't work */ }
     return json.link_token as string;
+  },
+
+  /** Drop any stashed OAuth-resume context (call on Link success/exit). */
+  clearLinkSession() {
+    try {
+      sessionStorage.removeItem(PLAID_LINK_SESSION_KEY);
+      sessionStorage.removeItem(PLAID_OAUTH_HREF_KEY);
+    } catch { /* ignore */ }
   },
 
   /** Exchange a Link public_token; the server pulls + files everything. */

@@ -15,6 +15,7 @@ import { toast } from 'sonner@2.0.3';
 import { useLeads, underwritingActions, type Lead } from '../crmStore';
 import {
   usePlaidItems, usePlaidNodes, usePlaidStatus, usePlaidSync, plaidActions,
+  PLAID_LINK_SESSION_KEY, PLAID_OAUTH_HREF_KEY,
   type PlaidItem, type PlaidNode,
 } from '../plaidStore';
 import {
@@ -85,13 +86,15 @@ function timeAgo(iso?: string | null): string {
 
 /** Mounted only once a link_token exists; auto-opens the Plaid Link modal. */
 function PlaidLinkOpener({
-  token, onSuccess, onExit,
+  token, receivedRedirectUri, onSuccess, onExit,
 }: {
   token: string;
+  /** Set when resuming after an OAuth bank redirect (must be the full return URL). */
+  receivedRedirectUri?: string;
   onSuccess: (publicToken: string, metadata: any) => void;
   onExit: () => void;
 }) {
-  const { open, ready } = usePlaidLink({ token, onSuccess, onExit });
+  const { open, ready } = usePlaidLink({ token, receivedRedirectUri, onSuccess, onExit });
   useEffect(() => {
     if (ready) open();
   }, [ready, open]);
@@ -123,6 +126,7 @@ function PlaidLinkButton({
   const onSuccess = useCallback(
     (publicToken: string, metadata: any) => {
       setToken(null);
+      plaidActions.clearLinkSession();
       plaidActions.exchange(leadId, publicToken, {
         institution_id: metadata?.institution?.institution_id,
         name: metadata?.institution?.name,
@@ -146,9 +150,59 @@ function PlaidLinkButton({
         {busy ? 'Starting…' : 'Connect bank'}
       </button>
       {token && (
-        <PlaidLinkOpener token={token} onSuccess={onSuccess} onExit={() => setToken(null)} />
+        <PlaidLinkOpener
+          token={token}
+          onSuccess={onSuccess}
+          onExit={() => { setToken(null); plaidActions.clearLinkSession(); }}
+        />
       )}
     </>
+  );
+}
+
+/**
+ * Finishes a Plaid Link flow interrupted by an OAuth bank redirect.
+ *
+ * OAuth institutions (Chase etc.) navigate the tab to the bank and back to
+ * /plaid-oauth-callback. The App-level shim stashes the return URL (which carries
+ * oauth_state_id) and re-enters the CRM; this component — mounted with the
+ * page — picks up the stashed link_token + leadId, re-opens Link with
+ * receivedRedirectUri, and runs the normal exchange.
+ */
+function PlaidOAuthResume() {
+  const [ctx, setCtx] = useState<{ href: string; token: string; leadId: string } | null>(() => {
+    try {
+      const href = sessionStorage.getItem(PLAID_OAUTH_HREF_KEY);
+      const raw = sessionStorage.getItem(PLAID_LINK_SESSION_KEY);
+      if (!href || !raw) return null;
+      const { token, leadId, ts } = JSON.parse(raw);
+      // OAuth link tokens are short-lived (~30 min) — drop stale contexts.
+      if (!token || !leadId || !ts || Date.now() - ts > 30 * 60_000) return null;
+      return { href, token, leadId };
+    } catch {
+      return null;
+    }
+  });
+
+  const finish = useCallback(() => {
+    plaidActions.clearLinkSession();
+    setCtx(null);
+  }, []);
+
+  if (!ctx) return null;
+  return (
+    <PlaidLinkOpener
+      token={ctx.token}
+      receivedRedirectUri={ctx.href}
+      onSuccess={(publicToken, metadata) => {
+        finish();
+        plaidActions.exchange(ctx.leadId, publicToken, {
+          institution_id: metadata?.institution?.institution_id,
+          name: metadata?.institution?.name,
+        });
+      }}
+      onExit={finish}
+    />
   );
 }
 
@@ -1311,7 +1365,9 @@ function KeyValueGrid({ obj }: { obj: Record<string, any> }) {
 function SandboxConnectButton({ leadId }: { leadId: string }) {
   const status = usePlaidStatus();
   const { busy } = usePlaidSync();
-  if (status && status.env !== 'sandbox') return null;
+  // Render only once status confirms sandbox — the server rejects this
+  // route in any other env, so don't show a button that can only error.
+  if (status?.env !== 'sandbox') return null;
   return (
     <button
       onClick={() => plaidActions.sandboxQuickConnect(leadId)}
@@ -1527,6 +1583,9 @@ export function BackendPlaid() {
       <div className="pointer-events-none absolute top-1/2 -right-40 w-[420px] h-[420px] rounded-full bg-[#2a6bff]/10 blur-[120px]" />
 
       <div className="relative space-y-6">
+        {/* Resume an OAuth-interrupted Link flow, if one is stashed. */}
+        <PlaidOAuthResume />
+
         {/* Header */}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
@@ -1565,6 +1624,33 @@ export function BackendPlaid() {
                 Add <code className="font-mono">PLAID_CLIENT_ID</code> and <code className="font-mono">PLAID_SECRET</code> from
                 your Plaid developer portal as Supabase Edge Function secrets (plus <code className="font-mono">PLAID_ENV</code>=
                 sandbox or production). See the Connections tab for details.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Environment warnings */}
+        {status && !status.envValid && (
+          <div className="border border-red-400/30 bg-red-400/10 rounded-2xl p-4 flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+            <div className="text-sm text-red-200">
+              <p className="font-medium">PLAID_ENV is set to an unrecognized value ("{status.env}")</p>
+              <p className="text-xs mt-1 text-red-200/80">
+                All Plaid calls are blocked until the <code className="font-mono">PLAID_ENV</code> secret is set to
+                {' '}<code className="font-mono">sandbox</code> or <code className="font-mono">production</code>.
+              </p>
+            </div>
+          </div>
+        )}
+        {status && status.envValid && status.envSource === 'default' && (
+          <div className="border border-amber-400/30 bg-amber-400/10 rounded-2xl p-4 flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+            <div className="text-sm text-amber-200">
+              <p className="font-medium">PLAID_ENV is not set — defaulting to sandbox</p>
+              <p className="text-xs mt-1 text-amber-200/80">
+                Set the <code className="font-mono">PLAID_ENV</code> Edge Function secret explicitly
+                (<code className="font-mono">sandbox</code> or <code className="font-mono">production</code>) so the
+                environment is never ambiguous.
               </p>
             </div>
           </div>

@@ -2,8 +2,10 @@
 # endpoint is reproducible instead of living only as dashboard state.
 #
 # verify_jwt = false is ONLY for endpoints that authenticate another way:
-#   - plaid-webhook:    called by Plaid (no Supabase JWT); guards by ignoring
-#                       unknown item_ids. TODO: verify Plaid-Verification JWT.
+#   - plaid-webhook:    called by Plaid (no Supabase JWT); verifies the
+#                       Plaid-Verification ES256 JWT + body hash (enforced in
+#                       production, log-only in sandbox; override with the
+#                       PLAID_WEBHOOK_VERIFY secret: enforce|log|off).
 #   - docusign-connect: called by DocuSign Connect; HMAC-verified
 #                       (DOCUSIGN_CONNECT_HMAC_KEY), fails closed.
 #   - plaid-config-check: public config self-check (returns booleans only).

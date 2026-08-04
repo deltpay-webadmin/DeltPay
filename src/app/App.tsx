@@ -77,6 +77,20 @@ function PixelRouteTracker() {
   return null;
 }
 
+/* Plaid OAuth return shim. OAuth banks redirect back to the registered
+   redirect URI, which can't contain a '#' fragment — so Plaid lands on the
+   real path /plaid-oauth-callback (served by the Vercel SPA rewrite). Stash the full
+   return URL (it carries oauth_state_id) and re-enter the hash-routed CRM,
+   where PlaidOAuthResume (BackendPlaid) finishes the Link flow. Keys are
+   string literals rather than plaidStore imports so the CRM store stays out
+   of the initial marketing-site chunk. Runs before HashRouter mounts. */
+if (window.location.pathname === '/plaid-oauth-callback') {
+  try {
+    sessionStorage.setItem('dp_plaid_oauth_href', window.location.href);
+  } catch { /* storage unavailable — flow restarts from scratch */ }
+  window.location.replace('/#/dashboard/underwriting');
+}
+
 /* App root - v2 */
 export default function App() {
   return (
