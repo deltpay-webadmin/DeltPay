@@ -40,15 +40,17 @@ referenced in step 5.
    It must match `PLAID_REDIRECT_URI` **exactly** (scheme, host, path, no
    trailing slash). The app serves this path via the Vercel SPA rewrite —
    no extra hosting config needed.
-3. Register the **webhook URL** (Team Settings → Webhooks):
+3. **Webhooks need no dashboard registration.** The backend attaches
 
    ```
    https://ytemrmpnwmzqeradbeoa.supabase.co/functions/v1/plaid-webhook
    ```
 
-   The code also attaches this URL to every link token and asset report,
-   but dashboard registration is still required for OAuth institutions and
-   item-level webhook migration.
+   to every link token and asset report it creates, which covers all the
+   event families the receiver handles (TRANSACTIONS, ITEM, ASSETS). The
+   dashboard's Webhooks page only configures listeners for products this
+   integration doesn't consume events from (Transfer, IDV, Monitor, Bank
+   Income) — leave it empty.
 
 ## 3. Deploy the code (safe while still on sandbox)
 
