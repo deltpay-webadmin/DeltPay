@@ -42,6 +42,11 @@ import { BackendPayments } from './pages/BackendPayments';
 import { BackendReports } from './pages/BackendReports';
 import { BackendPlaid } from './pages/BackendPlaid';
 import { BackendMarketing } from './pages/BackendMarketing';
+import { AgentSubmitDeal } from './pages/AgentSubmitDeal';
+import { AgentDealDesk } from './pages/AgentDealDesk';
+import { AgentResources } from './pages/AgentResources';
+import { AgentLeaderboard } from './pages/AgentLeaderboard';
+import { BackendAgentDesk } from './pages/BackendAgentDesk';
 import {
   LayoutDashboard,
   Users,
@@ -81,6 +86,10 @@ import {
   Moon,
   PenTool,
   LogOut,
+  Send,
+  GraduationCap,
+  Trophy,
+  MessageSquare,
 } from 'lucide-react';
 
 // ── Types ──
@@ -143,6 +152,7 @@ const adminGroups: NavGroup[] = [
     label: 'Team',
     items: [
       { label: 'Agents', path: '/agents', icon: UserCircle, perm: 'agents.view' },
+      { label: 'Agent Desk', path: '/agent-desk', icon: Inbox, perm: 'agents.edit' },
       { label: 'Employees', path: '/employees', icon: Briefcase, perm: 'employees.view' },
       { label: 'Payroll', path: '/payroll', icon: Receipt, perm: 'payroll.view' },
     ],
@@ -180,6 +190,15 @@ const agentGroups: NavGroup[] = [
       { label: 'Commissions', path: '/commissions', icon: Banknote, perm: 'compensation.view' },
     ],
   },
+  {
+    label: 'Grow',
+    items: [
+      { label: 'Submit a Deal', path: '/submit-deal', icon: Send, perm: 'leads.create' },
+      { label: 'Deal Desk', path: '/deal-desk', icon: MessageSquare },
+      { label: "President's Club", path: '/leaderboard', icon: Trophy },
+      { label: 'Resources & Training', path: '/resources', icon: GraduationCap },
+    ],
+  },
 ];
 
 // ── Page titles for the topbar ──
@@ -214,6 +233,11 @@ const PAGE_TITLES: Record<string, string> = {
   '/deals': 'Portfolio',
   '/commissions': 'Commissions',
   '/my-residuals': 'My Residuals',
+  '/submit-deal': 'Submit a Deal',
+  '/deal-desk': 'Deal Desk',
+  '/resources': 'Resources & Training',
+  '/leaderboard': "President's Club",
+  '/agent-desk': 'Agent Desk',
   '/tasks': 'Tasks',
   '/inbox': 'Inbox',
   '/documents': 'Documents & E-Sign',
@@ -286,6 +310,10 @@ const allCommands: CommandItem[] = [
   { label: 'Agents', path: '/agents', group: 'Team', icon: UserCircle, perm: 'agents.view' },
   { label: 'My Residuals (Agent view)', path: '/my-residuals', group: 'Team', icon: Receipt, keywords: 'agent portal residual statement book', perm: 'residuals.view' },
   { label: 'Commissions (Agent view)', path: '/commissions', group: 'Team', icon: Banknote, keywords: 'agent portal commission statement payout', perm: 'compensation.view' },
+  { label: 'Agent Desk', path: '/agent-desk', group: 'Team', icon: Inbox, keywords: 'deal submissions pipeline mpa activate bonus deal desk support threads', perm: 'agents.edit' },
+  { label: 'Submit a Deal', path: '/submit-deal', group: 'Team', icon: Send, keywords: 'mpa merchant application agent pipeline bonus', perm: 'leads.create' },
+  { label: "President's Club", path: '/leaderboard', group: 'Team', icon: Trophy, keywords: 'leaderboard standings quarterly top producers' },
+  { label: 'Resources & Training', path: '/resources', group: 'Team', icon: GraduationCap, keywords: 'training certification playbooks objection scripts collateral' },
   { label: 'Employees', path: '/employees', group: 'Team', icon: Briefcase, perm: 'employees.view' },
   { label: 'Payroll', path: '/payroll', group: 'Team', icon: Receipt, perm: 'payroll.view' },
   { label: 'Lens AI', path: '/lens-ai', group: 'Intelligence', icon: Sparkles, keywords: 'ai analysis', perm: 'lens_ai.view' },
@@ -731,6 +759,11 @@ export function DeltBackendLayout() {
               <Route path="websites" element={<Guard perm="merchants.view"><BackendWebsites /></Guard>} />
               <Route path="subscriptions" element={<Guard perm="billing.view"><BackendSubscriptions /></Guard>} />
               <Route path="commissions" element={<Guard perm="compensation.view"><AgentCommissions /></Guard>} />
+              <Route path="submit-deal" element={<Guard perm="leads.create"><AgentSubmitDeal /></Guard>} />
+              <Route path="deal-desk" element={<AgentDealDesk />} />
+              <Route path="resources" element={<AgentResources />} />
+              <Route path="leaderboard" element={<AgentLeaderboard />} />
+              <Route path="agent-desk" element={<Guard perm="agents.edit"><BackendAgentDesk /></Guard>} />
               <Route path="support" element={<SupportPage />} />
               <Route path="settings" element={<Guard perm="general.view"><BackendSettings /></Guard>} />
               <Route path="settings/integrations" element={<Guard perm="integrations.view"><BackendSettings /></Guard>} />

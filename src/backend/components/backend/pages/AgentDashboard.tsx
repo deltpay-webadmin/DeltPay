@@ -19,6 +19,11 @@ import {
 } from 'recharts';
 import { useLeads, useMerchants } from '../crmStore';
 import { useCapital } from '../capitalStore';
+import { useResiduals } from '../residualsStore';
+import { useDealSubmissions } from '../dealSubmissionsStore';
+import { useAppNavigate } from '../NavigationContext';
+import { tierForAccounts, nextTier, fmtUsd } from '../agentComp';
+import { Target, AlertTriangle, ArrowRight, HeartPulse } from 'lucide-react';
 
 const variantMap = {
   indigo: { bg: 'bg-indigo-50 border-indigo-100', icon: 'text-indigo-600' },
@@ -34,6 +39,45 @@ export function AgentDashboard() {
   const leads = useLeads();
   const merchants = useMerchants();
   const { deals } = useCapital();
+  const { rows: residualRows } = useResiduals();
+  const { submissions } = useDealSubmissions();
+  const { navigate } = useAppNavigate();
+
+  // ── Tier ladder progress (active accounts drive the 50/60/70 split) ──
+  const activeAccounts = merchants.filter(m => m.status === 'Active').length;
+  const tier = tierForAccounts(activeAccounts);
+  const next = nextTier(activeAccounts);
+  const tierPct = next
+    ? Math.min(100, Math.round((activeAccounts / next.minAccounts) * 100))
+    : 100;
+
+  // ── Deal pipeline: pending bonuses from submissions not yet activated ──
+  const pendingDeals = submissions.filter(s =>
+    ['Submitted', 'Underwriting', 'Approved'].includes(s.status),
+  );
+  const pendingBonuses = pendingDeals.reduce((s, d) => s + d.expectedBonus, 0);
+
+  // ── Book health: merchants whose volume dropped >25% vs the prior residual
+  //    period, or who vanished from the latest period entirely ──
+  const healthFlags = useMemo(() => {
+    const periods = [...new Set(residualRows.map(r => r.period))].sort().reverse();
+    if (periods.length < 2) return [];
+    const [latest, prev] = periods;
+    const latestBy = new Map(
+      residualRows.filter(r => r.period === latest).map(r => [r.merchantName, r]),
+    );
+    const flags: { merchant: string; note: string }[] = [];
+    for (const r of residualRows.filter(x => x.period === prev)) {
+      const now = latestBy.get(r.merchantName);
+      if (!now) {
+        flags.push({ merchant: r.merchantName, note: 'No processing in the latest period' });
+      } else if (r.monthlyVolume > 0 && now.monthlyVolume < r.monthlyVolume * 0.75) {
+        const drop = Math.round((1 - now.monthlyVolume / r.monthlyVolume) * 100);
+        flags.push({ merchant: r.merchantName, note: `Volume down ${drop}% month over month` });
+      }
+    }
+    return flags.slice(0, 3);
+  }, [residualRows]);
 
   // ── Pipeline by lead status ──
   const pipeline = useMemo(() => {
@@ -138,6 +182,65 @@ export function AgentDashboard() {
             </div>
           );
         })}
+      </div>
+
+      {/* Program row: tier ladder + deal pipeline + book health */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Tier progress */}
+        <div className="bg-white rounded-[8px] border border-gray-200 p-5">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-sm text-gray-600 flex items-center gap-1.5"><Target className="w-4 h-4 text-indigo-500" /> Tier Ladder</p>
+            <span className="text-xs font-bold text-indigo-600">{Math.round(tier.split * 100)}% split</span>
+          </div>
+          <p className="text-lg font-bold text-gray-900">{tier.label}</p>
+          <div className="mt-3 h-2 rounded-full bg-gray-100 overflow-hidden">
+            <div className="h-full bg-indigo-500 transition-all" style={{ width: `${tierPct}%` }} />
+          </div>
+          <p className="text-xs text-gray-500 mt-2">
+            {next
+              ? `${next.minAccounts - activeAccounts} more active account${next.minAccounts - activeAccounts !== 1 ? 's' : ''} to Tier ${next.tier} (${Math.round(next.split * 100)}%)`
+              : 'Top of the ladder — 70% on every account'}
+          </p>
+        </div>
+
+        {/* Deal pipeline */}
+        <button
+          onClick={() => navigate('/submit-deal')}
+          className="bg-white rounded-[8px] border border-gray-200 p-5 text-left hover:border-indigo-300 hover:shadow-sm transition-all group"
+        >
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-sm text-gray-600 flex items-center gap-1.5"><Send className="w-4 h-4 text-indigo-500" /> Deals in Motion</p>
+            <ArrowRight className="w-4 h-4 text-gray-300 group-hover:text-indigo-500 transition-colors" />
+          </div>
+          <p className="text-lg font-bold text-gray-900">
+            {pendingDeals.length} pending · <span className="text-indigo-600">{fmtUsd(pendingBonuses)}</span>
+          </p>
+          <p className="text-xs text-gray-500 mt-2">
+            Bonuses waiting on activation. Submit the next deal — it takes two minutes.
+          </p>
+        </button>
+
+        {/* Book health */}
+        <div className="bg-white rounded-[8px] border border-gray-200 p-5">
+          <p className="text-sm text-gray-600 flex items-center gap-1.5 mb-2">
+            <HeartPulse className="w-4 h-4 text-indigo-500" /> Book Health
+          </p>
+          {healthFlags.length === 0 ? (
+            <>
+              <p className="text-lg font-bold text-emerald-600">Healthy</p>
+              <p className="text-xs text-gray-500 mt-2">No merchants flagged. Declining volume shows up here first — so you can save the account before the residual drops.</p>
+            </>
+          ) : (
+            <div className="space-y-2">
+              {healthFlags.map(f => (
+                <div key={f.merchant} className="flex items-start gap-2">
+                  <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
+                  <p className="text-xs text-gray-700"><span className="font-semibold">{f.merchant}</span> — {f.note}. Worth a call this week.</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Pipeline + Activity row */}

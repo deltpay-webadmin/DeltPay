@@ -27,7 +27,7 @@ const RECEPTIVITY_LEVELS = [
   { key: 'resistant', label: 'Pushback', desc: 'Worried about customer reaction', color: '#F2565B' },
 ];
 
-const OBJECTIONS: Record<string, { title: string; reframe: string; talk: string; data: string }> = {
+export const OBJECTIONS: Record<string, { title: string; reframe: string; talk: string; data: string }> = {
   customers_upset: {
     title: '"My customers will be upset"',
     reframe: "Reframe: it's not a surcharge — it's a discount for cash",
