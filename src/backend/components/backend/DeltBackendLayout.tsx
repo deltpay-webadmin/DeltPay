@@ -75,6 +75,7 @@ import {
   BarChart3,
   Upload,
   ArrowLeft,
+  ArrowLeftRight,
   CalendarDays,
   Sun,
   Moon,
@@ -283,6 +284,8 @@ const allCommands: CommandItem[] = [
   { label: 'Marketing Hub', path: '/marketing', group: 'Operations', icon: Megaphone, keywords: 'ads ad spend cac roas funnel google meta outreach email sms campaign automation bulk send', perm: 'integrations.view' },
   { label: 'Compliance', path: '/compliance', group: 'Operations', icon: ShieldCheck, keywords: 'compliance rules', perm: 'general.view' },
   { label: 'Agents', path: '/agents', group: 'Team', icon: UserCircle, perm: 'agents.view' },
+  { label: 'My Residuals (Agent view)', path: '/my-residuals', group: 'Team', icon: Receipt, keywords: 'agent portal residual statement book', perm: 'residuals.view' },
+  { label: 'Commissions (Agent view)', path: '/commissions', group: 'Team', icon: Banknote, keywords: 'agent portal commission statement payout', perm: 'compensation.view' },
   { label: 'Employees', path: '/employees', group: 'Team', icon: Briefcase, perm: 'employees.view' },
   { label: 'Payroll', path: '/payroll', group: 'Team', icon: Receipt, perm: 'payroll.view' },
   { label: 'Lens AI', path: '/lens-ai', group: 'Intelligence', icon: Sparkles, keywords: 'ai analysis', perm: 'lens_ai.view' },
@@ -361,6 +364,33 @@ export function DeltBackendLayout() {
     }
   }, [theme]);
 
+  // ── Agent-view preview for admins: flips the sidebar and home page to the
+  // agent workspace without touching identity or permissions. Real agents are
+  // always in agent view; the pages themselves already let admins pick which
+  // agent's book to inspect (AgentResiduals/AgentCommissions pickers). ──
+  const [agentViewPreview, setAgentViewPreview] = useState(() => {
+    try {
+      return localStorage.getItem('delt-crm-agent-view') === '1';
+    } catch {
+      return false;
+    }
+  });
+  const agentView = role === 'agent' || agentViewPreview;
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('delt-crm-agent-view', agentViewPreview ? '1' : '0');
+    } catch {
+      /* private mode — preview just won't persist */
+    }
+  }, [agentViewPreview]);
+
+  const toggleAgentView = () => {
+    setAgentViewPreview(v => !v);
+    setIsUserMenuOpen(false);
+    handleNavigate('/');
+  };
+
   // ── Command palette keyboard shortcut ──
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -420,11 +450,11 @@ export function DeltBackendLayout() {
   // Agents get the focused agent workspace; admins/viewers get the full
   // sidebar filtered down to what their role can see.
   const groups = useMemo<NavGroup[]>(() => {
-    const source = role === 'agent' ? agentGroups : adminGroups;
+    const source = agentView ? agentGroups : adminGroups;
     return source
       .map(g => ({ ...g, items: g.items.filter(item => !item.perm || can(item.perm)) }))
       .filter(g => g.items.length > 0);
-  }, [role, can]);
+  }, [agentView, can]);
 
   // ── Sidebar nav body (shared desktop/mobile) ──
   const navBody = (
@@ -496,6 +526,15 @@ export function DeltBackendLayout() {
                   <p className="text-[11px] text-(--dp-text-muted)">{user.email}</p>
                 </div>
                 <button className="w-full px-4 py-2 text-left text-[13px] text-(--dp-text-secondary) hover:bg-white/[0.05]">Profile Settings</button>
+                {role !== 'agent' && (
+                  <button
+                    onClick={toggleAgentView}
+                    className="w-full px-4 py-2 text-left text-[13px] text-(--dp-text-secondary) hover:bg-white/[0.05] flex items-center gap-2"
+                  >
+                    <ArrowLeftRight className="w-3.5 h-3.5" />
+                    {agentViewPreview ? 'Switch to Admin View' : 'Switch to Agent View'}
+                  </button>
+                )}
                 <div className="border-t border-white/[0.06] mt-1 pt-1">
                   <button
                     onClick={() => { setIsUserMenuOpen(false); void signOut(); }}
@@ -528,7 +567,7 @@ export function DeltBackendLayout() {
     </button>
   );
 
-  const roleHome = role === 'agent' ? <AgentDashboard /> : <BackendDashboard />;
+  const roleHome = agentView ? <AgentDashboard /> : <BackendDashboard />;
 
   return (
     <NavigationContext.Provider value={{ navigate: handleNavigate, currentPage }}>
@@ -564,6 +603,16 @@ export function DeltBackendLayout() {
 
               {/* Right tools */}
               <div className="flex items-center gap-2 ml-auto">
+                {agentViewPreview && role !== 'agent' && (
+                  <button
+                    onClick={toggleAgentView}
+                    className="inline-flex items-center gap-1.5 h-9 px-3 rounded-full bg-(--dp-accent-soft) border border-(--dp-accent) text-[12px] font-semibold text-(--dp-accent-text) hover:opacity-80 transition-opacity"
+                    title="You are previewing the agent workspace. Click to return to admin view."
+                  >
+                    <ArrowLeftRight className="w-3.5 h-3.5" />
+                    Agent view — Exit
+                  </button>
+                )}
                 <SyncIndicator />
 
                 {/* Search chip */}
