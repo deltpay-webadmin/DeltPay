@@ -46,6 +46,7 @@ import { AgentSubmitDeal } from './pages/AgentSubmitDeal';
 import { AgentDealDesk } from './pages/AgentDealDesk';
 import { AgentResources } from './pages/AgentResources';
 import { AgentLeaderboard } from './pages/AgentLeaderboard';
+import { AgentTraining } from './pages/AgentTraining';
 import { BackendAgentDesk } from './pages/BackendAgentDesk';
 import {
   LayoutDashboard,
@@ -186,6 +187,8 @@ const agentGroups: NavGroup[] = [
       { label: 'Dashboard', path: '/', icon: LayoutDashboard },
       { label: 'My Merchants', path: '/merchants', icon: Store, perm: 'merchants.view' },
       { label: 'My Leads', path: '/leads', icon: Users, perm: 'leads.view' },
+      { label: 'Sales Tools', path: '/analysis', icon: Sparkles, perm: 'analysis.view' },
+      { label: 'Training', path: '/training', icon: GraduationCap },
       { label: 'My Residuals', path: '/my-residuals', icon: Receipt, perm: 'residuals.view' },
       { label: 'Commissions', path: '/commissions', icon: Banknote, perm: 'compensation.view' },
     ],
@@ -196,7 +199,7 @@ const agentGroups: NavGroup[] = [
       { label: 'Submit a Deal', path: '/submit-deal', icon: Send, perm: 'leads.create' },
       { label: 'Deal Desk', path: '/deal-desk', icon: MessageSquare },
       { label: "President's Club", path: '/leaderboard', icon: Trophy },
-      { label: 'Resources & Training', path: '/resources', icon: GraduationCap },
+      { label: 'Resources', path: '/resources', icon: BookOpen },
     ],
   },
 ];
@@ -235,7 +238,8 @@ const PAGE_TITLES: Record<string, string> = {
   '/my-residuals': 'My Residuals',
   '/submit-deal': 'Submit a Deal',
   '/deal-desk': 'Deal Desk',
-  '/resources': 'Resources & Training',
+  '/resources': 'Resources',
+  '/training': 'Merchant Services Training',
   '/leaderboard': "President's Club",
   '/agent-desk': 'Agent Desk',
   '/tasks': 'Tasks',
@@ -313,7 +317,8 @@ const allCommands: CommandItem[] = [
   { label: 'Agent Desk', path: '/agent-desk', group: 'Team', icon: Inbox, keywords: 'deal submissions pipeline mpa activate bonus deal desk support threads', perm: 'agents.edit' },
   { label: 'Submit a Deal', path: '/submit-deal', group: 'Team', icon: Send, keywords: 'mpa merchant application agent pipeline bonus', perm: 'leads.create' },
   { label: "President's Club", path: '/leaderboard', group: 'Team', icon: Trophy, keywords: 'leaderboard standings quarterly top producers' },
-  { label: 'Resources & Training', path: '/resources', group: 'Team', icon: GraduationCap, keywords: 'training certification playbooks objection scripts collateral' },
+  { label: 'Resources', path: '/resources', group: 'Team', icon: BookOpen, keywords: 'playbooks objection scripts collateral leave-behinds' },
+  { label: 'Training', path: '/training', group: 'Team', icon: GraduationCap, keywords: 'merchant services curriculum lessons quiz certification interchange pricing underwriting' },
   { label: 'Employees', path: '/employees', group: 'Team', icon: Briefcase, perm: 'employees.view' },
   { label: 'Payroll', path: '/payroll', group: 'Team', icon: Receipt, perm: 'payroll.view' },
   { label: 'Lens AI', path: '/lens-ai', group: 'Intelligence', icon: Sparkles, keywords: 'ai analysis', perm: 'lens_ai.view' },
@@ -763,6 +768,7 @@ export function DeltBackendLayout() {
               <Route path="deal-desk" element={<AgentDealDesk />} />
               <Route path="resources" element={<AgentResources />} />
               <Route path="leaderboard" element={<AgentLeaderboard />} />
+              <Route path="training" element={<AgentTraining />} />
               <Route path="agent-desk" element={<Guard perm="agents.edit"><BackendAgentDesk /></Guard>} />
               <Route path="support" element={<SupportPage />} />
               <Route path="settings" element={<Guard perm="general.view"><BackendSettings /></Guard>} />
