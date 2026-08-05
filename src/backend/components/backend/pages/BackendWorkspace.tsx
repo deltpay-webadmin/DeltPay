@@ -50,13 +50,7 @@ const CHANNEL_CONFIG: Record<ChannelType, { icon: React.ElementType; color: stri
   call: { icon: Phone, color: 'text-purple-600', bg: 'bg-purple-50' },
 };
 
-const INBOX_THREADS: InboxThread[] = [
-  { id: 'th-1', merchant: 'Brooklyn Vinyl Records', merchantInitials: 'BV', contact: 'David Park', channel: 'email', subject: 'Broker compensation section', preview: 'Question about broker compensation section...', time: '10:30', unread: true, messageCount: 4, starred: false },
-  { id: 'th-2', merchant: 'Coral Reef Auto Spa', merchantInitials: 'CA', contact: 'Carlos Mendez', channel: 'email', subject: '3DS cost question', preview: '3DS cost question — $200/mo, is that normal?', time: '09:20', unread: true, messageCount: 3, starred: false },
-  { id: 'th-3', merchant: 'Havana Bites Cafe', merchantInitials: 'HB', contact: 'Maria Gonzalez', channel: 'sms', subject: 'Renewal offer', preview: 'Excited about the renewal offer.', time: '14:15', unread: false, messageCount: 5, starred: true },
-  { id: 'th-4', merchant: 'SoBe Cycle & Fitness', merchantInitials: 'SC', contact: 'Carlos Mendez', channel: 'call', subject: 'Payment adjustment', preview: 'Voicemail — Requesting daily payment adjustment due to seasonal dip.', time: 'Apr 18', unread: false, messageCount: 1, starred: false },
-  { id: 'th-5', merchant: 'Metro Diner Group', merchantInitials: 'MD', contact: 'James Park', channel: 'email', subject: 'Website updates', preview: 'Could you add a catering menu page to our site?', time: 'Apr 17', unread: false, messageCount: 2, starred: false },
-];
+const INBOX_THREADS: InboxThread[] = [];
 
 // ═══════════════════════════════════════════
 // ── ACTIVITY DATA ──
@@ -88,18 +82,7 @@ const ACTIVITY_CONFIG: Record<ActivityType, { icon: React.ElementType; color: st
   system: { icon: Zap, color: 'text-gray-500', bg: 'bg-gray-100' },
 };
 
-const ACTIVITIES: ActivityEvent[] = [
-  { id: 'a-1', timestamp: '2026-04-20', time: 'Today 09:42', type: 'alert', title: 'VAMP threshold warning — Coral Reef Auto Spa', description: 'Fraud-to-sales at 0.82%, approaching 0.9% trigger', user: 'System' },
-  { id: 'a-2', timestamp: '2026-04-20', time: 'Today 09:15', type: 'call', title: 'Outbound call — Richmond Auto Detailing', description: 'VA 3-day review confirmed. Funding Apr 22.', user: 'Marcus Johnson' },
-  { id: 'a-3', timestamp: '2026-04-20', time: 'Today 08:55', type: 'document', title: 'VA disclosure package generated — DL-2026-0416', description: 'All 9 required items. 3-business-day review initiated.', user: 'System' },
-  { id: 'a-4', timestamp: '2026-04-19', time: 'Yesterday 16:30', type: 'deal', title: 'Deal approved — Havana Bites Cafe', description: '$45K MCA at 1.32x factor. Ready for funding.', user: 'Michael Torres' },
-  { id: 'a-5', timestamp: '2026-04-19', time: 'Yesterday 14:20', type: 'payment', title: 'NSF return — Little Havana Barbershop', description: '3rd consecutive NSF. Account flagged as Slow Pay.', user: 'System' },
-  { id: 'a-6', timestamp: '2026-04-19', time: 'Yesterday 11:00', type: 'status_change', title: 'Lead stage: Qualified → Submitted', description: 'Brooklyn Vinyl Records submitted full application.', user: 'Sarah Kim' },
-  { id: 'a-7', timestamp: '2026-04-18', time: 'Apr 18 15:45', type: 'email', title: 'Renewal offer sent — SoBe Cycle & Fitness', description: '$100K renewal at 1.28x. 63% of current position repaid.', user: 'James Miller' },
-  { id: 'a-8', timestamp: '2026-04-18', time: 'Apr 18 10:30', type: 'task', title: 'Task completed — ASV scan scheduled', description: 'Quarterly PCI ASV scan for 12 merchants scheduled with vendor.', user: 'Sarah Kim' },
-  { id: 'a-9', timestamp: '2026-04-17', time: 'Apr 17 09:00', type: 'system', title: 'Daily collections processed', description: '$1,103 collected across 6 active accounts. 1 NSF returned.', user: 'System' },
-  { id: 'a-10', timestamp: '2026-04-17', time: 'Apr 17 08:00', type: 'sms', title: 'SMS campaign delivered — Renewal Eligible', description: '8 merchants received renewal eligibility notification.', user: 'System' },
-];
+const ACTIVITIES: ActivityEvent[] = [];
 
 // ═══════════════════════════════════════════
 // ── TASKS DATA ──
@@ -127,18 +110,7 @@ const PRIORITY_CONFIG: Record<Priority, { color: string; bg: string; label: stri
   low: { color: 'text-gray-500', bg: 'bg-gray-50 border-gray-200', label: 'Low' },
 };
 
-const TASKS: Task[] = [
-  { id: 't-1', title: 'Issue VAMP intervention notice', merchant: 'Coral Reef', context: 'compliance', priority: 'critical', status: 'todo', assignee: 'James Miller', dueDate: '2026-04-17', overdue: true },
-  { id: 't-2', title: 'Schedule ASV scans — 3 merchants overdue', context: 'compliance', priority: 'critical', status: 'todo', assignee: 'Sarah Kim', dueDate: '2026-04-18', overdue: true },
-  { id: 't-3', title: 'Generate broker compensation disclosure', merchant: 'Brooklyn Vinyl Records', context: 'NY CFDL', priority: 'critical', status: 'todo', assignee: 'Sarah Kim', dueDate: '2026-04-18', overdue: true },
-  { id: 't-4', title: 'Send adverse action notice', merchant: 'Doral Fresh Market', context: 'FCRA', priority: 'high', status: 'todo', assignee: 'Marcus Johnson', dueDate: '2026-04-19', overdue: true },
-  { id: 't-5', title: 'Collection call', merchant: 'Little Havana Barbershop', context: 'NSF', priority: 'high', status: 'todo', assignee: 'Marcus Johnson', dueDate: '2026-04-18', overdue: true },
-  { id: 't-6', title: 'Follow up — Richmond Auto Detailing funding', context: 'VA review', priority: 'high', status: 'in_progress', assignee: 'Marcus Johnson', dueDate: '2026-04-22', overdue: false },
-  { id: 't-7', title: 'Reconcile CRS credit pulls — March', context: 'vendor', priority: 'medium', status: 'todo', assignee: 'Sarah Kim', dueDate: '2026-04-21', overdue: false },
-  { id: 't-8', title: 'Prepare weekly pipeline report', context: 'operations', priority: 'medium', status: 'todo', assignee: 'Marcus Johnson', dueDate: '2026-04-21', overdue: false },
-  { id: 't-9', title: 'Review Havana Bites funding package', context: 'funding', priority: 'high', status: 'in_progress', assignee: 'Michael Torres', dueDate: '2026-04-20', overdue: false },
-  { id: 't-10', title: 'Update compliance calendar Q2', context: 'compliance', priority: 'low', status: 'todo', assignee: 'Sarah Kim', dueDate: '2026-04-25', overdue: false },
-];
+const TASKS: Task[] = [];
 
 // ═══════════════════════════════════════════
 // ── WORKSPACE PAGE ──
@@ -153,7 +125,7 @@ export function BackendWorkspace() {
   const unreadCount = INBOX_THREADS.filter(t => t.unread).length;
   const overdueCount = TASKS.filter(t => t.overdue && t.status !== 'done').length;
   const openTaskCount = TASKS.filter(t => t.status !== 'done').length;
-  const activeDeals = 6;
+  const activeDeals = 0;
 
   const filteredInbox = INBOX_THREADS.filter(t => {
     if (!inboxSearch) return true;
@@ -268,7 +240,7 @@ export function BackendWorkspace() {
             {filteredInbox.length === 0 && (
               <div className="py-16 text-center">
                 <Inbox className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                <p className="text-sm text-gray-400">No conversations match your search</p>
+                <p className="text-sm text-gray-400">{INBOX_THREADS.length === 0 ? 'No conversations yet — merchant emails, texts, and call logs will appear here.' : 'No conversations match your search'}</p>
               </div>
             )}
           </div>
@@ -317,7 +289,7 @@ export function BackendWorkspace() {
             {filteredActivities.length === 0 && (
               <div className="py-16 text-center">
                 <Activity className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                <p className="text-sm text-gray-400">No activity matches your search</p>
+                <p className="text-sm text-gray-400">{ACTIVITIES.length === 0 ? 'No activity yet — calls, emails, payments, and system events will appear here as they happen.' : 'No activity matches your search'}</p>
               </div>
             )}
           </div>
@@ -380,7 +352,7 @@ export function BackendWorkspace() {
             {filteredTasks.length === 0 && (
               <div className="py-16 text-center">
                 <CheckCircle className="w-8 h-8 text-emerald-300 mx-auto mb-2" />
-                <p className="text-sm text-gray-400">All caught up!</p>
+                <p className="text-sm text-gray-400">{TASKS.length === 0 ? 'No tasks yet — compliance, collections, and follow-up work items will appear here.' : 'All caught up!'}</p>
               </div>
             )}
           </div>
