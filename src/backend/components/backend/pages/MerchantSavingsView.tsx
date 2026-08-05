@@ -156,6 +156,12 @@ export function MerchantSavingsView({ extracted, programs, bestProgramKey, onExi
                 </div>
                 <p className="text-xs text-gray-500 mt-1 leading-snug">{p.tagline}</p>
                 <p className="mt-3 inline-block text-xs font-mono text-gray-600 bg-gray-100 px-2 py-1 rounded-[6px] self-start">{p.terms}</p>
+                {p.key === 'interchange_plus' && p.icBaseMonthly != null && p.icMarginMonthly != null && (
+                  <p className="mt-2 text-[11px] text-gray-500 leading-snug">
+                    Your interchange cost at published rates: <span className="font-semibold text-gray-700 tabular-nums">{fmt(p.icBaseMonthly)}/mo</span>
+                    {' '}+ Delt margin <span className="font-semibold text-gray-700 tabular-nums">{fmt(p.icMarginMonthly)}/mo</span>
+                  </p>
+                )}
                 <div className="mt-4 pt-3 border-t border-gray-100 grid grid-cols-2 gap-2">
                   <div>
                     <p className="text-[11px] text-gray-500">You'd pay</p>
@@ -316,6 +322,21 @@ export function MerchantSavingsView({ extracted, programs, bestProgramKey, onExi
               <p className="text-sm text-gray-600 leading-snug">{step}</p>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* ── Delt Capital cross-sell ── */}
+      <div className="rounded-[8px] border border-brand/30 bg-brand/[0.04] px-5 py-4 flex items-start gap-3">
+        <div className="w-9 h-9 rounded-lg bg-brand/10 flex items-center justify-center shrink-0">
+          <BadgeDollarSign className="w-4.5 h-4.5 text-brand" />
+        </div>
+        <div>
+          <p className="text-sm font-semibold text-gray-900">And when you're ready to grow — Delt Capital</p>
+          <p className="text-xs text-gray-500 mt-0.5 leading-snug">
+            Delt merchants get priority access to working capital: best-in-class rates, flexible repayment that
+            flexes with your daily card sales, and funding decisions in days — we already know your numbers
+            from processing, so there's no paperwork marathon.
+          </p>
         </div>
       </div>
 

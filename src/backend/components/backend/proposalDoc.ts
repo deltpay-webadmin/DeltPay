@@ -28,6 +28,21 @@ export interface ProposalInput {
 
 const esc = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+/**
+ * Official Delt lockup (same traced SVG as the CRM sidebar): indigo mark +
+ * exact letterforms. Height set via the wrapping .logo / .logo-lg classes.
+ */
+const DELT_LOGO = `<svg viewBox="74 153 552 174" class="logosvg" aria-label="Delt">
+  <rect x="148.9" y="156.6" width="50.8" height="168.3" rx="17.2" fill="#4945FF"/>
+  <circle cx="107.8" cy="274.1" r="33.3" fill="#4945FF"/>
+  <g fill="#111827" transform="translate(208,153)">
+    <path transform="translate(0.428,167.36)" d="M 80.28125 0 L 21.6875 0 L 21.6875 -159.390625 L 79.921875 -159.390625 C 92.503906 -159.390625 103.953125 -157.492188 114.265625 -153.703125 C 124.578125 -149.910156 133.441406 -144.5 140.859375 -137.46875 C 148.285156 -130.4375 153.988281 -122.054688 157.96875 -112.328125 C 161.957031 -102.597656 163.953125 -91.757812 163.953125 -79.8125 C 163.953125 -67.851562 161.957031 -56.972656 157.96875 -47.171875 C 153.988281 -37.367188 148.304688 -28.953125 140.921875 -21.921875 C 133.546875 -14.890625 124.738281 -9.476562 114.5 -5.6875 C 104.257812 -1.894531 92.851562 0 80.28125 0 Z M 42.078125 -140.875 L 42.078125 -18.75 L 79.8125 -18.75 C 92.851562 -18.75 104.082031 -21.226562 113.5 -26.1875 C 122.914062 -31.15625 130.179688 -38.1875 135.296875 -47.28125 C 140.421875 -56.382812 142.984375 -67.070312 142.984375 -79.34375 C 142.984375 -91.6875 140.421875 -102.46875 135.296875 -111.6875 C 130.179688 -120.90625 122.875 -128.070312 113.375 -133.1875 C 103.882812 -138.3125 92.539062 -140.875 79.34375 -140.875 Z M 42.078125 -140.875"/>
+    <path transform="translate(160.05,167.36)" d="M 129.15625 -62.703125 C 129.15625 -61.679688 129.132812 -60.601562 129.09375 -59.46875 C 129.050781 -58.34375 128.953125 -56.6875 128.796875 -54.5 L 29.65625 -54.5 C 30.507812 -46.53125 32.847656 -39.613281 36.671875 -33.75 C 40.503906 -27.894531 45.3125 -23.382812 51.09375 -20.21875 C 56.875 -17.050781 63.046875 -15.46875 69.609375 -15.46875 C 77.660156 -15.46875 84.535156 -17.207031 90.234375 -20.6875 C 95.941406 -24.164062 100.125 -29.265625 102.78125 -35.984375 L 125.40625 -35.984375 C 123.6875 -30.515625 121.125 -25.394531 117.71875 -20.625 C 114.320312 -15.863281 110.21875 -11.703125 105.40625 -8.140625 C 100.601562 -4.585938 95.210938 -1.796875 89.234375 0.234375 C 83.265625 2.265625 76.878906 3.28125 70.078125 3.28125 C 61.410156 3.28125 53.382812 1.660156 46 -1.578125 C 38.613281 -4.828125 32.164062 -9.34375 26.65625 -15.125 C 21.15625 -20.90625 16.878906 -27.601562 13.828125 -35.21875 C 10.785156 -42.832031 9.265625 -51.015625 9.265625 -59.765625 C 9.265625 -68.515625 10.785156 -76.695312 13.828125 -84.3125 C 16.878906 -91.9375 21.15625 -98.640625 26.65625 -104.421875 C 32.164062 -110.203125 38.613281 -114.734375 46 -118.015625 C 53.382812 -121.296875 61.410156 -122.9375 70.078125 -122.9375 C 78.671875 -122.9375 86.582031 -121.332031 93.8125 -118.125 C 101.039062 -114.925781 107.289062 -110.515625 112.5625 -104.890625 C 117.84375 -99.265625 121.925781 -92.835938 124.8125 -85.609375 C 127.707031 -78.378906 129.15625 -70.742188 129.15625 -62.703125 Z M 30.59375 -72.3125 L 108.515625 -72.3125 C 108.203125 -76.53125 106.972656 -80.550781 104.828125 -84.375 C 102.679688 -88.207031 99.847656 -91.585938 96.328125 -94.515625 C 92.816406 -97.441406 88.773438 -99.742188 84.203125 -101.421875 C 79.628906 -103.109375 74.804688 -103.953125 69.734375 -103.953125 C 63.796875 -103.953125 58.128906 -102.738281 52.734375 -100.3125 C 47.347656 -97.894531 42.703125 -94.34375 38.796875 -89.65625 C 34.890625 -84.96875 32.15625 -79.1875 30.59375 -72.3125 Z M 30.59375 -72.3125"/>
+    <path transform="translate(282.643,167.36)" d="M 39.5 0 L 19.34375 0 L 19.34375 -165.25 L 39.5 -165.25 Z M 39.5 0"/>
+    <path transform="translate(327.545,167.36)" d="M 87.546875 0 L 65.515625 0 C 60.984375 0 56.488281 -0.582031 52.03125 -1.75 C 47.582031 -2.925781 43.539062 -5.078125 39.90625 -8.203125 C 36.269531 -11.328125 33.359375 -15.800781 31.171875 -21.625 C 28.984375 -27.445312 27.890625 -35.003906 27.890625 -44.296875 L 27.890625 -101.84375 L 1.296875 -101.84375 L 1.296875 -119.53125 L 27.890625 -119.53125 L 27.890625 -155.046875 L 48.046875 -155.171875 L 48.046875 -119.53125 L 87.546875 -119.53125 L 87.546875 -101.84375 L 48.046875 -101.84375 L 48.046875 -43.359375 C 48.046875 -37.816406 48.648438 -33.304688 49.859375 -29.828125 C 51.078125 -26.347656 52.71875 -23.691406 54.78125 -21.859375 C 56.851562 -20.023438 59.160156 -18.773438 61.703125 -18.109375 C 64.242188 -17.441406 66.84375 -17.109375 69.5 -17.109375 L 87.546875 -17.109375 Z M 87.546875 0"/>
+  </g>
+</svg>`;
 /** Safely embed a string as a JS literal inside the generated <script>. */
 const js = (s: string) => JSON.stringify(s).replace(/</g, '\\u003c');
 const fmt = (n: number) => n.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 });
@@ -109,6 +124,11 @@ export function buildProposalHtml(input: ProposalInput): string {
       <h3>${esc(p.name)}</h3>
       <p class="tagline">${esc(p.tagline)}</p>
       <p class="terms">${esc(p.terms)}</p>
+      ${p.key === 'interchange_plus' && p.icBaseMonthly != null && p.icMarginMonthly != null ? `
+      <p class="tagline" style="margin-top:-4px;margin-bottom:6px;">
+        Your interchange cost (published rates): <strong>${fmt(p.icBaseMonthly)}/mo</strong>
+        &nbsp;+&nbsp; Delt margin: <strong>${fmt(p.icMarginMonthly)}/mo</strong>
+      </p>` : ''}
       <div class="split">
         <div><span class="lbl">You'd pay</span><span class="val">${fmt(p.monthlyCost)}/mo</span></div>
         <div><span class="lbl">You'd save</span><span class="val green">${fmtWhole(p.annualSavings)}/yr</span></div>
@@ -139,6 +159,8 @@ export function buildProposalHtml(input: ProposalInput): string {
   @media screen { .page { box-shadow: 0 1px 8px rgba(0,0,0,0.12); margin: 16px auto; } body { background: #eef0f3; } }
 
   .brand { font-size: 15px; font-weight: 800; color: #2E6BFF; letter-spacing: 0.02em; }
+  .logo .logosvg { height: 22px; width: auto; display: block; }
+  .logo-lg .logosvg { height: 34px; width: auto; display: block; }
   h1 { font-size: 40px; line-height: 1.1; color: #111827; margin: 18px 0 6px; }
   h2 { font-size: 19px; color: #111827; margin-bottom: 4px; }
   .rule { height: 3px; width: 44px; background: #2E6BFF; border-radius: 2px; margin: 10px 0 16px; }
@@ -273,7 +295,7 @@ export function buildProposalHtml(input: ProposalInput): string {
 
 <!-- ── Page 1: Cover ── -->
 <div class="page cover">
-  <div class="brand">DELT</div>
+  <div class="logo-lg">${DELT_LOGO}</div>
   <h1>We Found ${fmtWhole(focus.annualSavings)}<br>Hiding in Your Statement.</h1>
   <p class="muted">Prepared exclusively for <strong>${name}</strong> — from your actual numbers, not an estimate off a website.</p>
   <div class="hero">
@@ -302,14 +324,16 @@ export function buildProposalHtml(input: ProposalInput): string {
 
 <!-- ── Page 2: Where you are today ── -->
 <div class="page">
-  <div class="brand">DELT</div>
+  <div class="logo">${DELT_LOGO}</div>
   <h2 style="margin-top:14px;">Here's What's Actually Happening</h2>
   <div class="rule"></div>
   <p>
-    We didn't skim your statement — we audited every line of the ${ex.statementPeriod ? esc(ex.statementPeriod) + ' ' : ''}statement${ex.currentProcessor ? ` from ${esc(ex.currentProcessor)}` : ''}.
-    On ${fmtWhole(ex.totalVolume)} of card volume across ${ex.totalTransactions.toLocaleString()} transactions, ${name} paid
-    <strong>${fmt(ex.currentMonthlyCost)}</strong> — a <strong>${ex.effectiveRatePct}%</strong> effective rate.
-    That's <strong>${fmtWhole(currentAnnual)} a year</strong> walking out the door for the privilege of taking cards.
+    Your situation, in your numbers: you're processing <strong>${fmtWhole(ex.totalVolume)}/month</strong> across
+    ${ex.totalTransactions.toLocaleString()} transactions${ex.currentProcessor && ex.currentProcessor !== 'Unknown' ? ` on ${esc(ex.currentProcessor)}` : ''}${ex.pricingModel && ex.pricingModel !== 'unknown' ? `'s ${esc(ex.pricingModel.replace(/-/g, ' '))} pricing` : ''},
+    and in ${ex.statementPeriod && ex.statementPeriod !== '—' ? esc(ex.statementPeriod) : 'the period analyzed'} you paid
+    <strong>${fmt(ex.currentMonthlyCost)}</strong> for it — a <strong>${ex.effectiveRatePct}%</strong> effective rate.
+    We didn't skim that statement; we audited every line. Annualized, that's <strong>${fmtWhole(currentAnnual)} a year</strong>
+    walking out the door for the privilege of taking cards.
   </p>
 
   <div class="stats">
@@ -344,7 +368,7 @@ export function buildProposalHtml(input: ProposalInput): string {
 
 <!-- ── Page 3: Proposed solutions ── -->
 <div class="page">
-  <div class="brand">DELT</div>
+  <div class="logo">${DELT_LOGO}</div>
   <h2 style="margin-top:14px;">Pick How You Want to Win</h2>
   <div class="rule"></div>
   <p>Three programs. All three beat what you pay today — the only wrong choice is staying where you are. The highlighted one is our recommendation for ${name}.</p>
@@ -381,7 +405,7 @@ export function buildProposalHtml(input: ProposalInput): string {
 
 <!-- ── Page 4: How it works + next steps + acceptance ── -->
 <div class="page">
-  <div class="brand">DELT</div>
+  <div class="logo">${DELT_LOGO}</div>
   <h2 style="margin-top:14px;">How ${esc(focus.name)} Works</h2>
   <div class="rule"></div>
   ${steps}
@@ -391,7 +415,9 @@ export function buildProposalHtml(input: ProposalInput): string {
   <div class="why">
     <div><h4>Locked pricing — in writing</h4><p>Your program price is your program price. No rate creep, no "quarterly adjustments," no surprise line items in month seven.</p></div>
     <div><h4>${junkFees > 1 ? `${fmtWhole(junkFees * 12)}/yr of junk fees — deleted` : 'Junk fees — deleted'}</h4><p>PCI, statement, batch, and "service" fees${junkFees > 1 ? ` (${fmt(junkFees)}/mo on your current statement)` : ''} don't follow you here.</p></div>
-    <div><h4>Rate audit, every cycle</h4><p>We re-check your pricing against the published Visa/Mastercard schedules every April and October — the same audit that ${padding ? `caught ${fmtWhole(padding.annualPadding)}/yr of padding on your current statement` : 'found the savings in this proposal'}.</p></div>
+    ${focus.key === 'cash_discount'
+      ? `<div><h4>One flat cost — nothing to audit</h4><p>There's no percentage rate on you at all. Card costs are covered by the customer service fee, so your cost is ${fmt(focus.monthlyCost)}/mo, period — the same in December as in January.</p></div>`
+      : `<div><h4>Rate audit, every cycle</h4><p>We re-check your pricing against the published Visa/Mastercard schedules every April and October — the same audit that ${padding ? `caught ${fmtWhole(padding.annualPadding)}/yr of padding on your current statement` : 'found the savings in this proposal'}.</p></div>`}
     <div><h4>Compliance + real humans</h4><p>Signage, receipt formatting, dispute-response tooling, and setup handled end to end — by people who pick up the phone, not a ticket queue.</p></div>
   </div>
 
@@ -400,12 +426,31 @@ export function buildProposalHtml(input: ProposalInput): string {
     And if our audit ever shows we can't beat your current statement, we'll tell you to stay put. We only win when you save.
   </div>
 
-  <h2 style="margin-top:18px;">Next Steps</h2>
+  <div class="callout" style="border-left-color:#4945FF;background:#f0f5ff;">
+    <strong>And when you're ready to grow — Delt Capital.</strong> Delt merchants get priority access to working capital with best-in-class
+    rates and flexible repayment that flexes with your daily card sales — busy week, pay a little more; slow week, a little less.
+    We already know your numbers from processing, so funding decisions come in days, not weeks. No new paperwork marathon.
+  </div>
+  <div class="footer"><span>Savings proposal — ${name}</span><span>Prepared by Delt · ${today}</span></div>
+</div>
+
+<!-- ── Page 5: First 30 days + dated CTA + acceptance ── -->
+<div class="page">
+  <div class="logo">${DELT_LOGO}</div>
+  <h2 style="margin-top:14px;">Your First 30 Days — What Actually Happens</h2>
   <div class="rule"></div>
-  <div class="step"><div class="stepnum">1</div><p><strong>Say yes</strong> — sign below or reply to your Delt contact. Two minutes, and the meter stops running.</p></div>
-  <div class="step"><div class="stepnum">2</div><p><strong>Quick onboarding</strong> — a short application; approval typically lands within 1–2 business days.</p></div>
-  <div class="step"><div class="stepnum">3</div><p><strong>Go live and keep the ${fmtWhole(monthlySavings)}/mo</strong> — equipment and signage arrive configured; most merchants switch with zero downtime.</p></div>
-  <p class="muted small" style="margin-top:8px;">This proposal is priced off your ${ex.statementPeriod ? esc(ex.statementPeriod) + ' ' : ''}statement and the current ${esc(IC_SCHEDULE.version)} interchange cycle — pricing honored through <strong>${validUntil}</strong>.</p>
+  <p>Most stalled switches die from fear of switching pain, not price. Here's the whole thing, start to finish:</p>
+  <div class="step"><div class="stepnum">1</div><p><strong>Today — say yes.</strong> Sign below or reply to your Delt contact. Two minutes, and the meter stops running.</p></div>
+  <div class="step"><div class="stepnum">2</div><p><strong>Days 1–2 — approval.</strong> A short application; we already have your statement, so underwriting is fast. You'll have a named onboarding contact the same day.</p></div>
+  <div class="step"><div class="stepnum">3</div><p><strong>Days 3–5 — equipment arrives configured.</strong> Terminal${focus.key === 'cash_discount' ? ', compliant signage kit,' : ''} and receipt setup done before it ships. Your current processing keeps running — no gap.</p></div>
+  <div class="step"><div class="stepnum">4</div><p><strong>Week 1 — go live.</strong> Your rep is on standby for the switch-over; most merchants change over with zero downtime and start keeping the ${fmtWhole(monthlySavings)}/mo immediately.</p></div>
+  <div class="step"><div class="stepnum">5</div><p><strong>Day 30 — first-statement review.</strong> We sit down with your first Delt statement next to this proposal, line by line, and confirm the numbers landed. If anything is off, we fix it.</p></div>
+
+  <div class="callout" style="margin-top:20px;">
+    <strong>Sign below to lock this pricing through ${validUntil}.</strong> This proposal is priced off your
+    ${ex.statementPeriod ? esc(ex.statementPeriod) + ' ' : ''}statement and the current ${esc(IC_SCHEDULE.version)} interchange cycle —
+    after ${validUntil} the numbers have to be re-run.
+  </div>
 
   <div class="sig">
     <div><div class="sigline"></div><p class="small muted">Signature — ${name}</p></div>

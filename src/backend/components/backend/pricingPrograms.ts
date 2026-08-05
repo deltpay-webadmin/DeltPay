@@ -62,6 +62,13 @@ export interface ProgramQuote {
   terms: string;
   /** Effective rate the merchant experiences, when meaningful. */
   effectiveRatePct: number | null;
+  /**
+   * Interchange-plus breakdown, set when the quote is priced from real
+   * interchange data: the monthly interchange + assessment cost at published
+   * rates, and Delt's margin on top. Merchant-safe (it's their own cost).
+   */
+  icBaseMonthly?: number | null;
+  icMarginMonthly?: number | null;
 }
 
 export interface QuoteInput {
@@ -95,6 +102,7 @@ export function quotePrograms(input: QuoteInput): ProgramQuote[] {
     monthlyCost: number,
     terms: string,
     effectiveRatePct: number | null,
+    extra?: Partial<ProgramQuote>,
   ): ProgramQuote => {
     const monthlySavings = Math.max(0, currentMonthlyCost - monthlyCost);
     return {
@@ -107,6 +115,7 @@ export function quotePrograms(input: QuoteInput): ProgramQuote[] {
       savingsPct: currentMonthlyCost > 0 ? Math.round((monthlySavings / currentMonthlyCost) * 1000) / 10 : 0,
       terms,
       effectiveRatePct,
+      ...extra,
     };
   };
 
@@ -119,12 +128,30 @@ export function quotePrograms(input: QuoteInput): ProgramQuote[] {
   // undercut the current effective rate ~22% with a 2.15% floor.
   const hasFloor = interchangeFloorMonthly != null && monthlyVolume > 0;
   const heuristicRate = Math.max(2.15, Math.round(currentRate * 0.78 * 100) / 100);
+  const icMargin = monthlyVolume * 0.0025 + monthlyTransactions * 0.10;
   const icCost = hasFloor
-    ? interchangeFloorMonthly! + monthlyVolume * 0.0025 + monthlyTransactions * 0.10
+    ? interchangeFloorMonthly! + icMargin
     : monthlyVolume * (heuristicRate / 100);
   const icRate = hasFloor
     ? Math.round((icCost / monthlyVolume) * 10000) / 100
     : heuristicRate;
+
+  // Flat Rate: matrix rate by band × tier, but never quote at or above the
+  // merchant's current cost — a flat-rate offer that saves $0 is no offer.
+  // Undercut the current cost by ~10%, floored at true cost plus a thin
+  // margin when interchange data exists (2.2% of volume otherwise) so the
+  // quote never dips below cost.
+  const matrixFlatCost = monthlyVolume * (fr.rate / 100) + monthlyTransactions * fr.perTxn;
+  const flatFloor = hasFloor
+    ? interchangeFloorMonthly! + monthlyVolume * 0.0015 + monthlyTransactions * 0.05
+    : monthlyVolume * 0.022;
+  const flatCost = currentMonthlyCost > 0
+    ? Math.min(matrixFlatCost, Math.max(currentMonthlyCost * 0.9, flatFloor))
+    : matrixFlatCost;
+  const flatMatched = flatCost < matrixFlatCost - 0.005;
+  const flatRatePct = flatMatched && monthlyVolume > 0
+    ? Math.max(0, Math.round(((flatCost - monthlyTransactions * fr.perTxn) / monthlyVolume) * 10000) / 100)
+    : fr.rate;
 
   return [
     build(
@@ -139,11 +166,13 @@ export function quotePrograms(input: QuoteInput): ProgramQuote[] {
       'flat_rate',
       'Flat Rate',
       'One predictable rate on every transaction, statement simplicity.',
-      monthlyVolume * (fr.rate / 100) + monthlyTransactions * fr.perTxn,
-      `${fr.rate.toFixed(2)}% + $${fr.perTxn.toFixed(2)}/txn`,
+      flatCost,
+      flatMatched
+        ? `${flatRatePct.toFixed(2)}% + $${fr.perTxn.toFixed(2)}/txn — rate-matched to beat your statement`
+        : `${fr.rate.toFixed(2)}% + $${fr.perTxn.toFixed(2)}/txn`,
       monthlyVolume > 0
-        ? Math.round(((monthlyVolume * (fr.rate / 100) + monthlyTransactions * fr.perTxn) / monthlyVolume) * 10000) / 100
-        : fr.rate,
+        ? Math.round((flatCost / monthlyVolume) * 10000) / 100
+        : flatRatePct,
     ),
     build(
       'interchange_plus',
@@ -153,9 +182,15 @@ export function quotePrograms(input: QuoteInput): ProgramQuote[] {
         : 'Pass-through interchange with a transparent Delt margin.',
       icCost,
       hasFloor
-        ? `IC pass-through + 0.25% + $0.10/txn (~${icRate.toFixed(2)}% all-in)`
+        ? `Interchange $${interchangeFloorMonthly!.toFixed(2)}/mo + 0.25% & $0.10/txn margin (~${icRate.toFixed(2)}% all-in)`
         : `~${icRate.toFixed(2)}% all-in effective`,
       icRate,
+      hasFloor
+        ? {
+            icBaseMonthly: Math.round(interchangeFloorMonthly! * 100) / 100,
+            icMarginMonthly: Math.round(icMargin * 100) / 100,
+          }
+        : undefined,
     ),
   ];
 }
@@ -184,15 +219,17 @@ export interface ProgramEconomics {
  * volume is already card volume extracted from the statement.
  */
 export function estimateProgramEconomics(input: QuoteInput): ProgramEconomics[] {
-  const { monthlyVolume, monthlyTransactions, currentMonthlyCost, riskTier } = input;
+  const { monthlyVolume, riskTier } = input;
   const band = volumeBandKey(monthlyVolume);
-  const currentRate = monthlyVolume > 0 ? (currentMonthlyCost / monthlyVolume) * 100 : 0;
   const annualVolume = monthlyVolume * 12;
   const interchangeCost = annualVolume * (INTERCHANGE_EST / 100);
 
   const cd = CASH_DISCOUNT_MATRIX[band][riskTier];
-  const fr = FLAT_RATE_MATRIX[band][riskTier];
-  const icRate = Math.max(2.15, Math.round(currentRate * 0.78 * 100) / 100);
+  // Flat-rate and IC+ revenue mirror the actual quotes (incl. rate-matching
+  // and the interchange floor) so internal economics match what's offered.
+  const quotes = quotePrograms(input);
+  const flatQuote = quotes.find(q => q.key === 'flat_rate')!;
+  const icQuote = quotes.find(q => q.key === 'interchange_plus')!;
 
   const build = (key: ProgramQuote['key'], name: string, grossRevenue: number): ProgramEconomics => {
     const margin = grossRevenue - interchangeCost;
@@ -208,7 +245,7 @@ export function estimateProgramEconomics(input: QuoteInput): ProgramEconomics[] 
 
   return [
     build('cash_discount', 'Cash Discount', annualVolume * (cd.serviceFee / 100) + cd.monthlyFee * 12),
-    build('flat_rate', 'Flat Rate', annualVolume * (fr.rate / 100) + monthlyTransactions * fr.perTxn * 12),
-    build('interchange_plus', 'Interchange-Plus', annualVolume * (icRate / 100)),
+    build('flat_rate', 'Flat Rate', flatQuote.monthlyCost * 12),
+    build('interchange_plus', 'Interchange-Plus', icQuote.monthlyCost * 12),
   ];
 }

@@ -49,3 +49,49 @@ describe('estimateProgramEconomics', () => {
     }
   });
 });
+
+describe('quotePrograms — flat-rate undercut & IC+ breakdown', () => {
+  // Sunrise Cafe shape: low current effective rate (2.86%) where the band's
+  // matrix flat rate used to quote ~the same cost → $0 savings shown.
+  const lowRateMerchant = {
+    monthlyVolume: 37_500,
+    monthlyTransactions: 812,
+    currentMonthlyCost: 1_072.65,
+    riskTier: 'medium' as const,
+    interchangeFloorMonthly: 732.81,
+  };
+
+  it('flat rate always undercuts the current cost — never $0 savings', () => {
+    const flat = quotePrograms(lowRateMerchant).find(p => p.key === 'flat_rate')!;
+    expect(flat.monthlyCost).toBeLessThan(lowRateMerchant.currentMonthlyCost);
+    expect(flat.annualSavings).toBeGreaterThan(0);
+    expect(flat.terms).toContain('rate-matched');
+  });
+
+  it('keeps the matrix quote when it already beats the statement', () => {
+    const flat = quotePrograms({ ...lowRateMerchant, currentMonthlyCost: 1_687.50 })
+      .find(p => p.key === 'flat_rate')!;
+    expect(flat.terms).not.toContain('rate-matched');
+    expect(flat.monthlyCost).toBeLessThan(1_687.50);
+  });
+
+  it('rate-matched flat quote never dips below the interchange floor', () => {
+    const flat = quotePrograms({ ...lowRateMerchant, currentMonthlyCost: 700 })
+      .find(p => p.key === 'flat_rate')!;
+    expect(flat.monthlyCost).toBeGreaterThanOrEqual(732.81);
+  });
+
+  it('interchange-plus exposes base + margin when floor data exists', () => {
+    const ic = quotePrograms(lowRateMerchant).find(p => p.key === 'interchange_plus')!;
+    expect(ic.icBaseMonthly).toBeCloseTo(732.81, 2);
+    expect(ic.icMarginMonthly).toBeCloseTo(37_500 * 0.0025 + 812 * 0.10, 2);
+    expect(ic.monthlyCost).toBeCloseTo(ic.icBaseMonthly! + ic.icMarginMonthly!, 1);
+    expect(ic.terms).toContain('Interchange $732.81/mo');
+  });
+
+  it('interchange-plus omits the breakdown without floor data', () => {
+    const ic = quotePrograms({ ...lowRateMerchant, interchangeFloorMonthly: null })
+      .find(p => p.key === 'interchange_plus')!;
+    expect(ic.icBaseMonthly).toBeUndefined();
+  });
+});
