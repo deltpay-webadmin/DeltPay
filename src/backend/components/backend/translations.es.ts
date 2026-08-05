@@ -496,8 +496,7 @@ export const ES: Record<string, string> = {
   'How to earn it:': 'Cómo ganarlo:',
   'Recovery figures are estimates against the published April 2026 schedules; actual results depend on card mix and how much volume re-qualifies.':
     'Las cifras de recuperación son estimaciones contra las tablas publicadas de abril 2026; los resultados reales dependen de la mezcla de tarjetas y de cuánto volumen se recalifica.',
-  'High': 'Alta',
-  'Medium': 'Media',
+  // 'High'/'Medium' already defined above (risk tiers) — audit severities reuse them.
   'Check': 'Revisar',
   'Internal only': 'Solo interno',
   'Interchange downgrades on the statement': 'Degradaciones de intercambio en el estado de cuenta',

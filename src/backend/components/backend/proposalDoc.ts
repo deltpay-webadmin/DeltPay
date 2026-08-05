@@ -7,18 +7,48 @@
  * Fully bilingual: pass lang 'es' for a Spanish proposal (copy lives in the
  * EN/ES objects below).
  *
+ * Branded with the real Delt lockup (inline SVG, same geometry as the CRM
+ * sidebar logo) and the CRM's Inter typography / light-theme palette.
+ *
  * Merchant-safe by construction: consumes ProgramQuote only, never
- * ProgramEconomics (see pricingPrograms.ts).
+ * ProgramEconomics (see pricingPrograms.ts); qualification findings render
+ * through the merchant-safe findingsCopy map only — the audit's rep-facing
+ * strings never reach this document.
  */
 import type { ProgramQuote } from './pricingPrograms';
 import { termsToEs } from './i18n';
 import type { ExtractedData } from './pages/BackendAnalysis';
+import { auditQualification } from './interchangeAudit';
+import type { MerchantCategory } from './interchangeRates';
+
+/**
+ * Official Delt lockup — same geometry as the CRM sidebar logo in
+ * DeltBackendLayout.tsx (indigo mark + traced "Delt" letterforms). Inlined
+ * so the downloaded proposal stays self-contained; letters are hard-coded to
+ * dark ink for the white page (a standalone document has no theme context).
+ */
+const DELT_LOGO_SVG = `<svg viewBox="74 153 552 174" style="height:24px;width:auto;display:block" aria-label="Delt">
+  <rect x="148.9" y="156.6" width="50.8" height="168.3" rx="17.2" fill="#4945FF"/>
+  <circle cx="107.8" cy="274.1" r="33.3" fill="#4945FF"/>
+  <g fill="#0B1730" transform="translate(208,153)">
+    <path transform="translate(0.428,167.36)" d="M 80.28125 0 L 21.6875 0 L 21.6875 -159.390625 L 79.921875 -159.390625 C 92.503906 -159.390625 103.953125 -157.492188 114.265625 -153.703125 C 124.578125 -149.910156 133.441406 -144.5 140.859375 -137.46875 C 148.285156 -130.4375 153.988281 -122.054688 157.96875 -112.328125 C 161.957031 -102.597656 163.953125 -91.757812 163.953125 -79.8125 C 163.953125 -67.851562 161.957031 -56.972656 157.96875 -47.171875 C 153.988281 -37.367188 148.304688 -28.953125 140.921875 -21.921875 C 133.546875 -14.890625 124.738281 -9.476562 114.5 -5.6875 C 104.257812 -1.894531 92.851562 0 80.28125 0 Z M 42.078125 -140.875 L 42.078125 -18.75 L 79.8125 -18.75 C 92.851562 -18.75 104.082031 -21.226562 113.5 -26.1875 C 122.914062 -31.15625 130.179688 -38.1875 135.296875 -47.28125 C 140.421875 -56.382812 142.984375 -67.070312 142.984375 -79.34375 C 142.984375 -91.6875 140.421875 -102.46875 135.296875 -111.6875 C 130.179688 -120.90625 122.875 -128.070312 113.375 -133.1875 C 103.882812 -138.3125 92.539062 -140.875 79.34375 -140.875 Z M 42.078125 -140.875"/>
+    <path transform="translate(160.05,167.36)" d="M 129.15625 -62.703125 C 129.15625 -61.679688 129.132812 -60.601562 129.09375 -59.46875 C 129.050781 -58.34375 128.953125 -56.6875 128.796875 -54.5 L 29.65625 -54.5 C 30.507812 -46.53125 32.847656 -39.613281 36.671875 -33.75 C 40.503906 -27.894531 45.3125 -23.382812 51.09375 -20.21875 C 56.875 -17.050781 63.046875 -15.46875 69.609375 -15.46875 C 77.660156 -15.46875 84.535156 -17.207031 90.234375 -20.6875 C 95.941406 -24.164062 100.125 -29.265625 102.78125 -35.984375 L 125.40625 -35.984375 C 123.6875 -30.515625 121.125 -25.394531 117.71875 -20.625 C 114.320312 -15.863281 110.21875 -11.703125 105.40625 -8.140625 C 100.601562 -4.585938 95.210938 -1.796875 89.234375 0.234375 C 83.265625 2.265625 76.878906 3.28125 70.078125 3.28125 C 61.410156 3.28125 53.382812 1.660156 46 -1.578125 C 38.613281 -4.828125 32.164062 -9.34375 26.65625 -15.125 C 21.15625 -20.90625 16.878906 -27.601562 13.828125 -35.21875 C 10.785156 -42.832031 9.265625 -51.015625 9.265625 -59.765625 C 9.265625 -68.515625 10.785156 -76.695312 13.828125 -84.3125 C 16.878906 -91.9375 21.15625 -98.640625 26.65625 -104.421875 C 32.164062 -110.203125 38.613281 -114.734375 46 -118.015625 C 53.382812 -121.296875 61.410156 -122.9375 70.078125 -122.9375 C 78.671875 -122.9375 86.582031 -121.332031 93.8125 -118.125 C 101.039062 -114.925781 107.289062 -110.515625 112.5625 -104.890625 C 117.84375 -99.265625 121.925781 -92.835938 124.8125 -85.609375 C 127.707031 -78.378906 129.15625 -70.742188 129.15625 -62.703125 Z M 30.59375 -72.3125 L 108.515625 -72.3125 C 108.203125 -76.53125 106.972656 -80.550781 104.828125 -84.375 C 102.679688 -88.207031 99.847656 -91.585938 96.328125 -94.515625 C 92.816406 -97.441406 88.773438 -99.742188 84.203125 -101.421875 C 79.628906 -103.109375 74.804688 -103.953125 69.734375 -103.953125 C 63.796875 -103.953125 58.128906 -102.738281 52.734375 -100.3125 C 47.347656 -97.894531 42.703125 -94.34375 38.796875 -89.65625 C 34.890625 -84.96875 32.15625 -79.1875 30.59375 -72.3125 Z M 30.59375 -72.3125"/>
+    <path transform="translate(282.643,167.36)" d="M 39.5 0 L 19.34375 0 L 19.34375 -165.25 L 39.5 -165.25 Z M 39.5 0"/>
+    <path transform="translate(327.545,167.36)" d="M 87.546875 0 L 65.515625 0 C 60.984375 0 56.488281 -0.582031 52.03125 -1.75 C 47.582031 -2.925781 43.539062 -5.078125 39.90625 -8.203125 C 36.269531 -11.328125 33.359375 -15.800781 31.171875 -21.625 C 28.984375 -27.445312 27.890625 -35.003906 27.890625 -44.296875 L 27.890625 -101.84375 L 1.296875 -101.84375 L 1.296875 -119.53125 L 27.890625 -119.53125 L 27.890625 -155.046875 L 48.046875 -155.171875 L 48.046875 -119.53125 L 87.546875 -119.53125 L 87.546875 -101.84375 L 48.046875 -101.84375 L 48.046875 -43.359375 C 48.046875 -37.816406 48.648438 -33.304688 49.859375 -29.828125 C 51.078125 -26.347656 52.71875 -23.691406 54.78125 -21.859375 C 56.851562 -20.023438 59.160156 -18.773438 61.703125 -18.109375 C 64.242188 -17.441406 66.84375 -17.109375 69.5 -17.109375 L 87.546875 -17.109375 Z M 87.546875 0"/>
+  </g>
+</svg>`;
 
 export interface ProposalInput {
   extracted: ExtractedData;
   programs: ProgramQuote[];
   /** Program to lead with — the merchant's selection or the recommendation. */
   focusKey: ProgramQuote['key'] | null;
+  /**
+   * Merchant category for the qualification findings page. When set, the
+   * statement audit runs and merchant-worthy findings render as a page;
+   * omitted → the findings page is skipped entirely.
+   */
+  category?: MerchantCategory;
   /** Name of the rep preparing the proposal, when known. */
   preparedBy?: string;
   /**
@@ -61,6 +91,21 @@ interface ProposalCopy {
   amount: string;
   calloutMeaning: (name: string) => string;
   calloutChargebacks: (n: number) => string;
+  findingsTitle: string;
+  findingsIntro: (name: string) => string;
+  /**
+   * Merchant-safe copy per audit finding id. Findings whose id is absent are
+   * skipped — the audit's rep-facing title/detail/action strings must never
+   * reach this document. `labels` carries the statement's own downgrade
+   * fee-line labels (may be empty).
+   */
+  findingsCopy: Partial<Record<string, { h: string; p: (a: { name: string; labels: string }) => string }>>;
+  findingsSavesLabel: string;
+  findingsDisclaimer: string;
+  socialTitle: string;
+  testimonials: { quote: string; name: string; role: string; business: string; location: string }[];
+  faqTitle: string;
+  faqs: { q: string; a: string }[];
   pricingOptions: string;
   pricingIntro: (name: string) => string;
   recommendedFor: (name: string) => string;
@@ -136,6 +181,49 @@ const EN: ProposalCopy = {
     `<strong>What this means for ${name}:</strong> every one of these line items is negotiable — most shrink dramatically or disappear under the programs on the next page.`,
   calloutChargebacks: n =>
     ` We also noted ${n} chargeback${n === 1 ? '' : 's'} this period; Delt includes dispute-response tooling at no extra cost.`,
+  findingsTitle: 'What We Found in Your Statement',
+  findingsIntro: name =>
+    `Beyond the headline rate, we checked how ${name}'s transactions are actually clearing on the card networks. A few things on this statement are costing more than they should — all of them fixable.`,
+  findingsCopy: {
+    'downgrade-lines': {
+      h: 'Penalty-rate charges on your statement',
+      p: ({ name, labels }) => labels
+        ? `Lines like ${labels} are charges from transactions clearing at the card networks' most expensive penalty tiers — not the rates ${name} qualifies for. Under Delt, these shrink dramatically or disappear.`
+        : `Some of ${name}'s transactions are clearing at the card networks' most expensive penalty tiers — not the rates the business qualifies for. Under Delt, these charges shrink dramatically or disappear.`,
+    },
+    'pin-debit-missing': {
+      h: 'Debit cards are taking the expensive route',
+      p: ({ name }) =>
+        `This statement shows no PIN-network debit activity — every debit card ${name} accepts is routing through the higher-cost path today. Delt terminals route debit the smart way automatically, with no change at the counter.`,
+    },
+    'nonqual-pricing': {
+      h: 'Your rate sits at penalty levels',
+      p: ({ name }) =>
+        `${name}'s effective rate is up at the level the card networks reserve for non-qualified transactions. Delt's programs replace this pricing outright — it is the biggest part of the savings in this proposal.`,
+    },
+    'b2b-enhanced-data': {
+      h: 'Business cards are missing built-in discounts',
+      p: ({ name }) =>
+        `Commercial cards qualify for meaningfully lower rates when extra order data travels with each transaction. Delt terminals and gateways send that data automatically, so ${name} captures those discounts without lifting a finger.`,
+    },
+  },
+  findingsSavesLabel: 'Est. reduction',
+  findingsDisclaimer:
+    'Figures are estimates from this statement and are already reflected in the savings shown in this proposal — they are part of the story, not an extra on top.',
+  socialTitle: 'Merchants Already on Delt',
+  testimonials: [
+    { quote: "Switching to Delt Payments took an afternoon. We went from T+3 settlements to same-day deposits and haven't looked back.", name: 'Carlos Mendez', role: 'Owner', business: 'Northside Auto', location: 'Denver, CO' },
+    { quote: "The Capital offer popped up in my dashboard. I applied at 9am and had the funds clearing by 3pm. I've never experienced anything like it with a bank.", name: 'Dmitri Volkov', role: 'Proprietor', business: 'Oak & Ember', location: 'Chicago, IL' },
+    { quote: "Chargebacks used to eat 2 hours a week. With Delt's evidence-builder and auto-responses, we handle them in 10 minutes.", name: 'Fatima Nkosi', role: 'Operations Lead', business: 'Atlas Apothecary', location: 'Atlanta, GA' },
+  ],
+  faqTitle: 'Common Questions',
+  faqs: [
+    { q: 'Will my customers push back on a service fee?', a: 'The program is a discount for paying cash, not a penalty for cards — the same model gas stations have used for decades. In well-run programs customer attrition measures under 1%, and the clear signage Delt provides does the explaining for you.' },
+    { q: 'Is cash discounting legal?', a: 'Yes — legal in all 50 states when structured as dual pricing with proper disclosure. Delt handles the compliant signage and receipt formatting, and keeps them current with card-network rules.' },
+    { q: 'Is switching complicated?', a: 'No. Delt programs the equipment, handles the paperwork, and trains your team. Most merchants switch with zero downtime — you take payments the same day the terminal arrives.' },
+    { q: "What if I'm under contract with my current processor?", a: 'Bring us the contract — many are month-to-month with a cancellation fee dressed up as a term. In most cases the first month or two of savings covers any fee, and your Delt contact will do that math with you before you commit.' },
+    { q: 'Will I lose sales?', a: 'The data says no: merchants on well-run programs see under 1% change in card behavior. Customers care about the product and the service — and cash payers get a better price.' },
+  ],
   pricingOptions: 'Your Pricing Options',
   pricingIntro: name => `Three ways forward — all three cost less than today. The highlighted program is our recommendation for ${name}.`,
   recommendedFor: name => `Recommended for ${name}`,
@@ -271,6 +359,49 @@ const ES_COPY: ProposalCopy = {
     `<strong>Qué significa esto para ${name}:</strong> cada una de estas líneas es negociable — la mayoría se reduce drásticamente o desaparece con los programas de la siguiente página.`,
   calloutChargebacks: n =>
     ` También notamos ${n} contracargo${n === 1 ? '' : 's'} en este período; Delt incluye herramientas de respuesta a disputas sin costo adicional.`,
+  findingsTitle: 'Qué Encontramos en Su Estado de Cuenta',
+  findingsIntro: name =>
+    `Más allá de la tasa general, revisamos cómo se están liquidando realmente las transacciones de ${name} en las redes de tarjetas. Varias cosas en este estado de cuenta cuestan más de lo que deberían — y todas tienen solución.`,
+  findingsCopy: {
+    'downgrade-lines': {
+      h: 'Cargos con tarifa de castigo en su estado de cuenta',
+      p: ({ name, labels }) => labels
+        ? `Líneas como ${labels} son cargos de transacciones que se liquidaron en los niveles de castigo más caros de las redes de tarjetas — no en las tasas que ${name} merece. Con Delt, estos cargos se reducen drásticamente o desaparecen.`
+        : `Parte de las transacciones de ${name} se está liquidando en los niveles de castigo más caros de las redes de tarjetas — no en las tasas que el negocio merece. Con Delt, estos cargos se reducen drásticamente o desaparecen.`,
+    },
+    'pin-debit-missing': {
+      h: 'Sus tarjetas de débito toman la ruta cara',
+      p: ({ name }) =>
+        `Este estado de cuenta no muestra actividad de débito por redes PIN — cada tarjeta de débito que ${name} acepta viaja hoy por la ruta más costosa. Las terminales Delt enrutan el débito de forma inteligente automáticamente, sin cambiar nada en el mostrador.`,
+    },
+    'nonqual-pricing': {
+      h: 'Su tasa está en niveles de castigo',
+      p: ({ name }) =>
+        `La tasa efectiva de ${name} está en el nivel que las redes reservan para transacciones no calificadas. Los programas de Delt reemplazan ese esquema por completo — es la mayor parte del ahorro de esta propuesta.`,
+    },
+    'b2b-enhanced-data': {
+      h: 'Sus tarjetas empresariales pierden descuentos',
+      p: ({ name }) =>
+        `Las tarjetas comerciales califican para tasas bastante más bajas cuando cada transacción viaja con datos adicionales del pedido. Las terminales y pasarelas de Delt envían esos datos automáticamente, así que ${name} captura esos descuentos sin mover un dedo.`,
+    },
+  },
+  findingsSavesLabel: 'Reducción est.',
+  findingsDisclaimer:
+    'Las cifras son estimaciones basadas en este estado de cuenta y ya están reflejadas en el ahorro de esta propuesta — son parte de la historia, no un extra.',
+  socialTitle: 'Comercios que Ya Usan Delt',
+  testimonials: [
+    { quote: 'Cambiarnos a Delt Payments tomó una tarde. Pasamos de liquidaciones a 3 días a depósitos el mismo día, y no hemos mirado atrás.', name: 'Carlos Mendez', role: 'Propietario', business: 'Northside Auto', location: 'Denver, CO' },
+    { quote: 'La oferta de Capital apareció en mi panel. Apliqué a las 9 de la mañana y a las 3 de la tarde los fondos ya estaban en camino. Nunca viví algo así con un banco.', name: 'Dmitri Volkov', role: 'Propietario', business: 'Oak & Ember', location: 'Chicago, IL' },
+    { quote: 'Los contracargos nos comían 2 horas por semana. Con el armado de evidencia y las respuestas automáticas de Delt, los resolvemos en 10 minutos.', name: 'Fatima Nkosi', role: 'Jefa de Operaciones', business: 'Atlas Apothecary', location: 'Atlanta, GA' },
+  ],
+  faqTitle: 'Preguntas Frecuentes',
+  faqs: [
+    { q: '¿Mis clientes se molestarán por una tarifa de servicio?', a: 'El programa es un descuento por pagar en efectivo, no un castigo por usar tarjeta — el mismo modelo que las gasolineras usan hace décadas. En programas bien administrados la pérdida de clientes es menor al 1%, y la señalización clara que Delt provee explica todo por usted.' },
+    { q: '¿El descuento por efectivo es legal?', a: 'Sí — es legal en los 50 estados cuando se estructura como doble precio con la divulgación adecuada. Delt se encarga de la señalización y los recibos en cumplimiento, y los mantiene al día con las reglas de las redes.' },
+    { q: '¿Cambiarse es complicado?', a: 'No. Delt programa el equipo, maneja el papeleo y capacita a su personal. La mayoría de los comercios cambia sin interrupciones — usted cobra el mismo día que llega la terminal.' },
+    { q: '¿Y si tengo contrato con mi procesador actual?', a: 'Tráiganos el contrato — muchos son mes a mes con una cuota de cancelación disfrazada de plazo. En la mayoría de los casos, el ahorro del primer o segundo mes cubre cualquier cuota, y su contacto de Delt hace esa cuenta con usted antes de comprometerse.' },
+    { q: '¿Perderé ventas?', a: 'Los datos dicen que no: los comercios con programas bien administrados ven menos del 1% de cambio en el comportamiento con tarjeta. A los clientes les importa el producto y el servicio — y quien paga en efectivo obtiene mejor precio.' },
+  ],
   pricingOptions: 'Sus Opciones de Precios',
   pricingIntro: name => `Tres caminos posibles — los tres cuestan menos que hoy. El programa resaltado es nuestra recomendación para ${name}.`,
   recommendedFor: name => `Recomendado para ${name}`,
@@ -378,7 +509,7 @@ const ES_COPY: ProposalCopy = {
 };
 
 export function buildProposalHtml(input: ProposalInput): string {
-  const { extracted: ex, programs, focusKey, preparedBy, preparedByEmail, lang = 'en' } = input;
+  const { extracted: ex, programs, focusKey, preparedBy, preparedByEmail, lang = 'en', category } = input;
   const L = lang === 'es' ? ES_COPY : EN;
   const requested = programs.find(p => p.key === focusKey) ?? programs[0];
   // The document narrates savings on every page — a $0-savings focus reads as
@@ -433,25 +564,75 @@ export function buildProposalHtml(input: ProposalInput): string {
   const steps = L.howItWorks[focus.key].map((s, i) => `
     <div class="step"><div class="stepnum">${i + 1}</div><p>${esc(s)}</p></div>`).join('');
 
+  const footer = `<div class="footer"><span>${L.footerLeft(name)}</span><span>${L.footerRight(today)}</span></div>`;
+
+  // ── Qualification findings, merchant-safe ──
+  // Only finding ids present in L.findingsCopy render; the audit's rep-facing
+  // title/detail/action strings never reach this document. History rows are
+  // normalized upstream, but guard the optional fields anyway.
+  const findings = category
+    ? auditQualification({
+        fees: ex.fees ?? [],
+        downgradeLines: ex.downgradeLines ?? [],
+        pinDebitPresent: ex.pinDebitPresent ?? null,
+        notes: ex.notes ?? '',
+        totalVolume: ex.totalVolume,
+        totalTransactions: ex.totalTransactions,
+        avgTicket: ex.avgTicket,
+        effectiveRatePct: ex.effectiveRatePct,
+        currentMonthlyCost: ex.currentMonthlyCost,
+      }, category)
+    : [];
+  const dgLabels = (ex.downgradeLines ?? []).map(l => l.label).slice(0, 3).join(', ');
+  const findingCards = findings.map(f => {
+    const copy = L.findingsCopy[f.id];
+    if (!copy) return '';
+    const save = f.estAnnualRecovery !== null && f.estAnnualRecovery > 0
+      ? `<span class="save">${esc(L.findingsSavesLabel)} ~${fmtWhole(f.estAnnualRecovery)}${L.perYr}</span>`
+      : '';
+    return `<div class="finding">${save}<h4>${esc(copy.h)}</h4><p>${esc(copy.p({ name: ex.merchantName, labels: dgLabels }))}</p></div>`;
+  }).join('');
+  const findingsPage = findingCards ? `
+<!-- ── Page: what we found in the statement ── -->
+<div class="page">
+  <div class="brand">${DELT_LOGO_SVG}</div>
+  <h2 style="margin-top:14px;">${esc(L.findingsTitle)}</h2>
+  <div class="rule"></div>
+  <p>${esc(L.findingsIntro(ex.merchantName))}</p>
+  ${findingCards}
+  <div class="callout">${esc(L.findingsDisclaimer)}</div>
+  ${footer}
+</div>` : '';
+
+  const quoteCards = L.testimonials.map(t => `
+    <div class="quote"><p class="q">“${esc(t.quote)}”</p><p class="who">${esc(t.name)} · ${esc(t.role)}, ${esc(t.business)} — ${esc(t.location)}</p></div>`).join('');
+  const faqBlocks = L.faqs.map(f => `
+    <div class="faq"><h4>${esc(f.q)}</h4><p>${esc(f.a)}</p></div>`).join('');
+
   const whyCells = L.whyItems.map(w => `<div><h4>${esc(w.h)}</h4><p>${esc(w.p)}</p></div>`).join('\n    ');
   const platformCells = L.platformItems.map(w => `<div><h4>${esc(w.h)}</h4><p>${esc(w.p)}</p></div>`).join('\n    ');
   const capitalCells = L.capitalPoints.map(w => `<div><h4>${esc(w.h)}</h4><p>${esc(w.p)}</p></div>`).join('\n    ');
   const nextSteps = L.steps.map((s, i) =>
     `<div class="step"><div class="stepnum">${i + 1}</div><p><strong>${esc(s.b)}</strong>${esc(s.rest)}</p></div>`).join('\n  ');
   const needList = L.needItems.map(n => `<li>${esc(n)}</li>`).join('\n    ');
-  const footer = `<div class="footer"><span>${L.footerLeft(name)}</span><span>${L.footerRight(today)}</span></div>`;
 
   return `<!DOCTYPE html>
 <html lang="${lang}">
 <head>
 <meta charset="utf-8">
 <title>${L.docTitle} — ${name}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { background: #fff; }
   body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    color: #1f2937; font-size: 13px; line-height: 1.55;
+    /* CRM typography (backend-theme.css): Inter, system stack as the
+       offline/print fallback for the downloaded standalone file. */
+    font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    color: #3A4763; font-size: 13px; line-height: 1.55;
+    font-variant-numeric: tabular-nums lining-nums;
   }
   @page { size: letter; margin: 0; }
   .page {
@@ -461,14 +642,14 @@ export function buildProposalHtml(input: ProposalInput): string {
   .page:last-child { page-break-after: auto; }
   @media screen { .page { box-shadow: 0 1px 8px rgba(0,0,0,0.12); margin: 16px auto; } body { background: #eef0f3; } }
 
-  .brand { font-size: 15px; font-weight: 800; color: #2E6BFF; letter-spacing: 0.02em; }
-  h1 { font-size: 40px; line-height: 1.1; color: #111827; margin: 18px 0 6px; }
-  h2 { font-size: 19px; color: #111827; margin-bottom: 4px; }
+  .brand svg { height: 24px; width: auto; display: block; }
+  h1 { font-size: 40px; line-height: 1.1; color: #0B1730; letter-spacing: -0.02em; margin: 18px 0 6px; }
+  h2 { font-size: 19px; color: #0B1730; letter-spacing: -0.02em; margin-bottom: 4px; }
   .rule { height: 3px; width: 44px; background: #2E6BFF; border-radius: 2px; margin: 10px 0 16px; }
   .muted { color: #6b7280; }
   .small { font-size: 11px; }
   .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
-  .green { color: #059669; }
+  .green { color: #149655; }
 
   /* Cover */
   .cover { display: flex; flex-direction: column; }
@@ -476,11 +657,11 @@ export function buildProposalHtml(input: ProposalInput): string {
     margin-top: 26px; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 12px;
     padding: 26px; text-align: center;
   }
-  .cover .hero .big { font-size: 46px; font-weight: 800; color: #047857; }
+  .cover .hero .big { font-size: 46px; font-weight: 800; color: #149655; }
   .prepared { display: flex; gap: 14px; margin-top: 26px; }
   .prepared > div { flex: 1; background: #f0f5ff; border-radius: 10px; padding: 14px 16px; }
   .prepared .lbl { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: #6b7280; margin-bottom: 4px; }
-  .prepared .who { font-size: 15px; font-weight: 700; color: #111827; }
+  .prepared .who { font-size: 15px; font-weight: 700; color: #0B1730; }
   .coverfoot { margin-top: auto; padding-top: 24px; font-size: 11px; color: #9ca3af; }
 
   /* Tables */
@@ -499,7 +680,7 @@ export function buildProposalHtml(input: ProposalInput): string {
   .stats { display: flex; gap: 12px; margin: 14px 0; }
   .stats > div { flex: 1; background: #f9fafb; border-radius: 10px; padding: 12px 14px; }
   .stats .lbl { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: #6b7280; margin-bottom: 3px; }
-  .stats .val { font-size: 17px; font-weight: 700; color: #111827; }
+  .stats .val { font-size: 17px; font-weight: 700; color: #0B1730; }
 
   /* Programs */
   .programs { display: flex; gap: 12px; margin: 14px 0; align-items: stretch; }
@@ -537,13 +718,29 @@ export function buildProposalHtml(input: ProposalInput): string {
   .capital .why { margin: 12px 0 0; }
   .capital .why > div { background: #fff; }
   .prequal { background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 10px; padding: 12px 16px; margin-top: 12px; }
-  .prequal .lbl { display: block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #047857; margin-bottom: 3px; }
+  .prequal .lbl { display: block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #149655; margin-bottom: 3px; }
+
+  /* Findings */
+  .finding { border: 1px solid #E0E6F0; border-radius: 10px; padding: 13px 16px; margin: 11px 0; }
+  .finding h4 { font-size: 13px; color: #0B1730; margin-bottom: 4px; }
+  .finding p { font-size: 11.5px; color: #3A4763; }
+  .finding .save { float: right; background: #ecfdf5; border: 1px solid #a7f3d0; color: #149655; font-weight: 800; font-size: 11px; border-radius: 99px; padding: 3px 10px; margin-left: 10px; white-space: nowrap; }
+
+  /* Testimonials */
+  .quote { background: #f9fafb; border: 1px solid #eef0f3; border-radius: 10px; padding: 13px 16px; margin: 10px 0; }
+  .quote .q { font-style: italic; font-size: 12px; color: #3A4763; }
+  .quote .who { margin-top: 6px; font-size: 11px; font-weight: 600; color: #61708C; }
+
+  /* FAQ */
+  .faq { margin: 11px 0; }
+  .faq h4 { font-size: 12.5px; color: #0B1730; margin-bottom: 3px; }
+  .faq p { font-size: 11.5px; color: #3A4763; }
 
   /* Checklist */
   ul.check { list-style: none; margin: 10px 0; }
   ul.check li { padding: 6px 0 6px 26px; position: relative; border-bottom: 1px solid #f3f4f6; }
   ul.check li:last-child { border-bottom: none; }
-  ul.check li:before { content: '✓'; position: absolute; left: 4px; color: #059669; font-weight: 800; }
+  ul.check li:before { content: '✓'; position: absolute; left: 4px; color: #149655; font-weight: 800; }
 
   /* Acceptance */
   .sig { display: flex; gap: 24px; margin-top: 28px; }
@@ -578,7 +775,7 @@ export function buildProposalHtml(input: ProposalInput): string {
   .pnav {
     display: none; position: fixed; z-index: 60; left: 0; right: 0; bottom: 22px;
     justify-content: center; align-items: center; gap: 14px;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   }
   body.present .pnav { display: flex; }
   .pnav button {
@@ -610,7 +807,7 @@ export function buildProposalHtml(input: ProposalInput): string {
 
 <!-- ── Page 1: Cover ── -->
 <div class="page cover">
-  <div class="brand">DELT</div>
+  <div class="brand">${DELT_LOGO_SVG}</div>
   <h1>${L.heroTitle}</h1>
   <p class="muted">${esc(L.preparedExclusivelyFor)} <strong>${name}</strong></p>
   <div class="hero">
@@ -635,7 +832,7 @@ export function buildProposalHtml(input: ProposalInput): string {
 
 <!-- ── Page 2: Where you are today ── -->
 <div class="page">
-  <div class="brand">DELT</div>
+  <div class="brand">${DELT_LOGO_SVG}</div>
   <h2 style="margin-top:14px;">${esc(L.executiveSummary)}</h2>
   <div class="rule"></div>
   <p>${L.executiveBody({
@@ -662,10 +859,10 @@ export function buildProposalHtml(input: ProposalInput): string {
   </div>
   ${footer}
 </div>
-
+${findingsPage}
 <!-- ── Page 3: Proposed solutions ── -->
 <div class="page">
-  <div class="brand">DELT</div>
+  <div class="brand">${DELT_LOGO_SVG}</div>
   <h2 style="margin-top:14px;">${esc(L.pricingOptions)}</h2>
   <div class="rule"></div>
   <p>${esc(L.pricingIntro(ex.merchantName))}</p>
@@ -696,7 +893,7 @@ export function buildProposalHtml(input: ProposalInput): string {
 
 <!-- ── Page 4: How the program works + why Delt ── -->
 <div class="page">
-  <div class="brand">DELT</div>
+  <div class="brand">${DELT_LOGO_SVG}</div>
   <h2 style="margin-top:14px;">${esc(L.howWorks(focusName))}</h2>
   <div class="rule"></div>
   ${steps}
@@ -711,7 +908,7 @@ export function buildProposalHtml(input: ProposalInput): string {
 
 <!-- ── Page 5: The Delt platform + Delt Capital ── -->
 <div class="page">
-  <div class="brand">DELT</div>
+  <div class="brand">${DELT_LOGO_SVG}</div>
   <h2 style="margin-top:14px;">${esc(L.platformTitle)}</h2>
   <div class="rule"></div>
   <p>${esc(L.platformIntro(ex.merchantName))}</p>
@@ -735,9 +932,22 @@ export function buildProposalHtml(input: ProposalInput): string {
   ${footer}
 </div>
 
-<!-- ── Page 6: Next steps + what we need + acceptance ── -->
+<!-- ── Page: merchants on Delt + common questions ── -->
 <div class="page">
-  <div class="brand">DELT</div>
+  <div class="brand">${DELT_LOGO_SVG}</div>
+  <h2 style="margin-top:14px;">${esc(L.socialTitle)}</h2>
+  <div class="rule"></div>
+  ${quoteCards}
+
+  <h2 style="margin-top:20px;">${esc(L.faqTitle)}</h2>
+  <div class="rule"></div>
+  ${faqBlocks}
+  ${footer}
+</div>
+
+<!-- ── Page: Next steps + what we need + acceptance ── -->
+<div class="page">
+  <div class="brand">${DELT_LOGO_SVG}</div>
   <h2 style="margin-top:14px;">${esc(L.nextSteps)}</h2>
   <div class="rule"></div>
   <p>${esc(L.stepsIntro(ex.merchantName))}</p>
