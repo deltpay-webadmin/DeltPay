@@ -413,6 +413,105 @@ export async function sandboxQuickConnect(leadId: string, institutionId = "ins_1
   return exchangePublicToken(leadId, out.public_token);
 }
 
+// ══════════════════════════════════════════════════════════════
+// Applicant-side exchange (deltcapital.com funding application)
+// ══════════════════════════════════════════════════════════════
+// The public /apply flow on deltcapital.com mints its own link tokens
+// (same Plaid client, its own PLAID_ENV) and forwards the resulting
+// public_token here so the connection lands in the vault instead of
+// being discarded. The public_token is env-bound: if the application
+// runs on a different PLAID_ENV than these edge functions, the
+// exchange fails with INVALID_PUBLIC_TOKEN and the caller falls back
+// to its local, non-persisting exchange.
+
+export interface ApplyApplicant {
+  email: string;
+  fullName?: string;
+  businessName?: string;
+  /** The deltcapital.com lead uuid (delt_capital.leads.id), if known. */
+  leadId?: string;
+}
+
+/** Match an applicant to a pipeline lead by email, or create one using the
+ * same conventions as the Meta lead import (see meta.ts importMetaLeads). */
+async function resolveApplyLead(applicant: ApplyApplicant): Promise<string> {
+  const db = svc();
+  const email = applicant.email.trim().toLowerCase();
+
+  // ilike with no wildcards = case-insensitive equality in PostgREST.
+  const { data: matches } = await db
+    .from("pipeline_leads")
+    .select("id, created_at")
+    .ilike("contact_email", email)
+    .order("created_at", { ascending: false })
+    .limit(1);
+  if (matches?.length) return matches[0].id as string;
+
+  const id = `lead-app-${crypto.randomUUID().slice(0, 8)}`;
+  const now = new Date().toISOString();
+  const name = applicant.businessName || applicant.fullName || email;
+  const { error } = await db.from("pipeline_leads").insert({
+    id,
+    products: ["Capital"],
+    business_name: name,
+    contact_name: applicant.fullName ?? null,
+    contact_email: email,
+    source: "deltcapital.com application",
+    stage: "New",
+    status: "New",
+    external_id: applicant.leadId ? `apply:${applicant.leadId}` : null,
+    timeline: [{
+      date: now,
+      event: "Created from the deltcapital.com funding application (bank connected via Plaid).",
+    }],
+  });
+  if (error) throw new Error(`Failed to create pipeline lead for applicant: ${error.message}`);
+  return id;
+}
+
+/** Exchange + store + sync a connection made by an applicant, and return
+ * the friendly account summary the application UI renders. */
+export async function applyPlaidExchange(
+  publicToken: string,
+  applicant: ApplyApplicant,
+  institution?: { institution_id?: string; name?: string },
+) {
+  const leadId = await resolveApplyLead(applicant);
+  const out = await exchangePublicToken(leadId, publicToken, institution);
+
+  // Friendly summary for the applicant-facing UI (name/mask/subtype only).
+  let accounts: { name: string; mask: string; subtype: string }[] = [];
+  try {
+    const { accessToken } = await loadItem(out.item_id);
+    const res = await plaid("/accounts/get", { access_token: accessToken });
+    accounts = (res.accounts ?? []).map((a: any) => ({
+      name: a.name || a.official_name || "Account",
+      mask: a.mask || "",
+      subtype: a.subtype || a.type || "",
+    }));
+  } catch { /* summary is cosmetic — the item is already stored + synced */ }
+
+  // Timeline note so the CRM shows how the connection arrived.
+  try {
+    const db = svc();
+    const { data: lead } = await db
+      .from("pipeline_leads").select("timeline").eq("id", leadId).maybeSingle();
+    const timeline = Array.isArray(lead?.timeline) ? lead.timeline : [];
+    timeline.push({
+      date: new Date().toISOString(),
+      event: `Bank connected via the deltcapital.com application (${out.institution_name || "bank"}).`,
+    });
+    await db.from("pipeline_leads").update({ timeline }).eq("id", leadId);
+  } catch { /* best-effort */ }
+
+  return {
+    lead_id: leadId,
+    item_id: out.item_id,
+    institution_name: out.institution_name,
+    accounts,
+  };
+}
+
 async function loadItem(itemId: string) {
   const db = svc();
   const [{ data: item, error: e1 }, { data: cred, error: e2 }] = await Promise.all([
