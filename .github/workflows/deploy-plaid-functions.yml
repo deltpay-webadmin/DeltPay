@@ -1,30 +1,26 @@
-# Deploys the Plaid-related Supabase edge functions from GitHub's servers —
-# no local terminal or Supabase CLI install needed.
+# Deploys the Supabase edge functions from GitHub's servers — no local
+# terminal or Supabase CLI install needed.
 #
-# Runs automatically when Plaid function code changes on main, or on demand
-# via Actions → "Deploy Plaid edge functions" → Run workflow.
+# Runs automatically when function code changes on main, or on demand via
+# Actions → "Deploy Supabase edge functions" → Run workflow.
 #
 # One-time setup: repo Settings → Secrets and variables → Actions → add
 #   SUPABASE_ACCESS_TOKEN  (Supabase dashboard → account avatar →
 #                           Access Tokens → Generate new token)
 #
-# Scope is deliberately limited to the three Plaid functions (the slugs the
-# CRM and Plaid actually call — see supabase/config.toml for the
-# make-server-940653c6 entrypoint mapping). Other functions are deployed by
-# their own processes; widen the list only after confirming the repo copy
-# is the live source of truth for them.
+# All eight functions deploy together. A change to _shared/ affects several
+# of them at once (e.g. docusign_status.ts is imported by both the server
+# and docusign-connect), so partial deploys leave stale copies serving
+# traffic — the previous three-function scope did exactly that.
 
-name: Deploy Plaid edge functions
+name: Deploy Supabase edge functions
 
 on:
   workflow_dispatch:
   push:
     branches: [main]
     paths:
-      - "supabase/functions/server/**"
-      - "supabase/functions/plaid-webhook/**"
-      - "supabase/functions/plaid-config-check/**"
-      - "supabase/functions/_shared/**"
+      - "supabase/functions/**"
       - "supabase/config.toml"
 
 jobs:
@@ -49,6 +45,9 @@ jobs:
 
       - name: Deploy functions
         run: |
-          supabase functions deploy make-server-940653c6 --project-ref "$SUPABASE_PROJECT_ID"
-          supabase functions deploy plaid-webhook --project-ref "$SUPABASE_PROJECT_ID"
-          supabase functions deploy plaid-config-check --project-ref "$SUPABASE_PROJECT_ID"
+          # make-server-940653c6 maps to functions/server via config.toml.
+          for fn in make-server-940653c6 plaid-webhook plaid-config-check \
+                    docusign docusign-connect analyze-statement \
+                    extract-deal-doc nebius-chat; do
+            supabase functions deploy "$fn" --project-ref "$SUPABASE_PROJECT_ID"
+          done
