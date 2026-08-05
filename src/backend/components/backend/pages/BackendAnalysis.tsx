@@ -2,11 +2,13 @@ import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react'
 import {
   Upload, FileText, Sparkles, Download, UserPlus, Clock,
   CheckCircle2, TrendingDown, Store,
-  AlertCircle, Loader2, X, File, ArrowRight,
+  AlertCircle, Loader2, X, File, ArrowRight, Presentation,
 } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
 import { useAppNavigate } from '../NavigationContext';
 import { BackendCostCalculator } from './BackendCostCalculator';
+import { MerchantSavingsView } from './MerchantSavingsView';
+import { AnalysisEconomicsCard } from './AnalysisEconomicsCard';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContainer,
   LineChart, Line, CartesianGrid, Cell, LabelList,
@@ -14,6 +16,9 @@ import {
 import { supabase } from '../../../lib/supabase';
 import { leadActions } from '../crmStore';
 import { quotePrograms, RISK_TIERS, type ProgramQuote, type RiskTierKey } from '../pricingPrograms';
+import { openProposalPdf } from '../proposalDoc';
+import { useSession } from '../SessionContext';
+import { useLang } from '../i18n';
 
 // ── Types ──
 type AnalysisStatus = 'idle' | 'uploading' | 'analyzing' | 'done';
@@ -26,7 +31,7 @@ interface FeeRow {
 }
 
 /** Shape returned by the analyze-statement edge function's extraction. */
-interface ExtractedData {
+export interface ExtractedData {
   merchantName: string;
   currentProcessor: string;
   statementPeriod: string;
@@ -114,6 +119,8 @@ function fromDbAnalysis(row: any): HistoryRow {
 // ══════════════════════════════════════
 export function BackendAnalysis() {
   const { navigate } = useAppNavigate();
+  const { displayName, email: sessionEmail } = useSession();
+  const { t, tTerms, lang } = useLang();
   const [activeView, setActiveView] = useState<'cost-calculator' | 'statement-analyzer'>('cost-calculator');
   const [status, setStatus] = useState<AnalysisStatus>('idle');
   const [files, setFiles] = useState<File[]>([]);
@@ -128,6 +135,7 @@ export function BackendAnalysis() {
   const [historyView, setHistoryView] = useState<'all' | 'merchant'>('all');
   const [merchantFilter, setMerchantFilter] = useState<string | null>(null);
   const [riskTier, setRiskTier] = useState<RiskTierKey>('medium');
+  const [merchantView, setMerchantView] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // ── Load saved analyses ──
@@ -231,6 +239,7 @@ export function BackendAnalysis() {
       setExtracted(ex);
       setProposal(prop);
       setStatus('done');
+      setMerchantView(false);
 
       // Persist so the history / merchant view survives reloads.
       const { data: saved, error: insErr } = await supabase.from('statement_analyses').insert({
@@ -324,6 +333,7 @@ export function BackendAnalysis() {
     setExtracted(null);
     setProposal(null);
     setSavedAnalysisId(null);
+    setMerchantView(false);
   };
 
   // ── Delt program quotes against the extracted statement ──
@@ -380,7 +390,7 @@ export function BackendAnalysis() {
       <div className="max-w-[1400px] mx-auto px-6 py-6 space-y-6">
         {/* ── Header ── */}
         <div>
-          <p className="text-sm text-gray-500 mt-0.5">Cost calculator and statement analysis tools.</p>
+          <p className="text-sm text-gray-500 mt-0.5">{t('Cost calculator and statement analysis tools.')}</p>
         </div>
 
         {/* ── View Tabs ── */}
@@ -389,17 +399,17 @@ export function BackendAnalysis() {
             {([
               { key: 'cost-calculator' as const, label: 'Cost Calculator' },
               { key: 'statement-analyzer' as const, label: 'Statement Analyzer' },
-            ]).map(t => (
+            ]).map(tab => (
               <button
-                key={t.key}
-                onClick={() => setActiveView(t.key)}
+                key={tab.key}
+                onClick={() => setActiveView(tab.key)}
                 className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-[1px] ${
-                  activeView === t.key
+                  activeView === tab.key
                     ? 'text-brand border-brand'
                     : 'text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
-                {t.label}
+                {t(tab.label)}
               </button>
             ))}
           </div>
@@ -442,10 +452,10 @@ export function BackendAnalysis() {
                     </div>
                     <div>
                       <p className="text-sm font-medium text-gray-700">
-                        Drag & drop merchant statements here
+                        {t('Drag & drop merchant statements here')}
                       </p>
                       <p className="text-xs text-gray-400 mt-1">
-                        PDF or image files — credit card processing statements
+                        {t('PDF or image files — credit card processing statements')}
                       </p>
                     </div>
                   </div>
@@ -479,11 +489,11 @@ export function BackendAnalysis() {
                     ) : (
                       <Sparkles className="w-4 h-4" />
                     )}
-                    {status === 'uploading' ? 'Reading file...' : status === 'analyzing' ? 'Analyzing...' : 'Analyze Statement'}
+                    {status === 'uploading' ? t('Reading file...') : status === 'analyzing' ? t('Analyzing...') : t('Analyze Statement')}
                   </button>
                   {(status === 'uploading' || status === 'analyzing') && (
                     <p className="text-xs text-gray-400">
-                      {status === 'uploading' ? 'Preparing the statement…' : 'AI is reading the statement and extracting every fee line…'}
+                      {status === 'uploading' ? t('Preparing the statement…') : t('AI is reading the statement and extracting every fee line…')}
                     </p>
                   )}
                 </div>
@@ -494,23 +504,53 @@ export function BackendAnalysis() {
             {status === 'done' && extracted && proposal && (
               <>
                 {/* Reset bar */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-sm text-emerald-600 font-medium">
-                    <CheckCircle2 className="w-4 h-4" />
-                    Analysis complete — {files[0]?.name}
-                    {extracted.confidence !== 'high' && (
-                      <span className={`ml-1 inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
-                        extracted.confidence === 'medium' ? 'bg-amber-50 text-amber-700' : 'bg-red-50 text-red-700'
-                      }`}>
-                        {extracted.confidence} confidence
-                      </span>
-                    )}
+                <div className="flex items-center justify-between gap-3">
+                  {merchantView ? (
+                    <div />
+                  ) : (
+                    <div className="flex items-center gap-2 text-sm text-emerald-600 font-medium">
+                      <CheckCircle2 className="w-4 h-4" />
+                      {t('Analysis complete')} — {files[0]?.name}
+                      {extracted.confidence !== 'high' && (
+                        <span className={`ml-1 inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
+                          extracted.confidence === 'medium' ? 'bg-amber-50 text-amber-700' : 'bg-red-50 text-red-700'
+                        }`}>
+                          {t(`${extracted.confidence} confidence`)}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => setMerchantView(v => !v)}
+                      className={`px-4 py-2 text-sm font-medium rounded-[6px] transition-colors flex items-center gap-2 ${
+                        merchantView
+                          ? 'bg-brand text-white hover:bg-brand-hover'
+                          : 'bg-white text-brand border border-brand hover:bg-brand/5'
+                      }`}
+                    >
+                      <Presentation className="w-4 h-4" />
+                      {merchantView ? t('Exit Merchant View') : t('Merchant View')}
+                    </button>
+                    <button onClick={reset} className="text-sm text-gray-500 hover:text-gray-700 underline underline-offset-2">
+                      {t('Analyze another statement')}
+                    </button>
                   </div>
-                  <button onClick={reset} className="text-sm text-gray-500 hover:text-gray-700 underline underline-offset-2">
-                    Analyze another statement
-                  </button>
                 </div>
 
+                {merchantView ? (
+                  <MerchantSavingsView
+                    extracted={extracted}
+                    programs={programs}
+                    bestProgramKey={bestProgram?.key ?? null}
+                    onExit={() => setMerchantView(false)}
+                    onDownloadProposal={key => {
+                      const ok = openProposalPdf({ extracted, programs, focusKey: key, preparedBy: displayName, preparedByEmail: sessionEmail, lang });
+                      if (!ok) toast.error('Pop-up blocked — allow pop-ups for this site to generate the proposal.');
+                    }}
+                  />
+                ) : (
+                <>
                 {/* AI notes on the extraction */}
                 {extracted.notes && (
                   <div className="bg-gray-50 border border-gray-200 rounded-[8px] px-4 py-3 text-xs text-gray-600 flex items-start gap-2">
@@ -559,30 +599,30 @@ export function BackendAnalysis() {
                     <div className="px-5 py-4 border-b border-gray-100">
                       <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
                         <FileText className="w-4 h-4 text-brand" />
-                        Extracted Data
+                        {t('Extracted Data')}
                       </h2>
                     </div>
 
                     <div className="px-5 py-4 space-y-4">
                       {/* Meta */}
                       <div className="grid grid-cols-2 gap-3">
-                        <MetaField label="Merchant" value={extracted.merchantName} highlight />
-                        <MetaField label="Current Processor" value={extracted.currentProcessor} />
-                        <MetaField label="Statement Period" value={extracted.statementPeriod} />
-                        <MetaField label="Total Volume" value={fmtWhole(extracted.totalVolume)} />
-                        <MetaField label="Total Transactions" value={extracted.totalTransactions.toLocaleString()} />
-                        <MetaField label="Avg Ticket" value={fmt(extracted.avgTicket)} />
+                        <MetaField label={t('Merchant')} value={extracted.merchantName} highlight />
+                        <MetaField label={t('Current Processor')} value={extracted.currentProcessor} />
+                        <MetaField label={t('Statement Period')} value={extracted.statementPeriod} />
+                        <MetaField label={t('Total Volume')} value={fmtWhole(extracted.totalVolume)} />
+                        <MetaField label={t('Total Transactions')} value={extracted.totalTransactions.toLocaleString()} />
+                        <MetaField label={t('Avg Ticket')} value={fmt(extracted.avgTicket)} />
                       </div>
 
                       {/* Fee breakdown */}
                       <div>
-                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Fee Breakdown</p>
+                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">{t('Fee Breakdown')}</p>
                         <div className="border border-gray-200 rounded-[6px] overflow-hidden">
                           <table className="w-full">
                             <thead>
                               <tr className="bg-gray-50">
-                                <th className="text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wide px-3 py-2">Fee Type</th>
-                                <th className="text-right text-[11px] font-semibold text-gray-500 uppercase tracking-wide px-3 py-2">Amount</th>
+                                <th className="text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wide px-3 py-2">{t('Fee Type')}</th>
+                                <th className="text-right text-[11px] font-semibold text-gray-500 uppercase tracking-wide px-3 py-2">{t('Amount')}</th>
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
@@ -600,7 +640,7 @@ export function BackendAnalysis() {
                       {/* Fee composition — where the money goes */}
                       {extracted.fees.length > 1 && (
                         <div>
-                          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Fee Composition</p>
+                          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">{t('Fee Composition')}</p>
                           <div className="border border-gray-200 rounded-[6px] p-3" style={{ height: Math.max(120, extracted.fees.length * 34) }}>
                             <ResponsiveContainer width="100%" height="100%">
                               <BarChart data={extracted.fees} layout="vertical" margin={{ top: 0, right: 56, bottom: 0, left: 8 }}>
@@ -626,9 +666,9 @@ export function BackendAnalysis() {
 
                       {/* Bottom stats */}
                       <div className="grid grid-cols-2 gap-3">
-                        <MetaField label="Effective Rate" value={`${extracted.effectiveRatePct}%`} />
-                        <MetaField label="Chargebacks" value={extracted.chargebackCount.toString()} warn={extracted.chargebackCount > 0} />
-                        <MetaField label="Current Monthly Cost" value={fmt(extracted.currentMonthlyCost)} highlight />
+                        <MetaField label={t('Effective Rate')} value={`${extracted.effectiveRatePct}%`} />
+                        <MetaField label={t('Chargebacks')} value={extracted.chargebackCount.toString()} warn={extracted.chargebackCount > 0} />
+                        <MetaField label={t('Current Monthly Cost')} value={fmt(extracted.currentMonthlyCost)} highlight />
                       </div>
                     </div>
                   </div>
@@ -638,7 +678,7 @@ export function BackendAnalysis() {
                     <div className="px-5 py-4 border-b border-gray-100">
                       <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
                         <TrendingDown className="w-4 h-4 text-emerald-600" />
-                        Delt Savings Proposal
+                        {t('Delt Savings Proposal')}
                       </h2>
                     </div>
 
@@ -649,23 +689,23 @@ export function BackendAnalysis() {
                           <thead>
                             <tr className="bg-gray-50">
                               <th className="text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wide px-3 py-2.5"></th>
-                              <th className="text-right text-[11px] font-semibold text-gray-500 uppercase tracking-wide px-3 py-2.5">Current</th>
-                              <th className="text-right text-[11px] font-semibold text-brand uppercase tracking-wide px-3 py-2.5">With Delt</th>
+                              <th className="text-right text-[11px] font-semibold text-gray-500 uppercase tracking-wide px-3 py-2.5">{t('Current')}</th>
+                              <th className="text-right text-[11px] font-semibold text-brand uppercase tracking-wide px-3 py-2.5">{t('With Delt')}</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-gray-100">
-                            <CompareRow label="Effective Rate" current={`${proposal.currentRate}%`} delt={`${proposal.deltRate}%`} />
-                            <CompareRow label="Monthly Cost" current={fmt(proposal.currentMonthlyCost)} delt={fmt(proposal.deltMonthlyCost)} />
-                            <CompareRow label="Annual Cost" current={fmtWhole(proposal.currentAnnualCost)} delt={fmtWhole(proposal.deltAnnualCost)} />
+                            <CompareRow label={t('Effective Rate')} current={`${proposal.currentRate}%`} delt={`${proposal.deltRate}%`} />
+                            <CompareRow label={t('Monthly Cost')} current={fmt(proposal.currentMonthlyCost)} delt={fmt(proposal.deltMonthlyCost)} />
+                            <CompareRow label={t('Annual Cost')} current={fmtWhole(proposal.currentAnnualCost)} delt={fmtWhole(proposal.deltAnnualCost)} />
                             <tr className="bg-emerald-50/50">
-                              <td className="px-3 py-3 text-sm font-semibold text-gray-900">Annual Savings</td>
+                              <td className="px-3 py-3 text-sm font-semibold text-gray-900">{t('Annual Savings')}</td>
                               <td className="px-3 py-3 text-right"></td>
                               <td className="px-3 py-3 text-right">
                                 <span className="text-base font-bold text-emerald-600">{fmtWhole(proposal.annualSavings)}</span>
                               </td>
                             </tr>
                             <tr className="bg-emerald-50/50">
-                              <td className="px-3 py-3 text-sm font-semibold text-gray-900">Savings %</td>
+                              <td className="px-3 py-3 text-sm font-semibold text-gray-900">{t('Savings %')}</td>
                               <td className="px-3 py-3 text-right"></td>
                               <td className="px-3 py-3 text-right">
                                 <span className="inline-block px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-sm font-bold">{proposal.savingsPercent}%</span>
@@ -677,16 +717,22 @@ export function BackendAnalysis() {
 
                       {/* Savings callout */}
                       <div className="mt-4 bg-emerald-50 border border-emerald-200 rounded-[8px] p-4 text-center">
-                        <p className="text-xs text-emerald-600 font-medium mb-1">Projected Annual Savings</p>
+                        <p className="text-xs text-emerald-600 font-medium mb-1">{t('Projected Annual Savings')}</p>
                         <p className="text-3xl font-bold text-emerald-700">{fmtWhole(proposal.annualSavings)}</p>
-                        <p className="text-xs text-emerald-500 mt-1">{proposal.savingsPercent}% reduction in processing costs</p>
+                        <p className="text-xs text-emerald-500 mt-1">{proposal.savingsPercent}% {t('reduction in processing costs')}</p>
                       </div>
 
                       {/* CTA buttons */}
                       <div className="mt-auto pt-5 flex items-center gap-3">
-                        <button className="flex-1 px-4 py-2.5 bg-brand text-white text-sm font-medium rounded-[6px] hover:bg-brand-hover transition-colors flex items-center justify-center gap-2">
+                        <button
+                          onClick={() => {
+                            const ok = openProposalPdf({ extracted, programs, focusKey: bestProgram?.key ?? null, preparedBy: displayName, preparedByEmail: sessionEmail, lang });
+                            if (!ok) toast.error('Pop-up blocked — allow pop-ups for this site to generate the proposal.');
+                          }}
+                          className="flex-1 px-4 py-2.5 bg-brand text-white text-sm font-medium rounded-[6px] hover:bg-brand-hover transition-colors flex items-center justify-center gap-2"
+                        >
                           <Download className="w-4 h-4" />
-                          Generate Proposal PDF
+                          {t('Generate Proposal PDF')}
                         </button>
                         {autoLeadCreated ? (
                           <button
@@ -694,7 +740,7 @@ export function BackendAnalysis() {
                             className="flex-1 px-4 py-2.5 bg-emerald-50 text-emerald-700 text-sm font-medium rounded-[6px] border border-emerald-200 hover:bg-emerald-100 transition-colors flex items-center justify-center gap-2"
                           >
                             <CheckCircle2 className="w-4 h-4" />
-                            Lead Created — View
+                            {t('Lead Created — View')}
                           </button>
                         ) : (
                           <button
@@ -702,7 +748,7 @@ export function BackendAnalysis() {
                             className="flex-1 px-4 py-2.5 bg-white text-brand text-sm font-medium rounded-[6px] border border-brand hover:bg-brand/5 transition-colors flex items-center justify-center gap-2"
                           >
                             <UserPlus className="w-4 h-4" />
-                            Create Lead
+                            {t('Create Lead')}
                           </button>
                         )}
                       </div>
@@ -715,21 +761,21 @@ export function BackendAnalysis() {
                   <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
                     <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
                       <Sparkles className="w-4 h-4 text-brand" />
-                      Delt Pricing Programs
+                      {t('Delt Pricing Programs')}
                     </h2>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-gray-400">Risk tier</span>
+                      <span className="text-xs text-gray-400">{t('Risk tier')}</span>
                       <div className="flex rounded-[6px] border border-gray-200 overflow-hidden">
-                        {RISK_TIERS.map(t => (
+                        {RISK_TIERS.map(tier => (
                           <button
-                            key={t.key}
-                            onClick={() => setRiskTier(t.key as RiskTierKey)}
+                            key={tier.key}
+                            onClick={() => setRiskTier(tier.key as RiskTierKey)}
                             className={`px-3 py-1.5 text-xs font-medium transition-colors ${
-                              riskTier === t.key ? 'bg-brand text-white' : 'bg-white text-gray-500 hover:text-gray-700'
+                              riskTier === tier.key ? 'bg-brand text-white' : 'bg-white text-gray-500 hover:text-gray-700'
                             }`}
-                            title={t.desc}
+                            title={t(tier.desc)}
                           >
-                            {t.label.replace(' Risk', '')}
+                            {t(tier.label.replace(' Risk', ''))}
                           </button>
                         ))}
                       </div>
@@ -747,28 +793,28 @@ export function BackendAnalysis() {
                           }`}
                         >
                           <div className="flex items-center justify-between">
-                            <p className="text-sm font-semibold text-gray-900">{p.name}</p>
+                            <p className="text-sm font-semibold text-gray-900">{t(p.name)}</p>
                             {recommended && (
                               <span className="px-2 py-0.5 rounded-full bg-brand text-white text-[10px] font-bold uppercase tracking-wide">
-                                Recommended
+                                {t('Recommended')}
                               </span>
                             )}
                           </div>
-                          <p className="text-xs text-gray-500 mt-1 leading-snug">{p.tagline}</p>
-                          <p className="mt-3 inline-block text-xs font-mono text-gray-600 bg-gray-100 px-2 py-1 rounded-[6px] self-start">{p.terms}</p>
+                          <p className="text-xs text-gray-500 mt-1 leading-snug">{t(p.tagline)}</p>
+                          <p className="mt-3 inline-block text-xs font-mono text-gray-600 bg-gray-100 px-2 py-1 rounded-[6px] self-start">{tTerms(p.terms)}</p>
                           <div className="mt-4 pt-3 border-t border-gray-100 grid grid-cols-2 gap-2">
                             <div>
-                              <p className="text-[11px] text-gray-500">Merchant pays</p>
+                              <p className="text-[11px] text-gray-500">{t('Merchant pays')}</p>
                               <p className="text-sm font-bold text-gray-900 tabular-nums">{fmt(p.monthlyCost)}<span className="text-[11px] font-medium text-gray-400">/mo</span></p>
                             </div>
                             <div>
-                              <p className="text-[11px] text-gray-500">Annual savings</p>
+                              <p className="text-[11px] text-gray-500">{t('Annual savings')}</p>
                               <p className="text-sm font-bold text-emerald-600 tabular-nums">{fmtWhole(p.annualSavings)}</p>
                             </div>
                           </div>
                           <div className="mt-2">
                             <span className="inline-block px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold">
-                              {p.savingsPct}% less than today
+                              {p.savingsPct}% {t('less than today')}
                             </span>
                           </div>
                         </div>
@@ -778,13 +824,13 @@ export function BackendAnalysis() {
 
                   {/* Annual cost comparison */}
                   <div className="px-5 pb-5">
-                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Annual Processing Cost</p>
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">{t('Annual Processing Cost')}</p>
                     <div className="border border-gray-200 rounded-[6px] p-3" style={{ height: 180 }}>
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart
                           data={[
-                            { name: 'Current', cost: Math.round(extracted.currentMonthlyCost * 12), kind: 'current' },
-                            ...programs.map(p => ({ name: p.name, cost: p.annualCost, kind: p.key })),
+                            { name: t('Current'), cost: Math.round(extracted.currentMonthlyCost * 12), kind: 'current' },
+                            ...programs.map(p => ({ name: t(p.name), cost: p.annualCost, kind: p.key })),
                           ]}
                           margin={{ top: 20, right: 12, bottom: 0, left: 12 }}
                         >
@@ -809,19 +855,29 @@ export function BackendAnalysis() {
                       </ResponsiveContainer>
                     </div>
                     <p className="text-[11px] text-gray-400 mt-2">
-                      Cash Discount shows the merchant's own cost — the {'\u2248'}4% service fee is customer-paid. Program pricing keyed to this statement's volume band and the selected risk tier.
+                      {t("Cash Discount shows the merchant's own cost — the ≈4% service fee is customer-paid. Program pricing keyed to this statement's volume band and the selected risk tier.")}
                     </p>
                   </div>
                 </div>
+
+                {/* ── Delt Economics (internal only) ── */}
+                <AnalysisEconomicsCard
+                  extracted={extracted}
+                  riskTier={riskTier}
+                  bestSavingsKey={bestProgram?.key ?? null}
+                />
+                </>
+                )}
               </>
             )}
 
             {/* ── History: all analyses / by merchant ── */}
+            {!merchantView && (
             <div className="bg-white rounded-[8px] border border-gray-200 overflow-hidden">
               <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
                 <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
                   <Clock className="w-4 h-4 text-gray-400" />
-                  Analysis History
+                  {t('Analysis History')}
                   {merchantFilter && (
                     <button
                       onClick={() => setMerchantFilter(null)}
@@ -837,22 +893,22 @@ export function BackendAnalysis() {
                     {([
                       { key: 'all' as const, label: 'All analyses' },
                       { key: 'merchant' as const, label: 'By merchant' },
-                    ]).map(t => (
+                    ]).map(tab => (
                       <button
-                        key={t.key}
-                        onClick={() => { setHistoryView(t.key); setMerchantFilter(null); }}
+                        key={tab.key}
+                        onClick={() => { setHistoryView(tab.key); setMerchantFilter(null); }}
                         className={`px-3 py-1.5 text-xs font-medium transition-colors ${
-                          historyView === t.key
+                          historyView === tab.key
                             ? 'bg-brand text-white'
                             : 'bg-white text-gray-500 hover:text-gray-700'
                         }`}
                       >
-                        {t.label}
+                        {t(tab.label)}
                       </button>
                     ))}
                   </div>
                   <span className="text-xs text-gray-400">
-                    {historyView === 'merchant' ? `${merchants.length} merchants` : `${visibleHistory.length} analyses`}
+                    {historyView === 'merchant' ? `${merchants.length} ${t('merchants')}` : `${visibleHistory.length} ${t('analyses')}`}
                   </span>
                 </div>
               </div>
@@ -871,15 +927,15 @@ export function BackendAnalysis() {
                   <div className="px-5 py-4 border-b border-gray-100 bg-gray-50/50">
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                       <div>
-                        <p className="text-[11px] text-gray-500 font-medium">Statements analyzed</p>
+                        <p className="text-[11px] text-gray-500 font-medium">{t('Statements analyzed')}</p>
                         <p className="text-lg font-bold text-gray-900 tabular-nums">{rows.length}</p>
                       </div>
                       <div>
-                        <p className="text-[11px] text-gray-500 font-medium">Latest effective rate</p>
+                        <p className="text-[11px] text-gray-500 font-medium">{t('Latest effective rate')}</p>
                         <p className="text-lg font-bold text-gray-900 tabular-nums">{latest.currentRate}%</p>
                       </div>
                       <div>
-                        <p className="text-[11px] text-gray-500 font-medium">Best annual savings</p>
+                        <p className="text-[11px] text-gray-500 font-medium">{t('Best annual savings')}</p>
                         <p className="text-lg font-bold text-emerald-600 tabular-nums">{fmtWhole(best)}</p>
                       </div>
                       <div className="flex items-center justify-end gap-2">
@@ -888,7 +944,7 @@ export function BackendAnalysis() {
                             onClick={() => navigate('/leads')}
                             className="px-3 py-2 bg-brand text-white text-xs font-medium rounded-[6px] hover:bg-brand-hover transition-colors flex items-center gap-1.5"
                           >
-                            Open Lead
+                            {t('Open Lead')}
                             <ArrowRight className="w-3.5 h-3.5" />
                           </button>
                         )}
@@ -896,7 +952,7 @@ export function BackendAnalysis() {
                     </div>
                     {trend.length >= 2 && (
                       <div className="mt-3" style={{ height: 110 }}>
-                        <p className="text-[11px] text-gray-500 font-medium mb-1">Effective rate over time</p>
+                        <p className="text-[11px] text-gray-500 font-medium mb-1">{t('Effective rate over time')}</p>
                         <ResponsiveContainer width="100%" height={90}>
                           <LineChart data={trend} margin={{ top: 6, right: 12, bottom: 0, left: 0 }}>
                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eef0f3" />
@@ -923,20 +979,20 @@ export function BackendAnalysis() {
               {history.length === 0 ? (
                 <div className="py-12 text-center">
                   <FileText className="w-8 h-8 text-gray-300 mx-auto mb-3" />
-                  <p className="text-sm font-medium text-gray-700">No analyses yet</p>
-                  <p className="text-xs text-gray-400 mt-1">Upload a merchant statement above — every analysis is saved here.</p>
+                  <p className="text-sm font-medium text-gray-700">{t('No analyses yet')}</p>
+                  <p className="text-xs text-gray-400 mt-1">{t('Upload a merchant statement above — every analysis is saved here.')}</p>
                 </div>
               ) : historyView === 'merchant' ? (
                 <div className="overflow-x-auto">
                   <table className="w-full min-w-[700px]">
                     <thead>
                       <tr className="bg-gray-50 border-b border-gray-200">
-                        <th className="text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wide pl-5 pr-3 py-2.5">Merchant</th>
-                        <th className="text-right text-[11px] font-semibold text-gray-500 uppercase tracking-wide px-3 py-2.5">Analyses</th>
-                        <th className="text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wide px-3 py-2.5">Last Analyzed</th>
-                        <th className="text-right text-[11px] font-semibold text-gray-500 uppercase tracking-wide px-3 py-2.5">Current → Proposed</th>
-                        <th className="text-right text-[11px] font-semibold text-gray-500 uppercase tracking-wide px-3 py-2.5">Best Savings</th>
-                        <th className="text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wide pl-3 pr-5 py-2.5">Status</th>
+                        <th className="text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wide pl-5 pr-3 py-2.5">{t('Merchant')}</th>
+                        <th className="text-right text-[11px] font-semibold text-gray-500 uppercase tracking-wide px-3 py-2.5">{t('Analyses')}</th>
+                        <th className="text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wide px-3 py-2.5">{t('Last Analyzed')}</th>
+                        <th className="text-right text-[11px] font-semibold text-gray-500 uppercase tracking-wide px-3 py-2.5">{t('Current → Proposed')}</th>
+                        <th className="text-right text-[11px] font-semibold text-gray-500 uppercase tracking-wide px-3 py-2.5">{t('Best Savings')}</th>
+                        <th className="text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wide pl-3 pr-5 py-2.5">{t('Status')}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
@@ -964,7 +1020,7 @@ export function BackendAnalysis() {
                           </td>
                           <td className="pl-3 pr-5 py-3">
                             <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${statusBadge(m.latest.status)}`}>
-                              {m.latest.status}
+                              {t(m.latest.status)}
                             </span>
                           </td>
                         </tr>
@@ -977,12 +1033,12 @@ export function BackendAnalysis() {
                   <table className="w-full min-w-[700px]">
                     <thead>
                       <tr className="bg-gray-50 border-b border-gray-200">
-                        <th className="text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wide pl-5 pr-3 py-2.5">Merchant Name</th>
-                        <th className="text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wide px-3 py-2.5">Date Analyzed</th>
-                        <th className="text-right text-[11px] font-semibold text-gray-500 uppercase tracking-wide px-3 py-2.5">Current Rate</th>
-                        <th className="text-right text-[11px] font-semibold text-gray-500 uppercase tracking-wide px-3 py-2.5">Proposed Rate</th>
-                        <th className="text-right text-[11px] font-semibold text-gray-500 uppercase tracking-wide px-3 py-2.5">Savings</th>
-                        <th className="text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wide pl-3 pr-5 py-2.5">Status</th>
+                        <th className="text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wide pl-5 pr-3 py-2.5">{t('Merchant Name')}</th>
+                        <th className="text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wide px-3 py-2.5">{t('Date Analyzed')}</th>
+                        <th className="text-right text-[11px] font-semibold text-gray-500 uppercase tracking-wide px-3 py-2.5">{t('Current Rate')}</th>
+                        <th className="text-right text-[11px] font-semibold text-gray-500 uppercase tracking-wide px-3 py-2.5">{t('Proposed Rate')}</th>
+                        <th className="text-right text-[11px] font-semibold text-gray-500 uppercase tracking-wide px-3 py-2.5">{t('Savings')}</th>
+                        <th className="text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wide pl-3 pr-5 py-2.5">{t('Status')}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
@@ -1001,7 +1057,7 @@ export function BackendAnalysis() {
                               onChange={e => void updateStatus(row.id, e.target.value as HistoryStatus)}
                               className={`px-2 py-1 rounded-full text-xs font-medium border-0 cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand/20 ${statusBadge(row.status)}`}
                             >
-                              {HISTORY_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+                              {HISTORY_STATUSES.map(s => <option key={s} value={s}>{t(s)}</option>)}
                             </select>
                           </td>
                         </tr>
@@ -1011,6 +1067,7 @@ export function BackendAnalysis() {
                 </div>
               )}
             </div>
+            )}
           </>
         )}
       </div>

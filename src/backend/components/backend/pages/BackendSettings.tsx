@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import {
   Settings, ChevronDown, Link2, Shield, Users, ClipboardList,
-  Plus, Check, X, Eye, EyeOff, Lock, Unlock, UserCircle,
+  Plus, Check, X, Eye, EyeOff, Lock, Unlock, UserCircle, Languages,
 } from 'lucide-react';
 import { useAppNavigate } from '../NavigationContext';
+import { useLang } from '../i18n';
 
 // ─── ROLE DEFINITIONS ───────────────────────────────────────────
 const ROLES = [
@@ -158,6 +159,9 @@ type SettingsTab = 'general' | 'integrations' | 'roles' | 'users' | 'audit';
 // ─── COMPONENT ──────────────────────────────────────────────────
 export function BackendSettings() {
   const { currentPage, navigate } = useAppNavigate();
+  const { lang, setLang, t } = useLang();
+  // The tabs map below uses `t` as its loop variable — alias the translator.
+  const tabLabel = t;
 
   // Derive initial tab from current route
   const initialTab: SettingsTab = currentPage === '/settings/integrations' ? 'integrations'
@@ -183,7 +187,36 @@ export function BackendSettings() {
       <div className="max-w-[1280px] mx-auto px-6 py-6">
         {/* Header */}
         <div className="mb-6">
-          <p className="text-sm text-gray-500 mt-1">Platform configuration, access control, and integrations</p>
+          <p className="text-sm text-gray-500 mt-1">{t('Platform configuration, access control, and integrations')}</p>
+        </div>
+
+        {/* ── Language / Idioma ── */}
+        <div className="mb-6 bg-white border border-gray-200 rounded-[8px] px-5 py-4 flex items-center justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-brand/10 flex items-center justify-center shrink-0">
+              <Languages className="w-4.5 h-4.5 text-brand" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-gray-900">{t('Language')} / Idioma</p>
+              <p className="text-xs text-gray-500 mt-0.5">{t('Applies to your workspace on this device.')}</p>
+            </div>
+          </div>
+          <div className="flex rounded-[6px] border border-gray-200 overflow-hidden">
+            {([
+              { key: 'en' as const, label: 'English' },
+              { key: 'es' as const, label: 'Español' },
+            ]).map(o => (
+              <button
+                key={o.key}
+                onClick={() => setLang(o.key)}
+                className={`px-4 py-2 text-sm font-medium transition-colors ${
+                  lang === o.key ? 'bg-brand text-white' : 'bg-white text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                {o.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Tab Bar */}
@@ -200,7 +233,7 @@ export function BackendSettings() {
                 }`}
               >
                 <t.icon className="w-3.5 h-3.5" />
-                {t.label}
+                {tabLabel(t.label)}
               </button>
             ))}
           </div>
