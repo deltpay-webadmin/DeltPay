@@ -87,8 +87,25 @@ CRM backend. You'll paste the SAME value in two places (here and Step 5).
 ## Step 4 — Deploy the updated server function (terminal, ~5 min)
 
 The new code is merged into GitHub, but the Supabase edge function is a
-separate deploy. One-time terminal session (works on Mac Terminal or
-Windows PowerShell; needs Node.js — https://nodejs.org, LTS version):
+separate deploy. Two ways to do it — pick one.
+
+**Option A — no terminal (recommended):** the repo has a GitHub Action
+(`.github/workflows/deploy-plaid-functions.yml`) that runs the deploy on
+GitHub's servers. One-time setup:
+
+1. Supabase dashboard → click your **account avatar** (bottom-left) →
+   **Access Tokens** → **Generate new token** (name it e.g.
+   `github-deploys`) → copy the token.
+2. GitHub → DeltPay repo → **Settings → Secrets and variables →
+   Actions** → **New repository secret** → Name
+   `SUPABASE_ACCESS_TOKEN`, Secret = the token → **Add secret**.
+3. Repo → **Actions** tab → **Deploy Plaid edge functions** →
+   **Run workflow** → green **Run workflow** button. A green check
+   (~1–2 min) means deployed. It also re-runs automatically whenever
+   Plaid function code changes on main.
+
+**Option B — terminal** (Mac Terminal or Windows PowerShell; needs
+Node.js — https://nodejs.org, LTS version):
 
 ```sh
 git clone https://github.com/deltpay-webadmin/DeltPay.git
