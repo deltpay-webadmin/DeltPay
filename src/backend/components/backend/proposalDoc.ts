@@ -21,6 +21,8 @@ export interface ProposalInput {
 
 const esc = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+/** Safely embed a string as a JS literal inside the generated <script>. */
+const js = (s: string) => JSON.stringify(s).replace(/</g, '\\u003c');
 const fmt = (n: number) => n.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 });
 const fmtWhole = (n: number) => n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
 
@@ -53,6 +55,22 @@ export function buildProposalHtml(input: ProposalInput): string {
   const currentAnnual = Math.round(ex.currentMonthlyCost * 12);
   const maxFee = Math.max(...ex.fees.map(f => f.amount), 1);
   const maxCost = Math.max(currentAnnual, focus.annualCost, 1);
+
+  const fileName = `Delt-Proposal-${ex.merchantName.replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '') || 'Merchant'}-${new Date().toISOString().slice(0, 10)}.html`;
+  const mailSubject = `Your Delt savings proposal — ${ex.merchantName}`;
+  const mailBody = [
+    `Hi,`,
+    ``,
+    `Thank you for sharing your processing statement. We went through it line by line, and the numbers are worth a look:`,
+    ``,
+    `• Today: ${fmt(ex.currentMonthlyCost)}/month in processing costs (${ex.effectiveRatePct}% effective rate)`,
+    `• With Delt ${focus.name}: ${fmt(focus.monthlyCost)}/month`,
+    `• Estimated savings: ${fmtWhole(focus.annualSavings)} per year`,
+    ``,
+    `Your full proposal is attached (it opens in any browser). Happy to walk through it together whenever works for you.`,
+    ``,
+    preparedBy ? `${preparedBy}\nDelt` : `The Delt Team`,
+  ].join('\n');
 
   const feeRows = ex.fees.map(f => `
     <tr>
@@ -172,9 +190,63 @@ export function buildProposalHtml(input: ProposalInput): string {
   .sig > div { flex: 1; }
   .sigline { border-bottom: 1px solid #9ca3af; height: 34px; margin-bottom: 5px; }
   .footer { position: absolute; bottom: 0.45in; left: 0.75in; right: 0.75in; display: flex; justify-content: space-between; font-size: 10px; color: #9ca3af; border-top: 1px solid #eef0f3; padding-top: 8px; }
+
+  /* ── Screen-only toolbar (Present / Download / PDF / Send) ── */
+  .toolbar {
+    position: fixed; top: 14px; right: 16px; z-index: 50;
+    display: flex; gap: 8px; align-items: center;
+  }
+  .toolbar button {
+    font: inherit; font-size: 12px; font-weight: 600; cursor: pointer;
+    border-radius: 8px; padding: 8px 14px; border: 1px solid #d1d5db;
+    background: #fff; color: #374151; box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .toolbar button:hover { background: #f9fafb; }
+  .toolbar button.primary { background: #2E6BFF; border-color: #2E6BFF; color: #fff; }
+  .toolbar button.primary:hover { background: #2458E6; }
+
+  /* ── Presentation mode: one page at a time, scaled to the screen ── */
+  body.present { background: #0f1115 !important; overflow: hidden; }
+  body.present .page { display: none; margin: 0; box-shadow: none; }
+  body.present .page.active {
+    display: block; position: fixed; top: calc(50% - 30px); left: 50%;
+    transform: translate(-50%, -50%) scale(var(--pscale, 1));
+    border-radius: 4px; box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+  }
+  body.present .toolbar { display: none; }
+  .pnav {
+    display: none; position: fixed; z-index: 60; left: 0; right: 0; bottom: 22px;
+    justify-content: center; align-items: center; gap: 14px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+  body.present .pnav { display: flex; }
+  .pnav button {
+    font: inherit; font-size: 16px; font-weight: 700; cursor: pointer;
+    width: 40px; height: 40px; border-radius: 50%; border: none;
+    background: rgba(255,255,255,0.14); color: #fff;
+  }
+  .pnav button:hover { background: rgba(255,255,255,0.28); }
+  .pnav .counter { color: rgba(255,255,255,0.75); font-size: 13px; min-width: 52px; text-align: center; }
+  .pnav .hint { color: rgba(255,255,255,0.45); font-size: 11px; }
+  @media print { .toolbar, .pnav { display: none !important; } body.present .page { display: block; position: static; transform: none; } }
 </style>
 </head>
 <body>
+
+<div class="toolbar">
+  <button class="primary" onclick="startPresent()" title="Full-screen, page-by-page walkthrough">▶ Present</button>
+  <button onclick="downloadProposal()" title="Save the proposal as a file you can attach or share">⬇ Download</button>
+  <button onclick="window.print()" title="Print or save as PDF">🖨 Save as PDF</button>
+  <button onclick="sendProposal()" title="Open a pre-written email and download the file to attach">✉ Send</button>
+</div>
+
+<div class="pnav">
+  <button onclick="step(-1)" title="Previous page">‹</button>
+  <span class="counter" id="pcounter"></span>
+  <button onclick="step(1)" title="Next page">›</button>
+  <span class="hint">← → to navigate · Esc to exit</span>
+</div>
 
 <!-- ── Page 1: Cover ── -->
 <div class="page cover">
@@ -293,11 +365,97 @@ export function buildProposalHtml(input: ProposalInput): string {
   <div class="footer"><span>Savings proposal — ${name}</span><span>Prepared by Delt · ${today}</span></div>
 </div>
 
+<script>
+var FILENAME = ${js(fileName)};
+var MAIL_SUBJECT = ${js(mailSubject)};
+var MAIL_BODY = ${js(mailBody)};
+
+var pages = Array.prototype.slice.call(document.querySelectorAll('.page'));
+var idx = 0;
+
+function fitPage() {
+  // .page is 8.5in × 11in → 816 × 1056 CSS px at 96dpi.
+  var s = Math.min(window.innerWidth / 856, (window.innerHeight - 90) / 1056);
+  document.documentElement.style.setProperty('--pscale', String(Math.max(0.2, s)));
+}
+
+function show(i) {
+  idx = Math.max(0, Math.min(pages.length - 1, i));
+  pages.forEach(function (p, n) { p.classList.toggle('active', n === idx); });
+  var c = document.getElementById('pcounter');
+  if (c) c.textContent = (idx + 1) + ' / ' + pages.length;
+}
+
+function step(d) { show(idx + d); }
+
+function startPresent() {
+  document.body.classList.add('present');
+  fitPage();
+  show(0);
+  var el = document.documentElement;
+  if (el.requestFullscreen) el.requestFullscreen().catch(function () {});
+}
+
+function endPresent() {
+  document.body.classList.remove('present');
+  pages.forEach(function (p) { p.classList.remove('active'); });
+  if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(function () {});
+}
+
+document.addEventListener('fullscreenchange', function () {
+  // Leaving browser fullscreen (Esc) also leaves presentation mode.
+  if (!document.fullscreenElement && document.body.classList.contains('present')) endPresent();
+});
+
+document.addEventListener('keydown', function (e) {
+  if (!document.body.classList.contains('present')) return;
+  if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') { e.preventDefault(); step(1); }
+  else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); step(-1); }
+  else if (e.key === 'Escape') endPresent();
+});
+
+document.addEventListener('click', function (e) {
+  if (!document.body.classList.contains('present')) return;
+  // Click on the page itself advances; toolbar/nav buttons keep their own
+  // handlers (the Present click itself bubbles here, so exclude the toolbar).
+  if (e.target.closest && (e.target.closest('.pnav') || e.target.closest('.toolbar'))) return;
+  step(1);
+});
+
+window.addEventListener('resize', function () {
+  if (document.body.classList.contains('present')) fitPage();
+});
+
+function downloadProposal() {
+  var wasPresenting = document.body.classList.contains('present');
+  if (wasPresenting) endPresent();
+  var html = '<!DOCTYPE html>\\n' + document.documentElement.outerHTML;
+  var blob = new Blob([html], { type: 'text/html' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = FILENAME;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function sendProposal() {
+  // No email backend — download the file to attach, then open a pre-written email.
+  downloadProposal();
+  window.location.href = 'mailto:?subject=' + encodeURIComponent(MAIL_SUBJECT) + '&body=' + encodeURIComponent(MAIL_BODY);
+}
+</script>
+
 </body>
 </html>`;
 }
 
-/** Open the proposal in a new window and bring up the print dialog (→ Save as PDF). */
+/**
+ * Open the proposal in a new window. Its built-in toolbar offers Present
+ * (full-screen walkthrough), Download, Save as PDF, and Send.
+ */
 export function openProposalPdf(input: ProposalInput): boolean {
   const html = buildProposalHtml(input);
   if (!html) return false;
@@ -307,8 +465,6 @@ export function openProposalPdf(input: ProposalInput): boolean {
   win.document.write(html);
   win.document.close();
   win.document.title = `Savings Proposal — ${input.extracted.merchantName}`;
-  // Let layout settle before invoking print so bars/pages render correctly.
   win.focus();
-  setTimeout(() => { try { win.print(); } catch { /* window closed */ } }, 350);
   return true;
 }
