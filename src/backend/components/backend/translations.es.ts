@@ -82,6 +82,15 @@ export const ES: Record<string, string> = {
   'Type a command or search…': 'Escriba un comando o busque…',
   'No results found': 'No se encontraron resultados',
 
+  // ── Notifications bell ──
+  'Notifications': 'Notificaciones',
+  'new': 'nuevas',
+  "You're all caught up.": 'Está al día.',
+  'View all activity': 'Ver toda la actividad',
+  'New lead': 'Nuevo prospecto',
+  'Statement analyzed': 'Estado de cuenta analizado',
+  'projected savings': 'de ahorro proyectado',
+
   // ── Settings ──
   'Platform configuration, access control, and integrations': 'Configuración de la plataforma, control de acceso e integraciones',
   'Language': 'Idioma',

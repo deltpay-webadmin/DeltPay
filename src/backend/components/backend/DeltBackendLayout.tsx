@@ -36,6 +36,7 @@ import { BackendWorkspace } from './pages/BackendWorkspace';
 import { BackendActivityTimeline } from './pages/BackendActivityTimeline';
 import { BackendTasks } from './pages/BackendTasks';
 import { BackendInbox } from './pages/BackendInbox';
+import { NotificationsBell } from './NotificationsBell';
 import { BackendWebsites } from './pages/BackendWebsites';
 import { BackendSubscriptions } from './pages/BackendSubscriptions';
 import { BackendDocuments } from './pages/BackendDocuments';
@@ -58,7 +59,6 @@ import {
   DollarSign,
   Sparkles,
   Search,
-  Bell,
   Menu,
   X,
   Banknote,
@@ -699,10 +699,7 @@ export function DeltBackendLayout() {
                 </button>
 
                 {/* Notifications */}
-                <button className="relative p-2 hover:bg-white/[0.06] rounded-full transition-colors" aria-label="Notifications">
-                  <Bell className="w-[18px] h-[18px] text-(--dp-text-muted)" />
-                  <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-(--dp-accent) rounded-full" />
-                </button>
+                <NotificationsBell onNavigate={handleNavigate} />
 
                 {/* Avatar */}
                 <button
