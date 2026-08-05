@@ -45,27 +45,9 @@ interface PayrollRun {
 }
 
 // ── Data ──
-const upcomingItems: PayrollLineItem[] = [
-  // Employees
-  { id: 'P-001', name: 'Carlos Rivera', category: 'Employee', type: 'Salary', grossPay: 6041.67, deductions: 420, taxes: 1450, netPay: 4171.67, paymentMethod: 'Direct Deposit' },
-  { id: 'P-002', name: 'Patrick Oduya', category: 'Employee', type: 'Salary', grossPay: 5208.33, deductions: 380, taxes: 1250, netPay: 3578.33, paymentMethod: 'Direct Deposit' },
-  { id: 'P-003', name: 'Jason Park', category: 'Employee', type: 'Salary', grossPay: 4583.33, deductions: 350, taxes: 1100, netPay: 3133.33, paymentMethod: 'Direct Deposit' },
-  { id: 'P-004', name: 'Lyndon Tate', category: 'Employee', type: 'Salary', grossPay: 4083.33, deductions: 310, taxes: 980, netPay: 2793.33, paymentMethod: 'Direct Deposit' },
-  { id: 'P-005', name: 'Nina Voskresenskaya', category: 'Employee', type: 'Hourly', grossPay: 6800.00, deductions: 0, taxes: 1632, netPay: 5168.00, paymentMethod: 'Check' },
-  // Agent Commissions
-  { id: 'P-006', name: 'Sarah Johnson', category: 'Agent Commission', type: 'Commission', grossPay: 4250.00, deductions: 0, taxes: 1020, netPay: 3230.00, paymentMethod: 'Direct Deposit' },
-  { id: 'P-007', name: 'Michael Chen', category: 'Agent Commission', type: 'Commission', grossPay: 3800.00, deductions: 0, taxes: 912, netPay: 2888.00, paymentMethod: 'Direct Deposit' },
-  { id: 'P-008', name: 'James Miller', category: 'Agent Commission', type: 'Commission', grossPay: 5100.00, deductions: 0, taxes: 1224, netPay: 3876.00, paymentMethod: 'Direct Deposit' },
-];
+const upcomingItems: PayrollLineItem[] = [];
 
-const pastRuns: PayrollRun[] = [
-  { id: 'RUN-007', payDate: 'Apr 1, 2026', period: 'Mar 16–31', totalGross: 38_420, totalNet: 27_650, employeesPaid: 5, agentsPaid: 3, status: 'Processed' },
-  { id: 'RUN-006', payDate: 'Mar 15, 2026', period: 'Mar 1–15', totalGross: 37_890, totalNet: 27_210, employeesPaid: 5, agentsPaid: 3, status: 'Processed' },
-  { id: 'RUN-005', payDate: 'Mar 1, 2026', period: 'Feb 16–28', totalGross: 36_500, totalNet: 26_120, employeesPaid: 5, agentsPaid: 2, status: 'Processed' },
-  { id: 'RUN-004', payDate: 'Feb 15, 2026', period: 'Feb 1–15', totalGross: 35_200, totalNet: 25_400, employeesPaid: 4, agentsPaid: 3, status: 'Processed' },
-  { id: 'RUN-003', payDate: 'Feb 1, 2026', period: 'Jan 16–31', totalGross: 34_800, totalNet: 24_900, employeesPaid: 4, agentsPaid: 3, status: 'Failed' },
-  { id: 'RUN-002', payDate: 'Jan 15, 2026', period: 'Jan 1–15', totalGross: 33_600, totalNet: 24_100, employeesPaid: 4, agentsPaid: 2, status: 'Processed' },
-];
+const pastRuns: PayrollRun[] = [];
 
 // ── Helpers ──
 const fmt = (n: number) => `$${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -128,8 +110,8 @@ export function BackendPayroll() {
   const totalTaxes = upcomingItems.reduce((s, i) => s + i.taxes, 0);
   const totalNet = upcomingItems.reduce((s, i) => s + i.netPay, 0);
 
-  const lastPayroll = 27_650;
-  const ytdPayroll = 312_480;
+  const lastPayroll = 0;
+  const ytdPayroll = 0;
 
   return (
     <div className="h-full flex flex-col bg-canvas">
@@ -148,10 +130,10 @@ export function BackendPayroll() {
       <div className="px-6 py-6 flex-1 overflow-y-auto space-y-6">
         {/* Summary Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard label="Next Pay Date" value="Apr 15, 2026" icon={<Calendar className="w-5 h-5" />} sub="Semi-monthly — in 6 days" highlight />
+          <StatCard label="Next Pay Date" value="—" icon={<Calendar className="w-5 h-5" />} sub="Semi-monthly cycle" highlight />
           <StatCard label="Payroll Amount" value={fmt(totalNet)} icon={<DollarSign className="w-5 h-5" />} sub={`${upcomingItems.length} payees`} />
-          <StatCard label="Last Payroll Paid" value={fmt(lastPayroll)} icon={<CheckCircle className="w-5 h-5" />} sub="Apr 1, 2026" />
-          <StatCard label="YTD Payroll" value={fmt(ytdPayroll)} icon={<TrendingUp className="w-5 h-5" />} sub="Jan 1 – Apr 9, 2026" />
+          <StatCard label="Last Payroll Paid" value={fmt(lastPayroll)} icon={<CheckCircle className="w-5 h-5" />} sub="—" />
+          <StatCard label="YTD Payroll" value={fmt(ytdPayroll)} icon={<TrendingUp className="w-5 h-5" />} sub="Year to date" />
         </div>
 
         {/* Tabs */}
@@ -176,8 +158,8 @@ export function BackendPayroll() {
             <div className="flex items-center gap-4 px-4 py-3 bg-brand/5 border border-brand/15 rounded-[8px]">
               <Calendar className="w-5 h-5 text-brand" />
               <div>
-                <p className="text-sm font-medium text-gray-900">Pay Period: Apr 1–15, 2026</p>
-                <p className="text-xs text-gray-500">Scheduled for Apr 15, 2026 &middot; Semi-monthly cycle</p>
+                <p className="text-sm font-medium text-gray-900">Pay Period: —</p>
+                <p className="text-xs text-gray-500">No payroll scheduled &middot; Semi-monthly cycle</p>
               </div>
             </div>
 
@@ -188,6 +170,13 @@ export function BackendPayroll() {
                 <h3 className="text-sm font-semibold text-gray-900">Employees</h3>
                 <span className="text-xs text-gray-500">({employeeItems.length})</span>
               </div>
+              {employeeItems.length === 0 ? (
+                <div className="py-12 text-center">
+                  <Users className="w-8 h-8 text-gray-300 mx-auto mb-3" />
+                  <p className="text-sm font-medium text-gray-700">No employee payouts scheduled</p>
+                  <p className="text-xs text-gray-400 mt-1">Employees will appear here when a pay period is open.</p>
+                </div>
+              ) : (
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead className="bg-gray-50 border-b border-gray-200">
@@ -221,6 +210,7 @@ export function BackendPayroll() {
                   </tbody>
                 </table>
               </div>
+              )}
             </div>
 
             {/* Agent Commissions Section */}
@@ -230,6 +220,13 @@ export function BackendPayroll() {
                 <h3 className="text-sm font-semibold text-gray-900">Agent Commissions</h3>
                 <span className="text-xs text-gray-500">({agentItems.length})</span>
               </div>
+              {agentItems.length === 0 ? (
+                <div className="py-12 text-center">
+                  <UserCircle className="w-8 h-8 text-gray-300 mx-auto mb-3" />
+                  <p className="text-sm font-medium text-gray-700">No agent commissions due</p>
+                  <p className="text-xs text-gray-400 mt-1">Commission payouts sync here from the Agent Commissions module.</p>
+                </div>
+              ) : (
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead className="bg-gray-50 border-b border-gray-200">
@@ -262,6 +259,7 @@ export function BackendPayroll() {
                   </tbody>
                 </table>
               </div>
+              )}
             </div>
 
             {/* Totals Row */}
@@ -372,36 +370,26 @@ export function BackendPayroll() {
                 <h3 className="text-sm font-semibold text-gray-900">Agent Commission Integration</h3>
                 <span className="text-[10px] bg-purple-50 text-purple-700 border border-purple-200 rounded px-2 py-0.5 font-medium">Live Sync</span>
               </div>
-              <p className="text-xs text-gray-500 mb-4">Commission data auto-synced from Agent Commissions module. Last sync: 2 minutes ago.</p>
+              <p className="text-xs text-gray-500 mb-4">Commission data auto-synced from Agent Commissions module.</p>
               <div className="grid grid-cols-3 gap-4">
                 <div className="bg-purple-50 rounded-[8px] p-3 text-center">
-                  <p className="text-xl font-bold text-purple-700">$13,150</p>
+                  <p className="text-xl font-bold text-purple-700">$0</p>
                   <p className="text-[10px] text-purple-600 mt-0.5">Total Commissions This Period</p>
                 </div>
                 <div className="bg-purple-50 rounded-[8px] p-3 text-center">
-                  <p className="text-xl font-bold text-purple-700">3</p>
+                  <p className="text-xl font-bold text-purple-700">0</p>
                   <p className="text-[10px] text-purple-600 mt-0.5">Agents With Payouts</p>
                 </div>
                 <div className="bg-purple-50 rounded-[8px] p-3 text-center">
-                  <p className="text-xl font-bold text-purple-700">7</p>
+                  <p className="text-xl font-bold text-purple-700">0</p>
                   <p className="text-[10px] text-purple-600 mt-0.5">Deals Earning Commissions</p>
                 </div>
               </div>
               <div className="mt-4 border-t border-gray-200 pt-3">
-                <div className="space-y-2">
-                  {[
-                    { name: 'Sarah Johnson', deals: 3, amount: 4250 },
-                    { name: 'Michael Chen', deals: 2, amount: 3800 },
-                    { name: 'James Miller', deals: 2, amount: 5100 },
-                  ].map(agent => (
-                    <div key={agent.name} className="flex items-center justify-between text-sm px-3 py-2 bg-gray-50 rounded-[6px]">
-                      <span className="text-gray-700 font-medium">{agent.name}</span>
-                      <div className="flex items-center gap-4">
-                        <span className="text-xs text-gray-500">{agent.deals} deals</span>
-                        <span className="font-semibold text-gray-900">${agent.amount.toLocaleString()}</span>
-                      </div>
-                    </div>
-                  ))}
+                <div className="py-12 text-center">
+                  <UserCircle className="w-8 h-8 text-gray-300 mx-auto mb-3" />
+                  <p className="text-sm font-medium text-gray-700">No agent payouts this period</p>
+                  <p className="text-xs text-gray-400 mt-1">Agents earning commissions will be listed here.</p>
                 </div>
               </div>
             </div>
@@ -415,6 +403,13 @@ export function BackendPayroll() {
               <h3 className="text-sm font-semibold text-gray-900">Payroll History</h3>
               <p className="text-xs text-gray-500 mt-0.5">{pastRuns.length} payroll runs this year</p>
             </div>
+            {pastRuns.length === 0 ? (
+              <div className="py-12 text-center">
+                <Banknote className="w-8 h-8 text-gray-300 mx-auto mb-3" />
+                <p className="text-sm font-medium text-gray-700">No payroll runs yet</p>
+                <p className="text-xs text-gray-400 mt-1">Completed payroll runs will appear here.</p>
+              </div>
+            ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-gray-50 border-b border-gray-200">
@@ -459,6 +454,7 @@ export function BackendPayroll() {
                 </tbody>
               </table>
             </div>
+            )}
           </div>
         )}
       </div>

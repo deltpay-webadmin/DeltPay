@@ -83,13 +83,7 @@ interface RecentExport {
   status: 'ready' | 'generating' | 'failed';
 }
 
-const RECENT_EXPORTS: RecentExport[] = [
-  { id: 'EXP-101', reportName: 'Revenue Summary', format: 'xlsx', generatedAt: '2026-04-17 06:02', size: '1.2 MB', status: 'ready' },
-  { id: 'EXP-100', reportName: 'Active Portfolio Summary', format: 'csv', generatedAt: '2026-04-17 06:01', size: '340 KB', status: 'ready' },
-  { id: 'EXP-099', reportName: 'Default & Delinquency Report', format: 'pdf', generatedAt: '2026-04-17 06:01', size: '890 KB', status: 'ready' },
-  { id: 'EXP-098', reportName: 'State Disclosure Audit', format: 'xlsx', generatedAt: '2026-04-17 06:00', size: '2.1 MB', status: 'ready' },
-  { id: 'EXP-097', reportName: 'Cross-Sell Opportunity Report', format: 'csv', generatedAt: '2026-04-17 08:01', size: '180 KB', status: 'generating' },
-];
+const RECENT_EXPORTS: RecentExport[] = [];
 
 // ── Main ──
 export function BackendReports() {
@@ -294,6 +288,13 @@ export function BackendReports() {
               </div>
             </div>
           ))}
+          {RECENT_EXPORTS.length === 0 && (
+            <div className="py-12 text-center">
+              <Download className="w-8 h-8 text-gray-300 mx-auto mb-3" />
+              <p className="text-sm font-medium text-gray-700">No exports yet</p>
+              <p className="text-xs text-gray-400 mt-1">Run a report from the library — generated files appear here.</p>
+            </div>
+          )}
         </div>
       )}
     </div>

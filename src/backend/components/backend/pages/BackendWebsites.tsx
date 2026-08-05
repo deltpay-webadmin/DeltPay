@@ -48,14 +48,7 @@ const PLAN_CONFIG: Record<PlanTier, { color: string; bg: string; label: string; 
   premium: { color: 'text-amber-700', bg: 'bg-amber-50', label: 'Premium', price: '$149/mo' },
 };
 
-const WEBSITES: Website[] = [
-  { id: 'WS-001', merchantId: 'M-1002', merchant: 'TechStart Solutions', domain: 'techstartsolutions.deltsite.com', customDomain: 'www.techstartsolutions.com', status: 'live', plan: 'premium', monthlyFee: 149, template: 'SaaS Pro', createdDate: '2025-11-15', lastPublished: '2026-04-15', pageViews30d: 12840, uniqueVisitors30d: 4280, conversionRate: 3.2, mobileScore: 94, seoScore: 88, sslExpiry: '2027-03-15', agent: 'Michael Chen', hasBooking: true, hasEcommerce: false, hasContactForm: true },
-  { id: 'WS-002', merchantId: 'M-1005', merchant: 'Bella Vista Restaurant', domain: 'bellavista.deltsite.com', customDomain: 'www.bellavistamiami.com', status: 'live', plan: 'business', monthlyFee: 79, template: 'Restaurant Elite', createdDate: '2026-01-10', lastPublished: '2026-04-12', pageViews30d: 8420, uniqueVisitors30d: 3150, conversionRate: 5.8, mobileScore: 91, seoScore: 76, sslExpiry: '2027-01-10', agent: 'Michael Chen', hasBooking: true, hasEcommerce: false, hasContactForm: true },
-  { id: 'WS-003', merchantId: 'M-1003', merchant: 'Urban Fitness Center', domain: 'urbanfitness.deltsite.com', customDomain: 'www.urbanfitnesscenter.com', status: 'live', plan: 'business', monthlyFee: 79, template: 'Fitness Hub', createdDate: '2025-12-20', lastPublished: '2026-04-08', pageViews30d: 5630, uniqueVisitors30d: 2110, conversionRate: 4.1, mobileScore: 88, seoScore: 72, sslExpiry: '2026-12-20', agent: 'Sarah Johnson', hasBooking: true, hasEcommerce: true, hasContactForm: true },
-  { id: 'WS-004', merchantId: 'M-1007', merchant: 'Brooklyn Vinyl Records', domain: 'brooklynvinyl.deltsite.com', status: 'building', plan: 'business', monthlyFee: 79, template: 'Retail Modern', createdDate: '2026-04-10', pageViews30d: 0, uniqueVisitors30d: 0, conversionRate: 0, mobileScore: 0, seoScore: 0, sslExpiry: '2027-04-10', agent: 'Sarah Kim', hasBooking: false, hasEcommerce: true, hasContactForm: true },
-  { id: 'WS-005', merchantId: 'M-1008', merchant: 'Doral Fresh Market', domain: 'doralfresh.deltsite.com', status: 'draft', plan: 'starter', monthlyFee: 29, template: 'Local Business', createdDate: '2026-03-28', pageViews30d: 0, uniqueVisitors30d: 0, conversionRate: 0, mobileScore: 0, seoScore: 0, sslExpiry: '2027-03-28', agent: 'Marcus Johnson', hasBooking: false, hasEcommerce: false, hasContactForm: true },
-  { id: 'WS-006', merchantId: 'M-1009', merchant: 'Harbor Marine Supply', domain: 'harbormarine.deltsite.com', customDomain: 'www.harbormarinesupply.com', status: 'live', plan: 'starter', monthlyFee: 29, template: 'Industrial Basic', createdDate: '2026-02-05', lastPublished: '2026-03-20', pageViews30d: 1240, uniqueVisitors30d: 680, conversionRate: 1.9, mobileScore: 78, seoScore: 65, sslExpiry: '2027-02-05', agent: 'James Miller', hasBooking: false, hasEcommerce: false, hasContactForm: true },
-];
+const WEBSITES: Website[] = [];
 
 // ── Site Detail Panel ──
 function SiteDetailPanel({ site, onClose }: { site: Website; onClose: () => void }) {
@@ -342,7 +335,7 @@ export function BackendWebsites() {
       {filtered.length === 0 && (
         <div className="bg-white rounded-[8px] border border-gray-200 px-5 py-16 text-center">
           <Globe className="w-8 h-8 text-gray-300 mx-auto mb-3" />
-          <p className="text-sm text-gray-400">No websites match your filters</p>
+          <p className="text-sm text-gray-400">{WEBSITES.length === 0 ? 'No websites yet' : 'No websites match your filters'}</p>
         </div>
       )}
 

@@ -57,9 +57,6 @@ const USERS = [
   { id: 1, name: 'David Hazday', email: 'david@deltpay.com', role: 'super_admin', avatar: 'DH', status: 'active', lastActive: 'Just now', territories: ['Miami-Dade', 'Broward'], portfolioCount: 8, split: undefined as number | undefined, portfolioCap: undefined as number | undefined, monthlyVolume: undefined as number | undefined },
   { id: 2, name: 'Anshu', email: 'anshu@deltpay.com', role: 'super_admin', avatar: 'AN', status: 'active', lastActive: '2 hours ago', territories: [] as string[], portfolioCount: 0, split: undefined as number | undefined, portfolioCap: undefined as number | undefined, monthlyVolume: undefined as number | undefined },
   { id: 3, name: 'Patrick', email: 'patrick@deltpay.com', role: 'admin', avatar: 'PK', status: 'active', lastActive: '1 hour ago', territories: [] as string[], portfolioCount: 0, split: undefined as number | undefined, portfolioCap: undefined as number | undefined, monthlyVolume: undefined as number | undefined },
-  { id: 4, name: 'Sarah Johnson', email: 'sarah@deltpay.com', role: 'agent', avatar: 'SJ', status: 'active', lastActive: '3 hours ago', split: 50, territories: ['Miami-Dade'], portfolioCount: 3, portfolioCap: 25, monthlyVolume: 131900 },
-  { id: 5, name: 'Michael Chen', email: 'michael@deltpay.com', role: 'agent', avatar: 'MC', status: 'active', lastActive: '1 day ago', split: 50, territories: ['Broward', 'Palm Beach'], portfolioCount: 3, portfolioCap: 25, monthlyVolume: 187200 },
-  { id: 6, name: 'James Miller', email: 'james@deltpay.com', role: 'agent', avatar: 'JM', status: 'active', lastActive: '5 hours ago', split: 50, territories: ['Miami-Dade'], portfolioCount: 2, portfolioCap: 25, monthlyVolume: 165700 },
   { id: 7, name: 'Lyndon', email: 'lyndon@deltpay.com', role: 'agent', avatar: 'LY', status: 'active', lastActive: '1 week ago', split: 40, territories: ['Outbound'], portfolioCount: 0, portfolioCap: 15, monthlyVolume: 0 },
   { id: 8, name: 'Jason', email: 'jason@deltpay.com', role: 'viewer', avatar: 'JS', status: 'active', lastActive: '3 days ago', territories: [] as string[], portfolioCount: 0, split: undefined as number | undefined, portfolioCap: undefined as number | undefined, monthlyVolume: undefined as number | undefined },
 ];
@@ -142,16 +139,8 @@ const GENERAL_SECTIONS: SettingsSection[] = [
 ];
 
 // ─── AUDIT LOG ──────────────────────────────────────────────────
-const AUDIT_LOG = [
-  { time: 'Apr 15, 2:34 PM', user: 'David Hazday', action: 'Updated processing defaults — margin floor set to 0.50%', module: 'Settings' },
-  { time: 'Apr 15, 1:12 PM', user: 'David Hazday', action: 'Verified interchange for Sunrise Cafe — flagged Visa Qual +14bps', module: 'Residuals' },
-  { time: 'Apr 14, 4:45 PM', user: 'Patrick', action: 'Uploaded March 2026 residual report — 8 merchants processed', module: 'Residuals' },
-  { time: 'Apr 14, 11:20 AM', user: 'Michael Chen', action: 'Created new lead: TechForward Solutions', module: 'Pipeline' },
-  { time: 'Apr 13, 3:15 PM', user: 'David Hazday', action: 'Approved MCA UW-2026-0145: Urban Wellness Spa — $150K at 1.36x', module: 'Capital' },
-  { time: 'Apr 12, 9:00 AM', user: 'Sarah Johnson', action: 'Moved Coastal Construction to Bank Verification stage', module: 'Pipeline' },
-  { time: 'Apr 11, 2:30 PM', user: 'David Hazday', action: 'Changed James Miller commission split from 45% → 50%', module: 'Team' },
-  { time: 'Apr 10, 10:45 AM', user: 'David Hazday', action: 'Connected CRS Credit integration — health check passed 92%', module: 'Settings' },
-];
+interface AuditLogEntry { time: string; user: string; action: string; module: string }
+const AUDIT_LOG: AuditLogEntry[] = [];
 
 type SettingsTab = 'general' | 'integrations' | 'roles' | 'users' | 'audit';
 
@@ -503,6 +492,13 @@ export function BackendSettings() {
                   <span className="text-[11px] font-medium text-brand bg-brand/5 px-2.5 py-0.5 rounded shrink-0">{log.module}</span>
                 </div>
               ))}
+              {AUDIT_LOG.length === 0 && (
+                <div className="py-12 text-center">
+                  <ClipboardList className="w-8 h-8 text-gray-300 mx-auto mb-3" />
+                  <p className="text-sm font-medium text-gray-700">No audit events yet</p>
+                  <p className="text-xs text-gray-400 mt-1">Administrative actions will be recorded here as they happen.</p>
+                </div>
+              )}
             </div>
           </div>
         )}

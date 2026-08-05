@@ -53,165 +53,29 @@ interface PreChargebackAlert {
   descriptor: string;
 }
 
-const DISPUTES: Dispute[] = [
-  {
-    id: 'DSP-2026-001', merchant: 'Havana Bites Cafe', merchantId: 'MID-001', vertical: 'Restaurant',
-    cardNetwork: 'Visa', reasonCode: '10.4', reasonLabel: 'Other Fraud — Card-Absent Environment',
-    reasonCategory: 'fraud', amount: 487.50, transactionDate: '2026-03-28', disputeDate: '2026-04-10',
-    responseDeadline: '2026-04-17', daysLeft: 1, stage: 'evidence', handler: 'Sarah M.',
-    cardLast4: '4821', arnNumber: '74929403850008741234567',
-    evidenceTypes: ['AVS/CVV match', 'IP geolocation', 'Device fingerprint', '3D Secure proof'],
-    evidenceCollected: ['AVS/CVV match', 'IP geolocation'],
-    notes: [
-      { author: 'Sarah M.', text: 'Customer claims card was stolen. Transaction shows 3DS authentication passed.', date: '2026-04-11' },
-      { author: 'System', text: 'AVS match confirmed: full match. CVV2 match: yes.', date: '2026-04-11' },
-    ],
-    stageTimestamps: { new: '2026-04-10', evidence: '2026-04-11' },
-  },
-  {
-    id: 'DSP-2026-002', merchant: 'Coral Reef Auto Spa', merchantId: 'MID-002', vertical: 'Auto Services',
-    cardNetwork: 'Visa', reasonCode: '13.1', reasonLabel: 'Merchandise / Services Not Received',
-    reasonCategory: 'service', amount: 325.00, transactionDate: '2026-03-15', disputeDate: '2026-04-08',
-    responseDeadline: '2026-04-18', daysLeft: 2, stage: 'draft', handler: 'Sarah M.',
-    cardLast4: '7392', arnNumber: '74929403850009182345678',
-    evidenceTypes: ['Delivery confirmation', 'Service completion record', 'Signed receipt', 'Communication logs'],
-    evidenceCollected: ['Service completion record', 'Signed receipt', 'Communication logs'],
-    notes: [
-      { author: 'Sarah M.', text: 'Service was completed on-site. Have signed work order + before/after photos.', date: '2026-04-09' },
-    ],
-    stageTimestamps: { new: '2026-04-08', evidence: '2026-04-09', draft: '2026-04-12' },
-  },
-  {
-    id: 'DSP-2026-003', merchant: 'SoBe Cycle & Fitness', merchantId: 'MID-004', vertical: 'Health & Fitness',
-    cardNetwork: 'Mastercard', reasonCode: '4853', reasonLabel: 'Cardholder Dispute — Not as Described',
-    reasonCategory: 'service', amount: 199.00, transactionDate: '2026-03-20', disputeDate: '2026-04-05',
-    responseDeadline: '2026-04-20', daysLeft: 4, stage: 'review', handler: 'John D.',
-    cardLast4: '5511', arnNumber: '53429403850007291234567',
-    evidenceTypes: ['Terms of service', 'Refund policy acknowledgment', 'Service description', 'Communication logs'],
-    evidenceCollected: ['Terms of service', 'Refund policy acknowledgment', 'Service description', 'Communication logs'],
-    notes: [
-      { author: 'John D.', text: 'Membership dispute. TOS clearly states cancellation policy. Have signed agreement.', date: '2026-04-06' },
-      { author: 'Sarah M.', text: 'Reviewed draft — strong case. Ready to submit.', date: '2026-04-13' },
-    ],
-    stageTimestamps: { new: '2026-04-05', evidence: '2026-04-06', draft: '2026-04-10', review: '2026-04-13' },
-  },
-  {
-    id: 'DSP-2026-004', merchant: 'Doral Fresh Market', merchantId: 'MID-006', vertical: 'Grocery',
-    cardNetwork: 'Visa', reasonCode: '10.4', reasonLabel: 'Other Fraud — Card-Absent Environment',
-    reasonCategory: 'fraud', amount: 892.30, transactionDate: '2026-03-22', disputeDate: '2026-04-02',
-    responseDeadline: '2026-04-25', daysLeft: 9, stage: 'submitted', handler: 'Sarah M.',
-    cardLast4: '3345', arnNumber: '74929403850011928345678',
-    evidenceTypes: ['AVS/CVV match', 'Delivery confirmation', 'Device fingerprint'],
-    evidenceCollected: ['AVS/CVV match', 'Delivery confirmation', 'Device fingerprint'],
-    notes: [
-      { author: 'Sarah M.', text: 'Submitted with full evidence package. Delivery confirmed with signature.', date: '2026-04-08' },
-    ],
-    stageTimestamps: { new: '2026-04-02', evidence: '2026-04-03', draft: '2026-04-05', review: '2026-04-07', submitted: '2026-04-08' },
-  },
-  {
-    id: 'DSP-2026-005', merchant: 'Midtown Taqueria', merchantId: 'FDM-001', vertical: 'Restaurant',
-    cardNetwork: 'Visa', reasonCode: '13.3', reasonLabel: 'Not as Described or Defective Merchandise',
-    reasonCategory: 'service', amount: 156.80, transactionDate: '2026-02-18', disputeDate: '2026-03-10',
-    responseDeadline: '2026-04-10', daysLeft: -6, stage: 'won', handler: 'John D.',
-    cardLast4: '8102', arnNumber: '74929403850005612345678', outcome: 'won',
-    evidenceTypes: ['Delivery confirmation', 'Communication logs', 'Refund policy acknowledgment'],
-    evidenceCollected: ['Delivery confirmation', 'Communication logs', 'Refund policy acknowledgment'],
-    notes: [
-      { author: 'System', text: 'Dispute resolved in merchant favor. Funds returned.', date: '2026-04-08' },
-    ],
-    stageTimestamps: { new: '2026-03-10', evidence: '2026-03-11', draft: '2026-03-14', review: '2026-03-15', submitted: '2026-03-16', awaiting: '2026-03-16', won: '2026-04-08' },
-  },
-  {
-    id: 'DSP-2026-006', merchant: 'Kendall Pet Grooming', merchantId: 'FDM-002', vertical: 'Personal Services',
-    cardNetwork: 'Mastercard', reasonCode: '4837', reasonLabel: 'No Cardholder Authorization',
-    reasonCategory: 'authorization', amount: 275.00, transactionDate: '2026-02-25', disputeDate: '2026-03-15',
-    responseDeadline: '2026-04-15', daysLeft: -1, stage: 'won', handler: 'Sarah M.',
-    cardLast4: '6290', arnNumber: '53429403850003781234567', outcome: 'won',
-    evidenceTypes: ['Signed receipt', 'AVS/CVV match', 'Communication logs'],
-    evidenceCollected: ['Signed receipt', 'AVS/CVV match', 'Communication logs'],
-    notes: [
-      { author: 'System', text: 'Won — signed receipt proved authorization.', date: '2026-04-12' },
-    ],
-    stageTimestamps: { new: '2026-03-15', evidence: '2026-03-16', draft: '2026-03-18', review: '2026-03-19', submitted: '2026-03-20', awaiting: '2026-03-20', won: '2026-04-12' },
-  },
-  {
-    id: 'DSP-2026-007', merchant: 'Aventura Nail Lounge', merchantId: 'FDM-003', vertical: 'Personal Services',
-    cardNetwork: 'Visa', reasonCode: '13.1', reasonLabel: 'Merchandise / Services Not Received',
-    reasonCategory: 'service', amount: 420.00, transactionDate: '2026-02-10', disputeDate: '2026-03-05',
-    responseDeadline: '2026-04-05', daysLeft: -11, stage: 'lost', handler: 'John D.',
-    cardLast4: '1158', arnNumber: '74929403850006793456789', outcome: 'lost',
-    evidenceTypes: ['Delivery confirmation', 'Service completion record'],
-    evidenceCollected: ['Service completion record'],
-    notes: [
-      { author: 'System', text: 'Lost — insufficient delivery proof. Missing signed confirmation.', date: '2026-04-02' },
-    ],
-    stageTimestamps: { new: '2026-03-05', evidence: '2026-03-06', draft: '2026-03-10', review: '2026-03-11', submitted: '2026-03-12', awaiting: '2026-03-12', lost: '2026-04-02' },
-  },
-  {
-    id: 'DSP-2026-008', merchant: 'Hialeah Tire & Brake', merchantId: 'FDM-004', vertical: 'Auto Services',
-    cardNetwork: 'Visa', reasonCode: '10.4', reasonLabel: 'Other Fraud — Card-Absent Environment',
-    reasonCategory: 'fraud', amount: 1250.00, transactionDate: '2026-03-05', disputeDate: '2026-03-25',
-    responseDeadline: '2026-04-28', daysLeft: 12, stage: 'awaiting', handler: 'Sarah M.',
-    cardLast4: '9473', arnNumber: '74929403850012039456789',
-    evidenceTypes: ['AVS/CVV match', 'IP geolocation', 'Device fingerprint', '3D Secure proof'],
-    evidenceCollected: ['AVS/CVV match', 'IP geolocation', 'Device fingerprint', '3D Secure proof'],
-    notes: [
-      { author: 'Sarah M.', text: 'Strong case — full 3DS authentication + matching device fingerprint from prior purchases.', date: '2026-04-01' },
-    ],
-    stageTimestamps: { new: '2026-03-25', evidence: '2026-03-26', draft: '2026-03-28', review: '2026-03-30', submitted: '2026-04-01', awaiting: '2026-04-01' },
-  },
-  {
-    id: 'DSP-2026-009', merchant: 'Palmetto Bay Bakery', merchantId: 'FDM-005', vertical: 'Restaurant',
-    cardNetwork: 'Mastercard', reasonCode: '4834', reasonLabel: 'Point-of-Interaction Error',
-    reasonCategory: 'processing', amount: 67.50, transactionDate: '2026-04-01', disputeDate: '2026-04-12',
-    responseDeadline: '2026-04-19', daysLeft: 3, stage: 'new', handler: 'Unassigned',
-    cardLast4: '2087', arnNumber: '53429403850004892345678',
-    evidenceTypes: ['Terminal transaction log', 'Batch settlement record', 'Signed receipt'],
-    evidenceCollected: [],
-    notes: [],
-    stageTimestamps: { new: '2026-04-12' },
-  },
-  {
-    id: 'DSP-2026-010', merchant: 'Little Havana Barbershop', merchantId: 'MID-005', vertical: 'Personal Services',
-    cardNetwork: 'Visa', reasonCode: '13.6', reasonLabel: 'Credit Not Processed',
-    reasonCategory: 'service', amount: 85.00, transactionDate: '2026-03-10', disputeDate: '2026-04-14',
-    responseDeadline: '2026-04-22', daysLeft: 6, stage: 'new', handler: 'Unassigned',
-    cardLast4: '5543', arnNumber: '74929403850013140567890',
-    evidenceTypes: ['Refund policy acknowledgment', 'Communication logs', 'Terms of service'],
-    evidenceCollected: [],
-    notes: [],
-    stageTimestamps: { new: '2026-04-14' },
-  },
-  {
-    id: 'DSP-2026-011', merchant: 'Wynwood Ink Studio', merchantId: 'MID-003', vertical: 'Retail',
-    cardNetwork: 'Visa', reasonCode: '10.4', reasonLabel: 'Other Fraud — Card-Absent Environment',
-    reasonCategory: 'fraud', amount: 345.00, transactionDate: '2026-01-20', disputeDate: '2026-02-15',
-    responseDeadline: '2026-03-18', daysLeft: -29, stage: 'won', handler: 'Sarah M.',
-    cardLast4: '7721', arnNumber: '74929403850002501234567', outcome: 'won',
-    evidenceTypes: ['AVS/CVV match', '3D Secure proof', 'IP geolocation'],
-    evidenceCollected: ['AVS/CVV match', '3D Secure proof', 'IP geolocation'],
-    notes: [{ author: 'System', text: 'Won — compelling 3DS evidence.', date: '2026-03-15' }],
-    stageTimestamps: { new: '2026-02-15', evidence: '2026-02-16', draft: '2026-02-18', review: '2026-02-19', submitted: '2026-02-20', awaiting: '2026-02-20', won: '2026-03-15' },
-  },
-  {
-    id: 'DSP-2026-012', merchant: 'Brickell Dry Cleaners', merchantId: 'MID-007', vertical: 'Services',
-    cardNetwork: 'Mastercard', reasonCode: '4853', reasonLabel: 'Cardholder Dispute — Not as Described',
-    reasonCategory: 'service', amount: 128.00, transactionDate: '2026-01-15', disputeDate: '2026-02-10',
-    responseDeadline: '2026-03-12', daysLeft: -35, stage: 'lost', handler: 'John D.',
-    cardLast4: '3389', arnNumber: '53429403850001392345678', outcome: 'lost',
-    evidenceTypes: ['Terms of service', 'Communication logs'],
-    evidenceCollected: ['Terms of service'],
-    notes: [{ author: 'System', text: 'Lost — no communication logs provided. Weak evidence.', date: '2026-03-10' }],
-    stageTimestamps: { new: '2026-02-10', evidence: '2026-02-11', draft: '2026-02-14', review: '2026-02-15', submitted: '2026-02-16', awaiting: '2026-02-16', lost: '2026-03-10' },
-  },
-];
+const DISPUTES: Dispute[] = [];
 
-const PRE_ALERTS: PreChargebackAlert[] = [
-  { id: 'PCA-001', merchant: 'Havana Bites Cafe', source: 'Verifi CDRN', amount: 142.50, cardLast4: '4821', alertDate: '2026-04-15', expiresIn: 48, transactionDate: '2026-04-01', status: 'pending', descriptor: 'HAVANA BITES*ONLINE' },
-  { id: 'PCA-002', merchant: 'Coral Reef Auto Spa', source: 'Ethoca', amount: 289.00, cardLast4: '7392', alertDate: '2026-04-14', expiresIn: 24, transactionDate: '2026-03-30', status: 'pending', descriptor: 'CORAL REEF AUTO*SPA' },
-  { id: 'PCA-003', merchant: 'Doral Fresh Market', source: 'Verifi CDRN', amount: 67.80, cardLast4: '9918', alertDate: '2026-04-13', expiresIn: 0, transactionDate: '2026-03-25', status: 'refunded', descriptor: 'DORAL FRESH*MARKET' },
-  { id: 'PCA-004', merchant: 'SoBe Cycle & Fitness', source: 'Ethoca', amount: 199.00, cardLast4: '5511', alertDate: '2026-04-12', expiresIn: 0, transactionDate: '2026-03-15', status: 'expired', descriptor: 'SOBE CYCLE*FIT' },
-];
+const PRE_ALERTS: PreChargebackAlert[] = [];
+
+interface MerchantCbRatio {
+  merchant: string;
+  txnCount: number;
+  cbCount: number;
+  ratio: number;
+  threshold: number;
+  network: string;
+}
+
+const CB_RATIO_MERCHANTS: MerchantCbRatio[] = [];
+
+interface ArgumentEffectiveness {
+  combo: string;
+  used: number;
+  wins: number;
+  losses: number;
+}
+
+const ARGUMENT_EFFECTIVENESS: ArgumentEffectiveness[] = [];
 
 // ── Reason code database ──
 const REASON_CODES: Record<string, { category: string; network: string; description: string; requiredEvidence: string[]; strategy: string; winRate: number }> = {
@@ -706,6 +570,15 @@ export function BackendDisputes() {
                         </tr>
                       );
                     })}
+                    {activeDisputes.length === 0 && (
+                      <tr><td colSpan={7}>
+                        <div className="py-12 text-center">
+                          <Clock className="w-8 h-8 text-gray-300 mx-auto mb-3" />
+                          <p className="text-sm font-medium text-gray-700">No active disputes</p>
+                          <p className="text-xs text-gray-400 mt-1">Response deadlines will appear here once disputes are logged.</p>
+                        </div>
+                      </td></tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -839,6 +712,7 @@ export function BackendDisputes() {
                       </div>
                     );
                   })}
+                  {Object.keys(analytics.byVertical).length === 0 && <p className="text-xs text-gray-400">No resolved disputes yet</p>}
                 </div>
               </div>
 
@@ -863,6 +737,7 @@ export function BackendDisputes() {
                       </div>
                     );
                   })}
+                  {Object.keys(analytics.byEvidence).length === 0 && <p className="text-xs text-gray-400">No resolved disputes yet</p>}
                 </div>
               </div>
             </div>
@@ -879,15 +754,7 @@ export function BackendDisputes() {
                     <Th className="pl-5">Evidence Combination</Th><Th>Times Used</Th><Th>Wins</Th><Th>Losses</Th><Th>Win Rate</Th><Th>Verdict</Th>
                   </tr></thead>
                   <tbody>
-                    {[
-                      { combo: 'AVS/CVV + 3D Secure + IP Geolocation', used: 3, wins: 3, losses: 0 },
-                      { combo: 'Signed Receipt + AVS/CVV + Communication Logs', used: 1, wins: 1, losses: 0 },
-                      { combo: 'Service Completion + Signed Receipt + Comms', used: 1, wins: 1, losses: 0 },
-                      { combo: 'Delivery Confirmation + Communication Logs + Refund Policy', used: 1, wins: 1, losses: 0 },
-                      { combo: 'TOS + Refund Policy + Service Description + Comms', used: 1, wins: 1, losses: 0 },
-                      { combo: 'TOS only (no communication logs)', used: 1, wins: 0, losses: 1 },
-                      { combo: 'Service Completion only (no delivery proof)', used: 1, wins: 0, losses: 1 },
-                    ].map((row, i) => {
+                    {ARGUMENT_EFFECTIVENESS.map((row, i) => {
                       const wr = row.used > 0 ? row.wins / row.used : 0;
                       return (
                         <tr key={i} className="border-b border-gray-50 hover:bg-gray-50/50">
@@ -904,6 +771,15 @@ export function BackendDisputes() {
                         </tr>
                       );
                     })}
+                    {ARGUMENT_EFFECTIVENESS.length === 0 && (
+                      <tr><td colSpan={6}>
+                        <div className="py-12 text-center">
+                          <Zap className="w-8 h-8 text-gray-300 mx-auto mb-3" />
+                          <p className="text-sm font-medium text-gray-700">No representment outcomes yet</p>
+                          <p className="text-xs text-gray-400 mt-1">Evidence combination effectiveness builds as disputes resolve.</p>
+                        </div>
+                      </td></tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -983,6 +859,15 @@ export function BackendDisputes() {
                         </tr>
                       );
                     })}
+                    {PRE_ALERTS.length === 0 && (
+                      <tr><td colSpan={9}>
+                        <div className="py-12 text-center">
+                          <Bell className="w-8 h-8 text-gray-300 mx-auto mb-3" />
+                          <p className="text-sm font-medium text-gray-700">No pre-chargeback alerts</p>
+                          <p className="text-xs text-gray-400 mt-1">Verifi CDRN and Ethoca alerts will surface here before they become disputes.</p>
+                        </div>
+                      </td></tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -995,12 +880,15 @@ export function BackendDisputes() {
                 <h3 className="text-sm font-semibold text-gray-900">Chargeback Ratio Monitor</h3>
               </div>
               <div className="px-5 py-4">
+                {CB_RATIO_MERCHANTS.length === 0 && (
+                  <div className="py-12 text-center">
+                    <Activity className="w-8 h-8 text-gray-300 mx-auto mb-3" />
+                    <p className="text-sm font-medium text-gray-700">No merchants monitored yet</p>
+                    <p className="text-xs text-gray-400 mt-1">Chargeback ratios will appear as processing volume comes in.</p>
+                  </div>
+                )}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {[
-                    { merchant: 'Havana Bites Cafe', txnCount: 1247, cbCount: 3, ratio: 0.0024, threshold: 0.01, network: 'Visa' },
-                    { merchant: 'Coral Reef Auto Spa', txnCount: 892, cbCount: 2, ratio: 0.0022, threshold: 0.01, network: 'Visa' },
-                    { merchant: 'SoBe Cycle & Fitness', txnCount: 456, cbCount: 1, ratio: 0.0022, threshold: 0.015, network: 'Mastercard' },
-                  ].map((m, i) => {
+                  {CB_RATIO_MERCHANTS.map((m, i) => {
                     const pctOfThreshold = m.ratio / m.threshold;
                     const color = pctOfThreshold >= 0.8 ? 'text-red-600' : pctOfThreshold >= 0.5 ? 'text-amber-600' : 'text-emerald-600';
                     const barColor = pctOfThreshold >= 0.8 ? 'bg-red-500' : pctOfThreshold >= 0.5 ? 'bg-amber-500' : 'bg-emerald-500';
@@ -1035,14 +923,11 @@ export function BackendDisputes() {
           const laborPerDispute = LABOR_RATE_PER_HOUR * AVG_HOURS_PER_DISPUTE;
 
           // Merchant CB ratio data for fine exposure
-          const merchantRatios = [
-            { merchant: 'Havana Bites Cafe', txnCount: 1247, cbCount: 3, network: 'Visa', threshold: 0.01 },
-            { merchant: 'Coral Reef Auto Spa', txnCount: 892, cbCount: 2, network: 'Visa', threshold: 0.01 },
-            { merchant: 'SoBe Cycle & Fitness', txnCount: 456, cbCount: 1, network: 'Mastercard', threshold: 0.015 },
-            { merchant: 'Doral Fresh Market', txnCount: 1034, cbCount: 2, network: 'Visa', threshold: 0.01 },
-            { merchant: 'Hialeah Tire & Brake', txnCount: 678, cbCount: 1, network: 'Visa', threshold: 0.01 },
-            { merchant: 'Midtown Taqueria', txnCount: 1560, cbCount: 1, network: 'Visa', threshold: 0.01 },
-          ].map(m => ({ ...m, ratio: m.cbCount / m.txnCount, pctOfThreshold: (m.cbCount / m.txnCount) / m.threshold }));
+          const merchantRatios = CB_RATIO_MERCHANTS.map(m => ({
+            ...m,
+            ratio: m.txnCount > 0 ? m.cbCount / m.txnCount : 0,
+            pctOfThreshold: m.txnCount > 0 ? (m.cbCount / m.txnCount) / m.threshold : 0,
+          }));
 
           // Network fine tiers
           const fineExposure = merchantRatios.filter(m => m.pctOfThreshold >= 0.5);
@@ -1203,6 +1088,15 @@ export function BackendDisputes() {
                           </tr>
                         );
                       })}
+                      {disputeCosts.length === 0 && (
+                        <tr><td colSpan={10}>
+                          <div className="py-12 text-center">
+                            <Calculator className="w-8 h-8 text-gray-300 mx-auto mb-3" />
+                            <p className="text-sm font-medium text-gray-700">No disputes to analyze</p>
+                            <p className="text-xs text-gray-400 mt-1">Cost breakdowns appear once disputes are logged.</p>
+                          </div>
+                        </td></tr>
+                      )}
                       {/* Totals row */}
                       <tr className="bg-gray-50 border-t-2 border-gray-200">
                         <td className="pl-5 py-3 text-sm font-bold text-gray-900">Portfolio Total ({DISPUTES.length} disputes)</td>
@@ -1282,6 +1176,13 @@ export function BackendDisputes() {
 
                   {/* Per-merchant ratio vs threshold */}
                   <div className="space-y-3">
+                    {merchantRatios.length === 0 && (
+                      <div className="py-12 text-center">
+                        <Shield className="w-8 h-8 text-gray-300 mx-auto mb-3" />
+                        <p className="text-sm font-medium text-gray-700">No merchant exposure yet</p>
+                        <p className="text-xs text-gray-400 mt-1">Ratio-vs-threshold tracking starts once merchants process volume.</p>
+                      </div>
+                    )}
                     {merchantRatios.sort((a, b) => b.pctOfThreshold - a.pctOfThreshold).map((m, i) => {
                       const barColor = m.pctOfThreshold >= 0.8 ? 'bg-red-500' : m.pctOfThreshold >= 0.5 ? 'bg-amber-500' : 'bg-emerald-500';
                       const textColor = m.pctOfThreshold >= 0.8 ? 'text-red-600' : m.pctOfThreshold >= 0.5 ? 'text-amber-600' : 'text-emerald-600';
@@ -1379,8 +1280,8 @@ export function BackendDisputes() {
                     <div className="bg-brand/5 rounded-[6px] border border-brand/20 p-3 mt-2">
                       <p className="text-xs text-brand font-semibold mb-1">Bottom Line</p>
                       <p className="text-xs text-gray-600 leading-relaxed">
-                        For every <strong className="text-gray-900">$1</strong> spent on representment labor, you recover an expected <strong className="text-emerald-700">${(totalExpectedRecovery / totalRepresentmentCost).toFixed(2)}</strong> in transaction revenue.
-                        Not fighting disputes costs <strong className="text-red-700">{fmt(totalInaction)}</strong> across the portfolio — {((totalInaction / totalRepresentmentCost)).toFixed(1)}× more than the cost of fighting them.
+                        For every <strong className="text-gray-900">$1</strong> spent on representment labor, you recover an expected <strong className="text-emerald-700">${(totalRepresentmentCost > 0 ? totalExpectedRecovery / totalRepresentmentCost : 0).toFixed(2)}</strong> in transaction revenue.
+                        Not fighting disputes costs <strong className="text-red-700">{fmt(totalInaction)}</strong> across the portfolio — {(totalRepresentmentCost > 0 ? totalInaction / totalRepresentmentCost : 0).toFixed(1)}× more than the cost of fighting them.
                       </p>
                     </div>
                   </div>

@@ -34,10 +34,10 @@ type Period = 'month' | 'quarter' | 'year' | 'custom';
 
 // ── Summary Data ──
 const summaryCards = [
-  { label: 'Total Revenue', value: '$536K', raw: 536000, trend: '+12.5%', positive: true, icon: DollarSign, variant: 'emerald' as const },
-  { label: 'Total Expenses', value: '$185K', raw: 185000, trend: '-3.2%', positive: true, icon: CreditCard, variant: 'red' as const },
-  { label: 'Net Profit', value: '$242K', raw: 242000, trend: '+18.7%', positive: true, icon: TrendingUp, variant: 'indigo' as const },
-  { label: 'Cash Flow', value: '$215K', raw: 215000, trend: '+8.4%', positive: true, icon: Activity, variant: 'blue' as const },
+  { label: 'Total Revenue', value: '$0', raw: 0, trend: '—', positive: true, icon: DollarSign, variant: 'emerald' as const },
+  { label: 'Total Expenses', value: '$0', raw: 0, trend: '—', positive: true, icon: CreditCard, variant: 'red' as const },
+  { label: 'Net Profit', value: '$0', raw: 0, trend: '—', positive: true, icon: TrendingUp, variant: 'indigo' as const },
+  { label: 'Cash Flow', value: '$0', raw: 0, trend: '—', positive: true, icon: Activity, variant: 'blue' as const },
 ];
 
 const variantStyles: Record<string, { bg: string; icon: string }> = {
@@ -48,45 +48,37 @@ const variantStyles: Record<string, { bg: string; icon: string }> = {
 };
 
 // ── Revenue & Expense Breakdowns ──
-const revenueBreakdown = [
-  { label: 'MCA Interest Income', value: 285000, pct: 53.2, color: 'bg-indigo-500' },
-  { label: 'Lease Commissions', value: 95000, pct: 17.7, color: 'bg-sky-500' },
-  { label: 'Residual Income', value: 47000, pct: 8.8, color: 'bg-teal-500' },
-  { label: 'Merchant SaaS Subscriptions', value: 72000, pct: 13.4, color: 'bg-violet-500' },
-  { label: 'Lens AI Fees', value: 37000, pct: 6.9, color: 'bg-purple-500' },
-];
+interface BreakdownItem {
+  label: string;
+  value: number;
+  pct: number;
+  color: string;
+}
 
-const expenseBreakdown = [
-  { label: 'Sales Commissions', value: 75000, pct: 40.5, color: 'bg-red-500' },
-  { label: 'Cost of Capital', value: 65000, pct: 35.1, color: 'bg-orange-500' },
-  { label: 'Deployment Fees', value: 28000, pct: 15.1, color: 'bg-amber-500' },
-  { label: 'Operating', value: 17000, pct: 9.2, color: 'bg-gray-400' },
-];
+const revenueBreakdown: BreakdownItem[] = [];
+
+const expenseBreakdown: BreakdownItem[] = [];
 
 // ── Cash Flow Forecast (90 days) ──
-const cashFlowData = Array.from({ length: 13 }, (_, i) => {
-  const week = i;
-  const baseIn = 52000 + Math.sin(i * 0.7) * 12000 + (i > 8 ? -8000 : 0);
-  const baseOut = 38000 + Math.cos(i * 0.5) * 8000 + (i > 6 ? 5000 : 0);
-  const net = baseIn - baseOut;
-  return {
-    week: `W${week + 1}`,
-    label: `Week ${week + 1}`,
-    inflows: Math.round(baseIn),
-    outflows: Math.round(baseOut),
-    net: Math.round(net),
-    threshold: 10000,
-  };
-});
+interface CashFlowWeek {
+  week: string;
+  label: string;
+  inflows: number;
+  outflows: number;
+  net: number;
+  threshold: number;
+}
+
+const cashFlowData: CashFlowWeek[] = [];
 
 const alertWeeks = cashFlowData.filter((d) => d.net < d.threshold);
 
 // ── Capital Deployment ──
 const capitalCards = [
-  { label: 'Available Capital', value: '$340K', icon: PiggyBank, variant: 'emerald' as const },
-  { label: 'Deployed', value: '$1.26M', icon: Zap, variant: 'indigo' as const },
-  { label: 'Utilization', value: '78.8%', icon: Percent, variant: 'blue' as const },
-  { label: '30-Day Need', value: '$185K', icon: Briefcase, variant: 'orange' as const },
+  { label: 'Available Capital', value: '$0', icon: PiggyBank, variant: 'emerald' as const },
+  { label: 'Deployed', value: '$0', icon: Zap, variant: 'indigo' as const },
+  { label: 'Utilization', value: '—', icon: Percent, variant: 'blue' as const },
+  { label: '30-Day Need', value: '$0', icon: Briefcase, variant: 'orange' as const },
 ];
 
 const capitalVariants: Record<string, { bg: string; icon: string }> = {
@@ -94,24 +86,27 @@ const capitalVariants: Record<string, { bg: string; icon: string }> = {
   orange: { bg: 'bg-orange-50 border-orange-100', icon: 'text-orange-600' },
 };
 
-const fundingSources = [
-  { name: 'Pinnacle Funding Group', committed: 600000, deployed: 485000, available: 115000, coc: 2.0, returnPct: 14.2 },
-  { name: 'Atlantic Capital Partners', committed: 400000, deployed: 320000, available: 80000, coc: 1.8, returnPct: 16.1 },
-  { name: 'Summit Finance Corp', committed: 350000, deployed: 290000, available: 60000, coc: 2.2, returnPct: 12.8 },
-  { name: 'Delt Internal Reserve', committed: 250000, deployed: 165000, available: 85000, coc: 0, returnPct: 22.5 },
-];
+interface FundingSource {
+  name: string;
+  committed: number;
+  deployed: number;
+  available: number;
+  coc: number;
+  returnPct: number;
+}
+
+const fundingSources: FundingSource[] = [];
 
 // ── Recent Transactions ──
-const transactions = [
-  { date: '2026-04-09', desc: 'Metro Diner Group — daily ACH', type: 'Income' as const, amount: 675, category: 'MCA Repayment' },
-  { date: '2026-04-09', desc: 'Bright Auto Sales — daily ACH', type: 'Income' as const, amount: 1088, category: 'Residual Repayment' },
-  { date: '2026-04-08', desc: 'Marcus J. — commission payout', type: 'Expense' as const, amount: -1575, category: 'Sales Commission' },
-  { date: '2026-04-08', desc: 'Pinnacle Funding — monthly COC', type: 'Expense' as const, amount: -9700, category: 'Cost of Capital' },
-  { date: '2026-04-07', desc: 'Peak Construction — lease payment', type: 'Income' as const, amount: 855, category: 'Lease Payment' },
-  { date: '2026-04-07', desc: 'UCC filing fee — Coastal Seafood', type: 'Expense' as const, amount: -125, category: 'Deployment Fee' },
-  { date: '2026-04-06', desc: 'Apex Fitness — final payoff', type: 'Income' as const, amount: 2600, category: 'MCA Repayment' },
-  { date: '2026-04-05', desc: 'Atlantic Capital — quarterly draw', type: 'Expense' as const, amount: -50000, category: 'Capital Draw' },
-];
+interface Transaction {
+  date: string;
+  desc: string;
+  type: 'Income' | 'Expense';
+  amount: number;
+  category: string;
+}
+
+const transactions: Transaction[] = [];
 
 const fmt = (n: number) =>
   n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
@@ -194,7 +189,14 @@ export function BackendFinancials() {
             <p className="text-xs text-gray-500 mt-0.5">Total: {fmt(revenueBreakdown.reduce((s, r) => s + r.value, 0))}</p>
           </div>
           <div className="px-5 py-4 space-y-5">
-            {revenueBreakdown.map((item) => (
+            {revenueBreakdown.length === 0 ? (
+              <div className="py-12 text-center">
+                <CircleDollarSign className="w-8 h-8 text-gray-300 mx-auto mb-3" />
+                <p className="text-sm font-medium text-gray-700">No revenue recorded yet</p>
+                <p className="text-xs text-gray-400 mt-1">Revenue categories will appear here as income comes in.</p>
+              </div>
+            ) : (
+            revenueBreakdown.map((item) => (
               <div key={item.label}>
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm text-gray-700">{item.label}</span>
@@ -207,7 +209,8 @@ export function BackendFinancials() {
                   <div className={`h-full rounded-full ${item.color}`} style={{ width: `${item.pct}%` }} />
                 </div>
               </div>
-            ))}
+            ))
+            )}
           </div>
         </div>
 
@@ -218,7 +221,14 @@ export function BackendFinancials() {
             <p className="text-xs text-gray-500 mt-0.5">Total: {fmt(expenseBreakdown.reduce((s, e) => s + e.value, 0))}</p>
           </div>
           <div className="px-5 py-4 space-y-5">
-            {expenseBreakdown.map((item) => (
+            {expenseBreakdown.length === 0 ? (
+              <div className="py-12 text-center">
+                <CreditCard className="w-8 h-8 text-gray-300 mx-auto mb-3" />
+                <p className="text-sm font-medium text-gray-700">No expenses recorded yet</p>
+                <p className="text-xs text-gray-400 mt-1">Expense categories will appear here as costs are logged.</p>
+              </div>
+            ) : (
+            expenseBreakdown.map((item) => (
               <div key={item.label}>
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm text-gray-700">{item.label}</span>
@@ -231,7 +241,8 @@ export function BackendFinancials() {
                   <div className={`h-full rounded-full ${item.color}`} style={{ width: `${item.pct}%` }} />
                 </div>
               </div>
-            ))}
+            ))
+            )}
           </div>
         </div>
       </div>
@@ -251,6 +262,14 @@ export function BackendFinancials() {
           )}
         </div>
         <div className="px-5 py-4">
+          {cashFlowData.length === 0 ? (
+            <div className="py-12 text-center">
+              <Activity className="w-8 h-8 text-gray-300 mx-auto mb-3" />
+              <p className="text-sm font-medium text-gray-700">No cash flow data yet</p>
+              <p className="text-xs text-gray-400 mt-1">The 90-day forecast will populate once transactions are recorded.</p>
+            </div>
+          ) : (
+          <>
           {/* Legend */}
           <div className="flex items-center gap-5 mb-4">
             <div className="flex items-center gap-1.5">
@@ -301,6 +320,8 @@ export function BackendFinancials() {
               </AreaChart>
             </ResponsiveContainer>
           </div>
+          </>
+          )}
         </div>
       </div>
 
@@ -325,6 +346,13 @@ export function BackendFinancials() {
 
         {/* Funding Source Table */}
         <div className="bg-white rounded-[8px] border border-gray-200 overflow-hidden">
+          {fundingSources.length === 0 ? (
+            <div className="py-12 text-center">
+              <Building2 className="w-8 h-8 text-gray-300 mx-auto mb-3" />
+              <p className="text-sm font-medium text-gray-700">No funding sources yet</p>
+              <p className="text-xs text-gray-400 mt-1">Add a capital partner to start tracking deployment and returns.</p>
+            </div>
+          ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -368,12 +396,21 @@ export function BackendFinancials() {
                   <td className="px-4 py-3 text-right font-semibold text-gray-900">{fmt(fundingSources.reduce((s, f) => s + f.committed, 0))}</td>
                   <td className="px-4 py-3 text-right font-semibold text-gray-900">{fmt(fundingSources.reduce((s, f) => s + f.deployed, 0))}</td>
                   <td className="px-4 py-3 text-right font-semibold text-emerald-600">{fmt(fundingSources.reduce((s, f) => s + f.available, 0))}</td>
-                  <td className="px-4 py-3 text-right text-gray-500">Avg {(fundingSources.filter(f => f.coc > 0).reduce((s, f) => s + f.coc, 0) / fundingSources.filter(f => f.coc > 0).length).toFixed(1)}%</td>
-                  <td className="px-4 py-3 text-right font-semibold text-indigo-600">{(fundingSources.reduce((s, f) => s + f.returnPct, 0) / fundingSources.length).toFixed(1)}%</td>
+                  <td className="px-4 py-3 text-right text-gray-500">
+                    {fundingSources.filter(f => f.coc > 0).length > 0
+                      ? `Avg ${(fundingSources.filter(f => f.coc > 0).reduce((s, f) => s + f.coc, 0) / fundingSources.filter(f => f.coc > 0).length).toFixed(1)}%`
+                      : '—'}
+                  </td>
+                  <td className="px-4 py-3 text-right font-semibold text-indigo-600">
+                    {fundingSources.length > 0
+                      ? `${(fundingSources.reduce((s, f) => s + f.returnPct, 0) / fundingSources.length).toFixed(1)}%`
+                      : '—'}
+                  </td>
                 </tr>
               </tfoot>
             </table>
           </div>
+          )}
         </div>
       </div>
 
@@ -382,6 +419,13 @@ export function BackendFinancials() {
         <div className="px-5 py-4 border-b border-gray-200">
           <h2 className="text-lg font-semibold text-gray-900">Recent Transactions</h2>
         </div>
+        {transactions.length === 0 ? (
+          <div className="py-12 text-center">
+            <Wallet className="w-8 h-8 text-gray-300 mx-auto mb-3" />
+            <p className="text-sm font-medium text-gray-700">No transactions yet</p>
+            <p className="text-xs text-gray-400 mt-1">Income and expense activity will show up here.</p>
+          </div>
+        ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -418,8 +462,9 @@ export function BackendFinancials() {
             </tbody>
           </table>
         </div>
+        )}
         <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 text-sm text-gray-500">
-          <span>Showing 8 most recent</span>
+          <span>Showing {transactions.length} most recent</span>
           <button className="text-indigo-600 hover:text-indigo-700 text-sm font-medium">View All Transactions</button>
         </div>
       </div>

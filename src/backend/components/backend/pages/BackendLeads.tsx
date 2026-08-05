@@ -1876,7 +1876,7 @@ function NewLeadModal({ onClose, onCreate }: { onClose: () => void; onCreate: (l
     source: 'Website Inquiry',
     monthlySales: '',
     amountRequested: '',
-    assignedAgent: 'Sarah Johnson',
+    assignedAgent: 'Unassigned',
     priority: 'Medium' as Lead['priority'],
     notes: '',
   });

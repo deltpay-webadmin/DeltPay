@@ -56,51 +56,14 @@ interface BatchItem {
   date: string; txns: number; amount: number; settled: boolean; time: string;
 }
 
-const MERCHANTS: Record<string, MerchantData> = {
-  'merchant-001': { name: 'Sunrise Cafe & Bakery', dba: 'Sunrise Cafe', legalName: 'Sunrise Cafe & Bakery LLC', mid: '4485-7721-0093', status: 'Active', industry: 'Food & Beverage / Restaurant', owner: 'Michael Roberts', email: 'michael@sunrisecafe.com', phone: '(305) 555-0147', address: '2847 SW 8th St, Miami, FL 33135', agent: 'Sarah Johnson', agentSplit: 50, onboarded: '2025-08-12', processor: 'North / NAB', platform: 'Clover Flex + Clover Station Duo', pricingModel: 'Tiered + Pass-Through', mcc: '5812', riskLevel: 'Low', lensScore: 78, chargebackRate: 0.004, planTier: 'Growth' },
-  'merchant-002': { name: 'TechStart Solutions', dba: 'TechStart', legalName: 'TechStart Solutions Inc.', mid: '4485-9932-1187', status: 'Active', industry: 'Technology / SaaS', owner: 'David Kim', email: 'david@techstart.io', phone: '(305) 555-0298', address: '1200 Brickell Ave #1420, Miami, FL 33131', agent: 'Michael Chen', agentSplit: 50, onboarded: '2025-06-20', processor: 'North / NAB', platform: 'Clover Virtual Terminal', pricingModel: 'Interchange Plus', mcc: '5734', riskLevel: 'Low', lensScore: 85, chargebackRate: 0.002, planTier: 'Pro' },
-  'merchant-003': { name: 'Urban Fitness Center', dba: 'Urban Fitness', legalName: 'Urban Fitness Center LLC', mid: '4485-6643-0521', status: 'Active', industry: 'Health & Fitness', owner: 'Rachel Torres', email: 'rachel@urbanfitness.com', phone: '(305) 555-0366', address: '990 NE 125th St, North Miami, FL 33161', agent: 'Sarah Johnson', agentSplit: 50, onboarded: '2025-07-15', processor: 'North / NAB', platform: 'Clover Station Duo', pricingModel: 'Tiered', mcc: '7941', riskLevel: 'Low', lensScore: 72, chargebackRate: 0.006, planTier: 'Growth' },
-  'merchant-005': { name: 'Bella Vista Restaurant', dba: 'Bella Vista', legalName: 'Bella Vista Restaurant Group LLC', mid: '4485-3314-0877', status: 'Active', industry: 'Food & Beverage / Restaurant', owner: 'Marco Deluca', email: 'marco@bellavista.com', phone: '(305) 555-0412', address: '3100 Coral Way, Coral Gables, FL 33145', agent: 'Michael Chen', agentSplit: 50, onboarded: '2025-05-10', processor: 'North / NAB', platform: 'Clover Station Duo + Clover Flex', pricingModel: 'Tiered + Pass-Through', mcc: '5812', riskLevel: 'Low', lensScore: 81, chargebackRate: 0.003, planTier: 'Pro' },
-  'merchant-006': { name: 'Green Leaf Landscaping', dba: 'Green Leaf', legalName: 'Green Leaf Landscaping Services LLC', mid: '4485-8827-0234', status: 'Active', industry: 'Services / Landscaping', owner: 'Carlos Mendez', email: 'carlos@greenleafmiami.com', phone: '(305) 555-0533', address: '7400 SW 117th Ave, Kendall, FL 33183', agent: 'Sarah Johnson', agentSplit: 50, onboarded: '2025-09-01', processor: 'North / NAB', platform: 'Clover Go', pricingModel: 'Flat Rate', mcc: '0780', riskLevel: 'Low', lensScore: 65, chargebackRate: 0.001, planTier: 'Free' },
-  'merchant-007': { name: 'Metro Diner Group', dba: 'Metro Diner', legalName: 'Metro Diner Group Inc.', mid: '4485-2256-0991', status: 'Active', industry: 'Food & Beverage / Restaurant', owner: 'James Park', email: 'james@metrodiner.com', phone: '(305) 555-0644', address: '5820 NW 7th Ave, Miami, FL 33127', agent: 'James Miller', agentSplit: 50, onboarded: '2025-04-22', processor: 'North / NAB', platform: 'Clover Station Duo x2', pricingModel: 'Interchange Plus', mcc: '5812', riskLevel: 'Medium', lensScore: 70, chargebackRate: 0.008, planTier: 'Pro' },
-  'merchant-008': { name: 'Luxe Nail Studio', dba: 'Luxe Nails', legalName: 'Luxe Nail Studio LLC', mid: '4485-1178-0445', status: 'Active', industry: 'Personal Care / Salon', owner: 'Lisa Nguyen', email: 'lisa@luxenails.com', phone: '(305) 555-0755', address: '1040 Lincoln Rd, Miami Beach, FL 33139', agent: 'Michael Chen', agentSplit: 50, onboarded: '2025-08-05', processor: 'North / NAB', platform: 'Clover Mini', pricingModel: 'Flat Rate', mcc: '7230', riskLevel: 'Low', lensScore: 74, chargebackRate: 0.002, planTier: 'Growth' },
-  'merchant-009': { name: 'Harbor Marine Supply', dba: 'Harbor Marine', legalName: 'Harbor Marine Supply Corp.', mid: '4485-5589-0668', status: 'Active', industry: 'Retail / Marine', owner: 'Tom Sullivan', email: 'tom@harbormarine.com', phone: '(305) 555-0866', address: '15400 Biscayne Blvd, Aventura, FL 33160', agent: 'James Miller', agentSplit: 50, onboarded: '2025-10-15', processor: 'North / NAB', platform: 'Clover Station Duo', pricingModel: 'Tiered', mcc: '5551', riskLevel: 'Low', lensScore: 69, chargebackRate: 0.005, planTier: 'Growth' },
-};
+const MERCHANTS: Record<string, MerchantData> = {};
 
-// Residual data per merchant
-function getResiduals(id: string): MonthlyResidual[] {
-  const base: Record<string, MonthlyResidual[]> = {
-    'merchant-001': [
-      { month: 'Mar 2026', volume: 37500, txns: 812, grossRev: 1282.50, procFees: 487.50, netRev: 795.00, agentShare: 397.50, deltNet: 397.50, effRate: 0.0342, avgTicket: 46.18 },
-      { month: 'Feb 2026', volume: 33400, txns: 724, grossRev: 1123.46, procFees: 434.10, netRev: 689.36, agentShare: 344.68, deltNet: 344.68, effRate: 0.0336, avgTicket: 46.13 },
-      { month: 'Jan 2026', volume: 31200, txns: 688, grossRev: 1060.80, procFees: 405.60, netRev: 655.20, agentShare: 327.60, deltNet: 327.60, effRate: 0.0340, avgTicket: 45.35 },
-      { month: 'Dec 2025', volume: 39800, txns: 876, grossRev: 1393.00, procFees: 517.40, netRev: 875.60, agentShare: 437.80, deltNet: 437.80, effRate: 0.0350, avgTicket: 45.43 },
-      { month: 'Nov 2025', volume: 28900, txns: 642, grossRev: 982.60, procFees: 375.70, netRev: 606.90, agentShare: 303.45, deltNet: 303.45, effRate: 0.0340, avgTicket: 45.02 },
-      { month: 'Oct 2025', volume: 26100, txns: 578, grossRev: 887.40, procFees: 339.30, netRev: 548.10, agentShare: 274.05, deltNet: 274.05, effRate: 0.0340, avgTicket: 45.16 },
-    ],
-  };
-  if (base[id]) return base[id];
-  // Generate synthetic data for other merchants
-  const seed = id.charCodeAt(id.length - 1);
-  const baseVol = 25000 + seed * 1200;
-  return ['Mar 2026', 'Feb 2026', 'Jan 2026', 'Dec 2025', 'Nov 2025', 'Oct 2025'].map((month, i) => {
-    const vol = Math.round(baseVol * (1 - i * 0.06) * (0.92 + Math.sin(seed + i) * 0.12));
-    const txns = Math.round(vol / (38 + seed % 15));
-    const grossRev = vol * (0.033 + (seed % 5) * 0.001);
-    const procFees = grossRev * (0.37 + (seed % 3) * 0.02);
-    const netRev = grossRev - procFees;
-    return { month, volume: vol, txns, grossRev: +grossRev.toFixed(2), procFees: +procFees.toFixed(2), netRev: +netRev.toFixed(2), agentShare: +(netRev / 2).toFixed(2), deltNet: +(netRev / 2).toFixed(2), effRate: +(grossRev / vol).toFixed(4), avgTicket: +(vol / txns).toFixed(2) };
-  });
+// Residual data per merchant — populated from live residual imports
+function getResiduals(_id: string): MonthlyResidual[] {
+  return [];
 }
 
-const INTERCHANGE_BREAKDOWN: InterchangeRow[] = [
-  { category: 'Visa Credit — Qual', volume: 14250, pct: 0.38, rate: '1.65% + $0.10', cost: 248.63 },
-  { category: 'Visa Credit — Mid-Qual', volume: 3375, pct: 0.09, rate: '2.30% + $0.10', cost: 81.00 },
-  { category: 'Visa Debit — Regulated', volume: 7500, pct: 0.20, rate: '0.05% + $0.22', cost: 19.51 },
-  { category: 'MC Credit — Qual', volume: 8625, pct: 0.23, rate: '1.73% + $0.10', cost: 157.80 },
-  { category: 'MC Debit — Regulated', volume: 2250, pct: 0.06, rate: '0.05% + $0.22', cost: 6.08 },
-  { category: 'Amex OptBlue', volume: 1500, pct: 0.04, rate: '2.40% + $0.10', cost: 37.50 },
-];
+const INTERCHANGE_BREAKDOWN: InterchangeRow[] = [];
 
 // ─── PUBLISHED INTERCHANGE REFERENCE ───
 // Shared with the Statement Analyzer — one schedule, one verification engine
@@ -125,65 +88,34 @@ function verifyLine(line: InterchangeRow, avgTicket: number): Verification {
 const statusIcon = verificationStatusIcon;
 const statusColor = verificationStatusColor;
 
-const FEE_SCHEDULE: FeeItem[] = [
-  { fee: 'Monthly Minimum', amount: 25.00, type: 'fixed' },
-  { fee: 'Statement Fee', amount: 10.00, type: 'fixed' },
-  { fee: 'PCI Compliance Fee', amount: 14.95, type: 'fixed' },
-  { fee: 'Batch Settlement Fee', amount: 0.25, type: 'per-batch', note: '~30 batches/mo' },
-  { fee: 'Gateway Fee', amount: 0.03, type: 'per-txn' },
-  { fee: 'Chargeback Fee', amount: 25.00, type: 'per-incident' },
-  { fee: 'Retrieval Fee', amount: 15.00, type: 'per-incident' },
-  { fee: 'Annual Fee', amount: 99.00, type: 'annual', note: 'Billed August' },
-];
+const FEE_SCHEDULE: FeeItem[] = [];
 
-const CHARGEBACKS: ChargebackItem[] = [
-  { date: '2026-03-22', amount: 87.50, reason: '4837 — No Cardholder Auth', status: 'Won', resolution: '2026-04-05' },
-  { date: '2026-01-14', amount: 142.00, reason: '4853 — Not as Described', status: 'Lost', resolution: '2026-02-10' },
-  { date: '2025-11-30', amount: 56.25, reason: '4840 — Fraudulent Processing', status: 'Won', resolution: '2025-12-18' },
-];
+const CHARGEBACKS: ChargebackItem[] = [];
 
-function getEquipment(merchant: MerchantData): EquipmentItem[] {
-  const base: EquipmentItem[] = [
-    { device: 'Clover Station Duo', serial: 'C06-2841-XR', location: 'Front Counter', status: 'Active', deployed: '2025-08-15', warranty: '2027-08-15', connectivity: 'Ethernet', firmware: 'v4.12.3', lastPing: '2 min ago' },
-    { device: 'Clover Flex (LTE)', serial: 'CFX-9917-BM', location: 'Mobile', status: 'Active', deployed: '2025-09-02', warranty: '2027-09-02', connectivity: 'LTE + WiFi', firmware: 'v4.12.3', lastPing: '8 min ago' },
-  ];
-  if (merchant.platform.includes('Mini')) base.push({ device: 'Clover Mini (WiFi)', serial: 'CMN-4402-KL', location: 'Secondary', status: 'Active', deployed: '2026-01-10', warranty: '2028-01-10', connectivity: 'WiFi', firmware: 'v4.11.8', lastPing: '1 min ago' });
-  return base;
+function getEquipment(_merchant: MerchantData): EquipmentItem[] {
+  return [];
 }
 
-const BATCHES_RECENT: BatchItem[] = [
-  { date: 'Apr 14', txns: 28, amount: 1294.50, settled: true, time: '11:02 PM' },
-  { date: 'Apr 13', txns: 31, amount: 1387.00, settled: true, time: '11:01 PM' },
-  { date: 'Apr 12', txns: 24, amount: 1102.75, settled: true, time: '11:03 PM' },
-  { date: 'Apr 11', txns: 33, amount: 1521.25, settled: true, time: '11:01 PM' },
-  { date: 'Apr 10', txns: 27, amount: 1245.80, settled: true, time: '11:02 PM' },
-  { date: 'Apr 9', txns: 22, amount: 998.50, settled: true, time: '11:04 PM' },
-  { date: 'Apr 8', txns: 30, amount: 1356.20, settled: true, time: '11:01 PM' },
-];
+const BATCHES_RECENT: BatchItem[] = [];
 
 // ── Interchange Downgrade Data ──
-const DOWNGRADE_ALERTS = [
-  { txnDate: 'Mar 28', cardType: 'Visa Business', amount: 847.50, qualifiedAt: 'EIRF (Mid-Qual)', shouldBe: 'CPS Retail', cause: 'Missing Level II data on B2B card', lostBps: 65, lostDollars: 5.51 },
-  { txnDate: 'Mar 22', cardType: 'MC World Elite', amount: 1240.00, qualifiedAt: 'Standard', shouldBe: 'Merit III', cause: 'Non-EMV fallback — chip read failed', lostBps: 45, lostDollars: 5.58 },
-  { txnDate: 'Mar 18', cardType: 'Visa Signature', amount: 392.00, qualifiedAt: 'EIRF', shouldBe: 'CPS Rewards 1', cause: 'Keyed entry when terminal available', lostBps: 55, lostDollars: 2.16 },
-  { txnDate: 'Mar 15', cardType: 'Visa Business', amount: 1650.00, qualifiedAt: 'EIRF (Mid-Qual)', shouldBe: 'CPS Retail', cause: 'Missing Level II data on B2B card', lostBps: 65, lostDollars: 10.73 },
-  { txnDate: 'Mar 11', cardType: 'MC Corporate', amount: 2100.00, qualifiedAt: 'Standard', shouldBe: 'Data Rate I', cause: 'Missing Level II data on B2B card', lostBps: 70, lostDollars: 14.70 },
-  { txnDate: 'Mar 8', cardType: 'Visa Credit', amount: 156.80, qualifiedAt: 'Mid-Qual', shouldBe: 'CPS Retail', cause: 'Keyed entry when terminal available', lostBps: 55, lostDollars: 0.86 },
-];
+interface DowngradeAlert {
+  txnDate: string; cardType: string; amount: number; qualifiedAt: string;
+  shouldBe: string; cause: string; lostBps: number; lostDollars: number;
+}
+const DOWNGRADE_ALERTS: DowngradeAlert[] = [];
 const DOWNGRADE_MONTHLY_LOSS = DOWNGRADE_ALERTS.reduce((s, d) => s + d.lostDollars, 0);
 
 // ── Approval/Decline Data ──
-const APPROVAL_DECLINE = {
-  total: 812, approved: 764, declined: 41, referred: 7,
-  declineReasons: [
-    { reason: 'Insufficient Funds', count: 18, pct: 43.9, revenue: 832.40 },
-    { reason: 'AVS Mismatch', count: 8, pct: 19.5, revenue: 412.00 },
-    { reason: 'Velocity Limit', count: 6, pct: 14.6, revenue: 287.50 },
-    { reason: 'Card Expired', count: 5, pct: 12.2, revenue: 198.75 },
-    { reason: 'Fraud Block', count: 3, pct: 7.3, revenue: 156.00 },
-    { reason: 'Other', count: 1, pct: 2.4, revenue: 45.00 },
-  ],
+interface DeclineReason {
+  reason: string; count: number; pct: number; revenue: number;
+}
+const APPROVAL_DECLINE: { total: number; approved: number; declined: number; referred: number; declineReasons: DeclineReason[] } = {
+  total: 0, approved: 0, declined: 0, referred: 0,
+  declineReasons: [],
 };
+// Guarded denominator so an empty month can never divide by zero
+const APPROVAL_TOTAL = APPROVAL_DECLINE.total || 1;
 const TOTAL_DECLINED_REVENUE = APPROVAL_DECLINE.declineReasons.reduce((s, d) => s + d.revenue, 0);
 
 // ══════════════════════════════════════
@@ -191,19 +123,49 @@ const TOTAL_DECLINED_REVENUE = APPROVAL_DECLINE.declineReasons.reduce((s, d) => 
 // ══════════════════════════════════════
 export function MerchantResidualDetail() {
   const { navigate, currentPage } = useAppNavigate();
+
+  const merchantId = currentPage.split('/residuals/')[1] || 'merchant-001';
+  const M: MerchantData | undefined = MERCHANTS[merchantId] || MERCHANTS['merchant-001'];
+
+  if (!M) {
+    return (
+      <div className="h-full overflow-y-auto bg-canvas">
+        <div className="max-w-[1440px] mx-auto px-6 py-6">
+          <button
+            onClick={() => navigate('/residuals')}
+            className="inline-flex items-center gap-1.5 text-sm text-brand hover:text-brand-hover font-medium transition-colors mb-4"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Residuals
+          </button>
+          <div className="bg-white rounded-[8px] border border-gray-200 py-12 text-center">
+            <Building2 className="w-8 h-8 text-gray-300 mx-auto mb-3" />
+            <p className="text-sm font-medium text-gray-900">No merchant data yet</p>
+            <p className="text-xs text-gray-500 mt-1">Residual detail populates from live residual imports.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return <MerchantResidualDetailBody M={M} merchantId={merchantId} />;
+}
+
+function MerchantResidualDetailBody({ M, merchantId }: { M: MerchantData; merchantId: string }) {
+  const { navigate } = useAppNavigate();
   const [activeTab, setActiveTab] = useState<'residuals' | 'interchange' | 'equipment' | 'chargebacks' | 'batches'>('residuals');
   const [verifyMode, setVerifyMode] = useState(false);
   const [expandedVerifyRow, setExpandedVerifyRow] = useState<number | null>(null);
   const [showSchedule, setShowSchedule] = useState(false);
   const [disputeModal, setDisputeModal] = useState<{ open: boolean; chargeback: ChargebackItem | null }>({ open: false, chargeback: null });
 
-  const merchantId = currentPage.split('/residuals/')[1] || 'merchant-001';
-  const M = MERCHANTS[merchantId] || MERCHANTS['merchant-001'];
   const residuals = useMemo(() => getResiduals(merchantId), [merchantId]);
   const equipment = useMemo(() => getEquipment(M), [merchantId]);
 
-  const latestMonth = residuals[0];
-  const prevMonth = residuals[1];
+  // Zero-value fallback so an empty residual history can never crash the page
+  const EMPTY_MONTH: MonthlyResidual = { month: '—', volume: 0, txns: 0, grossRev: 0, procFees: 0, netRev: 0, agentShare: 0, deltNet: 0, effRate: 0, avgTicket: 0 };
+  const latestMonth = residuals[0] ?? EMPTY_MONTH;
+  const prevMonth = residuals[1] ?? EMPTY_MONTH;
   const volDelta = prevMonth.volume > 0 ? (latestMonth.volume - prevMonth.volume) / prevMonth.volume : 0;
   const revDelta = prevMonth.netRev > 0 ? (latestMonth.netRev - prevMonth.netRev) / prevMonth.netRev : 0;
   const totalInterchangeCost = INTERCHANGE_BREAKDOWN.reduce((s, r) => s + r.cost, 0);
@@ -307,9 +269,9 @@ export function MerchantResidualDetail() {
                 <div className="flex items-center gap-6 mb-4">
                   <div className="flex-1">
                     <div className="flex h-4 rounded-full overflow-hidden bg-gray-100">
-                      <div className="bg-emerald-500 transition-all" style={{ width: `${(APPROVAL_DECLINE.approved / APPROVAL_DECLINE.total) * 100}%` }} />
-                      <div className="bg-red-400 transition-all" style={{ width: `${(APPROVAL_DECLINE.declined / APPROVAL_DECLINE.total) * 100}%` }} />
-                      <div className="bg-amber-400 transition-all" style={{ width: `${(APPROVAL_DECLINE.referred / APPROVAL_DECLINE.total) * 100}%` }} />
+                      <div className="bg-emerald-500 transition-all" style={{ width: `${(APPROVAL_DECLINE.approved / APPROVAL_TOTAL) * 100}%` }} />
+                      <div className="bg-red-400 transition-all" style={{ width: `${(APPROVAL_DECLINE.declined / APPROVAL_TOTAL) * 100}%` }} />
+                      <div className="bg-amber-400 transition-all" style={{ width: `${(APPROVAL_DECLINE.referred / APPROVAL_TOTAL) * 100}%` }} />
                     </div>
                   </div>
                 </div>
@@ -317,17 +279,17 @@ export function MerchantResidualDetail() {
                   <div className="bg-emerald-50 rounded-[6px] p-3 text-center">
                     <p className="text-xs text-gray-500 mb-0.5">Approved</p>
                     <p className="text-xl font-bold text-emerald-700">{APPROVAL_DECLINE.approved}</p>
-                    <p className="text-[10px] text-emerald-600">{((APPROVAL_DECLINE.approved / APPROVAL_DECLINE.total) * 100).toFixed(1)}%</p>
+                    <p className="text-[10px] text-emerald-600">{((APPROVAL_DECLINE.approved / APPROVAL_TOTAL) * 100).toFixed(1)}%</p>
                   </div>
                   <div className="bg-red-50 rounded-[6px] p-3 text-center">
                     <p className="text-xs text-gray-500 mb-0.5">Declined</p>
                     <p className="text-xl font-bold text-red-600">{APPROVAL_DECLINE.declined}</p>
-                    <p className="text-[10px] text-red-500">{((APPROVAL_DECLINE.declined / APPROVAL_DECLINE.total) * 100).toFixed(1)}%</p>
+                    <p className="text-[10px] text-red-500">{((APPROVAL_DECLINE.declined / APPROVAL_TOTAL) * 100).toFixed(1)}%</p>
                   </div>
                   <div className="bg-amber-50 rounded-[6px] p-3 text-center">
                     <p className="text-xs text-gray-500 mb-0.5">Referred</p>
                     <p className="text-xl font-bold text-amber-600">{APPROVAL_DECLINE.referred}</p>
-                    <p className="text-[10px] text-amber-500">{((APPROVAL_DECLINE.referred / APPROVAL_DECLINE.total) * 100).toFixed(1)}%</p>
+                    <p className="text-[10px] text-amber-500">{((APPROVAL_DECLINE.referred / APPROVAL_TOTAL) * 100).toFixed(1)}%</p>
                   </div>
                 </div>
                 <div className="bg-red-50/50 border border-red-100 rounded-[6px] px-3 py-2 flex items-center gap-2">
@@ -337,6 +299,13 @@ export function MerchantResidualDetail() {
               </Card>
 
               <Card title="Decline Reason Distribution" sub="Top reasons for transaction failures">
+                {APPROVAL_DECLINE.declineReasons.length === 0 ? (
+                  <div className="py-12 text-center">
+                    <Shield className="w-8 h-8 text-gray-300 mx-auto mb-3" />
+                    <p className="text-sm font-medium text-gray-900">No declines yet</p>
+                    <p className="text-xs text-gray-500 mt-1">Decline reasons appear once transaction data is imported.</p>
+                  </div>
+                ) : (
                 <div className="space-y-2.5">
                   {APPROVAL_DECLINE.declineReasons.map((d, i) => (
                     <div key={i} className="flex items-center gap-3">
@@ -353,6 +322,7 @@ export function MerchantResidualDetail() {
                     </div>
                   ))}
                 </div>
+                )}
               </Card>
             </div>
 
@@ -680,14 +650,13 @@ export function MerchantResidualDetail() {
                 sub={`${DOWNGRADE_ALERTS.length} downgrades — ${fmt(DOWNGRADE_MONTHLY_LOSS)} lost this month`}
                 right={<span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-red-50 text-red-700">{fmt(DOWNGRADE_MONTHLY_LOSS)}/mo</span>}
               >
-                <div className="mb-4 bg-amber-50 border border-amber-200 rounded-[8px] p-3">
-                  <p className="text-xs text-amber-800 font-medium mb-1">Common Downgrade Causes</p>
-                  <div className="flex flex-wrap gap-2">
-                    {[{ cause: 'Missing Level II Data (B2B)', count: 3 },{ cause: 'Non-EMV Fallback', count: 1 },{ cause: 'Keyed Entry (Terminal Available)', count: 2 }].map((c, i) => (
-                      <span key={i} className="inline-flex items-center gap-1.5 px-2 py-1 bg-white border border-amber-200 rounded text-xs text-amber-800"><span className="font-semibold">{c.count}x</span> {c.cause}</span>
-                    ))}
+                {DOWNGRADE_ALERTS.length === 0 ? (
+                  <div className="py-12 text-center">
+                    <AlertTriangle className="w-8 h-8 text-gray-300 mx-auto mb-3" />
+                    <p className="text-sm font-medium text-gray-900">No downgrade alerts yet</p>
+                    <p className="text-xs text-gray-500 mt-1">Interchange downgrades appear once transaction data is imported.</p>
                   </div>
-                </div>
+                ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full"><thead><tr className="border-b border-gray-100 bg-gray-50">{['Date','Card Type','Amount','Qualified At','Should Be','Cause','Lost'].map(h => <Th key={h}>{h}</Th>)}</tr></thead>
                     <tbody>{DOWNGRADE_ALERTS.map((d, i) => (
@@ -704,6 +673,7 @@ export function MerchantResidualDetail() {
                     <tfoot><tr className="border-t-2 border-gray-200 bg-red-50/30"><td colSpan={6} className="px-3 py-2.5 text-sm font-semibold text-gray-900">Total Monthly Downgrade Loss</td><td className="px-3 py-2.5 text-sm font-bold tabular-nums text-red-700">-{fmt(DOWNGRADE_MONTHLY_LOSS)}</td></tr></tfoot>
                   </table>
                 </div>
+                )}
               </Card>
 
               {/* Fee Schedule */}
@@ -740,7 +710,7 @@ export function MerchantResidualDetail() {
                     { label: 'Interchange Downgrades', value: DOWNGRADE_MONTHLY_LOSS, note: `${DOWNGRADE_ALERTS.length} transactions this month` },
                     { label: 'PCI Non-Compliance Fee', value: 0, note: 'Currently compliant' },
                     { label: 'Batch Timing Penalties', value: 0, note: 'All batches settled on time' },
-                    { label: 'Unnecessary Surcharges', value: 4.95, note: 'Annual fee prorated' },
+                    { label: 'Unnecessary Surcharges', value: 0, note: 'None detected' },
                   ].map((item, i) => (
                     <div key={i} className="flex items-center justify-between py-1.5 border-b border-gray-50 last:border-0">
                       <div>
@@ -758,8 +728,8 @@ export function MerchantResidualDetail() {
                       <p className="text-[10px] text-gray-500">Quote this number for rate review pitches</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-lg font-bold text-red-600 tabular-nums">{fmt(DOWNGRADE_MONTHLY_LOSS + 4.95)}/mo</p>
-                      <p className="text-xs text-red-500 tabular-nums">{fmt((DOWNGRADE_MONTHLY_LOSS + 4.95) * 12)}/yr</p>
+                      <p className="text-lg font-bold text-red-600 tabular-nums">{fmt(DOWNGRADE_MONTHLY_LOSS)}/mo</p>
+                      <p className="text-xs text-red-500 tabular-nums">{fmt(DOWNGRADE_MONTHLY_LOSS * 12)}/yr</p>
                     </div>
                   </div>
                 </div>
@@ -919,8 +889,8 @@ export function MerchantResidualDetail() {
                     { l: 'Chargeback Rate', v: fmtPct(M.chargebackRate), c: M.chargebackRate > 0.008 ? 'text-red-600' : 'text-emerald-600' },
                     { l: 'Visa Threshold', v: M.chargebackRate > 0.009 ? 'At Risk' : 'Within Limits', c: M.chargebackRate > 0.009 ? 'text-red-600' : 'text-emerald-600' },
                     { l: 'MC Threshold', v: 'Within Limits', c: 'text-emerald-600' },
-                    { l: 'Total Disputes (12mo)', v: '3', c: '' },
-                    { l: 'Win Rate', v: '66.7%', c: 'text-emerald-600' },
+                    { l: 'Total Disputes (12mo)', v: String(CHARGEBACKS.length), c: '' },
+                    { l: 'Win Rate', v: CHARGEBACKS.length > 0 ? `${((CHARGEBACKS.filter(c => c.status === 'Won').length / CHARGEBACKS.length) * 100).toFixed(1)}%` : '—', c: 'text-emerald-600' },
                     { l: 'Total Exposure', v: fmt(CHARGEBACKS.reduce((s, c) => s + c.amount, 0)), c: '' },
                     { l: 'Risk Tier', v: M.riskLevel, c: 'text-emerald-600' },
                   ].map((r, i) => (
@@ -992,8 +962,8 @@ export function MerchantResidualDetail() {
                   {[
                     { l: 'Total Settled', v: fmt(BATCHES_RECENT.reduce((s, b) => s + b.amount, 0)) },
                     { l: 'Total Transactions', v: fmtNum(BATCHES_RECENT.reduce((s, b) => s + b.txns, 0)) },
-                    { l: 'Avg Daily Volume', v: fmt(BATCHES_RECENT.reduce((s, b) => s + b.amount, 0) / BATCHES_RECENT.length) },
-                    { l: 'Avg Batch Size', v: `${Math.round(BATCHES_RECENT.reduce((s, b) => s + b.txns, 0) / BATCHES_RECENT.length)} txns` },
+                    { l: 'Avg Daily Volume', v: fmt(BATCHES_RECENT.reduce((s, b) => s + b.amount, 0) / Math.max(BATCHES_RECENT.length, 1)) },
+                    { l: 'Avg Batch Size', v: `${Math.round(BATCHES_RECENT.reduce((s, b) => s + b.txns, 0) / Math.max(BATCHES_RECENT.length, 1))} txns` },
                     { l: 'Settlement Time', v: 'Next Day', c: 'text-emerald-600' },
                     { l: 'Missed Batches', v: '0', c: 'text-emerald-600' },
                   ].map((r, i) => (

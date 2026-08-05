@@ -121,9 +121,9 @@ export function TemplateEditor() {
   // Render preview with resolved merge tags (mock data)
   const resolvePreview = (html: string) => {
     return html
-      .replace(/\{\{merchant_name\}\}/g, 'Sunrise Cafe & Bakery')
+      .replace(/\{\{merchant_name\}\}/g, 'Example Merchant')
       .replace(/\{\{contact_name\}\}/g, 'John Smith')
-      .replace(/\{\{agent_name\}\}/g, 'Sarah Johnson')
+      .replace(/\{\{agent_name\}\}/g, 'Agent Name')
       .replace(/\{\{monthly_volume\}\}/g, '$37,500')
       .replace(/\{\{monthly_savings\}\}/g, '$312')
       .replace(/\{\{savings_percent\}\}/g, '0.18')

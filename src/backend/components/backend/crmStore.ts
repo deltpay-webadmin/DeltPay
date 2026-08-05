@@ -425,34 +425,7 @@ export interface CrmState {
 // ══════════════════════════════════════════════════════════════
 
 const fallbackSeed: CrmState = {
-  leads: [
-    {
-      id: 'lead-001',
-      businessName: 'Green Valley Auto Repair',
-      industry: 'Automotive',
-      contactName: 'Robert Martinez',
-      contactEmail: 'robert@greenvalleyauto.com',
-      contactPhone: '(555) 123-4567',
-      type: 'MCA',
-      source: 'Website Inquiry',
-      monthlySales: '$45,000',
-      amountRequested: '$75,000',
-      score: 82,
-      status: 'In Progress',
-      priority: 'High',
-      lastActivity: '2 hours ago',
-      assignedAgent: 'Sarah Johnson',
-      stage: 'Qualified',
-      timeline: [
-        { title: 'Follow-up call completed', description: 'Discussed terms and pricing structure', user: 'Sarah Johnson', timestamp: '2 hours ago' },
-      ],
-      notes: 'Strong financials. Owner is motivated and ready to move forward.',
-      referredBy: 'Metro Diner Group',
-      tasks: [
-        { id: 't1', title: 'Follow up call scheduled', due: 'Tomorrow at 2:00 PM', done: false },
-      ],
-    },
-  ],
+  leads: [],
   onboarding: [],
   underwriting: [],
   referrals: [],

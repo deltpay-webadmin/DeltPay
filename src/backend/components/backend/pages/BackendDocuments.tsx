@@ -236,11 +236,11 @@ function ComposerModal({ initial, onClose }: { initial: ComposerForm; onClose: (
               </div>
               <div>
                 <label className={labelCls}>Merchant Name *</label>
-                <input value={form.merchantName} onChange={e => up({ merchantName: e.target.value })} className={inputCls} placeholder="Havana Bites Cafe" />
+                <input value={form.merchantName} onChange={e => up({ merchantName: e.target.value })} className={inputCls} placeholder="Business name" />
               </div>
               <div>
                 <label className={labelCls}>Legal Name</label>
-                <input value={form.merchantLegalName} onChange={e => up({ merchantLegalName: e.target.value })} className={inputCls} placeholder="Havana Bites LLC" />
+                <input value={form.merchantLegalName} onChange={e => up({ merchantLegalName: e.target.value })} className={inputCls} placeholder="Legal entity name" />
               </div>
               <div>
                 <label className={labelCls}>DBA</label>

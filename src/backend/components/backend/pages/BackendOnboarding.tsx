@@ -40,7 +40,7 @@ const STEP_SHORT: Record<StepName, string> = {
 };
 
 // Team members available for reassignment
-const AGENTS = ['Marcus Johnson', 'Priya Patel', 'Jamal Foster', 'Devon Richards', 'Sarah Kim', 'Alex Rivera'];
+const AGENTS = ['Unassigned'];
 
 
 function slaDot(status: SLAStatus) {
