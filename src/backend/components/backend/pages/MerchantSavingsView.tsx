@@ -74,6 +74,12 @@ export function MerchantSavingsView({ extracted, programs, bestProgramKey, onExi
     [monthlySavings],
   );
 
+  /** The program with the biggest real savings — offered as a redirect when the selected one saves nothing. */
+  const bestSavingsProgram = useMemo(
+    () => programs.reduce<ProgramQuote | null>((best, p) => (p.annualSavings > 0 && (!best || p.annualSavings > best.annualSavings) ? p : best), null),
+    [programs],
+  );
+
   if (!selected) return null;
 
   const monthLabel = (m: number) => {
@@ -112,21 +118,44 @@ export function MerchantSavingsView({ extracted, programs, bestProgramKey, onExi
         </div>
       </div>
 
-      {/* ── Hero savings banner ── */}
-      <div className="bg-emerald-50 border border-emerald-200 rounded-[8px] px-6 py-8 text-center">
-        <p className="text-sm text-emerald-600 font-medium mb-2">{t('Your Estimated Annual Savings with')} {t(selected.name)}</p>
-        <p className="text-5xl font-bold text-emerald-700 tabular-nums">{fmtWhole(selected.annualSavings)}</p>
-        <div className="mt-3 flex items-center justify-center gap-3 flex-wrap">
-          <span className="inline-block px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-sm font-bold">
-            {selected.savingsPct}% {t('less than you pay today')}
-          </span>
-          {monthlySavings > 0 && (
-            <span className="text-sm text-emerald-600">
-              {fmtWhole(monthlySavings)} {t('back in your pocket every month')}
+      {/* ── Hero banner: savings when there are savings, honest cost framing when not ── */}
+      {selected.annualSavings > 0 ? (
+        <div className="bg-emerald-50 border border-emerald-200 rounded-[8px] px-6 py-8 text-center">
+          <p className="text-sm text-emerald-600 font-medium mb-2">{t('Your Estimated Annual Savings with')} {t(selected.name)}</p>
+          <p className="text-5xl font-bold text-emerald-700 tabular-nums">{fmtWhole(selected.annualSavings)}</p>
+          <div className="mt-3 flex items-center justify-center gap-3 flex-wrap">
+            <span className="inline-block px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-sm font-bold">
+              {selected.savingsPct}% {t('less than you pay today')}
             </span>
+            {monthlySavings > 0 && (
+              <span className="text-sm text-emerald-600">
+                {fmtWhole(monthlySavings)} {t('back in your pocket every month')}
+              </span>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="bg-gray-50 border border-gray-200 rounded-[8px] px-6 py-8 text-center">
+          <p className="text-sm text-gray-500 font-medium mb-2">{t('Your Cost with')} {t(selected.name)}</p>
+          <p className="text-5xl font-bold text-gray-900 tabular-nums">
+            {fmt(selected.monthlyCost)}<span className="text-xl font-semibold text-gray-400">{t('/mo')}</span>
+          </p>
+          <div className="mt-3 flex items-center justify-center gap-3 flex-wrap">
+            <span className="inline-block px-3 py-1 rounded-full bg-gray-200 text-gray-600 text-sm font-bold">
+              {t('About the same as you pay today')}
+            </span>
+            <span className="text-sm text-gray-500">{t('One simple, predictable cost — no surprise fees.')}</span>
+          </div>
+          {bestSavingsProgram && bestSavingsProgram.key !== selected.key && (
+            <button
+              onClick={() => setSelectedKey(bestSavingsProgram.key)}
+              className="mt-4 inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-emerald-100 text-emerald-700 text-sm font-semibold hover:bg-emerald-200 transition-colors"
+            >
+              {t('Looking for savings?')} {t(bestSavingsProgram.name)} {t('would save you')} {fmtWhole(bestSavingsProgram.annualSavings)}{t('/yr')} →
+            </button>
           )}
         </div>
-      </div>
+      )}
 
       {/* ── Program selector ── */}
       <div className="bg-white rounded-[8px] border border-gray-200 overflow-hidden">
@@ -168,7 +197,11 @@ export function MerchantSavingsView({ extracted, programs, bestProgramKey, onExi
                   </div>
                   <div>
                     <p className="text-[11px] text-gray-500">{t("You'd save")}</p>
-                    <p className="text-sm font-bold text-emerald-600 tabular-nums">{fmtWhole(p.annualSavings)}<span className="text-[11px] font-medium text-emerald-400">/yr</span></p>
+                    {p.annualSavings > 0 ? (
+                      <p className="text-sm font-bold text-emerald-600 tabular-nums">{fmtWhole(p.annualSavings)}<span className="text-[11px] font-medium text-emerald-400">/yr</span></p>
+                    ) : (
+                      <p className="text-sm font-bold text-gray-500">{t('Same as today')}</p>
+                    )}
                   </div>
                 </div>
               </button>
@@ -177,8 +210,8 @@ export function MerchantSavingsView({ extracted, programs, bestProgramKey, onExi
         </div>
       </div>
 
-      {/* ── Charts: cost comparison + cumulative savings ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* ── Charts: cost comparison + cumulative savings (savings chart only when there are savings) ── */}
+      <div className={`grid grid-cols-1 ${monthlySavings > 0 ? 'lg:grid-cols-2' : ''} gap-6`}>
         <div className="bg-white rounded-[8px] border border-gray-200 p-5">
           <h3 className="text-sm font-semibold text-gray-900">{t('What you pay: today vs. Delt')}</h3>
           <p className="text-xs text-gray-500 mt-0.5 mb-3">{t('Annual processing cost')}</p>
@@ -214,6 +247,7 @@ export function MerchantSavingsView({ extracted, programs, bestProgramKey, onExi
           )}
         </div>
 
+        {monthlySavings > 0 && (
         <div className="bg-white rounded-[8px] border border-gray-200 p-5">
           <h3 className="text-sm font-semibold text-gray-900">{t('Your savings add up')}</h3>
           <p className="text-xs text-gray-500 mt-0.5 mb-3">{t('Estimated total saved over time with')} {t(selected.name)}</p>
@@ -246,6 +280,7 @@ export function MerchantSavingsView({ extracted, programs, bestProgramKey, onExi
             {t("After 3 years, that's an estimated")} <span className="font-semibold text-emerald-600">{fmtWhole(monthlySavings * 36)}</span> {t('kept in your business.')}
           </p>
         </div>
+        )}
       </div>
 
       {/* ── What you're paying today ── */}

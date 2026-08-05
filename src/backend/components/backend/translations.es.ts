@@ -193,6 +193,12 @@ export const ES: Record<string, string> = {
 
   // ── Merchant View ──
   'Savings proposal prepared by Delt': 'Propuesta de ahorro preparada por Delt',
+  'Your Cost with': 'Su Costo con',
+  'About the same as you pay today': 'Prácticamente lo mismo que paga hoy',
+  'One simple, predictable cost — no surprise fees.': 'Un costo simple y predecible — sin cargos sorpresa.',
+  'Looking for savings?': '¿Busca ahorrar?',
+  'would save you': 'le ahorraría',
+  'Same as today': 'Igual que hoy',
   'based on your statement for': 'basada en su estado de cuenta de',
   'Download Proposal': 'Descargar Propuesta',
   'Your Estimated Annual Savings with': 'Su Ahorro Anual Estimado con',

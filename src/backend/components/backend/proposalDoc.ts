@@ -66,6 +66,7 @@ interface ProposalCopy {
   recommendedFor: (name: string) => string;
   youdPay: string;
   youdSave: string;
+  sameAsToday: string;
   perMo: string;
   perYr: string;
   annualCostCompare: string;
@@ -128,6 +129,7 @@ const EN: ProposalCopy = {
   recommendedFor: name => `Recommended for ${name}`,
   youdPay: "You'd pay",
   youdSave: "You'd save",
+  sameAsToday: 'Same as today',
   perMo: '/mo',
   perYr: '/yr',
   annualCostCompare: 'Annual Cost: Today vs. Delt',
@@ -228,6 +230,7 @@ const ES_COPY: ProposalCopy = {
   recommendedFor: name => `Recomendado para ${name}`,
   youdPay: 'Usted pagaría',
   youdSave: 'Usted ahorraría',
+  sameAsToday: 'Igual que hoy',
   perMo: '/mes',
   perYr: '/año',
   annualCostCompare: 'Costo Anual: Hoy vs. Delt',
@@ -297,7 +300,13 @@ const ES_COPY: ProposalCopy = {
 export function buildProposalHtml(input: ProposalInput): string {
   const { extracted: ex, programs, focusKey, preparedBy, preparedByEmail, lang = 'en' } = input;
   const L = lang === 'es' ? ES_COPY : EN;
-  const focus = programs.find(p => p.key === focusKey) ?? programs[0];
+  const requested = programs.find(p => p.key === focusKey) ?? programs[0];
+  // The document narrates savings on every page — a $0-savings focus reads as
+  // broken in front of a merchant, so fall back to the best-savings program.
+  const bestSavings = programs.reduce<ProgramQuote | null>(
+    (b, p) => (p.annualSavings > (b?.annualSavings ?? 0) ? p : b), null,
+  );
+  const focus = requested && requested.annualSavings <= 0 && bestSavings ? bestSavings : requested;
   if (!focus) return '';
 
   const name = esc(ex.merchantName);
@@ -334,7 +343,7 @@ export function buildProposalHtml(input: ProposalInput): string {
       <p class="terms">${esc(lang === 'es' ? termsToEs(p.terms) : p.terms)}</p>
       <div class="split">
         <div><span class="lbl">${esc(L.youdPay)}</span><span class="val">${fmt(p.monthlyCost)}${L.perMo}</span></div>
-        <div><span class="lbl">${esc(L.youdSave)}</span><span class="val green">${fmtWhole(p.annualSavings)}${L.perYr}</span></div>
+        <div><span class="lbl">${esc(L.youdSave)}</span><span class="val ${p.annualSavings > 0 ? 'green' : ''}">${p.annualSavings > 0 ? fmtWhole(p.annualSavings) + L.perYr : esc(L.sameAsToday)}</span></div>
       </div>
     </div>`).join('');
 
