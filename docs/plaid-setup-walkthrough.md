@@ -7,20 +7,46 @@ know it worked. Total time: roughly 30 minutes.
 You'll need logins for: GitHub, dashboard.plaid.com, supabase.com,
 vercel.com — plus a computer with Node.js for one terminal step.
 
+## Why you're doing this — and what you get
+
+Four problems, four payoffs:
+
+1. **The CRM's Connect bank button errors out** ("OAuth redirect URI must
+   be configured"). Step 2 fixes it with one dashboard entry.
+2. **Applicant bank connections were being thrown away.** When someone
+   connected their bank in the deltcapital.com application, the data was
+   shown once and discarded — underwriting never saw it. After this
+   setup, every applicant connection lands in the Plaid Data Vault
+   automatically: accounts, 90 days of transactions, monthly revenue,
+   NSF history, and a scored lending recommendation, with zero staff
+   effort.
+3. **Staff can't connect a prospect's bank for them** — the CRM's Link
+   window asks for the *customer's* credentials. The new **Send connect
+   link** button fixes this: one click copies a secure Plaid URL you
+   text or email; the prospect connects on their own phone and the data
+   appears in the vault by itself. This is how you get bank data from
+   any lead, whether or not they ever touched the application.
+4. **You can't test the application without being flagged** — production
+   identity verification does real KYC and blocks repeat applicants.
+   Steps 5–7 give you a permanent test setup (sandbox on preview
+   deployments) where you can run the whole flow unlimited times with
+   fake credentials, while the live site stays untouched.
+
 ---
 
-## Step 1 — Merge the two pull requests (GitHub, ~2 min)
+## Step 1 — Merge any open pull requests (GitHub, ~2 min)
 
-There is one PR on the **DeltPay** repo (CRM backend + docs) and one on
-the **DeltCapital** repo (the deltcapital.com site).
+This work shipped as PRs on the **DeltPay** repo (CRM backend, the
+Send-connect-link feature, these docs) and the **DeltCapital** repo (the
+deltcapital.com site). For each PR that's still open:
 
 1. Open the PR page, skim the description, click the green
-   **Merge pull request** button, then **Confirm merge**. Do this for both.
+   **Merge pull request** button, then **Confirm merge**.
 2. Merging DeltCapital automatically redeploys www.deltcapital.com.
    That's safe: the new code does nothing until Step 3's secret exists,
    and if anything fails it behaves exactly like the old code.
 
-> If Vercel shows an old "blocked" build for the Claude branch, ignore
+> If Vercel shows an old "blocked" build for a Claude branch, ignore
 > it — Vercel blocks builds from unrecognized commit authors. Your merge
 > commit builds normally.
 
