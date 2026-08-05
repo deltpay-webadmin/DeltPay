@@ -1,4 +1,4 @@
 Deploy trigger marker (safe to delete).
 Carries a Claude-authored commit so Vercel deploys without attributing the
 deploy to a blocked account.
-Re-trigger: 2026-08-04a.
+Re-trigger: 2026-08-05a.
