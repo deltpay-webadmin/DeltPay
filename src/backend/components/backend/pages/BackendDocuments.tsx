@@ -236,11 +236,11 @@ function ComposerModal({ initial, onClose }: { initial: ComposerForm; onClose: (
               </div>
               <div>
                 <label className={labelCls}>Merchant Name *</label>
-                <input value={form.merchantName} onChange={e => up({ merchantName: e.target.value })} className={inputCls} placeholder="Havana Bites Cafe" />
+                <input value={form.merchantName} onChange={e => up({ merchantName: e.target.value })} className={inputCls} placeholder="Business name" />
               </div>
               <div>
                 <label className={labelCls}>Legal Name</label>
-                <input value={form.merchantLegalName} onChange={e => up({ merchantLegalName: e.target.value })} className={inputCls} placeholder="Havana Bites LLC" />
+                <input value={form.merchantLegalName} onChange={e => up({ merchantLegalName: e.target.value })} className={inputCls} placeholder="Legal entity name" />
               </div>
               <div>
                 <label className={labelCls}>DBA</label>
@@ -261,7 +261,7 @@ function ComposerModal({ initial, onClose }: { initial: ComposerForm; onClose: (
               </div>
               <div className="col-span-2">
                 <label className={labelCls}>Business Address</label>
-                <input value={form.businessAddress} onChange={e => up({ businessAddress: e.target.value })} className={inputCls} placeholder="123 Calle Ocho, Miami, FL 33135" />
+                <input value={form.businessAddress} onChange={e => up({ businessAddress: e.target.value })} className={inputCls} placeholder="Street address, City, ST ZIP" />
               </div>
             </div>
           </div>
@@ -346,7 +346,7 @@ function ComposerModal({ initial, onClose }: { initial: ComposerForm; onClose: (
             <div className="grid grid-cols-3 gap-3">
               <div>
                 <label className={labelCls}>Signer Name *</label>
-                <input value={form.signerName} onChange={e => up({ signerName: e.target.value })} className={inputCls} placeholder="Maria Gonzalez" />
+                <input value={form.signerName} onChange={e => up({ signerName: e.target.value })} className={inputCls} placeholder="Signer full name" />
               </div>
               <div>
                 <label className={labelCls}>Signer Email *</label>

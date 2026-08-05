@@ -74,77 +74,17 @@ interface ISOTenant {
 }
 
 // ── Data ──
-const subscriptions: Subscription[] = [
-  { id: 'SUB-001', merchantName: 'Metro Diner Group', plan: 'Custom', monthlyFee: 199, billingStatus: 'Current', lensUsage: 47, websiteStatus: 'Live', mcaActive: true, memberSince: 'Jan 2025', nextBilling: 'May 1, 2026', agent: 'Marcus Johnson' },
-  { id: 'SUB-002', merchantName: 'Bright Auto Sales', plan: 'Growth', monthlyFee: 99, billingStatus: 'Current', lensUsage: 12, websiteStatus: 'Live', mcaActive: true, memberSince: 'Mar 2025', nextBilling: 'May 1, 2026', agent: 'Marcus Johnson' },
-  { id: 'SUB-003', merchantName: 'Sunset Logistics LLC', plan: 'Free', monthlyFee: 0, billingStatus: 'Current', lensUsage: 0, websiteStatus: 'None', mcaActive: true, memberSince: 'Jun 2025', nextBilling: '—', agent: 'Devon Richards' },
-  { id: 'SUB-004', merchantName: 'Peak Construction Co', plan: 'Growth', monthlyFee: 99, billingStatus: 'Past Due', lensUsage: 8, websiteStatus: 'Draft', mcaActive: false, memberSince: 'Sep 2025', nextBilling: 'Apr 1, 2026', agent: 'Priya Patel' },
-  { id: 'SUB-005', merchantName: 'Coastal Seafood Inc', plan: 'Custom', monthlyFee: 199, billingStatus: 'Current', lensUsage: 63, websiteStatus: 'Live', mcaActive: true, memberSince: 'Nov 2024', nextBilling: 'May 1, 2026', agent: 'Jamal Foster' },
-  { id: 'SUB-006', merchantName: 'Lakeside Catering', plan: 'Free', monthlyFee: 0, billingStatus: 'Trial', lensUsage: 2, websiteStatus: 'None', mcaActive: false, memberSince: 'Apr 2026', nextBilling: 'May 9, 2026', agent: 'Jamal Foster' },
-];
+const subscriptions: Subscription[] = [];
 
-const allAgents = ['All Agents', 'Marcus Johnson', 'Devon Richards', 'Priya Patel', 'Jamal Foster', 'Sarah Kim'];
+const allAgents = ['All Agents'];
 
 const fmt = (n: number) => n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
 
-const isoTenants: ISOTenant[] = [
-  {
-    id: 'ISO-001', name: 'Apex Funding Group', tier: 'Enterprise', monthlyFee: 2499, residualOverride: 8400, mcaCommission: 12600, lensAIFees: 1890, totalRevenue: 25389, agents: 14, merchants: 86, status: 'Active', onboardDate: 'Aug 2024',
-    logo: 'AF', primaryColor: '#1E3A5F', secondaryColor: '#4A90D9', customDomain: 'portal.apexfunding.com',
-    contactName: 'Richard Torres', contactEmail: 'richard@apexfunding.com', contactPhone: '(305) 555-0142',
-    usageData: [
-      { month: 'Nov', saas: 2499, residual: 6200, mca: 9800, lens: 1200 },
-      { month: 'Dec', saas: 2499, residual: 6800, mca: 10400, lens: 1350 },
-      { month: 'Jan', saas: 2499, residual: 7200, mca: 11200, lens: 1520 },
-      { month: 'Feb', saas: 2499, residual: 7600, mca: 11800, lens: 1680 },
-      { month: 'Mar', saas: 2499, residual: 8100, mca: 12200, lens: 1790 },
-      { month: 'Apr', saas: 2499, residual: 8400, mca: 12600, lens: 1890 },
-    ],
-  },
-  {
-    id: 'ISO-002', name: 'Liberty Capital Partners', tier: 'Professional', monthlyFee: 999, residualOverride: 3200, mcaCommission: 5400, lensAIFees: 640, totalRevenue: 10239, agents: 6, merchants: 34, status: 'Active', onboardDate: 'Jan 2025',
-    logo: 'LC', primaryColor: '#2D5016', secondaryColor: '#6BAF3D', customDomain: 'app.libertycapital.io',
-    contactName: 'Sandra Kim', contactEmail: 'sandra@libertycapital.io', contactPhone: '(212) 555-0198',
-    usageData: [
-      { month: 'Nov', saas: 999, residual: 2100, mca: 3600, lens: 340 },
-      { month: 'Dec', saas: 999, residual: 2400, mca: 4000, lens: 410 },
-      { month: 'Jan', saas: 999, residual: 2600, mca: 4400, lens: 480 },
-      { month: 'Feb', saas: 999, residual: 2800, mca: 4800, lens: 520 },
-      { month: 'Mar', saas: 999, residual: 3000, mca: 5100, lens: 580 },
-      { month: 'Apr', saas: 999, residual: 3200, mca: 5400, lens: 640 },
-    ],
-  },
-  {
-    id: 'ISO-003', name: 'Pinnacle Merchant Solutions', tier: 'Standard', monthlyFee: 499, residualOverride: 1100, mcaCommission: 2200, lensAIFees: 180, totalRevenue: 3979, agents: 3, merchants: 12, status: 'Trial', onboardDate: 'Mar 2026',
-    logo: 'PM', primaryColor: '#6B21A8', secondaryColor: '#7C5BFF', customDomain: '—',
-    contactName: 'Derek Williams', contactEmail: 'derek@pinnaclemso.com', contactPhone: '(404) 555-0267',
-    usageData: [
-      { month: 'Nov', saas: 0, residual: 0, mca: 0, lens: 0 },
-      { month: 'Dec', saas: 0, residual: 0, mca: 0, lens: 0 },
-      { month: 'Jan', saas: 0, residual: 0, mca: 0, lens: 0 },
-      { month: 'Feb', saas: 0, residual: 0, mca: 0, lens: 0 },
-      { month: 'Mar', saas: 499, residual: 600, mca: 1400, lens: 90 },
-      { month: 'Apr', saas: 499, residual: 1100, mca: 2200, lens: 180 },
-    ],
-  },
-  {
-    id: 'ISO-004', name: 'Trident Financial Group', tier: 'Professional', monthlyFee: 999, residualOverride: 4100, mcaCommission: 6800, lensAIFees: 920, totalRevenue: 12819, agents: 8, merchants: 47, status: 'Active', onboardDate: 'Nov 2024',
-    logo: 'TF', primaryColor: '#B91C1C', secondaryColor: '#F87F83', customDomain: 'dash.tridentfg.com',
-    contactName: 'Angela Morrison', contactEmail: 'angela@tridentfg.com', contactPhone: '(713) 555-0331',
-    usageData: [
-      { month: 'Nov', saas: 999, residual: 2800, mca: 4600, lens: 560 },
-      { month: 'Dec', saas: 999, residual: 3100, mca: 5200, lens: 640 },
-      { month: 'Jan', saas: 999, residual: 3400, mca: 5600, lens: 720 },
-      { month: 'Feb', saas: 999, residual: 3600, mca: 6000, lens: 790 },
-      { month: 'Mar', saas: 999, residual: 3900, mca: 6400, lens: 860 },
-      { month: 'Apr', saas: 999, residual: 4100, mca: 6800, lens: 920 },
-    ],
-  },
-];
+const isoTenants: ISOTenant[] = [];
 
 const isoActiveCount = isoTenants.filter(t => t.status === 'Active').length;
 const isoMRR = isoTenants.reduce((s, t) => s + t.totalRevenue, 0);
-const isoAvgRevenue = Math.round(isoMRR / isoTenants.length);
+const isoAvgRevenue = isoTenants.length > 0 ? Math.round(isoMRR / isoTenants.length) : 0;
 const isoTotalMerchants = isoTenants.reduce((s, t) => s + t.merchants, 0);
 
 // ── Helpers ──
@@ -177,8 +117,8 @@ function websiteBadge(status: WebsiteStatus) {
 const totalSubscribers = subscriptions.length;
 const monthlyRevenue = subscriptions.filter(s => s.billingStatus !== 'Cancelled').reduce((sum, s) => sum + s.monthlyFee, 0);
 const paidSubscribers = subscriptions.filter(s => s.monthlyFee > 0 && s.billingStatus !== 'Cancelled');
-const avgRevenue = paidSubscribers.length > 0 ? Math.round(monthlyRevenue / totalSubscribers) : 0;
-const upgradeRate = 16.7; // 1 of 6 moved up this month
+const avgRevenue = paidSubscribers.length > 0 && totalSubscribers > 0 ? Math.round(monthlyRevenue / totalSubscribers) : 0;
+const upgradeRate: number | null = null; // computed once merchants have billing history
 
 const starterCount = subscriptions.filter(s => s.plan === 'Free').length;
 const growthCount = subscriptions.filter(s => s.plan === 'Growth').length;
@@ -245,7 +185,7 @@ export function BackendSubscriptions() {
             <SummaryCard icon={Users} label="Total Subscribers" value={String(totalSubscribers)} sub={`${paidSubscribers.length} paid, ${starterCount} free`} variant="indigo" />
             <SummaryCard icon={DollarSign} label="Monthly Subscription Revenue" value={fmt(monthlyRevenue)} sub={`${paidSubscribers.length} paying merchants`} variant="emerald" />
             <SummaryCard icon={CreditCard} label="Avg Revenue Per Merchant" value={fmt(avgRevenue)} sub="Across all subscribers" variant="blue" />
-            <SummaryCard icon={ArrowUpRight} label="Upgrade Rate" value={`${upgradeRate}%`} sub="Free → Growth/Custom this month" variant="purple" />
+            <SummaryCard icon={ArrowUpRight} label="Upgrade Rate" value={upgradeRate != null ? `${upgradeRate}%` : '—'} sub="Free → Growth/Custom this month" variant="purple" />
           </div>
 
           {/* Filter Bar */}
@@ -411,8 +351,13 @@ export function BackendSubscriptions() {
             </div>
 
             {filtered.length === 0 && (
-              <div className="px-5 py-12 text-center text-sm text-gray-500">
-                No subscriptions match your current filters.
+              <div className="px-5 py-16 text-center">
+                <CreditCard className="w-8 h-8 text-gray-300 mx-auto mb-3" />
+                <p className="text-sm text-gray-500">
+                  {subscriptions.length === 0
+                    ? 'No merchant subscriptions yet — merchants appear here once they sign up for a plan.'
+                    : 'No subscriptions match your current filters.'}
+                </p>
               </div>
             )}
           </div>
@@ -455,10 +400,11 @@ function SummaryCard({ icon: Icon, label, value, sub, variant }: {
 function PlanDistribution({ starter, growth, intelligence, total }: {
   starter: number; growth: number; intelligence: number; total: number;
 }) {
+  const pctOf = (count: number) => total > 0 ? Math.round((count / total) * 100) : 0;
   const plans = [
-    { name: 'Free', price: 'Free', count: starter, pct: Math.round((starter / total) * 100), color: 'bg-gray-400', ringColor: 'ring-gray-200', badgeColor: 'bg-gray-100 text-gray-600', barTrack: 'bg-gray-100', barFill: 'bg-gray-400' },
-    { name: 'Growth', price: '$99/mo', count: growth, pct: Math.round((growth / total) * 100), color: 'bg-blue-500', ringColor: 'ring-blue-200', badgeColor: 'bg-blue-50 text-blue-700', barTrack: 'bg-blue-100', barFill: 'bg-blue-500' },
-    { name: 'Custom', price: 'Custom', count: intelligence, pct: Math.round((intelligence / total) * 100), color: 'bg-purple-500', ringColor: 'ring-purple-200', badgeColor: 'bg-purple-50 text-purple-700', barTrack: 'bg-purple-100', barFill: 'bg-purple-500' },
+    { name: 'Free', price: 'Free', count: starter, pct: pctOf(starter), color: 'bg-gray-400', ringColor: 'ring-gray-200', badgeColor: 'bg-gray-100 text-gray-600', barTrack: 'bg-gray-100', barFill: 'bg-gray-400' },
+    { name: 'Growth', price: '$99/mo', count: growth, pct: pctOf(growth), color: 'bg-blue-500', ringColor: 'ring-blue-200', badgeColor: 'bg-blue-50 text-blue-700', barTrack: 'bg-blue-100', barFill: 'bg-blue-500' },
+    { name: 'Custom', price: 'Custom', count: intelligence, pct: pctOf(intelligence), color: 'bg-purple-500', ringColor: 'ring-purple-200', badgeColor: 'bg-purple-50 text-purple-700', barTrack: 'bg-purple-100', barFill: 'bg-purple-500' },
   ];
 
   return (
@@ -607,6 +553,12 @@ function ISOTenantsTab({ onViewTenant }: { onViewTenant: (t: ISOTenant) => void 
             </tbody>
           </table>
         </div>
+        {isoTenants.length === 0 && (
+          <div className="px-5 py-16 text-center">
+            <Building2 className="w-8 h-8 text-gray-300 mx-auto mb-3" />
+            <p className="text-sm text-gray-500">No ISO tenants yet — ISOs licensing the Delt platform will appear here once onboarded.</p>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -648,7 +600,7 @@ function ISOTenantDetail({ tenant, onBack }: { tenant: ISOTenant; onBack: () => 
     purple: { bg: 'bg-purple-50', text: 'text-purple-600' },
   };
 
-  const maxTotal = Math.max(...tenant.usageData.map(d => d.saas + d.residual + d.mca + d.lens));
+  const maxTotal = Math.max(0, ...tenant.usageData.map(d => d.saas + d.residual + d.mca + d.lens));
 
   return (
     <div className="space-y-6">

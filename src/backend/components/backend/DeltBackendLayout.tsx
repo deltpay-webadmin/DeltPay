@@ -895,10 +895,6 @@ function SupportPage() {
               <HelpCircle className="w-5 h-5 text-indigo-600" />
               <div><p className="text-sm font-medium text-gray-900">Email Support</p><p className="text-xs text-gray-500">support@deltpay.com</p></div>
             </div>
-            <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 rounded-[6px]">
-              <HelpCircle className="w-5 h-5 text-indigo-600" />
-              <div><p className="text-sm font-medium text-gray-900">Phone</p><p className="text-xs text-gray-500">(800) 555-DELT</p></div>
-            </div>
           </div>
         </div>
       </div>

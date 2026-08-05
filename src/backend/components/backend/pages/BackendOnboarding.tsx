@@ -39,8 +39,15 @@ const STEP_SHORT: Record<StepName, string> = {
   'Funded': 'Funded',
 };
 
-// Team members available for reassignment
-const AGENTS = ['Marcus Johnson', 'Priya Patel', 'Jamal Foster', 'Devon Richards', 'Sarah Kim', 'Alex Rivera'];
+// Team members available for reassignment — no hardcoded roster; names are
+// derived from the agents already assigned on live onboarding records.
+const AGENTS: string[] = [];
+
+function deriveAgents(applications: { agent: string }[]): string[] {
+  return [...new Set([...AGENTS, ...applications.map(a => a.agent)])]
+    .filter(a => a && a !== 'Unassigned')
+    .sort();
+}
 
 
 function slaDot(status: SLAStatus) {
@@ -89,6 +96,8 @@ export function BackendOnboarding() {
   const [slaFilter, setSlaFilter] = useState<string>('All');
 
   const selectedApp = applications.find(a => a.id === selectedAppId) || null;
+
+  const agents = useMemo(() => deriveAgents(applications), [applications]);
 
   const filteredApps = useMemo(() => {
     return applications.filter(a => {
@@ -207,7 +216,8 @@ export function BackendOnboarding() {
           className="px-3 py-2 text-sm border border-gray-200 rounded-[6px] bg-white"
         >
           <option value="All">All agents</option>
-          {AGENTS.map(a => <option key={a} value={a}>{a}</option>)}
+          <option value="Unassigned">Unassigned</option>
+          {agents.map(a => <option key={a} value={a}>{a}</option>)}
         </select>
         <select
           value={slaFilter}
@@ -316,7 +326,7 @@ export function BackendOnboarding() {
 
       {/* Slide-out Detail Panel */}
       {selectedApp && (
-        <SlideOutPanel app={selectedApp} onClose={() => setSelectedAppId(null)} />
+        <SlideOutPanel app={selectedApp} agents={agents} onClose={() => setSelectedAppId(null)} />
       )}
     </div>
   );
@@ -352,7 +362,7 @@ function SummaryCard({ icon: Icon, label, value, sub, variant }: {
 }
 
 // ── Slide-out Panel ──
-function SlideOutPanel({ app, onClose }: { app: OnboardingApp; onClose: () => void }) {
+function SlideOutPanel({ app, agents, onClose }: { app: OnboardingApp; agents: string[]; onClose: () => void }) {
   const applicantStepNum = app.currentStepIndex + 1;
   const [reassignOpen, setReassignOpen] = useState(false);
 
@@ -583,7 +593,7 @@ function SlideOutPanel({ app, onClose }: { app: OnboardingApp; onClose: () => vo
             {reassignOpen && (
               <div className="rounded-[6px] border border-gray-200 bg-white p-2 space-y-1">
                 <p className="text-xs text-gray-500 px-2 py-1">Select a new agent</p>
-                {AGENTS.map(agent => (
+                {['Unassigned', ...agents].map(agent => (
                   <button
                     key={agent}
                     onClick={() => reassign(agent)}
