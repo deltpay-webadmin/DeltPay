@@ -149,6 +149,10 @@ export const ES: Record<string, string> = {
   "Cash Discount shows the merchant's own cost — the ≈4% service fee is customer-paid. Program pricing keyed to this statement's volume band and the selected risk tier.":
     'Descuento por Efectivo muestra el costo propio del comercio — la tarifa de servicio de ≈4% la pagan los clientes. Los precios del programa dependen del rango de volumen de este estado de cuenta y del nivel de riesgo seleccionado.',
   'Analysis History': 'Historial de Análisis',
+  'Saved analysis': 'Análisis guardado',
+  'Open saved analysis': 'Abrir análisis guardado',
+  'This analysis was saved without its extraction data — re-run the statement to view it.':
+    'Este análisis se guardó sin sus datos de extracción — vuelva a analizar el estado de cuenta para verlo.',
   'All analyses': 'Todos los análisis',
   'By merchant': 'Por comercio',
   'merchants': 'comercios',

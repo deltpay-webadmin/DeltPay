@@ -67,6 +67,9 @@ interface HistoryRow {
   savings: number;
   status: HistoryStatus;
   leadId: string | null;
+  /** Raw extraction saved with the analysis — lets history rows reopen the full view. */
+  extraction: Partial<ExtractedData> | null;
+  filename: string | null;
 }
 
 const fmt = (n: number) => n.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 });
@@ -111,6 +114,26 @@ function fromDbAnalysis(row: any): HistoryRow {
     savings: Number(row.annual_savings ?? 0),
     status: (row.status as HistoryStatus) ?? 'Analyzed',
     leadId: row.lead_id ?? null,
+    extraction: row.extraction ?? null,
+    filename: row.filename ?? null,
+  };
+}
+
+/** Normalize a raw extraction (fresh from the edge function or reloaded from a saved row). */
+function normalizeExtraction(raw: Partial<ExtractedData>, fallbackName: string): ExtractedData {
+  return {
+    merchantName: raw.merchantName?.trim() || fallbackName,
+    currentProcessor: raw.currentProcessor || 'Unknown',
+    statementPeriod: raw.statementPeriod || '—',
+    totalVolume: Number(raw.totalVolume ?? 0),
+    totalTransactions: Number(raw.totalTransactions ?? 0),
+    avgTicket: Number(raw.avgTicket ?? 0),
+    effectiveRatePct: Number(raw.effectiveRatePct ?? 0),
+    fees: Array.isArray(raw.fees) ? raw.fees : [],
+    chargebackCount: Number(raw.chargebackCount ?? 0),
+    currentMonthlyCost: Number(raw.currentMonthlyCost ?? 0),
+    confidence: (raw.confidence as ExtractedData['confidence']) ?? 'medium',
+    notes: raw.notes || '',
   };
 }
 
@@ -136,7 +159,10 @@ export function BackendAnalysis() {
   const [merchantFilter, setMerchantFilter] = useState<string | null>(null);
   const [riskTier, setRiskTier] = useState<RiskTierKey>('medium');
   const [merchantView, setMerchantView] = useState(false);
+  /** Filename of a saved analysis reopened from history (no File object exists for it). */
+  const [openedFilename, setOpenedFilename] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   // ── Load saved analyses ──
   const loadHistory = useCallback(async () => {
@@ -221,25 +247,13 @@ export function BackendAnalysis() {
       if (data?.error) throw new Error(data.message || data.error);
 
       const raw = data.extraction as Partial<ExtractedData> & { effectiveRatePct?: number };
-      const ex: ExtractedData = {
-        merchantName: raw.merchantName?.trim() || nameFromFile(file.name),
-        currentProcessor: raw.currentProcessor || 'Unknown',
-        statementPeriod: raw.statementPeriod || '—',
-        totalVolume: Number(raw.totalVolume ?? 0),
-        totalTransactions: Number(raw.totalTransactions ?? 0),
-        avgTicket: Number(raw.avgTicket ?? 0),
-        effectiveRatePct: Number(raw.effectiveRatePct ?? 0),
-        fees: Array.isArray(raw.fees) ? raw.fees : [],
-        chargebackCount: Number(raw.chargebackCount ?? 0),
-        currentMonthlyCost: Number(raw.currentMonthlyCost ?? 0),
-        confidence: (raw.confidence as ExtractedData['confidence']) ?? 'medium',
-        notes: raw.notes || '',
-      };
+      const ex = normalizeExtraction(raw, nameFromFile(file.name));
       const prop = buildProposal(ex);
       setExtracted(ex);
       setProposal(prop);
       setStatus('done');
       setMerchantView(false);
+      setOpenedFilename(null);
 
       // Persist so the history / merchant view survives reloads.
       const { data: saved, error: insErr } = await supabase.from('statement_analyses').insert({
@@ -292,14 +306,14 @@ export function BackendAnalysis() {
         ], { onConflict: 'path', ignoreDuplicates: true });
         const { error: docErr } = await supabase.from('plaid_nodes').insert({
           path: `/prospects/${lead.id}/statement-analysis/${savedAnalysisId ?? crypto.randomUUID()}`,
-          name: files[0]?.name ?? `Statement analysis — ${extracted.statementPeriod}`,
+          name: files[0]?.name ?? openedFilename ?? `Statement analysis — ${extracted.statementPeriod}`,
           node_type: 'document',
           doc_kind: 'statement_analysis',
           lead_id: lead.id,
           data: {
             extraction: extracted,
             proposal,
-            filename: files[0]?.name ?? null,
+            filename: files[0]?.name ?? openedFilename ?? null,
             analyzedAt: new Date().toISOString(),
           },
         });
@@ -334,6 +348,27 @@ export function BackendAnalysis() {
     setProposal(null);
     setSavedAnalysisId(null);
     setMerchantView(false);
+    setOpenedFilename(null);
+  };
+
+  /** Reopen a saved analysis from history in the full results view. */
+  const openAnalysis = (row: HistoryRow) => {
+    if (!row.extraction) {
+      toast.error(t('This analysis was saved without its extraction data — re-run the statement to view it.'));
+      return;
+    }
+    const ex = normalizeExtraction(row.extraction, row.merchantName);
+    setExtracted(ex);
+    setProposal(buildProposal(ex));
+    setStatus('done');
+    setFiles([]);
+    setOpenedFilename(row.filename);
+    setSavedAnalysisId(row.id);
+    setMerchantView(false);
+    setAutoLeadCreated(Boolean(row.leadId));
+    setAutoLeadName(row.leadId ? row.merchantName : '');
+    setLeadBannerVisible(false);
+    scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // ── Delt program quotes against the extracted statement ──
@@ -386,7 +421,7 @@ export function BackendAnalysis() {
   };
 
   return (
-    <div className="h-full overflow-y-auto">
+    <div ref={scrollRef} className="h-full overflow-y-auto">
       <div className="max-w-[1400px] mx-auto px-6 py-6 space-y-6">
         {/* ── Header ── */}
         <div>
@@ -510,7 +545,9 @@ export function BackendAnalysis() {
                   ) : (
                     <div className="flex items-center gap-2 text-sm text-emerald-600 font-medium">
                       <CheckCircle2 className="w-4 h-4" />
-                      {t('Analysis complete')} — {files[0]?.name}
+                      {openedFilename !== null || !files.length
+                        ? <>{t('Saved analysis')} — {openedFilename ?? extracted.merchantName}</>
+                        : <>{t('Analysis complete')} — {files[0]?.name}</>}
                       {extracted.confidence !== 'high' && (
                         <span className={`ml-1 inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
                           extracted.confidence === 'medium' ? 'bg-amber-50 text-amber-700' : 'bg-red-50 text-red-700'
@@ -1043,15 +1080,25 @@ export function BackendAnalysis() {
                     </thead>
                     <tbody className="divide-y divide-gray-100">
                       {visibleHistory.map(row => (
-                        <tr key={row.id} className="hover:bg-gray-50/60 transition-colors">
-                          <td className="pl-5 pr-3 py-3 text-sm font-medium text-gray-900">{row.merchantName}</td>
+                        <tr
+                          key={row.id}
+                          onClick={() => openAnalysis(row)}
+                          title={t('Open saved analysis')}
+                          className="hover:bg-gray-50/60 transition-colors cursor-pointer"
+                        >
+                          <td className="pl-5 pr-3 py-3">
+                            <span className="text-sm font-medium text-gray-900 hover:text-brand transition-colors inline-flex items-center gap-1.5">
+                              {row.merchantName}
+                              <ArrowRight className="w-3.5 h-3.5 text-gray-300" />
+                            </span>
+                          </td>
                           <td className="px-3 py-3 text-sm text-gray-500">{row.dateAnalyzed}</td>
                           <td className="px-3 py-3 text-sm text-gray-700 text-right tabular-nums">{row.currentRate}%</td>
                           <td className="px-3 py-3 text-sm text-brand text-right font-medium tabular-nums">{row.proposedRate}%</td>
                           <td className="px-3 py-3 text-right">
                             <span className="text-sm font-medium text-emerald-600 tabular-nums">{fmtWhole(row.savings)}/yr</span>
                           </td>
-                          <td className="pl-3 pr-5 py-3">
+                          <td className="pl-3 pr-5 py-3" onClick={e => e.stopPropagation()}>
                             <select
                               value={row.status}
                               onChange={e => void updateStatus(row.id, e.target.value as HistoryStatus)}
