@@ -349,6 +349,7 @@ export async function reconcileMetaLeads(): Promise<{ matched: number; missing: 
 
   let matched = 0;
   let missing = 0;
+  const updates: Array<{ provider: string; lead_id: string; matched_lead_id: string | null; match_basis: string | null }> = [];
   for (const l of adLeads ?? []) {
     let hit: string | undefined;
     let basis: string | null = null;
@@ -358,9 +359,15 @@ export async function reconcileMetaLeads(): Promise<{ matched: number; missing: 
     else if ((hit = l.full_name ? byName.get(normName(l.full_name)!) : undefined)) basis = "name";
 
     if (hit) matched++; else missing++;
-    await db.from("ad_leads")
-      .update({ matched_lead_id: hit ?? null, match_basis: basis })
-      .eq("provider", "meta").eq("lead_id", l.lead_id);
+    updates.push({ provider: "meta", lead_id: l.lead_id, matched_lead_id: hit ?? null, match_basis: basis });
+  }
+  // One statement instead of one UPDATE per row. Every key exists (we just
+  // read them), so the upsert always takes the ON CONFLICT UPDATE path and
+  // touches only the two match columns.
+  if (updates.length) {
+    const { error: upErr } = await db.from("ad_leads")
+      .upsert(updates, { onConflict: "provider,lead_id" });
+    if (upErr) throw new Error(upErr.message);
   }
   return { matched, missing };
 }
@@ -378,6 +385,7 @@ export async function importMetaLeads(leadIds: string[]): Promise<{ imported: nu
   let imported = 0;
   let skipped = 0;
   const now = new Date().toISOString();
+  const matchUpdates: Array<{ provider: string; lead_id: string; matched_lead_id: string; match_basis: string }> = [];
   for (const l of adLeads ?? []) {
     if (l.matched_lead_id) { skipped++; continue; }
     const id = `lead-meta-l${l.lead_id}`;
@@ -408,9 +416,20 @@ export async function importMetaLeads(leadIds: string[]): Promise<{ imported: nu
     } else {
       imported++;
     }
-    await db.from("ad_leads")
-      .update({ matched_lead_id: id, match_basis: insErr ? "lead_id" : "imported" })
-      .eq("provider", "meta").eq("lead_id", l.lead_id);
+    matchUpdates.push({
+      provider: "meta",
+      lead_id: l.lead_id,
+      matched_lead_id: id,
+      match_basis: insErr ? "lead_id" : "imported",
+    });
+  }
+  // The pipeline_leads inserts stay per-row (each needs its own unique-
+  // violation handling), but the ad_leads match-column writes batch into
+  // one upsert — same pattern as reconcileMetaLeads.
+  if (matchUpdates.length) {
+    const { error: upErr } = await db.from("ad_leads")
+      .upsert(matchUpdates, { onConflict: "provider,lead_id" });
+    if (upErr) throw new Error(upErr.message);
   }
   return { imported, skipped };
 }

@@ -654,97 +654,116 @@ export async function syncItem(itemId: string) {
     const accountsRes = await plaid("/accounts/get", { access_token: accessToken });
     const accounts: any[] = accountsRes.accounts ?? [];
 
-    // ── 2. Bank account verification (Auth) — store masked numbers only ──
-    const routingByAccount = new Map<string, { routingLast4: string; accountLast4: string; wireRouting?: string }>();
-    try {
-      const auth = await plaid("/auth/get", { access_token: accessToken });
-      for (const n of auth?.numbers?.ach ?? []) {
-        routingByAccount.set(n.account_id, {
-          routingLast4: String(n.routing ?? "").slice(-4),
-          accountLast4: String(n.account ?? "").slice(-4),
-          wireRouting: n.wire_routing ? String(n.wire_routing).slice(-4) : undefined,
-        });
-      }
-    } catch { /* auth product unavailable on this item */ }
+    // ── 2–4c. Independent product pulls — auth, identity, liabilities,
+    // investments, recurring have no data dependency on each other, so they
+    // run concurrently. Each still degrades individually to "product
+    // unavailable on this item" exactly as it did when the calls were
+    // sequential; only the wall clock changes (~5 round trips → 1).
+    const [routingByAccount, owners, liabilities, investments, recurring] = await Promise.all([
+      // ── 2. Bank account verification (Auth) — store masked numbers only ──
+      (async () => {
+        const map = new Map<string, { routingLast4: string; accountLast4: string; wireRouting?: string }>();
+        try {
+          const auth = await plaid("/auth/get", { access_token: accessToken });
+          for (const n of auth?.numbers?.ach ?? []) {
+            map.set(n.account_id, {
+              routingLast4: String(n.routing ?? "").slice(-4),
+              accountLast4: String(n.account ?? "").slice(-4),
+              wireRouting: n.wire_routing ? String(n.wire_routing).slice(-4) : undefined,
+            });
+          }
+        } catch { /* auth product unavailable on this item */ }
+        return map;
+      })(),
 
-    // ── 3. Identity ──
-    let owners: any[] = [];
-    try {
-      const identity = await plaid("/identity/get", { access_token: accessToken });
-      const seen = new Set<string>();
-      for (const acc of identity?.accounts ?? []) {
-        for (const o of acc.owners ?? []) {
-          const key = JSON.stringify(o.names ?? []);
-          if (seen.has(key)) continue;
-          seen.add(key);
-          owners.push({
-            names: o.names ?? [],
-            emails: (o.emails ?? []).map((e: any) => ({ data: e.data, primary: e.primary, type: e.type })),
-            phone_numbers: (o.phone_numbers ?? []).map((p: any) => ({ data: p.data, primary: p.primary, type: p.type })),
-            addresses: (o.addresses ?? []).map((a: any) => ({ data: a.data, primary: a.primary })),
+      // ── 3. Identity ──
+      (async () => {
+        const list: any[] = [];
+        try {
+          const identity = await plaid("/identity/get", { access_token: accessToken });
+          const seen = new Set<string>();
+          for (const acc of identity?.accounts ?? []) {
+            for (const o of acc.owners ?? []) {
+              const key = JSON.stringify(o.names ?? []);
+              if (seen.has(key)) continue;
+              seen.add(key);
+              list.push({
+                names: o.names ?? [],
+                emails: (o.emails ?? []).map((e: any) => ({ data: e.data, primary: e.primary, type: e.type })),
+                phone_numbers: (o.phone_numbers ?? []).map((p: any) => ({ data: p.data, primary: p.primary, type: p.type })),
+                addresses: (o.addresses ?? []).map((a: any) => ({ data: a.data, primary: a.primary })),
+              });
+            }
+          }
+        } catch { /* identity product unavailable */ }
+        return list;
+      })(),
+
+      // ── 4. Credit data (liabilities) ──
+      (async () => {
+        try {
+          const li = await plaid("/liabilities/get", { access_token: accessToken });
+          return li?.liabilities ?? null;
+        } catch { /* liabilities unavailable — fine */ }
+        return null;
+      })(),
+
+      // ── 4b. Investments (holdings) ──
+      (async () => {
+        try {
+          const inv = await plaid("/investments/holdings/get", { access_token: accessToken });
+          const securities = new Map<string, any>(
+            (inv?.securities ?? []).map((s: any) => [s.security_id, s]),
+          );
+          const holdings = (inv?.holdings ?? []).map((h: any) => {
+            const sec = securities.get(h.security_id) ?? {};
+            return {
+              account_id: h.account_id,
+              name: sec.name ?? null,
+              ticker: sec.ticker_symbol ?? null,
+              type: sec.type ?? null,
+              quantity: h.quantity ?? null,
+              price: h.institution_price ?? null,
+              value: h.institution_value ?? null,
+              iso_currency_code: h.iso_currency_code ?? "USD",
+            };
           });
-        }
-      }
-    } catch { /* identity product unavailable */ }
+          if (holdings.length) {
+            return {
+              holdings,
+              total_value:
+                Math.round(holdings.reduce((s: number, h: any) => s + (h.value ?? 0), 0) * 100) / 100,
+              account_count: ((inv?.accounts ?? []) as any[]).filter((a) => a.type === "investment").length,
+            };
+          }
+        } catch { /* investments product unavailable on this item */ }
+        return null;
+      })(),
 
-    // ── 4. Credit data (liabilities) ──
-    let liabilities: any = null;
-    try {
-      const li = await plaid("/liabilities/get", { access_token: accessToken });
-      liabilities = li?.liabilities ?? null;
-    } catch { /* liabilities unavailable — fine */ }
-
-    // ── 4b. Investments (holdings) ──
-    let investments: any = null;
-    try {
-      const inv = await plaid("/investments/holdings/get", { access_token: accessToken });
-      const securities = new Map<string, any>(
-        (inv?.securities ?? []).map((s: any) => [s.security_id, s]),
-      );
-      const holdings = (inv?.holdings ?? []).map((h: any) => {
-        const sec = securities.get(h.security_id) ?? {};
-        return {
-          account_id: h.account_id,
-          name: sec.name ?? null,
-          ticker: sec.ticker_symbol ?? null,
-          type: sec.type ?? null,
-          quantity: h.quantity ?? null,
-          price: h.institution_price ?? null,
-          value: h.institution_value ?? null,
-          iso_currency_code: h.iso_currency_code ?? "USD",
-        };
-      });
-      if (holdings.length) {
-        investments = {
-          holdings,
-          total_value:
-            Math.round(holdings.reduce((s: number, h: any) => s + (h.value ?? 0), 0) * 100) / 100,
-          account_count: ((inv?.accounts ?? []) as any[]).filter((a) => a.type === "investment").length,
-        };
-      }
-    } catch { /* investments product unavailable on this item */ }
-
-    // ── 4c. Recurring transaction streams (revenue streams + debt service) ──
-    let recurring: any = null;
-    try {
-      const rec = await plaid("/transactions/recurring/get", { access_token: accessToken });
-      const slimStream = (s: any) => ({
-        stream_id: s.stream_id,
-        description: s.description ?? null,
-        merchant_name: s.merchant_name ?? null,
-        category: s.personal_finance_category?.primary ?? null,
-        frequency: s.frequency ?? "UNKNOWN",
-        average_amount: s.average_amount?.amount ?? null,
-        last_amount: s.last_amount?.amount ?? null,
-        last_date: s.last_date ?? null,
-        is_active: s.is_active !== false,
-        status: s.status ?? null,
-      });
-      recurring = {
-        inflow_streams: (rec?.inflow_streams ?? []).map(slimStream),
-        outflow_streams: (rec?.outflow_streams ?? []).map(slimStream),
-      };
-    } catch { /* recurring not ready / unavailable */ }
+      // ── 4c. Recurring transaction streams (revenue streams + debt service) ──
+      (async () => {
+        try {
+          const rec = await plaid("/transactions/recurring/get", { access_token: accessToken });
+          const slimStream = (s: any) => ({
+            stream_id: s.stream_id,
+            description: s.description ?? null,
+            merchant_name: s.merchant_name ?? null,
+            category: s.personal_finance_category?.primary ?? null,
+            frequency: s.frequency ?? "UNKNOWN",
+            average_amount: s.average_amount?.amount ?? null,
+            last_amount: s.last_amount?.amount ?? null,
+            last_date: s.last_date ?? null,
+            is_active: s.is_active !== false,
+            status: s.status ?? null,
+          });
+          return {
+            inflow_streams: (rec?.inflow_streams ?? []).map(slimStream),
+            outflow_streams: (rec?.outflow_streams ?? []).map(slimStream),
+          };
+        } catch { /* recurring not ready / unavailable */ }
+        return null;
+      })(),
+    ]);
 
     // ── 5. Transactions (incremental /transactions/sync) ──
     let cursor: string | null = item.transactions_cursor ?? null;
