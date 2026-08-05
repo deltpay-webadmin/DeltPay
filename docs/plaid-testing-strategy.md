@@ -92,8 +92,15 @@ deltcapital.com /apply  ──(public_token + applicant email)──▶
 
 ### One-time wiring (operational)
 
-1. Generate a long random secret, e.g. `openssl rand -hex 32`.
-2. Supabase: `supabase secrets set APPLY_EXCHANGE_SECRET=<secret>`
+1. Deploy the updated server function (adds the route; inert until the
+   secret below is set):
+   `supabase functions deploy make-server-940653c6`
+   — the slug maps to `functions/server/` via the entrypoint entry in
+   `supabase/config.toml`. Do NOT use `deploy server`; that publishes a
+   stray `server` slug the CRM never calls (one already exists in the
+   dashboard from a past deploy — safe to delete).
+2. Generate a long random secret, e.g. `openssl rand -hex 32`, then
+   `supabase secrets set APPLY_EXCHANGE_SECRET=<secret>`
    (project `ytemrmpnwmzqeradbeoa`). Edge functions pick it up on the
    next cold start.
 3. Vercel project `delt-capital-final` → Settings → Environment
