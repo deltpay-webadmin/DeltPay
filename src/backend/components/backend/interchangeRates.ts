@@ -70,7 +70,7 @@ export const MERCHANT_CATEGORIES: { key: MerchantCategory; label: string }[] = [
  * Per-network anchor rates for one merchant category, taken from the fee
  * program that category qualifies for on each schedule.
  */
-interface CategoryRates {
+export interface CategoryRates {
   visa: { debit: IcFee; credit: IcFee; rewards: IcFee; premium: IcFee; commercial: IcFee };
   mastercard: { debit: IcFee; credit: IcFee; rewards: IcFee; premium: IcFee; commercial: IcFee };
   discover: { debit: IcFee; credit: IcFee; rewards: IcFee; premium: IcFee; commercial: IcFee };
@@ -335,8 +335,13 @@ function mixFor(category: MerchantCategory): ProductMix {
   return category === 'b2b' ? B2B_MIX : DEFAULT_MIX;
 }
 
+/** Rates the audit layer compares against (interchangeAudit.ts). */
+export function getCategoryRates(category: MerchantCategory): CategoryRates {
+  return CATEGORY_RATES[category] ?? CATEGORY_RATES.retail;
+}
+
 /** Effective cost of one fee as % of an average-ticket transaction. */
-function effectivePct(fee: IcFee, ticket: number): number {
+export function effectivePct(fee: IcFee, ticket: number): number {
   if (ticket <= 0) return fee.pct;
   let dollars = (fee.pct / 100) * ticket + fee.perTxn;
   if (fee.min !== undefined) dollars = Math.max(dollars, (fee.pct / 100) * ticket + fee.min);

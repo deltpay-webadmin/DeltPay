@@ -62,6 +62,25 @@ const EXTRACTION_SCHEMA = {
       description: "Total processing cost for the period in dollars — every fee the merchant paid (discount, per-item, monthly, PCI, statement, batch, surcharges, everything)",
     },
     chargebackCount: { type: "number", description: "Number of chargebacks/disputes in the period; 0 if none shown" },
+    downgradeLines: {
+      type: "array",
+      description:
+        "Fee lines that indicate DOWNGRADED or non-qualified interchange, with their labels kept verbatim: EIRF, Standard, Non-Qualified, Mid-Qualified, Base Submission, key-entry surcharges, Data Rate I, 'NQ' suffixes, downgrade adjustments. Empty array if none appear. These lines ALSO belong in the fees array (inside 'Other' or their own line) — this is a spotlight, not a replacement",
+      items: {
+        type: "object",
+        properties: {
+          label: { type: "string", description: "Verbatim fee-line label from the statement" },
+          amount: { type: "number", description: "Dollar amount for the period; 0 if the statement shows the tier but not a separable amount" },
+        },
+        required: ["label", "amount"],
+        additionalProperties: false,
+      },
+    },
+    pinDebitPresent: {
+      type: "boolean",
+      description:
+        "true if the statement shows PIN debit / EFT network activity (Interlink, Maestro, Pulse, Star, NYCE, Accel, Shazam, Culiance — network fee lines or PIN debit summaries); false if the statement clearly itemizes card activity and shows none",
+    },
     fees: {
       type: "array",
       description:
@@ -89,7 +108,7 @@ const EXTRACTION_SCHEMA = {
   required: [
     "merchantName", "currentProcessor", "statementPeriod", "totalVolume",
     "totalTransactions", "avgTicket", "effectiveRatePct", "currentMonthlyCost",
-    "chargebackCount", "fees", "confidence", "notes",
+    "chargebackCount", "downgradeLines", "pinDebitPresent", "fees", "confidence", "notes",
   ],
   additionalProperties: false,
 } as const;
@@ -101,6 +120,8 @@ Rules:
 - currentMonthlyCost is the merchant's TOTAL cost of acceptance for the period: discount/interchange charges, per-item fees, monthly/service fees, PCI, statement, batch, regulatory, non-qualified surcharges — everything. Do not include equipment leases or cash advance repayments; note them in notes if present.
 - The fees array must reconcile: its amounts sum to currentMonthlyCost (within rounding). Use the canonical bucket labels where lines fit; keep genuinely distinct charges as their own labeled lines.
 - Tiered statements often bury downgrade surcharges in vague lines — put those in 'Other' and mention them in notes.
+- Hunt for downgrade evidence: EIRF, Standard, Non-Qualified/NQ, Mid-Qualified, Base Submission, key-entry surcharges, Data Rate I, downgrade adjustments. List each such line verbatim in downgradeLines (as well as in fees). An empty downgradeLines array means you looked and found none.
+- Determine pinDebitPresent from EFT/PIN network evidence: Interlink, Maestro, Pulse, Star, NYCE, Accel, Shazam network lines or PIN debit summaries. If the statement itemizes card activity and shows none, report false.
 - If the document is not a merchant processing statement, set confidence to "low" and explain in notes.`;
 
 // ── Nebius fallback: vision extraction for image statements ──

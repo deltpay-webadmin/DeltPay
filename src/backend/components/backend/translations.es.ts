@@ -486,4 +486,23 @@ export const ES: Record<string, string> = {
   'Rates themselves are the published figures.': 'Las tasas son las cifras publicadas.',
   'Effective': 'Vigente desde',
   'Fee Program': 'Programa de Tarifa',
+
+  // ── Statement Analyzer: downgrade & qualification audit ──
+  'Downgrade & Qualification Audit': 'Auditoría de Degradaciones y Calificación',
+  'recoverable margin': 'margen recuperable',
+  'No downgrade signals on this statement': 'Sin señales de degradación en este estado de cuenta',
+  'No punitive-tier fee lines, and routing looks clean for this profile. The savings case rests on the processor markup, not qualification fixes.':
+    'No hay cargos en niveles punitivos y el enrutamiento se ve limpio para este perfil. El caso de ahorro descansa en el margen del procesador, no en correcciones de calificación.',
+  'How to earn it:': 'Cómo ganarlo:',
+  'Recovery figures are estimates against the published April 2026 schedules; actual results depend on card mix and how much volume re-qualifies.':
+    'Las cifras de recuperación son estimaciones contra las tablas publicadas de abril 2026; los resultados reales dependen de la mezcla de tarjetas y de cuánto volumen se recalifica.',
+  'High': 'Alta',
+  'Medium': 'Media',
+  'Check': 'Revisar',
+  'Interchange downgrades on the statement': 'Degradaciones de intercambio en el estado de cuenta',
+  'Downgrade language in the statement notes': 'Lenguaje de degradación en las notas del estado de cuenta',
+  'PIN debit not enabled': 'Débito con PIN no habilitado',
+  'PIN debit routing unconfirmed': 'Enrutamiento de débito con PIN sin confirmar',
+  'Effective rate at non-qualified levels': 'Tasa efectiva en niveles no calificados',
+  'Commercial cards without Level II/III data': 'Tarjetas comerciales sin datos de Nivel II/III',
 };

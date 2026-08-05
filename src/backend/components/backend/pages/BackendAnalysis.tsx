@@ -18,6 +18,7 @@ import { leadActions } from '../crmStore';
 import { quotePrograms, RISK_TIERS, IC_PLUS_MARGIN, volumeBandKey, type ProgramQuote, type RiskTierKey } from '../pricingPrograms';
 import { estimateInterchange, MERCHANT_CATEGORIES, type MerchantCategory } from '../interchangeRates';
 import { InterchangeReferenceCard } from './InterchangeReferenceCard';
+import { QualificationAuditCard } from './QualificationAuditCard';
 import { openProposalPdf } from '../proposalDoc';
 import { useSession } from '../SessionContext';
 import { useLang } from '../i18n';
@@ -44,6 +45,10 @@ export interface ExtractedData {
   fees: FeeRow[];
   chargebackCount: number;
   currentMonthlyCost: number;
+  /** Verbatim downgrade fee lines (EIRF, Non-Qual, Standard…); empty when none found. */
+  downgradeLines: FeeRow[];
+  /** Whether the statement shows PIN debit / EFT network activity; null on older analyses. */
+  pinDebitPresent: boolean | null;
   confidence: 'high' | 'medium' | 'low';
   notes: string;
 }
@@ -143,6 +148,8 @@ function normalizeExtraction(raw: Partial<ExtractedData>, fallbackName: string):
     fees: Array.isArray(raw.fees) ? raw.fees : [],
     chargebackCount: Number(raw.chargebackCount ?? 0),
     currentMonthlyCost: Number(raw.currentMonthlyCost ?? 0),
+    downgradeLines: Array.isArray(raw.downgradeLines) ? raw.downgradeLines : [],
+    pinDebitPresent: typeof raw.pinDebitPresent === 'boolean' ? raw.pinDebitPresent : null,
     confidence: (raw.confidence as ExtractedData['confidence']) ?? 'medium',
     notes: raw.notes || '',
   };
@@ -930,6 +937,9 @@ export function BackendAnalysis() {
                   category={category}
                   bestSavingsKey={bestProgram?.key ?? null}
                 />
+
+                {/* ── Downgrade & qualification audit (internal only) ── */}
+                <QualificationAuditCard extracted={extracted} category={category} />
 
                 {/* ── Published interchange schedules (internal only) ── */}
                 <InterchangeReferenceCard category={category} avgTicket={extracted.avgTicket} />
