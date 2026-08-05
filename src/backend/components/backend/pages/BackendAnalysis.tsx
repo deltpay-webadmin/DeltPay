@@ -110,36 +110,61 @@ const PRICING_MODEL_LABELS: Record<string, string> = {
 };
 
 /**
- * Delt savings proposal. When the statement yields real interchange lines,
- * quote from the true cost basis: published interchange + assessments +
- * Delt margin (0.25% + $0.10/txn). Otherwise fall back to the heuristic —
- * undercut the current effective rate ~22% with a 2.15% floor, consistent
- * with the Cost Calculator's positioning.
+ * Savings proposal for a specific Delt program quote — the proposal panel
+ * follows whichever program card is selected.
  */
-function buildProposal(ex: ExtractedData, icFloorMonthly: number | null): SavingsProposal {
-  const currentRate = ex.effectiveRatePct;
-  let deltRate: number;
-  let deltMonthlyCost: number;
-  if (icFloorMonthly != null && ex.totalVolume > 0) {
-    deltMonthlyCost = Math.round((icFloorMonthly + ex.totalVolume * 0.0025 + ex.totalTransactions * 0.10) * 100) / 100;
-    deltRate = Math.round((deltMonthlyCost / ex.totalVolume) * 10000) / 100;
-  } else {
-    deltRate = Math.max(2.15, Math.round(currentRate * 0.78 * 100) / 100);
-    deltMonthlyCost = Math.round(ex.totalVolume * deltRate) / 100;
-  }
-  const monthlySavings = Math.max(0, ex.currentMonthlyCost - deltMonthlyCost);
-  const annualSavings = Math.round(monthlySavings * 12);
+function proposalFromProgram(ex: ExtractedData, program: ProgramQuote): SavingsProposal {
+  const deltMonthlyCost = program.monthlyCost;
+  const deltRate = program.effectiveRatePct ??
+    (ex.totalVolume > 0 ? Math.round((deltMonthlyCost / ex.totalVolume) * 10000) / 100 : 0);
   return {
-    currentRate,
+    currentRate: ex.effectiveRatePct,
     deltRate,
     currentMonthlyCost: ex.currentMonthlyCost,
     deltMonthlyCost,
     currentAnnualCost: Math.round(ex.currentMonthlyCost * 12),
-    deltAnnualCost: Math.round(deltMonthlyCost * 12),
-    annualSavings,
-    savingsPercent: ex.currentMonthlyCost > 0
-      ? Math.round((monthlySavings / ex.currentMonthlyCost) * 1000) / 10
-      : 0,
+    deltAnnualCost: program.annualCost,
+    annualSavings: program.annualSavings,
+    savingsPercent: program.savingsPct,
+  };
+}
+
+/** Fallback merchant name derived from the filename when the statement doesn't show one. */
+function nameFromFile(fileName: string) {
+  const cleaned = fileName
+    .replace(/\.(pdf|png|jpg|jpeg|webp|gif|tiff?)$/i, '')
+    .replace(/[-_]/g, ' ')
+    .replace(/statement|stmt|processing/gi, '')
+    .trim();
+  return cleaned.length > 2
+    ? cleaned.split(' ').filter(Boolean).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ')
+    : 'New Prospect';
+}
+
+/** Normalize a raw extraction (fresh from the edge function or stored jsonb) into the full shape. */
+function normalizeExtraction(raw: Partial<ExtractedData>, fallbackName: string): ExtractedData {
+  return {
+    merchantName: raw.merchantName?.trim() || fallbackName,
+    currentProcessor: raw.currentProcessor || 'Unknown',
+    statementPeriod: raw.statementPeriod || '—',
+    mid: raw.mid?.trim() || '',
+    mcc: raw.mcc?.trim() || '',
+    pricingModel: raw.pricingModel || 'unknown',
+    totalVolume: Number(raw.totalVolume ?? 0),
+    totalTransactions: Number(raw.totalTransactions ?? 0),
+    avgTicket: Number(raw.avgTicket ?? 0),
+    refundsVolume: Number(raw.refundsVolume ?? 0),
+    netDeposits: Number(raw.netDeposits ?? 0),
+    effectiveRatePct: Number(raw.effectiveRatePct ?? 0),
+    fees: Array.isArray(raw.fees) ? raw.fees : [],
+    cardMix: Array.isArray(raw.cardMix) ? raw.cardMix : [],
+    interchangeLines: Array.isArray(raw.interchangeLines) ? raw.interchangeLines : [],
+    assessmentFees: Array.isArray(raw.assessmentFees) ? raw.assessmentFees : [],
+    chargebackCount: Number(raw.chargebackCount ?? 0),
+    chargebackAmount: Number(raw.chargebackAmount ?? 0),
+    currentMonthlyCost: Number(raw.currentMonthlyCost ?? 0),
+    confidence: (raw.confidence as ExtractedData['confidence']) ?? 'medium',
+    notes: raw.notes || '',
   };
 }
 
@@ -173,7 +198,7 @@ export function BackendAnalysis() {
   const [files, setFiles] = useState<File[]>([]);
   const [dragOver, setDragOver] = useState(false);
   const [extracted, setExtracted] = useState<ExtractedData | null>(null);
-  const [proposal, setProposal] = useState<SavingsProposal | null>(null);
+  const [selectedProgram, setSelectedProgram] = useState<ProgramQuote['key'] | null>(null);
   const [autoLeadCreated, setAutoLeadCreated] = useState(false);
   const [autoLeadName, setAutoLeadName] = useState('');
   const [leadBannerVisible, setLeadBannerVisible] = useState(false);
@@ -183,6 +208,8 @@ export function BackendAnalysis() {
   const [merchantFilter, setMerchantFilter] = useState<string | null>(null);
   const [riskTier, setRiskTier] = useState<RiskTierKey>('medium');
   const inputRef = useRef<HTMLInputElement>(null);
+  const topRef = useRef<HTMLDivElement>(null);
+  const historyRef = useRef<HTMLDivElement>(null);
 
   // ── Load saved analyses ──
   const loadHistory = useCallback(async () => {
@@ -215,18 +242,6 @@ export function BackendAnalysis() {
   }, [handleFiles]);
 
   const removeFile = (idx: number) => setFiles(prev => prev.filter((_, i) => i !== idx));
-
-  /** Fallback merchant name derived from the filename when the statement doesn't show one. */
-  const nameFromFile = (fileName: string) => {
-    const cleaned = fileName
-      .replace(/\.(pdf|png|jpg|jpeg|webp|gif|tiff?)$/i, '')
-      .replace(/[-_]/g, ' ')
-      .replace(/statement|stmt|processing/gi, '')
-      .trim();
-    return cleaned.length > 2
-      ? cleaned.split(' ').filter(Boolean).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ')
-      : 'New Prospect';
-  };
 
   // ── Real extraction via the analyze-statement edge function ──
   const analyze = async () => {
@@ -268,33 +283,22 @@ export function BackendAnalysis() {
       if (data?.error) throw new Error(data.message || data.error);
 
       const raw = data.extraction as Partial<ExtractedData> & { effectiveRatePct?: number };
-      const ex: ExtractedData = {
-        merchantName: raw.merchantName?.trim() || nameFromFile(file.name),
-        currentProcessor: raw.currentProcessor || 'Unknown',
-        statementPeriod: raw.statementPeriod || '—',
-        mid: raw.mid?.trim() || '',
-        mcc: raw.mcc?.trim() || '',
-        pricingModel: raw.pricingModel || 'unknown',
-        totalVolume: Number(raw.totalVolume ?? 0),
-        totalTransactions: Number(raw.totalTransactions ?? 0),
-        avgTicket: Number(raw.avgTicket ?? 0),
-        refundsVolume: Number(raw.refundsVolume ?? 0),
-        netDeposits: Number(raw.netDeposits ?? 0),
-        effectiveRatePct: Number(raw.effectiveRatePct ?? 0),
-        fees: Array.isArray(raw.fees) ? raw.fees : [],
-        cardMix: Array.isArray(raw.cardMix) ? raw.cardMix : [],
-        interchangeLines: Array.isArray(raw.interchangeLines) ? raw.interchangeLines : [],
-        assessmentFees: Array.isArray(raw.assessmentFees) ? raw.assessmentFees : [],
-        chargebackCount: Number(raw.chargebackCount ?? 0),
-        chargebackAmount: Number(raw.chargebackAmount ?? 0),
-        currentMonthlyCost: Number(raw.currentMonthlyCost ?? 0),
-        confidence: (raw.confidence as ExtractedData['confidence']) ?? 'medium',
-        notes: raw.notes || '',
-      };
+      const ex = normalizeExtraction(raw, nameFromFile(file.name));
+      // Quote the programs now so the saved row records the recommended
+      // (best-savings) proposal; the on-screen proposal follows whichever
+      // program card the user selects afterward.
       const icFloor = computeInterchangeFloor(ex.interchangeLines, ex.avgTicket);
-      const prop = buildProposal(ex, icFloor?.total ?? null);
+      const progs = quotePrograms({
+        monthlyVolume: ex.totalVolume,
+        monthlyTransactions: ex.totalTransactions,
+        currentMonthlyCost: ex.currentMonthlyCost,
+        riskTier,
+        interchangeFloorMonthly: icFloor?.total ?? null,
+      });
+      const best = progs.reduce<ProgramQuote | null>((b, p) => (!b || p.annualSavings > b.annualSavings ? p : b), null);
+      const prop = best ? proposalFromProgram(ex, best) : null;
       setExtracted(ex);
-      setProposal(prop);
+      setSelectedProgram(best?.key ?? null);
       setStatus('done');
 
       // Persist so the history / merchant view survives reloads.
@@ -302,9 +306,9 @@ export function BackendAnalysis() {
         merchant_name: ex.merchantName,
         filename: file.name,
         extraction: raw,
-        current_rate: prop.currentRate,
-        proposed_rate: prop.deltRate,
-        annual_savings: prop.annualSavings,
+        current_rate: ex.effectiveRatePct,
+        proposed_rate: prop?.deltRate ?? 0,
+        annual_savings: prop?.annualSavings ?? 0,
         status: 'Analyzed',
         model: data.model ?? null,
       }).select('id').single();
@@ -387,8 +391,33 @@ export function BackendAnalysis() {
     setStatus('idle');
     setFiles([]);
     setExtracted(null);
-    setProposal(null);
+    setSelectedProgram(null);
     setSavedAnalysisId(null);
+  };
+
+  /** Open a previously saved analysis from history in the full results view. */
+  const viewAnalysis = (row: HistoryRow) => {
+    if (!row.extraction) {
+      toast.error('This analysis has no stored extraction data.');
+      return;
+    }
+    setExtracted(normalizeExtraction(row.extraction, row.merchantName));
+    setFiles([]);
+    setSavedAnalysisId(row.id);
+    setSelectedProgram(null); // falls back to the recommended program
+    setAutoLeadCreated(!!row.leadId);
+    setLeadBannerVisible(false);
+    setStatus('done');
+    topRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  /** Jump to the per-merchant rollup in the history section. */
+  const openMerchantView = () => {
+    setActiveView('statement-analyzer');
+    setHistoryView('merchant');
+    setMerchantFilter(null);
+    // Let the tab switch render before scrolling.
+    setTimeout(() => historyRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
   };
 
   // ── Delt program quotes against the extracted statement ──
@@ -407,6 +436,16 @@ export function BackendAnalysis() {
     () => programs.reduce<ProgramQuote | null>((best, p) => (!best || p.annualSavings > best.annualSavings ? p : best), null),
     [programs],
   );
+  /** The program driving the savings proposal: the selected card, else the recommended one. */
+  const activeProgram = useMemo(
+    () => programs.find(p => p.key === selectedProgram) ?? bestProgram,
+    [programs, selectedProgram, bestProgram],
+  );
+  const proposal: SavingsProposal | null = useMemo(
+    () => (extracted && activeProgram ? proposalFromProgram(extracted, activeProgram) : null),
+    [extracted, activeProgram],
+  );
+
 
   // ── Merchant rollup for the "By merchant" view ──
   const merchants = useMemo(() => {
@@ -446,8 +485,15 @@ export function BackendAnalysis() {
     <div className="h-full overflow-y-auto">
       <div className="max-w-[1400px] mx-auto px-6 py-6 space-y-6">
         {/* ── Header ── */}
-        <div>
+        <div className="flex items-center justify-between" ref={topRef}>
           <p className="text-sm text-gray-500 mt-0.5">Cost calculator and statement analysis tools.</p>
+          <button
+            onClick={openMerchantView}
+            className="px-4 py-2.5 bg-brand text-white text-sm font-semibold rounded-[6px] hover:bg-brand-hover transition-colors flex items-center gap-2 shrink-0"
+          >
+            <Store className="w-4 h-4" />
+            Merchant View
+          </button>
         </div>
 
         {/* ── View Tabs ── */}
@@ -564,7 +610,9 @@ export function BackendAnalysis() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 text-sm text-emerald-600 font-medium">
                     <CheckCircle2 className="w-4 h-4" />
-                    Analysis complete — {files[0]?.name}
+                    {files[0]?.name
+                      ? <>Analysis complete — {files[0].name}</>
+                      : <>Saved analysis — {extracted.merchantName} · {extracted.statementPeriod}</>}
                     {extracted.confidence !== 'high' && (
                       <span className={`ml-1 inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
                         extracted.confidence === 'medium' ? 'bg-amber-50 text-amber-700' : 'bg-red-50 text-red-700'
@@ -742,11 +790,17 @@ export function BackendAnalysis() {
 
                   {/* ── Right: Delt Savings Proposal ── */}
                   <div className="bg-white rounded-[8px] border border-gray-200 overflow-hidden flex flex-col">
-                    <div className="px-5 py-4 border-b border-gray-100">
+                    <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between gap-3">
                       <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
                         <TrendingDown className="w-4 h-4 text-emerald-600" />
                         Delt Savings Proposal
                       </h2>
+                      {activeProgram && (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-brand/10 text-brand text-xs font-semibold">
+                          <Sparkles className="w-3 h-3" />
+                          {activeProgram.name}
+                        </span>
+                      )}
                     </div>
 
                     <div className="px-5 py-4 flex-1 flex flex-col">
@@ -831,7 +885,8 @@ export function BackendAnalysis() {
                       <Sparkles className="w-4 h-4 text-brand" />
                       Delt Pricing Programs
                     </h2>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs text-gray-400 hidden sm:inline">Select a program to update the proposal</span>
                       <span className="text-xs text-gray-400">Risk tier</span>
                       <div className="flex rounded-[6px] border border-gray-200 overflow-hidden">
                         {RISK_TIERS.map(t => (
@@ -853,17 +908,25 @@ export function BackendAnalysis() {
                   <div className="p-5 grid grid-cols-1 lg:grid-cols-3 gap-4">
                     {programs.map(p => {
                       const recommended = bestProgram?.key === p.key;
+                      const selected = activeProgram?.key === p.key;
                       return (
-                        <div
+                        <button
+                          type="button"
                           key={p.key}
-                          className={`rounded-[8px] border p-4 flex flex-col ${
-                            recommended ? 'border-brand bg-brand/[0.03] shadow-[0_0_0_1px_var(--brand,#2E6BFF)]' : 'border-gray-200'
+                          onClick={() => setSelectedProgram(p.key)}
+                          className={`rounded-[8px] border p-4 flex flex-col text-left cursor-pointer transition-all ${
+                            selected
+                              ? 'border-brand bg-brand/[0.03] shadow-[0_0_0_1px_var(--brand,#2E6BFF)]'
+                              : 'border-gray-200 hover:border-brand/40 hover:shadow-sm'
                           }`}
                         >
-                          <div className="flex items-center justify-between">
-                            <p className="text-sm font-semibold text-gray-900">{p.name}</p>
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
+                              {selected && <CheckCircle2 className="w-4 h-4 text-brand shrink-0" />}
+                              {p.name}
+                            </p>
                             {recommended && (
-                              <span className="px-2 py-0.5 rounded-full bg-brand text-white text-[10px] font-bold uppercase tracking-wide">
+                              <span className="px-2 py-0.5 rounded-full bg-brand text-white text-[10px] font-bold uppercase tracking-wide shrink-0">
                                 Recommended
                               </span>
                             )}
@@ -885,7 +948,7 @@ export function BackendAnalysis() {
                               {p.savingsPct}% less than today
                             </span>
                           </div>
-                        </div>
+                        </button>
                       );
                     })}
                   </div>
@@ -931,7 +994,7 @@ export function BackendAnalysis() {
             )}
 
             {/* ── History: all analyses / by merchant ── */}
-            <div className="bg-white rounded-[8px] border border-gray-200 overflow-hidden">
+            <div ref={historyRef} className="bg-white rounded-[8px] border border-gray-200 overflow-hidden scroll-mt-4">
               <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
                 <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
                   <Clock className="w-4 h-4 text-gray-400" />
@@ -1005,6 +1068,13 @@ export function BackendAnalysis() {
                         <p className="text-lg font-bold text-emerald-600 tabular-nums">{fmtWhole(best)}</p>
                       </div>
                       <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => viewAnalysis(latest)}
+                          className="px-3 py-2 bg-white text-brand border border-brand text-xs font-medium rounded-[6px] hover:bg-brand/5 transition-colors flex items-center gap-1.5"
+                        >
+                          View Latest Analysis
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </button>
                         {linkedLead && (
                           <button
                             onClick={() => navigate('/leads')}
@@ -1156,22 +1226,38 @@ export function BackendAnalysis() {
                     </thead>
                     <tbody className="divide-y divide-gray-100">
                       {visibleHistory.map(row => (
-                        <tr key={row.id} className="hover:bg-gray-50/60 transition-colors">
-                          <td className="pl-5 pr-3 py-3 text-sm font-medium text-gray-900">{row.merchantName}</td>
+                        <tr
+                          key={row.id}
+                          onClick={() => viewAnalysis(row)}
+                          title="View this analysis"
+                          className="hover:bg-gray-50/60 transition-colors cursor-pointer"
+                        >
+                          <td className="pl-5 pr-3 py-3 text-sm font-medium text-gray-900">
+                            <span className="flex items-center gap-2">
+                              <FileText className="w-4 h-4 text-gray-300 shrink-0" />
+                              {row.merchantName}
+                            </span>
+                          </td>
                           <td className="px-3 py-3 text-sm text-gray-500">{row.dateAnalyzed}</td>
                           <td className="px-3 py-3 text-sm text-gray-700 text-right tabular-nums">{row.currentRate}%</td>
                           <td className="px-3 py-3 text-sm text-brand text-right font-medium tabular-nums">{row.proposedRate}%</td>
                           <td className="px-3 py-3 text-right">
                             <span className="text-sm font-medium text-emerald-600 tabular-nums">{fmtWhole(row.savings)}/yr</span>
                           </td>
-                          <td className="pl-3 pr-5 py-3">
-                            <select
-                              value={row.status}
-                              onChange={e => void updateStatus(row.id, e.target.value as HistoryStatus)}
-                              className={`px-2 py-1 rounded-full text-xs font-medium border-0 cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand/20 ${statusBadge(row.status)}`}
-                            >
-                              {HISTORY_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
-                            </select>
+                          <td className="pl-3 pr-5 py-3" onClick={e => e.stopPropagation()}>
+                            <span className="flex items-center gap-2 justify-between">
+                              <select
+                                value={row.status}
+                                onChange={e => void updateStatus(row.id, e.target.value as HistoryStatus)}
+                                className={`px-2 py-1 rounded-full text-xs font-medium border-0 cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand/20 ${statusBadge(row.status)}`}
+                              >
+                                {HISTORY_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+                              </select>
+                              <ArrowRight
+                                className="w-3.5 h-3.5 text-gray-300 cursor-pointer hover:text-brand"
+                                onClick={() => viewAnalysis(row)}
+                              />
+                            </span>
                           </td>
                         </tr>
                       ))}
