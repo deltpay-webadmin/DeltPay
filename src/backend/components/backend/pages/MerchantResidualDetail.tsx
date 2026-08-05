@@ -7,6 +7,11 @@ import {
   Mail, MapPin, Clock, Search, ChevronDown, Info,
 } from 'lucide-react';
 import { useAppNavigate } from '../NavigationContext';
+import {
+  IC_SCHEDULE, PUBLISHED_RATES, verifyInterchangeLine,
+  verificationStatusIcon, verificationStatusColor,
+  type Verification as SharedVerification,
+} from '../interchangeReference';
 
 // ── Helpers ──
 const fmt = (n: number) => n.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 });
@@ -97,56 +102,28 @@ const INTERCHANGE_BREAKDOWN: InterchangeRow[] = [
   { category: 'Amex OptBlue', volume: 1500, pct: 0.04, rate: '2.40% + $0.10', cost: 37.50 },
 ];
 
-// ─── PUBLISHED INTERCHANGE REFERENCE (April 2026) ───
-const IC_SCHEDULE = { version: 'April 2026', effectiveDate: 'April 18, 2026', nextUpdate: 'October 2026', lastChecked: '2026-04-15' };
-
-const PUBLISHED_RATES: Record<string, { network: string; published: { rate: number; txnFee: number }; program: string; notes: string; range?: { low: number; high: number }; commonPadding: string }> = {
-  'Visa Credit — Qual': { network: 'Visa', published: { rate: 1.51, txnFee: 0.10 }, program: 'CPS Retail / CPS Retail 2', notes: 'Card present, swiped/dipped/tapped.', commonPadding: 'Processors often blend Rewards 1 (1.65%) into this bucket at a higher blended rate' },
-  'Visa Credit — Mid-Qual': { network: 'Visa', published: { rate: 1.99, txnFee: 0.10 }, program: 'CPS Rewards 2 / EIRF', notes: 'Rewards cards or keyed-in transactions.', range: { low: 1.65, high: 2.30 }, commonPadding: "This is the #1 bucket for padding — processors exploit the ambiguity" },
-  'Visa Debit — Regulated': { network: 'Visa', published: { rate: 0.05, txnFee: 0.22 }, program: 'Regulated Debit (Durbin)', notes: 'Durbin-regulated debit. Rate set by Federal Reserve.', commonPadding: 'This rate is federally regulated — ZERO reason for variance.' },
-  'MC Credit — Qual': { network: 'Mastercard', published: { rate: 1.58, txnFee: 0.10 }, program: 'Merit III / Core', notes: 'Card present, standard consumer credit.', commonPadding: "Watch for World/World Elite cards being bucketed here at a padded rate" },
-  'MC Debit — Regulated': { network: 'Mastercard', published: { rate: 0.05, txnFee: 0.22 }, program: 'Regulated Debit (Durbin)', notes: 'Same Durbin regulation as Visa.', commonPadding: 'Identical to Visa regulated — any variance is pure markup.' },
-  'Amex OptBlue': { network: 'Amex', published: { rate: 2.30, txnFee: 0.10 }, program: 'OptBlue Tier 3', notes: 'Amex OptBlue for merchants under $1M/yr.', range: { low: 1.60, high: 3.30 }, commonPadding: 'Amex has the widest tier spread — always verify which OptBlue tier' },
-};
+// ─── PUBLISHED INTERCHANGE REFERENCE ───
+// Shared with the Statement Analyzer — one schedule, one verification engine
+// (interchangeReference.ts). Refresh there each April & October cycle.
 
 function parseRate(s: string): { rate: number; txnFee: number } {
   const m = s.match(/([\d.]+)%\s*\+\s*\$([\d.]+)/);
   return m ? { rate: parseFloat(m[1]), txnFee: parseFloat(m[2]) } : { rate: 0, txnFee: 0 };
 }
 
-interface Verification { status: string; severity: number; message: string; publishedRate: number; publishedTxnFee: number; diffBps: number; ratePadding: number; txnPadding: number; totalPadding: number; annualImpact: number; estTxns: number; commonPadding: string; program: string; notes: string; hasRange: boolean; range?: { low: number; high: number } }
+type Verification = SharedVerification & { hasRange: boolean };
 
 function verifyLine(line: InterchangeRow, avgTicket: number): Verification {
-  const ref = PUBLISHED_RATES[line.category];
   const parsed = parseRate(line.rate);
-  const empty: Verification = { status: 'unknown', severity: 0, message: 'No reference rate found', publishedRate: 0, publishedTxnFee: 0, diffBps: 0, ratePadding: 0, txnPadding: 0, totalPadding: 0, annualImpact: 0, estTxns: 0, commonPadding: '', program: '', notes: '', hasRange: false };
-  if (!ref) return empty;
-  const pub = ref.published;
-  const diffBps = Math.round(parsed.rate * 100) - Math.round(pub.rate * 100);
-  const diffTxnFee = Math.round(((parsed.txnFee || 0) - (pub.txnFee || 0)) * 100);
-  const estTxns = avgTicket > 0 ? Math.round(line.volume / avgTicket) : 0;
-  const ratePadding = Math.max(line.volume * (diffBps / 10000), 0);
-  const txnPadding = Math.max(estTxns * (parsed.txnFee - pub.txnFee), 0);
-  const totalPadding = ratePadding + txnPadding;
-  const annualImpact = totalPadding * 12;
-  const hasRange = !!ref.range;
-  const withinRange = hasRange && ref.range && parsed.rate >= ref.range.low && parsed.rate <= ref.range.high;
-  let status: string, severity: number, message: string;
-  if (diffBps === 0 && diffTxnFee === 0) { status = 'verified'; severity = 0; message = 'Exact match to published rate'; }
-  else if (diffBps <= 2 && diffTxnFee <= 0) { status = 'verified'; severity = 0; message = 'Within rounding tolerance'; }
-  else if (hasRange && withinRange && diffBps <= 10) { status = 'acceptable'; severity = 1; message = `Within range (${ref.range!.low}%–${ref.range!.high}%). ${diffBps} bps above base.`; }
-  else if (hasRange && withinRange) { status = 'review'; severity = 2; message = `Within range but ${diffBps} bps above base. Request card-level detail.`; }
-  else if (diffBps > 0 && diffBps <= 5) { status = 'review'; severity = 1; message = `${diffBps} bps above published. Minor variance.`; }
-  else if (diffBps > 5 && diffBps <= 15) { status = 'flag'; severity = 2; message = `${diffBps} bps above published. Likely padding.`; }
-  else if (diffBps > 15) { status = 'alert'; severity = 3; message = `${diffBps} bps above published — significant overcharge.`; }
-  else if (diffBps < 0) { status = 'verified'; severity = 0; message = `${Math.abs(diffBps)} bps below published. Favorable.`; }
-  else { status = 'review'; severity = 1; message = 'Review manually'; }
-  if (line.category.includes('Regulated') && (diffBps > 0 || diffTxnFee > 0)) { status = 'alert'; severity = 3; message = `Regulated debit is federally set. ANY variance is pure markup. Reported: ${parsed.rate}% + $${parsed.txnFee} vs Published: ${pub.rate}% + $${pub.txnFee.toFixed(2)}`; }
-  return { status, severity, message, publishedRate: pub.rate, publishedTxnFee: pub.txnFee, diffBps, ratePadding, txnPadding, totalPadding, annualImpact, estTxns, commonPadding: ref.commonPadding, program: ref.program, notes: ref.notes, hasRange, range: ref.range };
+  const v = verifyInterchangeLine(
+    { category: line.category, volume: line.volume, ratePct: parsed.rate, perItemFee: parsed.txnFee },
+    avgTicket,
+  );
+  return { ...v, hasRange: !!v.range };
 }
 
-const statusIcon = (s: string) => s === 'verified' || s === 'acceptable' ? '✓' : s === 'review' ? '?' : s === 'flag' ? '⚑' : s === 'alert' ? '✕' : '—';
-const statusColor = (s: string) => s === 'verified' || s === 'acceptable' ? '#34C77B' : s === 'review' ? '#F0B429' : s === 'flag' ? '#F59849' : s === 'alert' ? '#F2565B' : '#6b7280';
+const statusIcon = verificationStatusIcon;
+const statusColor = verificationStatusColor;
 
 const FEE_SCHEDULE: FeeItem[] = [
   { fee: 'Monthly Minimum', amount: 25.00, type: 'fixed' },

@@ -25,17 +25,41 @@ interface FeeRow {
   amount: number;
 }
 
+interface CardMixRow {
+  network: string;
+  volume: number;
+  transactions: number;
+}
+
+interface InterchangeLine {
+  category: string;
+  volume: number;
+  transactions: number;
+  ratePct: number;
+  perItemFee: number;
+  cost: number;
+}
+
 /** Shape returned by the analyze-statement edge function's extraction. */
 interface ExtractedData {
   merchantName: string;
   currentProcessor: string;
   statementPeriod: string;
+  mid: string;
+  mcc: string;
+  pricingModel: string;
   totalVolume: number;
   totalTransactions: number;
   avgTicket: number;
+  refundsVolume: number;
+  netDeposits: number;
   effectiveRatePct: number;
   fees: FeeRow[];
+  cardMix: CardMixRow[];
+  interchangeLines: InterchangeLine[];
+  assessmentFees: FeeRow[];
   chargebackCount: number;
+  chargebackAmount: number;
   currentMonthlyCost: number;
   confidence: 'high' | 'medium' | 'low';
   notes: string;
@@ -62,20 +86,47 @@ interface HistoryRow {
   savings: number;
   status: HistoryStatus;
   leadId: string | null;
+  /** Full model extraction (jsonb) — powers the merchant drill-in detail. */
+  extraction: Partial<ExtractedData> | null;
 }
 
 const fmt = (n: number) => n.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 });
 const fmtWhole = (n: number) => n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
 
+const NETWORK_COLORS: Record<string, string> = {
+  Visa: '#1a1f71',
+  Mastercard: '#eb001b',
+  Amex: '#006fcf',
+  Discover: '#ff6000',
+  Other: '#9ca3af',
+};
+
+const PRICING_MODEL_LABELS: Record<string, string> = {
+  'interchange-plus': 'Interchange-Plus',
+  'tiered': 'Tiered',
+  'flat-rate': 'Flat Rate',
+  'subscription': 'Subscription',
+  'unknown': '—',
+};
+
 /**
- * Delt pricing heuristic pending the full interchange engine: undercut the
- * merchant's current effective rate by ~22% with a 2.15% floor. Numbers stay
- * consistent with the Cost Calculator's positioning.
+ * Delt savings proposal. When the statement yields real interchange lines,
+ * quote from the true cost basis: published interchange + assessments +
+ * Delt margin (0.25% + $0.10/txn). Otherwise fall back to the heuristic —
+ * undercut the current effective rate ~22% with a 2.15% floor, consistent
+ * with the Cost Calculator's positioning.
  */
-function buildProposal(ex: ExtractedData): SavingsProposal {
+function buildProposal(ex: ExtractedData, icFloorMonthly: number | null): SavingsProposal {
   const currentRate = ex.effectiveRatePct;
-  const deltRate = Math.max(2.15, Math.round(currentRate * 0.78 * 100) / 100);
-  const deltMonthlyCost = Math.round(ex.totalVolume * deltRate) / 100;
+  let deltRate: number;
+  let deltMonthlyCost: number;
+  if (icFloorMonthly != null && ex.totalVolume > 0) {
+    deltMonthlyCost = Math.round((icFloorMonthly + ex.totalVolume * 0.0025 + ex.totalTransactions * 0.10) * 100) / 100;
+    deltRate = Math.round((deltMonthlyCost / ex.totalVolume) * 10000) / 100;
+  } else {
+    deltRate = Math.max(2.15, Math.round(currentRate * 0.78 * 100) / 100);
+    deltMonthlyCost = Math.round(ex.totalVolume * deltRate) / 100;
+  }
   const monthlySavings = Math.max(0, ex.currentMonthlyCost - deltMonthlyCost);
   const annualSavings = Math.round(monthlySavings * 12);
   return {
@@ -94,6 +145,8 @@ function buildProposal(ex: ExtractedData): SavingsProposal {
 
 // Shared with the deal-documents flow (extract-deal-doc) — one rasterizer.
 import { fileToBase64, pdfToImages } from '../docImaging';
+import { InterchangeAudit, auditInterchangeLines } from '../InterchangeAudit';
+import { computeInterchangeFloor } from '../interchangeReference';
 
 function fromDbAnalysis(row: any): HistoryRow {
   return {
@@ -106,6 +159,7 @@ function fromDbAnalysis(row: any): HistoryRow {
     savings: Number(row.annual_savings ?? 0),
     status: (row.status as HistoryStatus) ?? 'Analyzed',
     leadId: row.lead_id ?? null,
+    extraction: row.extraction ?? null,
   };
 }
 
@@ -189,7 +243,8 @@ export function BackendAnalysis() {
       // vision model reads them; single images pass through as-is.
       const payload: Record<string, unknown> = { filename: file.name };
       if (file.type === 'application/pdf') {
-        payload.images = await pdfToImages(file);
+        // Interchange detail often sits on later pages — render up to 12.
+        payload.images = await pdfToImages(file, 12);
       } else {
         payload.mediaType = file.type || 'image/png';
         payload.dataBase64 = await fileToBase64(file);
@@ -217,17 +272,27 @@ export function BackendAnalysis() {
         merchantName: raw.merchantName?.trim() || nameFromFile(file.name),
         currentProcessor: raw.currentProcessor || 'Unknown',
         statementPeriod: raw.statementPeriod || '—',
+        mid: raw.mid?.trim() || '',
+        mcc: raw.mcc?.trim() || '',
+        pricingModel: raw.pricingModel || 'unknown',
         totalVolume: Number(raw.totalVolume ?? 0),
         totalTransactions: Number(raw.totalTransactions ?? 0),
         avgTicket: Number(raw.avgTicket ?? 0),
+        refundsVolume: Number(raw.refundsVolume ?? 0),
+        netDeposits: Number(raw.netDeposits ?? 0),
         effectiveRatePct: Number(raw.effectiveRatePct ?? 0),
         fees: Array.isArray(raw.fees) ? raw.fees : [],
+        cardMix: Array.isArray(raw.cardMix) ? raw.cardMix : [],
+        interchangeLines: Array.isArray(raw.interchangeLines) ? raw.interchangeLines : [],
+        assessmentFees: Array.isArray(raw.assessmentFees) ? raw.assessmentFees : [],
         chargebackCount: Number(raw.chargebackCount ?? 0),
+        chargebackAmount: Number(raw.chargebackAmount ?? 0),
         currentMonthlyCost: Number(raw.currentMonthlyCost ?? 0),
         confidence: (raw.confidence as ExtractedData['confidence']) ?? 'medium',
         notes: raw.notes || '',
       };
-      const prop = buildProposal(ex);
+      const icFloor = computeInterchangeFloor(ex.interchangeLines, ex.avgTicket);
+      const prop = buildProposal(ex, icFloor?.total ?? null);
       setExtracted(ex);
       setProposal(prop);
       setStatus('done');
@@ -329,11 +394,13 @@ export function BackendAnalysis() {
   // ── Delt program quotes against the extracted statement ──
   const programs: ProgramQuote[] = useMemo(() => {
     if (!extracted) return [];
+    const floor = computeInterchangeFloor(extracted.interchangeLines, extracted.avgTicket);
     return quotePrograms({
       monthlyVolume: extracted.totalVolume,
       monthlyTransactions: extracted.totalTransactions,
       currentMonthlyCost: extracted.currentMonthlyCost,
       riskTier,
+      interchangeFloorMonthly: floor?.total ?? null,
     });
   }, [extracted, riskTier]);
   const bestProgram = useMemo(
@@ -569,10 +636,44 @@ export function BackendAnalysis() {
                         <MetaField label="Merchant" value={extracted.merchantName} highlight />
                         <MetaField label="Current Processor" value={extracted.currentProcessor} />
                         <MetaField label="Statement Period" value={extracted.statementPeriod} />
+                        <MetaField label="Pricing Model" value={PRICING_MODEL_LABELS[extracted.pricingModel] ?? extracted.pricingModel} />
+                        {extracted.mid && <MetaField label="MID" value={extracted.mid} />}
+                        {extracted.mcc && <MetaField label="MCC" value={extracted.mcc} />}
                         <MetaField label="Total Volume" value={fmtWhole(extracted.totalVolume)} />
                         <MetaField label="Total Transactions" value={extracted.totalTransactions.toLocaleString()} />
                         <MetaField label="Avg Ticket" value={fmt(extracted.avgTicket)} />
+                        {extracted.refundsVolume > 0 && <MetaField label="Refunds" value={fmt(extracted.refundsVolume)} />}
+                        {extracted.netDeposits > 0 && <MetaField label="Net Deposits" value={fmtWhole(extracted.netDeposits)} />}
                       </div>
+
+                      {/* Card mix — network volume split */}
+                      {extracted.cardMix.length > 0 && (() => {
+                        const mixTotal = extracted.cardMix.reduce((s, m) => s + m.volume, 0);
+                        if (mixTotal <= 0) return null;
+                        return (
+                          <div>
+                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Card Mix</p>
+                            <div className="flex h-3 rounded-full overflow-hidden border border-gray-200">
+                              {extracted.cardMix.map(m => (
+                                <div
+                                  key={m.network}
+                                  title={`${m.network}: ${fmtWhole(m.volume)}`}
+                                  style={{ width: `${(m.volume / mixTotal) * 100}%`, background: NETWORK_COLORS[m.network] ?? '#9ca3af' }}
+                                />
+                              ))}
+                            </div>
+                            <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2">
+                              {extracted.cardMix.map(m => (
+                                <span key={m.network} className="inline-flex items-center gap-1.5 text-xs text-gray-600">
+                                  <span className="w-2 h-2 rounded-full" style={{ background: NETWORK_COLORS[m.network] ?? '#9ca3af' }} />
+                                  {m.network} <span className="font-medium tabular-nums">{((m.volume / mixTotal) * 100).toFixed(0)}%</span>
+                                  <span className="text-gray-400 tabular-nums">{fmtWhole(m.volume)}</span>
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })()}
 
                       {/* Fee breakdown */}
                       <div>
@@ -627,7 +728,13 @@ export function BackendAnalysis() {
                       {/* Bottom stats */}
                       <div className="grid grid-cols-2 gap-3">
                         <MetaField label="Effective Rate" value={`${extracted.effectiveRatePct}%`} />
-                        <MetaField label="Chargebacks" value={extracted.chargebackCount.toString()} warn={extracted.chargebackCount > 0} />
+                        <MetaField
+                          label="Chargebacks"
+                          value={extracted.chargebackAmount > 0
+                            ? `${extracted.chargebackCount} · ${fmt(extracted.chargebackAmount)}`
+                            : extracted.chargebackCount.toString()}
+                          warn={extracted.chargebackCount > 0}
+                        />
                         <MetaField label="Current Monthly Cost" value={fmt(extracted.currentMonthlyCost)} highlight />
                       </div>
                     </div>
@@ -709,6 +816,13 @@ export function BackendAnalysis() {
                     </div>
                   </div>
                 </div>
+
+                {/* ── Interchange Audit: extracted rates vs published Visa/MC schedules ── */}
+                <InterchangeAudit
+                  lines={extracted.interchangeLines}
+                  avgTicket={extracted.avgTicket}
+                  assessmentFees={extracted.assessmentFees}
+                />
 
                 {/* ── Delt Pricing Programs ── */}
                 <div className="bg-white rounded-[8px] border border-gray-200 overflow-hidden">
@@ -867,6 +981,14 @@ export function BackendAnalysis() {
                   date: new Date(r.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
                   rate: r.currentRate,
                 }));
+                // Latest saved extraction powers the deeper merchant stats.
+                const latestEx = [...rows].reverse().map(r => r.extraction).find(Boolean) ?? null;
+                const icLines = Array.isArray(latestEx?.interchangeLines) ? latestEx!.interchangeLines! : [];
+                const icAudit = icLines.length
+                  ? auditInterchangeLines(icLines, Number(latestEx?.avgTicket ?? 0)).summary
+                  : null;
+                const mix = Array.isArray(latestEx?.cardMix) ? latestEx!.cardMix! : [];
+                const mixTotal = mix.reduce((s, m) => s + m.volume, 0);
                 return (
                   <div className="px-5 py-4 border-b border-gray-100 bg-gray-50/50">
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
@@ -894,6 +1016,53 @@ export function BackendAnalysis() {
                         )}
                       </div>
                     </div>
+                    {latestEx && (
+                      <div className="mt-3 pt-3 border-t border-gray-200/70 grid grid-cols-2 lg:grid-cols-4 gap-3">
+                        <div>
+                          <p className="text-[11px] text-gray-500 font-medium">Processor</p>
+                          <p className="text-sm font-semibold text-gray-900">{latestEx.currentProcessor || '—'}</p>
+                          {latestEx.pricingModel && latestEx.pricingModel !== 'unknown' && (
+                            <p className="text-[11px] text-gray-400">{PRICING_MODEL_LABELS[latestEx.pricingModel] ?? latestEx.pricingModel}</p>
+                          )}
+                        </div>
+                        <div>
+                          <p className="text-[11px] text-gray-500 font-medium">MID</p>
+                          <p className="text-sm font-semibold text-gray-900 tabular-nums">{latestEx.mid || '—'}</p>
+                          {latestEx.mcc && <p className="text-[11px] text-gray-400">MCC {latestEx.mcc}</p>}
+                        </div>
+                        <div>
+                          <p className="text-[11px] text-gray-500 font-medium">Est. interchange padding</p>
+                          {icAudit ? (
+                            icAudit.monthlyPadding > 0.5 ? (
+                              <p className="text-sm font-semibold text-red-600 tabular-nums">
+                                {fmt(icAudit.monthlyPadding)}/mo
+                                <span className="block text-[11px] font-medium text-red-400">{fmtWhole(icAudit.annualPadding)}/yr · {icAudit.flaggedLines} flagged</span>
+                              </p>
+                            ) : (
+                              <p className="text-sm font-semibold text-emerald-600">Clean vs published rates</p>
+                            )
+                          ) : (
+                            <p className="text-sm text-gray-400">No interchange detail</p>
+                          )}
+                        </div>
+                        <div>
+                          <p className="text-[11px] text-gray-500 font-medium mb-1">Card mix</p>
+                          {mixTotal > 0 ? (
+                            <div className="flex h-2.5 rounded-full overflow-hidden border border-gray-200 max-w-[180px]">
+                              {mix.map(m => (
+                                <div
+                                  key={m.network}
+                                  title={`${m.network}: ${fmtWhole(m.volume)} (${((m.volume / mixTotal) * 100).toFixed(0)}%)`}
+                                  style={{ width: `${(m.volume / mixTotal) * 100}%`, background: NETWORK_COLORS[m.network] ?? '#9ca3af' }}
+                                />
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="text-sm text-gray-400">—</p>
+                          )}
+                        </div>
+                      </div>
+                    )}
                     {trend.length >= 2 && (
                       <div className="mt-3" style={{ height: 110 }}>
                         <p className="text-[11px] text-gray-500 font-medium mb-1">Effective rate over time</p>

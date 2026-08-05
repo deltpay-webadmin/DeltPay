@@ -67,6 +67,12 @@ export interface QuoteInput {
   /** The merchant's current total monthly processing cost. */
   currentMonthlyCost: number;
   riskTier: RiskTierKey;
+  /**
+   * True monthly interchange + assessment cost at published rates, when the
+   * Statement Analyzer extracted real interchange lines. Grounds the
+   * interchange-plus quote in actual cost instead of the heuristic.
+   */
+  interchangeFloorMonthly?: number | null;
 }
 
 /**
@@ -75,7 +81,7 @@ export interface QuoteInput {
  * cost collapses to the program fee — that's the headline program.
  */
 export function quotePrograms(input: QuoteInput): ProgramQuote[] {
-  const { monthlyVolume, monthlyTransactions, currentMonthlyCost, riskTier } = input;
+  const { monthlyVolume, monthlyTransactions, currentMonthlyCost, riskTier, interchangeFloorMonthly } = input;
   const band = volumeBandKey(monthlyVolume);
   const currentRate = monthlyVolume > 0 ? (currentMonthlyCost / monthlyVolume) * 100 : 0;
 
@@ -104,9 +110,18 @@ export function quotePrograms(input: QuoteInput): ProgramQuote[] {
   const cd = CASH_DISCOUNT_MATRIX[band][riskTier];
   const fr = FLAT_RATE_MATRIX[band][riskTier];
 
-  // Interchange-plus estimate: undercut the current effective rate ~22%
-  // with a 2.15% floor (heuristic pending the full interchange engine).
-  const icRate = Math.max(2.15, Math.round(currentRate * 0.78 * 100) / 100);
+  // Interchange-plus: quote from the true cost basis (published interchange
+  // + assessments + 0.25% + $0.10/txn Delt margin) when the analyzer
+  // extracted real interchange lines; otherwise fall back to the heuristic —
+  // undercut the current effective rate ~22% with a 2.15% floor.
+  const hasFloor = interchangeFloorMonthly != null && monthlyVolume > 0;
+  const heuristicRate = Math.max(2.15, Math.round(currentRate * 0.78 * 100) / 100);
+  const icCost = hasFloor
+    ? interchangeFloorMonthly! + monthlyVolume * 0.0025 + monthlyTransactions * 0.10
+    : monthlyVolume * (heuristicRate / 100);
+  const icRate = hasFloor
+    ? Math.round((icCost / monthlyVolume) * 10000) / 100
+    : heuristicRate;
 
   return [
     build(
@@ -130,9 +145,13 @@ export function quotePrograms(input: QuoteInput): ProgramQuote[] {
     build(
       'interchange_plus',
       'Interchange-Plus',
-      'Pass-through interchange with a transparent Delt margin.',
-      monthlyVolume * (icRate / 100),
-      `~${icRate.toFixed(2)}% all-in effective`,
+      hasFloor
+        ? 'True pass-through priced from this statement’s card mix at published interchange.'
+        : 'Pass-through interchange with a transparent Delt margin.',
+      icCost,
+      hasFloor
+        ? `IC pass-through + 0.25% + $0.10/txn (~${icRate.toFixed(2)}% all-in)`
+        : `~${icRate.toFixed(2)}% all-in effective`,
       icRate,
     ),
   ];

@@ -50,9 +50,24 @@ const EXTRACTION_SCHEMA = {
       type: "string",
       description: "Statement month and year, e.g. 'March 2026'. If multiple months, the most recent complete month",
     },
+    mid: {
+      type: "string",
+      description: "Merchant ID (MID) as printed on the statement, digits and dashes verbatim; empty string if not shown",
+    },
+    mcc: {
+      type: "string",
+      description: "Merchant category code (MCC/SIC) if printed; empty string if not shown",
+    },
+    pricingModel: {
+      type: "string",
+      enum: ["interchange-plus", "tiered", "flat-rate", "subscription", "unknown"],
+      description: "Pricing structure inferred from the statement: pass-through interchange lines with a stated markup = interchange-plus; qual/mid-qual/non-qual buckets = tiered; one blended rate = flat-rate; membership/wholesale pricing = subscription",
+    },
     totalVolume: { type: "number", description: "Gross card sales volume for the period in dollars" },
     totalTransactions: { type: "number", description: "Total number of card transactions for the period" },
     avgTicket: { type: "number", description: "Average ticket in dollars (volume / transactions if not printed)" },
+    refundsVolume: { type: "number", description: "Total refunds/returns volume in dollars for the period; 0 if not shown" },
+    netDeposits: { type: "number", description: "Net amount deposited to the merchant's bank account for the period; 0 if not shown" },
     effectiveRatePct: {
       type: "number",
       description: "All-in effective rate as a percentage: total processing cost / gross volume * 100",
@@ -62,6 +77,54 @@ const EXTRACTION_SCHEMA = {
       description: "Total processing cost for the period in dollars — every fee the merchant paid (discount, per-item, monthly, PCI, statement, batch, surcharges, everything)",
     },
     chargebackCount: { type: "number", description: "Number of chargebacks/disputes in the period; 0 if none shown" },
+    chargebackAmount: { type: "number", description: "Total dollar amount of chargebacks/disputes in the period; 0 if none shown" },
+    cardMix: {
+      type: "array",
+      description:
+        "Volume split by card network when the statement shows it (card summary / settlement recap section). One entry per network with sales volume and transaction count; empty array if the statement has no network breakdown",
+      items: {
+        type: "object",
+        properties: {
+          network: { type: "string", enum: ["Visa", "Mastercard", "Amex", "Discover", "Other"] },
+          volume: { type: "number", description: "Gross sales volume for this network in dollars" },
+          transactions: { type: "number", description: "Transaction count for this network; 0 if not printed" },
+        },
+        required: ["network", "volume", "transactions"],
+        additionalProperties: false,
+      },
+    },
+    interchangeLines: {
+      type: "array",
+      description:
+        "EVERY row of the interchange / card-type / qualification detail section (often titled 'Interchange Charges', 'Fees Detail', 'Card Summary by Type', or pseudo-categories like 'Qualified', 'Mid-Qualified'). One entry per printed category line. Copy the category label verbatim. This is the most valuable data on the statement — extract it exhaustively across all pages; empty array only if the statement truly has no per-category rate detail",
+      items: {
+        type: "object",
+        properties: {
+          category: { type: "string", description: "Category label exactly as printed, e.g. 'VS CRD QUAL', 'MC World Elite Merit III', 'Mid-Qualified'" },
+          volume: { type: "number", description: "Dollar volume processed under this category" },
+          transactions: { type: "number", description: "Item/transaction count for this line; 0 if not printed" },
+          ratePct: { type: "number", description: "Percentage rate charged for this category (e.g. 1.65 for 1.65%); 0 if only a flat amount is shown" },
+          perItemFee: { type: "number", description: "Per-item fee in dollars for this line (e.g. 0.10); 0 if none printed" },
+          cost: { type: "number", description: "Total dollars charged for this line; derive as volume*rate + items*perItem when not printed" },
+        },
+        required: ["category", "volume", "transactions", "ratePct", "perItemFee", "cost"],
+        additionalProperties: false,
+      },
+    },
+    assessmentFees: {
+      type: "array",
+      description:
+        "Card-brand assessment / dues / access fee lines (e.g. 'Visa Assessment 0.14%', 'MC License Fee', 'Discover Data Usage'). These are network fees, not interchange — keep them separate from interchangeLines; empty array if not itemized",
+      items: {
+        type: "object",
+        properties: {
+          label: { type: "string" },
+          amount: { type: "number", description: "Dollar amount for the period" },
+        },
+        required: ["label", "amount"],
+        additionalProperties: false,
+      },
+    },
     fees: {
       type: "array",
       description:
@@ -87,9 +150,11 @@ const EXTRACTION_SCHEMA = {
     },
   },
   required: [
-    "merchantName", "currentProcessor", "statementPeriod", "totalVolume",
-    "totalTransactions", "avgTicket", "effectiveRatePct", "currentMonthlyCost",
-    "chargebackCount", "fees", "confidence", "notes",
+    "merchantName", "currentProcessor", "statementPeriod", "mid", "mcc",
+    "pricingModel", "totalVolume", "totalTransactions", "avgTicket",
+    "refundsVolume", "netDeposits", "effectiveRatePct", "currentMonthlyCost",
+    "chargebackCount", "chargebackAmount", "cardMix", "interchangeLines",
+    "assessmentFees", "fees", "confidence", "notes",
   ],
   additionalProperties: false,
 } as const;
@@ -98,6 +163,9 @@ const SYSTEM_PROMPT = `You are a senior merchant-processing statement analyst at
 
 Rules:
 - Extract only what the document supports; derive avgTicket and effectiveRatePct arithmetically when not printed.
+- Extract EVERYTHING the statement offers: MID, MCC, pricing model, card-network mix, refunds, net deposits, chargeback dollars. Use empty string / 0 / empty array only when the statement genuinely doesn't show a value.
+- interchangeLines is the highest-value extraction: walk every page of the interchange / card-type / qualification detail and capture every category row verbatim (label, volume, item count, % rate, per-item fee, dollars charged). Delt audits these against the published Visa/Mastercard interchange schedules, so precision on rates and per-item fees matters more than anything else. Tiered statements' Qualified/Mid-Qualified/Non-Qualified buckets belong here too.
+- Keep card-brand assessments/dues/access fees in assessmentFees, separate from interchange.
 - currentMonthlyCost is the merchant's TOTAL cost of acceptance for the period: discount/interchange charges, per-item fees, monthly/service fees, PCI, statement, batch, regulatory, non-qualified surcharges — everything. Do not include equipment leases or cash advance repayments; note them in notes if present.
 - The fees array must reconcile: its amounts sum to currentMonthlyCost (within rounding). Use the canonical bucket labels where lines fit; keep genuinely distinct charges as their own labeled lines.
 - Tiered statements often bury downgrade surcharges in vague lines — put those in 'Other' and mention them in notes.
@@ -123,7 +191,7 @@ async function extractWithNebius(
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
     body: JSON.stringify({
       model,
-      max_tokens: 4096,
+      max_tokens: 8192,
       temperature: 0,
       response_format: { type: "json_object" },
       messages: [
@@ -218,7 +286,7 @@ Deno.serve(async (req) => {
     Array.isArray(body.images) && body.images.length
       ? body.images
           .filter(i => i && typeof i.dataBase64 === "string" && /^image\/(png|jpeg|webp|gif)$/.test(i.mediaType))
-          .slice(0, 8)
+          .slice(0, 12)
       : null;
 
   if (!images && !dataBase64) return json({ error: "missing_file" }, 400);
