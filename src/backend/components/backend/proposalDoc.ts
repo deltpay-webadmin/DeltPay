@@ -1,13 +1,17 @@
 /**
  * Personalized merchant savings proposal — a paginated, print-ready document
- * built from the analyzed statement. Opened in a new window where the print
- * dialog saves it as a PDF (same precedent as ExportDealReport / underwriting
- * print views).
+ * built from the analyzed statement. Opened in a new window where the built-in
+ * toolbar offers Present (full-screen walkthrough), Download, Save as PDF, and
+ * Send (Outlook compose in the rep's own account).
+ *
+ * Fully bilingual: pass lang 'es' for a Spanish proposal (copy lives in the
+ * EN/ES objects below).
  *
  * Merchant-safe by construction: consumes ProgramQuote only, never
  * ProgramEconomics (see pricingPrograms.ts).
  */
 import type { ProgramQuote } from './pricingPrograms';
+import { termsToEs } from './i18n';
 import type { ExtractedData } from './pages/BackendAnalysis';
 
 export interface ProposalInput {
@@ -22,6 +26,8 @@ export interface ProposalInput {
    * login_hint, so each rep lands in their own Outlook account.
    */
   preparedByEmail?: string;
+  /** Document language. Defaults to English. */
+  lang?: 'en' | 'es';
 }
 
 const esc = (s: string) =>
@@ -31,51 +37,287 @@ const js = (s: string) => JSON.stringify(s).replace(/</g, '\\u003c');
 const fmt = (n: number) => n.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 });
 const fmtWhole = (n: number) => n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
 
-const HOW_IT_WORKS: Record<ProgramQuote['key'], string[]> = {
-  cash_discount: [
-    'Your posted prices stay exactly the same. Customers who pay by card see a small service fee on their receipt, with clear signage provided by Delt.',
-    'That fee covers the cost of card acceptance, so the processing fees you pay today go away. Your only cost is a flat monthly program fee.',
-    'Delt handles compliant signage, receipt formatting, and setup end to end. Cash-paying customers automatically pay the lower price.',
+interface ProposalCopy {
+  docTitle: string;
+  heroTitle: string;
+  preparedExclusivelyFor: string;
+  estAnnualSavingsWith: (program: string) => string;
+  heroLine: (pct: number, name: string, monthly: string | null) => string;
+  preparedFor: string;
+  preparedBy: string;
+  basedOnStatement: (period: string, processor: string) => string;
+  coverDisclaimer: string;
+  executiveSummary: string;
+  executiveBody: (a: {
+    name: string; period: string; processor: string; volume: string; txns: string;
+    monthlyCost: string; rate: number; program: string; newCost: string; savings: string;
+  }) => string;
+  whereMoneyGoes: string;
+  monthlyVolume: string;
+  effectiveRate: string;
+  monthlyCost: string;
+  annualCost: string;
+  feeOnStatement: string;
+  amount: string;
+  calloutMeaning: (name: string) => string;
+  calloutChargebacks: (n: number) => string;
+  pricingOptions: string;
+  pricingIntro: (name: string) => string;
+  recommendedFor: (name: string) => string;
+  youdPay: string;
+  youdSave: string;
+  perMo: string;
+  perYr: string;
+  annualCostCompare: string;
+  today: string;
+  with: string;
+  year1Savings: string;
+  threeYearSavings: string;
+  everyMonth: string;
+  cdNote: (name: string, fee: string) => string;
+  howWorks: (program: string) => string;
+  whyDelt: string;
+  whyItems: { h: string; p: string }[];
+  nextSteps: string;
+  steps: { b: string; rest: string }[];
+  signature: (name: string) => string;
+  date: string;
+  footerLeft: (name: string) => string;
+  footerRight: (date: string) => string;
+  programNames: Record<ProgramQuote['key'], string>;
+  programTaglines: Record<ProgramQuote['key'], string>;
+  howItWorks: Record<ProgramQuote['key'], string[]>;
+  toolbar: { present: string; download: string; pdf: string; send: string };
+  presentHint: string;
+  mailSubject: (name: string) => string;
+  mailBody: (a: { current: string; program: string; newCost: string; savings: string; rate: number; signoff: string }) => string;
+  teamSignoff: string;
+}
+
+const EN: ProposalCopy = {
+  docTitle: 'Savings Proposal',
+  heroTitle: 'Payment Savings<br>Proposal',
+  preparedExclusivelyFor: 'Prepared exclusively for',
+  estAnnualSavingsWith: p => `Estimated annual savings with ${p}`,
+  heroLine: (pct, name, monthly) => `${pct}% less than ${name} pays today${monthly ? ` — ${monthly} back every month` : ''}`,
+  preparedFor: 'Prepared for',
+  preparedBy: 'Prepared by',
+  basedOnStatement: (period, processor) =>
+    `${period ? `Based on the ${period} statement` : 'Based on your processing statement'}${processor ? ` from ${processor}` : ''}`,
+  coverDisclaimer: 'Estimates are based on the statement provided. Actual results depend on card mix and processing volume.',
+  executiveSummary: 'Executive Summary',
+  executiveBody: a => `
+    We reviewed ${a.name}'s ${a.period ? a.period + ' ' : ''}processing statement${a.processor ? ` from ${a.processor}` : ''} line by line.
+    On ${a.volume} of monthly card volume across ${a.txns} transactions,
+    ${a.name} is paying <strong>${a.monthlyCost} per month</strong> in processing costs — an effective rate of
+    <strong>${a.rate}%</strong>. Under the recommended <strong>${a.program}</strong> program, we estimate that cost drops to
+    <strong>${a.newCost} per month</strong>, keeping <strong class="green">${a.savings}</strong> in the business every year.`,
+  whereMoneyGoes: 'Where the Money Goes Today',
+  monthlyVolume: 'Monthly volume',
+  effectiveRate: 'Effective rate',
+  monthlyCost: 'Monthly cost',
+  annualCost: 'Annual cost',
+  feeOnStatement: 'Fee on your statement',
+  amount: 'Amount',
+  calloutMeaning: name =>
+    `<strong>What this means for ${name}:</strong> every one of these line items is negotiable — most shrink dramatically or disappear under the programs on the next page.`,
+  calloutChargebacks: n =>
+    ` We also noted ${n} chargeback${n === 1 ? '' : 's'} this period; Delt includes dispute-response tooling at no extra cost.`,
+  pricingOptions: 'Your Pricing Options',
+  pricingIntro: name => `Three ways forward — all three cost less than today. The highlighted program is our recommendation for ${name}.`,
+  recommendedFor: name => `Recommended for ${name}`,
+  youdPay: "You'd pay",
+  youdSave: "You'd save",
+  perMo: '/mo',
+  perYr: '/yr',
+  annualCostCompare: 'Annual Cost: Today vs. Delt',
+  today: 'Today',
+  with: 'With',
+  year1Savings: 'Year 1 savings',
+  threeYearSavings: '3-year savings',
+  everyMonth: 'Every month',
+  cdNote: (name, fee) =>
+    `With Cash Discount, the ${fee} service fee is paid by card-paying customers — ${name}'s own cost is the flat program fee shown above.`,
+  howWorks: p => `How ${p} Works`,
+  whyDelt: 'Why Merchants Choose Delt',
+  whyItems: [
+    { h: 'No rate creep', p: 'Your pricing is locked to your program — there is no percentage rate to quietly go up over time.' },
+    { h: 'Transparent statements', p: 'One page you can read, not twelve pages of line items. What you see is what you pay.' },
+    { h: 'Compliance handled', p: 'Signage, receipt formatting, and card-network rules are set up and kept current for you.' },
+    { h: 'Real support', p: 'Setup, hardware, and day-to-day questions handled by people, not ticket queues.' },
   ],
-  flat_rate: [
-    'You pay one simple rate plus a few cents per transaction — the same on every card, every time.',
-    'No tiers, no line-item surcharges, no surprises. Your statement becomes one line you can actually read.',
-    'Your rate is locked to your business profile — no rate creep over time.',
+  nextSteps: 'Next Steps',
+  steps: [
+    { b: 'Accept this proposal', rest: ' — sign below or reply to your Delt contact.' },
+    { b: 'Quick onboarding', rest: ' — a short application; approval typically lands within 1–2 business days.' },
+    { b: 'Go live', rest: ' — equipment and signage arrive configured; most merchants switch with zero downtime.' },
   ],
-  interchange_plus: [
-    'Every card has a wholesale cost set by the card networks, called interchange. You pay that at true cost, with no markup hidden inside it.',
-    'Delt adds one small, transparent margin on top — you see exactly what the networks charge and exactly what Delt earns.',
-    'When the networks lower a rate, the savings pass straight through to you.',
+  signature: name => `Signature — ${name}`,
+  date: 'Date',
+  footerLeft: name => `Savings proposal — ${name}`,
+  footerRight: date => `Prepared by Delt · ${date}`,
+  programNames: { cash_discount: 'Cash Discount', flat_rate: 'Flat Rate', interchange_plus: 'Interchange-Plus' },
+  programTaglines: {
+    cash_discount: 'Customers cover the service fee — your processing cost drops to the program fee.',
+    flat_rate: 'One predictable rate on every transaction, statement simplicity.',
+    interchange_plus: 'Pass-through interchange with a transparent Delt margin.',
+  },
+  howItWorks: {
+    cash_discount: [
+      'Your posted prices stay exactly the same. Customers who pay by card see a small service fee on their receipt, with clear signage provided by Delt.',
+      'That fee covers the cost of card acceptance, so the processing fees you pay today go away. Your only cost is a flat monthly program fee.',
+      'Delt handles compliant signage, receipt formatting, and setup end to end. Cash-paying customers automatically pay the lower price.',
+    ],
+    flat_rate: [
+      'You pay one simple rate plus a few cents per transaction — the same on every card, every time.',
+      'No tiers, no line-item surcharges, no surprises. Your statement becomes one line you can actually read.',
+      'Your rate is locked to your business profile — no rate creep over time.',
+    ],
+    interchange_plus: [
+      'Every card has a wholesale cost set by the card networks, called interchange. You pay that at true cost, with no markup hidden inside it.',
+      'Delt adds one small, transparent margin on top — you see exactly what the networks charge and exactly what Delt earns.',
+      'When the networks lower a rate, the savings pass straight through to you.',
+    ],
+  },
+  toolbar: { present: '▶ Present', download: '⬇ Download', pdf: '🖨 Save as PDF', send: '✉ Send' },
+  presentHint: '← → to navigate · Esc to exit',
+  mailSubject: name => `Your Delt savings proposal — ${name}`,
+  mailBody: a => [
+    'Hi,', '',
+    'Thank you for sharing your processing statement. We went through it line by line, and the numbers are worth a look:', '',
+    `• Today: ${a.current}/month in processing costs (${a.rate}% effective rate)`,
+    `• With Delt ${a.program}: ${a.newCost}/month`,
+    `• Estimated savings: ${a.savings} per year`, '',
+    'Your full proposal is attached (it opens in any browser). Happy to walk through it together whenever works for you.', '',
+    a.signoff,
+  ].join('\n'),
+  teamSignoff: 'The Delt Team',
+};
+
+const ES_COPY: ProposalCopy = {
+  docTitle: 'Propuesta de Ahorro',
+  heroTitle: 'Propuesta de Ahorro<br>en Procesamiento de Pagos',
+  preparedExclusivelyFor: 'Preparada exclusivamente para',
+  estAnnualSavingsWith: p => `Ahorro anual estimado con ${p}`,
+  heroLine: (pct, name, monthly) => `${pct}% menos de lo que ${name} paga hoy${monthly ? ` — ${monthly} de vuelta a su bolsillo cada mes` : ''}`,
+  preparedFor: 'Preparada para',
+  preparedBy: 'Preparada por',
+  basedOnStatement: (period, processor) =>
+    `${period ? `Basada en el estado de cuenta de ${period}` : 'Basada en su estado de cuenta de procesamiento'}${processor ? ` de ${processor}` : ''}`,
+  coverDisclaimer: 'Las cifras son estimaciones basadas en el estado de cuenta proporcionado. Los resultados reales dependen de la mezcla de tarjetas y el volumen procesado.',
+  executiveSummary: 'Resumen Ejecutivo',
+  executiveBody: a => `
+    Revisamos línea por línea el estado de cuenta${a.period ? ` de ${a.period}` : ''}${a.processor ? ` de ${a.processor}` : ''} de ${a.name}.
+    Sobre ${a.volume} de volumen mensual en tarjetas a través de ${a.txns} transacciones,
+    ${a.name} está pagando <strong>${a.monthlyCost} al mes</strong> en costos de procesamiento — una tasa efectiva del
+    <strong>${a.rate}%</strong>. Con el programa recomendado <strong>${a.program}</strong>, estimamos que ese costo baja a
+    <strong>${a.newCost} al mes</strong>, dejando <strong class="green">${a.savings}</strong> en su negocio cada año.`,
+  whereMoneyGoes: 'A Dónde Se Va el Dinero Hoy',
+  monthlyVolume: 'Volumen mensual',
+  effectiveRate: 'Tasa efectiva',
+  monthlyCost: 'Costo mensual',
+  annualCost: 'Costo anual',
+  feeOnStatement: 'Cargo en su estado de cuenta',
+  amount: 'Monto',
+  calloutMeaning: name =>
+    `<strong>Qué significa esto para ${name}:</strong> cada una de estas líneas es negociable — la mayoría se reduce drásticamente o desaparece con los programas de la siguiente página.`,
+  calloutChargebacks: n =>
+    ` También notamos ${n} contracargo${n === 1 ? '' : 's'} en este período; Delt incluye herramientas de respuesta a disputas sin costo adicional.`,
+  pricingOptions: 'Sus Opciones de Precios',
+  pricingIntro: name => `Tres caminos posibles — los tres cuestan menos que hoy. El programa resaltado es nuestra recomendación para ${name}.`,
+  recommendedFor: name => `Recomendado para ${name}`,
+  youdPay: 'Usted pagaría',
+  youdSave: 'Usted ahorraría',
+  perMo: '/mes',
+  perYr: '/año',
+  annualCostCompare: 'Costo Anual: Hoy vs. Delt',
+  today: 'Hoy',
+  with: 'Con',
+  year1Savings: 'Ahorro año 1',
+  threeYearSavings: 'Ahorro a 3 años',
+  everyMonth: 'Cada mes',
+  cdNote: (name, fee) =>
+    `Con Descuento por Efectivo, la tarifa de servicio de ${fee} la pagan los clientes que usan tarjeta — el costo propio de ${name} es solo la cuota fija del programa mostrada arriba.`,
+  howWorks: p => `Cómo Funciona ${p}`,
+  whyDelt: 'Por Qué los Comercios Eligen Delt',
+  whyItems: [
+    { h: 'Sin aumentos escondidos', p: 'Su precio queda fijado a su programa — no hay una tasa porcentual que suba silenciosamente con el tiempo.' },
+    { h: 'Estados de cuenta transparentes', p: 'Una página que se puede leer, no doce páginas de cargos. Lo que ve es lo que paga.' },
+    { h: 'Cumplimiento incluido', p: 'La señalización, el formato de recibos y las reglas de las redes de tarjetas quedan configurados y actualizados por usted.' },
+    { h: 'Soporte de verdad', p: 'Instalación, equipos y dudas del día a día atendidos por personas, no por filas de tickets.' },
   ],
+  nextSteps: 'Próximos Pasos',
+  steps: [
+    { b: 'Acepte esta propuesta', rest: ' — firme abajo o responda a su contacto de Delt.' },
+    { b: 'Alta rápida', rest: ' — una solicitud corta; la aprobación normalmente llega en 1–2 días hábiles.' },
+    { b: 'Puesta en marcha', rest: ' — el equipo y la señalización llegan configurados; la mayoría de los comercios cambia sin interrupciones.' },
+  ],
+  signature: name => `Firma — ${name}`,
+  date: 'Fecha',
+  footerLeft: name => `Propuesta de ahorro — ${name}`,
+  footerRight: date => `Preparada por Delt · ${date}`,
+  programNames: { cash_discount: 'Descuento por Efectivo', flat_rate: 'Tarifa Fija', interchange_plus: 'Intercambio Plus' },
+  programTaglines: {
+    cash_discount: 'Sus clientes cubren la tarifa de servicio — su costo de procesamiento baja a la cuota del programa.',
+    flat_rate: 'Una sola tasa predecible en cada transacción, simplicidad total en su estado de cuenta.',
+    interchange_plus: 'Intercambio a costo real con un margen transparente de Delt.',
+  },
+  howItWorks: {
+    cash_discount: [
+      'Sus precios publicados quedan exactamente iguales. Los clientes que pagan con tarjeta ven una pequeña tarifa de servicio en su recibo, con señalización clara provista por Delt.',
+      'Esa tarifa cubre el costo de aceptar tarjetas, así que las comisiones que usted paga hoy desaparecen. Su único costo es una cuota mensual fija del programa.',
+      'Delt se encarga de la señalización, los recibos y la instalación de principio a fin. Los clientes que pagan en efectivo pagan automáticamente el precio más bajo.',
+    ],
+    flat_rate: [
+      'Usted paga una sola tasa simple más unos centavos por transacción — igual en cada tarjeta, todas las veces.',
+      'Sin niveles, sin recargos por línea, sin sorpresas. Su estado de cuenta se convierte en una línea que sí se puede leer.',
+      'Su tasa queda fijada a su perfil de negocio — sin aumentos con el tiempo.',
+    ],
+    interchange_plus: [
+      'Cada tarjeta tiene un costo mayorista fijado por las redes, llamado intercambio. Usted lo paga a costo real, sin márgenes escondidos.',
+      'Delt agrega un solo margen pequeño y transparente — usted ve exactamente lo que cobran las redes y exactamente lo que gana Delt.',
+      'Cuando las redes bajan una tasa, el ahorro pasa directo a usted.',
+    ],
+  },
+  toolbar: { present: '▶ Presentar', download: '⬇ Descargar', pdf: '🖨 Guardar PDF', send: '✉ Enviar' },
+  presentHint: '← → para navegar · Esc para salir',
+  mailSubject: name => `Su propuesta de ahorro de Delt — ${name}`,
+  mailBody: a => [
+    'Hola,', '',
+    'Gracias por compartir su estado de cuenta de procesamiento. Lo revisamos línea por línea y los números merecen su atención:', '',
+    `• Hoy: ${a.current}/mes en costos de procesamiento (tasa efectiva del ${a.rate}%)`,
+    `• Con Delt ${a.program}: ${a.newCost}/mes`,
+    `• Ahorro estimado: ${a.savings} al año`, '',
+    'Su propuesta completa va adjunta (se abre en cualquier navegador). Con gusto la repasamos juntos cuando le convenga.', '',
+    a.signoff,
+  ].join('\n'),
+  teamSignoff: 'El Equipo Delt',
 };
 
 export function buildProposalHtml(input: ProposalInput): string {
-  const { extracted: ex, programs, focusKey, preparedBy, preparedByEmail } = input;
+  const { extracted: ex, programs, focusKey, preparedBy, preparedByEmail, lang = 'en' } = input;
+  const L = lang === 'es' ? ES_COPY : EN;
   const focus = programs.find(p => p.key === focusKey) ?? programs[0];
   if (!focus) return '';
 
   const name = esc(ex.merchantName);
-  const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  const today = new Date().toLocaleDateString(lang === 'es' ? 'es-US' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' });
   const monthlySavings = Math.max(0, ex.currentMonthlyCost - focus.monthlyCost);
   const currentAnnual = Math.round(ex.currentMonthlyCost * 12);
   const maxFee = Math.max(...ex.fees.map(f => f.amount), 1);
   const maxCost = Math.max(currentAnnual, focus.annualCost, 1);
+  const focusName = L.programNames[focus.key];
 
   const fileName = `Delt-Proposal-${ex.merchantName.replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '') || 'Merchant'}-${new Date().toISOString().slice(0, 10)}.html`;
-  const mailSubject = `Your Delt savings proposal — ${ex.merchantName}`;
-  const mailBody = [
-    `Hi,`,
-    ``,
-    `Thank you for sharing your processing statement. We went through it line by line, and the numbers are worth a look:`,
-    ``,
-    `• Today: ${fmt(ex.currentMonthlyCost)}/month in processing costs (${ex.effectiveRatePct}% effective rate)`,
-    `• With Delt ${focus.name}: ${fmt(focus.monthlyCost)}/month`,
-    `• Estimated savings: ${fmtWhole(focus.annualSavings)} per year`,
-    ``,
-    `Your full proposal is attached (it opens in any browser). Happy to walk through it together whenever works for you.`,
-    ``,
-    preparedBy ? `${preparedBy}\nDelt` : `The Delt Team`,
-  ].join('\n');
+  const mailSubject = L.mailSubject(ex.merchantName);
+  const mailBody = L.mailBody({
+    current: fmt(ex.currentMonthlyCost),
+    program: focusName,
+    newCost: fmt(focus.monthlyCost),
+    savings: fmtWhole(focus.annualSavings),
+    rate: ex.effectiveRatePct,
+    signoff: preparedBy ? `${preparedBy}\nDelt` : L.teamSignoff,
+  });
 
   const feeRows = ex.fees.map(f => `
     <tr>
@@ -86,24 +328,29 @@ export function buildProposalHtml(input: ProposalInput): string {
 
   const programCards = programs.map(p => `
     <div class="program ${p.key === focus.key ? 'focus' : ''}">
-      ${p.key === focus.key ? '<div class="pill">Recommended for ' + name + '</div>' : ''}
-      <h3>${esc(p.name)}</h3>
-      <p class="tagline">${esc(p.tagline)}</p>
-      <p class="terms">${esc(p.terms)}</p>
+      ${p.key === focus.key ? '<div class="pill">' + esc(L.recommendedFor(ex.merchantName)) + '</div>' : ''}
+      <h3>${esc(L.programNames[p.key])}</h3>
+      <p class="tagline">${esc(L.programTaglines[p.key])}</p>
+      <p class="terms">${esc(lang === 'es' ? termsToEs(p.terms) : p.terms)}</p>
       <div class="split">
-        <div><span class="lbl">You'd pay</span><span class="val">${fmt(p.monthlyCost)}/mo</span></div>
-        <div><span class="lbl">You'd save</span><span class="val green">${fmtWhole(p.annualSavings)}/yr</span></div>
+        <div><span class="lbl">${esc(L.youdPay)}</span><span class="val">${fmt(p.monthlyCost)}${L.perMo}</span></div>
+        <div><span class="lbl">${esc(L.youdSave)}</span><span class="val green">${fmtWhole(p.annualSavings)}${L.perYr}</span></div>
       </div>
     </div>`).join('');
 
-  const steps = HOW_IT_WORKS[focus.key].map((s, i) => `
-    <div class="step"><div class="stepnum">${i + 1}</div><p>${s}</p></div>`).join('');
+  const steps = L.howItWorks[focus.key].map((s, i) => `
+    <div class="step"><div class="stepnum">${i + 1}</div><p>${esc(s)}</p></div>`).join('');
+
+  const whyCells = L.whyItems.map(w => `<div><h4>${esc(w.h)}</h4><p>${esc(w.p)}</p></div>`).join('\n    ');
+  const nextSteps = L.steps.map((s, i) =>
+    `<div class="step"><div class="stepnum">${i + 1}</div><p><strong>${esc(s.b)}</strong>${esc(s.rest)}</p></div>`).join('\n  ');
+  const footer = `<div class="footer"><span>${L.footerLeft(name)}</span><span>${L.footerRight(today)}</span></div>`;
 
   return `<!DOCTYPE html>
-<html>
+<html lang="${lang}">
 <head>
 <meta charset="utf-8">
-<title>Savings Proposal — ${name}</title>
+<title>${L.docTitle} — ${name}</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { background: #fff; }
@@ -240,134 +487,127 @@ export function buildProposalHtml(input: ProposalInput): string {
 <body>
 
 <div class="toolbar">
-  <button class="primary" onclick="startPresent()" title="Full-screen, page-by-page walkthrough">▶ Present</button>
-  <button onclick="downloadProposal()" title="Save the proposal as a file you can attach or share">⬇ Download</button>
-  <button onclick="window.print()" title="Print or save as PDF">🖨 Save as PDF</button>
-  <button onclick="sendProposal()" title="Open a pre-written email in your Outlook account and download the file to attach">✉ Send</button>
+  <button class="primary" onclick="startPresent()">${L.toolbar.present}</button>
+  <button onclick="downloadProposal()">${L.toolbar.download}</button>
+  <button onclick="window.print()">${L.toolbar.pdf}</button>
+  <button onclick="sendProposal()">${L.toolbar.send}</button>
 </div>
 
 <div class="pnav">
-  <button onclick="step(-1)" title="Previous page">‹</button>
+  <button onclick="step(-1)">‹</button>
   <span class="counter" id="pcounter"></span>
-  <button onclick="step(1)" title="Next page">›</button>
-  <span class="hint">← → to navigate · Esc to exit</span>
+  <button onclick="step(1)">›</button>
+  <span class="hint">${L.presentHint}</span>
 </div>
 
 <!-- ── Page 1: Cover ── -->
 <div class="page cover">
   <div class="brand">DELT</div>
-  <h1>Payment Savings<br>Proposal</h1>
-  <p class="muted">Prepared exclusively for <strong>${name}</strong></p>
+  <h1>${L.heroTitle}</h1>
+  <p class="muted">${esc(L.preparedExclusivelyFor)} <strong>${name}</strong></p>
   <div class="hero">
-    <p class="muted small" style="text-transform:uppercase;letter-spacing:0.08em;">Estimated annual savings with ${esc(focus.name)}</p>
+    <p class="muted small" style="text-transform:uppercase;letter-spacing:0.08em;">${esc(L.estAnnualSavingsWith(focusName))}</p>
     <div class="big">${fmtWhole(focus.annualSavings)}</div>
-    <p class="green" style="font-weight:700;">${focus.savingsPct}% less than ${name} pays today${monthlySavings > 0 ? ` — ${fmtWhole(monthlySavings)} back every month` : ''}</p>
+    <p class="green" style="font-weight:700;">${esc(L.heroLine(focus.savingsPct, ex.merchantName, monthlySavings > 0 ? fmtWhole(monthlySavings) : null))}</p>
   </div>
   <div class="prepared">
     <div>
-      <span class="lbl">Prepared for</span>
+      <span class="lbl">${esc(L.preparedFor)}</span>
       <span class="who">${name}</span>
-      <p class="muted small">${ex.statementPeriod ? `Based on the ${esc(ex.statementPeriod)} statement` : 'Based on your processing statement'}${ex.currentProcessor ? ` from ${esc(ex.currentProcessor)}` : ''}</p>
+      <p class="muted small">${esc(L.basedOnStatement(ex.statementPeriod, ex.currentProcessor))}</p>
     </div>
     <div>
-      <span class="lbl">Prepared by</span>
+      <span class="lbl">${esc(L.preparedBy)}</span>
       <span class="who">${preparedBy ? esc(preparedBy) : 'Delt'}</span>
       <p class="muted small">${today}</p>
     </div>
   </div>
-  <p class="coverfoot">Estimates are based on the statement provided. Actual results depend on card mix and processing volume.</p>
+  <p class="coverfoot">${esc(L.coverDisclaimer)}</p>
 </div>
 
 <!-- ── Page 2: Where you are today ── -->
 <div class="page">
   <div class="brand">DELT</div>
-  <h2 style="margin-top:14px;">Executive Summary</h2>
+  <h2 style="margin-top:14px;">${esc(L.executiveSummary)}</h2>
   <div class="rule"></div>
-  <p>
-    We reviewed ${name}'s ${ex.statementPeriod ? esc(ex.statementPeriod) + ' ' : ''}processing statement${ex.currentProcessor ? ` from ${esc(ex.currentProcessor)}` : ''} line by line.
-    On ${fmtWhole(ex.totalVolume)} of monthly card volume across ${ex.totalTransactions.toLocaleString()} transactions,
-    ${name} is paying <strong>${fmt(ex.currentMonthlyCost)} per month</strong> in processing costs — an effective rate of
-    <strong>${ex.effectiveRatePct}%</strong>. Under the recommended <strong>${esc(focus.name)}</strong> program, we estimate that cost drops to
-    <strong>${fmt(focus.monthlyCost)} per month</strong>, keeping <strong class="green">${fmtWhole(focus.annualSavings)}</strong> in the business every year.
-  </p>
+  <p>${L.executiveBody({
+    name, period: esc(ex.statementPeriod), processor: esc(ex.currentProcessor),
+    volume: fmtWhole(ex.totalVolume), txns: ex.totalTransactions.toLocaleString(),
+    monthlyCost: fmt(ex.currentMonthlyCost), rate: ex.effectiveRatePct,
+    program: esc(focusName), newCost: fmt(focus.monthlyCost), savings: fmtWhole(focus.annualSavings),
+  })}</p>
 
-  <h2 style="margin-top:24px;">Where the Money Goes Today</h2>
+  <h2 style="margin-top:24px;">${esc(L.whereMoneyGoes)}</h2>
   <div class="rule"></div>
   <div class="stats">
-    <div><span class="lbl">Monthly volume</span><span class="val">${fmtWhole(ex.totalVolume)}</span></div>
-    <div><span class="lbl">Effective rate</span><span class="val">${ex.effectiveRatePct}%</span></div>
-    <div><span class="lbl">Monthly cost</span><span class="val">${fmt(ex.currentMonthlyCost)}</span></div>
-    <div><span class="lbl">Annual cost</span><span class="val">${fmtWhole(currentAnnual)}</span></div>
+    <div><span class="lbl">${esc(L.monthlyVolume)}</span><span class="val">${fmtWhole(ex.totalVolume)}</span></div>
+    <div><span class="lbl">${esc(L.effectiveRate)}</span><span class="val">${ex.effectiveRatePct}%</span></div>
+    <div><span class="lbl">${esc(L.monthlyCost)}</span><span class="val">${fmt(ex.currentMonthlyCost)}</span></div>
+    <div><span class="lbl">${esc(L.annualCost)}</span><span class="val">${fmtWhole(currentAnnual)}</span></div>
   </div>
   <table>
-    <thead><tr><th>Fee on your statement</th><th class="num">Amount</th><th></th></tr></thead>
+    <thead><tr><th>${esc(L.feeOnStatement)}</th><th class="num">${esc(L.amount)}</th><th></th></tr></thead>
     <tbody>${feeRows}</tbody>
   </table>
   <div class="callout">
-    <strong>What this means for ${name}:</strong> every one of these line items is negotiable — most shrink dramatically or disappear
-    under the programs on the next page.${ex.chargebackCount > 0 ? ` We also noted ${ex.chargebackCount} chargeback${ex.chargebackCount === 1 ? '' : 's'} this period; Delt includes dispute-response tooling at no extra cost.` : ''}
+    ${L.calloutMeaning(name)}${ex.chargebackCount > 0 ? L.calloutChargebacks(ex.chargebackCount) : ''}
   </div>
-  <div class="footer"><span>Savings proposal — ${name}</span><span>Prepared by Delt · ${today}</span></div>
+  ${footer}
 </div>
 
 <!-- ── Page 3: Proposed solutions ── -->
 <div class="page">
   <div class="brand">DELT</div>
-  <h2 style="margin-top:14px;">Your Pricing Options</h2>
+  <h2 style="margin-top:14px;">${esc(L.pricingOptions)}</h2>
   <div class="rule"></div>
-  <p>Three ways forward — all three cost less than today. The highlighted program is our recommendation for ${name}.</p>
+  <p>${esc(L.pricingIntro(ex.merchantName))}</p>
   <div class="programs">${programCards}</div>
 
-  <h2 style="margin-top:20px;">Annual Cost: Today vs. Delt</h2>
+  <h2 style="margin-top:20px;">${esc(L.annualCostCompare)}</h2>
   <div class="rule"></div>
   <div class="compare">
     <div class="row">
-      <div class="lbl">Today${ex.currentProcessor ? ` (${esc(ex.currentProcessor)})` : ''}</div>
+      <div class="lbl">${esc(L.today)}${ex.currentProcessor ? ` (${esc(ex.currentProcessor)})` : ''}</div>
       <div class="track"><div class="bar gray" style="width:${Math.max(3, Math.round((currentAnnual / maxCost) * 100))}%"></div></div>
       <div class="amount">${fmtWhole(currentAnnual)}</div>
     </div>
     <div class="row">
-      <div class="lbl">With ${esc(focus.name)}</div>
+      <div class="lbl">${esc(L.with)} ${esc(focusName)}</div>
       <div class="track"><div class="bar blue" style="width:${Math.max(3, Math.round((focus.annualCost / maxCost) * 100))}%"></div></div>
       <div class="amount">${fmtWhole(focus.annualCost)}</div>
     </div>
   </div>
   <div class="stats">
-    <div><span class="lbl">Year 1 savings</span><span class="val green">${fmtWhole(focus.annualSavings)}</span></div>
-    <div><span class="lbl">3-year savings</span><span class="val green">${fmtWhole(Math.round(monthlySavings * 36))}</span></div>
-    <div><span class="lbl">Every month</span><span class="val green">${fmtWhole(monthlySavings)}</span></div>
+    <div><span class="lbl">${esc(L.year1Savings)}</span><span class="val green">${fmtWhole(focus.annualSavings)}</span></div>
+    <div><span class="lbl">${esc(L.threeYearSavings)}</span><span class="val green">${fmtWhole(Math.round(monthlySavings * 36))}</span></div>
+    <div><span class="lbl">${esc(L.everyMonth)}</span><span class="val green">${fmtWhole(monthlySavings)}</span></div>
   </div>
-  ${focus.key === 'cash_discount' ? `<p class="muted small">With Cash Discount, the ${esc(focus.terms.split(' ')[0] ?? '')} service fee is paid by card-paying customers — ${name}'s own cost is the flat program fee shown above.</p>` : ''}
-  <div class="footer"><span>Savings proposal — ${name}</span><span>Prepared by Delt · ${today}</span></div>
+  ${focus.key === 'cash_discount' ? `<p class="muted small">${esc(L.cdNote(ex.merchantName, focus.terms.split(' ')[0] ?? ''))}</p>` : ''}
+  ${footer}
 </div>
 
 <!-- ── Page 4: How it works + next steps + acceptance ── -->
 <div class="page">
   <div class="brand">DELT</div>
-  <h2 style="margin-top:14px;">How ${esc(focus.name)} Works</h2>
+  <h2 style="margin-top:14px;">${esc(L.howWorks(focusName))}</h2>
   <div class="rule"></div>
   ${steps}
 
-  <h2 style="margin-top:20px;">Why Merchants Choose Delt</h2>
+  <h2 style="margin-top:20px;">${esc(L.whyDelt)}</h2>
   <div class="rule"></div>
   <div class="why">
-    <div><h4>No rate creep</h4><p>Your pricing is locked to your program — there is no percentage rate to quietly go up over time.</p></div>
-    <div><h4>Transparent statements</h4><p>One page you can read, not twelve pages of line items. What you see is what you pay.</p></div>
-    <div><h4>Compliance handled</h4><p>Signage, receipt formatting, and card-network rules are set up and kept current for you.</p></div>
-    <div><h4>Real support</h4><p>Setup, hardware, and day-to-day questions handled by people, not ticket queues.</p></div>
+    ${whyCells}
   </div>
 
-  <h2 style="margin-top:20px;">Next Steps</h2>
+  <h2 style="margin-top:20px;">${esc(L.nextSteps)}</h2>
   <div class="rule"></div>
-  <div class="step"><div class="stepnum">1</div><p><strong>Accept this proposal</strong> — sign below or reply to your Delt contact.</p></div>
-  <div class="step"><div class="stepnum">2</div><p><strong>Quick onboarding</strong> — a short application; approval typically lands within 1–2 business days.</p></div>
-  <div class="step"><div class="stepnum">3</div><p><strong>Go live</strong> — equipment and signage arrive configured; most merchants switch with zero downtime.</p></div>
+  ${nextSteps}
 
   <div class="sig">
-    <div><div class="sigline"></div><p class="small muted">Signature — ${name}</p></div>
-    <div><div class="sigline"></div><p class="small muted">Date</p></div>
+    <div><div class="sigline"></div><p class="small muted">${esc(L.signature(ex.merchantName))}</p></div>
+    <div><div class="sigline"></div><p class="small muted">${esc(L.date)}</p></div>
   </div>
-  <div class="footer"><span>Savings proposal — ${name}</span><span>Prepared by Delt · ${today}</span></div>
+  ${footer}
 </div>
 
 <script>
@@ -480,7 +720,7 @@ export function openProposalPdf(input: ProposalInput): boolean {
   win.document.open();
   win.document.write(html);
   win.document.close();
-  win.document.title = `Savings Proposal — ${input.extracted.merchantName}`;
+  win.document.title = `${input.lang === 'es' ? 'Propuesta de Ahorro' : 'Savings Proposal'} — ${input.extracted.merchantName}`;
   win.focus();
   return true;
 }

@@ -8,6 +8,7 @@ import {
 } from 'recharts';
 import type { ExtractedData } from './BackendAnalysis';
 import type { ProgramQuote } from '../pricingPrograms';
+import { useLang } from '../i18n';
 
 const fmt = (n: number) => n.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 });
 const fmtWhole = (n: number) => n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
@@ -59,6 +60,7 @@ interface MerchantSavingsViewProps {
  * ProgramEconomics stays out of ProgramQuote).
  */
 export function MerchantSavingsView({ extracted, programs, bestProgramKey, onExit, onDownloadProposal }: MerchantSavingsViewProps) {
+  const { t, tTerms, lang } = useLang();
   const [selectedKey, setSelectedKey] = useState<ProgramQuote['key']>(bestProgramKey ?? 'cash_discount');
   const selected = programs.find(p => p.key === selectedKey) ?? programs[0];
 
@@ -74,7 +76,10 @@ export function MerchantSavingsView({ extracted, programs, bestProgramKey, onExi
 
   if (!selected) return null;
 
-  const monthLabel = (m: number) => (m < 12 ? `${m} mo` : m % 12 === 0 ? `${m / 12} yr` : `${Math.floor(m / 12)}.${Math.round(((m % 12) / 12) * 10)} yr`);
+  const monthLabel = (m: number) => {
+    if (lang === 'es') return m < 12 ? `${m} meses` : m === 12 ? '1 año' : `${Math.round(m / 12)} años`;
+    return m < 12 ? `${m} mo` : m % 12 === 0 ? `${m / 12} yr` : `${Math.floor(m / 12)}.${Math.round(((m % 12) / 12) * 10)} yr`;
+  };
 
   return (
     <div className="space-y-6">
@@ -83,8 +88,8 @@ export function MerchantSavingsView({ extracted, programs, bestProgramKey, onExi
         <div>
           <h1 className="text-2xl font-bold text-gray-900">{extracted.merchantName}</h1>
           <p className="text-sm text-gray-500 mt-1">
-            Savings proposal prepared by Delt
-            {extracted.statementPeriod && <> · based on your {extracted.statementPeriod} statement</>}
+            {t('Savings proposal prepared by Delt')}
+            {extracted.statementPeriod && <> · {t('based on your statement for')} {extracted.statementPeriod}</>}
           </p>
         </div>
         <div className="shrink-0 flex items-center gap-2">
@@ -94,7 +99,7 @@ export function MerchantSavingsView({ extracted, programs, bestProgramKey, onExi
               className="px-3 py-2 text-xs font-medium bg-brand text-white rounded-[6px] hover:bg-brand-hover transition-colors flex items-center gap-1.5"
             >
               <Download className="w-3.5 h-3.5" />
-              Download Proposal
+              {t('Download Proposal')}
             </button>
           )}
           <button
@@ -102,22 +107,22 @@ export function MerchantSavingsView({ extracted, programs, bestProgramKey, onExi
             className="px-3 py-2 text-xs font-medium text-gray-500 hover:text-gray-700 border border-gray-200 rounded-[6px] hover:bg-gray-50 transition-colors flex items-center gap-1.5"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            Exit Merchant View
+            {t('Exit Merchant View')}
           </button>
         </div>
       </div>
 
       {/* ── Hero savings banner ── */}
       <div className="bg-emerald-50 border border-emerald-200 rounded-[8px] px-6 py-8 text-center">
-        <p className="text-sm text-emerald-600 font-medium mb-2">Your Estimated Annual Savings with {selected.name}</p>
+        <p className="text-sm text-emerald-600 font-medium mb-2">{t('Your Estimated Annual Savings with')} {t(selected.name)}</p>
         <p className="text-5xl font-bold text-emerald-700 tabular-nums">{fmtWhole(selected.annualSavings)}</p>
         <div className="mt-3 flex items-center justify-center gap-3 flex-wrap">
           <span className="inline-block px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-sm font-bold">
-            {selected.savingsPct}% less than you pay today
+            {selected.savingsPct}% {t('less than you pay today')}
           </span>
           {monthlySavings > 0 && (
             <span className="text-sm text-emerald-600">
-              {fmtWhole(monthlySavings)} back in your pocket every month
+              {fmtWhole(monthlySavings)} {t('back in your pocket every month')}
             </span>
           )}
         </div>
@@ -126,8 +131,8 @@ export function MerchantSavingsView({ extracted, programs, bestProgramKey, onExi
       {/* ── Program selector ── */}
       <div className="bg-white rounded-[8px] border border-gray-200 overflow-hidden">
         <div className="px-5 py-4 border-b border-gray-100">
-          <h2 className="text-sm font-semibold text-gray-900">Choose your program</h2>
-          <p className="text-xs text-gray-500 mt-0.5">Tap a program to see how your numbers change.</p>
+          <h2 className="text-sm font-semibold text-gray-900">{t('Choose your program')}</h2>
+          <p className="text-xs text-gray-500 mt-0.5">{t('Tap a program to see how your numbers change.')}</p>
         </div>
         <div className="p-5 grid grid-cols-1 lg:grid-cols-3 gap-4">
           {programs.map(p => {
@@ -146,23 +151,23 @@ export function MerchantSavingsView({ extracted, programs, bestProgramKey, onExi
                 <div className="flex items-center justify-between gap-2">
                   <p className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
                     {isSelected && <CheckCircle2 className="w-4 h-4 text-brand" />}
-                    {p.name}
+                    {t(p.name)}
                   </p>
                   {recommended && (
                     <span className="px-2 py-0.5 rounded-full bg-brand text-white text-[10px] font-bold uppercase tracking-wide">
-                      Recommended
+                      {t('Recommended')}
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-gray-500 mt-1 leading-snug">{p.tagline}</p>
-                <p className="mt-3 inline-block text-xs font-mono text-gray-600 bg-gray-100 px-2 py-1 rounded-[6px] self-start">{p.terms}</p>
+                <p className="text-xs text-gray-500 mt-1 leading-snug">{t(p.tagline)}</p>
+                <p className="mt-3 inline-block text-xs font-mono text-gray-600 bg-gray-100 px-2 py-1 rounded-[6px] self-start">{tTerms(p.terms)}</p>
                 <div className="mt-4 pt-3 border-t border-gray-100 grid grid-cols-2 gap-2">
                   <div>
-                    <p className="text-[11px] text-gray-500">You'd pay</p>
+                    <p className="text-[11px] text-gray-500">{t("You'd pay")}</p>
                     <p className="text-sm font-bold text-gray-900 tabular-nums">{fmt(p.monthlyCost)}<span className="text-[11px] font-medium text-gray-400">/mo</span></p>
                   </div>
                   <div>
-                    <p className="text-[11px] text-gray-500">You'd save</p>
+                    <p className="text-[11px] text-gray-500">{t("You'd save")}</p>
                     <p className="text-sm font-bold text-emerald-600 tabular-nums">{fmtWhole(p.annualSavings)}<span className="text-[11px] font-medium text-emerald-400">/yr</span></p>
                   </div>
                 </div>
@@ -175,14 +180,14 @@ export function MerchantSavingsView({ extracted, programs, bestProgramKey, onExi
       {/* ── Charts: cost comparison + cumulative savings ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white rounded-[8px] border border-gray-200 p-5">
-          <h3 className="text-sm font-semibold text-gray-900">What you pay: today vs. Delt</h3>
-          <p className="text-xs text-gray-500 mt-0.5 mb-3">Annual processing cost</p>
+          <h3 className="text-sm font-semibold text-gray-900">{t('What you pay: today vs. Delt')}</h3>
+          <p className="text-xs text-gray-500 mt-0.5 mb-3">{t('Annual processing cost')}</p>
           <div style={{ height: 220 }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={[
-                  { name: 'Today', cost: Math.round(extracted.currentMonthlyCost * 12) },
-                  { name: `With ${selected.name}`, cost: selected.annualCost },
+                  { name: t('Today'), cost: Math.round(extracted.currentMonthlyCost * 12) },
+                  { name: `${t('With')} ${t(selected.name)}`, cost: selected.annualCost },
                 ]}
                 margin={{ top: 24, right: 12, bottom: 0, left: 12 }}
               >
@@ -191,7 +196,7 @@ export function MerchantSavingsView({ extracted, programs, bestProgramKey, onExi
                 <YAxis hide />
                 <ChartTooltip
                   cursor={{ fill: 'rgba(0,0,0,0.03)' }}
-                  formatter={(v: number) => [fmtWhole(v), 'Annual cost']}
+                  formatter={(v: number) => [fmtWhole(v), t('Annual cost')]}
                   contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e5e7eb' }}
                 />
                 <Bar dataKey="cost" radius={[4, 4, 0, 0]} barSize={64}>
@@ -204,14 +209,14 @@ export function MerchantSavingsView({ extracted, programs, bestProgramKey, onExi
           </div>
           {selected.key === 'cash_discount' && (
             <p className="text-[11px] text-gray-400 mt-2">
-              With Cash Discount, the service fee is paid by card-paying customers — your own cost is just the program fee.
+              {t('With Cash Discount, the service fee is paid by card-paying customers — your own cost is just the program fee.')}
             </p>
           )}
         </div>
 
         <div className="bg-white rounded-[8px] border border-gray-200 p-5">
-          <h3 className="text-sm font-semibold text-gray-900">Your savings add up</h3>
-          <p className="text-xs text-gray-500 mt-0.5 mb-3">Estimated total saved over time with {selected.name}</p>
+          <h3 className="text-sm font-semibold text-gray-900">{t('Your savings add up')}</h3>
+          <p className="text-xs text-gray-500 mt-0.5 mb-3">{t('Estimated total saved over time with')} {t(selected.name)}</p>
           <div style={{ height: 220 }}>
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={cumulativeSavings} margin={{ top: 12, right: 12, bottom: 0, left: 12 }}>
@@ -229,7 +234,7 @@ export function MerchantSavingsView({ extracted, programs, bestProgramKey, onExi
                 />
                 <YAxis hide />
                 <ChartTooltip
-                  formatter={(v: number) => [fmtWhole(v), 'Total saved']}
+                  formatter={(v: number) => [fmtWhole(v), t('Total saved')]}
                   labelFormatter={(m: number) => monthLabel(m)}
                   contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e5e7eb' }}
                 />
@@ -238,7 +243,7 @@ export function MerchantSavingsView({ extracted, programs, bestProgramKey, onExi
             </ResponsiveContainer>
           </div>
           <p className="text-[11px] text-gray-400 mt-2">
-            After 3 years, that's an estimated <span className="font-semibold text-emerald-600">{fmtWhole(monthlySavings * 36)}</span> kept in your business.
+            {t("After 3 years, that's an estimated")} <span className="font-semibold text-emerald-600">{fmtWhole(monthlySavings * 36)}</span> {t('kept in your business.')}
           </p>
         </div>
       </div>
@@ -248,13 +253,13 @@ export function MerchantSavingsView({ extracted, programs, bestProgramKey, onExi
         <div className="bg-white rounded-[8px] border border-gray-200 p-5">
           <div className="flex items-baseline justify-between gap-4 flex-wrap">
             <div>
-              <h3 className="text-sm font-semibold text-gray-900">What you're paying today</h3>
-              <p className="text-xs text-gray-500 mt-0.5">These fees go away or shrink with Delt.</p>
+              <h3 className="text-sm font-semibold text-gray-900">{t("What you're paying today")}</h3>
+              <p className="text-xs text-gray-500 mt-0.5">{t('These fees go away or shrink with Delt.')}</p>
             </div>
             <p className="text-xs text-gray-500">
-              Current effective rate: <span className="font-bold text-gray-900">{extracted.effectiveRatePct}%</span>
+              {t('Current effective rate:')} <span className="font-bold text-gray-900">{extracted.effectiveRatePct}%</span>
               <span className="mx-1.5 text-gray-300">·</span>
-              <span className="font-bold text-gray-900">{fmt(extracted.currentMonthlyCost)}</span>/mo in fees
+              <span className="font-bold text-gray-900">{fmt(extracted.currentMonthlyCost)}</span>{t('/mo in fees')}
             </p>
           </div>
           <div className="mt-3" style={{ height: Math.max(120, extracted.fees.length * 34) }}>
@@ -268,7 +273,7 @@ export function MerchantSavingsView({ extracted, programs, bestProgramKey, onExi
                 />
                 <ChartTooltip
                   cursor={{ fill: 'rgba(0,0,0,0.03)' }}
-                  formatter={(v: number) => [fmt(v), 'Amount']}
+                  formatter={(v: number) => [fmt(v), t('Amount')]}
                   contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e5e7eb' }}
                 />
                 <Bar dataKey="amount" fill="#9ca3af" radius={[0, 4, 4, 0]} barSize={16}>
@@ -285,7 +290,7 @@ export function MerchantSavingsView({ extracted, programs, bestProgramKey, onExi
         selectedKey === 'cash_discount' ? 'border-brand bg-brand/[0.02]' : 'border-gray-200 bg-white'
       }`}>
         <div className="px-5 py-4 border-b border-gray-100">
-          <h3 className="text-sm font-semibold text-gray-900">Why merchants choose Cash Discount</h3>
+          <h3 className="text-sm font-semibold text-gray-900">{t('Why merchants choose Cash Discount')}</h3>
         </div>
         <div className="p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
           {WHY_CASH_DISCOUNT.map(item => (
@@ -294,8 +299,8 @@ export function MerchantSavingsView({ extracted, programs, bestProgramKey, onExi
                 <item.icon className="w-4.5 h-4.5 text-brand" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-gray-900">{item.title}</p>
-                <p className="text-xs text-gray-500 mt-0.5 leading-snug">{item.body}</p>
+                <p className="text-sm font-semibold text-gray-900">{t(item.title)}</p>
+                <p className="text-xs text-gray-500 mt-0.5 leading-snug">{t(item.body)}</p>
               </div>
             </div>
           ))}
@@ -305,7 +310,7 @@ export function MerchantSavingsView({ extracted, programs, bestProgramKey, onExi
       {/* ── How the selected program works ── */}
       <div className="bg-white rounded-[8px] border border-gray-200 overflow-hidden">
         <div className="px-5 py-4 border-b border-gray-100">
-          <h3 className="text-sm font-semibold text-gray-900">How {selected.name} works</h3>
+          <h3 className="text-sm font-semibold text-gray-900">{t('How it works:')} {t(selected.name)}</h3>
         </div>
         <div className="p-5 grid grid-cols-1 lg:grid-cols-3 gap-4">
           {EXPLAINERS[selectedKey].steps.map((step, i) => (
@@ -313,7 +318,7 @@ export function MerchantSavingsView({ extracted, programs, bestProgramKey, onExi
               <div className="w-7 h-7 rounded-full bg-brand text-white text-sm font-bold flex items-center justify-center shrink-0">
                 {i + 1}
               </div>
-              <p className="text-sm text-gray-600 leading-snug">{step}</p>
+              <p className="text-sm text-gray-600 leading-snug">{t(step)}</p>
             </div>
           ))}
         </div>
@@ -321,8 +326,7 @@ export function MerchantSavingsView({ extracted, programs, bestProgramKey, onExi
 
       {/* ── Disclaimer ── */}
       <p className="text-[11px] text-gray-400 text-center pb-2">
-        Estimates based on your statement{extracted.statementPeriod ? ` for ${extracted.statementPeriod}` : ''}.
-        Actual savings depend on your card mix and processing volume.
+        {t('Estimates based on your statement')}{extracted.statementPeriod ? ` (${extracted.statementPeriod})` : ''}. {t('Actual savings depend on your card mix and processing volume.')}
       </p>
     </div>
   );
