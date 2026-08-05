@@ -267,4 +267,178 @@ export const ES: Record<string, string> = {
     'El margen usa la estimación fija de intercambio mientras se integra el motor completo de intercambio.',
   'Best merchant savings ≠ best Delt margin on this statement —': 'El mejor ahorro para el comercio ≠ el mejor margen para Delt en este estado de cuenta —',
   'maximizes margin.': 'maximiza el margen.',
+
+  // ── Cost Calculator: chrome ──
+  'Start Over': 'Empezar de Nuevo',
+  'Qualify': 'Calificar',
+  'Price': 'Precio',
+  'Playbook': 'Guía de Venta',
+  "e.g. Mario's Pizzeria": 'ej. Pizzería de Mario',
+  'Business Type': 'Tipo de Negocio',
+  'Monthly Card Volume': 'Volumen Mensual de Tarjetas',
+  'Risk Category': 'Categoría de Riesgo',
+  'Low Risk': 'Riesgo Bajo',
+  'Medium Risk': 'Riesgo Medio',
+  'High Risk': 'Riesgo Alto',
+  'Cash Discount Receptivity': 'Receptividad al Descuento por Efectivo',
+  'How did the merchant respond when you brought up cash discount?': '¿Cómo respondió el comercio cuando mencionó el descuento por efectivo?',
+  'Cash Discount Fit': 'Compatibilidad con Descuento por Efectivo',
+  'High Fit': 'Alta Compatibilidad',
+  'Moderate Fit': 'Compatibilidad Moderada',
+  'Low Fit — Consider Flat Rate': 'Baja Compatibilidad — Considere Tarifa Fija',
+  'This vertical is tough for cash discount — most transactions are card-not-present. The playbook will default to flat rate with a cash discount upsell path.':
+    'Este giro es difícil para descuento por efectivo — la mayoría de las transacciones son sin tarjeta presente. La guía usará tarifa fija con una ruta de venta adicional hacia descuento por efectivo.',
+  'Optional Overrides': 'Ajustes Opcionales',
+  'Avg Ticket $': 'Ticket Promedio $',
+  'Current Rate %': 'Tasa Actual %',
+  'Card %': '% Tarjeta',
+  'Continue to Pricing': 'Continuar a Precios',
+  'Back': 'Atrás',
+  'View Playbook': 'Ver Guía de Venta',
+  'Back to Pricing': 'Volver a Precios',
+
+  // ── Cost Calculator: merchant types & receptivity ──
+  'Restaurant / Bar': 'Restaurante / Bar',
+  'Retail Store': 'Tienda Minorista',
+  'Auto / Repair': 'Automotriz / Taller',
+  'Salon / Spa': 'Salón / Spa',
+  'Medical / Dental': 'Médico / Dental',
+  'Professional Svcs': 'Servicios Profesionales',
+  'E-Commerce': 'Comercio Electrónico',
+  'Other': 'Otro',
+  'Open to it': 'Abierto a la idea',
+  'Already aware or interested': 'Ya lo conoce o le interesa',
+  'Needs education': 'Necesita información',
+  "Hasn't heard of it or unsure": 'No lo conoce o tiene dudas',
+  'Pushback': 'Resistencia',
+  'Worried about customer reaction': 'Preocupado por la reacción de sus clientes',
+
+  // ── Cost Calculator: pricing step ──
+  '0% effective rate — fee to card customers': 'Tasa efectiva de 0% — tarifa a clientes con tarjeta',
+  'Traditional — merchant absorbs cost': 'Tradicional — el comercio absorbe el costo',
+  'RECOMMENDED': 'RECOMENDADO',
+  'Deal Simulator': 'Simulador de Negocios',
+  'Drag to model the deal live — pricing re-locks to the matching volume band': 'Arrastre para modelar el negocio en vivo — el precio se ajusta al rango de volumen correspondiente',
+  'Monthly Volume': 'Volumen Mensual',
+  'Card Share': 'Proporción de Tarjeta',
+  'Simulated volume moved pricing to the {band} band.': 'El volumen simulado movió el precio al rango {band}.',
+  'Merchant Effective Rate': 'Tasa Efectiva del Comercio',
+  'processing cost eliminated': 'costo de procesamiento eliminado',
+  'Service Fee to Card Customers': 'Tarifa de Servicio a Clientes con Tarjeta',
+  'non-cash adjustment': 'ajuste por pago no en efectivo',
+  'per transaction': 'por transacción',
+  'Matrix-locked — no discretionary adjustments': 'Precio fijado por matriz — sin ajustes discrecionales',
+  'Merchant Saves': 'El Comercio Ahorra',
+  '/yr': '/año',
+  '/mo': '/mes',
+  '(internal)': '(interno)',
+  'Spread Revenue': 'Ingreso por Margen',
+  'Program Fees': 'Cuotas del Programa',
+  'Total Revenue': 'Ingreso Total',
+  'Annual Margin': 'Margen Anual',
+  'Annual Revenue': 'Ingreso Anual',
+  'CD vs Flat Rate Margin': 'Margen: Descuento vs Tarifa Fija',
+  'CD wins by': 'El descuento gana por',
+  'Flat rate wins by': 'La tarifa fija gana por',
+
+  // ── Cost Calculator: break-even ──
+  'Program Break-Even': 'Punto de Equilibrio del Programa',
+  'Delt Margin Tipping Point': 'Punto de Inflexión del Margen Delt',
+  'Cash discount out-earns flat rate at': 'El descuento por efectivo genera más margen que la tarifa fija con',
+  'any card mix': 'cualquier mezcla de tarjetas',
+  'for this profile.': 'para este perfil.',
+  'Flat rate is the higher-margin program at': 'La tarifa fija es el programa de mayor margen con',
+  'any realistic card mix': 'cualquier mezcla realista de tarjetas',
+  '— volume is too low to cover the spread.': '— el volumen es muy bajo para cubrir el margen.',
+  'Cash discount overtakes flat rate once': 'El descuento por efectivo supera a la tarifa fija cuando',
+  'of sales are card.': 'de las ventas son con tarjeta.',
+  'This merchant is at': 'Este comercio está en',
+  'CD leads by': 'el descuento lidera por',
+  'flat rate leads by': 'la tarifa fija lidera por',
+  'Merchant Cost Comparison': 'Comparación de Costos del Comercio',
+  'on cash discount vs': 'en descuento por efectivo vs',
+  'on flat rate.': 'en tarifa fija.',
+  'Annual Delt Margin vs Card Share': 'Margen Anual Delt vs Proporción de Tarjeta',
+  'Cash Discount margin': 'Margen Descuento por Efectivo',
+  'Flat Rate margin': 'Margen Tarifa Fija',
+  'card share': 'de ventas con tarjeta',
+  'this deal': 'este negocio',
+
+  // ── Cost Calculator: playbook ──
+  'CD Fit:': 'Compatibilidad:',
+  'Opening Move': 'Movimiento de Apertura',
+  'Handle These Objections': 'Maneje Estas Objeciones',
+  'Most likely for this merchant profile': 'Las más probables para este perfil de comercio',
+  'What to say:': 'Qué decir:',
+  'Closing Move': 'Movimiento de Cierre',
+  'Quick Reference Numbers': 'Números de Referencia Rápida',
+  'New Rate': 'Tasa Nueva',
+  'Delt Margin': 'Margen Delt',
+  'Confirm & Close': 'Confirmar y Cerrar',
+  'Educate & Anchor': 'Educar y Anclar',
+  'Empathize & Prove': 'Empatizar y Demostrar',
+  'Validate & Structure': 'Validar y Estructurar',
+  'Numbers First': 'Números Primero',
+  'Flat Rate Bridge': 'Puente de Tarifa Fija',
+  'Flat Rate Default': 'Tarifa Fija por Defecto',
+  'Lead with the savings number. "{type} owners love this because it eliminates processing costs entirely. Based on your volume, you\'d save roughly {savings}/year."':
+    'Empiece con la cifra de ahorro. "A los dueños de {type} les encanta porque elimina por completo los costos de procesamiento. Según su volumen, ahorraría aproximadamente {savings} al año."',
+  'Go straight to paperwork. They\'re ready — don\'t oversell. "Let me get this set up for you. We can have you live this week."':
+    'Vaya directo al papeleo. Ya están listos — no venda de más. "Déjeme configurárselo. Podemos tenerlo operando esta misma semana."',
+  'Start with a question: "What are you currently paying in processing fees?" Let them say the number. Then: "What if that went to zero?" Pause. Let it land.':
+    'Empiece con una pregunta: "¿Cuánto está pagando actualmente en comisiones de procesamiento?" Deje que diga la cifra. Luego: "¿Y si eso bajara a cero?" Haga una pausa. Deje que haga efecto.',
+  'Anchor to a peer: "Most {typeLower} owners I work with switched within the first meeting once they saw the math. Want me to run your numbers?"':
+    'Ancle con un colega: "La mayoría de los dueños de {typeLower} con los que trabajo cambiaron en la primera reunión al ver los números. ¿Quiere que calcule los suyos?"',
+  'Validate the concern first: "I get it — when I first heard about cash discount, I had the same reaction. But here\'s what changed my mind..." Then lead with the data.':
+    'Valide primero la preocupación: "Lo entiendo — cuando escuché del descuento por efectivo por primera vez, reaccioné igual. Pero esto fue lo que me hizo cambiar de opinión..." Luego presente los datos.',
+  'Offer a trial frame: "Tell you what — try it for 60 days. If you don\'t like it, we switch you to flat rate, no penalty. But I\'ve never had someone switch back."':
+    'Ofrezca un periodo de prueba: "Mire — pruébelo 60 días. Si no le gusta, lo cambiamos a tarifa fija sin penalización. Pero nunca nadie ha querido regresar."',
+  'They\'re interested but this vertical has nuance. "Cash discount works great for your business — let me show you exactly how we structure it so it feels seamless for your clients."':
+    'Hay interés, pero este giro tiene matices. "El descuento por efectivo funciona muy bien para su negocio — déjeme mostrarle exactamente cómo lo estructuramos para que sea imperceptible para sus clientes."',
+  'Position the monthly fee as the "all-in cost" — compare it to what they\'re paying now. The delta sells itself.':
+    'Posicione la cuota mensual como el "costo todo incluido" — compárela con lo que pagan hoy. La diferencia se vende sola.',
+  'Lead with their statement. "I looked at your processing — you\'re paying X%. On cash discount, your effective rate goes to zero. The math is pretty hard to argue with."':
+    'Empiece con su estado de cuenta. "Revisé su procesamiento — está pagando X%. Con descuento por efectivo, su tasa efectiva baja a cero. Es difícil discutir con esos números."',
+  'Side-by-side comparison: "Here\'s what you pay now, here\'s what you\'d pay. The difference is {savings}/year back in your pocket."':
+    'Comparación lado a lado: "Esto es lo que paga hoy y esto es lo que pagaría. La diferencia es {savings} al año de vuelta a su bolsillo."',
+  'Start with flat rate as the "safe" option, then introduce cash discount as the upgrade: "We can definitely do flat rate at X%. But honestly, most of my {typeLower} clients end up on cash discount once they see the savings."':
+    'Empiece con tarifa fija como la opción "segura" y luego presente el descuento por efectivo como la mejora: "Claro que podemos hacer tarifa fija a X%. Pero honestamente, la mayoría de mis clientes de {typeLower} terminan en descuento por efectivo al ver el ahorro."',
+  'Offer flat rate as the fallback: "We can start you on flat rate today and revisit cash discount in 90 days once you\'ve seen how we operate. Sound fair?"':
+    'Ofrezca tarifa fija como respaldo: "Podemos empezar hoy con tarifa fija y retomar el descuento por efectivo en 90 días, cuando ya haya visto cómo operamos. ¿Le parece justo?"',
+  'Cash discount is tough for online-only merchants since all transactions are card. Lead with flat rate: "For e-commerce, we\'ve got a clean flat rate at X% — no hidden fees, no surprises."':
+    'El descuento por efectivo es difícil para comercios 100% en línea porque todas las transacciones son con tarjeta. Empiece con tarifa fija: "Para comercio electrónico tenemos una tarifa fija clara de X% — sin cargos ocultos, sin sorpresas."',
+  'Focus on the Delt ecosystem value — payments are the wedge, then layer in websites, Lens AI, and capital as the retention play.':
+    'Enfóquese en el valor del ecosistema Delt — los pagos son la entrada; después sume sitios web, Lens AI y capital como estrategia de retención.',
+
+  // ── Cost Calculator: objections ──
+  '"My customers will be upset"': '"Mis clientes se van a molestar"',
+  "Reframe: it's not a surcharge — it's a discount for cash": 'Replanteamiento: no es un recargo — es un descuento por pagar en efectivo',
+  '"You\'re not charging more for cards — you\'re offering a discount for paying cash. Your posted prices stay the same. Gas stations have done this for decades and nobody blinks. We\'ll handle all the signage and compliance so your customers see it as a perk, not a penalty."':
+    '"No está cobrando más por tarjeta — está ofreciendo un descuento por pagar en efectivo. Sus precios publicados quedan iguales. Las gasolineras lo han hecho por décadas y nadie se inmuta. Nosotros nos encargamos de la señalización y el cumplimiento para que sus clientes lo vean como un beneficio, no un castigo."',
+  '97% of consumers complete the transaction even after seeing the fee. Churn from cash discount programs is under 1% in retail and food service.':
+    'El 97% de los consumidores completa la transacción incluso después de ver la tarifa. La pérdida de clientes por programas de descuento por efectivo es menor al 1% en comercio minorista y alimentos.',
+  '"I\'ll lose sales"': '"Voy a perder ventas"',
+  'Reframe: your effective rate is 0% — reinvest that into growth': 'Replanteamiento: su tasa efectiva es 0% — reinvierta eso en crecimiento',
+  '"Right now you\'re paying $X,000/year in processing fees. That\'s money leaving your business. On cash discount, that goes to zero. You could put that into marketing, staff, inventory — things that actually drive sales. The fee is transparent, it\'s legal, and your competitors are already doing it."':
+    '"Ahora mismo está pagando miles al año en comisiones de procesamiento. Es dinero que sale de su negocio. Con descuento por efectivo, eso baja a cero. Podría invertirlo en marketing, personal, inventario — cosas que sí generan ventas. La tarifa es transparente, es legal, y sus competidores ya lo están haciendo."',
+  'Average merchant saves $8,400/yr on cash discount. Less than 0.5% of merchants report measurable sales decline after 90 days.':
+    'El comercio promedio ahorra $8,400/año con descuento por efectivo. Menos del 0.5% de los comercios reporta una caída medible en ventas después de 90 días.',
+  '"Sounds complicated"': '"Suena complicado"',
+  'Reframe: we handle everything — zero work for you': 'Replanteamiento: nosotros nos encargamos de todo — cero trabajo para usted',
+  '"We program the terminal, provide the signage, and handle compliance. Your staff doesn\'t do anything different. The adjustment shows automatically on the receipt. It\'s genuinely plug-and-play — we\'ve done this hundreds of times."':
+    '"Nosotros programamos la terminal, proveemos la señalización y manejamos el cumplimiento. Su personal no hace nada diferente. El ajuste aparece automáticamente en el recibo. Es realmente llegar y conectar — lo hemos hecho cientos de veces."',
+  'Average onboarding takes 15 minutes. Terminal auto-applies the adjustment — no manual entry, no training required.':
+    'La activación promedio toma 15 minutos. La terminal aplica el ajuste automáticamente — sin captura manual ni capacitación.',
+  '"Is this legal?"': '"¿Esto es legal?"',
+  "Reframe: it's a cash discount, not a surcharge — fully compliant": 'Replanteamiento: es un descuento por efectivo, no un recargo — totalmente conforme a la ley',
+  '"Cash discounting is legal in all 50 states. It\'s different from surcharging, which has restrictions. We structure the program as a service fee with a cash discount — the same model gas stations use. We handle all signage requirements and receipt language to keep you compliant."':
+    '"El descuento por efectivo es legal en los 50 estados. Es diferente al recargo, que tiene restricciones. Estructuramos el programa como una tarifa de servicio con descuento por efectivo — el mismo modelo que usan las gasolineras. Nosotros manejamos la señalización y el texto de los recibos para mantenerlo en cumplimiento."',
+  'Legal in all 50 states. Visa, Mastercard, and Discover all permit properly structured cash discount programs. We handle compliance.':
+    'Legal en los 50 estados. Visa, Mastercard y Discover permiten programas de descuento por efectivo bien estructurados. Nosotros nos encargamos del cumplimiento.',
+  '"Customers will go to my competitor"': '"Mis clientes se irán con la competencia"',
+  'Reframe: your competitor is probably already doing this': 'Replanteamiento: su competidor probablemente ya lo está haciendo',
+  '"Honestly, a lot of your competitors are already on cash discount — they\'re just not advertising it. The businesses still paying 3-4% on every swipe are the ones falling behind. This is becoming the standard, not the exception."':
+    '"Honestamente, muchos de sus competidores ya usan descuento por efectivo — solo que no lo anuncian. Los negocios que siguen pagando 3-4% en cada transacción son los que se están quedando atrás. Esto se está volviendo el estándar, no la excepción."',
+  'Cash discount adoption among SMBs has grown 340% since 2020. In food service and auto repair, over 40% of merchants now use some form of non-cash adjustment.':
+    'La adopción del descuento por efectivo entre PyMEs ha crecido 340% desde 2020. En alimentos y talleres automotrices, más del 40% de los comercios ya usa alguna forma de ajuste por pago no en efectivo.',
 };

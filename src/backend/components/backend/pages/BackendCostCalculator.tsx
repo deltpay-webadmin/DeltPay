@@ -10,6 +10,7 @@ import {
   Tooltip as ChartTooltip, CartesianGrid, ReferenceLine,
 } from 'recharts';
 import { CASH_DISCOUNT_MATRIX, FLAT_RATE_MATRIX, VOLUME_BANDS, RISK_TIERS, INTERCHANGE_EST, volumeBandKey } from '../pricingPrograms';
+import { useLang } from '../i18n';
 
 // ─── PRICING MATRICES: shared with the Statement Analyzer ───
 // (see ../pricingPrograms.ts)
@@ -65,51 +66,58 @@ export const OBJECTIONS: Record<string, { title: string; reframe: string; talk: 
 };
 
 // ─── ENGINE ───
-function getSellingStrategy(merchantType: string, receptivity: string, savings: string) {
+// Copy is translated through `t`; templates carry {type}/{typeLower}/{savings}
+// placeholders so translations can reorder them freely.
+function getSellingStrategy(merchantType: string, receptivity: string, savings: string, t: (s: string) => string) {
   const mt = MERCHANT_TYPES.find(m => m.key === merchantType);
   if (!mt) return null;
   const cdScore = mt.cdScore;
+  const typeLabel = t(mt.label);
+  const fill = (s: string) => s
+    .replace(/\{type\}/g, typeLabel)
+    .replace(/\{typeLower\}/g, typeLabel.toLowerCase())
+    .replace(/\{savings\}/g, savings);
   let approach: string, opener: string, keyObjections: string[], closingMove: string;
 
   if (cdScore >= 85) {
     if (receptivity === 'eager') {
-      approach = 'Confirm & Close';
-      opener = `Lead with the savings number. "${mt.label} owners love this because it eliminates processing costs entirely. Based on your volume, you'd save roughly ${savings}/year."`;
+      approach = t('Confirm & Close');
+      opener = fill(t('Lead with the savings number. "{type} owners love this because it eliminates processing costs entirely. Based on your volume, you\'d save roughly {savings}/year."'));
       keyObjections = ['too_complicated'];
-      closingMove = 'Go straight to paperwork. They\'re ready — don\'t oversell. "Let me get this set up for you. We can have you live this week."';
+      closingMove = t('Go straight to paperwork. They\'re ready — don\'t oversell. "Let me get this set up for you. We can have you live this week."');
     } else if (receptivity === 'neutral') {
-      approach = 'Educate & Anchor';
-      opener = 'Start with a question: "What are you currently paying in processing fees?" Let them say the number. Then: "What if that went to zero?" Pause. Let it land.';
+      approach = t('Educate & Anchor');
+      opener = t('Start with a question: "What are you currently paying in processing fees?" Let them say the number. Then: "What if that went to zero?" Pause. Let it land.');
       keyObjections = ['customers_upset', 'too_complicated'];
-      closingMove = `Anchor to a peer: "Most ${mt.label.toLowerCase()} owners I work with switched within the first meeting once they saw the math. Want me to run your numbers?"`;
+      closingMove = fill(t('Anchor to a peer: "Most {typeLower} owners I work with switched within the first meeting once they saw the math. Want me to run your numbers?"'));
     } else {
-      approach = 'Empathize & Prove';
-      opener = 'Validate the concern first: "I get it — when I first heard about cash discount, I had the same reaction. But here\'s what changed my mind..." Then lead with the data.';
+      approach = t('Empathize & Prove');
+      opener = t('Validate the concern first: "I get it — when I first heard about cash discount, I had the same reaction. But here\'s what changed my mind..." Then lead with the data.');
       keyObjections = ['customers_upset', 'lose_sales', 'customers_will_leave'];
-      closingMove = 'Offer a trial frame: "Tell you what — try it for 60 days. If you don\'t like it, we switch you to flat rate, no penalty. But I\'ve never had someone switch back."';
+      closingMove = t('Offer a trial frame: "Tell you what — try it for 60 days. If you don\'t like it, we switch you to flat rate, no penalty. But I\'ve never had someone switch back."');
     }
   } else if (cdScore >= 50) {
     if (receptivity === 'eager') {
-      approach = 'Validate & Structure';
-      opener = `They're interested but this vertical has nuance. "Cash discount works great for your business — let me show you exactly how we structure it so it feels seamless for your clients."`;
+      approach = t('Validate & Structure');
+      opener = t('They\'re interested but this vertical has nuance. "Cash discount works great for your business — let me show you exactly how we structure it so it feels seamless for your clients."');
       keyObjections = ['is_it_legal', 'customers_upset'];
-      closingMove = 'Position the monthly fee as the "all-in cost" — compare it to what they\'re paying now. The delta sells itself.';
+      closingMove = t('Position the monthly fee as the "all-in cost" — compare it to what they\'re paying now. The delta sells itself.');
     } else if (receptivity === 'neutral') {
-      approach = 'Numbers First';
-      opener = 'Lead with their statement. "I looked at your processing — you\'re paying X%. On cash discount, your effective rate goes to zero. The math is pretty hard to argue with."';
+      approach = t('Numbers First');
+      opener = t('Lead with their statement. "I looked at your processing — you\'re paying X%. On cash discount, your effective rate goes to zero. The math is pretty hard to argue with."');
       keyObjections = ['customers_upset', 'is_it_legal', 'too_complicated'];
-      closingMove = `Side-by-side comparison: "Here's what you pay now, here's what you'd pay. The difference is ${savings}/year back in your pocket."`;
+      closingMove = fill(t('Side-by-side comparison: "Here\'s what you pay now, here\'s what you\'d pay. The difference is {savings}/year back in your pocket."'));
     } else {
-      approach = 'Flat Rate Bridge';
-      opener = `Start with flat rate as the "safe" option, then introduce cash discount as the upgrade: "We can definitely do flat rate at X%. But honestly, most of my ${mt.label.toLowerCase()} clients end up on cash discount once they see the savings."`;
+      approach = t('Flat Rate Bridge');
+      opener = fill(t('Start with flat rate as the "safe" option, then introduce cash discount as the upgrade: "We can definitely do flat rate at X%. But honestly, most of my {typeLower} clients end up on cash discount once they see the savings."'));
       keyObjections = ['customers_upset', 'lose_sales', 'is_it_legal', 'customers_will_leave'];
-      closingMove = 'Offer flat rate as the fallback: "We can start you on flat rate today and revisit cash discount in 90 days once you\'ve seen how we operate. Sound fair?"';
+      closingMove = t('Offer flat rate as the fallback: "We can start you on flat rate today and revisit cash discount in 90 days once you\'ve seen how we operate. Sound fair?"');
     }
   } else {
-    approach = 'Flat Rate Default';
-    opener = `Cash discount is tough for online-only merchants since all transactions are card. Lead with flat rate: "For e-commerce, we've got a clean flat rate at X% — no hidden fees, no surprises."`;
+    approach = t('Flat Rate Default');
+    opener = t('Cash discount is tough for online-only merchants since all transactions are card. Lead with flat rate: "For e-commerce, we\'ve got a clean flat rate at X% — no hidden fees, no surprises."');
     keyObjections = [];
-    closingMove = 'Focus on the Delt ecosystem value — payments are the wedge, then layer in websites, Lens AI, and capital as the retention play.';
+    closingMove = t('Focus on the Delt ecosystem value — payments are the wedge, then layer in websites, Lens AI, and capital as the retention play.');
   }
 
   return { approach, opener, keyObjections, closingMove, cdScore };
@@ -138,6 +146,7 @@ export function BackendCostCalculator() {
   const [expandedObj, setExpandedObj] = useState<string | null>(null);
   // Simulator override: null = use the qualification band's midpoint.
   const [simVolume, setSimVolume] = useState<number | null>(null);
+  const { t, tTerms, lang, setLang } = useLang();
 
   const isCashDiscount = program === 'cash_discount';
   const bandData = VOLUME_BANDS.find(b => b.key === volumeBand);
@@ -205,8 +214,8 @@ export function BackendCostCalculator() {
 
   const strategy = useMemo(() => {
     if (!merchantType || !receptivity) return null;
-    return getSellingStrategy(merchantType, receptivity, savingsStr);
-  }, [merchantType, receptivity, savingsStr]);
+    return getSellingStrategy(merchantType, receptivity, savingsStr, t);
+  }, [merchantType, receptivity, savingsStr, t]);
 
   const reset = useCallback(() => {
     setStep(1); setProgram('cash_discount'); setVolumeBand(null); setRiskTier(null);
@@ -231,11 +240,27 @@ export function BackendCostCalculator() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">Cost Calculator</h2>
+            <h2 className="text-lg font-semibold text-gray-900">{t('Cost Calculator')}</h2>
           </div>
-          <button onClick={reset} className="px-3.5 py-2 border border-gray-200 rounded-[6px] text-sm text-gray-500 bg-white hover:bg-gray-50 inline-flex items-center gap-2 font-medium transition-colors">
-            <RotateCcw className="w-3.5 h-3.5" /> Start Over
-          </button>
+          <div className="flex items-center gap-2">
+            {/* Language toggle — same persisted setting as the CRM-wide language switch */}
+            <div className="flex rounded-[6px] border border-gray-200 overflow-hidden" title={t('Language')}>
+              {(['en', 'es'] as const).map(l => (
+                <button
+                  key={l}
+                  onClick={() => setLang(l)}
+                  className={`px-2.5 py-2 text-xs font-semibold transition-colors ${
+                    lang === l ? 'bg-brand text-white' : 'bg-white text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  {l.toUpperCase()}
+                </button>
+              ))}
+            </div>
+            <button onClick={reset} className="px-3.5 py-2 border border-gray-200 rounded-[6px] text-sm text-gray-500 bg-white hover:bg-gray-50 inline-flex items-center gap-2 font-medium transition-colors">
+              <RotateCcw className="w-3.5 h-3.5" /> {t('Start Over')}
+            </button>
+          </div>
         </div>
 
         {/* Step Indicator */}
@@ -257,7 +282,7 @@ export function BackendCostCalculator() {
                 }`} style={{ width: 22, height: 22 }}>
                   {isDone ? <Check className="w-3 h-3" strokeWidth={3} /> : s.n}
                 </span>
-                {s.label}
+                {t(s.label)}
               </button>
             );
           })}
@@ -270,16 +295,16 @@ export function BackendCostCalculator() {
               {/* Left */}
               <div className="space-y-5">
                 {/* Merchant Name */}
-                <FieldGroup label="Merchant Name">
+                <FieldGroup label={t('Merchant Name')}>
                   <input
                     type="text" value={merchantName} onChange={e => setMerchantName(e.target.value)}
-                    placeholder="e.g. Mario's Pizzeria"
+                    placeholder={t("e.g. Mario's Pizzeria")}
                     className="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-[8px] text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand"
                   />
                 </FieldGroup>
 
                 {/* Business Type */}
-                <FieldGroup label="Business Type">
+                <FieldGroup label={t('Business Type')}>
                   <div className="grid grid-cols-4 gap-2">
                     {MERCHANT_TYPES.map(mt => (
                       <button
@@ -292,14 +317,14 @@ export function BackendCostCalculator() {
                         }`}
                       >
                         <mt.icon className={`w-5 h-5 ${merchantType === mt.key ? 'text-brand' : 'text-gray-400'}`} strokeWidth={1.75} />
-                        <span className="text-[11px] font-medium text-gray-600 leading-tight">{mt.label}</span>
+                        <span className="text-[11px] font-medium text-gray-600 leading-tight">{t(mt.label)}</span>
                       </button>
                     ))}
                   </div>
                 </FieldGroup>
 
                 {/* Volume Band */}
-                <FieldGroup label="Monthly Card Volume">
+                <FieldGroup label={t('Monthly Card Volume')}>
                   <div className="flex flex-wrap gap-2">
                     {VOLUME_BANDS.map(band => (
                       <button
@@ -318,7 +343,7 @@ export function BackendCostCalculator() {
                 </FieldGroup>
 
                 {/* Risk */}
-                <FieldGroup label="Risk Category">
+                <FieldGroup label={t('Risk Category')}>
                   <div className="space-y-1.5">
                     {RISK_TIERS.map(tier => {
                       const active = riskTier === tier.key;
@@ -332,8 +357,8 @@ export function BackendCostCalculator() {
                         >
                           <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: tier.color, boxShadow: active ? `0 0 8px ${tier.color}40` : 'none' }} />
                           <div>
-                            <p className={`text-sm font-semibold ${active ? tier.text : 'text-gray-700'}`}>{tier.label}</p>
-                            <p className="text-[11px] text-gray-500">{tier.desc}</p>
+                            <p className={`text-sm font-semibold ${active ? tier.text : 'text-gray-700'}`}>{t(tier.label)}</p>
+                            <p className="text-[11px] text-gray-500">{t(tier.desc)}</p>
                           </div>
                         </button>
                       );
@@ -345,7 +370,7 @@ export function BackendCostCalculator() {
               {/* Right */}
               <div className="space-y-5">
                 {/* Receptivity */}
-                <FieldGroup label="Cash Discount Receptivity" hint="How did the merchant respond when you brought up cash discount?">
+                <FieldGroup label={t('Cash Discount Receptivity')} hint={t('How did the merchant respond when you brought up cash discount?')}>
                   <div className="space-y-2">
                     {RECEPTIVITY_LEVELS.map(r => {
                       const active = receptivity === r.key;
@@ -359,8 +384,8 @@ export function BackendCostCalculator() {
                         >
                           <span className="w-3 h-3 rounded-full shrink-0" style={{ background: r.color, boxShadow: active ? `0 0 10px ${r.color}50` : 'none' }} />
                           <div>
-                            <p className={`text-sm font-semibold ${active ? 'text-gray-900' : 'text-gray-600'}`}>{r.label}</p>
-                            <p className="text-[11px] text-gray-500">{r.desc}</p>
+                            <p className={`text-sm font-semibold ${active ? 'text-gray-900' : 'text-gray-600'}`}>{t(r.label)}</p>
+                            <p className="text-[11px] text-gray-500">{t(r.desc)}</p>
                           </div>
                         </button>
                       );
@@ -372,40 +397,40 @@ export function BackendCostCalculator() {
                 {merchantType && (
                   <div className="bg-white border border-gray-200 rounded-[8px] p-4">
                     <div className="flex justify-between items-center mb-2.5">
-                      <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">Cash Discount Fit</span>
+                      <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">{t('Cash Discount Fit')}</span>
                       <span className={`text-lg font-bold font-mono ${cdScoreColor}`}>{cdScore}/100</span>
                     </div>
                     <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden mb-2">
                       <div className={`h-full rounded-full ${cdScoreBarColor}`} style={{ width: `${cdScore}%`, transition: 'width 0.4s ease' }} />
                     </div>
-                    <p className={`text-xs font-semibold ${cdScoreColor}`}>{cdScoreLabel}</p>
+                    <p className={`text-xs font-semibold ${cdScoreColor}`}>{t(cdScoreLabel)}</p>
                     {cdScore < 50 && (
                       <p className="text-[11px] text-gray-500 mt-2 p-2 bg-red-50 rounded-[6px] leading-relaxed">
-                        This vertical is tough for cash discount — most transactions are card-not-present. The playbook will default to flat rate with a cash discount upsell path.
+                        {t('This vertical is tough for cash discount — most transactions are card-not-present. The playbook will default to flat rate with a cash discount upsell path.')}
                       </p>
                     )}
                   </div>
                 )}
 
                 {/* Overrides */}
-                <FieldGroup label="Optional Overrides">
+                <FieldGroup label={t('Optional Overrides')}>
                   <div className="flex gap-3">
                     <div className="flex-1">
-                      <label className="text-[10px] text-gray-500 uppercase tracking-wide font-medium mb-1 block">Avg Ticket $</label>
+                      <label className="text-[10px] text-gray-500 uppercase tracking-wide font-medium mb-1 block">{t('Avg Ticket $')}</label>
                       <input type="number" value={avgTicket} onChange={e => setAvgTicket(e.target.value)}
                         placeholder={bandData ? `~$${AVG_TICKET_PRESETS[bandData.key]}` : '—'}
                         className="w-full px-2.5 py-2 bg-white border border-gray-200 rounded-[6px] text-sm font-mono text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand"
                       />
                     </div>
                     <div className="flex-1">
-                      <label className="text-[10px] text-gray-500 uppercase tracking-wide font-medium mb-1 block">Current Rate %</label>
+                      <label className="text-[10px] text-gray-500 uppercase tracking-wide font-medium mb-1 block">{t('Current Rate %')}</label>
                       <input type="number" step="0.01" value={currentRate} onChange={e => setCurrentRate(e.target.value)}
                         placeholder="e.g. 3.50"
                         className="w-full px-2.5 py-2 bg-white border border-gray-200 rounded-[6px] text-sm font-mono text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand"
                       />
                     </div>
                     <div className="flex-1">
-                      <label className="text-[10px] text-gray-500 uppercase tracking-wide font-medium mb-1 block">Card %</label>
+                      <label className="text-[10px] text-gray-500 uppercase tracking-wide font-medium mb-1 block">{t('Card %')}</label>
                       <input type="number" value={cardRatio} onChange={e => setCardRatio(e.target.value)}
                         placeholder={mtData ? `~${mtData.cardRatioDefault}%` : '70'}
                         className="w-full px-2.5 py-2 bg-white border border-gray-200 rounded-[6px] text-sm font-mono text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand"
@@ -419,7 +444,7 @@ export function BackendCostCalculator() {
             {canAdvanceTo2 && (
               <div className="flex justify-end pt-5 border-t border-gray-100 mt-6">
                 <button onClick={() => setStep(2)} className="px-6 py-2.5 bg-brand text-white text-sm font-semibold rounded-[6px] hover:bg-brand-hover transition-colors inline-flex items-center gap-2">
-                  Continue to Pricing <ArrowRight className="w-4 h-4" />
+                  {t('Continue to Pricing')} <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
             )}
@@ -441,11 +466,11 @@ export function BackendCostCalculator() {
                   <Banknote className="w-4.5 h-4.5" />
                 </span>
                 <div className="flex-1">
-                  <p className="text-sm font-semibold text-gray-900">Cash Discount</p>
-                  <p className="text-[11px] text-gray-500">0% effective rate — fee to card customers</p>
+                  <p className="text-sm font-semibold text-gray-900">{t('Cash Discount')}</p>
+                  <p className="text-[11px] text-gray-500">{t('0% effective rate — fee to card customers')}</p>
                 </div>
                 {isCashDiscount && (
-                  <span className="absolute top-2 right-2.5 text-[9px] font-bold tracking-wide text-brand bg-indigo-100 px-2 py-0.5 rounded">RECOMMENDED</span>
+                  <span className="absolute top-2 right-2.5 text-[9px] font-bold tracking-wide text-brand bg-indigo-100 px-2 py-0.5 rounded">{t('RECOMMENDED')}</span>
                 )}
               </button>
               <button
@@ -458,8 +483,8 @@ export function BackendCostCalculator() {
                   <BarChart3 className="w-4.5 h-4.5" />
                 </span>
                 <div>
-                  <p className="text-sm font-semibold text-gray-900">Flat Rate</p>
-                  <p className="text-[11px] text-gray-500">Traditional — merchant absorbs cost</p>
+                  <p className="text-sm font-semibold text-gray-900">{t('Flat Rate')}</p>
+                  <p className="text-[11px] text-gray-500">{t('Traditional — merchant absorbs cost')}</p>
                 </div>
               </button>
             </div>
@@ -468,19 +493,19 @@ export function BackendCostCalculator() {
             <div className="bg-white border border-gray-200 rounded-[8px] p-4">
               <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
                 <div className="flex items-center gap-2 text-[11px] font-semibold text-gray-500 uppercase tracking-wide">
-                  <SlidersHorizontal className="w-3.5 h-3.5 text-brand" /> Deal Simulator
+                  <SlidersHorizontal className="w-3.5 h-3.5 text-brand" /> {t('Deal Simulator')}
                 </div>
-                <span className="text-[10px] text-gray-400">Drag to model the deal live — pricing re-locks to the matching volume band</span>
+                <span className="text-[10px] text-gray-400">{t('Drag to model the deal live — pricing re-locks to the matching volume band')}</span>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-4">
-                <SimSlider label="Monthly Volume" display={fmt(monthlyVol)} value={monthlyVol} min={2500} max={300000} step={2500} onChange={setSimVolume} />
-                <SimSlider label="Avg Ticket" display={fmt(ticket)} value={ticket} min={5} max={250} step={5} onChange={v => setAvgTicket(String(v))} />
-                <SimSlider label="Card Share" display={`${Math.round(effectiveCardRatio)}%`} value={effectiveCardRatio} min={0} max={100} step={1} onChange={v => setCardRatio(String(v))} />
-                <SimSlider label="Current Rate" display={`${effCurrentRate.toFixed(2)}%`} value={effCurrentRate} min={1.5} max={6} step={0.05} onChange={v => setCurrentRate(v.toFixed(2))} />
+                <SimSlider label={t('Monthly Volume')} display={fmt(monthlyVol)} value={monthlyVol} min={2500} max={300000} step={2500} onChange={setSimVolume} />
+                <SimSlider label={t('Avg Ticket')} display={fmt(ticket)} value={ticket} min={5} max={250} step={5} onChange={v => setAvgTicket(String(v))} />
+                <SimSlider label={t('Card Share')} display={`${Math.round(effectiveCardRatio)}%`} value={effectiveCardRatio} min={0} max={100} step={1} onChange={v => setCardRatio(String(v))} />
+                <SimSlider label={t('Current Rate')} display={`${effCurrentRate.toFixed(2)}%`} value={effCurrentRate} min={1.5} max={6} step={0.05} onChange={v => setCurrentRate(v.toFixed(2))} />
               </div>
               {pricingBandData && pricingBand !== volumeBand && (
                 <p className="mt-3 text-[11px] text-amber-600 bg-amber-50 rounded-[6px] px-2.5 py-1.5 inline-block">
-                  Simulated volume moved pricing to the {pricingBandData.label} band.
+                  {t('Simulated volume moved pricing to the {band} band.').replace('{band}', pricingBandData.label)}
                 </p>
               )}
             </div>
@@ -492,44 +517,44 @@ export function BackendCostCalculator() {
                   {merchantName && <p className="text-lg font-semibold text-gray-900 mb-1">{merchantName}</p>}
                   <div className="inline-flex items-center gap-2 px-3 py-1 bg-gray-100 rounded-full text-[11px] text-gray-500 font-medium mb-5">
                     <span className="w-2 h-2 rounded-full" style={{ background: riskData?.color }} />
-                    {riskData?.label} · {fmt(monthlyVol)}/mo
+                    {riskData ? t(riskData.label) : ''} · {fmt(monthlyVol)}{t('/mo')}
                   </div>
 
                   {isCashDiscount ? (
                     <div className="flex items-center justify-center gap-0">
                       <div className="flex-1 px-4">
-                        <p className="text-[9px] font-semibold text-gray-500 uppercase tracking-wide mb-2">Merchant Effective Rate</p>
+                        <p className="text-[9px] font-semibold text-gray-500 uppercase tracking-wide mb-2">{t('Merchant Effective Rate')}</p>
                         <p className="text-5xl font-bold text-emerald-600 font-mono leading-none">0.00<span className="text-xl opacity-60 ml-0.5">%</span></p>
-                        <p className="text-[9px] text-gray-400 uppercase tracking-wide mt-2">processing cost eliminated</p>
+                        <p className="text-[9px] text-gray-400 uppercase tracking-wide mt-2">{t('processing cost eliminated')}</p>
                       </div>
                       <div className="w-px h-16 bg-gray-200" />
                       <div className="flex-1 px-4">
-                        <p className="text-[9px] font-semibold text-gray-500 uppercase tracking-wide mb-2">Service Fee to Card Customers</p>
+                        <p className="text-[9px] font-semibold text-gray-500 uppercase tracking-wide mb-2">{t('Service Fee to Card Customers')}</p>
                         <p className="text-5xl font-bold text-gray-900 font-mono leading-none">{cdPricing?.serviceFee.toFixed(2)}<span className="text-xl text-brand ml-0.5">%</span></p>
-                        <p className="text-[9px] text-gray-400 uppercase tracking-wide mt-2">non-cash adjustment</p>
+                        <p className="text-[9px] text-gray-400 uppercase tracking-wide mt-2">{t('non-cash adjustment')}</p>
                       </div>
                     </div>
                   ) : (
                     <div>
                       <p className="text-6xl font-bold text-gray-900 font-mono leading-none">{frPricing?.rate.toFixed(2)}<span className="text-2xl text-brand ml-0.5">%</span></p>
-                      <p className="text-sm text-gray-500 font-mono mt-2">+ ${frPricing?.perTxn.toFixed(2)} per transaction</p>
+                      <p className="text-sm text-gray-500 font-mono mt-2">+ ${frPricing?.perTxn.toFixed(2)} {t('per transaction')}</p>
                     </div>
                   )}
 
                   {isCashDiscount && cdPricing && cdPricing.monthlyFee > 0 && (
-                    <p className="inline-block mt-4 text-xs font-mono text-gray-500 bg-gray-100 px-3 py-1 rounded-[6px]">${cdPricing.monthlyFee}/mo program fee</p>
+                    <p className="inline-block mt-4 text-xs font-mono text-gray-500 bg-gray-100 px-3 py-1 rounded-[6px]">{tTerms(`$${cdPricing.monthlyFee}/mo program fee`)}</p>
                   )}
 
                   <div className="flex items-center justify-center gap-1.5 mt-4 text-[10px] text-brand font-medium">
-                    <Lock className="w-3 h-3" /> Matrix-locked — no discretionary adjustments
+                    <Lock className="w-3 h-3" /> {t('Matrix-locked — no discretionary adjustments')}
                   </div>
                 </div>
 
                 {/* Savings */}
                 {merchantSavings != null && (
                   <div className={`border rounded-[8px] p-4 ${merchantSavings > 0 ? 'border-emerald-200 bg-emerald-50/50' : 'border-red-200 bg-red-50/50'}`}>
-                    <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Merchant Saves</p>
-                    <p className={`text-2xl font-bold font-mono ${merchantSavings > 0 ? 'text-emerald-600' : 'text-red-600'}`}>{fmtSigned(merchantSavings)}/yr</p>
+                    <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1">{t('Merchant Saves')}</p>
+                    <p className={`text-2xl font-bold font-mono ${merchantSavings > 0 ? 'text-emerald-600' : 'text-red-600'}`}>{fmtSigned(merchantSavings)}{t('/yr')}</p>
                   </div>
                 )}
               </div>
@@ -537,28 +562,28 @@ export function BackendCostCalculator() {
               {/* Delt Economics Sidebar */}
               <div className="bg-gray-50 border border-gray-200 rounded-[8px] p-4 space-y-3 h-fit">
                 <div className="flex items-center gap-2 text-[11px] font-semibold text-gray-500 uppercase tracking-wide">
-                  <span className="w-1.5 h-1.5 rounded-full bg-brand" /> Delt Economics <span className="text-gray-400 font-normal normal-case text-[9px]">(internal)</span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-brand" /> {t('Delt Economics')} <span className="text-gray-400 font-normal normal-case text-[9px]">{t('(internal)')}</span>
                 </div>
 
                 {isCashDiscount ? (
                   <div className="space-y-2">
-                    <EconRow label="Spread Revenue" value={cdAnnual ? fmt(cdAnnual.feeRevenue - cdAnnual.interchangeCost) : '—'} />
-                    <EconRow label="Program Fees" value={cdAnnual ? fmt(cdAnnual.monthlyFees) : '—'} />
-                    <EconRow label="Total Revenue" value={cdAnnual ? fmt(cdAnnual.grossRevenue) : '—'} accent />
-                    <EconRow label="Annual Margin" value={cdAnnual ? fmt(cdAnnual.margin) : '—'} color="text-emerald-600"
+                    <EconRow label={t('Spread Revenue')} value={cdAnnual ? fmt(cdAnnual.feeRevenue - cdAnnual.interchangeCost) : '—'} />
+                    <EconRow label={t('Program Fees')} value={cdAnnual ? fmt(cdAnnual.monthlyFees) : '—'} />
+                    <EconRow label={t('Total Revenue')} value={cdAnnual ? fmt(cdAnnual.grossRevenue) : '—'} accent />
+                    <EconRow label={t('Annual Margin')} value={cdAnnual ? fmt(cdAnnual.margin) : '—'} color="text-emerald-600"
                       sub={cdAnnual ? `${((cdAnnual.margin / cdAnnual.grossRevenue) * 100).toFixed(1)}%` : undefined} />
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    <EconRow label="Annual Revenue" value={frAnnual ? fmt(frAnnual.grossRevenue) : '—'} accent />
-                    <EconRow label="Annual Margin" value={frAnnual ? fmt(frAnnual.margin) : '—'} color="text-emerald-600"
+                    <EconRow label={t('Annual Revenue')} value={frAnnual ? fmt(frAnnual.grossRevenue) : '—'} accent />
+                    <EconRow label={t('Annual Margin')} value={frAnnual ? fmt(frAnnual.margin) : '—'} color="text-emerald-600"
                       sub={frAnnual ? `${((frAnnual.margin / frAnnual.grossRevenue) * 100).toFixed(1)}%` : undefined} />
                   </div>
                 )}
 
                 {cdAnnual && frAnnual && (
                   <div className="bg-indigo-50 rounded-[6px] p-3 mt-2">
-                    <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-2">CD vs Flat Rate Margin</p>
+                    <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-2">{t('CD vs Flat Rate Margin')}</p>
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-bold font-mono text-emerald-600">{fmt(cdAnnual.margin)}</span>
                       <span className="text-[11px] text-gray-400">vs</span>
@@ -566,8 +591,8 @@ export function BackendCostCalculator() {
                     </div>
                     <p className="text-[11px] mt-1.5 font-medium">
                       {cdAnnual.margin > frAnnual.margin
-                        ? <span className="text-emerald-600">CD wins by {fmt(cdAnnual.margin - frAnnual.margin)}/yr</span>
-                        : <span className="text-amber-600">Flat rate wins by {fmt(frAnnual.margin - cdAnnual.margin)}/yr</span>}
+                        ? <span className="text-emerald-600">{t('CD wins by')} {fmt(cdAnnual.margin - frAnnual.margin)}{t('/yr')}</span>
+                        : <span className="text-amber-600">{t('Flat rate wins by')} {fmt(frAnnual.margin - cdAnnual.margin)}{t('/yr')}</span>}
                     </p>
                   </div>
                 )}
@@ -578,35 +603,35 @@ export function BackendCostCalculator() {
             {cdAnnual && frAnnual && cdPricing && breakEvenRatio != null && (
               <div className="bg-white border border-gray-200 rounded-[8px] p-4">
                 <div className="flex items-center gap-2 text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-4">
-                  <span className="w-1.5 h-1.5 rounded-full bg-brand" /> Program Break-Even <span className="text-gray-400 font-normal normal-case text-[9px]">(internal)</span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-brand" /> {t('Program Break-Even')} <span className="text-gray-400 font-normal normal-case text-[9px]">{t('(internal)')}</span>
                 </div>
                 <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-5">
                   <div className="space-y-3">
                     <div className="bg-gray-50 rounded-[6px] p-3">
-                      <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Delt Margin Tipping Point</p>
+                      <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1">{t('Delt Margin Tipping Point')}</p>
                       {breakEvenRatio <= 0 ? (
-                        <p className="text-sm text-gray-700 leading-snug">Cash discount out-earns flat rate at <span className="font-bold text-emerald-600">any card mix</span> for this profile.</p>
+                        <p className="text-sm text-gray-700 leading-snug">{t('Cash discount out-earns flat rate at')} <span className="font-bold text-emerald-600">{t('any card mix')}</span> {t('for this profile.')}</p>
                       ) : breakEvenRatio >= 100 ? (
-                        <p className="text-sm text-gray-700 leading-snug">Flat rate is the higher-margin program at <span className="font-bold text-amber-600">any realistic card mix</span> — volume is too low to cover the spread.</p>
+                        <p className="text-sm text-gray-700 leading-snug">{t('Flat rate is the higher-margin program at')} <span className="font-bold text-amber-600">{t('any realistic card mix')}</span> {t('— volume is too low to cover the spread.')}</p>
                       ) : (
                         <p className="text-sm text-gray-700 leading-snug">
-                          Cash discount overtakes flat rate once <span className="font-bold text-brand font-mono">{Math.ceil(breakEvenRatio)}%</span> of sales are card.
-                          This merchant is at <span className={`font-bold font-mono ${effectiveCardRatio >= breakEvenRatio ? 'text-emerald-600' : 'text-amber-600'}`}>{Math.round(effectiveCardRatio)}%</span> —
-                          {effectiveCardRatio >= breakEvenRatio ? ' CD leads by ' : ' flat rate leads by '}
-                          <span className="font-bold font-mono">{fmt(Math.abs(cdAnnual.margin - frAnnual.margin))}/yr</span>.
+                          {t('Cash discount overtakes flat rate once')} <span className="font-bold text-brand font-mono">{Math.ceil(breakEvenRatio)}%</span> {t('of sales are card.')}{' '}
+                          {t('This merchant is at')} <span className={`font-bold font-mono ${effectiveCardRatio >= breakEvenRatio ? 'text-emerald-600' : 'text-amber-600'}`}>{Math.round(effectiveCardRatio)}%</span> —{' '}
+                          {effectiveCardRatio >= breakEvenRatio ? t('CD leads by') : t('flat rate leads by')}{' '}
+                          <span className="font-bold font-mono">{fmt(Math.abs(cdAnnual.margin - frAnnual.margin))}{t('/yr')}</span>.
                         </p>
                       )}
                     </div>
                     <div className="bg-gray-50 rounded-[6px] p-3">
-                      <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Merchant Cost Comparison</p>
+                      <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1">{t('Merchant Cost Comparison')}</p>
                       <p className="text-sm text-gray-700 leading-snug">
-                        Merchant pays <span className="font-bold font-mono text-emerald-600">{fmt(cdPricing.monthlyFee * 12)}/yr</span> on cash discount vs{' '}
-                        <span className="font-bold font-mono text-gray-900">{frPricing ? fmt((monthlyVol * (frPricing.rate / 100) + monthlyTxns * frPricing.perTxn) * 12) : '—'}/yr</span> on flat rate.
+                        {t('Merchant pays')} <span className="font-bold font-mono text-emerald-600">{fmt(cdPricing.monthlyFee * 12)}{t('/yr')}</span> {t('on cash discount vs')}{' '}
+                        <span className="font-bold font-mono text-gray-900">{frPricing ? fmt((monthlyVol * (frPricing.rate / 100) + monthlyTxns * frPricing.perTxn) * 12) : '—'}{t('/yr')}</span> {t('on flat rate.')}
                       </p>
                     </div>
                   </div>
                   <div>
-                    <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-2">Annual Delt Margin vs Card Share</p>
+                    <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-2">{t('Annual Delt Margin vs Card Share')}</p>
                     <div style={{ height: 180 }}>
                       <ResponsiveContainer width="100%" height="100%">
                         <LineChart data={marginCurve} margin={{ top: 6, right: 12, bottom: 0, left: 0 }}>
@@ -614,19 +639,19 @@ export function BackendCostCalculator() {
                           <XAxis dataKey="ratio" tickLine={false} axisLine={false} tick={{ fontSize: 10, fill: '#9ca3af' }} tickFormatter={(v: number) => `${v}%`} />
                           <YAxis width={52} tickLine={false} axisLine={false} tick={{ fontSize: 10, fill: '#9ca3af' }} tickFormatter={(v: number) => `$${Math.round(v / 1000)}k`} />
                           <ChartTooltip
-                            formatter={(v: number, name: string) => [fmt(v), name === 'cd' ? 'Cash Discount margin' : 'Flat Rate margin']}
-                            labelFormatter={(v: number) => `${v}% card share`}
+                            formatter={(v: number, name: string) => [fmt(v), name === 'cd' ? t('Cash Discount margin') : t('Flat Rate margin')]}
+                            labelFormatter={(v: number) => `${v}% ${t('card share')}`}
                             contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e5e7eb' }}
                           />
-                          <ReferenceLine x={Math.round(effectiveCardRatio)} stroke="#4318ff" strokeDasharray="4 3" label={{ value: 'this deal', position: 'top', fontSize: 10, fill: '#4318ff' }} />
+                          <ReferenceLine x={Math.round(effectiveCardRatio)} stroke="#4318ff" strokeDasharray="4 3" label={{ value: t('this deal'), position: 'top', fontSize: 10, fill: '#4318ff' }} />
                           <Line type="monotone" dataKey="cd" stroke="#34C77B" strokeWidth={2} dot={false} />
                           <Line type="monotone" dataKey="fr" stroke="#9ca3af" strokeWidth={2} strokeDasharray="6 4" dot={false} />
                         </LineChart>
                       </ResponsiveContainer>
                     </div>
                     <div className="flex items-center gap-4 mt-1.5 text-[10px] text-gray-500">
-                      <span className="flex items-center gap-1.5"><span className="w-3 h-0.5 bg-[#34C77B] rounded-full inline-block" /> Cash Discount</span>
-                      <span className="flex items-center gap-1.5"><span className="w-3 h-0.5 bg-gray-400 rounded-full inline-block" style={{ borderTop: '2px dashed #9ca3af', background: 'none' }} /> Flat Rate</span>
+                      <span className="flex items-center gap-1.5"><span className="w-3 h-0.5 bg-[#34C77B] rounded-full inline-block" /> {t('Cash Discount')}</span>
+                      <span className="flex items-center gap-1.5"><span className="w-3 h-0.5 bg-gray-400 rounded-full inline-block" style={{ borderTop: '2px dashed #9ca3af', background: 'none' }} /> {t('Flat Rate')}</span>
                     </div>
                   </div>
                 </div>
@@ -634,9 +659,9 @@ export function BackendCostCalculator() {
             )}
 
             <div className="flex justify-between pt-5 border-t border-gray-100">
-              <button onClick={() => setStep(1)} className="px-4 py-2 border border-gray-200 rounded-[6px] text-sm text-gray-500 bg-white hover:bg-gray-50 font-medium">← Back</button>
+              <button onClick={() => setStep(1)} className="px-4 py-2 border border-gray-200 rounded-[6px] text-sm text-gray-500 bg-white hover:bg-gray-50 font-medium">← {t('Back')}</button>
               <button onClick={() => setStep(3)} className="px-6 py-2.5 bg-brand text-white text-sm font-semibold rounded-[6px] hover:bg-brand-hover transition-colors inline-flex items-center gap-2">
-                View Playbook <ArrowRight className="w-4 h-4" />
+                {t('View Playbook')} <ArrowRight className="w-4 h-4" />
               </button>
             </div>
           </div>
@@ -650,11 +675,11 @@ export function BackendCostCalculator() {
               <div>
                 <h2 className="text-xl font-bold text-gray-900">{strategy.approach}</h2>
                 <p className="text-sm text-gray-500 mt-1">
-                  {merchantName || mtData?.label} · {RECEPTIVITY_LEVELS.find(r => r.key === receptivity)?.label} · CD Fit: {cdScore}/100
+                  {merchantName || (mtData && t(mtData.label))} · {(() => { const r = RECEPTIVITY_LEVELS.find(x => x.key === receptivity); return r ? t(r.label) : ''; })()} · {t('CD Fit:')} {cdScore}/100
                 </p>
               </div>
               <span className="text-[11px] font-semibold text-brand bg-indigo-100 px-3 py-1.5 rounded-[6px] whitespace-nowrap">
-                {isCashDiscount ? 'Cash Discount' : 'Flat Rate'} · {fmt(monthlyVol)}/mo
+                {t(isCashDiscount ? 'Cash Discount' : 'Flat Rate')} · {fmt(monthlyVol)}{t('/mo')}
               </span>
             </div>
 
@@ -662,7 +687,7 @@ export function BackendCostCalculator() {
             <div>
               <div className="flex items-center gap-2.5 mb-3">
                 <span className="w-6 h-6 rounded-full bg-indigo-100 text-brand flex items-center justify-center text-xs font-bold font-mono">1</span>
-                <span className="text-sm font-semibold text-gray-700">Opening Move</span>
+                <span className="text-sm font-semibold text-gray-700">{t('Opening Move')}</span>
               </div>
               <div className="bg-white border border-gray-200 rounded-[8px] p-4">
                 <p className="text-sm text-gray-700 leading-relaxed">{strategy.opener}</p>
@@ -674,8 +699,8 @@ export function BackendCostCalculator() {
               <div>
                 <div className="flex items-center gap-2.5 mb-3">
                   <span className="w-6 h-6 rounded-full bg-indigo-100 text-brand flex items-center justify-center text-xs font-bold font-mono">2</span>
-                  <span className="text-sm font-semibold text-gray-700">Handle These Objections</span>
-                  <span className="text-[11px] text-gray-400">Most likely for this merchant profile</span>
+                  <span className="text-sm font-semibold text-gray-700">{t('Handle These Objections')}</span>
+                  <span className="text-[11px] text-gray-400">{t('Most likely for this merchant profile')}</span>
                 </div>
                 <div className="space-y-2">
                   {/* Primary objections */}
@@ -686,21 +711,21 @@ export function BackendCostCalculator() {
                     return (
                       <div key={objKey} className={`border rounded-[8px] overflow-hidden transition-colors ${isOpen ? 'border-brand/20' : 'border-gray-200'}`}>
                         <button onClick={() => setExpandedObj(isOpen ? null : objKey)} className="w-full flex items-center justify-between px-4 py-3 bg-white hover:bg-gray-50 text-left transition-colors">
-                          <span className="text-sm font-semibold text-gray-800">{obj.title}</span>
+                          <span className="text-sm font-semibold text-gray-800">{t(obj.title)}</span>
                           <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
                         </button>
                         {isOpen && (
                           <div className="px-4 pb-4 space-y-3 bg-white">
-                            <p className="text-xs font-semibold text-brand italic">{obj.reframe}</p>
+                            <p className="text-xs font-semibold text-brand italic">{t(obj.reframe)}</p>
                             <div>
-                              <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">What to say:</p>
+                              <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">{t('What to say:')}</p>
                               <div className="text-sm text-gray-700 leading-relaxed p-3 bg-indigo-50/50 rounded-[6px] border-l-3 border-brand" style={{ borderLeft: '3px solid #4318FF' }}>
-                                {obj.talk}
+                                {t(obj.talk)}
                               </div>
                             </div>
                             <div className="flex items-start gap-2 text-xs text-gray-500 leading-relaxed">
                               <BarChart3 className="w-3.5 h-3.5 shrink-0 mt-0.5 text-gray-400" />
-                              {obj.data}
+                              {t(obj.data)}
                             </div>
                           </div>
                         )}
@@ -714,21 +739,21 @@ export function BackendCostCalculator() {
                     return (
                       <div key={objKey} className={`border rounded-[8px] overflow-hidden opacity-60 transition-colors ${isOpen ? 'border-brand/15 opacity-100' : 'border-gray-100'}`}>
                         <button onClick={() => setExpandedObj(isOpen ? null : objKey)} className="w-full flex items-center justify-between px-4 py-3 bg-white hover:bg-gray-50 text-left transition-colors">
-                          <span className="text-sm font-medium text-gray-600">{obj.title}</span>
+                          <span className="text-sm font-medium text-gray-600">{t(obj.title)}</span>
                           <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
                         </button>
                         {isOpen && (
                           <div className="px-4 pb-4 space-y-3 bg-white">
-                            <p className="text-xs font-semibold text-brand italic">{obj.reframe}</p>
+                            <p className="text-xs font-semibold text-brand italic">{t(obj.reframe)}</p>
                             <div>
-                              <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">What to say:</p>
+                              <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">{t('What to say:')}</p>
                               <div className="text-sm text-gray-700 leading-relaxed p-3 bg-indigo-50/50 rounded-[6px]" style={{ borderLeft: '3px solid #4318FF' }}>
-                                {obj.talk}
+                                {t(obj.talk)}
                               </div>
                             </div>
                             <div className="flex items-start gap-2 text-xs text-gray-500 leading-relaxed">
                               <BarChart3 className="w-3.5 h-3.5 shrink-0 mt-0.5 text-gray-400" />
-                              {obj.data}
+                              {t(obj.data)}
                             </div>
                           </div>
                         )}
@@ -745,7 +770,7 @@ export function BackendCostCalculator() {
                 <span className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-xs font-bold font-mono">
                   {strategy.keyObjections.length > 0 ? '3' : '2'}
                 </span>
-                <span className="text-sm font-semibold text-gray-700">Closing Move</span>
+                <span className="text-sm font-semibold text-gray-700">{t('Closing Move')}</span>
               </div>
               <div className="bg-emerald-50/50 border border-emerald-200 rounded-[8px] p-4">
                 <p className="text-sm text-gray-700 leading-relaxed">{strategy.closingMove}</p>
@@ -755,18 +780,18 @@ export function BackendCostCalculator() {
             {/* Quick Reference */}
             {merchantSavings != null && (
               <div className="bg-white border border-gray-200 rounded-[8px] p-4">
-                <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-3">Quick Reference Numbers</p>
+                <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-3">{t('Quick Reference Numbers')}</p>
                 <div className="grid grid-cols-4 gap-3">
-                  <QRItem label="Merchant Saves" value={`${fmtSigned(merchantSavings)}/yr`} color="text-emerald-600" />
-                  <QRItem label="Current Rate" value={`${effCurrentRate.toFixed(2)}%`} />
-                  <QRItem label="New Rate" value={isCashDiscount ? '0.00%' : `${frPricing?.rate.toFixed(2)}%`} color="text-emerald-600" />
-                  <QRItem label="Delt Margin" value={`${isCashDiscount ? fmt(cdAnnual?.margin) : fmt(frAnnual?.margin)}/yr`} />
+                  <QRItem label={t('Merchant Saves')} value={`${fmtSigned(merchantSavings)}${t('/yr')}`} color="text-emerald-600" />
+                  <QRItem label={t('Current Rate')} value={`${effCurrentRate.toFixed(2)}%`} />
+                  <QRItem label={t('New Rate')} value={isCashDiscount ? '0.00%' : `${frPricing?.rate.toFixed(2)}%`} color="text-emerald-600" />
+                  <QRItem label={t('Delt Margin')} value={`${isCashDiscount ? fmt(cdAnnual?.margin) : fmt(frAnnual?.margin)}${t('/yr')}`} />
                 </div>
               </div>
             )}
 
             <div className="flex justify-start pt-5 border-t border-gray-100">
-              <button onClick={() => setStep(2)} className="px-4 py-2 border border-gray-200 rounded-[6px] text-sm text-gray-500 bg-white hover:bg-gray-50 font-medium">← Back to Pricing</button>
+              <button onClick={() => setStep(2)} className="px-4 py-2 border border-gray-200 rounded-[6px] text-sm text-gray-500 bg-white hover:bg-gray-50 font-medium">← {t('Back to Pricing')}</button>
             </div>
           </div>
         )}
