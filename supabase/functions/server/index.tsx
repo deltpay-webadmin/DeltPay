@@ -15,6 +15,8 @@ import {
   createAssetReport,
   refreshAssetReport,
   applyPlaidExchange,
+  createHostedLink,
+  sweepHostedLinks,
   svc,
 } from "../_shared/plaid.ts";
 import { adsStatus, connectMeta, syncMeta, disconnectMeta, syncMetaLeads, importMetaLeads } from "../_shared/meta.ts";
@@ -69,7 +71,12 @@ app.get("/make-server-940653c6/health", (c) => {
 // ────────────────────────────────────────────────────────────────
 
 const JOB_TASKS: Record<string, () => Promise<unknown>> = {
-  "plaid-sync-all": () => syncAllItems(),
+  // Sweep pending hosted-link invites first so a connection completed on a
+  // phone overnight is exchanged before (and then included in) the sync.
+  "plaid-sync-all": async () => ({
+    hosted_links: await sweepHostedLinks().catch((err: any) => ({ error: String(err?.message ?? err) })),
+    items: await syncAllItems(),
+  }),
   "meta-insights": () => syncMeta(90),
   // syncMetaLeads already reconciles matches against pipeline_leads
   "meta-leads": () => syncMetaLeads(),
@@ -293,10 +300,30 @@ app.post(`${PLAID_BASE}/sync`, needPerm("underwriting.review"), async (c) => {
 app.post(`${PLAID_BASE}/sync-all`, needPerm("underwriting.review"), async (c) => {
   try {
     const body = await c.req.json().catch(() => ({}));
-    const results = await syncAllItems(body.leadId ? String(body.leadId) : undefined);
+    const leadId = body.leadId ? String(body.leadId) : undefined;
+    // Best-effort sweep of pending hosted-link invites first, so a bank the
+    // prospect connected on their phone shows up on this very sync.
+    await sweepHostedLinks(leadId).catch(() => {});
+    const results = await syncAllItems(leadId);
     return c.json({ ok: true, results });
   } catch (err: any) {
     console.error("plaid sync-all error", err);
+    return c.json({ ok: false, error: String(err?.message ?? err) }, 500);
+  }
+});
+
+// Mint a Plaid-hosted connect URL for a prospect. Staff text/email it;
+// the prospect completes Link on their own device and the connection is
+// exchanged into the vault by webhook (or the sweep above).
+app.post(`${PLAID_BASE}/hosted-link`, needPerm("underwriting.review"), async (c) => {
+  try {
+    const body = await c.req.json().catch(() => ({}));
+    const leadId = String(body.leadId ?? "");
+    if (!leadId) return c.json({ ok: false, error: "leadId is required" }, 400);
+    const out = await createHostedLink(leadId);
+    return c.json({ ok: true, ...out });
+  } catch (err: any) {
+    console.error("plaid hosted-link error", err);
     return c.json({ ok: false, error: String(err?.message ?? err) }, 500);
   }
 });

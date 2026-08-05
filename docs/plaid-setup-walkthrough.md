@@ -70,6 +70,7 @@ cd DeltPay/supabase
 npx supabase login
 npx supabase link --project-ref ytemrmpnwmzqeradbeoa
 npx supabase functions deploy make-server-940653c6
+npx supabase functions deploy plaid-webhook
 ```
 
 What each line does:
@@ -80,6 +81,8 @@ What each line does:
   for function deploys).
 - `functions deploy make-server-940653c6` uploads the server. Success
   looks like `Deployed Function make-server-940653c6`.
+- `functions deploy plaid-webhook` uploads the webhook receiver (it now
+  also completes "Send connect link" bank connections automatically).
 
 ⚠️ Use exactly `make-server-940653c6` — NOT `deploy server`. (A stray
 function named `server` already exists in the Supabase dashboard from a

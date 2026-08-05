@@ -125,6 +125,27 @@ functions (Supabase `PLAID_ENV`) must match for connections to persist:
 Both sides also share the same `PLAID_CLIENT_ID` (one Plaid team), which
 is what makes the cross-app exchange possible at all.
 
+### Getting connections from prospects who never used the application
+
+The CRM's local *Connect bank* button opens Plaid Link on the staff
+member's screen, so it only works when the customer is present (staff
+obviously can't type the customer's bank credentials). For everyone
+else, use **Send connect link** (next to Connect bank on the vault
+page): it mints a Plaid-hosted URL (valid 7 days), copies it to the
+clipboard, and staff text/email it to the prospect. The prospect
+completes Link on their own device — including OAuth banks like Chase,
+with no redirect-URI setup needed, since the whole flow runs on Plaid's
+hosted page. The connection is exchanged into the vault automatically by
+the `LINK` webhook, with a sweep during *Sync all connections* and the
+nightly `plaid-sync-all` cron as the safety net. Invites live in
+`plaid_link_requests` (pending / completed / expired), and the button
+shows "Link sent Xh ago" while one is outstanding.
+
+There is nothing to import from *past* application sessions: the old
+deltcapital.com exchange endpoint discarded access tokens, and Plaid
+has no mechanism to recover a token that was never stored. Only 5
+`plaid_connected` events ever occurred — all internal tests.
+
 ## 3. Testing the deltcapital.com application without real IDV
 
 **Never test the production flow with real identities** — production

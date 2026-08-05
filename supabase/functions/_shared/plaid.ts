@@ -512,6 +512,134 @@ export async function applyPlaidExchange(
   };
 }
 
+// ══════════════════════════════════════════════════════════════
+// Hosted Link (send the prospect a connect-your-bank URL)
+// ══════════════════════════════════════════════════════════════
+// Staff can't type a customer's bank credentials, so the CRM's local
+// Link button only works with the customer present. Hosted Link flips
+// the flow: mint a link token with hosted_link enabled, hand staff the
+// returned URL to text/email, and the prospect completes Link on their
+// own device on a Plaid-hosted page. Completion lands here two ways
+// (either wins, both are idempotent via the request row's status):
+//   1. LINK / SESSION_FINISHED webhook (handlePlaidWebhook below)
+//   2. sweepHostedLinks() — polled by "Sync all" and the nightly cron
+
+const HOSTED_LINK_LIFETIME_SECONDS = 7 * 24 * 3600;
+
+export async function createHostedLink(leadId: string) {
+  const cfg = plaidConfig();
+  const db = svc();
+  const req: Record<string, unknown> = {
+    user: { client_user_id: leadId || "delt-crm" },
+    // Prospect-facing brand: this name shows on the Plaid-hosted page.
+    client_name: "Delt Capital",
+    language: "en",
+    country_codes: ["US"],
+    products: cfg.products,
+    // No redirect_uri: Plaid's hosted page handles OAuth banks itself,
+    // so the flow works for Chase etc. even before the dashboard
+    // redirect-URI registration is done.
+    hosted_link: { url_lifetime_seconds: HOSTED_LINK_LIFETIME_SECONDS },
+  };
+  if (cfg.optionalProducts.length) req.optional_products = cfg.optionalProducts;
+  const hook = webhookUrl();
+  if (hook) req.webhook = hook;
+
+  const out = await plaid("/link/token/create", req);
+  if (!out.hosted_link_url) {
+    throw new Error("Plaid did not return a hosted link URL for this token.");
+  }
+  const { error } = await db.from("plaid_link_requests").insert({
+    link_token: out.link_token,
+    lead_id: leadId,
+    hosted_link_url: out.hosted_link_url,
+    status: "pending",
+    expires_at: out.expiration ?? new Date(Date.now() + HOSTED_LINK_LIFETIME_SECONDS * 1000).toISOString(),
+  });
+  if (error) throw new Error(`Failed to record link request: ${error.message}`);
+  return {
+    link_token: out.link_token,
+    hosted_link_url: out.hosted_link_url,
+    expiration: out.expiration ?? null,
+  };
+}
+
+/** Exchange one completed hosted-link session and close out its request row. */
+async function completeHostedLink(
+  linkToken: string,
+  leadId: string,
+  publicToken: string,
+  institution?: { institution_id?: string; name?: string },
+) {
+  const out = await exchangePublicToken(leadId, publicToken, institution);
+  await svc()
+    .from("plaid_link_requests")
+    .update({ status: "completed", item_id: out.item_id, completed_at: new Date().toISOString() })
+    .eq("link_token", linkToken);
+  return out;
+}
+
+/** Pull completed sessions out of /link/token/get (shape mirrors the
+ * deltcapital.com poller — results.item_add_results[].public_token). */
+function extractHostedCompletions(data: any): { public_token: string; institution?: { institution_id?: string; name?: string } }[] {
+  const found: { public_token: string; institution?: { institution_id?: string; name?: string } }[] = [];
+  for (const s of data?.link_sessions ?? []) {
+    for (const a of s?.results?.item_add_results ?? []) {
+      if (a?.public_token) {
+        found.push({
+          public_token: a.public_token,
+          institution: a.institution
+            ? { institution_id: a.institution.institution_id, name: a.institution.name }
+            : undefined,
+        });
+      }
+    }
+  }
+  return found;
+}
+
+/** Check every pending hosted-link request against Plaid and complete or
+ * expire it. Safety net for missed webhooks — runs on "Sync all" and the
+ * nightly plaid-sync-all cron. */
+export async function sweepHostedLinks(leadId?: string) {
+  const db = svc();
+  let q = db
+    .from("plaid_link_requests")
+    .select("link_token, lead_id, expires_at")
+    .eq("status", "pending");
+  if (leadId) q = q.eq("lead_id", leadId);
+  const { data: pending } = await q;
+
+  const out = { checked: 0, completed: 0, expired: 0, errors: 0 };
+  for (const r of pending ?? []) {
+    out.checked++;
+    try {
+      const data = await plaid("/link/token/get", { link_token: r.link_token });
+      const completions = extractHostedCompletions(data);
+      if (completions.length) {
+        for (const c of completions) {
+          await completeHostedLink(r.link_token, r.lead_id, c.public_token, c.institution);
+        }
+        out.completed++;
+      } else if (r.expires_at && new Date(r.expires_at).getTime() < Date.now()) {
+        await db.from("plaid_link_requests").update({ status: "expired" }).eq("link_token", r.link_token);
+        out.expired++;
+      }
+    } catch (err: any) {
+      // An expired/invalid link token is a normal end state, not an error.
+      const code = err?.plaid?.error_code;
+      if (code === "INVALID_FIELD" || code === "INVALID_LINK_TOKEN") {
+        await db.from("plaid_link_requests").update({ status: "expired" }).eq("link_token", r.link_token);
+        out.expired++;
+      } else {
+        out.errors++;
+        console.error(`hosted-link sweep failed for ${r.link_token.slice(-6)}:`, err?.message ?? err);
+      }
+    }
+  }
+  return out;
+}
+
 async function loadItem(itemId: string) {
   const db = svc();
   const [{ data: item, error: e1 }, { data: cred, error: e2 }] = await Promise.all([
@@ -1365,6 +1493,37 @@ export async function handlePlaidWebhook(body: any): Promise<{ handled: string }
       }
     }
     return { handled: `assets:${code}` };
+  }
+
+  // Hosted-link sessions (CRM "send connect link") finish with a LINK
+  // webhook carrying the public_token(s) — no item_id yet.
+  if (type === "LINK") {
+    if (code === "SESSION_FINISHED") {
+      const linkToken: string = body?.link_token ?? "";
+      const publicTokens: string[] = (body?.public_tokens ?? []).filter(Boolean);
+      if (!linkToken) return { handled: "link:no-token" };
+      const db = svc();
+      const { data: reqRow } = await db
+        .from("plaid_link_requests")
+        .select("lead_id, status")
+        .eq("link_token", linkToken)
+        .maybeSingle();
+      if (!reqRow?.lead_id) return { handled: "link:unknown-token" };
+      if (reqRow.status !== "pending") return { handled: "link:already-handled" };
+      if (String(body?.status ?? "").toUpperCase() !== "SUCCESS" || !publicTokens.length) {
+        return { handled: `link:finished-${body?.status ?? "no-status"}` };
+      }
+      try {
+        for (const pt of publicTokens) {
+          await completeHostedLink(linkToken, reqRow.lead_id, pt);
+        }
+        return { handled: `link:completed:${reqRow.lead_id}` };
+      } catch (err: any) {
+        console.error("[plaid-webhook] hosted-link exchange failed:", err?.message ?? err);
+        return { handled: "link:exchange-error" };
+      }
+    }
+    return { handled: `link:${code}` };
   }
 
   if (!itemId) return { handled: "ignored:no-item" };
