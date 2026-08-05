@@ -157,6 +157,44 @@ async function send(payload: Record<string, unknown>): Promise<{ ok: boolean; er
   }
 }
 
+// ── CRM handoff (best-effort) ────────────────────────────────────
+// When SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY are set in Vercel, the lead
+// is also inserted into crm_leads (source delt_pay_site); the database's
+// mirror_crm_lead_to_pipeline trigger copies it into the CRM pipeline
+// (supabase/migrations/20260805_04_crm_leads_mirror.sql). Failures are
+// logged and never block the email — the inbox is the proven path and must
+// keep working when these env vars are absent.
+async function recordCrmLead(lead: {
+  form_name: string;
+  full_name?: string;
+  email?: string;
+  phone?: string;
+  company?: string;
+  message?: string;
+  monthly_volume?: string;
+}): Promise<boolean> {
+  const url = process.env.SUPABASE_URL || "";
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+  if (!url || !key) return false;
+  try {
+    const res = await fetch(`${url}/rest/v1/crm_leads`, {
+      method: "POST",
+      headers: {
+        apikey: key,
+        Authorization: `Bearer ${key}`,
+        "Content-Type": "application/json",
+        Prefer: "return=minimal",
+      },
+      body: JSON.stringify({ source: "delt_pay_site", ...lead }),
+    });
+    if (res.ok) return true;
+    console.warn("crm_leads insert failed:", res.status, (await res.text().catch(() => "")).slice(0, 300));
+  } catch (err) {
+    console.warn("crm_leads insert error:", (err as Error)?.message || err);
+  }
+  return false;
+}
+
 export default async function handler(req: any, res: any) {
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
@@ -206,7 +244,20 @@ export default async function handler(req: any, res: any) {
     if (!v.ok) console.warn("calc-quote visitor email failed:", v.error);
   }
 
+  let crmRecorded: boolean | undefined;
+  if (!spamSuspect) {
+    crmRecorded = await recordCrmLead({
+      form_name: "calculator-quote",
+      email,
+      monthly_volume: q.monthlyVolume,
+      message:
+        `Completed the savings calculator: ${usd(q.savings)}/mo estimated savings ` +
+        `(current cost ${usd(q.currentCost)}, Delt cost ${usd(q.deltCost)}` +
+        `${q.processingRate ? `, current rate ${q.processingRate}%` : ""}).`,
+    });
+  }
+
   return res.status(200).json({
-    ok: true, emailed: team.ok, emailError: team.error, visitorEmailed,
+    ok: true, emailed: team.ok, emailError: team.error, visitorEmailed, crmRecorded,
   });
 }

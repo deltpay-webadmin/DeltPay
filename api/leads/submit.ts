@@ -214,6 +214,44 @@ async function sendVisitorEmail(o: {
   }
 }
 
+// ── CRM handoff (best-effort) ────────────────────────────────────
+// When SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY are set in Vercel, the lead
+// is also inserted into crm_leads (source delt_pay_site); the database's
+// mirror_crm_lead_to_pipeline trigger copies it into the CRM pipeline
+// (supabase/migrations/20260805_04_crm_leads_mirror.sql). Failures are
+// logged and never block the email — the inbox is the proven path and must
+// keep working when these env vars are absent.
+async function recordCrmLead(lead: {
+  form_name: string;
+  full_name?: string;
+  email?: string;
+  phone?: string;
+  company?: string;
+  message?: string;
+  monthly_volume?: string;
+}): Promise<boolean> {
+  const url = process.env.SUPABASE_URL || "";
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+  if (!url || !key) return false;
+  try {
+    const res = await fetch(`${url}/rest/v1/crm_leads`, {
+      method: "POST",
+      headers: {
+        apikey: key,
+        Authorization: `Bearer ${key}`,
+        "Content-Type": "application/json",
+        Prefer: "return=minimal",
+      },
+      body: JSON.stringify({ source: "delt_pay_site", ...lead }),
+    });
+    if (res.ok) return true;
+    console.warn("crm_leads insert failed:", res.status, (await res.text().catch(() => "")).slice(0, 300));
+  } catch (err) {
+    console.warn("crm_leads insert error:", (err as Error)?.message || err);
+  }
+  return false;
+}
+
 // ── Per-form themes + row builders ───────────────────────────────
 type FormDef = {
   badge: string; accent: string;
@@ -221,6 +259,13 @@ type FormDef = {
   heading: string;
   subtitle: (b: Record<string, unknown>) => string;
   rows: (b: Record<string, unknown>) => Array<[string, unknown]>;
+  // Optional CRM handoff: the fields that become the crm_leads row (email
+  // and form_name are added by the handler). Forms without a mapping
+  // (newsletter, signin) notify by email only.
+  crm?: (b: Record<string, unknown>) => {
+    full_name?: string; phone?: string; company?: string;
+    message?: string; monthly_volume?: string;
+  };
 };
 const IS_MERCHANT: Record<string, string> = {
   yes: "Yes — already a merchant",
@@ -244,6 +289,13 @@ const FORMS: Record<string, FormDef> = {
       ["Message", clean(b.message, 4000)],
       ["Source", clean(b.source, 80)],
     ],
+    crm: (b) => ({
+      full_name: fullName(b),
+      phone: clean(b.phone, 40),
+      company: clean(b.company, 200),
+      message: clean(b.message, 4000),
+      monthly_volume: clean(b.monthlyVolume, 80),
+    }),
   },
   audit: {
     badge: "Statement audit", accent: "#F59E0B",
@@ -255,6 +307,10 @@ const FORMS: Record<string, FormDef> = {
       ["Email", clean(b.email, 254)],
       ["Statement", clean(b.fileName, 200)],
     ],
+    crm: (b) => ({
+      company: clean(b.biz, 200),
+      message: "Requested a free statement audit through the DeltPay site.",
+    }),
   },
   newsletter: {
     badge: "Newsletter", accent: "#0EA5A5",
@@ -269,6 +325,9 @@ const FORMS: Record<string, FormDef> = {
     heading: "New custom-rate request",
     subtitle: () => `Someone asked to see their custom rate from the homepage bar.`,
     rows: (b) => [["Email", clean(b.email, 254)]],
+    crm: () => ({
+      message: "Requested a custom rate from the homepage rate-check bar.",
+    }),
   },
   signup: {
     badge: "Sign-up lead", accent: "#7C3AED",
@@ -287,6 +346,13 @@ const FORMS: Record<string, FormDef> = {
       ["Average ticket", clean(b.averageTicket, 80)],
       ["About", clean(b.businessDescription, 4000)],
     ],
+    crm: (b) => ({
+      full_name: fullName(b),
+      phone: clean(b.phone, 40),
+      company: clean(b.businessName, 200),
+      message: clean(b.businessDescription, 4000),
+      monthly_volume: clean(b.monthlyVolume, 80),
+    }),
   },
   onboarding: {
     badge: "Onboarding", accent: "#DB2777",
@@ -309,6 +375,13 @@ const FORMS: Record<string, FormDef> = {
       ["Address", [clean(b.addressLine1, 200), clean(b.city, 100), clean(b.state, 40), clean(b.zip, 20)].filter(Boolean).join(", ")],
       ["Identity", "DOB / SSN collected in-app — intentionally not included in email."],
     ],
+    crm: (b) => ({
+      full_name: fullName(b),
+      phone: clean(b.phone, 40),
+      company: clean(b.legalName, 200) || clean(b.dba, 200),
+      message: "Submitted the merchant onboarding application.",
+      monthly_volume: clean(b.monthlyVolume, 80),
+    }),
   },
   "pricing-guide": {
     badge: "Pricing guide", accent: "#041E42",
@@ -319,6 +392,10 @@ const FORMS: Record<string, FormDef> = {
       ["Email", clean(b.email, 254)],
       ["Business", clean(b.business, 200)],
     ],
+    crm: (b) => ({
+      company: clean(b.business, 200),
+      message: "Requested the Delt hardware pricing guide.",
+    }),
   },
   signin: {
     badge: "Sign-in attempt", accent: "#64748B",
@@ -400,5 +477,13 @@ export default async function handler(req: any, res: any) {
     if (!v.ok) console.warn("visitor rate email failed:", v.error);
   }
 
-  return res.status(200).json({ ok: true, type, emailed: r.ok, emailError: r.error, visitorEmailed });
+  // CRM handoff — after the email so an unreachable database can never
+  // delay or break the notification. Suspected spam stays out of the CRM
+  // (the email still goes, tagged, so a false positive is never lost).
+  let crmRecorded: boolean | undefined;
+  if (def.crm && !spamSuspect) {
+    crmRecorded = await recordCrmLead({ form_name: type, email, ...def.crm(body) });
+  }
+
+  return res.status(200).json({ ok: true, type, emailed: r.ok, emailError: r.error, visitorEmailed, crmRecorded });
 }

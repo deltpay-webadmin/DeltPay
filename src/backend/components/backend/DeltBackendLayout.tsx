@@ -14,6 +14,7 @@ import { BackendAgents } from './pages/BackendAgents';
 import { BackendFinancials } from './pages/BackendFinancials';
 import { BackendLensAI } from './pages/BackendLensAI';
 import { BackendSettings } from './pages/BackendSettings';
+import { BackendBundles } from './pages/BackendBundles';
 import { MerchantDetail } from './pages/MerchantDetail';
 import { UnderwritingDetail } from './pages/UnderwritingDetail';
 import { DealDetail } from './pages/DealDetail';
@@ -789,7 +790,7 @@ export function DeltBackendLayout() {
               <Route path="settings" element={<Guard perm="general.view"><BackendSettings /></Guard>} />
               <Route path="settings/integrations" element={<Guard perm="integrations.view"><BackendSettings /></Guard>} />
               <Route path="settings/roles" element={<Guard perm="roles.view"><BackendSettings /></Guard>} />
-              <Route path="settings/bundles" element={<Guard perm="general.view"><BackendSettings /></Guard>} />
+              <Route path="settings/bundles" element={<Guard perm="general.view"><BackendBundles /></Guard>} />
               <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </Routes>
           </main>
