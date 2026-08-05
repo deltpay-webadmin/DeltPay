@@ -2,11 +2,13 @@ import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react'
 import {
   Upload, FileText, Sparkles, Download, UserPlus, Clock,
   CheckCircle2, TrendingDown, Store,
-  AlertCircle, Loader2, X, File, ArrowRight,
+  AlertCircle, Loader2, X, File, ArrowRight, Presentation,
 } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
 import { useAppNavigate } from '../NavigationContext';
 import { BackendCostCalculator } from './BackendCostCalculator';
+import { MerchantSavingsView } from './MerchantSavingsView';
+import { AnalysisEconomicsCard } from './AnalysisEconomicsCard';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContainer,
   LineChart, Line, CartesianGrid, Cell, LabelList,
@@ -26,7 +28,7 @@ interface FeeRow {
 }
 
 /** Shape returned by the analyze-statement edge function's extraction. */
-interface ExtractedData {
+export interface ExtractedData {
   merchantName: string;
   currentProcessor: string;
   statementPeriod: string;
@@ -128,6 +130,7 @@ export function BackendAnalysis() {
   const [historyView, setHistoryView] = useState<'all' | 'merchant'>('all');
   const [merchantFilter, setMerchantFilter] = useState<string | null>(null);
   const [riskTier, setRiskTier] = useState<RiskTierKey>('medium');
+  const [merchantView, setMerchantView] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // ── Load saved analyses ──
@@ -231,6 +234,7 @@ export function BackendAnalysis() {
       setExtracted(ex);
       setProposal(prop);
       setStatus('done');
+      setMerchantView(false);
 
       // Persist so the history / merchant view survives reloads.
       const { data: saved, error: insErr } = await supabase.from('statement_analyses').insert({
@@ -324,6 +328,7 @@ export function BackendAnalysis() {
     setExtracted(null);
     setProposal(null);
     setSavedAnalysisId(null);
+    setMerchantView(false);
   };
 
   // ── Delt program quotes against the extracted statement ──
@@ -494,23 +499,49 @@ export function BackendAnalysis() {
             {status === 'done' && extracted && proposal && (
               <>
                 {/* Reset bar */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-sm text-emerald-600 font-medium">
-                    <CheckCircle2 className="w-4 h-4" />
-                    Analysis complete — {files[0]?.name}
-                    {extracted.confidence !== 'high' && (
-                      <span className={`ml-1 inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
-                        extracted.confidence === 'medium' ? 'bg-amber-50 text-amber-700' : 'bg-red-50 text-red-700'
-                      }`}>
-                        {extracted.confidence} confidence
-                      </span>
-                    )}
+                <div className="flex items-center justify-between gap-3">
+                  {merchantView ? (
+                    <div />
+                  ) : (
+                    <div className="flex items-center gap-2 text-sm text-emerald-600 font-medium">
+                      <CheckCircle2 className="w-4 h-4" />
+                      Analysis complete — {files[0]?.name}
+                      {extracted.confidence !== 'high' && (
+                        <span className={`ml-1 inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
+                          extracted.confidence === 'medium' ? 'bg-amber-50 text-amber-700' : 'bg-red-50 text-red-700'
+                        }`}>
+                          {extracted.confidence} confidence
+                        </span>
+                      )}
+                    </div>
+                  )}
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => setMerchantView(v => !v)}
+                      className={`px-4 py-2 text-sm font-medium rounded-[6px] transition-colors flex items-center gap-2 ${
+                        merchantView
+                          ? 'bg-brand text-white hover:bg-brand-hover'
+                          : 'bg-white text-brand border border-brand hover:bg-brand/5'
+                      }`}
+                    >
+                      <Presentation className="w-4 h-4" />
+                      {merchantView ? 'Exit Merchant View' : 'Merchant View'}
+                    </button>
+                    <button onClick={reset} className="text-sm text-gray-500 hover:text-gray-700 underline underline-offset-2">
+                      Analyze another statement
+                    </button>
                   </div>
-                  <button onClick={reset} className="text-sm text-gray-500 hover:text-gray-700 underline underline-offset-2">
-                    Analyze another statement
-                  </button>
                 </div>
 
+                {merchantView ? (
+                  <MerchantSavingsView
+                    extracted={extracted}
+                    programs={programs}
+                    bestProgramKey={bestProgram?.key ?? null}
+                    onExit={() => setMerchantView(false)}
+                  />
+                ) : (
+                <>
                 {/* AI notes on the extraction */}
                 {extracted.notes && (
                   <div className="bg-gray-50 border border-gray-200 rounded-[8px] px-4 py-3 text-xs text-gray-600 flex items-start gap-2">
@@ -813,10 +844,20 @@ export function BackendAnalysis() {
                     </p>
                   </div>
                 </div>
+
+                {/* ── Delt Economics (internal only) ── */}
+                <AnalysisEconomicsCard
+                  extracted={extracted}
+                  riskTier={riskTier}
+                  bestSavingsKey={bestProgram?.key ?? null}
+                />
+                </>
+                )}
               </>
             )}
 
             {/* ── History: all analyses / by merchant ── */}
+            {!merchantView && (
             <div className="bg-white rounded-[8px] border border-gray-200 overflow-hidden">
               <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
                 <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
@@ -1011,6 +1052,7 @@ export function BackendAnalysis() {
                 </div>
               )}
             </div>
+            )}
           </>
         )}
       </div>
