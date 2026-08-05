@@ -79,8 +79,20 @@ interface ProposalCopy {
   howWorks: (program: string) => string;
   whyDelt: string;
   whyItems: { h: string; p: string }[];
+  platformTitle: string;
+  platformIntro: (name: string) => string;
+  platformItems: { h: string; p: string }[];
+  capitalTitle: string;
+  capitalIntro: (name: string) => string;
+  capitalPoints: { h: string; p: string }[];
+  capitalPrequalLabel: string;
+  capitalPrequalLine: (name: string, amount: string) => string;
+  capitalDisclaimer: string;
   nextSteps: string;
+  stepsIntro: (name: string) => string;
   steps: { b: string; rest: string }[];
+  whatWeNeed: string;
+  needItems: string[];
   signature: (name: string) => string;
   date: string;
   footerLeft: (name: string) => string;
@@ -148,11 +160,45 @@ const EN: ProposalCopy = {
     { h: 'Compliance handled', p: 'Signage, receipt formatting, and card-network rules are set up and kept current for you.' },
     { h: 'Real support', p: 'Setup, hardware, and day-to-day questions handled by people, not ticket queues.' },
   ],
+  platformTitle: 'One Platform to Run, Grow, and Fund the Business',
+  platformIntro: name =>
+    `Lower processing costs are the start, not the whole story. Delt is built as one platform, so as ${name} grows, the tools are already in place — no new vendors, no new logins, no integration projects.`,
+  platformItems: [
+    { h: 'Lens AI', p: 'An AI analyst built into your dashboard. Ask questions about your business in plain English — best-selling items, slow days, month-over-month trends — and get answers grounded in your live sales data.' },
+    { h: 'Point of Sale & Hardware', p: 'Modern terminals and full KORONA POS systems arrive pre-configured for your counter. Inventory, staff permissions, and end-of-day reports included — plugged in and taking payments the day they arrive.' },
+    { h: 'Websites & Online Ordering', p: 'A professional website with payments built in, launched for you. Take orders, deposits, and bookings online with the same transparent pricing as your counter.' },
+    { h: 'Dispute & Chargeback Tooling', p: 'When a customer disputes a charge, Delt assembles the evidence and files the response for you — included with every program at no extra cost.' },
+  ],
+  capitalTitle: 'Delt Capital: Funding When You Want It',
+  capitalIntro: name =>
+    `Processing with Delt does more than cut costs — it builds a funding relationship. Delt Capital advances ${name} working capital based on real card sales, not a bank formula: no business plan, no pitch deck, no weeks of waiting.`,
+  capitalPoints: [
+    { h: '$1,000 to $300,000', p: 'Funding sized to your actual processing volume — for equipment, inventory, renovations, a second location, or simply smoothing a slow season.' },
+    { h: 'One fixed fee', p: 'No compounding interest, no application fees, no prepayment penalties, no late fees. The cost is agreed up front and never changes.' },
+    { h: 'Repayment that flexes with sales', p: 'Repay automatically as a small percentage of daily card sales — busy weeks pay down more, slow weeks pay down less. No fixed monthly payment shock.' },
+    { h: 'Fast, credit-safe application', p: 'Checking your offer takes minutes and does not affect your credit score. Pre-qualified merchants are often funded the next business day.' },
+  ],
+  capitalPrequalLabel: 'Delt Capital pre-qualification',
+  capitalPrequalLine: (name, amount) =>
+    `Based on the card volume in this statement, ${name} could pre-qualify for up to <strong>${amount}</strong> once processing with Delt.`,
+  capitalDisclaimer: 'Delt Capital loans are issued by Delt Banking Partners, member FDIC. Actual offers depend on underwriting and processing history.',
   nextSteps: 'Next Steps',
+  stepsIntro: name =>
+    `Switching processors sounds disruptive; with Delt it isn't. Here is exactly what happens after ${name} accepts, and how long each step takes.`,
   steps: [
-    { b: 'Accept this proposal', rest: ' — sign below or reply to your Delt contact.' },
-    { b: 'Quick onboarding', rest: ' — a short application; approval typically lands within 1–2 business days.' },
-    { b: 'Go live', rest: ' — equipment and signage arrive configured; most merchants switch with zero downtime.' },
+    { b: 'Accept this proposal', rest: ' — sign the acceptance below or reply to your Delt contact. The pricing in this document is locked for 30 days.' },
+    { b: 'Short application (about 10 minutes)', rest: ' — basic business details; we prepare the paperwork from the statement already on file.' },
+    { b: 'Approval within 1–2 business days', rest: ' — underwriting runs on our side; your Delt contact keeps you posted at every step.' },
+    { b: 'Setup and go-live', rest: ' — equipment and compliant signage arrive configured, and your team gets a walkthrough. Most merchants switch with zero downtime.' },
+    { b: '30-day savings review', rest: ' — your Delt contact sits down with your first Delt statement and this proposal, side by side, to confirm the savings landed.' },
+  ],
+  whatWeNeed: 'What We Need From You',
+  needItems: [
+    'This proposal, signed below (an email confirmation works too)',
+    'Basic business details — legal name, EIN, and ownership information',
+    'A voided check or bank letter for deposit setup',
+    'A government-issued ID for the signer',
+    'Your processing statement — already on file from this analysis',
   ],
   signature: name => `Signature — ${name}`,
   date: 'Date',
@@ -249,11 +295,45 @@ const ES_COPY: ProposalCopy = {
     { h: 'Cumplimiento incluido', p: 'La señalización, el formato de recibos y las reglas de las redes de tarjetas quedan configurados y actualizados por usted.' },
     { h: 'Soporte de verdad', p: 'Instalación, equipos y dudas del día a día atendidos por personas, no por filas de tickets.' },
   ],
+  platformTitle: 'Una Sola Plataforma para Operar, Crecer y Financiar su Negocio',
+  platformIntro: name =>
+    `Bajar los costos de procesamiento es el comienzo, no toda la historia. Delt está construido como una sola plataforma, así que cuando ${name} crezca, las herramientas ya estarán listas — sin nuevos proveedores, sin nuevas contraseñas, sin proyectos de integración.`,
+  platformItems: [
+    { h: 'Lens AI', p: 'Un analista de inteligencia artificial integrado en su panel. Haga preguntas sobre su negocio en lenguaje natural — productos más vendidos, días lentos, tendencias mes a mes — y reciba respuestas basadas en sus ventas reales.' },
+    { h: 'Punto de Venta y Equipos', p: 'Terminales modernas y sistemas KORONA POS completos llegan preconfigurados para su mostrador. Inventario, permisos de personal y reportes de cierre incluidos — listos para cobrar el mismo día que llegan.' },
+    { h: 'Sitios Web y Pedidos en Línea', p: 'Un sitio web profesional con pagos integrados, lanzado por nosotros. Reciba pedidos, depósitos y reservas en línea con los mismos precios transparentes que en su mostrador.' },
+    { h: 'Herramientas contra Contracargos', p: 'Cuando un cliente disputa un cargo, Delt arma la evidencia y presenta la respuesta por usted — incluido en todos los programas sin costo adicional.' },
+  ],
+  capitalTitle: 'Delt Capital: Financiamiento Cuando Lo Necesite',
+  capitalIntro: name =>
+    `Procesar con Delt hace más que bajar costos — construye una relación de financiamiento. Delt Capital adelanta capital de trabajo a ${name} basándose en sus ventas reales con tarjeta, no en una fórmula bancaria: sin plan de negocios, sin presentaciones, sin semanas de espera.`,
+  capitalPoints: [
+    { h: 'De $1,000 a $300,000', p: 'Financiamiento a la medida de su volumen real de procesamiento — para equipo, inventario, remodelaciones, una segunda ubicación o simplemente cubrir una temporada baja.' },
+    { h: 'Una sola tarifa fija', p: 'Sin interés compuesto, sin cargos por solicitud, sin penalidades por pago anticipado, sin cargos por mora. El costo se acuerda desde el inicio y nunca cambia.' },
+    { h: 'Pagos que se ajustan a sus ventas', p: 'Se paga automáticamente como un pequeño porcentaje de las ventas diarias con tarjeta — las semanas buenas abonan más, las lentas abonan menos. Sin sustos de pago fijo mensual.' },
+    { h: 'Solicitud rápida y sin riesgo crediticio', p: 'Consultar su oferta toma minutos y no afecta su puntaje de crédito. Los comercios precalificados suelen recibir los fondos al siguiente día hábil.' },
+  ],
+  capitalPrequalLabel: 'Precalificación de Delt Capital',
+  capitalPrequalLine: (name, amount) =>
+    `Según el volumen con tarjeta de este estado de cuenta, ${name} podría precalificar hasta por <strong>${amount}</strong> al procesar con Delt.`,
+  capitalDisclaimer: 'Los préstamos de Delt Capital son emitidos por Delt Banking Partners, miembro FDIC. Las ofertas reales dependen de la evaluación crediticia y del historial de procesamiento.',
   nextSteps: 'Próximos Pasos',
+  stepsIntro: name =>
+    `Cambiar de procesador suena complicado; con Delt no lo es. Esto es exactamente lo que sucede después de que ${name} acepta, y cuánto toma cada paso.`,
   steps: [
-    { b: 'Acepte esta propuesta', rest: ' — firme abajo o responda a su contacto de Delt.' },
-    { b: 'Alta rápida', rest: ' — una solicitud corta; la aprobación normalmente llega en 1–2 días hábiles.' },
-    { b: 'Puesta en marcha', rest: ' — el equipo y la señalización llegan configurados; la mayoría de los comercios cambia sin interrupciones.' },
+    { b: 'Acepte esta propuesta', rest: ' — firme la aceptación abajo o responda a su contacto de Delt. Los precios de este documento quedan garantizados por 30 días.' },
+    { b: 'Solicitud corta (unos 10 minutos)', rest: ' — datos básicos del negocio; nosotros preparamos el papeleo con el estado de cuenta que ya tenemos.' },
+    { b: 'Aprobación en 1–2 días hábiles', rest: ' — la evaluación corre por nuestra cuenta; su contacto de Delt le informa en cada paso.' },
+    { b: 'Instalación y puesta en marcha', rest: ' — el equipo y la señalización llegan configurados, y su personal recibe una capacitación. La mayoría de los comercios cambia sin interrupciones.' },
+    { b: 'Revisión de ahorro a los 30 días', rest: ' — su contacto de Delt compara su primer estado de cuenta de Delt con esta propuesta, lado a lado, para confirmar que el ahorro se cumplió.' },
+  ],
+  whatWeNeed: 'Qué Necesitamos de Usted',
+  needItems: [
+    'Esta propuesta firmada abajo (una confirmación por correo también sirve)',
+    'Datos básicos del negocio — razón social, EIN e información de los dueños',
+    'Un cheque anulado o carta bancaria para configurar los depósitos',
+    'Identificación oficial de quien firma',
+    'Su estado de cuenta de procesamiento — ya lo tenemos gracias a este análisis',
   ],
   signature: name => `Firma — ${name}`,
   date: 'Fecha',
@@ -316,6 +396,9 @@ export function buildProposalHtml(input: ProposalInput): string {
   const maxFee = Math.max(...ex.fees.map(f => f.amount), 1);
   const maxCost = Math.max(currentAnnual, focus.annualCost, 1);
   const focusName = L.programNames[focus.key];
+  // Indicative Delt Capital pre-qualification: roughly one month of card
+  // volume, within the program's $1k–$300k band (marked indicative in copy).
+  const capitalUpTo = Math.min(300_000, Math.max(5_000, Math.round(ex.totalVolume / 1000) * 1000));
 
   const fileName = `Delt-Proposal-${ex.merchantName.replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '') || 'Merchant'}-${new Date().toISOString().slice(0, 10)}.html`;
   const mailSubject = L.mailSubject(ex.merchantName);
@@ -351,8 +434,11 @@ export function buildProposalHtml(input: ProposalInput): string {
     <div class="step"><div class="stepnum">${i + 1}</div><p>${esc(s)}</p></div>`).join('');
 
   const whyCells = L.whyItems.map(w => `<div><h4>${esc(w.h)}</h4><p>${esc(w.p)}</p></div>`).join('\n    ');
+  const platformCells = L.platformItems.map(w => `<div><h4>${esc(w.h)}</h4><p>${esc(w.p)}</p></div>`).join('\n    ');
+  const capitalCells = L.capitalPoints.map(w => `<div><h4>${esc(w.h)}</h4><p>${esc(w.p)}</p></div>`).join('\n    ');
   const nextSteps = L.steps.map((s, i) =>
     `<div class="step"><div class="stepnum">${i + 1}</div><p><strong>${esc(s.b)}</strong>${esc(s.rest)}</p></div>`).join('\n  ');
+  const needList = L.needItems.map(n => `<li>${esc(n)}</li>`).join('\n    ');
   const footer = `<div class="footer"><span>${L.footerLeft(name)}</span><span>${L.footerRight(today)}</span></div>`;
 
   return `<!DOCTYPE html>
@@ -445,6 +531,19 @@ export function buildProposalHtml(input: ProposalInput): string {
   .why > div { background: #f9fafb; border-radius: 10px; padding: 12px 14px; }
   .why h4 { font-size: 12px; margin-bottom: 3px; }
   .why p { font-size: 11px; color: #6b7280; }
+
+  /* Delt Capital */
+  .capital { background: #f7faff; border: 1px solid #dbe5ff; border-radius: 12px; padding: 16px 18px; margin: 14px 0; }
+  .capital .why { margin: 12px 0 0; }
+  .capital .why > div { background: #fff; }
+  .prequal { background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 10px; padding: 12px 16px; margin-top: 12px; }
+  .prequal .lbl { display: block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #047857; margin-bottom: 3px; }
+
+  /* Checklist */
+  ul.check { list-style: none; margin: 10px 0; }
+  ul.check li { padding: 6px 0 6px 26px; position: relative; border-bottom: 1px solid #f3f4f6; }
+  ul.check li:last-child { border-bottom: none; }
+  ul.check li:before { content: '✓'; position: absolute; left: 4px; color: #059669; font-weight: 800; }
 
   /* Acceptance */
   .sig { display: flex; gap: 24px; margin-top: 28px; }
@@ -595,7 +694,7 @@ export function buildProposalHtml(input: ProposalInput): string {
   ${footer}
 </div>
 
-<!-- ── Page 4: How it works + next steps + acceptance ── -->
+<!-- ── Page 4: How the program works + why Delt ── -->
 <div class="page">
   <div class="brand">DELT</div>
   <h2 style="margin-top:14px;">${esc(L.howWorks(focusName))}</h2>
@@ -607,10 +706,48 @@ export function buildProposalHtml(input: ProposalInput): string {
   <div class="why">
     ${whyCells}
   </div>
+  ${footer}
+</div>
 
-  <h2 style="margin-top:20px;">${esc(L.nextSteps)}</h2>
+<!-- ── Page 5: The Delt platform + Delt Capital ── -->
+<div class="page">
+  <div class="brand">DELT</div>
+  <h2 style="margin-top:14px;">${esc(L.platformTitle)}</h2>
   <div class="rule"></div>
+  <p>${esc(L.platformIntro(ex.merchantName))}</p>
+  <div class="why">
+    ${platformCells}
+  </div>
+
+  <div class="capital">
+    <h2>${esc(L.capitalTitle)}</h2>
+    <div class="rule"></div>
+    <p>${esc(L.capitalIntro(ex.merchantName))}</p>
+    <div class="why">
+      ${capitalCells}
+    </div>
+    <div class="prequal">
+      <span class="lbl">${esc(L.capitalPrequalLabel)}</span>
+      ${L.capitalPrequalLine(name, fmtWhole(capitalUpTo))}
+    </div>
+    <p class="muted small" style="margin-top:8px;">${esc(L.capitalDisclaimer)}</p>
+  </div>
+  ${footer}
+</div>
+
+<!-- ── Page 6: Next steps + what we need + acceptance ── -->
+<div class="page">
+  <div class="brand">DELT</div>
+  <h2 style="margin-top:14px;">${esc(L.nextSteps)}</h2>
+  <div class="rule"></div>
+  <p>${esc(L.stepsIntro(ex.merchantName))}</p>
   ${nextSteps}
+
+  <h2 style="margin-top:20px;">${esc(L.whatWeNeed)}</h2>
+  <div class="rule"></div>
+  <ul class="check">
+    ${needList}
+  </ul>
 
   <div class="sig">
     <div><div class="sigline"></div><p class="small muted">${esc(L.signature(ex.merchantName))}</p></div>
