@@ -22,16 +22,28 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 // Base URL for the Hono edge function server
 export const serverBaseUrl = `${supabaseUrl}/functions/v1/make-server-940653c6`;
 
-// Helper for making authenticated API calls to the server
-export async function serverFetch(
-  route: string,
-  options: RequestInit = {}
-): Promise<Response> {
-  const url = `${serverBaseUrl}${route.startsWith('/') ? route : `/${route}`}`;
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${supabaseAnonKey}`,
-    ...(options.headers as Record<string, string> || {}),
+// Factory for staff-authenticated calls to the Hono edge server. Every route
+// on the server goes through requireUser(), so the signed-in user's JWT (not
+// the anon key) must be attached per call. Each store binds its own prefix:
+//   const authFetch = makeAuthFetch('/plaid', 'You must be signed in …');
+export function makeAuthFetch(basePath: string, signInMessage: string) {
+  return async function authFetch(route: string, options: RequestInit = {}): Promise<any> {
+    const { data } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
+    if (!token) throw new Error(signInMessage);
+    const url = `${serverBaseUrl}${basePath}${route.startsWith('/') ? route : `/${route}`}`;
+    const res = await fetch(url, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+        ...((options.headers as Record<string, string>) || {}),
+      },
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok || json?.ok === false) {
+      throw new Error(json?.error || `Request failed (${res.status})`);
+    }
+    return json;
   };
-  return fetch(url, { ...options, headers });
 }

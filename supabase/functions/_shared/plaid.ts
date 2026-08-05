@@ -111,29 +111,6 @@ async function plaid(path: string, body: Record<string, unknown>): Promise<any> 
 }
 
 // ══════════════════════════════════════════════════════════════
-// Staff auth (mirrors the CRM's is_staff() RLS gate)
-// ══════════════════════════════════════════════════════════════
-
-export async function verifyStaff(authHeader: string | undefined): Promise<
-  { ok: true; userId: string } | { ok: false; status: number; error: string }
-> {
-  const token = (authHeader ?? "").replace(/^Bearer\s+/i, "").trim();
-  if (!token) return { ok: false, status: 401, error: "Missing Authorization token" };
-  const db = svc();
-  const { data, error } = await db.auth.getUser(token);
-  if (error || !data?.user) {
-    return { ok: false, status: 401, error: "Sign in required" };
-  }
-  const { data: staff } = await db
-    .from("staff_profiles")
-    .select("id")
-    .eq("id", data.user.id)
-    .maybeSingle();
-  if (!staff) return { ok: false, status: 403, error: "Staff access required" };
-  return { ok: true, userId: data.user.id };
-}
-
-// ══════════════════════════════════════════════════════════════
 // Vault writers
 // ══════════════════════════════════════════════════════════════
 

@@ -18,7 +18,7 @@
 import { useSyncExternalStore } from 'react';
 import { toast } from 'sonner@2.0.3';
 import { supabase, isSupabaseConfigured } from '../../lib/supabase';
-import { serverBaseUrl } from '../../../app/lib/supabase';
+import { makeAuthFetch } from '../../../app/lib/supabase';
 import { refreshLeads } from './crmStore';
 
 // ══════════════════════════════════════════════════════════════
@@ -230,26 +230,7 @@ function subscribeRealtime() {
 // Server API (staff JWT)
 // ══════════════════════════════════════════════════════════════
 
-async function authFetch(route: string, options: RequestInit = {}): Promise<any> {
-  if (!supabase) throw new Error('Supabase is not configured');
-  const { data } = await supabase.auth.getSession();
-  const token = data.session?.access_token;
-  if (!token) throw new Error('You must be signed in to manage ad accounts');
-  const url = `${serverBaseUrl}/ads${route.startsWith('/') ? route : `/${route}`}`;
-  const res = await fetch(url, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-      ...((options.headers as Record<string, string>) || {}),
-    },
-  });
-  const json = await res.json().catch(() => ({}));
-  if (!res.ok || json?.ok === false) {
-    throw new Error(json?.error || `Request failed (${res.status})`);
-  }
-  return json;
-}
+const authFetch = makeAuthFetch('/ads', 'You must be signed in to manage ad accounts');
 
 // ══════════════════════════════════════════════════════════════
 // Actions
