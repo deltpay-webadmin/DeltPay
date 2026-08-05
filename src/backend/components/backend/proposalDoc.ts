@@ -9,6 +9,8 @@
  */
 import type { ProgramQuote } from './pricingPrograms';
 import type { ExtractedData } from './pages/BackendAnalysis';
+import { auditInterchangeLines } from './InterchangeAudit';
+import { IC_SCHEDULE } from './interchangeReference';
 
 export interface ProposalInput {
   extracted: ExtractedData;
@@ -60,19 +62,36 @@ export function buildProposalHtml(input: ProposalInput): string {
   const currentAnnual = Math.round(ex.currentMonthlyCost * 12);
   const maxFee = Math.max(...ex.fees.map(f => f.amount), 1);
   const maxCost = Math.max(currentAnnual, focus.annualCost, 1);
+  const dailySavings = monthlySavings * 12 / 365;
+  const threeYear = Math.round(monthlySavings * 36);
+
+  // Closer ammo, all pulled from the real statement:
+  // junk fees the merchant pays for nothing, and documented interchange
+  // padding vs the published Visa/MC schedules.
+  const junkFees = ex.fees
+    .filter(f => /pci|statement|batch|monthly|regulatory|annual|minimum|service fee|gateway|misc|other/i.test(f.label))
+    .reduce((s, f) => s + f.amount, 0);
+  const audit = ex.interchangeLines.length
+    ? auditInterchangeLines(ex.interchangeLines, ex.avgTicket).summary
+    : null;
+  const padding = audit && audit.monthlyPadding > 0.5 ? audit : null;
+  const validUntil = new Date(Date.now() + 14 * 86400_000)
+    .toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 
   const fileName = `Delt-Proposal-${ex.merchantName.replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '') || 'Merchant'}-${new Date().toISOString().slice(0, 10)}.html`;
-  const mailSubject = `Your Delt savings proposal — ${ex.merchantName}`;
+  const mailSubject = `We found ${fmtWhole(focus.annualSavings)}/yr in your processing statement — ${ex.merchantName}`;
   const mailBody = [
     `Hi,`,
     ``,
-    `Thank you for sharing your processing statement. We went through it line by line, and the numbers are worth a look:`,
+    `We audited your statement line by line — not a website estimate, your actual numbers. Here's what it showed:`,
     ``,
-    `• Today: ${fmt(ex.currentMonthlyCost)}/month in processing costs (${ex.effectiveRatePct}% effective rate)`,
+    `• Today you pay ${fmt(ex.currentMonthlyCost)}/month (${ex.effectiveRatePct}% effective rate)`,
     `• With Delt ${focus.name}: ${fmt(focus.monthlyCost)}/month`,
-    `• Estimated savings: ${fmtWhole(focus.annualSavings)} per year`,
+    `• That's ${fmtWhole(focus.annualSavings)}/year staying in your business instead of your processor's`,
     ``,
-    `Your full proposal is attached (it opens in any browser). Happy to walk through it together whenever works for you.`,
+    `Same customers, same cards, same counter — the only thing that changes is who keeps the money.`,
+    ``,
+    `The full proposal is attached (opens in any browser). It's priced off your current statement, so the sooner we talk, the sooner the meter stops. When's a good 15 minutes this week?`,
     ``,
     preparedBy ? `${preparedBy}\nDelt` : `The Delt Team`,
   ].join('\n');
@@ -241,7 +260,6 @@ export function buildProposalHtml(input: ProposalInput): string {
 
 <div class="toolbar">
   <button class="primary" onclick="startPresent()" title="Full-screen, page-by-page walkthrough">▶ Present</button>
-  <button onclick="downloadProposal()" title="Save the proposal as a file you can attach or share">⬇ Download</button>
   <button onclick="window.print()" title="Print or save as PDF">🖨 Save as PDF</button>
   <button onclick="sendProposal()" title="Open a pre-written email in your Outlook account and download the file to attach">✉ Send</button>
 </div>
@@ -256,43 +274,44 @@ export function buildProposalHtml(input: ProposalInput): string {
 <!-- ── Page 1: Cover ── -->
 <div class="page cover">
   <div class="brand">DELT</div>
-  <h1>Payment Savings<br>Proposal</h1>
-  <p class="muted">Prepared exclusively for <strong>${name}</strong></p>
+  <h1>We Found ${fmtWhole(focus.annualSavings)}<br>Hiding in Your Statement.</h1>
+  <p class="muted">Prepared exclusively for <strong>${name}</strong> — from your actual numbers, not an estimate off a website.</p>
   <div class="hero">
-    <p class="muted small" style="text-transform:uppercase;letter-spacing:0.08em;">Estimated annual savings with ${esc(focus.name)}</p>
-    <div class="big">${fmtWhole(focus.annualSavings)}</div>
-    <p class="green" style="font-weight:700;">${focus.savingsPct}% less than ${name} pays today${monthlySavings > 0 ? ` — ${fmtWhole(monthlySavings)} back every month` : ''}</p>
+    <p class="muted small" style="text-transform:uppercase;letter-spacing:0.08em;">Back in ${name}'s pocket with ${esc(focus.name)}</p>
+    <div class="big">${fmtWhole(focus.annualSavings)}<span style="font-size:20px;font-weight:700;">/yr</span></div>
+    <p class="green" style="font-weight:700;">That's ${fmtWhole(monthlySavings)} every month — ${focus.savingsPct}% off what you pay today${dailySavings >= 1 ? `, about ${fmt(dailySavings)} every single day` : ''}.</p>
   </div>
+  <p style="margin-top:18px;">
+    Right now, ${ex.currentProcessor && ex.currentProcessor !== 'Unknown' ? esc(ex.currentProcessor) : 'your processor'} keeps that money.
+    Same customers. Same cards. Same terminal on the counter. The only thing that changes is <strong>who keeps the ${fmtWhole(focus.annualSavings)}</strong> — them, or you.
+  </p>
   <div class="prepared">
     <div>
       <span class="lbl">Prepared for</span>
       <span class="who">${name}</span>
-      <p class="muted small">${ex.statementPeriod ? `Based on the ${esc(ex.statementPeriod)} statement` : 'Based on your processing statement'}${ex.currentProcessor ? ` from ${esc(ex.currentProcessor)}` : ''}</p>
+      <p class="muted small">${ex.statementPeriod ? `Line-by-line audit of the ${esc(ex.statementPeriod)} statement` : 'Line-by-line audit of your processing statement'}${ex.currentProcessor ? ` from ${esc(ex.currentProcessor)}` : ''}</p>
     </div>
     <div>
       <span class="lbl">Prepared by</span>
       <span class="who">${preparedBy ? esc(preparedBy) : 'Delt'}</span>
-      <p class="muted small">${today}</p>
+      <p class="muted small">${today} · Pricing honored through ${validUntil}</p>
     </div>
   </div>
-  <p class="coverfoot">Estimates are based on the statement provided. Actual results depend on card mix and processing volume.</p>
+  <p class="coverfoot">Numbers come from the statement provided. Actual results depend on card mix and processing volume.</p>
 </div>
 
 <!-- ── Page 2: Where you are today ── -->
 <div class="page">
   <div class="brand">DELT</div>
-  <h2 style="margin-top:14px;">Executive Summary</h2>
+  <h2 style="margin-top:14px;">Here's What's Actually Happening</h2>
   <div class="rule"></div>
   <p>
-    We reviewed ${name}'s ${ex.statementPeriod ? esc(ex.statementPeriod) + ' ' : ''}processing statement${ex.currentProcessor ? ` from ${esc(ex.currentProcessor)}` : ''} line by line.
-    On ${fmtWhole(ex.totalVolume)} of monthly card volume across ${ex.totalTransactions.toLocaleString()} transactions,
-    ${name} is paying <strong>${fmt(ex.currentMonthlyCost)} per month</strong> in processing costs — an effective rate of
-    <strong>${ex.effectiveRatePct}%</strong>. Under the recommended <strong>${esc(focus.name)}</strong> program, we estimate that cost drops to
-    <strong>${fmt(focus.monthlyCost)} per month</strong>, keeping <strong class="green">${fmtWhole(focus.annualSavings)}</strong> in the business every year.
+    We didn't skim your statement — we audited every line of the ${ex.statementPeriod ? esc(ex.statementPeriod) + ' ' : ''}statement${ex.currentProcessor ? ` from ${esc(ex.currentProcessor)}` : ''}.
+    On ${fmtWhole(ex.totalVolume)} of card volume across ${ex.totalTransactions.toLocaleString()} transactions, ${name} paid
+    <strong>${fmt(ex.currentMonthlyCost)}</strong> — a <strong>${ex.effectiveRatePct}%</strong> effective rate.
+    That's <strong>${fmtWhole(currentAnnual)} a year</strong> walking out the door for the privilege of taking cards.
   </p>
 
-  <h2 style="margin-top:24px;">Where the Money Goes Today</h2>
-  <div class="rule"></div>
   <div class="stats">
     <div><span class="lbl">Monthly volume</span><span class="val">${fmtWhole(ex.totalVolume)}</span></div>
     <div><span class="lbl">Effective rate</span><span class="val">${ex.effectiveRatePct}%</span></div>
@@ -303,19 +322,32 @@ export function buildProposalHtml(input: ProposalInput): string {
     <thead><tr><th>Fee on your statement</th><th class="num">Amount</th><th></th></tr></thead>
     <tbody>${feeRows}</tbody>
   </table>
+  ${padding ? `
+  <div class="callout" style="border-left-color:#dc2626;background:#fef2f2;">
+    <strong>We caught something.</strong> Compared against the published ${esc(IC_SCHEDULE.version)} Visa/Mastercard interchange schedules,
+    ${audit!.flaggedLines} of your card categories are billed <strong>above the published rate</strong> — roughly
+    <strong>${fmt(padding.monthlyPadding)}/month (${fmtWhole(padding.annualPadding)}/year)</strong> in markup buried inside "interchange."
+    Your processor is betting you'll never check. We checked.
+  </div>` : ''}
+  ${junkFees > 1 ? `
+  <div class="callout">
+    <strong>And the junk fees:</strong> ${fmt(junkFees)}/month (${fmtWhole(junkFees * 12)}/year) of PCI, statement, batch, and service
+    fees — charges for paperwork, not processing. Under the programs on the next page, most of this disappears on day one.
+    ${ex.chargebackCount > 0 ? ` We also noted ${ex.chargebackCount} chargeback${ex.chargebackCount === 1 ? '' : 's'} this period; Delt includes dispute-response tooling at no extra cost.` : ''}
+  </div>` : `
   <div class="callout">
     <strong>What this means for ${name}:</strong> every one of these line items is negotiable — most shrink dramatically or disappear
     under the programs on the next page.${ex.chargebackCount > 0 ? ` We also noted ${ex.chargebackCount} chargeback${ex.chargebackCount === 1 ? '' : 's'} this period; Delt includes dispute-response tooling at no extra cost.` : ''}
-  </div>
+  </div>`}
   <div class="footer"><span>Savings proposal — ${name}</span><span>Prepared by Delt · ${today}</span></div>
 </div>
 
 <!-- ── Page 3: Proposed solutions ── -->
 <div class="page">
   <div class="brand">DELT</div>
-  <h2 style="margin-top:14px;">Your Pricing Options</h2>
+  <h2 style="margin-top:14px;">Pick How You Want to Win</h2>
   <div class="rule"></div>
-  <p>Three ways forward — all three cost less than today. The highlighted program is our recommendation for ${name}.</p>
+  <p>Three programs. All three beat what you pay today — the only wrong choice is staying where you are. The highlighted one is our recommendation for ${name}.</p>
   <div class="programs">${programCards}</div>
 
   <h2 style="margin-top:20px;">Annual Cost: Today vs. Delt</h2>
@@ -333,10 +365,16 @@ export function buildProposalHtml(input: ProposalInput): string {
     </div>
   </div>
   <div class="stats">
-    <div><span class="lbl">Year 1 savings</span><span class="val green">${fmtWhole(focus.annualSavings)}</span></div>
-    <div><span class="lbl">3-year savings</span><span class="val green">${fmtWhole(Math.round(monthlySavings * 36))}</span></div>
-    <div><span class="lbl">Every month</span><span class="val green">${fmtWhole(monthlySavings)}</span></div>
+    <div><span class="lbl">Year 1</span><span class="val green">${fmtWhole(focus.annualSavings)} kept</span></div>
+    <div><span class="lbl">3 years</span><span class="val green">${fmtWhole(threeYear)} kept</span></div>
+    <div><span class="lbl">Every month you wait</span><span class="val" style="color:#dc2626;">${fmtWhole(monthlySavings)} gone</span></div>
   </div>
+  ${monthlySavings > 0 ? `
+  <div class="callout" style="border-left-color:#dc2626;background:#fef2f2;">
+    <strong>The cost of "let me think about it":</strong> this decision has a meter running. Wait 3 months, that's ${fmtWhole(monthlySavings * 3)}.
+    Wait a year, ${fmtWhole(focus.annualSavings)}. Over 3 years, <strong>${fmtWhole(threeYear)}</strong> — money that buys inventory, staff,
+    marketing… or stays with your processor. It never comes back either way.
+  </div>` : ''}
   ${focus.key === 'cash_discount' ? `<p class="muted small">With Cash Discount, the ${esc(focus.terms.split(' ')[0] ?? '')} service fee is paid by card-paying customers — ${name}'s own cost is the flat program fee shown above.</p>` : ''}
   <div class="footer"><span>Savings proposal — ${name}</span><span>Prepared by Delt · ${today}</span></div>
 </div>
@@ -348,20 +386,26 @@ export function buildProposalHtml(input: ProposalInput): string {
   <div class="rule"></div>
   ${steps}
 
-  <h2 style="margin-top:20px;">Why Merchants Choose Delt</h2>
+  <h2 style="margin-top:20px;">Everything You Get (Without Paying Extra For It)</h2>
   <div class="rule"></div>
   <div class="why">
-    <div><h4>No rate creep</h4><p>Your pricing is locked to your program — there is no percentage rate to quietly go up over time.</p></div>
-    <div><h4>Transparent statements</h4><p>One page you can read, not twelve pages of line items. What you see is what you pay.</p></div>
-    <div><h4>Compliance handled</h4><p>Signage, receipt formatting, and card-network rules are set up and kept current for you.</p></div>
-    <div><h4>Real support</h4><p>Setup, hardware, and day-to-day questions handled by people, not ticket queues.</p></div>
+    <div><h4>Locked pricing — in writing</h4><p>Your program price is your program price. No rate creep, no "quarterly adjustments," no surprise line items in month seven.</p></div>
+    <div><h4>${junkFees > 1 ? `${fmtWhole(junkFees * 12)}/yr of junk fees — deleted` : 'Junk fees — deleted'}</h4><p>PCI, statement, batch, and "service" fees${junkFees > 1 ? ` (${fmt(junkFees)}/mo on your current statement)` : ''} don't follow you here.</p></div>
+    <div><h4>Rate audit, every cycle</h4><p>We re-check your pricing against the published Visa/Mastercard schedules every April and October — the same audit that ${padding ? `caught ${fmtWhole(padding.annualPadding)}/yr of padding on your current statement` : 'found the savings in this proposal'}.</p></div>
+    <div><h4>Compliance + real humans</h4><p>Signage, receipt formatting, dispute-response tooling, and setup handled end to end — by people who pick up the phone, not a ticket queue.</p></div>
   </div>
 
-  <h2 style="margin-top:20px;">Next Steps</h2>
+  <div class="callout" style="border-left-color:#059669;background:#ecfdf5;">
+    <strong>The Delt guarantee:</strong> no long-term contract and no cancellation fee — we keep your business by earning it monthly, not by trapping you in one.
+    And if our audit ever shows we can't beat your current statement, we'll tell you to stay put. We only win when you save.
+  </div>
+
+  <h2 style="margin-top:18px;">Next Steps</h2>
   <div class="rule"></div>
-  <div class="step"><div class="stepnum">1</div><p><strong>Accept this proposal</strong> — sign below or reply to your Delt contact.</p></div>
+  <div class="step"><div class="stepnum">1</div><p><strong>Say yes</strong> — sign below or reply to your Delt contact. Two minutes, and the meter stops running.</p></div>
   <div class="step"><div class="stepnum">2</div><p><strong>Quick onboarding</strong> — a short application; approval typically lands within 1–2 business days.</p></div>
-  <div class="step"><div class="stepnum">3</div><p><strong>Go live</strong> — equipment and signage arrive configured; most merchants switch with zero downtime.</p></div>
+  <div class="step"><div class="stepnum">3</div><p><strong>Go live and keep the ${fmtWhole(monthlySavings)}/mo</strong> — equipment and signage arrive configured; most merchants switch with zero downtime.</p></div>
+  <p class="muted small" style="margin-top:8px;">This proposal is priced off your ${ex.statementPeriod ? esc(ex.statementPeriod) + ' ' : ''}statement and the current ${esc(IC_SCHEDULE.version)} interchange cycle — pricing honored through <strong>${validUntil}</strong>.</p>
 
   <div class="sig">
     <div><div class="sigline"></div><p class="small muted">Signature — ${name}</p></div>
@@ -470,7 +514,8 @@ function sendProposal() {
 
 /**
  * Open the proposal in a new window. Its built-in toolbar offers Present
- * (full-screen walkthrough), Download, Save as PDF, and Send.
+ * (full-screen walkthrough), Save as PDF, and Send (which also downloads
+ * the file for attaching).
  */
 export function openProposalPdf(input: ProposalInput): boolean {
   const html = buildProposalHtml(input);
