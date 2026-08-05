@@ -300,10 +300,11 @@ export function BackendAnalysis() {
     if (supabase) {
       try {
         // Folders first (no-op when they already exist), then the document.
-        await supabase.from('plaid_nodes').upsert([
+        const { error: folderErr } = await supabase.from('plaid_nodes').upsert([
           { path: `/prospects/${lead.id}`, name: extracted.merchantName, node_type: 'folder', lead_id: lead.id },
           { path: `/prospects/${lead.id}/statement-analysis`, name: 'Statement Analysis', node_type: 'folder', lead_id: lead.id },
         ], { onConflict: 'path', ignoreDuplicates: true });
+        if (folderErr) throw folderErr;
         const { error: docErr } = await supabase.from('plaid_nodes').insert({
           path: `/prospects/${lead.id}/statement-analysis/${savedAnalysisId ?? crypto.randomUUID()}`,
           name: files[0]?.name ?? openedFilename ?? `Statement analysis — ${extracted.statementPeriod}`,
@@ -319,9 +320,10 @@ export function BackendAnalysis() {
         });
         if (docErr) throw docErr;
         if (savedAnalysisId) {
-          await supabase.from('statement_analyses')
+          const { error: linkErr } = await supabase.from('statement_analyses')
             .update({ lead_id: lead.id, status: 'Lead Created' })
             .eq('id', savedAnalysisId);
+          if (linkErr) throw linkErr;
         }
         void loadHistory();
       } catch (err: any) {

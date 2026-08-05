@@ -170,10 +170,11 @@ export const dealDeskActions = {
       toast.error(`Couldn't send the reply: ${error.message}`);
       return false;
     }
-    await supabase
+    const { error: statusErr } = await supabase
       .from('deal_desk_threads')
       .update({ status: fromOps ? 'Answered' : 'Open', updated_at: new Date().toISOString() })
       .eq('id', threadId);
+    if (statusErr) toast.error(`Reply sent but the thread status didn't update: ${statusErr.message}`);
     await refresh();
     return true;
   },

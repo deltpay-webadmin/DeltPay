@@ -39,11 +39,15 @@ const needPerm = (perm: string) => async (c: any, next: () => Promise<void>) => 
 // Enable logger
 app.use('*', logger(console.log));
 
-// Enable CORS for all routes and methods
+// CORS: only our own origins may call from a browser. Server-to-server
+// callers (pg_cron, deltcapital.com's apply-exchange) send no Origin header
+// and are unaffected — CORS is a browser-enforcement mechanism only.
+const ALLOWED_ORIGIN_RE =
+  /^https?:\/\/([a-z0-9-]+\.)*(deltpay\.com|delt\.com|vercel\.app)$|^http:\/\/localhost(:\d+)?$/i;
 app.use(
   "/*",
   cors({
-    origin: "*",
+    origin: (origin) => (ALLOWED_ORIGIN_RE.test(origin) ? origin : null),
     allowHeaders: ["Content-Type", "Authorization"],
     allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     exposeHeaders: ["Content-Length"],

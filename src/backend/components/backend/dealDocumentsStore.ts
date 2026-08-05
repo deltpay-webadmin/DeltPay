@@ -120,14 +120,18 @@ async function runExtraction(docId: string, docKind: DocKind, filename: string, 
       } catch { /* keep the generic message */ }
       throw new Error(message);
     }
-    await supabase
+    const { error: doneErr } = await supabase
       .from('deal_documents')
       .update({ extracted: data?.extraction ?? null, extract_status: 'done' })
       .eq('id', docId);
+    if (doneErr) throw new Error(`saving extraction failed: ${doneErr.message}`);
   } catch (err: any) {
     // eslint-disable-next-line no-console
     console.error('[DealDocuments] Extraction failed:', err?.message);
-    await supabase.from('deal_documents').update({ extract_status: 'failed' }).eq('id', docId);
+    const { error: failErr } = await supabase
+      .from('deal_documents').update({ extract_status: 'failed' }).eq('id', docId);
+    // eslint-disable-next-line no-console
+    if (failErr) console.error('[DealDocuments] Could not mark extraction failed:', failErr.message);
   } finally {
     await refresh();
   }
@@ -182,7 +186,9 @@ export const dealDocumentActions = {
       .single();
     if (rowErr || !row) {
       toast.error(`Couldn't record the document: ${rowErr?.message ?? 'unknown error'}`);
-      await supabase.storage.from('deal-docs').remove([path]);
+      const { error: cleanupErr } = await supabase.storage.from('deal-docs').remove([path]);
+      // eslint-disable-next-line no-console
+      if (cleanupErr) console.error('[DealDocuments] Orphaned storage object:', path, cleanupErr.message);
       return false;
     }
 
@@ -198,7 +204,9 @@ export const dealDocumentActions = {
       toast.error(`Couldn't delete the document: ${error.message}`);
       return false;
     }
-    await supabase.storage.from('deal-docs').remove([doc.storagePath]);
+    const { error: rmErr } = await supabase.storage.from('deal-docs').remove([doc.storagePath]);
+    // eslint-disable-next-line no-console
+    if (rmErr) console.error('[DealDocuments] Orphaned storage object:', doc.storagePath, rmErr.message);
     await refresh();
     return true;
   },

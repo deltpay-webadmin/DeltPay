@@ -57,17 +57,16 @@ function renderLeadEmail(o: {
 }
 
 export default async function handler(req: any, res: any) {
-  // Optional gate: when LEADS_TEST_TOKEN is set in the Vercel env, require
-  // /api/leads/test-email?token=<value>. When unset, the route stays open so
-  // the owner can always self-test delivery (set the token to lock it down).
+  // Closed by default: the route only answers when LEADS_TEST_TOKEN is set in
+  // the Vercel env AND /api/leads/test-email?token=<value> matches it. Anything
+  // else 404s — otherwise anyone on the internet can trigger sends to the
+  // sales inbox and burn Resend quota.
   const token = process.env.LEADS_TEST_TOKEN || "";
   const provided = (req.query && req.query.token) || "";
-  if (token && provided !== token) {
+  if (!token || provided !== token) {
     return res.status(404).json({ ok: false, error: "Not found" });
   }
-  const tokenGate = token
-    ? "enabled"
-    : "disabled — set LEADS_TEST_TOKEN in Vercel to lock this route down";
+  const tokenGate = "enabled";
   let result: { ok: boolean; error?: string } = { ok: false, error: "email not configured" };
   if (RESEND_API_KEY) {
     try {

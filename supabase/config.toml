@@ -32,3 +32,18 @@ verify_jwt = false
 
 [functions.plaid-config-check]
 verify_jwt = false
+
+# The rest of the functions require a signed-in Supabase user. verify_jwt =
+# true is the platform default, but it's pinned here so the posture of every
+# deployed function is in this file, as the header above promises.
+[functions.docusign]
+verify_jwt = true
+
+[functions.analyze-statement]
+verify_jwt = true
+
+[functions.extract-deal-doc]
+verify_jwt = true
+
+[functions.nebius-chat]
+verify_jwt = true

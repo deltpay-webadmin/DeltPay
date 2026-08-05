@@ -330,10 +330,11 @@ export const achActions = {
 
       const skipped = rows.length - inserted;
       // 3. Update batch with final counts
-      await supabase
+      const { error: countErr } = await supabase
         .from('ach_imports')
         .update({ inserted_count: inserted, skipped_count: skipped })
         .eq('id', batchId);
+      if (countErr) throw countErr;
 
       // 4. Refresh imports list
       const { data: importsData } = await supabase
@@ -355,17 +356,26 @@ export const achActions = {
 
   async deleteImport(batchId: string): Promise<void> {
     if (!supabase) return;
-    try {
-      await supabase.from('ach_daily_activity').delete().eq('import_batch_id', batchId);
-      await supabase.from('ach_imports').delete().eq('id', batchId);
-      set({
-        rows: state.rows.filter(r => r.importBatchId !== batchId),
-        imports: state.imports.filter(i => i.id !== batchId),
-      });
-      toast.success('Import deleted.');
-    } catch (err: any) {
-      toast.error(`Delete failed — ${err?.message || 'unknown error'}`);
+    // supabase-js returns errors rather than throwing — check both deletes
+    // before touching local state, or an RLS denial shows "Import deleted."
+    // while the rows are still there.
+    const { error: rowsErr } = await supabase
+      .from('ach_daily_activity').delete().eq('import_batch_id', batchId);
+    if (rowsErr) {
+      toast.error(`Delete failed — ${rowsErr.message || 'unknown error'}`);
+      return;
     }
+    const { error: batchErr } = await supabase
+      .from('ach_imports').delete().eq('id', batchId);
+    if (batchErr) {
+      toast.error(`Delete failed — ${batchErr.message || 'unknown error'}`);
+      return;
+    }
+    set({
+      rows: state.rows.filter(r => r.importBatchId !== batchId),
+      imports: state.imports.filter(i => i.id !== batchId),
+    });
+    toast.success('Import deleted.');
   },
 };
 
