@@ -189,7 +189,46 @@ site is untouched.
 
 ---
 
-**When you go fully live** (production application → production CRM),
-follow `docs/plaid-production-cutover.md`; the applicant-connection
-pipeline then persists real connections automatically with no further
-changes.
+## Going straight to production (skipping sandbox)
+
+If you'd rather skip the sandbox test setup entirely (Steps 5's sandbox
+vars, 6, 7, 8): do Steps 1–4 as written, then flip the CRM to
+production in the same Supabase Secrets screen used in Step 3 (or via
+CLI):
+
+```sh
+npx supabase secrets set \
+  PLAID_ENV=production \
+  PLAID_SECRET=<production secret from Plaid dashboard → Team Settings → Keys> \
+  PLAID_REDIRECT_URI=https://www.deltpay.com/plaid-oauth-callback
+```
+
+The vault is empty, so the cutover runbook's sandbox-purge step is a
+no-op. Full runbook: `docs/plaid-production-cutover.md`.
+
+**What you accept by skipping sandbox:**
+
+- **You can't self-test the deltcapital.com application** — its identity
+  step does real KYC and flags repeat applicants (the original problem).
+  The first real applicant effectively becomes the test. The flow is
+  built to fail safe (worst case: the connection isn't persisted and the
+  applicant notices nothing), but bugs will be discovered live.
+- **You CAN still self-test the CRM side safely**: connecting a bank via
+  *Connect bank* or *Send connect link* uses only Auth/Transactions/
+  Identity — no KYC, no repeat-applicant flagging. Send yourself a
+  connect link, log into your own real bank, watch the vault populate,
+  then remove the connection. That's a legitimate production test.
+- **Billing starts**: production Plaid charges per connected account /
+  product and per identity verification (typically cents to a few
+  dollars each — confirm on your Plaid pricing page).
+- **Product entitlements**: production accounts sometimes don't have the
+  `identity` product enabled even when auth/transactions work. If
+  *Connect bank* fails with `INVALID_PRODUCT` after the flip, set
+  `npx supabase secrets set PLAID_PRODUCTS=auth,transactions` and retry.
+- **Real bank tokens land in `plaid_credentials` in plaintext**
+  (service-role-only, but unencrypted at rest). Fine to launch with;
+  encrypting this table is the first hardening task worth scheduling.
+
+Verify the flip: the Plaid Data Vault status card shows `production`
+with no warning banners, and the purple "Sandbox test connect" button is
+gone.
