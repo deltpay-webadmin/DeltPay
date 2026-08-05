@@ -134,7 +134,7 @@ export function TemplateEditor() {
       .replace(/\{\{factor_rate\}\}/g, '1.35')
       .replace(/\{\{daily_payment\}\}/g, '$420')
       .replace(/\{\{term\}\}/g, '8 months')
-      .replace(/\{\{phone\}\}/g, '(800) 555-DELT')
+      .replace(/\{\{phone\}\}/g, '(your phone number)')
       .replace(/\{\{percent_paid\}\}/g, '65')
       .replace(/\{\{recommended_plan\}\}/g, 'Growth')
       .replace(/\{\{upgrade_link\}\}/g, '#')
@@ -583,7 +583,7 @@ export function TemplateEditor() {
                       <div className="w-8 h-8 rounded-full bg-brand flex items-center justify-center text-white text-xs font-bold">D</div>
                       <div>
                         <p className="text-xs font-medium text-gray-900">Delt Pay</p>
-                        <p className="text-[10px] text-gray-400">(800) 555-DELT</p>
+                        <p className="text-[10px] text-gray-400">SMS preview</p>
                       </div>
                     </div>
                     <div className="flex justify-start">

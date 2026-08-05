@@ -142,16 +142,7 @@ const GENERAL_SECTIONS: SettingsSection[] = [
 ];
 
 // ─── AUDIT LOG ──────────────────────────────────────────────────
-const AUDIT_LOG = [
-  { time: 'Apr 15, 2:34 PM', user: 'David Hazday', action: 'Updated processing defaults — margin floor set to 0.50%', module: 'Settings' },
-  { time: 'Apr 15, 1:12 PM', user: 'David Hazday', action: 'Verified interchange for Sunrise Cafe — flagged Visa Qual +14bps', module: 'Residuals' },
-  { time: 'Apr 14, 4:45 PM', user: 'Patrick', action: 'Uploaded March 2026 residual report — 8 merchants processed', module: 'Residuals' },
-  { time: 'Apr 14, 11:20 AM', user: 'Michael Chen', action: 'Created new lead: TechForward Solutions', module: 'Pipeline' },
-  { time: 'Apr 13, 3:15 PM', user: 'David Hazday', action: 'Approved MCA UW-2026-0145: Urban Wellness Spa — $150K at 1.36x', module: 'Capital' },
-  { time: 'Apr 12, 9:00 AM', user: 'Sarah Johnson', action: 'Moved Coastal Construction to Bank Verification stage', module: 'Pipeline' },
-  { time: 'Apr 11, 2:30 PM', user: 'David Hazday', action: 'Changed James Miller commission split from 45% → 50%', module: 'Team' },
-  { time: 'Apr 10, 10:45 AM', user: 'David Hazday', action: 'Connected CRS Credit integration — health check passed 92%', module: 'Settings' },
-];
+const AUDIT_LOG: { time: string; user: string; action: string; module: string }[] = [];
 
 type SettingsTab = 'general' | 'integrations' | 'roles' | 'users' | 'audit';
 
@@ -301,40 +292,22 @@ export function BackendSettings() {
         {tab === 'integrations' && (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
             {INTEGRATIONS.map(int => (
-              <div key={int.id} className={`border rounded-[8px] p-5 flex flex-col gap-2.5 ${int.status === 'disconnected' ? 'border-dashed border-gray-300 opacity-60' : 'border-gray-200'}`}>
+              <div key={int.id} className="border border-gray-200 rounded-[8px] p-5 flex flex-col gap-2.5">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-semibold text-gray-900">{int.name}</p>
                     <p className="text-[11px] text-gray-400 font-medium">{int.category}</p>
                   </div>
-                  <span className={`text-[11px] font-semibold ${int.status === 'connected' ? 'text-emerald-600' : 'text-red-500'}`}>
-                    ● {int.status === 'connected' ? 'Connected' : 'Disconnected'}
+                  <span className="text-[11px] font-semibold text-gray-400">
+                    ● Not connected
                   </span>
                 </div>
                 <p className="text-xs text-gray-500 leading-relaxed">{int.description}</p>
-                {int.status === 'connected' && (
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 flex-1">
-                      <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                        <div
-                          className={`h-full rounded-full ${int.health >= 95 ? 'bg-emerald-500' : int.health >= 80 ? 'bg-amber-500' : 'bg-red-500'}`}
-                          style={{ width: `${int.health}%` }}
-                        />
-                      </div>
-                      <span className="text-[11px] font-mono font-semibold text-gray-600">{int.health}%</span>
-                    </div>
-                    <span className="text-[11px] text-gray-400 ml-3">Synced: {int.lastSync}</span>
-                  </div>
-                )}
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] text-gray-400">Last sync: —</span>
+                </div>
                 <div className="flex gap-2 mt-1">
-                  {int.status === 'connected' ? (
-                    <>
-                      <button className="px-3 py-1.5 text-[11px] font-medium text-brand bg-brand/5 border border-brand/15 rounded-[6px] hover:bg-brand/10 transition-colors">Configure</button>
-                      <button className="px-3 py-1.5 text-[11px] font-medium text-red-500 bg-red-50/50 border border-red-200/40 rounded-[6px] hover:bg-red-50 transition-colors">Disconnect</button>
-                    </>
-                  ) : (
-                    <button className="px-4 py-1.5 text-[11px] font-semibold text-white bg-brand rounded-[6px] hover:bg-brand-hover transition-colors">Connect</button>
-                  )}
+                  <button className="px-4 py-1.5 text-[11px] font-semibold text-white bg-brand rounded-[6px] hover:bg-brand-hover transition-colors">Connect</button>
                 </div>
               </div>
             ))}
@@ -518,6 +491,12 @@ export function BackendSettings() {
                   })}
                 </tbody>
               </table>
+              {USERS.length === 0 && (
+                <div className="px-5 py-16 text-center">
+                  <Users className="w-8 h-8 text-gray-300 mx-auto mb-3" />
+                  <p className="text-sm text-gray-500">No users yet — invite a teammate with the button above and their account will appear here.</p>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -535,6 +514,12 @@ export function BackendSettings() {
                   <span className="text-[11px] font-medium text-brand bg-brand/5 px-2.5 py-0.5 rounded shrink-0">{log.module}</span>
                 </div>
               ))}
+              {AUDIT_LOG.length === 0 && (
+                <div className="px-5 py-16 text-center">
+                  <ClipboardList className="w-8 h-8 text-gray-300 mx-auto mb-3" />
+                  <p className="text-sm text-gray-500">No audit activity yet — administrative actions will be logged here as they happen.</p>
+                </div>
+              )}
             </div>
           </div>
         )}
