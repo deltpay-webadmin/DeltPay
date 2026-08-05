@@ -1,6 +1,7 @@
 import { Toaster } from 'sonner@2.0.3';
 import { DeltBackendLayout } from './components/backend/DeltBackendLayout';
 import { SessionProvider, useSession } from './components/backend/SessionContext';
+import { LanguageProvider } from './components/backend/i18n';
 
 /**
  * Self-contained Delt CRM / back-office application.
@@ -51,8 +52,10 @@ function Gate() {
 export default function DeltBackendApp() {
   return (
     <SessionProvider>
-      <Toaster position="top-right" richColors theme="dark" />
-      <Gate />
+      <LanguageProvider>
+        <Toaster position="top-right" richColors theme="dark" />
+        <Gate />
+      </LanguageProvider>
     </SessionProvider>
   );
 }

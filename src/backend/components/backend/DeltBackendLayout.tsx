@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router';
 import { NavigationContext } from './NavigationContext';
 import { useSession } from './SessionContext';
+import { useLang } from './i18n';
 import { useOrgTheme } from './useOrgTheme';
 import { SyncIndicator } from './SyncIndicator';
 import { BackendDashboard } from './pages/BackendDashboard';
@@ -371,6 +372,7 @@ export function DeltBackendLayout() {
   const routerNavigate = useNavigate();
   const session = useSession();
   const { role, can, org, displayName, email, signOut } = session;
+  const { t } = useLang();
   useOrgTheme(org);
 
   // The CRM mounts under /dashboard/* — internal paths stay in the legacy
@@ -497,7 +499,7 @@ export function DeltBackendLayout() {
         <div key={group.label ?? `g${gi}`} className={gi === 0 ? '' : 'mt-5'}>
           {group.label && (
             <p className="px-3 pb-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-(--dp-text-faint)">
-              {group.label}
+              {t(group.label)}
             </p>
           )}
           <div className="space-y-px">
@@ -511,7 +513,7 @@ export function DeltBackendLayout() {
                   className={`${itemBase} ${active ? itemActive : itemIdle}`}
                 >
                   <Icon className="w-4 h-4 shrink-0" strokeWidth={active ? 2.25 : 2} />
-                  {item.label}
+                  {t(item.label)}
                 </button>
               );
             })}
@@ -526,11 +528,11 @@ export function DeltBackendLayout() {
       <div className="border-t border-white/[0.06] px-3 py-2 space-y-px">
         <a href="#/" className={`${itemBase} ${itemIdle}`}>
           <ArrowLeft className="w-4 h-4" />
-          Return to site
+          {t('Return to site')}
         </a>
         <button onClick={() => setHelpCenterOpen(true)} className={`${itemBase} ${itemIdle}`}>
           <HelpCircle className="w-4 h-4" />
-          Help &amp; Support
+          {t('Help & Support')}
         </button>
       </div>
 
@@ -559,14 +561,14 @@ export function DeltBackendLayout() {
                   <p className="text-[13px] font-semibold text-(--dp-text)">{user.name}</p>
                   <p className="text-[11px] text-(--dp-text-muted)">{user.email}</p>
                 </div>
-                <button className="w-full px-4 py-2 text-left text-[13px] text-(--dp-text-secondary) hover:bg-white/[0.05]">Profile Settings</button>
+                <button className="w-full px-4 py-2 text-left text-[13px] text-(--dp-text-secondary) hover:bg-white/[0.05]">{t('Profile Settings')}</button>
                 {role !== 'agent' && (
                   <button
                     onClick={toggleAgentView}
                     className="w-full px-4 py-2 text-left text-[13px] text-(--dp-text-secondary) hover:bg-white/[0.05] flex items-center gap-2"
                   >
                     <ArrowLeftRight className="w-3.5 h-3.5" />
-                    {agentViewPreview ? 'Switch to Admin View' : 'Switch to Agent View'}
+                    {agentViewPreview ? t('Switch to Admin View') : t('Switch to Agent View')}
                   </button>
                 )}
                 <div className="border-t border-white/[0.06] mt-1 pt-1">
@@ -575,7 +577,7 @@ export function DeltBackendLayout() {
                     className="w-full px-4 py-2 text-left text-[13px] text-(--dp-danger) hover:bg-[rgba(242,86,91,.08)] flex items-center gap-2"
                   >
                     <LogOut className="w-3.5 h-3.5" />
-                    Log Out
+                    {t('Log Out')}
                   </button>
                 </div>
               </div>
@@ -644,7 +646,7 @@ export function DeltBackendLayout() {
 
               {/* Page title */}
               <h1 className="hidden lg:block text-[22px] font-bold text-(--dp-text) tracking-[-0.01em]">
-                {titleForPath(currentPage)}
+                {t(titleForPath(currentPage))}
               </h1>
 
               {/* Right tools */}
@@ -656,7 +658,7 @@ export function DeltBackendLayout() {
                     title="You are previewing the agent workspace. Click to return to admin view."
                   >
                     <ArrowLeftRight className="w-3.5 h-3.5" />
-                    Agent view — Exit
+                    {t('Agent view — Exit')}
                   </button>
                 )}
                 <SyncIndicator />
@@ -667,7 +669,7 @@ export function DeltBackendLayout() {
                   className="hidden md:inline-flex items-center gap-2 h-9 pl-3 pr-2 rounded-full border border-(--dp-border) text-[13px] text-(--dp-text-faint) hover:border-(--dp-border-strong) hover:text-(--dp-text-muted) transition-colors w-56"
                 >
                   <Search className="w-4 h-4" />
-                  <span className="flex-1 text-left">Search</span>
+                  <span className="flex-1 text-left">{t('Search')}</span>
                   <kbd className="font-mono text-[10px] text-(--dp-text-faint) bg-white/[0.06] border border-(--dp-border) rounded-[6px] px-1.5 py-0.5">⌘K</kbd>
                 </button>
                 <button
@@ -681,7 +683,7 @@ export function DeltBackendLayout() {
                 {/* Date-range chip */}
                 <span className="hidden xl:inline-flex items-center gap-1.5 h-9 px-3 rounded-full border border-(--dp-border) text-[12px] font-semibold text-(--dp-text-muted)">
                   <CalendarDays className="w-3.5 h-3.5" />
-                  Last 30 days
+                  {t('Last 30 days')}
                 </span>
 
                 {/* Theme toggle */}
@@ -726,10 +728,10 @@ export function DeltBackendLayout() {
                         onClick={() => handleNavigate(crumb.path)}
                         className="text-(--dp-text-muted) hover:text-(--dp-accent-text) transition-colors"
                       >
-                        {i === 0 ? <Home className="w-4 h-4" /> : crumb.label}
+                        {i === 0 ? <Home className="w-4 h-4" /> : t(crumb.label)}
                       </button>
                     ) : (
-                      <span className="text-(--dp-text) font-medium">{crumb.label}</span>
+                      <span className="text-(--dp-text) font-medium">{t(crumb.label)}</span>
                     )}
                   </React.Fragment>
                 ))}
@@ -832,18 +834,18 @@ export function DeltBackendLayout() {
                   type="text"
                   value={cmdQuery}
                   onChange={e => setCmdQuery(e.target.value)}
-                  placeholder="Type a command or search…"
+                  placeholder={t('Type a command or search…')}
                   className="flex-1 text-[13px] text-(--dp-text) placeholder-(--dp-text-faint) outline-none bg-transparent"
                 />
                 <kbd className="font-mono text-[10px] text-(--dp-text-faint) bg-white/[0.06] border border-(--dp-border) rounded-[6px] px-1.5 py-0.5">ESC</kbd>
               </div>
               <div className="max-h-[50vh] overflow-y-auto py-2">
                 {filteredCommands.length === 0 ? (
-                  <div className="px-4 py-8 text-center text-[13px] text-(--dp-text-faint)">No results found</div>
+                  <div className="px-4 py-8 text-center text-[13px] text-(--dp-text-faint)">{t('No results found')}</div>
                 ) : (
                   Array.from(cmdGroups.entries()).map(([group, items]) => (
                     <div key={group}>
-                      <p className="px-4 pt-3 pb-1 text-[10px] text-(--dp-text-faint) uppercase tracking-[0.14em] font-bold">{group}</p>
+                      <p className="px-4 pt-3 pb-1 text-[10px] text-(--dp-text-faint) uppercase tracking-[0.14em] font-bold">{t(group)}</p>
                       {items.map(item => {
                         const CmdIcon = item.icon;
                         return (
@@ -853,7 +855,7 @@ export function DeltBackendLayout() {
                             className="w-full flex items-center gap-3 px-4 py-2.5 text-[13px] text-(--dp-text-secondary) hover:bg-(--dp-accent-soft) hover:text-(--dp-accent-text) transition-colors"
                           >
                             <CmdIcon className="w-4 h-4 text-(--dp-text-faint)" />
-                            <span className="flex-1 text-left">{item.label}</span>
+                            <span className="flex-1 text-left">{t(item.label)}</span>
                             <ChevronRight className="w-3.5 h-3.5 text-(--dp-text-faint)" />
                           </button>
                         );
