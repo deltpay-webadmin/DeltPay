@@ -5,7 +5,7 @@ import {
   Building2, ShoppingCart, Wrench, Scissors, Heart, Briefcase,
   Package, BarChart3, ArrowRight,
 } from 'lucide-react';
-import { CASH_DISCOUNT_MATRIX, FLAT_RATE_MATRIX, VOLUME_BANDS, RISK_TIERS } from '../pricingPrograms';
+import { CASH_DISCOUNT_MATRIX, FLAT_RATE_MATRIX, VOLUME_BANDS, RISK_TIERS, INTERCHANGE_EST } from '../pricingPrograms';
 
 // ─── PRICING MATRICES: shared with the Statement Analyzer ───
 // (see ../pricingPrograms.ts)
@@ -111,7 +111,6 @@ function getSellingStrategy(merchantType: string, receptivity: string, savings: 
   return { approach, opener, keyObjections, closingMove, cdScore };
 }
 
-const INTERCHANGE_EST = 1.80;
 const AVG_TICKET_PRESETS: Record<string, number> = { '0-10k': 25, '10k-25k': 35, '25k-50k': 45, '50k-100k': 55, '100k+': 65 };
 
 // ─── HELPERS ───

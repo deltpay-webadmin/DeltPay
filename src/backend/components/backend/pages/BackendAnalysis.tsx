@@ -2,11 +2,13 @@ import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react'
 import {
   Upload, FileText, Sparkles, Download, UserPlus, Clock,
   CheckCircle2, TrendingDown, Store,
-  AlertCircle, Loader2, X, File, ArrowRight,
+  AlertCircle, Loader2, X, File, ArrowRight, Presentation,
 } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
 import { useAppNavigate } from '../NavigationContext';
 import { BackendCostCalculator } from './BackendCostCalculator';
+import { MerchantSavingsView } from './MerchantSavingsView';
+import { AnalysisEconomicsCard } from './AnalysisEconomicsCard';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContainer,
   LineChart, Line, CartesianGrid, Cell, LabelList,
@@ -14,6 +16,8 @@ import {
 import { supabase } from '../../../lib/supabase';
 import { leadActions } from '../crmStore';
 import { quotePrograms, RISK_TIERS, type ProgramQuote, type RiskTierKey } from '../pricingPrograms';
+import { openProposalPdf } from '../proposalDoc';
+import { useSession } from '../SessionContext';
 
 // ── Types ──
 type AnalysisStatus = 'idle' | 'uploading' | 'analyzing' | 'done';
@@ -41,7 +45,7 @@ interface InterchangeLine {
 }
 
 /** Shape returned by the analyze-statement edge function's extraction. */
-interface ExtractedData {
+export interface ExtractedData {
   merchantName: string;
   currentProcessor: string;
   statementPeriod: string;
@@ -193,6 +197,7 @@ function fromDbAnalysis(row: any): HistoryRow {
 // ══════════════════════════════════════
 export function BackendAnalysis() {
   const { navigate } = useAppNavigate();
+  const { displayName, email: sessionEmail } = useSession();
   const [activeView, setActiveView] = useState<'cost-calculator' | 'statement-analyzer'>('cost-calculator');
   const [status, setStatus] = useState<AnalysisStatus>('idle');
   const [files, setFiles] = useState<File[]>([]);
@@ -207,6 +212,7 @@ export function BackendAnalysis() {
   const [historyView, setHistoryView] = useState<'all' | 'merchant'>('all');
   const [merchantFilter, setMerchantFilter] = useState<string | null>(null);
   const [riskTier, setRiskTier] = useState<RiskTierKey>('medium');
+  const [merchantView, setMerchantView] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const topRef = useRef<HTMLDivElement>(null);
   const historyRef = useRef<HTMLDivElement>(null);
@@ -300,6 +306,7 @@ export function BackendAnalysis() {
       setExtracted(ex);
       setSelectedProgram(best?.key ?? null);
       setStatus('done');
+      setMerchantView(false);
 
       // Persist so the history / merchant view survives reloads.
       const { data: saved, error: insErr } = await supabase.from('statement_analyses').insert({
@@ -393,6 +400,7 @@ export function BackendAnalysis() {
     setExtracted(null);
     setSelectedProgram(null);
     setSavedAnalysisId(null);
+    setMerchantView(false);
   };
 
   /** Open a previously saved analysis from history in the full results view. */
@@ -411,9 +419,18 @@ export function BackendAnalysis() {
     topRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  /** Jump to the per-merchant rollup in the history section. */
+  /**
+   * Top-of-page Merchant View button: with an analysis open it enters the
+   * merchant-facing presentation; otherwise it jumps to the per-merchant
+   * rollup in the history section.
+   */
   const openMerchantView = () => {
     setActiveView('statement-analyzer');
+    if (status === 'done' && extracted) {
+      setMerchantView(true);
+      setTimeout(() => topRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
+      return;
+    }
     setHistoryView('merchant');
     setMerchantFilter(null);
     // Let the tab switch render before scrolling.
@@ -607,25 +624,55 @@ export function BackendAnalysis() {
             {status === 'done' && extracted && proposal && (
               <>
                 {/* Reset bar */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-sm text-emerald-600 font-medium">
-                    <CheckCircle2 className="w-4 h-4" />
-                    {files[0]?.name
-                      ? <>Analysis complete — {files[0].name}</>
-                      : <>Saved analysis — {extracted.merchantName} · {extracted.statementPeriod}</>}
-                    {extracted.confidence !== 'high' && (
-                      <span className={`ml-1 inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
-                        extracted.confidence === 'medium' ? 'bg-amber-50 text-amber-700' : 'bg-red-50 text-red-700'
-                      }`}>
-                        {extracted.confidence} confidence
-                      </span>
-                    )}
+                <div className="flex items-center justify-between gap-3">
+                  {merchantView ? (
+                    <div />
+                  ) : (
+                    <div className="flex items-center gap-2 text-sm text-emerald-600 font-medium">
+                      <CheckCircle2 className="w-4 h-4" />
+                      {files[0]?.name
+                        ? <>Analysis complete — {files[0].name}</>
+                        : <>Saved analysis — {extracted.merchantName} · {extracted.statementPeriod}</>}
+                      {extracted.confidence !== 'high' && (
+                        <span className={`ml-1 inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
+                          extracted.confidence === 'medium' ? 'bg-amber-50 text-amber-700' : 'bg-red-50 text-red-700'
+                        }`}>
+                          {extracted.confidence} confidence
+                        </span>
+                      )}
+                    </div>
+                  )}
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => setMerchantView(v => !v)}
+                      className={`px-4 py-2 text-sm font-medium rounded-[6px] transition-colors flex items-center gap-2 ${
+                        merchantView
+                          ? 'bg-brand text-white hover:bg-brand-hover'
+                          : 'bg-white text-brand border border-brand hover:bg-brand/5'
+                      }`}
+                    >
+                      <Presentation className="w-4 h-4" />
+                      {merchantView ? 'Exit Merchant View' : 'Merchant View'}
+                    </button>
+                    <button onClick={reset} className="text-sm text-gray-500 hover:text-gray-700 underline underline-offset-2">
+                      Analyze another statement
+                    </button>
                   </div>
-                  <button onClick={reset} className="text-sm text-gray-500 hover:text-gray-700 underline underline-offset-2">
-                    Analyze another statement
-                  </button>
                 </div>
 
+                {merchantView ? (
+                  <MerchantSavingsView
+                    extracted={extracted}
+                    programs={programs}
+                    bestProgramKey={bestProgram?.key ?? null}
+                    onExit={() => setMerchantView(false)}
+                    onDownloadProposal={key => {
+                      const ok = openProposalPdf({ extracted, programs, focusKey: key, preparedBy: displayName, preparedByEmail: sessionEmail });
+                      if (!ok) toast.error('Pop-up blocked — allow pop-ups for this site to generate the proposal.');
+                    }}
+                  />
+                ) : (
+                <>
                 {/* AI notes on the extraction */}
                 {extracted.notes && (
                   <div className="bg-gray-50 border border-gray-200 rounded-[8px] px-4 py-3 text-xs text-gray-600 flex items-start gap-2">
@@ -845,7 +892,13 @@ export function BackendAnalysis() {
 
                       {/* CTA buttons */}
                       <div className="mt-auto pt-5 flex items-center gap-3">
-                        <button className="flex-1 px-4 py-2.5 bg-brand text-white text-sm font-medium rounded-[6px] hover:bg-brand-hover transition-colors flex items-center justify-center gap-2">
+                        <button
+                          onClick={() => {
+                            const ok = openProposalPdf({ extracted, programs, focusKey: bestProgram?.key ?? null, preparedBy: displayName, preparedByEmail: sessionEmail });
+                            if (!ok) toast.error('Pop-up blocked — allow pop-ups for this site to generate the proposal.');
+                          }}
+                          className="flex-1 px-4 py-2.5 bg-brand text-white text-sm font-medium rounded-[6px] hover:bg-brand-hover transition-colors flex items-center justify-center gap-2"
+                        >
                           <Download className="w-4 h-4" />
                           Generate Proposal PDF
                         </button>
@@ -990,10 +1043,20 @@ export function BackendAnalysis() {
                     </p>
                   </div>
                 </div>
+
+                {/* ── Delt Economics (internal only) ── */}
+                <AnalysisEconomicsCard
+                  extracted={extracted}
+                  riskTier={riskTier}
+                  bestSavingsKey={bestProgram?.key ?? null}
+                />
+                </>
+                )}
               </>
             )}
 
             {/* ── History: all analyses / by merchant ── */}
+            {!merchantView && (
             <div ref={historyRef} className="bg-white rounded-[8px] border border-gray-200 overflow-hidden scroll-mt-4">
               <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
                 <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
@@ -1266,6 +1329,7 @@ export function BackendAnalysis() {
                 </div>
               )}
             </div>
+            )}
           </>
         )}
       </div>

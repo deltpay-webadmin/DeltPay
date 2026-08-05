@@ -36,6 +36,9 @@ export const RISK_TIERS = [
   { key: 'high', label: 'High Risk', desc: 'CBD, nutra, travel, high-chargeback', color: '#F2565B', bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-300' },
 ];
 
+/** Flat interchange cost estimate (% of card volume) pending the full interchange engine. */
+export const INTERCHANGE_EST = 1.80;
+
 export function volumeBandKey(monthlyVolume: number): string {
   if (monthlyVolume < 10_000) return '0-10k';
   if (monthlyVolume < 25_000) return '10k-25k';
@@ -154,5 +157,58 @@ export function quotePrograms(input: QuoteInput): ProgramQuote[] {
         : `~${icRate.toFixed(2)}% all-in effective`,
       icRate,
     ),
+  ];
+}
+
+/**
+ * Internal-only Delt economics per program. Deliberately a separate type from
+ * ProgramQuote: quotes are merchant-safe and travel into merchant-facing views,
+ * economics never should. Do not fold margin fields into ProgramQuote.
+ */
+export interface ProgramEconomics {
+  key: ProgramQuote['key'];
+  name: string;
+  /** Annual gross revenue to Delt under this program. */
+  grossRevenue: number;
+  /** Annual estimated interchange cost (INTERCHANGE_EST % of volume). */
+  interchangeCost: number;
+  /** Annual estimated Delt margin. */
+  margin: number;
+  /** Margin as bps of annual volume, for at-a-glance comparison. */
+  marginBps: number;
+}
+
+/**
+ * Annualized Delt revenue/margin, mirroring the Cost Calculator's math.
+ * Unlike the calculator, no card-ratio factor is applied: the analyzer's
+ * volume is already card volume extracted from the statement.
+ */
+export function estimateProgramEconomics(input: QuoteInput): ProgramEconomics[] {
+  const { monthlyVolume, monthlyTransactions, currentMonthlyCost, riskTier } = input;
+  const band = volumeBandKey(monthlyVolume);
+  const currentRate = monthlyVolume > 0 ? (currentMonthlyCost / monthlyVolume) * 100 : 0;
+  const annualVolume = monthlyVolume * 12;
+  const interchangeCost = annualVolume * (INTERCHANGE_EST / 100);
+
+  const cd = CASH_DISCOUNT_MATRIX[band][riskTier];
+  const fr = FLAT_RATE_MATRIX[band][riskTier];
+  const icRate = Math.max(2.15, Math.round(currentRate * 0.78 * 100) / 100);
+
+  const build = (key: ProgramQuote['key'], name: string, grossRevenue: number): ProgramEconomics => {
+    const margin = grossRevenue - interchangeCost;
+    return {
+      key,
+      name,
+      grossRevenue: Math.round(grossRevenue),
+      interchangeCost: Math.round(interchangeCost),
+      margin: Math.round(margin),
+      marginBps: annualVolume > 0 ? Math.round((margin / annualVolume) * 10000) : 0,
+    };
+  };
+
+  return [
+    build('cash_discount', 'Cash Discount', annualVolume * (cd.serviceFee / 100) + cd.monthlyFee * 12),
+    build('flat_rate', 'Flat Rate', annualVolume * (fr.rate / 100) + monthlyTransactions * fr.perTxn * 12),
+    build('interchange_plus', 'Interchange-Plus', annualVolume * (icRate / 100)),
   ];
 }
