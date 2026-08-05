@@ -231,68 +231,7 @@ interface Merchant {
   controls: Record<string, ControlState>;
 }
 
-const MERCHANTS: Merchant[] = [
-  { id: 'M-1001', name: 'Havana Bites Cafe', state: 'FL', type: 'both', activeDeals: 1, monthlyVolume: '$42k', riskScore: 22,
-    controls: {
-      kyc: { status: 'green', rule: 'Plaid IDV + EIN verification required at boarding', currentStatus: 'Verified Apr 14, 2026. Principal: Maria Gonzalez. EIN confirmed.', missingProof: '', nextAction: 'Annual re-verification due Apr 2027', lastCompleted: 'Apr 14, 2026' },
-      ofac: { status: 'green', rule: 'SDN list screening at boarding + quarterly', currentStatus: 'Clear. Last checked Apr 14, 2026.', missingProof: '', nextAction: 'Quarterly re-screen Jul 2026', lastCompleted: 'Apr 14, 2026' },
-      disclosures: { status: 'green', rule: 'FL \u2014 no enacted MCA disclosure law', currentStatus: 'No state-specific disclosure required. FDUTPA general protections apply.', missingProof: '', nextAction: 'Monitor FL legislation', lastCompleted: 'Apr 14, 2026' },
-      contract: { status: 'green', rule: '6-factor recharacterization assessment', currentStatus: 'Defensible. All 6 factors assessed: safe.', missingProof: '', nextAction: 'Re-assess at renewal', lastCompleted: 'Apr 14, 2026' },
-      pci: { status: 'yellow', rule: 'SAQ + quarterly ASV scans required', currentStatus: 'SAQ-A on file. ASV scan expires tomorrow (Apr 18, 2026).', missingProof: 'Current ASV scan result', nextAction: 'Renew ASV scan immediately', lastCompleted: 'Jan 18, 2026' },
-      match: { status: 'green', rule: 'MATCH check at boarding + quarterly', currentStatus: 'Clear. No match found.', missingProof: '', nextAction: 'Q3 re-screen Jul 2026', lastCompleted: 'Apr 14, 2026' },
-      registrations: { status: 'green', rule: 'FL \u2014 no state registration required', currentStatus: 'Not applicable.', missingProof: '', nextAction: 'Monitor FL legislation', lastCompleted: 'N/A' },
-      vendor: { status: 'green', rule: 'Global + Plaid + DataMerch active', currentStatus: 'All vendor connections active and current.', missingProof: '', nextAction: 'Plaid security questionnaire renewal May 5', lastCompleted: 'Apr 14, 2026' },
-    },
-  },
-  { id: 'M-1002', name: 'Brooklyn Vinyl Records', state: 'NY', type: 'mca', activeDeals: 1, monthlyVolume: '$28k', riskScore: 58,
-    controls: {
-      kyc: { status: 'green', rule: 'Plaid IDV + EIN verification', currentStatus: 'Verified Apr 16, 2026. Principal: David Park.', missingProof: '', nextAction: 'Annual re-verification', lastCompleted: 'Apr 16, 2026' },
-      ofac: { status: 'green', rule: 'SDN screening', currentStatus: 'Clear.', missingProof: '', nextAction: 'Quarterly re-screen', lastCompleted: 'Apr 16, 2026' },
-      disclosures: { status: 'red', rule: 'NY CFDL: 9 items + APR mandatory. Broker compensation disclosure required.', currentStatus: 'Disclosure generated but NOT DELIVERED. Broker compensation NOT generated.', missingProof: 'Signed disclosure acknowledgment, broker compensation disclosure', nextAction: 'Generate broker disclosure, deliver both, capture acknowledgment', lastCompleted: 'Not yet completed' },
-      contract: { status: 'green', rule: '6-factor recharacterization', currentStatus: 'Defensible.', missingProof: '', nextAction: 'Re-assess at renewal', lastCompleted: 'Apr 16, 2026' },
-      pci: { status: 'gray', rule: 'MCA-only \u2014 PCI not applicable', currentStatus: 'N/A for MCA-only relationship.', missingProof: '', nextAction: 'N/A', lastCompleted: 'N/A' },
-      match: { status: 'green', rule: 'MATCH check at boarding', currentStatus: 'Clear.', missingProof: '', nextAction: 'Quarterly re-screen', lastCompleted: 'Apr 16, 2026' },
-      registrations: { status: 'green', rule: 'NY \u2014 no registration required (disclosure only)', currentStatus: 'N/A.', missingProof: '', nextAction: 'N/A', lastCompleted: 'N/A' },
-      vendor: { status: 'yellow', rule: 'DataMerch stacking alert pending review', currentStatus: '1 existing position found: Rapid Capital $28k. Flagged for review.', missingProof: 'Stacking review decision record', nextAction: 'Review stacking flag and document decision', lastCompleted: 'Apr 16, 2026' },
-    },
-  },
-  { id: 'M-1003', name: 'Richmond Auto Detailing', state: 'VA', type: 'mca', activeDeals: 0, monthlyVolume: '$0', riskScore: 45,
-    controls: {
-      kyc: { status: 'yellow', rule: 'Plaid IDV required', currentStatus: 'Awaiting identity verification.', missingProof: 'IDV completion record', nextAction: 'Complete Plaid identity verification', lastCompleted: 'Not yet completed' },
-      ofac: { status: 'green', rule: 'SDN screening', currentStatus: 'Clear.', missingProof: '', nextAction: 'Quarterly', lastCompleted: 'Apr 17, 2026' },
-      disclosures: { status: 'yellow', rule: 'VA HB 1027: 9 items. 3-business-day review. Mandatory VA jurisdiction. COJ prohibited.', currentStatus: 'Disclosure generated. In 3-business-day review period. Cannot fund before Apr 22.', missingProof: 'Signed acknowledgment after review period', nextAction: 'Wait for review period to expire Apr 22, then collect signature', lastCompleted: 'Not yet completed' },
-      contract: { status: 'yellow', rule: 'VA-specific addendum required. SCC # must display.', currentStatus: 'VA addendum generated, pending review.', missingProof: 'Executed VA addendum', nextAction: 'Review and attach VA addendum to contract', lastCompleted: 'Not yet completed' },
-      pci: { status: 'gray', rule: 'MCA-only', currentStatus: 'N/A.', missingProof: '', nextAction: 'N/A', lastCompleted: 'N/A' },
-      match: { status: 'green', rule: 'MATCH check', currentStatus: 'Clear.', missingProof: '', nextAction: 'Quarterly', lastCompleted: 'Apr 17, 2026' },
-      registrations: { status: 'green', rule: 'VA SCC registration required', currentStatus: 'Virginia SCC registration active. Renewal Jun 2027.', missingProof: '', nextAction: 'Renewal Jun 2027', lastCompleted: 'Jun 15, 2025' },
-      vendor: { status: 'green', rule: 'All vendors active', currentStatus: 'Current.', missingProof: '', nextAction: 'Routine', lastCompleted: 'Apr 17, 2026' },
-    },
-  },
-  { id: 'M-1004', name: 'Coral Reef Auto Spa', state: 'FL', type: 'processing', activeDeals: 0, monthlyVolume: '$87k', riskScore: 82,
-    controls: {
-      kyc: { status: 'green', rule: 'Verified at boarding', currentStatus: 'Verified.', missingProof: '', nextAction: 'Annual', lastCompleted: 'Nov 3, 2025' },
-      ofac: { status: 'green', rule: 'SDN screening', currentStatus: 'Clear.', missingProof: '', nextAction: 'Quarterly', lastCompleted: 'Apr 1, 2026' },
-      disclosures: { status: 'green', rule: 'Processing-only \u2014 standard merchant agreement', currentStatus: 'On file.', missingProof: '', nextAction: 'N/A', lastCompleted: 'Nov 3, 2025' },
-      contract: { status: 'green', rule: 'Processing agreement', currentStatus: 'Active.', missingProof: '', nextAction: 'Renewal Nov 2026', lastCompleted: 'Nov 3, 2025' },
-      pci: { status: 'yellow', rule: 'SAQ + quarterly ASV', currentStatus: 'SAQ-B on file. ASV scan expired 14 days ago. Non-compliance fee activating.', missingProof: 'Current ASV scan', nextAction: 'Schedule ASV scan immediately', lastCompleted: 'Jan 3, 2026' },
-      match: { status: 'green', rule: 'MATCH screening', currentStatus: 'Clear.', missingProof: '', nextAction: 'Quarterly', lastCompleted: 'Apr 1, 2026' },
-      registrations: { status: 'green', rule: 'FL \u2014 no registration', currentStatus: 'N/A.', missingProof: '', nextAction: 'N/A', lastCompleted: 'N/A' },
-      vendor: { status: 'red', rule: 'Visa VAMP monitoring', currentStatus: 'Fraud-to-sales at 0.82%. VAMP trigger is 0.9%. Breach projected in ~11 days.', missingProof: 'Remediation plan', nextAction: 'Issue VAMP intervention notice immediately', lastCompleted: 'Not yet initiated' },
-    },
-  },
-  { id: 'M-1005', name: 'Midtown Taqueria', state: 'NY', type: 'both', activeDeals: 1, monthlyVolume: '$54k', riskScore: 67,
-    controls: {
-      kyc: { status: 'green', rule: 'Verified', currentStatus: 'Verified.', missingProof: '', nextAction: 'Annual', lastCompleted: 'Aug 12, 2025' },
-      ofac: { status: 'green', rule: 'Clear', currentStatus: 'Clear.', missingProof: '', nextAction: 'Quarterly', lastCompleted: 'Apr 1, 2026' },
-      disclosures: { status: 'green', rule: 'NY CFDL delivered and acknowledged', currentStatus: 'On file.', missingProof: '', nextAction: 'Re-disclose at renewal', lastCompleted: 'Aug 12, 2025' },
-      contract: { status: 'green', rule: 'Defensible', currentStatus: '6/6 safe.', missingProof: '', nextAction: 'Re-assess at renewal', lastCompleted: 'Aug 12, 2025' },
-      pci: { status: 'green', rule: 'SAQ-A + ASV current', currentStatus: 'Last scan Mar 15, 2026 \u2014 PASS.', missingProof: '', nextAction: 'Next scan Jun 15, 2026', lastCompleted: 'Mar 15, 2026' },
-      match: { status: 'green', rule: 'Clear', currentStatus: 'Clear.', missingProof: '', nextAction: 'Quarterly', lastCompleted: 'Apr 1, 2026' },
-      registrations: { status: 'green', rule: 'NY \u2014 no registration', currentStatus: 'N/A.', missingProof: '', nextAction: 'N/A', lastCompleted: 'N/A' },
-      vendor: { status: 'yellow', rule: 'Mastercard ECM monitoring', currentStatus: 'CB ratio at 1.17% (threshold 1.5%). 87 CBs (threshold 100). Climbing.', missingProof: 'ECM remediation plan', nextAction: 'Draft ECM remediation plan before breach', lastCompleted: 'Not yet initiated' },
-    },
-  },
-];
+const MERCHANTS: Merchant[] = [];
 
 interface Deal {
   id: string; merchantId: string; merchant: string; state: string;
@@ -301,77 +240,35 @@ interface Deal {
   controls: Record<string, ControlState>;
 }
 
-const DEALS: Deal[] = [
-  { id: 'DL-2026-0412', merchantId: 'M-1001', merchant: 'Havana Bites Cafe', state: 'FL', amount: '$45,000', factorRate: '1.38', stage: 'Funded', agent: 'Marcus Johnson', date: 'Apr 14', blocked: false, blockReason: '',
-    controls: MERCHANTS[0].controls },
-  { id: 'DL-2026-0415', merchantId: 'M-1002', merchant: 'Brooklyn Vinyl Records', state: 'NY', amount: '$62,000', factorRate: '1.42', stage: 'Disclosure', agent: 'Sarah Kim', date: 'Apr 16', blocked: true, blockReason: 'Broker compensation disclosure not generated',
-    controls: MERCHANTS[1].controls },
-  { id: 'DL-2026-0416', merchantId: 'M-1003', merchant: 'Richmond Auto Detailing', state: 'VA', amount: '$38,000', factorRate: '1.35', stage: '3-Day Review', agent: 'Marcus Johnson', date: 'Apr 17', blocked: true, blockReason: 'VA 3-business-day review period (until Apr 22)',
-    controls: MERCHANTS[2].controls },
-];
+const DEALS: Deal[] = [];
 
 interface Deadline {
   id: string; date: string; dateShort: string; title: string; category: string;
   severity: 'critical' | 'warning' | 'info'; daysLeft: number;
 }
 
-const DEADLINES: Deadline[] = [
-  { id: 'd1', date: 'Apr 17', dateShort: '17', title: 'VAMP intervention \u2014 Coral Reef Auto Spa', category: 'Card Networks', severity: 'critical', daysLeft: 0 },
-  { id: 'd2', date: 'Apr 18', dateShort: '18', title: 'ASV scan renewal \u2014 3 merchants', category: 'PCI DSS', severity: 'critical', daysLeft: 1 },
-  { id: 'd3', date: 'Apr 19', dateShort: '19', title: 'Adverse action notice \u2014 Doral Fresh Market', category: 'FCRA', severity: 'warning', daysLeft: 2 },
-  { id: 'd4', date: 'Apr 21', dateShort: '21', title: 'CRS credit pull reconciliation \u2014 March', category: 'Vendor', severity: 'info', daysLeft: 4 },
-  { id: 'd5', date: 'Apr 22', dateShort: '22', title: 'VA review period expires \u2014 Richmond Auto', category: 'Disclosure', severity: 'warning', daysLeft: 5 },
-  { id: 'd6', date: 'Apr 22', dateShort: '22', title: 'ECM remediation plan \u2014 Midtown Taqueria', category: 'Card Networks', severity: 'warning', daysLeft: 5 },
-  { id: 'd7', date: 'Apr 23', dateShort: '23', title: 'MATCH re-screen Q2 batch (127 merchants)', category: 'MATCH', severity: 'info', daysLeft: 6 },
-  { id: 'd8', date: 'Apr 23', dateShort: '23', title: 'Report 2 defaults to DataMerch', category: 'Vendor', severity: 'info', daysLeft: 6 },
-  { id: 'd9', date: 'May 5', dateShort: '5', title: 'Plaid security questionnaire renewal', category: 'Vendor', severity: 'warning', daysLeft: 18 },
-  { id: 'd10', date: 'Jun 3', dateShort: '3', title: 'Global Payments ISO renewal', category: 'Registration', severity: 'info', daysLeft: 47 },
-];
+const DEADLINES: Deadline[] = [];
 
 interface RiskCategory {
   label: string; icon: React.ElementType; current: string; threshold: string;
   pct: number; trend: 'up' | 'down' | 'flat'; status: 'green' | 'yellow' | 'red';
 }
 
-const RISK_CATEGORIES: RiskCategory[] = [
-  { label: 'Nacha return rate', icon: Activity, current: '1.2%', threshold: '3.0%', pct: 40, trend: 'flat', status: 'green' },
-  { label: 'Visa VAMP (portfolio)', icon: CreditCard, current: '0.41%', threshold: '0.9%', pct: 46, trend: 'up', status: 'yellow' },
-  { label: 'MC ECM (portfolio)', icon: CreditCard, current: '0.89%', threshold: '1.5%', pct: 59, trend: 'up', status: 'yellow' },
-  { label: 'PCI compliance rate', icon: Lock, current: '94%', threshold: '100%', pct: 94, trend: 'down', status: 'yellow' },
-  { label: 'State registrations', icon: FileCheck, current: '6/7', threshold: '7/7', pct: 86, trend: 'flat', status: 'yellow' },
-  { label: 'DataMerch sync', icon: Server, current: '53hr', threshold: '48hr', pct: 110, trend: 'up', status: 'red' },
-];
+const RISK_CATEGORIES: RiskCategory[] = [];
 
 interface ChangeEvent {
   id: string; date: string; type: 'regulatory' | 'network' | 'vendor';
   title: string; impact: string; taskCreated: boolean;
 }
 
-const CHANGES: ChangeEvent[] = [
-  { id: 'ch1', date: 'Apr 15', type: 'regulatory', title: 'NJ S1760 passed committee', impact: 'If enacted: APR via Reg Z for NJ merchants. Monitor for floor vote.', taskCreated: false },
-  { id: 'ch2', date: 'Apr 12', type: 'network', title: 'Visa VAMP threshold reminder', impact: 'Jan 2026 lower thresholds now fully enforced. 2 merchants at 80%+.', taskCreated: true },
-  { id: 'ch3', date: 'Apr 10', type: 'vendor', title: 'DataMerch API maintenance window', impact: 'Sync gap Apr 14-15. Data may be stale. Verify before boarding decisions.', taskCreated: true },
-  { id: 'ch4', date: 'Apr 8', type: 'regulatory', title: 'TX OCCC registration portal open', impact: 'Registration form available. Dec 31, 2026 deadline. Begin preparation.', taskCreated: true },
-  { id: 'ch5', date: 'Apr 3', type: 'network', title: 'MC ECM fine schedule updated', impact: 'Escalation fines increased 15% effective Jun 2026. Review exposure.', taskCreated: false },
-];
+const CHANGES: ChangeEvent[] = [];
 
 interface EvidenceRecord {
   id: string; date: string; merchant: string; dealId?: string;
   control: string; type: string; detail: string; exportable: boolean;
 }
 
-const EVIDENCE: EvidenceRecord[] = [
-  { id: 'ev1', date: 'Apr 17, 2026 09:14', merchant: 'Richmond Auto Detailing', dealId: 'DL-2026-0416', control: 'disclosures', type: 'VA Disclosure Package', detail: 'VA HB 1027 disclosure generated. 9 items included. 3-day review period initiated.', exportable: true },
-  { id: 'ev2', date: 'Apr 16, 2026 10:05', merchant: 'Brooklyn Vinyl Records', dealId: 'DL-2026-0415', control: 'ofac', type: 'OFAC Clearance', detail: 'SDN list check \u2014 no hits. Principal: David Park.', exportable: true },
-  { id: 'ev3', date: 'Apr 16, 2026 10:04', merchant: 'Brooklyn Vinyl Records', dealId: 'DL-2026-0415', control: 'match', type: 'MATCH Clearance', detail: 'No match found in MATCH/TMF database.', exportable: true },
-  { id: 'ev4', date: 'Apr 16, 2026 10:06', merchant: 'Brooklyn Vinyl Records', dealId: 'DL-2026-0415', control: 'kyc', type: 'KYC Verification', detail: 'Plaid IDV complete. EIN confirmed. Business verified.', exportable: true },
-  { id: 'ev5', date: 'Apr 14, 2026 09:12', merchant: 'Havana Bites Cafe', dealId: 'DL-2026-0412', control: 'match', type: 'MATCH Clearance', detail: 'No match found.', exportable: true },
-  { id: 'ev6', date: 'Apr 14, 2026 09:13', merchant: 'Havana Bites Cafe', dealId: 'DL-2026-0412', control: 'contract', type: 'Contract Health Scorecard', detail: '6/6 factors assessed: Defensible. All safe.', exportable: true },
-  { id: 'ev7', date: 'Apr 14, 2026 09:14', merchant: 'Havana Bites Cafe', dealId: 'DL-2026-0412', control: 'disclosures', type: 'State Determination', detail: 'FL \u2014 no enacted MCA disclosure law. No disclosure required.', exportable: true },
-  { id: 'ev8', date: 'Apr 1, 2026', merchant: 'Coral Reef Auto Spa', control: 'ofac', type: 'OFAC Quarterly Re-screen', detail: 'Q2 screening \u2014 clear.', exportable: true },
-  { id: 'ev9', date: 'Mar 28, 2026', merchant: 'Havana Bites Cafe', control: 'pci', type: 'ASV Scan Result', detail: 'Quarterly scan \u2014 PASS. No vulnerabilities.', exportable: true },
-  { id: 'ev10', date: 'Mar 15, 2026', merchant: 'Midtown Taqueria', control: 'pci', type: 'ASV Scan Result', detail: 'Quarterly scan \u2014 PASS.', exportable: true },
-];
+const EVIDENCE: EvidenceRecord[] = [];
 
 /* ═══════════════════════════════════════════════════
    HELPERS
@@ -390,6 +287,15 @@ const tagCfg: Record<string, { bg: string; text: string }> = {
 function Tag({ type }: { type: string }) {
   const c = tagCfg[type] || tagCfg.track;
   return <span className={`px-1.5 py-0.5 rounded text-[9px] font-mono font-semibold ${c.bg} ${c.text} whitespace-nowrap`}>{type}</span>;
+}
+
+function EmptyState({ icon: Icon, text }: { icon: React.ElementType; text: string }) {
+  return (
+    <div className="bg-white rounded-[8px] border border-gray-200 px-4 py-8 flex flex-col items-center justify-center text-center">
+      <Icon className="w-6 h-6 text-gray-300 mb-2" />
+      <p className="text-xs text-gray-500 max-w-xs leading-relaxed">{text}</p>
+    </div>
+  );
 }
 
 type Tab = 'today' | 'pipeline' | 'merchants' | 'monitoring' | 'audit' | 'rules';
@@ -525,6 +431,7 @@ export function BackendCompliance() {
                     <h3 className="text-sm font-bold text-gray-900">Needs action now</h3>
                   </div>
                   <div className="space-y-1.5">
+                    {DEADLINES.filter(d => d.daysLeft <= 7).length === 0 && <EmptyState icon={ClipboardCheck} text="Nothing needs action — compliance tasks appear here as merchants and deals are added." />}
                     {DEADLINES.filter(d => d.daysLeft <= 7).slice(0, 10).map((item, i) => {
                       const sevColors = { critical: 'bg-red-500', warning: 'bg-amber-500', info: 'bg-blue-400' };
                       return (
@@ -553,6 +460,7 @@ export function BackendCompliance() {
                     <h3 className="text-sm font-bold text-gray-900">Deadlines this month</h3>
                   </div>
                   <div className="space-y-1">
+                    {DEADLINES.length === 0 && <EmptyState icon={Calendar} text="Deadlines appear here as registrations, scans, and filings are tracked." />}
                     {DEADLINES.map(d => {
                       const sevColors = { critical: 'border-l-red-500 bg-red-50/30', warning: 'border-l-amber-500 bg-amber-50/20', info: 'border-l-blue-400 bg-white' };
                       return (
@@ -576,6 +484,7 @@ export function BackendCompliance() {
                     <h3 className="text-sm font-bold text-gray-900">Portfolio risk drift</h3>
                   </div>
                   <div className="space-y-2">
+                    {RISK_CATEGORIES.length === 0 && <EmptyState icon={Activity} text="Risk metrics appear once processing activity accumulates." />}
                     {RISK_CATEGORIES.map((r, i) => {
                       const Icon = r.icon;
                       const barColor = r.status === 'green' ? 'bg-emerald-500' : r.status === 'yellow' ? 'bg-amber-500' : 'bg-red-500';
@@ -609,6 +518,7 @@ export function BackendCompliance() {
                     <h3 className="text-sm font-bold text-gray-900">What changed</h3>
                   </div>
                   <div className="space-y-1.5">
+                    {CHANGES.length === 0 && <EmptyState icon={Bell} text="Regulatory, network, and vendor changes will be logged here." />}
                     {CHANGES.map(ch => {
                       const typeColors = { regulatory: 'bg-purple-50 text-purple-700', network: 'bg-blue-50 text-blue-700', vendor: 'bg-gray-100 text-gray-600' };
                       return (
@@ -644,6 +554,7 @@ export function BackendCompliance() {
 
               {/* Deal cards */}
               <div className="space-y-3">
+                {DEALS.length === 0 && <EmptyState icon={GitBranch} text="No active deals — compliance status appears here as deals enter the pipeline." />}
                 {DEALS.map(deal => (
                   <div key={deal.id} className={`rounded-[8px] border ${deal.blocked ? 'border-red-200 bg-red-50/20' : 'border-gray-200 bg-white'} overflow-hidden`}>
                     <div className="px-4 py-3">
@@ -702,6 +613,7 @@ export function BackendCompliance() {
                 <p className="text-xs text-gray-500">{MERCHANTS.length} merchants &middot; {MERCHANTS.filter(m => Object.values(m.controls).some(c => c.status === 'red')).length} with blocks &middot; {MERCHANTS.filter(m => Object.values(m.controls).some(c => c.status === 'yellow')).length} with warnings</p>
               </div>
               <div className="space-y-2">
+                {MERCHANTS.length === 0 && <EmptyState icon={Store} text="No merchants yet — boarding and compliance records appear here as merchants are added." />}
                 {MERCHANTS.map(m => {
                   const reds = Object.values(m.controls).filter(c => c.status === 'red').length;
                   const yellows = Object.values(m.controls).filter(c => c.status === 'yellow').length;
@@ -851,6 +763,7 @@ export function BackendCompliance() {
                     ))}
                   </div>
                   <div className="space-y-1.5">
+                    {filteredDeadlines.length === 0 && <EmptyState icon={Calendar} text="No deadlines tracked yet — expirations and filings appear here." />}
                     {filteredDeadlines.map(d => {
                       const sevColors = { critical: 'border-l-red-500 bg-red-50/30', warning: 'border-l-amber-500 bg-amber-50/20', info: 'border-l-blue-400 bg-white' };
                       return (
@@ -875,6 +788,7 @@ export function BackendCompliance() {
 
               {monitoringView === 'thresholds' && (
                 <div className="space-y-3">
+                  {RISK_CATEGORIES.length === 0 && <EmptyState icon={Activity} text="Threshold monitoring begins once processing activity accumulates." />}
                   {RISK_CATEGORIES.map((r, i) => {
                     const Icon = r.icon;
                     const barColor = r.status === 'green' ? 'bg-emerald-500' : r.status === 'yellow' ? 'bg-amber-500' : 'bg-red-500';
@@ -914,6 +828,7 @@ export function BackendCompliance() {
 
               {monitoringView === 'changes' && (
                 <div className="space-y-2">
+                  {CHANGES.length === 0 && <EmptyState icon={Bell} text="Regulatory and network changes will be logged here." />}
                   {CHANGES.map(ch => {
                     const typeColors = { regulatory: 'bg-purple-50 text-purple-700 border-purple-200', network: 'bg-blue-50 text-blue-700 border-blue-200', vendor: 'bg-gray-50 text-gray-600 border-gray-200' };
                     const typeIcons = { regulatory: Landmark, network: CreditCard, vendor: Building2 };
@@ -973,6 +888,12 @@ export function BackendCompliance() {
                   <span className="flex-1">Detail</span>
                   <span className="w-8"></span>
                 </div>
+                {filteredEvidence.length === 0 && (
+                  <div className="px-4 py-10 text-center">
+                    <BadgeCheck className="w-6 h-6 text-gray-300 mx-auto mb-2" />
+                    <p className="text-xs text-gray-500">No evidence records yet — audit records accumulate as compliance checks run.</p>
+                  </div>
+                )}
                 {filteredEvidence.map(e => {
                   const ctrl = CONTROLS.find(c => c.key === e.control);
                   return (

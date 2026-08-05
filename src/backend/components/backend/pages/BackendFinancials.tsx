@@ -33,11 +33,11 @@ import {
 type Period = 'month' | 'quarter' | 'year' | 'custom';
 
 // ── Summary Data ──
-const summaryCards = [
-  { label: 'Total Revenue', value: '$536K', raw: 536000, trend: '+12.5%', positive: true, icon: DollarSign, variant: 'emerald' as const },
-  { label: 'Total Expenses', value: '$185K', raw: 185000, trend: '-3.2%', positive: true, icon: CreditCard, variant: 'red' as const },
-  { label: 'Net Profit', value: '$242K', raw: 242000, trend: '+18.7%', positive: true, icon: TrendingUp, variant: 'indigo' as const },
-  { label: 'Cash Flow', value: '$215K', raw: 215000, trend: '+8.4%', positive: true, icon: Activity, variant: 'blue' as const },
+const summaryCards: { label: string; value: string; raw: number; trend: string | null; positive: boolean; icon: React.ElementType; variant: 'emerald' | 'red' | 'indigo' | 'blue' }[] = [
+  { label: 'Total Revenue', value: '—', raw: 0, trend: null, positive: true, icon: DollarSign, variant: 'emerald' },
+  { label: 'Total Expenses', value: '—', raw: 0, trend: null, positive: true, icon: CreditCard, variant: 'red' },
+  { label: 'Net Profit', value: '—', raw: 0, trend: null, positive: true, icon: TrendingUp, variant: 'indigo' },
+  { label: 'Cash Flow', value: '—', raw: 0, trend: null, positive: true, icon: Activity, variant: 'blue' },
 ];
 
 const variantStyles: Record<string, { bg: string; icon: string }> = {
@@ -48,45 +48,21 @@ const variantStyles: Record<string, { bg: string; icon: string }> = {
 };
 
 // ── Revenue & Expense Breakdowns ──
-const revenueBreakdown = [
-  { label: 'MCA Interest Income', value: 285000, pct: 53.2, color: 'bg-indigo-500' },
-  { label: 'Lease Commissions', value: 95000, pct: 17.7, color: 'bg-sky-500' },
-  { label: 'Residual Income', value: 47000, pct: 8.8, color: 'bg-teal-500' },
-  { label: 'Merchant SaaS Subscriptions', value: 72000, pct: 13.4, color: 'bg-violet-500' },
-  { label: 'Lens AI Fees', value: 37000, pct: 6.9, color: 'bg-purple-500' },
-];
+const revenueBreakdown: { label: string; value: number; pct: number; color: string }[] = [];
 
-const expenseBreakdown = [
-  { label: 'Sales Commissions', value: 75000, pct: 40.5, color: 'bg-red-500' },
-  { label: 'Cost of Capital', value: 65000, pct: 35.1, color: 'bg-orange-500' },
-  { label: 'Deployment Fees', value: 28000, pct: 15.1, color: 'bg-amber-500' },
-  { label: 'Operating', value: 17000, pct: 9.2, color: 'bg-gray-400' },
-];
+const expenseBreakdown: { label: string; value: number; pct: number; color: string }[] = [];
 
 // ── Cash Flow Forecast (90 days) ──
-const cashFlowData = Array.from({ length: 13 }, (_, i) => {
-  const week = i;
-  const baseIn = 52000 + Math.sin(i * 0.7) * 12000 + (i > 8 ? -8000 : 0);
-  const baseOut = 38000 + Math.cos(i * 0.5) * 8000 + (i > 6 ? 5000 : 0);
-  const net = baseIn - baseOut;
-  return {
-    week: `W${week + 1}`,
-    label: `Week ${week + 1}`,
-    inflows: Math.round(baseIn),
-    outflows: Math.round(baseOut),
-    net: Math.round(net),
-    threshold: 10000,
-  };
-});
+const cashFlowData: { week: string; label: string; inflows: number; outflows: number; net: number; threshold: number }[] = [];
 
 const alertWeeks = cashFlowData.filter((d) => d.net < d.threshold);
 
 // ── Capital Deployment ──
 const capitalCards = [
-  { label: 'Available Capital', value: '$340K', icon: PiggyBank, variant: 'emerald' as const },
-  { label: 'Deployed', value: '$1.26M', icon: Zap, variant: 'indigo' as const },
-  { label: 'Utilization', value: '78.8%', icon: Percent, variant: 'blue' as const },
-  { label: '30-Day Need', value: '$185K', icon: Briefcase, variant: 'orange' as const },
+  { label: 'Available Capital', value: '$0', icon: PiggyBank, variant: 'emerald' as const },
+  { label: 'Deployed', value: '$0', icon: Zap, variant: 'indigo' as const },
+  { label: 'Utilization', value: '—', icon: Percent, variant: 'blue' as const },
+  { label: '30-Day Need', value: '$0', icon: Briefcase, variant: 'orange' as const },
 ];
 
 const capitalVariants: Record<string, { bg: string; icon: string }> = {
@@ -94,24 +70,10 @@ const capitalVariants: Record<string, { bg: string; icon: string }> = {
   orange: { bg: 'bg-orange-50 border-orange-100', icon: 'text-orange-600' },
 };
 
-const fundingSources = [
-  { name: 'Pinnacle Funding Group', committed: 600000, deployed: 485000, available: 115000, coc: 2.0, returnPct: 14.2 },
-  { name: 'Atlantic Capital Partners', committed: 400000, deployed: 320000, available: 80000, coc: 1.8, returnPct: 16.1 },
-  { name: 'Summit Finance Corp', committed: 350000, deployed: 290000, available: 60000, coc: 2.2, returnPct: 12.8 },
-  { name: 'Delt Internal Reserve', committed: 250000, deployed: 165000, available: 85000, coc: 0, returnPct: 22.5 },
-];
+const fundingSources: { name: string; committed: number; deployed: number; available: number; coc: number; returnPct: number }[] = [];
 
 // ── Recent Transactions ──
-const transactions = [
-  { date: '2026-04-09', desc: 'Metro Diner Group — daily ACH', type: 'Income' as const, amount: 675, category: 'MCA Repayment' },
-  { date: '2026-04-09', desc: 'Bright Auto Sales — daily ACH', type: 'Income' as const, amount: 1088, category: 'Residual Repayment' },
-  { date: '2026-04-08', desc: 'Marcus J. — commission payout', type: 'Expense' as const, amount: -1575, category: 'Sales Commission' },
-  { date: '2026-04-08', desc: 'Pinnacle Funding — monthly COC', type: 'Expense' as const, amount: -9700, category: 'Cost of Capital' },
-  { date: '2026-04-07', desc: 'Peak Construction — lease payment', type: 'Income' as const, amount: 855, category: 'Lease Payment' },
-  { date: '2026-04-07', desc: 'UCC filing fee — Coastal Seafood', type: 'Expense' as const, amount: -125, category: 'Deployment Fee' },
-  { date: '2026-04-06', desc: 'Apex Fitness — final payoff', type: 'Income' as const, amount: 2600, category: 'MCA Repayment' },
-  { date: '2026-04-05', desc: 'Atlantic Capital — quarterly draw', type: 'Expense' as const, amount: -50000, category: 'Capital Draw' },
-];
+const transactions: { date: string; desc: string; type: 'Income' | 'Expense'; amount: number; category: string }[] = [];
 
 const fmt = (n: number) =>
   n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
@@ -176,10 +138,14 @@ export function BackendFinancials() {
                 <div className={v.icon}><Icon className="w-5 h-5" /></div>
               </div>
               <p className="text-xl sm:text-2xl font-bold text-gray-900">{card.value}</p>
-              <p className={`text-xs mt-2 flex items-center gap-1 ${card.positive ? 'text-emerald-600' : 'text-red-600'}`}>
-                {card.positive ? <ArrowUpRight className="w-3.5 h-3.5" /> : <ArrowDownRight className="w-3.5 h-3.5" />}
-                {card.trend} vs last period
-              </p>
+              {card.trend ? (
+                <p className={`text-xs mt-2 flex items-center gap-1 ${card.positive ? 'text-emerald-600' : 'text-red-600'}`}>
+                  {card.positive ? <ArrowUpRight className="w-3.5 h-3.5" /> : <ArrowDownRight className="w-3.5 h-3.5" />}
+                  {card.trend} vs last period
+                </p>
+              ) : (
+                <p className="text-xs mt-2 text-gray-400">Populates as activity accumulates</p>
+              )}
             </div>
           );
         })}
@@ -194,6 +160,12 @@ export function BackendFinancials() {
             <p className="text-xs text-gray-500 mt-0.5">Total: {fmt(revenueBreakdown.reduce((s, r) => s + r.value, 0))}</p>
           </div>
           <div className="px-5 py-4 space-y-5">
+            {revenueBreakdown.length === 0 && (
+              <div className="py-8 flex flex-col items-center text-center">
+                <BarChart3 className="w-6 h-6 text-gray-300 mb-2" />
+                <p className="text-sm text-gray-500">Revenue appears here as payment activity accumulates.</p>
+              </div>
+            )}
             {revenueBreakdown.map((item) => (
               <div key={item.label}>
                 <div className="flex items-center justify-between mb-2">
@@ -218,6 +190,12 @@ export function BackendFinancials() {
             <p className="text-xs text-gray-500 mt-0.5">Total: {fmt(expenseBreakdown.reduce((s, e) => s + e.value, 0))}</p>
           </div>
           <div className="px-5 py-4 space-y-5">
+            {expenseBreakdown.length === 0 && (
+              <div className="py-8 flex flex-col items-center text-center">
+                <CreditCard className="w-6 h-6 text-gray-300 mb-2" />
+                <p className="text-sm text-gray-500">Expense categories appear here as spending is recorded.</p>
+              </div>
+            )}
             {expenseBreakdown.map((item) => (
               <div key={item.label}>
                 <div className="flex items-center justify-between mb-2">
@@ -251,6 +229,12 @@ export function BackendFinancials() {
           )}
         </div>
         <div className="px-5 py-4">
+          {cashFlowData.length === 0 ? (
+            <div className="h-72 flex flex-col items-center justify-center text-center">
+              <Activity className="w-6 h-6 text-gray-300 mb-2" />
+              <p className="text-sm text-gray-500">Forecast appears once payment history accumulates.</p>
+            </div>
+          ) : (<>
           {/* Legend */}
           <div className="flex items-center gap-5 mb-4">
             <div className="flex items-center gap-1.5">
@@ -301,6 +285,7 @@ export function BackendFinancials() {
               </AreaChart>
             </ResponsiveContainer>
           </div>
+          </>)}
         </div>
       </div>
 
@@ -338,6 +323,14 @@ export function BackendFinancials() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
+                {fundingSources.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="px-4 py-10 text-center">
+                      <Building2 className="w-6 h-6 text-gray-300 mx-auto mb-2" />
+                      <p className="text-sm text-gray-500">Funding sources appear here once capital partners are added.</p>
+                    </td>
+                  </tr>
+                )}
                 {fundingSources.map((src) => {
                   const util = ((src.deployed / src.committed) * 100).toFixed(0);
                   return (
@@ -362,6 +355,7 @@ export function BackendFinancials() {
                   );
                 })}
               </tbody>
+              {fundingSources.length > 0 && (
               <tfoot>
                 <tr className="bg-gray-50 border-t-2 border-gray-200">
                   <td className="px-4 py-3 font-semibold text-gray-900">Total</td>
@@ -372,6 +366,7 @@ export function BackendFinancials() {
                   <td className="px-4 py-3 text-right font-semibold text-indigo-600">{(fundingSources.reduce((s, f) => s + f.returnPct, 0) / fundingSources.length).toFixed(1)}%</td>
                 </tr>
               </tfoot>
+              )}
             </table>
           </div>
         </div>
@@ -394,6 +389,14 @@ export function BackendFinancials() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
+              {transactions.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="px-4 py-10 text-center">
+                    <CircleDollarSign className="w-6 h-6 text-gray-300 mx-auto mb-2" />
+                    <p className="text-sm text-gray-500">Transactions appear here as payment and capital activity accumulates.</p>
+                  </td>
+                </tr>
+              )}
               {transactions.map((tx, i) => (
                 <tr key={i} className="hover:bg-gray-50/50 transition-colors">
                   <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{tx.date}</td>
@@ -419,7 +422,7 @@ export function BackendFinancials() {
           </table>
         </div>
         <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 text-sm text-gray-500">
-          <span>Showing 8 most recent</span>
+          <span>{transactions.length > 0 ? `Showing ${transactions.length} most recent` : 'No transactions yet'}</span>
           <button className="text-indigo-600 hover:text-indigo-700 text-sm font-medium">View All Transactions</button>
         </div>
       </div>
