@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import {
-  ArrowLeft, BadgeDollarSign, CheckCircle2, ShieldCheck, TrendingDown, Users,
+  ArrowLeft, BadgeDollarSign, CheckCircle2, Download, ShieldCheck, TrendingDown, Users,
 } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContainer,
@@ -49,6 +49,8 @@ interface MerchantSavingsViewProps {
   programs: ProgramQuote[];
   bestProgramKey: ProgramQuote['key'] | null;
   onExit: () => void;
+  /** Generate the printable proposal for the currently selected program. */
+  onDownloadProposal?: (selectedKey: ProgramQuote['key']) => void;
 }
 
 /**
@@ -56,7 +58,7 @@ interface MerchantSavingsViewProps {
  * receives no Delt profit/margin data by design (see pricingPrograms.ts:
  * ProgramEconomics stays out of ProgramQuote).
  */
-export function MerchantSavingsView({ extracted, programs, bestProgramKey, onExit }: MerchantSavingsViewProps) {
+export function MerchantSavingsView({ extracted, programs, bestProgramKey, onExit, onDownloadProposal }: MerchantSavingsViewProps) {
   const [selectedKey, setSelectedKey] = useState<ProgramQuote['key']>(bestProgramKey ?? 'cash_discount');
   const selected = programs.find(p => p.key === selectedKey) ?? programs[0];
 
@@ -85,13 +87,24 @@ export function MerchantSavingsView({ extracted, programs, bestProgramKey, onExi
             {extracted.statementPeriod && <> · based on your {extracted.statementPeriod} statement</>}
           </p>
         </div>
-        <button
-          onClick={onExit}
-          className="shrink-0 px-3 py-2 text-xs font-medium text-gray-500 hover:text-gray-700 border border-gray-200 rounded-[6px] hover:bg-gray-50 transition-colors flex items-center gap-1.5"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          Exit Merchant View
-        </button>
+        <div className="shrink-0 flex items-center gap-2">
+          {onDownloadProposal && (
+            <button
+              onClick={() => onDownloadProposal(selectedKey)}
+              className="px-3 py-2 text-xs font-medium bg-brand text-white rounded-[6px] hover:bg-brand-hover transition-colors flex items-center gap-1.5"
+            >
+              <Download className="w-3.5 h-3.5" />
+              Download Proposal
+            </button>
+          )}
+          <button
+            onClick={onExit}
+            className="px-3 py-2 text-xs font-medium text-gray-500 hover:text-gray-700 border border-gray-200 rounded-[6px] hover:bg-gray-50 transition-colors flex items-center gap-1.5"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            Exit Merchant View
+          </button>
+        </div>
       </div>
 
       {/* ── Hero savings banner ── */}
