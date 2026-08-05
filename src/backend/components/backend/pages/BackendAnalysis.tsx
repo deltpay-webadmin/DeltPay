@@ -118,7 +118,7 @@ function fromDbAnalysis(row: any): HistoryRow {
 // ══════════════════════════════════════
 export function BackendAnalysis() {
   const { navigate } = useAppNavigate();
-  const { displayName } = useSession();
+  const { displayName, email: sessionEmail } = useSession();
   const [activeView, setActiveView] = useState<'cost-calculator' | 'statement-analyzer'>('cost-calculator');
   const [status, setStatus] = useState<AnalysisStatus>('idle');
   const [files, setFiles] = useState<File[]>([]);
@@ -543,7 +543,7 @@ export function BackendAnalysis() {
                     bestProgramKey={bestProgram?.key ?? null}
                     onExit={() => setMerchantView(false)}
                     onDownloadProposal={key => {
-                      const ok = openProposalPdf({ extracted, programs, focusKey: key, preparedBy: displayName });
+                      const ok = openProposalPdf({ extracted, programs, focusKey: key, preparedBy: displayName, preparedByEmail: sessionEmail });
                       if (!ok) toast.error('Pop-up blocked — allow pop-ups for this site to generate the proposal.');
                     }}
                   />
@@ -724,7 +724,7 @@ export function BackendAnalysis() {
                       <div className="mt-auto pt-5 flex items-center gap-3">
                         <button
                           onClick={() => {
-                            const ok = openProposalPdf({ extracted, programs, focusKey: bestProgram?.key ?? null, preparedBy: displayName });
+                            const ok = openProposalPdf({ extracted, programs, focusKey: bestProgram?.key ?? null, preparedBy: displayName, preparedByEmail: sessionEmail });
                             if (!ok) toast.error('Pop-up blocked — allow pop-ups for this site to generate the proposal.');
                           }}
                           className="flex-1 px-4 py-2.5 bg-brand text-white text-sm font-medium rounded-[6px] hover:bg-brand-hover transition-colors flex items-center justify-center gap-2"

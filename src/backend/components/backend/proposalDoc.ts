@@ -17,6 +17,11 @@ export interface ProposalInput {
   focusKey: ProgramQuote['key'] | null;
   /** Name of the rep preparing the proposal, when known. */
   preparedBy?: string;
+  /**
+   * Signed-in rep's email. Send opens Outlook Web compose with this as the
+   * login_hint, so each rep lands in their own Outlook account.
+   */
+  preparedByEmail?: string;
 }
 
 const esc = (s: string) =>
@@ -45,7 +50,7 @@ const HOW_IT_WORKS: Record<ProgramQuote['key'], string[]> = {
 };
 
 export function buildProposalHtml(input: ProposalInput): string {
-  const { extracted: ex, programs, focusKey, preparedBy } = input;
+  const { extracted: ex, programs, focusKey, preparedBy, preparedByEmail } = input;
   const focus = programs.find(p => p.key === focusKey) ?? programs[0];
   if (!focus) return '';
 
@@ -238,7 +243,7 @@ export function buildProposalHtml(input: ProposalInput): string {
   <button class="primary" onclick="startPresent()" title="Full-screen, page-by-page walkthrough">▶ Present</button>
   <button onclick="downloadProposal()" title="Save the proposal as a file you can attach or share">⬇ Download</button>
   <button onclick="window.print()" title="Print or save as PDF">🖨 Save as PDF</button>
-  <button onclick="sendProposal()" title="Open a pre-written email and download the file to attach">✉ Send</button>
+  <button onclick="sendProposal()" title="Open a pre-written email in your Outlook account and download the file to attach">✉ Send</button>
 </div>
 
 <div class="pnav">
@@ -369,6 +374,7 @@ export function buildProposalHtml(input: ProposalInput): string {
 var FILENAME = ${js(fileName)};
 var MAIL_SUBJECT = ${js(mailSubject)};
 var MAIL_BODY = ${js(mailBody)};
+var SENDER_EMAIL = ${js(preparedByEmail ?? '')};
 
 var pages = Array.prototype.slice.call(document.querySelectorAll('.page'));
 var idx = 0;
@@ -442,9 +448,19 @@ function downloadProposal() {
 }
 
 function sendProposal() {
-  // No email backend — download the file to attach, then open a pre-written email.
+  // Download the file so it can be attached, then open Outlook Web compose in
+  // the rep's own account (login_hint routes to the signed-in CRM user's
+  // mailbox when the browser holds several Microsoft accounts).
   downloadProposal();
-  window.location.href = 'mailto:?subject=' + encodeURIComponent(MAIL_SUBJECT) + '&body=' + encodeURIComponent(MAIL_BODY);
+  var url = 'https://outlook.office.com/mail/deeplink/compose'
+    + '?subject=' + encodeURIComponent(MAIL_SUBJECT)
+    + '&body=' + encodeURIComponent(MAIL_BODY)
+    + (SENDER_EMAIL ? '&login_hint=' + encodeURIComponent(SENDER_EMAIL) : '');
+  var win = window.open(url, '_blank');
+  if (!win) {
+    // Pop-up blocked — fall back to the default mail client.
+    window.location.href = 'mailto:?subject=' + encodeURIComponent(MAIL_SUBJECT) + '&body=' + encodeURIComponent(MAIL_BODY);
+  }
 }
 </script>
 
