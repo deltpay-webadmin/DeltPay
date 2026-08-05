@@ -2,16 +2,17 @@ import React, { useState } from 'react';
 import {
   Settings, ChevronDown, Link2, Shield, Users, ClipboardList,
   Plus, Check, X, Eye, EyeOff, Lock, Unlock, UserCircle, Languages,
+  Building2, Palette, Bell, CreditCard, Landmark,
 } from 'lucide-react';
 import { useAppNavigate } from '../NavigationContext';
 import { useLang } from '../i18n';
 
 // ─── ROLE DEFINITIONS ───────────────────────────────────────────
 const ROLES = [
-  { id: 'super_admin', name: 'Super Admin', description: 'Full platform access. Company settings, financials, RBAC, all modules.', color: '#2E6BFF', userCount: 2, isSystem: true },
-  { id: 'admin', name: 'Admin', description: 'Operational access across all modules. Cannot modify roles, billing, or company settings.', color: '#2BB56D', userCount: 1, isSystem: true },
-  { id: 'agent', name: 'Agent', description: 'Portfolio-scoped access. Sees only assigned merchants, leads, and own compensation.', color: '#F0B429', userCount: 4, isSystem: true },
-  { id: 'viewer', name: 'Viewer', description: 'Read-only access to assigned modules. Cannot create, edit, or delete records.', color: '#6b7280', userCount: 1, isSystem: false },
+  { id: 'super_admin', name: 'Super Admin', description: 'Full platform access. Company settings, financials, RBAC, all modules.', color: '#2E6BFF', userCount: 0, isSystem: true },
+  { id: 'admin', name: 'Admin', description: 'Operational access across all modules. Cannot modify roles, billing, or company settings.', color: '#2BB56D', userCount: 0, isSystem: true },
+  { id: 'agent', name: 'Agent', description: 'Portfolio-scoped access. Sees only assigned merchants, leads, and own compensation.', color: '#F0B429', userCount: 0, isSystem: true },
+  { id: 'viewer', name: 'Viewer', description: 'Read-only access to assigned modules. Cannot create, edit, or delete records.', color: '#6b7280', userCount: 0, isSystem: false },
 ];
 
 const PERMISSION_MODULES = [
@@ -54,30 +55,28 @@ const DEFAULT_PERMS: Record<string, any> = {
 };
 
 // ─── USERS ──────────────────────────────────────────────────────
-const USERS = [
-  { id: 1, name: 'David Hazday', email: 'david@deltpay.com', role: 'super_admin', avatar: 'DH', status: 'active', lastActive: 'Just now', territories: ['Miami-Dade', 'Broward'], portfolioCount: 8, split: undefined as number | undefined, portfolioCap: undefined as number | undefined, monthlyVolume: undefined as number | undefined },
-  { id: 2, name: 'Anshu', email: 'anshu@deltpay.com', role: 'super_admin', avatar: 'AN', status: 'active', lastActive: '2 hours ago', territories: [] as string[], portfolioCount: 0, split: undefined as number | undefined, portfolioCap: undefined as number | undefined, monthlyVolume: undefined as number | undefined },
-  { id: 3, name: 'Patrick', email: 'patrick@deltpay.com', role: 'admin', avatar: 'PK', status: 'active', lastActive: '1 hour ago', territories: [] as string[], portfolioCount: 0, split: undefined as number | undefined, portfolioCap: undefined as number | undefined, monthlyVolume: undefined as number | undefined },
-  { id: 4, name: 'Sarah Johnson', email: 'sarah@deltpay.com', role: 'agent', avatar: 'SJ', status: 'active', lastActive: '3 hours ago', split: 50, territories: ['Miami-Dade'], portfolioCount: 3, portfolioCap: 25, monthlyVolume: 131900 },
-  { id: 5, name: 'Michael Chen', email: 'michael@deltpay.com', role: 'agent', avatar: 'MC', status: 'active', lastActive: '1 day ago', split: 50, territories: ['Broward', 'Palm Beach'], portfolioCount: 3, portfolioCap: 25, monthlyVolume: 187200 },
-  { id: 6, name: 'James Miller', email: 'james@deltpay.com', role: 'agent', avatar: 'JM', status: 'active', lastActive: '5 hours ago', split: 50, territories: ['Miami-Dade'], portfolioCount: 2, portfolioCap: 25, monthlyVolume: 165700 },
-  { id: 7, name: 'Lyndon', email: 'lyndon@deltpay.com', role: 'agent', avatar: 'LY', status: 'active', lastActive: '1 week ago', split: 40, territories: ['Outbound'], portfolioCount: 0, portfolioCap: 15, monthlyVolume: 0 },
-  { id: 8, name: 'Jason', email: 'jason@deltpay.com', role: 'viewer', avatar: 'JS', status: 'active', lastActive: '3 days ago', territories: [] as string[], portfolioCount: 0, split: undefined as number | undefined, portfolioCap: undefined as number | undefined, monthlyVolume: undefined as number | undefined },
-];
+interface PlatformUser {
+  id: number; name: string; email: string; role: string; avatar: string;
+  status: string; lastActive: string; territories: string[]; portfolioCount: number;
+  split?: number; portfolioCap?: number; monthlyVolume?: number;
+}
+const USERS: PlatformUser[] = [];
 
 // ─── INTEGRATIONS ───────────────────────────────────────────────
+// Integration catalog — connection status is per-environment and shown
+// as 'Not connected' until an integration is actually configured.
 const INTEGRATIONS = [
-  { id: 'north', name: 'North (NAB)', category: 'Processor', status: 'connected', lastSync: 'Apr 14, 2026', health: 98, description: 'ISO payment processing, residual reports' },
-  { id: 'ach', name: 'ACH.com', category: 'Payments', status: 'connected', lastSync: 'Apr 14, 2026', health: 100, description: 'Recurring ACH debits for MCA collections' },
-  { id: 'plaid', name: 'Plaid', category: 'Underwriting', status: 'connected', lastSync: 'Apr 15, 2026', health: 95, description: 'Bank verification, transaction data, identity' },
-  { id: 'sentilink', name: 'SentiLink', category: 'Underwriting', status: 'connected', lastSync: 'Apr 12, 2026', health: 100, description: 'Synthetic identity fraud detection' },
-  { id: 'crs', name: 'CRS Credit', category: 'Underwriting', status: 'connected', lastSync: 'Apr 10, 2026', health: 92, description: 'Commercial credit reporting' },
-  { id: 'ficoso', name: 'FiCoSo', category: 'Legal', status: 'connected', lastSync: 'Apr 14, 2026', health: 100, description: 'UCC filing and lien management' },
-  { id: 'datamerch', name: 'DataMerch', category: 'Risk', status: 'connected', lastSync: 'Apr 14, 2026', health: 100, description: 'MCA industry default database' },
-  { id: '10web', name: '10Web', category: 'Websites', status: 'connected', lastSync: 'Apr 13, 2026', health: 88, description: 'AI website builder — white-label merchant sites' },
-  { id: 'qbo', name: 'QuickBooks Online', category: 'Accounting', status: 'connected', lastSync: 'Apr 15, 2026', health: 97, description: 'Chart of accounts, MCA journal entries' },
-  { id: 'ollama', name: 'Ollama / Qwen', category: 'AI', status: 'connected', lastSync: 'Apr 15, 2026', health: 100, description: 'Local LLM for Lens AI intelligence layer' },
-  { id: 'stripe', name: 'Stripe', category: 'Billing', status: 'disconnected', lastSync: '—', health: 0, description: 'Platform billing and subscription management' },
+  { id: 'north', name: 'North (NAB)', category: 'Processor', description: 'ISO payment processing, residual reports' },
+  { id: 'ach', name: 'ACH.com', category: 'Payments', description: 'Recurring ACH debits for MCA collections' },
+  { id: 'plaid', name: 'Plaid', category: 'Underwriting', description: 'Bank verification, transaction data, identity' },
+  { id: 'sentilink', name: 'SentiLink', category: 'Underwriting', description: 'Synthetic identity fraud detection' },
+  { id: 'crs', name: 'CRS Credit', category: 'Underwriting', description: 'Commercial credit reporting' },
+  { id: 'ficoso', name: 'FiCoSo', category: 'Legal', description: 'UCC filing and lien management' },
+  { id: 'datamerch', name: 'DataMerch', category: 'Risk', description: 'MCA industry default database' },
+  { id: '10web', name: '10Web', category: 'Websites', description: 'AI website builder — white-label merchant sites' },
+  { id: 'qbo', name: 'QuickBooks Online', category: 'Accounting', description: 'Chart of accounts, MCA journal entries' },
+  { id: 'ollama', name: 'Ollama / Qwen', category: 'AI', description: 'Local LLM for Lens AI intelligence layer' },
+  { id: 'stripe', name: 'Stripe', category: 'Billing', description: 'Platform billing and subscription management' },
 ];
 
 // ─── GENERAL SETTINGS ───────────────────────────────────────────
@@ -86,7 +85,7 @@ interface SettingsField {
   description?: string; options?: string[];
 }
 interface SettingsSection {
-  key: string; title: string; icon: string; fields: SettingsField[];
+  key: string; title: string; icon: React.ElementType; fields: SettingsField[];
 }
 
 const GENERAL_SECTIONS: SettingsSection[] = [

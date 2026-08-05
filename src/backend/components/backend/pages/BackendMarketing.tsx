@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Link2, Target, TrendingUp, ArrowRight, RefreshCw, X, Unplug, AlertTriangle, Download, CheckCircle2 } from 'lucide-react';
+import { Link2, TrendingUp, ArrowRight, RefreshCw, X, Unplug, AlertTriangle, Download, CheckCircle2 } from 'lucide-react';
 import { Overline, DeltaPill, KpiTile, Card, HeroPanel, Btn } from '../../dp';
 import { useMarketing, useMarketingSync, marketingActions } from '../marketingStore';
 import { useLeads } from '../crmStore';
@@ -804,75 +804,35 @@ export function BackendMarketing() {
             title={
               <span className="inline-flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-(--dp-accent-text)" />
-                {live ? 'Spend vs leads by month' : 'Spend vs return by cycle'}
+                Spend vs leads by month
               </span>
             }
           >
-            {live ? (
-              <>
-                <div className={`grid gap-3 items-end h-[150px] pt-5`} style={{ gridTemplateColumns: `repeat(${Math.max(live.trend.length, 1)}, 1fr)` }}>
-                  {live.trend.map(t => (
-                    <div key={t.month} className="flex flex-col items-center justify-end h-full gap-1.5">
-                      <span className="text-[10px] font-bold tabular-nums text-(--dp-success)">
-                        {t.leads > 0 ? fmtMoney(t.spend / t.leads) : '—'}
-                      </span>
-                      <div className="flex items-end gap-1 w-full justify-center flex-1">
-                        <div
-                          className="w-[36%] max-w-[24px] rounded-t-[3px] bg-(--dp-accent)"
-                          style={{ height: `${Math.max((t.spend / maxLiveTrend) * 100, 2)}%` }}
-                        />
-                      </div>
-                      <span className="text-[10px] text-(--dp-text-muted)">{t.month}</span>
-                      <span className="text-[10px] tabular-nums text-(--dp-text-faint)">{t.leads} leads</span>
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-3 flex items-center justify-between">
-                  <span className="inline-flex items-center gap-1.5 text-[11px] text-(--dp-text-muted)">
-                    <span className="w-2 h-2 rounded-[3px] bg-(--dp-accent)" /> Spend · label = cost per lead
+            <div className={`grid gap-3 items-end h-[150px] pt-5`} style={{ gridTemplateColumns: `repeat(${Math.max(live.trend.length, 1)}, 1fr)` }}>
+              {live.trend.map(t => (
+                <div key={t.month} className="flex flex-col items-center justify-end h-full gap-1.5">
+                  <span className="text-[10px] font-bold tabular-nums text-(--dp-success)">
+                    {t.leads > 0 ? fmtMoney(t.spend / t.leads) : '—'}
                   </span>
-                  <span className="inline-flex items-center gap-1 text-[11px] text-(--dp-text-faint)">
-                    {live.trend.length} months <ArrowRight className="w-3 h-3" />
-                  </span>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="grid grid-cols-6 gap-3 items-end h-[150px] pt-5">
-                  {SAMPLE_TREND.map(t => (
-                    <div key={t.month} className="flex flex-col items-center justify-end h-full gap-1.5">
-                      <span className="text-[10px] font-bold tabular-nums text-(--dp-success)">
-                        {(t.revenue / t.spend).toFixed(1)}×
-                      </span>
-                      <div className="flex items-end gap-1 w-full justify-center flex-1">
-                        <div
-                          className="w-[22%] max-w-[18px] rounded-t-[3px] bg-(--dp-border-strong)"
-                          style={{ height: `${(t.spend / maxSampleTrend) * 100}%` }}
-                        />
-                        <div
-                          className="w-[22%] max-w-[18px] rounded-t-[3px] bg-(--dp-accent)"
-                          style={{ height: `${(t.revenue / maxSampleTrend) * 100}%` }}
-                        />
-                      </div>
-                      <span className="text-[10px] text-(--dp-text-muted)">{t.month}</span>
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-3 flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <span className="inline-flex items-center gap-1.5 text-[11px] text-(--dp-text-muted)">
-                      <span className="w-2 h-2 rounded-[3px] bg-(--dp-border-strong)" /> Spend
-                    </span>
-                    <span className="inline-flex items-center gap-1.5 text-[11px] text-(--dp-text-muted)">
-                      <span className="w-2 h-2 rounded-[3px] bg-(--dp-accent)" /> Return
-                    </span>
+                  <div className="flex items-end gap-1 w-full justify-center flex-1">
+                    <div
+                      className="w-[36%] max-w-[24px] rounded-t-[3px] bg-(--dp-accent)"
+                      style={{ height: `${Math.max((t.spend / maxLiveTrend) * 100, 2)}%` }}
+                    />
                   </div>
-                  <span className="inline-flex items-center gap-1 text-[11px] text-(--dp-text-faint)">
-                    6 cycles <ArrowRight className="w-3 h-3" />
-                  </span>
+                  <span className="text-[10px] text-(--dp-text-muted)">{t.month}</span>
+                  <span className="text-[10px] tabular-nums text-(--dp-text-faint)">{t.leads} leads</span>
                 </div>
-              </>
-            )}
+              ))}
+            </div>
+            <div className="mt-3 flex items-center justify-between">
+              <span className="inline-flex items-center gap-1.5 text-[11px] text-(--dp-text-muted)">
+                <span className="w-2 h-2 rounded-[3px] bg-(--dp-accent)" /> Spend · label = cost per lead
+              </span>
+              <span className="inline-flex items-center gap-1 text-[11px] text-(--dp-text-faint)">
+                {live.trend.length} months <ArrowRight className="w-3 h-3" />
+              </span>
+            </div>
           </Card>
         </div>
       </div>

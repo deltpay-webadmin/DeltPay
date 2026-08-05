@@ -848,6 +848,12 @@ export function MerchantResidualDetail() {
             <Card title="Terminal & Equipment Inventory" sub={`${equipment.length} active devices`}
               right={<span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-50 text-indigo-600">Platform: {M.platform.split('+')[0].trim()}</span>}
             >
+              {equipment.length === 0 && (
+                <div className="py-12 text-center">
+                  <Monitor className="w-8 h-8 text-gray-300 mx-auto mb-3" />
+                  <p className="text-sm text-gray-400">No terminals on file — deployed devices will appear here.</p>
+                </div>
+              )}
               <div className="space-y-3">
                 {equipment.map((eq, i) => (
                   <div key={i} className="border border-gray-200 rounded-[8px] p-4 grid grid-cols-2 md:grid-cols-5 gap-4 hover:bg-gray-50/50 transition-colors">
@@ -921,6 +927,12 @@ export function MerchantResidualDetail() {
                     ))}
                   </tbody>
                 </table>
+                {CHARGEBACKS.length === 0 && (
+                  <div className="py-12 text-center">
+                    <Shield className="w-8 h-8 text-gray-300 mx-auto mb-3" />
+                    <p className="text-sm text-gray-400">No chargebacks on file — disputes will appear here if filed.</p>
+                  </div>
+                )}
               </div>
             </Card>
 
@@ -931,8 +943,8 @@ export function MerchantResidualDetail() {
                     { l: 'Chargeback Rate', v: fmtPct(M.chargebackRate), c: M.chargebackRate > 0.008 ? 'text-red-600' : 'text-emerald-600' },
                     { l: 'Visa Threshold', v: M.chargebackRate > 0.009 ? 'At Risk' : 'Within Limits', c: M.chargebackRate > 0.009 ? 'text-red-600' : 'text-emerald-600' },
                     { l: 'MC Threshold', v: 'Within Limits', c: 'text-emerald-600' },
-                    { l: 'Total Disputes (12mo)', v: '3', c: '' },
-                    { l: 'Win Rate', v: '66.7%', c: 'text-emerald-600' },
+                    { l: 'Total Disputes (12mo)', v: String(CHARGEBACKS.length), c: '' },
+                    { l: 'Win Rate', v: CHARGEBACKS.length > 0 ? `${((CHARGEBACKS.filter(c => c.status === 'Won').length / CHARGEBACKS.length) * 100).toFixed(1)}%` : '—', c: '' },
                     { l: 'Total Exposure', v: fmt(CHARGEBACKS.reduce((s, c) => s + c.amount, 0)), c: '' },
                     { l: 'Risk Tier', v: M.riskLevel, c: 'text-emerald-600' },
                   ].map((r, i) => (
@@ -947,17 +959,17 @@ export function MerchantResidualDetail() {
               <Card title="Compliance Status">
                 <div className="space-y-2.5">
                   {[
-                    { l: 'PCI DSS', v: 'Compliant' },
-                    { l: 'SAQ Type', v: 'SAQ B-IP' },
-                    { l: 'Last PCI Scan', v: 'Mar 12, 2026' },
-                    { l: 'EMV Enabled', v: 'All terminals' },
-                    { l: '3D Secure', v: 'N/A (Card Present)' },
+                    { l: 'PCI DSS', v: '—' },
+                    { l: 'SAQ Type', v: '—' },
+                    { l: 'Last PCI Scan', v: '—' },
+                    { l: 'EMV Enabled', v: '—' },
+                    { l: '3D Secure', v: '—' },
                   ].map((r, i) => (
                     <div key={i} className="flex justify-between items-center">
                       <span className="text-sm text-gray-500">{r.l}</span>
                       <div className="flex items-center gap-1.5">
-                        <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />
-                        <span className="text-sm font-semibold text-emerald-600">{r.v}</span>
+                        {r.v !== '—' && <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />}
+                        <span className={`text-sm font-semibold ${r.v !== '—' ? 'text-emerald-600' : 'text-gray-400'}`}>{r.v}</span>
                       </div>
                     </div>
                   ))}
@@ -995,6 +1007,12 @@ export function MerchantResidualDetail() {
                     ))}
                   </tbody>
                 </table>
+                {BATCHES_RECENT.length === 0 && (
+                  <div className="py-12 text-center">
+                    <FileText className="w-8 h-8 text-gray-300 mx-auto mb-3" />
+                    <p className="text-sm text-gray-400">No batch settlements yet — daily batches will appear here as this merchant processes.</p>
+                  </div>
+                )}
               </div>
             </Card>
 
@@ -1004,11 +1022,11 @@ export function MerchantResidualDetail() {
                   {[
                     { l: 'Total Settled', v: fmt(BATCHES_RECENT.reduce((s, b) => s + b.amount, 0)) },
                     { l: 'Total Transactions', v: fmtNum(BATCHES_RECENT.reduce((s, b) => s + b.txns, 0)) },
-                    { l: 'Avg Daily Volume', v: fmt(BATCHES_RECENT.reduce((s, b) => s + b.amount, 0) / BATCHES_RECENT.length) },
-                    { l: 'Avg Batch Size', v: `${Math.round(BATCHES_RECENT.reduce((s, b) => s + b.txns, 0) / BATCHES_RECENT.length)} txns` },
-                    { l: 'Settlement Time', v: 'Next Day', c: 'text-emerald-600' },
-                    { l: 'Missed Batches', v: '0', c: 'text-emerald-600' },
-                  ].map((r, i) => (
+                    { l: 'Avg Daily Volume', v: BATCHES_RECENT.length > 0 ? fmt(BATCHES_RECENT.reduce((s, b) => s + b.amount, 0) / BATCHES_RECENT.length) : '—' },
+                    { l: 'Avg Batch Size', v: BATCHES_RECENT.length > 0 ? `${Math.round(BATCHES_RECENT.reduce((s, b) => s + b.txns, 0) / BATCHES_RECENT.length)} txns` : '—' },
+                    { l: 'Settlement Time', v: '—' },
+                    { l: 'Missed Batches', v: '—' },
+                  ].map((r: { l: string; v: string; c?: string }, i) => (
                     <div key={i} className="flex justify-between">
                       <span className="text-sm text-gray-500">{r.l}</span>
                       <span className={`text-sm font-semibold tabular-nums ${r.c || 'text-gray-900'}`}>{r.v}</span>
@@ -1018,6 +1036,11 @@ export function MerchantResidualDetail() {
               </Card>
 
               <Card title="Batch Volume (7d)">
+                {BATCHES_RECENT.length === 0 && (
+                  <div className="py-6 text-center">
+                    <p className="text-sm text-gray-400">Batch volume appears here once settlements post.</p>
+                  </div>
+                )}
                 <div className="flex items-end justify-between gap-1.5 h-14 px-1">
                   {[...BATCHES_RECENT].reverse().map((b, i, arr) => {
                     const mx = Math.max(...arr.map(x => x.amount));
