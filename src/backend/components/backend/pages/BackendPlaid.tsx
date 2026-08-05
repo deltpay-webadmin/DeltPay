@@ -14,7 +14,7 @@ import {
 import { toast } from 'sonner@2.0.3';
 import { useLeads, underwritingActions, type Lead } from '../crmStore';
 import {
-  usePlaidItems, usePlaidNodes, usePlaidStatus, usePlaidSync, plaidActions,
+  usePlaidItems, usePlaidNodes, usePlaidStatus, usePlaidSync, usePlaidLinkRequests, plaidActions,
   PLAID_LINK_SESSION_KEY, PLAID_OAUTH_HREF_KEY,
   type PlaidItem, type PlaidNode,
 } from '../plaidStore';
@@ -157,6 +157,45 @@ function PlaidLinkButton({
         />
       )}
     </>
+  );
+}
+
+/**
+ * "Send connect link" — the remote counterpart to PlaidLinkButton.
+ *
+ * Staff can't type a prospect's bank credentials, so the local Link modal
+ * only works with the customer present. This mints a Plaid-hosted URL
+ * (valid 7 days), copies it to the clipboard for staff to text/email, and
+ * the prospect completes Link on their own device. The connection lands in
+ * the vault automatically via webhook (or the Sync-all / nightly sweep).
+ */
+function SendLinkButton({ leadId, compact }: { leadId: string; compact?: boolean }) {
+  const { busy } = usePlaidSync();
+  const requests = usePlaidLinkRequests();
+  const isBusy = busy.includes(`invite:${leadId}`);
+  const pending = requests.find(r => r.leadId === leadId && r.status === 'pending');
+  const title = pending
+    ? `Connect link sent ${timeAgo(pending.createdAt)} — click to copy a fresh one`
+    : 'Copy a secure Plaid link to text or email the prospect — they connect their bank on their own device';
+
+  const send = () => plaidActions.createHostedLink(leadId).catch(() => {});
+
+  return (
+    <button
+      onClick={send}
+      disabled={isBusy}
+      title={title}
+      className={
+        compact
+          ? 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/[0.06] border border-(--dp-border) text-xs text-(--dp-text-secondary) hover:bg-(--dp-bg-raised) disabled:opacity-50'
+          : BTN_GLASS
+      }
+    >
+      <Send className={compact ? 'w-3 h-3' : 'w-4 h-4'} />
+      {compact
+        ? (isBusy ? '…' : pending ? 'Link sent' : 'Send link')
+        : (isBusy ? 'Creating link…' : pending ? `Link sent ${timeAgo(pending.createdAt)} — resend` : 'Send connect link')}
+    </button>
   );
 }
 
@@ -584,6 +623,7 @@ function ProspectDetail({
           >
             <RefreshCw className="w-4 h-4" /> Sync
           </button>
+          <SendLinkButton leadId={lead.id} />
           <PlaidLinkButton leadId={lead.id} />
         </div>
       </div>
@@ -596,6 +636,7 @@ function ProspectDetail({
             Connect this prospect's bank via Plaid Link to pull identity, account verification, financials and credit data.
           </p>
           <div className="flex items-center justify-center gap-2">
+            <SendLinkButton leadId={lead.id} />
             <PlaidLinkButton leadId={lead.id} />
             <SandboxConnectButton leadId={lead.id} />
           </div>
@@ -1416,6 +1457,7 @@ function ConnectionsTab() {
           </select>
           {leadId ? (
             <>
+              <SendLinkButton leadId={leadId} />
               <PlaidLinkButton leadId={leadId} />
               <SandboxConnectButton leadId={leadId} />
             </>
@@ -1755,7 +1797,10 @@ export function BackendPlaid() {
                               {p.items.length} bank{p.items.length > 1 ? 's' : ''}
                             </span>
                           ) : (
-                            <PlaidLinkButton leadId={p.lead.id} compact />
+                            <span className="inline-flex items-center gap-1.5">
+                              <SendLinkButton leadId={p.lead.id} compact />
+                              <PlaidLinkButton leadId={p.lead.id} compact />
+                            </span>
                           )}
                         </td>
                         <td className="py-2.5 px-4">

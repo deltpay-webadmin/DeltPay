@@ -60,6 +60,18 @@ export interface PlaidNode {
   updatedAt: string;
 }
 
+/** A "send the prospect a connect link" invite (plaid_link_requests row). */
+export interface PlaidLinkRequest {
+  linkToken: string;
+  leadId: string | null;
+  hostedLinkUrl: string;
+  status: 'pending' | 'completed' | 'expired';
+  itemId: string | null;
+  createdAt: string;
+  expiresAt: string | null;
+  completedAt: string | null;
+}
+
 export interface PlaidStatus {
   configured: boolean;
   env: string;
@@ -78,6 +90,7 @@ export interface PlaidStatus {
 interface PlaidState {
   items: PlaidItem[];
   nodes: PlaidNode[];
+  requests: PlaidLinkRequest[];
   status: PlaidStatus | null;
 }
 
@@ -92,7 +105,7 @@ interface PlaidSyncState {
 // Store
 // ══════════════════════════════════════════════════════════════
 
-let state: PlaidState = { items: [], nodes: [], status: null };
+let state: PlaidState = { items: [], nodes: [], requests: [], status: null };
 let sync: PlaidSyncState = { isLoading: isSupabaseConfigured, busy: [], lastError: null };
 
 const listeners = new Set<() => void>();
@@ -136,6 +149,19 @@ function fromDbItem(r: any): PlaidItem {
   };
 }
 
+function fromDbRequest(r: any): PlaidLinkRequest {
+  return {
+    linkToken: r.link_token,
+    leadId: r.lead_id ?? null,
+    hostedLinkUrl: r.hosted_link_url ?? '',
+    status: r.status ?? 'pending',
+    itemId: r.item_id ?? null,
+    createdAt: r.created_at ?? '',
+    expiresAt: r.expires_at ?? null,
+    completedAt: r.completed_at ?? null,
+  };
+}
+
 function fromDbNode(r: any): PlaidNode {
   return {
     path: r.path,
@@ -167,15 +193,19 @@ async function maybeHydrate() {
   hydrating = true;
   setSync({ isLoading: true, lastError: null });
   try {
-    const [itemsRes, nodesRes] = await Promise.all([
+    const [itemsRes, nodesRes, reqsRes] = await Promise.all([
       supabase.from('plaid_items').select('*').order('created_at', { ascending: false }),
       supabase.from('plaid_nodes').select('*').order('path', { ascending: true }),
+      supabase.from('plaid_link_requests').select('*').order('created_at', { ascending: false }),
     ]);
     const firstErr = itemsRes.error || nodesRes.error;
     if (firstErr) throw firstErr;
     set({
       items: (itemsRes.data || []).map(fromDbItem),
       nodes: (nodesRes.data || []).map(fromDbNode),
+      // Tolerate a missing table (migration not applied yet) — invites are
+      // an enhancement, not a load-bearing read.
+      requests: reqsRes.error ? [] : (reqsRes.data || []).map(fromDbRequest),
     });
     hydrated = true;
     setSync({ isLoading: false, lastError: null });
@@ -231,6 +261,24 @@ function subscribeRealtime() {
         }
       },
     )
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'plaid_link_requests' },
+      payload => {
+        const { eventType, new: newRow, old: oldRow } = payload as any;
+        if (eventType === 'DELETE') {
+          set({ requests: state.requests.filter(r => r.linkToken !== oldRow?.link_token) });
+        } else {
+          const mapped = fromDbRequest(newRow);
+          const exists = state.requests.some(r => r.linkToken === mapped.linkToken);
+          set({
+            requests: exists
+              ? state.requests.map(r => (r.linkToken === mapped.linkToken ? mapped : r))
+              : [mapped, ...state.requests],
+          });
+        }
+      },
+    )
     .subscribe();
   (globalThis as any).__deltPlaidChannel = channel;
 }
@@ -272,12 +320,14 @@ export const plaidActions = {
   /** Re-fetch items + nodes from Postgres (realtime usually covers this). */
   async refresh() {
     if (!supabase) return;
-    const [itemsRes, nodesRes] = await Promise.all([
+    const [itemsRes, nodesRes, reqsRes] = await Promise.all([
       supabase.from('plaid_items').select('*').order('created_at', { ascending: false }),
       supabase.from('plaid_nodes').select('*').order('path', { ascending: true }),
+      supabase.from('plaid_link_requests').select('*').order('created_at', { ascending: false }),
     ]);
     if (!itemsRes.error && itemsRes.data) set({ items: itemsRes.data.map(fromDbItem) });
     if (!nodesRes.error && nodesRes.data) set({ nodes: nodesRes.data.map(fromDbNode) });
+    if (!reqsRes.error && reqsRes.data) set({ requests: reqsRes.data.map(fromDbRequest) });
   },
 
   /** Server-side config status (are Plaid keys set, which env, webhook URL). */
@@ -350,6 +400,40 @@ export const plaidActions = {
       throw err;
     } finally {
       markBusy(`exchange:${leadId}`, false);
+    }
+  },
+
+  /**
+   * Mint a Plaid-hosted "connect your bank" URL for a prospect and copy it
+   * to the clipboard. Staff text/email the link; the prospect completes
+   * Link on their own device and the connection lands in the vault
+   * automatically (webhook, or the sweep during Sync all / nightly cron).
+   */
+  async createHostedLink(leadId: string): Promise<string> {
+    markBusy(`invite:${leadId}`, true);
+    try {
+      const json = await authFetch('/hosted-link', {
+        method: 'POST',
+        body: JSON.stringify({ leadId }),
+      });
+      const url = String(json.hosted_link_url ?? '');
+      let copied = false;
+      try {
+        await navigator.clipboard.writeText(url);
+        copied = true;
+      } catch { /* clipboard blocked — fall through to prompt */ }
+      if (copied) {
+        toast.success('Secure connect link copied — text or email it to the prospect. Valid for 7 days.');
+      } else {
+        window.prompt('Copy this secure connect link and send it to the prospect (valid 7 days):', url);
+      }
+      await plaidActions.refresh();
+      return url;
+    } catch (err: any) {
+      toast.error(`Couldn't create connect link: ${err.message}`);
+      throw err;
+    } finally {
+      markBusy(`invite:${leadId}`, false);
     }
   },
 
@@ -492,6 +576,11 @@ export function usePlaidItems() {
 
 export function usePlaidNodes() {
   const selector = useCallback(() => state.nodes, []);
+  return useSyncExternalStore(subscribe, selector, selector);
+}
+
+export function usePlaidLinkRequests() {
+  const selector = useCallback(() => state.requests, []);
   return useSyncExternalStore(subscribe, selector, selector);
 }
 
