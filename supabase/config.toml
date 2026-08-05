@@ -14,6 +14,16 @@
 # gated by x-cron-secret); pg_cron sends the public anon key to satisfy the
 # platform JWT check, so that function keeps verify_jwt = true.
 
+# The Hono server deploys under the slug make-server-940653c6 (the URL the
+# CRM frontend calls), but its source lives in functions/server/. Without
+# this entrypoint mapping, `supabase functions deploy server` publishes a
+# stray `server` slug that nothing calls (this happened — the dashboard may
+# still show it; safe to delete). Deploy with:
+#   supabase functions deploy make-server-940653c6
+[functions.make-server-940653c6]
+entrypoint = "./functions/server/index.tsx"
+verify_jwt = true
+
 [functions.plaid-webhook]
 verify_jwt = false
 

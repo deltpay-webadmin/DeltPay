@@ -61,11 +61,15 @@ referenced in step 5.
 Deploy the three Plaid edge functions and the frontend:
 
 ```sh
-supabase functions deploy server
+supabase functions deploy make-server-940653c6   # the Hono server (see config.toml entrypoint)
 supabase functions deploy plaid-webhook
 supabase functions deploy plaid-config-check
 # frontend: ./deploy.sh (Vercel)
 ```
+
+(Not `deploy server` — that publishes a stray `server` slug the frontend
+never calls. The `[functions.make-server-940653c6]` entrypoint mapping in
+`supabase/config.toml` points the real slug at `functions/server/`.)
 
 Nothing changes behavior until the secrets below are flipped:
 `redirect_uri` is only sent when `PLAID_REDIRECT_URI` is set, and webhook
