@@ -499,6 +499,7 @@ export const ES: Record<string, string> = {
   'High': 'Alta',
   'Medium': 'Media',
   'Check': 'Revisar',
+  'Internal only': 'Solo interno',
   'Interchange downgrades on the statement': 'Degradaciones de intercambio en el estado de cuenta',
   'Downgrade language in the statement notes': 'Lenguaje de degradación en las notas del estado de cuenta',
   'PIN debit not enabled': 'Débito con PIN no habilitado',

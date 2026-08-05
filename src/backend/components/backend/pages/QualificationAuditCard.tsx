@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import { ShieldAlert, ShieldCheck } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { ChevronDown, ChevronRight, ShieldAlert, ShieldCheck } from 'lucide-react';
 import { auditQualification, type DowngradeFinding, type FindingSeverity } from '../interchangeAudit';
 import type { MerchantCategory } from '../interchangeRates';
 import type { ExtractedData } from './BackendAnalysis';
@@ -12,17 +12,21 @@ interface QualificationAuditCardProps {
   category: MerchantCategory;
 }
 
-const SEVERITY_STYLE: Record<FindingSeverity, { badge: string; label: string }> = {
-  high: { badge: 'bg-red-50 text-red-700', label: 'High' },
-  medium: { badge: 'bg-amber-50 text-amber-700', label: 'Medium' },
-  info: { badge: 'bg-gray-100 text-gray-600', label: 'Check' },
+const SEVERITY: Record<FindingSeverity, { dot: string; chip: string; border: string; label: string }> = {
+  high: { dot: 'bg-red-500', chip: 'bg-red-50 text-red-700', border: 'border-red-400', label: 'High' },
+  medium: { dot: 'bg-amber-500', chip: 'bg-amber-50 text-amber-700', border: 'border-amber-400', label: 'Medium' },
+  info: { dot: 'bg-gray-300', chip: 'bg-gray-100 text-gray-600', border: 'border-gray-200', label: 'Check' },
 };
 
 /**
  * Downgrade & qualification audit for the analyzed statement — where the
  * merchant is clearing at punitive interchange tiers, missing PIN debit
  * routing, or lacking enhanced data, and what that margin is worth annually.
- * Internal-only — never rendered in Merchant View.
+ *
+ * Built to scan: the header carries severity counts and the recoverable
+ * total; each finding is a single row (dot · title · evidence preview ·
+ * $/yr) that expands to the full evidence and playbook. High-severity
+ * findings start expanded. Internal-only — never rendered in Merchant View.
  */
 export function QualificationAuditCard({ extracted, category }: QualificationAuditCardProps) {
   const { t } = useLang();
@@ -39,26 +43,51 @@ export function QualificationAuditCard({ extracted, category }: QualificationAud
     currentMonthlyCost: extracted.currentMonthlyCost,
   }, category), [extracted, category]);
 
+  // High-severity findings open on arrival; everything else stays folded.
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    setExpanded(new Set(findings.filter(f => f.severity === 'high').map(f => f.id)));
+  }, [findings]);
+
+  const toggle = (id: string) => setExpanded(prev => {
+    const next = new Set(prev);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    return next;
+  });
+
   const totalRecovery = findings.reduce((s, f) => s + (f.estAnnualRecovery ?? 0), 0);
-  const actionable = findings.filter(f => f.severity !== 'info');
+  const counts = findings.reduce(
+    (acc, f) => { acc[f.severity] += 1; return acc; },
+    { high: 0, medium: 0, info: 0 } as Record<FindingSeverity, number>,
+  );
+  const actionable = counts.high + counts.medium;
 
   return (
     <div className="bg-white rounded-[8px] border border-gray-200 overflow-hidden">
+      {/* ── Scan line: what's wrong, how bad, what it's worth ── */}
       <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between gap-3 flex-wrap">
         <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
-          {actionable.length > 0
+          {actionable > 0
             ? <ShieldAlert className="w-4 h-4 text-amber-500" />
             : <ShieldCheck className="w-4 h-4 text-emerald-500" />}
           {t('Downgrade & Qualification Audit')}
+          <span className="flex items-center gap-1.5 ml-1">
+            {(['high', 'medium', 'info'] as FindingSeverity[]).map(sev => counts[sev] > 0 && (
+              <span key={sev} className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide ${SEVERITY[sev].chip}`}>
+                {counts[sev]} {t(SEVERITY[sev].label)}
+              </span>
+            ))}
+          </span>
         </h2>
         <div className="flex items-center gap-2">
           {totalRecovery > 0 && (
-            <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold tabular-nums">
-              ~{fmtWhole(totalRecovery)}/yr {t('recoverable margin')}
+            <span className="px-2.5 py-1 rounded-[6px] bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm font-bold tabular-nums">
+              ~{fmtWhole(totalRecovery)}/yr
             </span>
           )}
           <span className="px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 text-[10px] font-bold uppercase tracking-wide">
-            {t('Internal only — hidden in Merchant View')}
+            {t('Internal only')}
           </span>
         </div>
       </div>
@@ -75,31 +104,49 @@ export function QualificationAuditCard({ extracted, category }: QualificationAud
         </div>
       ) : (
         <div className="divide-y divide-gray-100">
-          {findings.map(f => (
-            <div key={f.id} className="px-5 py-4">
-              <div className="flex items-center justify-between gap-3 flex-wrap">
-                <p className="text-sm font-semibold text-gray-900 flex items-center gap-2">
-                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide ${SEVERITY_STYLE[f.severity].badge}`}>
-                    {t(SEVERITY_STYLE[f.severity].label)}
+          {findings.map(f => {
+            const sev = SEVERITY[f.severity];
+            const isOpen = expanded.has(f.id);
+            return (
+              <div key={f.id} className={`border-l-2 ${sev.border}`}>
+                {/* One-line scan row */}
+                <button
+                  onClick={() => toggle(f.id)}
+                  className="w-full px-4 py-3 flex items-center gap-3 text-left hover:bg-gray-50/60 transition-colors"
+                >
+                  <span className={`w-2 h-2 rounded-full shrink-0 ${sev.dot}`} />
+                  <span className="text-sm font-semibold text-gray-900 shrink-0">{t(f.title)}</span>
+                  {!isOpen && (
+                    <span className="text-xs text-gray-400 truncate flex-1 min-w-0">{f.detail}</span>
+                  )}
+                  <span className="ml-auto flex items-center gap-2 shrink-0">
+                    {f.estAnnualRecovery !== null && f.estAnnualRecovery > 0 && (
+                      <span className="text-sm font-bold text-emerald-600 tabular-nums">
+                        ~{fmtWhole(f.estAnnualRecovery)}/yr
+                      </span>
+                    )}
+                    {isOpen
+                      ? <ChevronDown className="w-4 h-4 text-gray-300" />
+                      : <ChevronRight className="w-4 h-4 text-gray-300" />}
                   </span>
-                  {t(f.title)}
-                </p>
-                {f.estAnnualRecovery !== null && f.estAnnualRecovery > 0 && (
-                  <span className="text-sm font-bold text-emerald-600 tabular-nums">
-                    ~{fmtWhole(f.estAnnualRecovery)}/yr
-                  </span>
+                </button>
+
+                {/* Expanded: evidence + playbook */}
+                {isOpen && (
+                  <div className="px-4 pb-4 pl-9 space-y-1.5">
+                    <p className="text-xs text-gray-600">{f.detail}</p>
+                    <p className="text-xs text-gray-500">
+                      <span className="font-semibold text-gray-700">{t('How to earn it:')}</span> {f.action}
+                    </p>
+                  </div>
                 )}
               </div>
-              <p className="text-xs text-gray-600 mt-1.5">{f.detail}</p>
-              <p className="text-xs text-gray-500 mt-1.5">
-                <span className="font-semibold text-gray-700">{t('How to earn it:')}</span> {f.action}
-              </p>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
-      <div className="px-5 py-3 border-t border-gray-100">
+      <div className="px-5 py-2.5 border-t border-gray-100">
         <p className="text-[11px] text-gray-400">
           {t('Recovery figures are estimates against the published April 2026 schedules; actual results depend on card mix and how much volume re-qualifies.')}
         </p>
