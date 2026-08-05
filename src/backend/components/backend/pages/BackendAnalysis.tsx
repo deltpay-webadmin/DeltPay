@@ -15,7 +15,9 @@ import {
 } from 'recharts';
 import { supabase } from '../../../lib/supabase';
 import { leadActions } from '../crmStore';
-import { quotePrograms, RISK_TIERS, type ProgramQuote, type RiskTierKey } from '../pricingPrograms';
+import { quotePrograms, RISK_TIERS, IC_PLUS_MARGIN, volumeBandKey, type ProgramQuote, type RiskTierKey } from '../pricingPrograms';
+import { estimateInterchange, MERCHANT_CATEGORIES, type MerchantCategory } from '../interchangeRates';
+import { InterchangeReferenceCard } from './InterchangeReferenceCard';
 import { openProposalPdf } from '../proposalDoc';
 import { useSession } from '../SessionContext';
 import { useLang } from '../i18n';
@@ -76,13 +78,22 @@ const fmt = (n: number) => n.toLocaleString('en-US', { style: 'currency', curren
 const fmtWhole = (n: number) => n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
 
 /**
- * Delt pricing heuristic pending the full interchange engine: undercut the
- * merchant's current effective rate by ~22% with a 2.15% floor. Numbers stay
- * consistent with the Cost Calculator's positioning.
+ * Headline proposal: undercut the merchant's current effective rate by ~22%,
+ * floored at the real network cost (published interchange + assessments,
+ * interchangeRates.ts) plus the banded Delt margin — never quote below cost.
  */
 function buildProposal(ex: ExtractedData): SavingsProposal {
   const currentRate = ex.effectiveRatePct;
-  const deltRate = Math.max(2.15, Math.round(currentRate * 0.78 * 100) / 100);
+  const ticket = ex.avgTicket > 0
+    ? ex.avgTicket
+    : ex.totalTransactions > 0 ? ex.totalVolume / ex.totalTransactions : 0;
+  const margin = IC_PLUS_MARGIN[volumeBandKey(ex.totalVolume)];
+  const floor = estimateInterchange('retail', ticket).networkCostPct
+    + margin.pct + (ticket > 0 ? (margin.perTxn / ticket) * 100 : 0);
+  const deltRate = Math.max(
+    Math.round(floor * 100) / 100,
+    Math.round(currentRate * 0.78 * 100) / 100,
+  );
   const deltMonthlyCost = Math.round(ex.totalVolume * deltRate) / 100;
   const monthlySavings = Math.max(0, ex.currentMonthlyCost - deltMonthlyCost);
   const annualSavings = Math.round(monthlySavings * 12);
@@ -158,6 +169,7 @@ export function BackendAnalysis() {
   const [historyView, setHistoryView] = useState<'all' | 'merchant'>('all');
   const [merchantFilter, setMerchantFilter] = useState<string | null>(null);
   const [riskTier, setRiskTier] = useState<RiskTierKey>('medium');
+  const [category, setCategory] = useState<MerchantCategory>('retail');
   const [merchantView, setMerchantView] = useState(false);
   /** Filename of a saved analysis reopened from history (no File object exists for it). */
   const [openedFilename, setOpenedFilename] = useState<string | null>(null);
@@ -379,8 +391,10 @@ export function BackendAnalysis() {
       monthlyTransactions: extracted.totalTransactions,
       currentMonthlyCost: extracted.currentMonthlyCost,
       riskTier,
+      category,
+      avgTicket: extracted.avgTicket,
     });
-  }, [extracted, riskTier]);
+  }, [extracted, riskTier, category]);
   const bestProgram = useMemo(
     () => programs.reduce<ProgramQuote | null>((best, p) => (!best || p.annualSavings > best.annualSavings ? p : best), null),
     [programs],
@@ -800,7 +814,19 @@ export function BackendAnalysis() {
                       <Sparkles className="w-4 h-4 text-brand" />
                       {t('Delt Pricing Programs')}
                     </h2>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-gray-400">{t('Industry')}</span>
+                        <select
+                          value={category}
+                          onChange={e => setCategory(e.target.value as MerchantCategory)}
+                          className="px-2.5 py-1.5 text-xs font-medium text-gray-700 border border-gray-200 rounded-[6px] bg-white cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand/20"
+                        >
+                          {MERCHANT_CATEGORIES.map(c => (
+                            <option key={c.key} value={c.key}>{t(c.label)}</option>
+                          ))}
+                        </select>
+                      </div>
                       <span className="text-xs text-gray-400">{t('Risk tier')}</span>
                       <div className="flex rounded-[6px] border border-gray-200 overflow-hidden">
                         {RISK_TIERS.map(tier => (
@@ -901,8 +927,12 @@ export function BackendAnalysis() {
                 <AnalysisEconomicsCard
                   extracted={extracted}
                   riskTier={riskTier}
+                  category={category}
                   bestSavingsKey={bestProgram?.key ?? null}
                 />
+
+                {/* ── Published interchange schedules (internal only) ── */}
+                <InterchangeReferenceCard category={category} avgTicket={extracted.avgTicket} />
                 </>
                 )}
               </>

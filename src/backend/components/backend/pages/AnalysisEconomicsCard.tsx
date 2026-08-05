@@ -1,9 +1,13 @@
 import React, { useMemo } from 'react';
 import { Lock } from 'lucide-react';
 import {
-  estimateProgramEconomics, INTERCHANGE_EST,
+  estimateProgramEconomics,
   type RiskTierKey,
 } from '../pricingPrograms';
+import {
+  estimateInterchange, INTERCHANGE_SCHEDULE_VERSION, MERCHANT_CATEGORIES,
+  type MerchantCategory,
+} from '../interchangeRates';
 import type { ExtractedData } from './BackendAnalysis';
 import { useLang } from '../i18n';
 
@@ -12,26 +16,35 @@ const fmtWhole = (n: number) => n.toLocaleString('en-US', { style: 'currency', c
 interface AnalysisEconomicsCardProps {
   extracted: ExtractedData;
   riskTier: RiskTierKey;
+  /** Merchant category driving the interchange lookup. */
+  category: MerchantCategory;
   /** Key of the program recommended to the merchant (best savings), for the margin-vs-savings footnote. */
   bestSavingsKey: string | null;
 }
 
 /** Internal-only Delt economics for the analyzed statement. Never rendered in Merchant View. */
-export function AnalysisEconomicsCard({ extracted, riskTier, bestSavingsKey }: AnalysisEconomicsCardProps) {
+export function AnalysisEconomicsCard({ extracted, riskTier, category, bestSavingsKey }: AnalysisEconomicsCardProps) {
   const { t } = useLang();
   const economics = useMemo(() => estimateProgramEconomics({
     monthlyVolume: extracted.totalVolume,
     monthlyTransactions: extracted.totalTransactions,
     currentMonthlyCost: extracted.currentMonthlyCost,
     riskTier,
-  }), [extracted, riskTier]);
+    category,
+    avgTicket: extracted.avgTicket,
+  }), [extracted, riskTier, category]);
+  const ic = useMemo(
+    () => estimateInterchange(category, extracted.avgTicket),
+    [category, extracted.avgTicket],
+  );
 
   const bestMargin = useMemo(
     () => economics.reduce((best, e) => (!best || e.margin > best.margin ? e : best), economics[0] ?? null),
     [economics],
   );
 
-  const spreadBps = Math.round((extracted.effectiveRatePct - INTERCHANGE_EST) * 100);
+  const spreadBps = Math.round((extracted.effectiveRatePct - ic.networkCostPct) * 100);
+  const categoryLabel = MERCHANT_CATEGORIES.find(c => c.key === category)?.label ?? category;
 
   return (
     <div className="bg-white rounded-[8px] border border-gray-200 overflow-hidden">
@@ -51,7 +64,7 @@ export function AnalysisEconomicsCard({ extracted, riskTier, bestSavingsKey }: A
             <tr className="bg-gray-50 border-b border-gray-200">
               <th className="text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wide pl-5 pr-3 py-2.5">{t('Program')}</th>
               <th className="text-right text-[11px] font-semibold text-gray-500 uppercase tracking-wide px-3 py-2.5">{t('Annual Gross Revenue')}</th>
-              <th className="text-right text-[11px] font-semibold text-gray-500 uppercase tracking-wide px-3 py-2.5">{t('Est. Interchange')} (@ {INTERCHANGE_EST.toFixed(2)}%)</th>
+              <th className="text-right text-[11px] font-semibold text-gray-500 uppercase tracking-wide px-3 py-2.5">{t('Est. Network Cost')} (@ {ic.networkCostPct.toFixed(2)}%)</th>
               <th className="text-right text-[11px] font-semibold text-gray-500 uppercase tracking-wide px-3 py-2.5">{t('Est. Annual Margin')}</th>
               <th className="text-right text-[11px] font-semibold text-gray-500 uppercase tracking-wide pl-3 pr-5 py-2.5">{t('Margin (bps of vol.)')}</th>
             </tr>
@@ -85,9 +98,9 @@ export function AnalysisEconomicsCard({ extracted, riskTier, bestSavingsKey }: A
       <div className="px-5 py-3 border-t border-gray-100 space-y-1.5">
         <p className="text-xs text-gray-500">
           <span className="font-semibold text-gray-700">{t('Interchange optimization:')}</span>{' '}
-          {t('merchant currently pays')} {extracted.effectiveRatePct}% {t('effective vs')} ~{INTERCHANGE_EST.toFixed(2)}% {t('est. interchange')} —{' '}
+          {t('merchant currently pays')} {extracted.effectiveRatePct}% {t('effective vs')} ~{ic.networkCostPct.toFixed(2)}% {t('network cost')} —{' '}
           <span className={`font-semibold ${spreadBps > 0 ? 'text-emerald-600' : 'text-amber-600'}`}>{spreadBps} bps</span> {t('of addressable spread.')}{' '}
-          {t('Margin uses the flat interchange estimate pending the full interchange engine.')}
+          {t('Network cost blends the published')} {INTERCHANGE_SCHEDULE_VERSION} {t('Visa, Mastercard, Discover, and Amex OptBlue schedules for')} {t(categoryLabel)} {t("at this statement's average ticket, plus network assessments.")}
         </p>
         {bestMargin && bestSavingsKey && bestMargin.key !== bestSavingsKey && (
           <p className="text-xs text-amber-600">

@@ -36,8 +36,26 @@ export const RISK_TIERS = [
   { key: 'high', label: 'High Risk', desc: 'CBD, nutra, travel, high-chargeback', color: '#F2565B', bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-300' },
 ];
 
-/** Flat interchange cost estimate (% of card volume) pending the full interchange engine. */
+import { ASSESSMENTS_PCT, estimateInterchange, type MerchantCategory } from './interchangeRates';
+
+/**
+ * Flat interchange estimate (% of card volume) used only by the Cost
+ * Calculator's quick deal modeling, where no statement exists. The Statement
+ * Analyzer prices against the real published schedules (interchangeRates.ts).
+ */
 export const INTERCHANGE_EST = 1.80;
+
+/**
+ * Delt margin over interchange + assessments for the Interchange-Plus
+ * program, by monthly-volume band.
+ */
+export const IC_PLUS_MARGIN: Record<string, { pct: number; perTxn: number }> = {
+  '0-10k':    { pct: 0.75, perTxn: 0.10 },
+  '10k-25k':  { pct: 0.60, perTxn: 0.10 },
+  '25k-50k':  { pct: 0.50, perTxn: 0.08 },
+  '50k-100k': { pct: 0.40, perTxn: 0.07 },
+  '100k+':    { pct: 0.30, perTxn: 0.05 },
+};
 
 export function volumeBandKey(monthlyVolume: number): string {
   if (monthlyVolume < 10_000) return '0-10k';
@@ -70,6 +88,18 @@ export interface QuoteInput {
   /** The merchant's current total monthly processing cost. */
   currentMonthlyCost: number;
   riskTier: RiskTierKey;
+  /** Merchant category for interchange lookup. Defaults to 'retail'. */
+  category?: MerchantCategory;
+  /** Average ticket; derived from volume/transactions when omitted. */
+  avgTicket?: number;
+}
+
+/** Blended network cost (interchange + assessments, % of volume) for a quote input. */
+function networkCostPct(input: QuoteInput): number {
+  const ticket = input.avgTicket && input.avgTicket > 0
+    ? input.avgTicket
+    : input.monthlyTransactions > 0 ? input.monthlyVolume / input.monthlyTransactions : 0;
+  return estimateInterchange(input.category ?? 'retail', ticket).networkCostPct;
 }
 
 /**
@@ -80,7 +110,6 @@ export interface QuoteInput {
 export function quotePrograms(input: QuoteInput): ProgramQuote[] {
   const { monthlyVolume, monthlyTransactions, currentMonthlyCost, riskTier } = input;
   const band = volumeBandKey(monthlyVolume);
-  const currentRate = monthlyVolume > 0 ? (currentMonthlyCost / monthlyVolume) * 100 : 0;
 
   const build = (
     key: ProgramQuote['key'],
@@ -107,9 +136,14 @@ export function quotePrograms(input: QuoteInput): ProgramQuote[] {
   const cd = CASH_DISCOUNT_MATRIX[band][riskTier];
   const fr = FLAT_RATE_MATRIX[band][riskTier];
 
-  // Interchange-plus estimate: undercut the current effective rate ~22%
-  // with a 2.15% floor (heuristic pending the full interchange engine).
-  const icRate = Math.max(2.15, Math.round(currentRate * 0.78 * 100) / 100);
+  // Interchange-Plus: blended published-schedule network cost for this
+  // merchant's category and ticket, plus the banded Delt margin.
+  const icMargin = IC_PLUS_MARGIN[band];
+  const icBase = networkCostPct(input);
+  const icMonthly = monthlyVolume * ((icBase + icMargin.pct) / 100) + monthlyTransactions * icMargin.perTxn;
+  const icEffective = monthlyVolume > 0
+    ? Math.round((icMonthly / monthlyVolume) * 10000) / 100
+    : Math.round((icBase + icMargin.pct) * 100) / 100;
 
   return [
     build(
@@ -134,9 +168,9 @@ export function quotePrograms(input: QuoteInput): ProgramQuote[] {
       'interchange_plus',
       'Interchange-Plus',
       'Pass-through interchange with a transparent Delt margin.',
-      monthlyVolume * (icRate / 100),
-      `~${icRate.toFixed(2)}% all-in effective`,
-      icRate,
+      icMonthly,
+      `IC + ${icMargin.pct.toFixed(2)}% + $${icMargin.perTxn.toFixed(2)}/txn · ~${icEffective.toFixed(2)}% all-in effective`,
+      icEffective,
     ),
   ];
 }
@@ -151,7 +185,7 @@ export interface ProgramEconomics {
   name: string;
   /** Annual gross revenue to Delt under this program. */
   grossRevenue: number;
-  /** Annual estimated interchange cost (INTERCHANGE_EST % of volume). */
+  /** Annual estimated network cost: published-schedule interchange + assessments. */
   interchangeCost: number;
   /** Annual estimated Delt margin. */
   margin: number;
@@ -165,15 +199,15 @@ export interface ProgramEconomics {
  * volume is already card volume extracted from the statement.
  */
 export function estimateProgramEconomics(input: QuoteInput): ProgramEconomics[] {
-  const { monthlyVolume, monthlyTransactions, currentMonthlyCost, riskTier } = input;
+  const { monthlyVolume, monthlyTransactions, riskTier } = input;
   const band = volumeBandKey(monthlyVolume);
-  const currentRate = monthlyVolume > 0 ? (currentMonthlyCost / monthlyVolume) * 100 : 0;
   const annualVolume = monthlyVolume * 12;
-  const interchangeCost = annualVolume * (INTERCHANGE_EST / 100);
+  const netCostPct = networkCostPct(input);
+  const interchangeCost = annualVolume * (netCostPct / 100);
 
   const cd = CASH_DISCOUNT_MATRIX[band][riskTier];
   const fr = FLAT_RATE_MATRIX[band][riskTier];
-  const icRate = Math.max(2.15, Math.round(currentRate * 0.78 * 100) / 100);
+  const icMargin = IC_PLUS_MARGIN[band];
 
   const build = (key: ProgramQuote['key'], name: string, grossRevenue: number): ProgramEconomics => {
     const margin = grossRevenue - interchangeCost;
@@ -190,6 +224,7 @@ export function estimateProgramEconomics(input: QuoteInput): ProgramEconomics[] 
   return [
     build('cash_discount', 'Cash Discount', annualVolume * (cd.serviceFee / 100) + cd.monthlyFee * 12),
     build('flat_rate', 'Flat Rate', annualVolume * (fr.rate / 100) + monthlyTransactions * fr.perTxn * 12),
-    build('interchange_plus', 'Interchange-Plus', annualVolume * (icRate / 100)),
+    build('interchange_plus', 'Interchange-Plus',
+      annualVolume * ((netCostPct + icMargin.pct) / 100) + monthlyTransactions * icMargin.perTxn * 12),
   ];
 }

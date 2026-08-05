@@ -460,4 +460,30 @@ export const ES: Record<string, string> = {
     '"Honestamente, muchos de sus competidores ya usan descuento por efectivo — solo que no lo anuncian. Los negocios que siguen pagando 3-4% en cada transacción son los que se están quedando atrás. Esto se está volviendo el estándar, no la excepción."',
   'Cash discount adoption among SMBs has grown 340% since 2020. In food service and auto repair, over 40% of merchants now use some form of non-cash adjustment.':
     'La adopción del descuento por efectivo entre PyMEs ha crecido 340% desde 2020. En alimentos y talleres automotrices, más del 40% de los comercios ya usa alguna forma de ajuste por pago no en efectivo.',
+
+  // ── Statement Analyzer: interchange engine ──
+  'Industry': 'Industria',
+  'Restaurant': 'Restaurante',
+  'Supermarket / Grocery': 'Supermercado / Abarrotes',
+  'E-Commerce / Card-Not-Present': 'Comercio Electrónico / Tarjeta No Presente',
+  'Professional Services': 'Servicios Profesionales',
+  'Healthcare': 'Salud',
+  'Lodging / Travel': 'Hotelería / Viajes',
+  'Petroleum / Fuel': 'Gasolinera / Combustible',
+  'B2B / Wholesale': 'B2B / Mayoreo',
+  'Est. Network Cost': 'Costo de Red Est.',
+  'network cost': 'costo de red',
+  'Network cost blends the published': 'El costo de red combina las tablas publicadas de',
+  'Visa, Mastercard, Discover, and Amex OptBlue schedules for': 'Visa, Mastercard, Discover y Amex OptBlue para',
+  "at this statement's average ticket, plus network assessments.": 'al ticket promedio de este estado de cuenta, más cuotas de red.',
+  'Interchange Reference': 'Referencia de Intercambio',
+  'Published schedules': 'Tablas publicadas',
+  'blended interchange': 'intercambio combinado',
+  'Blended baseline for this statement': 'Base combinada para este estado de cuenta',
+  'Blended + assessments': 'Combinado + cuotas de red',
+  'Blend assumes a typical US card mix (network share, debit vs credit, rewards tiers); regulated debit at':
+    'La mezcla asume un perfil típico de tarjetas en EE. UU. (participación por red, débito vs crédito, niveles de recompensas); débito regulado a',
+  'Rates themselves are the published figures.': 'Las tasas son las cifras publicadas.',
+  'Effective': 'Vigente desde',
+  'Fee Program': 'Programa de Tarifa',
 };
