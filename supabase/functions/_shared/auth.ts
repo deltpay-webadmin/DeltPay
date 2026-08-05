@@ -87,10 +87,7 @@ export async function requirePerm(
   return auth;
 }
 
-/** Timing-safe compare of the x-cron-secret header against CRON_SECRET. */
-export function verifyCronSecret(req: Request): boolean {
-  const expected = Deno.env.get("CRON_SECRET") ?? "";
-  const given = req.headers.get("x-cron-secret") ?? "";
+function timingSafeEqual(expected: string, given: string): boolean {
   if (!expected) return false; // fail closed when unconfigured
   const enc = new TextEncoder();
   const a = enc.encode(expected);
@@ -99,4 +96,22 @@ export function verifyCronSecret(req: Request): boolean {
   let diff = 0;
   for (let i = 0; i < a.length; i++) diff |= a[i] ^ b[i];
   return diff === 0;
+}
+
+/** Timing-safe compare of the x-cron-secret header against CRON_SECRET. */
+export function verifyCronSecret(req: Request): boolean {
+  return timingSafeEqual(
+    Deno.env.get("CRON_SECRET") ?? "",
+    req.headers.get("x-cron-secret") ?? "",
+  );
+}
+
+/** Timing-safe compare of the x-apply-secret header against
+ * APPLY_EXCHANGE_SECRET — the gate for the public applicant-side Plaid
+ * exchange route called server-to-server by deltcapital.com. */
+export function verifyApplySecret(req: Request): boolean {
+  return timingSafeEqual(
+    Deno.env.get("APPLY_EXCHANGE_SECRET") ?? "",
+    req.headers.get("x-apply-secret") ?? "",
+  );
 }

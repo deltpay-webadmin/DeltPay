@@ -14,10 +14,11 @@ import {
   attachIdentityVerification,
   createAssetReport,
   refreshAssetReport,
+  applyPlaidExchange,
   svc,
 } from "../_shared/plaid.ts";
 import { adsStatus, connectMeta, syncMeta, disconnectMeta, syncMetaLeads, importMetaLeads } from "../_shared/meta.ts";
-import { requireUser, hasPerm, verifyCronSecret, type AuthContext } from "../_shared/auth.ts";
+import { requireUser, hasPerm, verifyCronSecret, verifyApplySecret, type AuthContext } from "../_shared/auth.ts";
 import { sweepInFlightEnvelopes } from "../_shared/docusign_status.ts";
 const app = new Hono();
 
@@ -136,6 +137,55 @@ app.post("/make-server-940653c6/leads/pricing-guide", async (c) => {
   } catch (err) {
     console.error("pricing-guide lead error", err);
     return c.json({ ok: false, error: "Something went wrong. Please try again." }, 500);
+  }
+});
+
+// ────────────────────────────────────────────────────────────────
+// Applicant-side Plaid exchange — called server-to-server by the
+// deltcapital.com funding application (api/plaid-exchange-token.js)
+// so applicant bank connections land in the vault instead of being
+// discarded. No user JWT (applicants aren't staff): the caller sends
+// the public anon key as Authorization to pass platform JWT
+// verification, and x-apply-secret (timing-safe compare against the
+// APPLY_EXCHANGE_SECRET function secret, fails closed when unset) is
+// the real gate. The public_token is env-bound — if deltcapital.com
+// runs a different PLAID_ENV than these functions, the exchange fails
+// and the caller falls back to its local, non-persisting exchange.
+// ────────────────────────────────────────────────────────────────
+
+app.post("/make-server-940653c6/apply/plaid-exchange", async (c) => {
+  if (!verifyApplySecret(c.req.raw)) {
+    return c.json({ ok: false, error: "Forbidden" }, 403);
+  }
+  const body = await c.req.json().catch(() => ({}));
+  const publicToken = String(body.public_token ?? "");
+  const applicant = (body.applicant ?? {}) as Record<string, unknown>;
+  const email = String(applicant.email ?? "").trim().toLowerCase();
+  if (!publicToken) {
+    return c.json({ ok: false, error: "public_token is required" }, 400);
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254) {
+    return c.json({ ok: false, error: "applicant.email is required" }, 400);
+  }
+  try {
+    const out = await applyPlaidExchange(
+      publicToken,
+      {
+        email,
+        fullName: typeof applicant.fullName === "string" ? applicant.fullName.slice(0, 200) : undefined,
+        businessName: typeof applicant.businessName === "string" ? applicant.businessName.slice(0, 200) : undefined,
+        leadId: typeof applicant.leadId === "string" ? applicant.leadId.slice(0, 64) : undefined,
+      },
+      body.institution,
+    );
+    return c.json({ ok: true, ...out });
+  } catch (err: any) {
+    console.error("apply plaid-exchange error", err);
+    return c.json({
+      ok: false,
+      error: String(err?.message ?? err),
+      plaid_error_code: err?.plaid?.error_code ?? null,
+    }, 500);
   }
 });
 
