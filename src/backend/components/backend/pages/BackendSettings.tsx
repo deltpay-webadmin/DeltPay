@@ -89,7 +89,7 @@ interface SettingsSection {
 }
 
 const GENERAL_SECTIONS: SettingsSection[] = [
-  { key: 'company', title: 'Company Profile', icon: '🏢', fields: [
+  { key: 'company', title: 'Company Profile', icon: Building2, fields: [
     { label: 'Company Name', value: 'Delt Pay LLC', type: 'text' },
     { label: 'Legal Entity', value: 'Delt Pay LLC', type: 'text' },
     { label: 'Registered Address', value: '1603 Capitol Ave Ste 415 #644712, Cheyenne, WY', type: 'text' },
@@ -98,14 +98,14 @@ const GENERAL_SECTIONS: SettingsSection[] = [
     { label: 'Website', value: 'deltpay.com', type: 'text' },
     { label: 'Entity Type', value: 'LLC — S-Corp Election', type: 'text', readonly: true },
   ]},
-  { key: 'branding', title: 'Brand & Appearance', icon: '🎨', fields: [
+  { key: 'branding', title: 'Brand & Appearance', icon: Palette, fields: [
     { label: 'Primary Color', value: '#2E6BFF', type: 'color' },
     { label: 'Secondary Color', value: '#041e42', type: 'color' },
     { label: 'Heading Font', value: 'DM Sans', type: 'select', options: ['DM Sans', 'Inter', 'Outfit', 'Plus Jakarta Sans'] },
     { label: 'Mono Font', value: 'JetBrains Mono', type: 'select', options: ['JetBrains Mono', 'Fira Code', 'Source Code Pro'] },
     { label: 'White-Label Agent Portal', value: true, type: 'toggle' },
   ]},
-  { key: 'notifications', title: 'Notifications', icon: '🔔', fields: [
+  { key: 'notifications', title: 'Notifications', icon: Bell, fields: [
     { label: 'New Lead Alert', value: true, type: 'toggle' },
     { label: 'Underwriting Status Change', value: true, type: 'toggle' },
     { label: 'Chargeback Filed (CRITICAL)', value: true, type: 'toggle', description: 'Notifies both agent AND super admin immediately' },
@@ -115,7 +115,7 @@ const GENERAL_SECTIONS: SettingsSection[] = [
     { label: 'NSF / Slow Pay Alert', value: true, type: 'toggle' },
     { label: 'Notification Channel', value: 'Email + SMS + In-App', type: 'select', options: ['Email Only', 'In-App Only', 'Email + In-App', 'Email + SMS + In-App'] },
   ]},
-  { key: 'processing', title: 'Processing Defaults', icon: '💳', fields: [
+  { key: 'processing', title: 'Processing Defaults', icon: CreditCard, fields: [
     { label: 'Default Program', value: 'Cash Discount', type: 'select', options: ['Cash Discount', 'Flat Rate', 'Interchange Plus'] },
     { label: 'Default Service Fee (CD)', value: '3.99%', type: 'text' },
     { label: 'Interchange Schedule', value: 'April 2026', type: 'text', readonly: true },
@@ -124,7 +124,7 @@ const GENERAL_SECTIONS: SettingsSection[] = [
     { label: 'Margin Floor', value: '0.50%', type: 'text' },
     { label: 'Agent Pricing Override', value: false, type: 'toggle', description: 'If off, agents cannot modify matrix-locked rates' },
   ]},
-  { key: 'capital', title: 'Capital Defaults', icon: '🏦', fields: [
+  { key: 'capital', title: 'Capital Defaults', icon: Landmark, fields: [
     { label: 'Cost of Capital', value: '12%', type: 'text' },
     { label: 'Default Factor Range', value: '1.25x – 1.45x', type: 'text' },
     { label: 'Max Position Size', value: '$50,000', type: 'text' },
@@ -132,7 +132,7 @@ const GENERAL_SECTIONS: SettingsSection[] = [
     { label: 'NSF Retry Attempts', value: '3', type: 'select', options: ['1', '2', '3', '4', '5'] },
     { label: 'Default ACH Schedule', value: 'Daily (Mon-Fri)', type: 'select', options: ['Daily (Mon-Fri)', 'Weekly', 'Bi-Weekly'] },
   ]},
-  { key: 'data', title: 'Data & Privacy', icon: '🔒', fields: [
+  { key: 'data', title: 'Data & Privacy', icon: Lock, fields: [
     { label: 'Data Retention Period', value: '7 years', type: 'select', options: ['3 years', '5 years', '7 years', '10 years', 'Indefinite'] },
     { label: 'GLBA Compliance Mode', value: true, type: 'toggle' },
     { label: 'FCRA Disclosure Enabled', value: true, type: 'toggle' },
@@ -250,7 +250,7 @@ export function BackendSettings() {
                     className="w-full flex items-center justify-between px-5 py-4 bg-white hover:bg-gray-50/50 transition-colors"
                   >
                     <div className="flex items-center gap-3">
-                      <span className="text-lg">{section.icon}</span>
+                      <section.icon className="w-[18px] h-[18px] text-gray-500" />
                       <span className="text-sm font-semibold text-gray-900">{section.title}</span>
                     </div>
                     <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${open ? 'rotate-180' : ''}`} />
