@@ -1,24 +1,28 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import {
-  Calculator, RotateCcw, ChevronRight, ChevronDown, Lock,
-  AlertTriangle, CheckCircle, TrendingUp, DollarSign, Users,
-  Building2, ShoppingCart, Wrench, Scissors, Heart, Briefcase,
-  Package, BarChart3, ArrowRight,
+  RotateCcw, ChevronDown, Lock, Check,
+  UtensilsCrossed, Store, Wrench, Scissors, Stethoscope, Briefcase,
+  ShoppingCart, Package, Banknote, BarChart3, ArrowRight, SlidersHorizontal,
+  type LucideIcon,
 } from 'lucide-react';
-import { CASH_DISCOUNT_MATRIX, FLAT_RATE_MATRIX, VOLUME_BANDS, RISK_TIERS, INTERCHANGE_EST } from '../pricingPrograms';
+import {
+  ResponsiveContainer, LineChart, Line, XAxis, YAxis,
+  Tooltip as ChartTooltip, CartesianGrid, ReferenceLine,
+} from 'recharts';
+import { CASH_DISCOUNT_MATRIX, FLAT_RATE_MATRIX, VOLUME_BANDS, RISK_TIERS, INTERCHANGE_EST, volumeBandKey } from '../pricingPrograms';
 
 // ─── PRICING MATRICES: shared with the Statement Analyzer ───
 // (see ../pricingPrograms.ts)
 
-const MERCHANT_TYPES = [
-  { key: 'restaurant', label: 'Restaurant / Bar', icon: '🍽️', cdScore: 92, cardRatioDefault: 65 },
-  { key: 'retail', label: 'Retail Store', icon: '🏪', cdScore: 88, cardRatioDefault: 80 },
-  { key: 'auto', label: 'Auto / Repair', icon: '🔧', cdScore: 95, cardRatioDefault: 55 },
-  { key: 'salon', label: 'Salon / Spa', icon: '💈', cdScore: 85, cardRatioDefault: 75 },
-  { key: 'medical', label: 'Medical / Dental', icon: '🏥', cdScore: 70, cardRatioDefault: 85 },
-  { key: 'professional', label: 'Professional Svcs', icon: '💼', cdScore: 65, cardRatioDefault: 90 },
-  { key: 'ecommerce', label: 'E-Commerce', icon: '🛒', cdScore: 20, cardRatioDefault: 98 },
-  { key: 'other', label: 'Other', icon: '📦', cdScore: 75, cardRatioDefault: 70 },
+const MERCHANT_TYPES: { key: string; label: string; icon: LucideIcon; cdScore: number; cardRatioDefault: number }[] = [
+  { key: 'restaurant', label: 'Restaurant / Bar', icon: UtensilsCrossed, cdScore: 92, cardRatioDefault: 65 },
+  { key: 'retail', label: 'Retail Store', icon: Store, cdScore: 88, cardRatioDefault: 80 },
+  { key: 'auto', label: 'Auto / Repair', icon: Wrench, cdScore: 95, cardRatioDefault: 55 },
+  { key: 'salon', label: 'Salon / Spa', icon: Scissors, cdScore: 85, cardRatioDefault: 75 },
+  { key: 'medical', label: 'Medical / Dental', icon: Stethoscope, cdScore: 70, cardRatioDefault: 85 },
+  { key: 'professional', label: 'Professional Svcs', icon: Briefcase, cdScore: 65, cardRatioDefault: 90 },
+  { key: 'ecommerce', label: 'E-Commerce', icon: ShoppingCart, cdScore: 20, cardRatioDefault: 98 },
+  { key: 'other', label: 'Other', icon: Package, cdScore: 75, cardRatioDefault: 70 },
 ];
 
 const RECEPTIVITY_LEVELS = [
@@ -132,6 +136,8 @@ export function BackendCostCalculator() {
   const [merchantName, setMerchantName] = useState('');
   const [cardRatio, setCardRatio] = useState('');
   const [expandedObj, setExpandedObj] = useState<string | null>(null);
+  // Simulator override: null = use the qualification band's midpoint.
+  const [simVolume, setSimVolume] = useState<number | null>(null);
 
   const isCashDiscount = program === 'cash_discount';
   const bandData = VOLUME_BANDS.find(b => b.key === volumeBand);
@@ -141,12 +147,16 @@ export function BackendCostCalculator() {
   const effectiveCardRatio = parseFloat(cardRatio) || (mtData ? mtData.cardRatioDefault : 70);
   const ratio = Math.min(Math.max(effectiveCardRatio, 0), 100) / 100;
   const ticket = parseFloat(avgTicket) || (bandData ? AVG_TICKET_PRESETS[bandData.key] : 40);
-  const monthlyVol = bandData ? bandData.midpoint : 0;
+  const monthlyVol = simVolume ?? (bandData ? bandData.midpoint : 0);
   const monthlyTxns = ticket > 0 ? Math.round(monthlyVol / ticket) : 0;
   const cardVol = monthlyVol * ratio;
+  const effCurrentRate = parseFloat(currentRate) || 3.5;
 
-  const cdPricing = volumeBand && riskTier ? CASH_DISCOUNT_MATRIX[volumeBand][riskTier] : null;
-  const frPricing = volumeBand && riskTier ? FLAT_RATE_MATRIX[volumeBand][riskTier] : null;
+  // Pricing re-locks to whatever band the simulated volume lands in.
+  const pricingBand = monthlyVol > 0 ? volumeBandKey(monthlyVol) : null;
+  const pricingBandData = VOLUME_BANDS.find(b => b.key === pricingBand);
+  const cdPricing = pricingBand && riskTier ? CASH_DISCOUNT_MATRIX[pricingBand][riskTier] : null;
+  const frPricing = pricingBand && riskTier ? FLAT_RATE_MATRIX[pricingBand][riskTier] : null;
 
   const cdAnnual = useMemo(() => {
     if (!cdPricing) return null;
@@ -165,12 +175,31 @@ export function BackendCostCalculator() {
   }, [frPricing, monthlyVol, monthlyTxns]);
 
   const merchantSavings = useMemo(() => {
-    const cr = parseFloat(currentRate);
-    if (!cr || !monthlyVol) return null;
-    const curr = monthlyVol * 12 * (cr / 100);
+    if (!monthlyVol) return null;
+    const curr = monthlyVol * 12 * (effCurrentRate / 100);
     if (isCashDiscount) return curr - (cdPricing ? cdPricing.monthlyFee * 12 : 0);
     return curr - (frPricing ? (monthlyVol * 12 * (frPricing.rate / 100)) + (monthlyTxns * 12 * frPricing.perTxn) : 0);
-  }, [currentRate, isCashDiscount, cdPricing, frPricing, monthlyVol, monthlyTxns]);
+  }, [effCurrentRate, isCashDiscount, cdPricing, frPricing, monthlyVol, monthlyTxns]);
+
+  // ── Break-even: the card-share tipping point where CD margin overtakes flat rate ──
+  const cdSpreadPct = cdPricing ? (cdPricing.serviceFee - INTERCHANGE_EST) / 100 : 0;
+  const breakEvenRatio = useMemo(() => {
+    if (!cdPricing || !frAnnual || !monthlyVol || cdSpreadPct <= 0) return null;
+    return ((frAnnual.margin - cdPricing.monthlyFee * 12) / (monthlyVol * cdSpreadPct * 12)) * 100;
+  }, [cdPricing, frAnnual, monthlyVol, cdSpreadPct]);
+
+  const marginCurve = useMemo(() => {
+    if (!cdPricing || !frAnnual || !monthlyVol) return [];
+    const pts: { ratio: number; cd: number; fr: number }[] = [];
+    for (let r = 0; r <= 100; r += 5) {
+      pts.push({
+        ratio: r,
+        cd: Math.round(monthlyVol * (r / 100) * cdSpreadPct * 12 + cdPricing.monthlyFee * 12),
+        fr: Math.round(frAnnual.margin),
+      });
+    }
+    return pts;
+  }, [cdPricing, frAnnual, monthlyVol, cdSpreadPct]);
 
   const savingsStr = merchantSavings != null ? '$' + Math.abs(merchantSavings).toLocaleString('en-US', { maximumFractionDigits: 0 }) : '$X,XXX';
 
@@ -182,7 +211,7 @@ export function BackendCostCalculator() {
   const reset = useCallback(() => {
     setStep(1); setProgram('cash_discount'); setVolumeBand(null); setRiskTier(null);
     setMerchantType(null); setReceptivity(null); setAvgTicket(''); setCurrentRate('');
-    setMerchantName(''); setCardRatio(''); setExpandedObj(null);
+    setMerchantName(''); setCardRatio(''); setExpandedObj(null); setSimVolume(null);
   }, []);
 
   const canAdvanceTo2 = merchantType && receptivity && volumeBand && riskTier;
@@ -226,7 +255,7 @@ export function BackendCostCalculator() {
                 <span className={`w-5.5 h-5.5 rounded-full flex items-center justify-center text-[11px] font-bold ${
                   isActive ? 'bg-brand text-white' : isDone ? 'bg-emerald-100 text-emerald-600' : 'bg-gray-200 text-gray-400'
                 }`} style={{ width: 22, height: 22 }}>
-                  {isDone ? '✓' : s.n}
+                  {isDone ? <Check className="w-3 h-3" strokeWidth={3} /> : s.n}
                 </span>
                 {s.label}
               </button>
@@ -262,7 +291,7 @@ export function BackendCostCalculator() {
                             : 'border-gray-200 hover:border-gray-300 bg-white'
                         }`}
                       >
-                        <span className="text-lg">{mt.icon}</span>
+                        <mt.icon className={`w-5 h-5 ${merchantType === mt.key ? 'text-brand' : 'text-gray-400'}`} strokeWidth={1.75} />
                         <span className="text-[11px] font-medium text-gray-600 leading-tight">{mt.label}</span>
                       </button>
                     ))}
@@ -275,7 +304,7 @@ export function BackendCostCalculator() {
                     {VOLUME_BANDS.map(band => (
                       <button
                         key={band.key}
-                        onClick={() => setVolumeBand(band.key)}
+                        onClick={() => { setVolumeBand(band.key); setSimVolume(null); }}
                         className={`px-3 py-1.5 rounded-[6px] text-xs font-medium font-mono transition-all ${
                           volumeBand === band.key
                             ? 'bg-brand text-white'
@@ -408,7 +437,9 @@ export function BackendCostCalculator() {
                   isCashDiscount ? 'border-brand bg-indigo-50/30' : 'border-gray-200 bg-white hover:bg-gray-50'
                 }`}
               >
-                <span className="text-xl">💰</span>
+                <span className="w-9 h-9 rounded-[8px] bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                  <Banknote className="w-4.5 h-4.5" />
+                </span>
                 <div className="flex-1">
                   <p className="text-sm font-semibold text-gray-900">Cash Discount</p>
                   <p className="text-[11px] text-gray-500">0% effective rate — fee to card customers</p>
@@ -423,12 +454,35 @@ export function BackendCostCalculator() {
                   !isCashDiscount ? 'border-gray-400 bg-gray-50' : 'border-gray-200 bg-white hover:bg-gray-50'
                 }`}
               >
-                <span className="text-xl">📊</span>
+                <span className="w-9 h-9 rounded-[8px] bg-gray-100 text-gray-500 flex items-center justify-center shrink-0">
+                  <BarChart3 className="w-4.5 h-4.5" />
+                </span>
                 <div>
                   <p className="text-sm font-semibold text-gray-900">Flat Rate</p>
                   <p className="text-[11px] text-gray-500">Traditional — merchant absorbs cost</p>
                 </div>
               </button>
+            </div>
+
+            {/* Deal Simulator — live what-if modeling, no statement required */}
+            <div className="bg-white border border-gray-200 rounded-[8px] p-4">
+              <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
+                <div className="flex items-center gap-2 text-[11px] font-semibold text-gray-500 uppercase tracking-wide">
+                  <SlidersHorizontal className="w-3.5 h-3.5 text-brand" /> Deal Simulator
+                </div>
+                <span className="text-[10px] text-gray-400">Drag to model the deal live — pricing re-locks to the matching volume band</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-4">
+                <SimSlider label="Monthly Volume" display={fmt(monthlyVol)} value={monthlyVol} min={2500} max={300000} step={2500} onChange={setSimVolume} />
+                <SimSlider label="Avg Ticket" display={fmt(ticket)} value={ticket} min={5} max={250} step={5} onChange={v => setAvgTicket(String(v))} />
+                <SimSlider label="Card Share" display={`${Math.round(effectiveCardRatio)}%`} value={effectiveCardRatio} min={0} max={100} step={1} onChange={v => setCardRatio(String(v))} />
+                <SimSlider label="Current Rate" display={`${effCurrentRate.toFixed(2)}%`} value={effCurrentRate} min={1.5} max={6} step={0.05} onChange={v => setCurrentRate(v.toFixed(2))} />
+              </div>
+              {pricingBandData && pricingBand !== volumeBand && (
+                <p className="mt-3 text-[11px] text-amber-600 bg-amber-50 rounded-[6px] px-2.5 py-1.5 inline-block">
+                  Simulated volume moved pricing to the {pricingBandData.label} band.
+                </p>
+              )}
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-5">
@@ -438,7 +492,7 @@ export function BackendCostCalculator() {
                   {merchantName && <p className="text-lg font-semibold text-gray-900 mb-1">{merchantName}</p>}
                   <div className="inline-flex items-center gap-2 px-3 py-1 bg-gray-100 rounded-full text-[11px] text-gray-500 font-medium mb-5">
                     <span className="w-2 h-2 rounded-full" style={{ background: riskData?.color }} />
-                    {riskData?.label} · {bandData?.label}/mo
+                    {riskData?.label} · {fmt(monthlyVol)}/mo
                   </div>
 
                   {isCashDiscount ? (
@@ -520,6 +574,65 @@ export function BackendCostCalculator() {
               </div>
             </div>
 
+            {/* Break-Even Analysis — where cash discount overtakes flat rate */}
+            {cdAnnual && frAnnual && cdPricing && breakEvenRatio != null && (
+              <div className="bg-white border border-gray-200 rounded-[8px] p-4">
+                <div className="flex items-center gap-2 text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-4">
+                  <span className="w-1.5 h-1.5 rounded-full bg-brand" /> Program Break-Even <span className="text-gray-400 font-normal normal-case text-[9px]">(internal)</span>
+                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-5">
+                  <div className="space-y-3">
+                    <div className="bg-gray-50 rounded-[6px] p-3">
+                      <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Delt Margin Tipping Point</p>
+                      {breakEvenRatio <= 0 ? (
+                        <p className="text-sm text-gray-700 leading-snug">Cash discount out-earns flat rate at <span className="font-bold text-emerald-600">any card mix</span> for this profile.</p>
+                      ) : breakEvenRatio >= 100 ? (
+                        <p className="text-sm text-gray-700 leading-snug">Flat rate is the higher-margin program at <span className="font-bold text-amber-600">any realistic card mix</span> — volume is too low to cover the spread.</p>
+                      ) : (
+                        <p className="text-sm text-gray-700 leading-snug">
+                          Cash discount overtakes flat rate once <span className="font-bold text-brand font-mono">{Math.ceil(breakEvenRatio)}%</span> of sales are card.
+                          This merchant is at <span className={`font-bold font-mono ${effectiveCardRatio >= breakEvenRatio ? 'text-emerald-600' : 'text-amber-600'}`}>{Math.round(effectiveCardRatio)}%</span> —
+                          {effectiveCardRatio >= breakEvenRatio ? ' CD leads by ' : ' flat rate leads by '}
+                          <span className="font-bold font-mono">{fmt(Math.abs(cdAnnual.margin - frAnnual.margin))}/yr</span>.
+                        </p>
+                      )}
+                    </div>
+                    <div className="bg-gray-50 rounded-[6px] p-3">
+                      <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Merchant Cost Comparison</p>
+                      <p className="text-sm text-gray-700 leading-snug">
+                        Merchant pays <span className="font-bold font-mono text-emerald-600">{fmt(cdPricing.monthlyFee * 12)}/yr</span> on cash discount vs{' '}
+                        <span className="font-bold font-mono text-gray-900">{frPricing ? fmt((monthlyVol * (frPricing.rate / 100) + monthlyTxns * frPricing.perTxn) * 12) : '—'}/yr</span> on flat rate.
+                      </p>
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-2">Annual Delt Margin vs Card Share</p>
+                    <div style={{ height: 180 }}>
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={marginCurve} margin={{ top: 6, right: 12, bottom: 0, left: 0 }}>
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
+                          <XAxis dataKey="ratio" tickLine={false} axisLine={false} tick={{ fontSize: 10, fill: '#9ca3af' }} tickFormatter={(v: number) => `${v}%`} />
+                          <YAxis width={52} tickLine={false} axisLine={false} tick={{ fontSize: 10, fill: '#9ca3af' }} tickFormatter={(v: number) => `$${Math.round(v / 1000)}k`} />
+                          <ChartTooltip
+                            formatter={(v: number, name: string) => [fmt(v), name === 'cd' ? 'Cash Discount margin' : 'Flat Rate margin']}
+                            labelFormatter={(v: number) => `${v}% card share`}
+                            contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e5e7eb' }}
+                          />
+                          <ReferenceLine x={Math.round(effectiveCardRatio)} stroke="#4318ff" strokeDasharray="4 3" label={{ value: 'this deal', position: 'top', fontSize: 10, fill: '#4318ff' }} />
+                          <Line type="monotone" dataKey="cd" stroke="#34C77B" strokeWidth={2} dot={false} />
+                          <Line type="monotone" dataKey="fr" stroke="#9ca3af" strokeWidth={2} strokeDasharray="6 4" dot={false} />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                    <div className="flex items-center gap-4 mt-1.5 text-[10px] text-gray-500">
+                      <span className="flex items-center gap-1.5"><span className="w-3 h-0.5 bg-[#34C77B] rounded-full inline-block" /> Cash Discount</span>
+                      <span className="flex items-center gap-1.5"><span className="w-3 h-0.5 bg-gray-400 rounded-full inline-block" style={{ borderTop: '2px dashed #9ca3af', background: 'none' }} /> Flat Rate</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="flex justify-between pt-5 border-t border-gray-100">
               <button onClick={() => setStep(1)} className="px-4 py-2 border border-gray-200 rounded-[6px] text-sm text-gray-500 bg-white hover:bg-gray-50 font-medium">← Back</button>
               <button onClick={() => setStep(3)} className="px-6 py-2.5 bg-brand text-white text-sm font-semibold rounded-[6px] hover:bg-brand-hover transition-colors inline-flex items-center gap-2">
@@ -541,7 +654,7 @@ export function BackendCostCalculator() {
                 </p>
               </div>
               <span className="text-[11px] font-semibold text-brand bg-indigo-100 px-3 py-1.5 rounded-[6px] whitespace-nowrap">
-                {isCashDiscount ? 'Cash Discount' : 'Flat Rate'} · {bandData?.label}/mo
+                {isCashDiscount ? 'Cash Discount' : 'Flat Rate'} · {fmt(monthlyVol)}/mo
               </span>
             </div>
 
@@ -645,7 +758,7 @@ export function BackendCostCalculator() {
                 <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-3">Quick Reference Numbers</p>
                 <div className="grid grid-cols-4 gap-3">
                   <QRItem label="Merchant Saves" value={`${fmtSigned(merchantSavings)}/yr`} color="text-emerald-600" />
-                  <QRItem label="Current Rate" value={`${parseFloat(currentRate).toFixed(2)}%`} />
+                  <QRItem label="Current Rate" value={`${effCurrentRate.toFixed(2)}%`} />
                   <QRItem label="New Rate" value={isCashDiscount ? '0.00%' : `${frPricing?.rate.toFixed(2)}%`} color="text-emerald-600" />
                   <QRItem label="Delt Margin" value={`${isCashDiscount ? fmt(cdAnnual?.margin) : fmt(frAnnual?.margin)}/yr`} />
                 </div>
@@ -679,6 +792,24 @@ function EconRow({ label, value, color, sub, accent }: { label: string; value: s
       <span className="text-[11px] text-gray-500">{label}</span>
       <span className={`text-sm font-bold font-mono ${color || (accent ? 'text-gray-900' : 'text-gray-600')}`}>{value}</span>
       {sub && <span className="w-full text-right text-[10px] text-gray-400 font-mono">{sub}</span>}
+    </div>
+  );
+}
+
+function SimSlider({ label, display, value, min, max, step, onChange }: {
+  label: string; display: string; value: number; min: number; max: number; step: number; onChange: (v: number) => void;
+}) {
+  return (
+    <div>
+      <div className="flex justify-between items-baseline mb-1.5">
+        <span className="text-[10px] text-gray-500 uppercase tracking-wide font-medium">{label}</span>
+        <span className="text-sm font-bold font-mono text-gray-900">{display}</span>
+      </div>
+      <input
+        type="range" min={min} max={max} step={step} value={Math.min(Math.max(value, min), max)}
+        onChange={e => onChange(parseFloat(e.target.value))}
+        className="w-full cursor-pointer accent-brand"
+      />
     </div>
   );
 }
