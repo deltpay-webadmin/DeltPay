@@ -13,7 +13,7 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import {
-  ClipboardCopy, ExternalLink, FileSignature, FileText, Link2, Loader2, PenLine, RefreshCw, Send,
+  BookmarkPlus, ClipboardCopy, ExternalLink, FileSignature, FileText, Link2, Loader2, PenLine, RefreshCw, Send, Trash2,
 } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
 import type { DealSubmission } from './dealSubmissionsStore';
@@ -23,6 +23,8 @@ import {
   type MerchantApplication,
 } from './merchantApplicationsStore';
 import { contractActions, useContracts } from './contractsStore';
+import { applyPricingTemplate, builtInPricingTemplates } from './mpaPricingTemplates';
+import { mpaPricingTemplateActions, useMpaPricingTemplates } from './mpaPricingTemplatesStore';
 import type { LuqraPricing, PaysafePricing } from '../../../features/mpa/types';
 
 const ORDEROUT_URL = 'https://reseller.orderout.co/portal/links?org=delt&iso=all';
@@ -160,9 +162,16 @@ export function MpaBoardingPanel({ submission }: { submission: DealSubmission })
   const [warnings, setWarnings] = useState<string[]>([]);
   const [signingUrl, setSigningUrl] = useState<string | null>(null);
   const [linkInfo, setLinkInfo] = useState<{ url: string; expiresAt: string } | null>(null);
+  const [templateSel, setTemplateSel] = useState('');
 
   const channel = submission.channel;
   const isProcessorChannel = channel === 'Luqra' || channel === 'Paysafe';
+  const savedTemplates = useMpaPricingTemplates(isProcessorChannel ? (channel as 'Luqra' | 'Paysafe') : undefined);
+  const monthlyVolume = Number(String(app?.data?.profile?.monthlyVolume ?? '').replace(/[^0-9.]/g, '')) || 0;
+  const builtInTemplates = useMemo(
+    () => (isProcessorChannel ? builtInPricingTemplates(channel as 'Luqra' | 'Paysafe', monthlyVolume) : []),
+    [isProcessorChannel, channel, monthlyVolume],
+  );
 
   const startApplication = async (thenNavigate: boolean) => {
     setBusy('start');
@@ -196,6 +205,41 @@ export function MpaBoardingPanel({ submission }: { submission: DealSubmission })
   const savePricing = async (): Promise<boolean> => {
     if (!app || !isProcessorChannel) return false;
     return mpaActions.savePricing(app.id, channel as 'Luqra' | 'Paysafe', currentPricing() as any);
+  };
+
+  const selectTemplate = (value: string) => {
+    setTemplateSel(value);
+    if (!value) return;
+    const pricing = value.startsWith('builtin:')
+      ? builtInTemplates.find((t) => `builtin:${t.key}` === value)?.pricing
+      : savedTemplates.find((t) => `saved:${t.id}` === value)?.pricing;
+    if (pricing) {
+      setPricingDraft(applyPricingTemplate(currentPricing(), pricing));
+      toast.success('Template applied — review the grid before generating');
+    }
+  };
+
+  const saveAsTemplate = async () => {
+    if (!isProcessorChannel) return;
+    const name = window.prompt(`Save the current ${channel} pricing grid as a template:`);
+    if (!name?.trim()) return;
+    setBusy('template');
+    const ok = await mpaPricingTemplateActions.save(channel as 'Luqra' | 'Paysafe', name, currentPricing());
+    setBusy(null);
+    if (ok) setTemplateSel('');
+  };
+
+  const selectedSavedTemplate = templateSel.startsWith('saved:')
+    ? savedTemplates.find((t) => t.id === templateSel.slice('saved:'.length)) ?? null
+    : null;
+
+  const deleteSelectedTemplate = async () => {
+    if (!selectedSavedTemplate) return;
+    if (!window.confirm(`Delete the "${selectedSavedTemplate.name}" template for everyone in the org?`)) return;
+    setBusy('template');
+    const ok = await mpaPricingTemplateActions.remove(selectedSavedTemplate.id);
+    setBusy(null);
+    if (ok) setTemplateSel('');
   };
 
   const previewPdf = async () => {
@@ -332,6 +376,41 @@ export function MpaBoardingPanel({ submission }: { submission: DealSubmission })
               <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">
                 {channel} pricing (goes on the MPA)
               </p>
+              <div className="flex flex-wrap items-center gap-2 mt-2">
+                <select
+                  value={templateSel}
+                  onChange={(e) => selectTemplate(e.target.value)}
+                  className="px-2 py-1.5 bg-white border border-gray-300 rounded-[6px] text-xs text-gray-700 focus:outline-none max-w-[280px]"
+                >
+                  <option value="">Apply pricing template…</option>
+                  <optgroup label="Delt programs (from deal volume)">
+                    {builtInTemplates.map((t) => (
+                      <option key={t.key} value={`builtin:${t.key}`}>{t.name}</option>
+                    ))}
+                  </optgroup>
+                  {savedTemplates.length > 0 && (
+                    <optgroup label="Saved templates">
+                      {savedTemplates.map((t) => (
+                        <option key={t.id} value={`saved:${t.id}`}>{t.name}</option>
+                      ))}
+                    </optgroup>
+                  )}
+                </select>
+                <button className={btnGhost} disabled={busy !== null} onClick={() => void saveAsTemplate()}>
+                  {busy === 'template' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <BookmarkPlus className="w-3.5 h-3.5" />}
+                  Save as template
+                </button>
+                {selectedSavedTemplate && (
+                  <button
+                    className={btnGhost}
+                    disabled={busy !== null}
+                    title={`Delete "${selectedSavedTemplate.name}"`}
+                    onClick={() => void deleteSelectedTemplate()}
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
               <PricingGrid
                 fields={channel === 'Luqra' ? LUQRA_FIELDS : PAYSAFE_FIELDS}
                 value={currentPricing()}

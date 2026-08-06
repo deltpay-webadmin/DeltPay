@@ -13,6 +13,8 @@ tablet (embedded signing) or by email.
 `supabase/migrations/20260807_01_merchant_applications.sql` creates the
 `merchant_applications` table, extends `contracts.kind` with `'mpa'`, and
 creates the private `mpa-templates` storage bucket.
+`supabase/migrations/20260807_02_mpa_pricing_templates.sql` adds the
+org-wide `mpa_pricing_templates` table behind the pricing-template dropdown.
 
 ```sh
 supabase db push
@@ -68,7 +70,16 @@ the existing e-sign setup.
    percentages must total 100). Or **"Send merchant link"** to let the
    merchant self-complete remotely (link expires in 14 days, dies on submit).
 2. When the application shows **submitted**, pick the **channel**:
-   - **Luqra / Paysafe** — fill the pricing grid, **Preview PDF** (check the
+   - **Luqra / Paysafe** — fill the pricing grid with one click via **"Apply
+     pricing template…"**: the *Delt programs* group is auto-priced from the
+     deal's monthly volume using the same matrices as the Cost Calculator
+     (flat rate for both processors; cash discount is Luqra-only — the
+     Paysafe MPA has no cash-discount structure), and *Saved templates* are
+     your own org-wide presets (**"Save as template"** stores the current
+     grid; saving under an existing name updates it; the trash button deletes
+     the selected one). Applying only overwrites fields the template sets, so
+     merchant-specific entries like MCC survive — always review the grid and
+     tweak per-deal fields. Then **Preview PDF** (check the
      fill warnings), then **"Generate MPA & sign now (in person)"**. Open
      the signing session on the iPad (or copy the link into Safari on it) —
      it expires in ~5 minutes; regenerate with one click. Merchant not
