@@ -362,6 +362,8 @@ export interface Merchant {
   ein?: string;
   website?: string;
   notes?: string;
+  /** Row creation time from the database; drives "member since". */
+  createdAt?: string;
 }
 
 // ── Deals ──
@@ -755,6 +757,7 @@ function fromDbMerchant(r: any): Merchant {
     ein: r.ein ?? undefined,
     website: r.website ?? undefined,
     notes: r.notes ?? undefined,
+    createdAt: r.created_at ?? undefined,
   };
 }
 
