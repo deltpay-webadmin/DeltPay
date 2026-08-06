@@ -382,12 +382,12 @@ export async function importMetaLeads(leadIds: string[]): Promise<{ imported: nu
     if (l.matched_lead_id) { skipped++; continue; }
     const id = `lead-meta-l${l.lead_id}`;
     const name = l.full_name || l.email || `Meta lead ${l.lead_id}`;
-    const products = /capital/i.test(l.form_name ?? "")
-      ? ["Capital"]
-      : /processing/i.test(l.form_name ?? "") ? ["Processing"] : [];
+    // Infer the product line from the form name; MCA is the fallback, matching
+    // the pipeline_leads default.
+    const type = /processing/i.test(l.form_name ?? "") ? "Processing" : "MCA";
     const { error: insErr } = await db.from("pipeline_leads").insert({
       id,
-      products,
+      type,
       business_name: name,
       contact_name: l.full_name ?? null,
       contact_email: l.email ?? null,

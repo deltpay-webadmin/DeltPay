@@ -205,9 +205,6 @@ export interface KybIntake {
   };
 }
 
-/** Product lines a lead can be tagged with — either or both. */
-export type ProductTag = 'Capital' | 'Processing';
-
 export interface Lead {
   id: string;
   businessName: string;
@@ -216,8 +213,6 @@ export interface Lead {
   contactEmail: string;
   contactPhone: string;
   type: 'MCA' | 'Residual' | 'Processing' | 'Leasing';
-  /** Product-line tags: Capital, Processing, or both. */
-  products?: ProductTag[];
   source: string;
   monthlySales: string;
   amountRequested: string;
@@ -441,10 +436,10 @@ const fallbackSeed: CrmState = {
       status: 'In Progress',
       priority: 'High',
       lastActivity: '2 hours ago',
-      assignedAgent: 'Sarah Johnson',
+      assignedAgent: 'Unassigned',
       stage: 'Qualified',
       timeline: [
-        { title: 'Follow-up call completed', description: 'Discussed terms and pricing structure', user: 'Sarah Johnson', timestamp: '2 hours ago' },
+        { title: 'Follow-up call completed', description: 'Discussed terms and pricing structure', user: 'Unassigned', timestamp: '2 hours ago' },
       ],
       notes: 'Strong financials. Owner is motivated and ready to move forward.',
       referredBy: 'Metro Diner Group',
@@ -526,7 +521,6 @@ function fromDbLead(r: any): Lead {
     contactEmail: r.contact_email ?? '',
     contactPhone: r.contact_phone ?? '',
     type: r.type,
-    products: r.products ?? [],
     source: r.source ?? '',
     monthlySales: r.monthly_sales ?? '',
     amountRequested: r.amount_requested ?? '',
@@ -559,7 +553,6 @@ export function toDbLead(l: Partial<Lead>): Record<string, any> {
   if (l.contactEmail !== undefined) out.contact_email = l.contactEmail;
   if (l.contactPhone !== undefined) out.contact_phone = l.contactPhone;
   if (l.type !== undefined) out.type = l.type;
-  if (l.products !== undefined) out.products = l.products;
   if (l.source !== undefined) out.source = l.source;
   if (l.monthlySales !== undefined) out.monthly_sales = l.monthlySales;
   if (l.amountRequested !== undefined) out.amount_requested = l.amountRequested;
@@ -1288,26 +1281,6 @@ export const leadActions = {
       () => set({ leads: prev }),
       () => supabase!.from('pipeline_leads').update(toDbLead(effective)).eq('id', id).then(r => ({ error: r.error })),
     );
-  },
-
-  toggleProduct(id: string, tag: ProductTag) {
-    const lead = state.leads.find(l => l.id === id);
-    if (!lead) return;
-    const cur = lead.products ?? [];
-    const products = cur.includes(tag) ? cur.filter(t => t !== tag) : [...cur, tag];
-    leadActions.update(id, { products });
-  },
-
-  /** Add or remove a product tag across many leads; skips no-ops. */
-  tagProductMany(ids: string[], tag: ProductTag, on: boolean) {
-    for (const id of ids) {
-      const lead = state.leads.find(l => l.id === id);
-      if (!lead) continue;
-      const cur = lead.products ?? [];
-      const has = cur.includes(tag);
-      if (on && !has) leadActions.update(id, { products: [...cur, tag] });
-      else if (!on && has) leadActions.update(id, { products: cur.filter(t => t !== tag) });
-    }
   },
 
   setStatus(id: string, status: Lead['status']) {

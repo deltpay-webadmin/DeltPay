@@ -452,7 +452,8 @@ async function resolveApplyLead(applicant: ApplyApplicant): Promise<string> {
   const name = applicant.businessName || applicant.fullName || email;
   const { error } = await db.from("pipeline_leads").insert({
     id,
-    products: ["Capital"],
+    // deltcapital.com applicants are always a capital (MCA) lead.
+    type: "MCA",
     business_name: name,
     contact_name: applicant.fullName ?? null,
     contact_email: email,

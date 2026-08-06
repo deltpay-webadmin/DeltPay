@@ -55,27 +55,7 @@ import {
   isDummyLead,
   scoreLead,
   type Lead as StoreLead,
-  type ProductTag,
 } from '../crmStore';
-
-// ── Product-line tags (Capital / Processing) ──
-const PRODUCT_TAGS: ProductTag[] = ['Capital', 'Processing'];
-
-const productChipCls = (tag: ProductTag) =>
-  tag === 'Capital' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-sky-50 text-sky-700 border-sky-200';
-
-/** Read-only product badges shown in table rows and kanban cards. */
-function ProductBadges({ products, size = 'xs' }: { products?: ProductTag[]; size?: 'xs' | 'xxs' }) {
-  if (!products?.length) return null;
-  const cls = size === 'xxs' ? 'px-1.5 py-0.5 text-[9px]' : 'px-2 py-0.5 text-[10px]';
-  return (
-    <>
-      {products.map(t => (
-        <span key={t} className={`inline-flex rounded border font-semibold ${cls} ${productChipCls(t)}`}>{t}</span>
-      ))}
-    </>
-  );
-}
 import { stageEsignDraft } from '../contractsStore';
 import { useAppNavigate } from '../NavigationContext';
 
@@ -515,27 +495,6 @@ function LeadDetailPanel({ lead, onClose, onEdit, onDelete }: { lead: Lead | nul
               <div className="flex items-center gap-2 flex-wrap">
                 <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${getStatusColor(lead.status)}`}>{lead.status}</span>
                 <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${getPriorityColor(lead.priority)}`}>{lead.priority} Priority</span>
-                <span className="w-px h-4 bg-gray-200" />
-                {PRODUCT_TAGS.map(tag => {
-                  const active = (lead.products ?? []).includes(tag);
-                  return (
-                    <button
-                      key={tag}
-                      onClick={() => {
-                        leadActions.toggleProduct(lead.id, tag);
-                        toast.success(`${lead.businessName} ${active ? 'untagged' : 'tagged'} ${tag}`);
-                      }}
-                      title={active ? `Remove ${tag} tag` : `Tag as ${tag}`}
-                      className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
-                        active
-                          ? productChipCls(tag)
-                          : 'bg-white text-gray-400 border-dashed border-gray-300 hover:border-gray-400 hover:text-gray-600'
-                      }`}
-                    >
-                      {active ? tag : `+ ${tag}`}
-                    </button>
-                  );
-                })}
               </div>
             </div>
             <div className="flex items-center gap-1">
@@ -1202,7 +1161,6 @@ export function BackendLeads({ openImport = false }: { openImport?: boolean } = 
   const [viewMode, setViewMode] = useState<'table' | 'kanban'>('table');
   const [statusFilter, setStatusFilter] = useState<string>('All');
   const [typeFilter, setTypeFilter] = useState<string>('All');
-  const [productFilter, setProductFilter] = useState<string>('All');
   const [stageFilter, setStageFilter] = useState<string>('All');
   const [agentFilter, setAgentFilter] = useState<string>('All');
   const [newLeadOpen, setNewLeadOpen] = useState(false);
@@ -1224,6 +1182,7 @@ export function BackendLeads({ openImport = false }: { openImport?: boolean } = 
       case 'MCA': return 'bg-indigo-50 text-indigo-700';
       case 'Residual': return 'bg-purple-50 text-purple-700';
       case 'Leasing': return 'bg-emerald-50 text-emerald-700';
+      case 'Processing': return 'bg-sky-50 text-sky-700';
       default: return 'bg-gray-100 text-gray-700';
     }
   };
@@ -1255,12 +1214,6 @@ export function BackendLeads({ openImport = false }: { openImport?: boolean } = 
     return leads.filter(l => {
       if (statusFilter !== 'All' && l.status !== statusFilter) return false;
       if (typeFilter !== 'All' && l.type !== typeFilter) return false;
-      if (productFilter !== 'All') {
-        const p = l.products ?? [];
-        if (productFilter === 'Untagged') { if (p.length > 0) return false; }
-        else if (productFilter === 'Both') { if (!(p.includes('Capital') && p.includes('Processing'))) return false; }
-        else if (!p.includes(productFilter as ProductTag)) return false;
-      }
       if (stageFilter !== 'All' && l.stage !== stageFilter) return false;
       if (agentFilter !== 'All' && l.assignedAgent !== agentFilter) return false;
       if (searchQuery.trim()) {
@@ -1273,7 +1226,7 @@ export function BackendLeads({ openImport = false }: { openImport?: boolean } = 
       }
       return true;
     });
-  }, [leads, statusFilter, typeFilter, productFilter, stageFilter, agentFilter, searchQuery]);
+  }, [leads, statusFilter, typeFilter, stageFilter, agentFilter, searchQuery]);
 
   // Original hydration order is created_at DESC, so array index acts as recency.
   const orderIndex = useMemo(() => {
@@ -1523,19 +1476,9 @@ export function BackendLeads({ openImport = false }: { openImport?: boolean } = 
               >
                 <option value="All">All Types</option>
                 <option value="MCA">MCA</option>
+                <option value="Processing">Processing</option>
                 <option value="Residual">Residual</option>
                 <option value="Leasing">Leasing</option>
-              </select>
-              <select
-                value={productFilter}
-                onChange={e => setProductFilter(e.target.value)}
-                className="px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              >
-                <option value="All">All Products</option>
-                <option value="Capital">Capital</option>
-                <option value="Processing">Processing</option>
-                <option value="Both">Capital + Processing</option>
-                <option value="Untagged">Untagged</option>
               </select>
               <select
                 value={stageFilter}
@@ -1602,26 +1545,6 @@ export function BackendLeads({ openImport = false }: { openImport?: boolean } = 
                 {selectedIds.size} lead{selectedIds.size === 1 ? '' : 's'} selected
               </p>
               <div className="flex items-center gap-2 flex-wrap">
-                {PRODUCT_TAGS.map(tag => {
-                  const ids = visibleIds.filter(id => selectedIds.has(id));
-                  const allTagged = ids.length > 0 && ids.every(id => (leads.find(l => l.id === id)?.products ?? []).includes(tag));
-                  return (
-                    <button
-                      key={tag}
-                      onClick={() => {
-                        leadActions.tagProductMany(ids, tag, !allTagged);
-                        toast.success(`${ids.length} lead${ids.length === 1 ? '' : 's'} ${allTagged ? 'untagged' : 'tagged'} ${tag}`);
-                      }}
-                      className={`px-3 py-1.5 text-sm font-medium rounded-md border transition-colors ${
-                        allTagged ? productChipCls(tag) : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
-                      }`}
-                      title={allTagged ? `Remove ${tag} tag from selected` : `Tag selected as ${tag}`}
-                    >
-                      {allTagged ? `✓ ${tag}` : `Tag ${tag}`}
-                    </button>
-                  );
-                })}
-                <span className="w-px h-5 bg-indigo-200" />
                 <button onClick={clearSelection} className="px-3 py-1.5 text-sm text-indigo-700 hover:bg-indigo-100 rounded-md">
                   Clear
                 </button>
@@ -1666,7 +1589,6 @@ export function BackendLeads({ openImport = false }: { openImport?: boolean } = 
                             <p className="text-xs text-gray-500 mb-2">{lead.contactName}</p>
                             <div className="flex items-center gap-1.5 flex-wrap">
                               <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${getTypeColor(lead.type)}`}>{lead.type}</span>
-                              <ProductBadges products={lead.products} size="xxs" />
                             </div>
                             {lead.blocker && (
                               <p className="text-[10px] text-red-600 mt-2 line-clamp-1">{lead.blocker}</p>
@@ -1746,12 +1668,7 @@ export function BackendLeads({ openImport = false }: { openImport?: boolean } = 
                           <p className="text-xs text-gray-500">{lead.contactPhone}</p>
                         </td>
                         <td className="px-5 py-4">
-                          <div className="flex flex-col items-start gap-1.5">
-                            <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${getTypeColor(lead.type)}`}>{lead.type}</span>
-                            <div className="flex items-center gap-1">
-                              <ProductBadges products={lead.products} />
-                            </div>
-                          </div>
+                          <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${getTypeColor(lead.type)}`}>{lead.type}</span>
                         </td>
                         <td className="px-5 py-4">
                           <span className={`inline-flex px-2.5 py-1 text-xs font-medium border rounded-md ${stageBadgeCls(lead.stage)}`}>
@@ -1876,7 +1793,7 @@ function NewLeadModal({ onClose, onCreate }: { onClose: () => void; onCreate: (l
     source: 'Website Inquiry',
     monthlySales: '',
     amountRequested: '',
-    assignedAgent: 'Sarah Johnson',
+    assignedAgent: 'Unassigned',
     priority: 'Medium' as Lead['priority'],
     notes: '',
   });
