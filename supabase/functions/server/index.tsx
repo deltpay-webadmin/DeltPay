@@ -19,7 +19,7 @@ import {
   sweepHostedLinks,
   svc,
 } from "../_shared/plaid.ts";
-import { adsStatus, connectMeta, syncMeta, disconnectMeta, syncMetaLeads, importMetaLeads } from "../_shared/meta.ts";
+import { adsStatus, connectMeta, syncMeta, disconnectMeta, syncMetaLeads, importMetaLeads, dismissMetaLeads } from "../_shared/meta.ts";
 import { requireUser, hasPerm, verifyCronSecret, verifyApplySecret, type AuthContext } from "../_shared/auth.ts";
 import { sweepInFlightEnvelopes } from "../_shared/docusign_status.ts";
 const app = new Hono();
@@ -458,6 +458,19 @@ app.post(`${ADS_BASE}/meta/leads/import`, needPerm("leads.create"), async (c) =>
     return c.json({ ok: true, ...out });
   } catch (err: any) {
     console.error("meta leads import error", err);
+    return c.json({ ok: false, error: String(err?.message ?? err) }, 500);
+  }
+});
+
+app.post(`${ADS_BASE}/meta/leads/dismiss`, needPerm("leads.delete"), async (c) => {
+  try {
+    const body = await c.req.json().catch(() => ({}));
+    const leadIds = Array.isArray(body.leadIds) ? body.leadIds.map(String) : [];
+    if (!leadIds.length) return c.json({ ok: false, error: "leadIds is required" }, 400);
+    const out = await dismissMetaLeads(leadIds, "manual");
+    return c.json({ ok: true, ...out });
+  } catch (err: any) {
+    console.error("meta leads dismiss error", err);
     return c.json({ ok: false, error: String(err?.message ?? err) }, 500);
   }
 });

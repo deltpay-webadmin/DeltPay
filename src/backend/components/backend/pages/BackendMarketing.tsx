@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link2, Target, TrendingUp, ArrowRight, RefreshCw, X, Unplug, AlertTriangle, Download, CheckCircle2 } from 'lucide-react';
 import { Overline, DeltaPill, KpiTile, Card, HeroPanel, Btn } from '../../dp';
-import { useMarketing, useMarketingSync, marketingActions } from '../marketingStore';
+import { useMarketing, useMarketingSync, marketingActions, isMetaTestLead } from '../marketingStore';
 import { useLeads } from '../crmStore';
 
 // ══════════════════════════════════════
@@ -352,12 +352,14 @@ function LeadReconCard() {
   const { adLeads } = useMarketing();
   const { isBusy } = useMarketingSync();
 
-  // Meta's form-testing tool submits dummy entries — surface them but never bulk-import.
-  const isTest = (l: { email: string | null; fullName: string | null }) =>
-    l.email === 'test@meta.com' || (l.fullName || '').startsWith('<test lead');
-  const missing = adLeads.filter(l => !l.matchedLeadId);
-  const missingReal = missing.filter(l => !isTest(l));
-  const matched = adLeads.length - missing.length;
+  // Dismissed rows (Meta test-tool entries auto-dismissed at sync, plus
+  // anything staff dismissed by hand) are tombstoned server-side — they
+  // never count as missing and the server refuses to import them.
+  const dismissed = adLeads.filter(l => l.dismissedAt).length;
+  const active = adLeads.filter(l => !l.dismissedAt);
+  const missing = active.filter(l => !l.matchedLeadId);
+  const missingReal = missing.filter(l => !isMetaTestLead(l));
+  const matched = active.length - missing.length;
   const synced = adLeads.length > 0;
 
   const fmtDate = (iso: string | null) =>
@@ -370,10 +372,11 @@ function LeadReconCard() {
         <div className="flex items-center gap-2">
           {synced && (
             <span className="text-[11px] text-(--dp-text-faint)">
-              {adLeads.length} submissions · {matched} in CRM ·{' '}
+              {active.length} submissions · {matched} in CRM ·{' '}
               <span className={missing.length ? 'text-amber-500 font-bold' : ''}>
                 {missing.length} missing
               </span>
+              {dismissed > 0 && ` · ${dismissed} dismissed`}
             </span>
           )}
           <Btn variant="ghost" size="sm" onClick={() => marketingActions.syncMetaLeads()} disabled={isBusy}>
@@ -393,7 +396,10 @@ function LeadReconCard() {
       ) : missing.length === 0 ? (
         <div className="flex items-center gap-2.5 py-2 text-[13px] text-(--dp-text-faint)">
           <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-          Every lead Meta reported is present in the pipeline. Nothing has been dropped.
+          Every lead Meta reported is present in the pipeline.
+          {dismissed > 0
+            ? ` ${dismissed} test/dismissed submission${dismissed === 1 ? '' : 's'} are permanently excluded.`
+            : ' Nothing has been dropped.'}
         </div>
       ) : (
         <>
@@ -404,7 +410,7 @@ function LeadReconCard() {
                 <span className="font-bold">{missingReal.length}</span> paid{' '}
                 lead{missingReal.length === 1 ? '' : 's'} never made it into the pipeline
                 {missing.length > missingReal.length &&
-                  ` (plus ${missing.length - missingReal.length} Meta test submission${missing.length - missingReal.length === 1 ? '' : 's'}, excluded from bulk import)`}
+                  ` (plus ${missing.length - missingReal.length} Meta test submission${missing.length - missingReal.length === 1 ? '' : 's'} — blocked from import; the next sync dismisses them for good)`}
                 .
               </span>
             </div>
@@ -434,8 +440,8 @@ function LeadReconCard() {
                 {missing.map(l => (
                   <tr key={l.leadId} className="border-t border-(--dp-border)">
                     <td className="py-2 pr-3 font-semibold text-(--dp-text)">
-                      {isTest(l) ? 'Meta test submission' : l.fullName || '—'}
-                      {isTest(l) ? (
+                      {isMetaTestLead(l) ? 'Meta test submission' : l.fullName || '—'}
+                      {isMetaTestLead(l) ? (
                         <span className="ml-1.5 text-[10px] font-bold text-amber-500">TEST</span>
                       ) : l.isOrganic ? (
                         <span className="ml-1.5 text-[10px] font-bold text-(--dp-text-faint)">ORGANIC</span>
@@ -448,14 +454,24 @@ function LeadReconCard() {
                       {l.campaignName || l.adName || l.formName || '—'}
                     </td>
                     <td className="py-2 pr-3 text-(--dp-text-faint) whitespace-nowrap">{fmtDate(l.createdTime)}</td>
-                    <td className="py-2 text-right">
+                    <td className="py-2 text-right whitespace-nowrap">
+                      {!isMetaTestLead(l) && (
+                        <Btn
+                          variant="ghost"
+                          size="sm"
+                          disabled={isBusy}
+                          onClick={() => marketingActions.importMetaLeads([l.leadId])}
+                        >
+                          Import
+                        </Btn>
+                      )}
                       <Btn
                         variant="ghost"
                         size="sm"
                         disabled={isBusy}
-                        onClick={() => marketingActions.importMetaLeads([l.leadId])}
+                        onClick={() => marketingActions.dismissMetaLeads([l.leadId])}
                       >
-                        Import
+                        Dismiss
                       </Btn>
                     </td>
                   </tr>

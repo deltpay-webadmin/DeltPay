@@ -59,6 +59,17 @@ export interface AdLead {
   isOrganic: boolean;
   matchedLeadId: string | null;
   matchBasis: string | null;
+  dismissedAt: string | null;
+  dismissReason: string | null;
+}
+
+/** Meta's Lead Ads testing tool signature — mirrors isMetaTestSubmission in
+ * supabase/functions/_shared/meta.ts and public.is_meta_test_lead in SQL. */
+export function isMetaTestLead(l: { fullName: string | null; email: string | null }): boolean {
+  const email = (l.email || '').trim().toLowerCase();
+  if (email === 'test@fb.com' || email === 'test@meta.com') return true;
+  const name = (l.fullName || '').trim().toLowerCase();
+  return name.startsWith('<') || name.startsWith('test lead:') || name.includes('dummy data');
 }
 
 interface MarketingState {
@@ -130,6 +141,8 @@ function fromDbAdLead(r: any): AdLead {
     isOrganic: Boolean(r.is_organic),
     matchedLeadId: r.matched_lead_id ?? null,
     matchBasis: r.match_basis ?? null,
+    dismissedAt: r.dismissed_at ?? null,
+    dismissReason: r.dismiss_reason ?? null,
   };
 }
 
@@ -298,14 +311,38 @@ export const marketingActions = {
         method: 'POST',
         body: JSON.stringify({ leadIds }),
       });
+      const extras = [
+        json.skipped ? `${json.skipped} already present` : '',
+        json.blocked ? `${json.blocked} test submission${json.blocked === 1 ? '' : 's'} blocked` : '',
+      ].filter(Boolean).join(', ');
       toast.success(
         `Imported ${json.imported} lead${json.imported === 1 ? '' : 's'} into the pipeline` +
-          (json.skipped ? ` (${json.skipped} already present)` : '') + '.',
+          (extras ? ` (${extras})` : '') + '.',
       );
       await Promise.all([marketingActions.refreshInsights(), refreshLeads()]);
       return json;
     } catch (err: any) {
       toast.error(`Import failed: ${err.message}`);
+      throw err;
+    } finally {
+      setSync({ isBusy: false });
+    }
+  },
+
+  /** Permanently dismiss submissions — they stop counting as missing and
+   * can never be imported into the pipeline. */
+  async dismissMetaLeads(leadIds: string[]) {
+    setSync({ isBusy: true });
+    try {
+      const json = await authFetch('/meta/leads/dismiss', {
+        method: 'POST',
+        body: JSON.stringify({ leadIds }),
+      });
+      toast.success(`Dismissed ${json.dismissed} submission${json.dismissed === 1 ? '' : 's'} — they won't come back.`);
+      await marketingActions.refreshInsights();
+      return json;
+    } catch (err: any) {
+      toast.error(`Dismiss failed: ${err.message}`);
       throw err;
     } finally {
       setSync({ isBusy: false });

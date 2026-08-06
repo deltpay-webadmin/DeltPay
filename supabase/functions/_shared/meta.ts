@@ -218,6 +218,16 @@ function fieldValue(fieldData: { name?: string; values?: string[] }[], names: st
   return null;
 }
 
+/** Meta's Lead Ads testing tool signature — deliberately narrow so a real
+ * submission can never be swallowed. Mirrors public.is_meta_test_lead in
+ * supabase/migrations/20260806_01_block_dummy_leads.sql — keep in sync. */
+export function isMetaTestSubmission(l: { full_name?: string | null; email?: string | null }): boolean {
+  const email = (l.email || "").trim().toLowerCase();
+  if (email === "test@fb.com" || email === "test@meta.com") return true;
+  const name = (l.full_name || "").trim().toLowerCase();
+  return name.startsWith("<") || name.startsWith("test lead:") || name.includes("dummy data");
+}
+
 const normEmail = (e: string | null | undefined) => (e || "").trim().toLowerCase() || null;
 const normPhone = (p: string | null | undefined) => {
   const digits = (p || "").replace(/\D/g, "");
@@ -318,15 +328,32 @@ export async function syncMetaLeads(): Promise<{
     if (error) throw new Error(`Storing lead forms failed: ${error.message}`);
   }
 
+  // Auto-tombstone Meta's testing-tool submissions so they never surface
+  // as missing leads and can never be imported into the pipeline.
+  const testIds = rows
+    .filter(r => isMetaTestSubmission(r as { full_name?: string | null; email?: string | null }))
+    .map(r => String(r.lead_id));
+  for (let i = 0; i < testIds.length; i += 500) {
+    const { error } = await db
+      .from("ad_leads")
+      .update({ dismissed_at: new Date().toISOString(), dismiss_reason: "meta_test" })
+      .eq("provider", "meta")
+      .in("lead_id", testIds.slice(i, i + 500))
+      .is("dismissed_at", null);
+    if (error) throw new Error(`Dismissing test submissions failed: ${error.message}`);
+  }
+
   const { matched, missing } = await reconcileMetaLeads();
   return { pages: pages.length, forms: formCount, total: rows.length, matched, missing };
 }
 
-/** Re-run CRM matching over everything in ad_leads. Cheap; pure DB. */
+/** Re-run CRM matching over everything in ad_leads. Cheap; pure DB.
+ * Dismissed submissions (test-tool entries, staff-dismissed rows) are
+ * left untouched and never counted as missing. */
 export async function reconcileMetaLeads(): Promise<{ matched: number; missing: number }> {
   const db = svc();
   const [{ data: adLeads, error: alErr }, { data: crm, error: plErr }] = await Promise.all([
-    db.from("ad_leads").select("lead_id,email,phone,full_name").eq("provider", "meta"),
+    db.from("ad_leads").select("lead_id,email,phone,full_name,dismissed_at").eq("provider", "meta"),
     db.from("pipeline_leads").select("id,external_id,contact_email,contact_phone,contact_name,business_name"),
   ]);
   if (alErr) throw new Error(alErr.message);
@@ -350,6 +377,7 @@ export async function reconcileMetaLeads(): Promise<{ matched: number; missing: 
   let matched = 0;
   let missing = 0;
   for (const l of adLeads ?? []) {
+    if (l.dismissed_at) continue;
     let hit: string | undefined;
     let basis: string | null = null;
     if ((hit = byExternal.get(`l:${l.lead_id}`))) basis = "lead_id";
@@ -369,7 +397,7 @@ export async function reconcileMetaLeads(): Promise<{ matched: number; missing: 
  * external_id convention as the Zapier-delivered rows, so future syncs
  * match them by lead_id. created_at keeps the original submission time
  * so pipeline aging is honest. */
-export async function importMetaLeads(leadIds: string[]): Promise<{ imported: number; skipped: number }> {
+export async function importMetaLeads(leadIds: string[]): Promise<{ imported: number; skipped: number; blocked: number }> {
   const db = svc();
   const { data: adLeads, error } = await db
     .from("ad_leads").select("*").eq("provider", "meta").in("lead_id", leadIds);
@@ -377,8 +405,21 @@ export async function importMetaLeads(leadIds: string[]): Promise<{ imported: nu
 
   let imported = 0;
   let skipped = 0;
+  let blocked = 0;
   const now = new Date().toISOString();
   for (const l of adLeads ?? []) {
+    // Hard server-side block: dismissed rows and Meta test-tool
+    // submissions never re-enter the pipeline, no matter which button
+    // (or API call) asked for them.
+    if (l.dismissed_at || isMetaTestSubmission(l)) {
+      blocked++;
+      if (!l.dismissed_at) {
+        await db.from("ad_leads")
+          .update({ dismissed_at: now, dismiss_reason: "meta_test" })
+          .eq("provider", "meta").eq("lead_id", l.lead_id);
+      }
+      continue;
+    }
     if (l.matched_lead_id) { skipped++; continue; }
     const id = `lead-meta-l${l.lead_id}`;
     const name = l.full_name || l.email || `Meta lead ${l.lead_id}`;
@@ -402,6 +443,15 @@ export async function importMetaLeads(leadIds: string[]): Promise<{ imported: nu
         event: `Recovered from Meta lead form${l.form_name ? ` “${l.form_name}”` : ""} by ad-spend reconciliation (submitted ${l.created_time ?? "unknown"}).`,
       }],
     });
+    if (insErr && /test lead/i.test(insErr.message)) {
+      // The pipeline_leads insert trigger rejected it as a Meta test
+      // signature the classifier above missed — tombstone it too.
+      blocked++;
+      await db.from("ad_leads")
+        .update({ dismissed_at: now, dismiss_reason: "meta_test" })
+        .eq("provider", "meta").eq("lead_id", l.lead_id);
+      continue;
+    }
     if (insErr) {
       // Unique violation → someone already holds this id; treat as matched.
       skipped++;
@@ -412,7 +462,22 @@ export async function importMetaLeads(leadIds: string[]): Promise<{ imported: nu
       .update({ matched_lead_id: id, match_basis: insErr ? "lead_id" : "imported" })
       .eq("provider", "meta").eq("lead_id", l.lead_id);
   }
-  return { imported, skipped };
+  return { imported, skipped, blocked };
+}
+
+/** Tombstone submissions so they never count as missing and can never be
+ * imported. Used for Meta test entries and rows staff explicitly dismiss. */
+export async function dismissMetaLeads(leadIds: string[], reason = "manual"): Promise<{ dismissed: number }> {
+  const db = svc();
+  const { data, error } = await db
+    .from("ad_leads")
+    .update({ dismissed_at: new Date().toISOString(), dismiss_reason: reason })
+    .eq("provider", "meta")
+    .in("lead_id", leadIds)
+    .is("dismissed_at", null)
+    .select("lead_id");
+  if (error) throw new Error(error.message);
+  return { dismissed: data?.length ?? 0 };
 }
 
 /** Drop the token and mark the connection disconnected. Insights are kept. */

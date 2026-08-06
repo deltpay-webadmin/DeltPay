@@ -1462,7 +1462,7 @@ export function isDummyLead(l: Lead): boolean {
   const lower = name.toLowerCase();
   if (!name) return true;
   // Angle-bracket placeholders Meta injects, e.g. "<test lead: dummy data…>"
-  if (name.startsWith('<') || name.includes('dummy') || name.includes('test lead')) return true;
+  if (name.startsWith('<') || lower.includes('dummy') || lower.includes('test lead')) return true;
   // Obvious keyword placeholders
   if (/\b(test|demo|sample|asdf|qwerty|placeholder|delete\s*me)\b/.test(lower)) return true;
   // A bare social handle or email fragment with no real business identity
