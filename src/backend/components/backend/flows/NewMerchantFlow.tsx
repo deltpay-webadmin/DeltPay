@@ -43,7 +43,8 @@ const STATES = [
   'NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY',
 ];
 
-const AGENTS = ['Sarah Johnson', 'Michael Chen', 'James Miller', 'Unassigned'];
+// No agent roster is wired up yet, so merchants start unassigned.
+const AGENTS = ['Unassigned'];
 
 export interface NewMerchantFlowProps {
   open: boolean;
@@ -61,7 +62,7 @@ export function NewMerchantFlow({ open, onClose, onCreated }: NewMerchantFlowPro
     contactName: '',
     contactEmail: '',
     contactPhone: '',
-    agent: 'Sarah Johnson',
+    agent: 'Unassigned',
     plan: 'Growth' as PlanTier,
     products: {
       processing: true,

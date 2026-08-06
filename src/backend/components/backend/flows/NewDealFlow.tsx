@@ -20,7 +20,8 @@ import {
 } from './OnboardingFlow';
 import { dealActions, type Deal, type DealType } from '../crmStore';
 
-const AGENTS = ['Marcus J.', 'Sarah K.', 'Michael Chen', 'James Miller', 'Unassigned'];
+// No agent roster is wired up yet, so deals start unassigned.
+const AGENTS = ['Unassigned'];
 
 const fmtMoney = (n: number) =>
   n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
@@ -37,7 +38,7 @@ export function NewDealFlow({ open, onClose, onCreated, initialBorrower }: NewDe
   const [form, setForm] = useState({
     type: 'MCA' as DealType,
     borrower: initialBorrower || '',
-    agent: 'Marcus J.',
+    agent: 'Unassigned',
     loanAmountStr: '50000',
     rateStr: '1.35',
     termDaysStr: '150',

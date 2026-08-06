@@ -26,7 +26,9 @@ const SOURCES = [
   'Other',
 ];
 
-const AGENTS = ['Sarah Johnson', 'Michael Chen', 'James Miller', 'Unassigned'];
+// No agent roster is wired up yet, so leads start unassigned and are
+// reassigned from the lead detail drawer.
+const AGENTS = ['Unassigned'];
 
 const PRODUCT_TYPES: { value: Lead['type']; label: string; icon: React.ElementType }[] = [
   { value: 'Processing', label: 'Processing', icon: CreditCard },

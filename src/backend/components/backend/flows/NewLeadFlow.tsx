@@ -83,7 +83,9 @@ const SOURCES = [
   'Other',
 ];
 
-const AGENTS = ['Sarah Johnson', 'Michael Chen', 'James Miller', 'Unassigned'];
+// No agent roster is wired up yet, so leads start unassigned and are
+// reassigned from the lead detail drawer.
+const AGENTS = ['Unassigned'];
 
 const US_STATES = [
   'AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA',
@@ -232,7 +234,7 @@ export function NewLeadFlow({ open, onClose, onCreated }: NewLeadFlowProps) {
 
     // Step 8 — Assignment + attestation
     source: 'Website Inquiry',
-    assignedAgent: 'Sarah Johnson',
+    assignedAgent: 'Unassigned',
     priority: 'Medium' as Lead['priority'],
     notes: '',
     attestCertified: false,
