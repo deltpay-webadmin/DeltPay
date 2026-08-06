@@ -20,8 +20,11 @@ export const MAX_FLAGS = 3;
 /**
  * Compare the two most recent residual periods: flag merchants that vanished
  * from the latest period, or whose volume fell more than DROP_THRESHOLD.
+ *
+ * `limit` caps the result — MAX_FLAGS by default, which suits the dashboard
+ * nudge. Pass Infinity for the full watchlist.
  */
-export function computeHealthFlags(rows: ResidualRow[]): HealthFlag[] {
+export function computeHealthFlags(rows: ResidualRow[], limit: number = MAX_FLAGS): HealthFlag[] {
   const periods = [...new Set(rows.map(r => r.period))].sort().reverse();
   if (periods.length < 2) return [];
   const [latest, prev] = periods;
@@ -36,5 +39,5 @@ export function computeHealthFlags(rows: ResidualRow[]): HealthFlag[] {
       flags.push({ merchant: r.merchantName, note: `Volume down ${drop}% month over month` });
     }
   }
-  return flags.slice(0, MAX_FLAGS);
+  return flags.slice(0, limit);
 }
