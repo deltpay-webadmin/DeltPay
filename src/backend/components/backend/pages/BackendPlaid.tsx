@@ -5,7 +5,7 @@ import {
   Folder, FolderOpen, FileJson, ShieldCheck, ShieldAlert, Banknote, User,
   CreditCard, TrendingUp, TrendingDown, Minus, ArrowLeft, Trash2, Copy,
   AlertTriangle, CheckCircle2, XCircle, Clock, Zap, Send, Wallet, Activity,
-  PieChart, Repeat, Gauge, ScrollText,
+  PieChart, Repeat, Gauge, ScrollText, Mail,
 } from 'lucide-react';
 import {
   BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid,
@@ -174,28 +174,46 @@ function SendLinkButton({ leadId, compact }: { leadId: string; compact?: boolean
   const requests = usePlaidLinkRequests();
   const isBusy = busy.includes(`invite:${leadId}`);
   const pending = requests.find(r => r.leadId === leadId && r.status === 'pending');
-  const title = pending
-    ? `Connect link sent ${timeAgo(pending.createdAt)} — click to copy a fresh one`
+  const sentLabel = pending?.emailedAt
+    ? `Link emailed to ${pending.emailedTo ?? 'the prospect'} ${timeAgo(pending.emailedAt)}`
+    : pending
+    ? `Connect link sent ${timeAgo(pending.createdAt)}`
+    : null;
+  const title = sentLabel
+    ? `${sentLabel} — click to copy a fresh one`
     : 'Copy a secure Plaid link to text or email the prospect — they connect their bank on their own device';
 
   const send = () => plaidActions.createHostedLink(leadId).catch(() => {});
+  // Emails the branded invite to the lead's contact email (tracked opens/
+  // clicks, timeline entry, New → Contacted) — server-side one-shot.
+  const email = () => plaidActions.emailHostedLink(leadId).catch(() => {});
+
+  const compactCls =
+    'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/[0.06] border border-(--dp-border) text-xs text-(--dp-text-secondary) hover:bg-(--dp-bg-raised) disabled:opacity-50';
 
   return (
-    <button
-      onClick={send}
-      disabled={isBusy}
-      title={title}
-      className={
-        compact
-          ? 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/[0.06] border border-(--dp-border) text-xs text-(--dp-text-secondary) hover:bg-(--dp-bg-raised) disabled:opacity-50'
-          : BTN_GLASS
-      }
-    >
-      <Send className={compact ? 'w-3 h-3' : 'w-4 h-4'} />
-      {compact
-        ? (isBusy ? '…' : pending ? 'Link sent' : 'Send link')
-        : (isBusy ? 'Creating link…' : pending ? `Link sent ${timeAgo(pending.createdAt)} — resend` : 'Send connect link')}
-    </button>
+    <>
+      <button
+        onClick={send}
+        disabled={isBusy}
+        title={title}
+        className={compact ? compactCls : BTN_GLASS}
+      >
+        <Send className={compact ? 'w-3 h-3' : 'w-4 h-4'} />
+        {compact
+          ? (isBusy ? '…' : pending ? 'Link sent' : 'Copy link')
+          : (isBusy ? 'Creating link…' : sentLabel ? `${sentLabel} — resend` : 'Copy connect link')}
+      </button>
+      <button
+        onClick={email}
+        disabled={isBusy}
+        title="Email the prospect a branded invite with the secure connect link — opens and clicks are tracked in the CRM"
+        className={compact ? compactCls : BTN_GLASS}
+      >
+        <Mail className={compact ? 'w-3 h-3' : 'w-4 h-4'} />
+        {compact ? 'Email' : 'Email connect link'}
+      </button>
+    </>
   );
 }
 

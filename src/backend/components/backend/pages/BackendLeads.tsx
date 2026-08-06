@@ -78,6 +78,9 @@ function ProductBadges({ products, size = 'xs' }: { products?: ProductTag[]; siz
 }
 import { stageEsignDraft } from '../contractsStore';
 import { useAppNavigate } from '../NavigationContext';
+import { usePlaidLinkRequests, usePlaidSync, plaidActions } from '../plaidStore';
+import { useLeadOutreach } from '../outreachStore';
+import { useSession } from '../SessionContext';
 
 // ── CRM sales cycle (short) ──
 // Onboarding / underwriting lives outside the CRM; a lead only moves through
@@ -385,13 +388,151 @@ function StageProgress({ stage }: { stage: StageName }) {
   );
 }
 
+// ── Connect-link engagement (emailed Plaid invite funnel) ──
+// Sent → opened → clicked → connected, driven by the realtime-published
+// plaid_link_requests row + this lead's crm-connect-link outreach events.
+function ConnectLinkStatus({ lead }: { lead: Lead }) {
+  const requests = usePlaidLinkRequests();
+  const outreach = useLeadOutreach(lead.id);
+  const mine = requests.filter(r => r.leadId === lead.id);
+  if (!mine.length && !outreach.sentAt) return null;
+  const completed = mine.find(r => r.status === 'completed');
+  const latest = mine[0]; // hydration + realtime both keep newest first
+
+  let chip: { cls: string; icon: React.ReactNode; label: string };
+  if (completed) {
+    chip = {
+      cls: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+      icon: <CheckCircle className="w-3.5 h-3.5" />,
+      label: `Bank connected ${timeAgo(completed.completedAt ?? undefined)}`,
+    };
+  } else if (outreach.clickedAt) {
+    chip = {
+      cls: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+      icon: <ChevronRight className="w-3.5 h-3.5" />,
+      label: `Link clicked ${timeAgo(outreach.clickedAt)}`,
+    };
+  } else if (outreach.openedAt) {
+    chip = {
+      cls: 'bg-sky-50 text-sky-700 border-sky-200',
+      icon: <Mail className="w-3.5 h-3.5" />,
+      label: `Email opened ${timeAgo(outreach.openedAt)}`,
+    };
+  } else if (latest?.status === 'expired') {
+    chip = {
+      cls: 'bg-amber-50 text-amber-700 border-amber-200',
+      icon: <AlertTriangle className="w-3.5 h-3.5" />,
+      label: 'Connect link expired — resend',
+    };
+  } else if (latest?.emailedAt) {
+    chip = {
+      cls: 'bg-gray-50 text-gray-600 border-gray-200',
+      icon: <Send className="w-3.5 h-3.5" />,
+      label: `Emailed ${latest.emailedTo ?? ''} ${timeAgo(latest.emailedAt)}`,
+    };
+  } else if (latest) {
+    chip = {
+      cls: 'bg-gray-50 text-gray-500 border-gray-200',
+      icon: <Clock className="w-3.5 h-3.5" />,
+      label: 'Connect link created — not emailed yet',
+    };
+  } else {
+    return null;
+  }
+
+  return (
+    <div className="flex items-center justify-between mt-4">
+      <span className="text-xs text-gray-500">Bank Connect</span>
+      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs font-medium ${chip.cls}`}>
+        {chip.icon}
+        {chip.label}
+      </span>
+    </div>
+  );
+}
+
+// ── Email-the-connect-link modal ──
+function EmailLinkModal({ lead, onClose }: { lead: Lead; onClose: () => void }) {
+  const [to, setTo] = useState(lead.contactEmail || '');
+  const [note, setNote] = useState('');
+  const { busy } = usePlaidSync();
+  const sending = busy.includes(`invite:${lead.id}`);
+
+  const send = async () => {
+    const trimmed = to.trim();
+    if (!trimmed) { toast.error('Enter the recipient email address'); return; }
+    try {
+      await plaidActions.emailHostedLink(lead.id, {
+        to: trimmed,
+        ...(note.trim() ? { note: note.trim() } : {}),
+      });
+      onClose();
+    } catch { /* action already toasts the error */ }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
+        <div className="flex items-start justify-between mb-1">
+          <h3 className="text-lg font-bold text-gray-900">Email application link</h3>
+          <button onClick={onClose} className="p-1.5 hover:bg-gray-100 rounded-md transition-colors">
+            <X className="w-4 h-4 text-gray-500" />
+          </button>
+        </div>
+        <p className="text-sm text-gray-600 mb-4">
+          Sends {lead.businessName} a branded email with a secure Plaid bank-connect
+          link (valid 7 days). You'll see it here the moment they connect.
+        </p>
+        <label className="block text-xs font-medium text-gray-700 mb-1">Send to</label>
+        <input
+          type="email"
+          value={to}
+          onChange={e => setTo(e.target.value)}
+          placeholder="prospect@business.com"
+          className="w-full px-3 py-2 mb-3 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+        />
+        <label className="block text-xs font-medium text-gray-700 mb-1">Personal note (optional)</label>
+        <textarea
+          value={note}
+          onChange={e => setNote(e.target.value)}
+          placeholder="Great speaking with you today — here's the secure link we discussed."
+          rows={3}
+          className="w-full px-3 py-2 mb-4 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
+        />
+        <div className="flex items-center justify-end gap-2">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-50 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={send}
+            disabled={sending}
+            className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 transition-colors disabled:opacity-50 inline-flex items-center gap-1.5"
+          >
+            {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+            {sending ? 'Sending…' : 'Send link'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Lead Detail Panel ──
 function LeadDetailPanel({ lead, onClose, onEdit, onDelete }: { lead: Lead | null; onClose: () => void; onEdit?: () => void; onDelete?: () => void }) {
   const [activeTab, setActiveTab] = useState<'activity' | 'notes' | 'tasks'>('activity');
   const [newNote, setNewNote] = useState('');
   const [newTask, setNewTask] = useState('');
+  const [emailModalOpen, setEmailModalOpen] = useState(false);
   const { navigate } = useAppNavigate();
+  const { can } = useSession();
+  const linkRequests = usePlaidLinkRequests();
   if (!lead) return null;
+
+  const hasEmailedLink = linkRequests.some(r => r.leadId === lead.id && r.emailedAt);
 
   // Stage a prefilled MCA agreement from everything the lead already told us
   // (KYB intake, contact, requested amount) and jump to the e-sign composer.
@@ -584,6 +725,7 @@ function LeadDetailPanel({ lead, onClose, onEdit, onDelete }: { lead: Lead | nul
               Last activity <span className="text-gray-700 font-medium">{timeAgo(lead.updatedAt) || lead.lastActivity}</span>
             </span>
           </div>
+          <ConnectLinkStatus lead={lead} />
         </div>
 
         {/* Welcome Bundle — visible at Qualified stage or later */}
@@ -738,6 +880,22 @@ function LeadDetailPanel({ lead, onClose, onEdit, onDelete }: { lead: Lead | nul
             >
               <PenTool className="w-4 h-4" /> E-Sign
             </button>
+            {can('leads.edit') && (
+              <button
+                onClick={() => setEmailModalOpen(true)}
+                disabled={isDeadEnd}
+                title={
+                  isDeadEnd
+                    ? 'Change the status before emailing a connect link'
+                    : lead.contactEmail
+                    ? 'Email the prospect a secure Plaid bank-connect link (valid 7 days)'
+                    : 'No contact email on this lead yet — you can type one in the next step'
+                }
+                className="px-4 py-2.5 bg-white border border-sky-300 text-sky-700 text-sm font-medium rounded-[6px] hover:bg-sky-50 transition-colors whitespace-nowrap inline-flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <Mail className="w-4 h-4" /> {hasEmailedLink ? 'Resend Link' : 'Email Link'}
+              </button>
+            )}
             <button
               onClick={handleMarkNotQualified}
               className="px-4 py-2.5 bg-white border border-orange-300 text-orange-700 text-sm font-medium rounded-[6px] hover:bg-orange-50 transition-colors whitespace-nowrap"
@@ -753,6 +911,7 @@ function LeadDetailPanel({ lead, onClose, onEdit, onDelete }: { lead: Lead | nul
           </div>
         </div>
       </div>
+      {emailModalOpen && <EmailLinkModal lead={lead} onClose={() => setEmailModalOpen(false)} />}
     </div>
   );
 }

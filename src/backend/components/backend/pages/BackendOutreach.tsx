@@ -71,6 +71,16 @@ const CAMPAIGN_META: Record<string, { name: string; description: string; channel
     channel: 'sms',
     automated: false,
   },
+  // Fired from this repo (edge functions), not deltcapital.com: the CRM's
+  // "Email Link" action on a lead. 'responded' = bank connected via Plaid.
+  // Opens are an upper bound (Apple Mail prefetches pixels) — clicks are
+  // the trustworthy engagement signal.
+  'crm-connect-link': {
+    name: 'CRM Connect-Link Email',
+    description: 'Staff-sent application & bank-connect link from the CRM (responded = bank connected)',
+    channel: 'email',
+    automated: false,
+  },
 };
 
 // Subject-line copy for the nudge A/B test — mirrors nudgeSubject() in

@@ -1,14 +1,17 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Bell, FileText, UserPlus, ArrowRight } from 'lucide-react';
+import { Bell, FileText, UserPlus, ArrowRight, Landmark } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useLeads } from './crmStore';
+import { usePlaidLinkRequests } from './plaidStore';
 import { useSession } from './SessionContext';
 import { useLang } from './i18n';
 
 /**
- * Live notifications for the header bell: new pipeline leads (CRM store) and
- * recent statement analyses (statement_analyses). Unread state is a last-seen
- * timestamp per browser — opening the panel marks everything seen.
+ * Live notifications for the header bell: new pipeline leads (CRM store),
+ * recent statement analyses (statement_analyses), and prospects completing
+ * a Plaid bank connection (plaid_link_requests, realtime via plaidStore).
+ * Unread state is a last-seen timestamp per browser — opening the panel
+ * marks everything seen.
  */
 
 const SEEN_KEY = 'delt-crm-notif-seen';
@@ -17,7 +20,7 @@ const MAX_ITEMS = 8;
 
 interface Notif {
   id: string;
-  kind: 'lead' | 'analysis';
+  kind: 'lead' | 'analysis' | 'bank';
   title: string;
   detail: string;
   at: string;
@@ -52,6 +55,7 @@ export function NotificationsBell({ onNavigate }: { onNavigate: (path: string) =
   const { t, lang } = useLang();
   const { can } = useSession();
   const leads = useLeads();
+  const linkRequests = usePlaidLinkRequests();
   const [open, setOpen] = useState(false);
   const [seenAt, setSeenAt] = useState<number>(getSeen);
   /** Unread ids captured when the panel opens, so highlights persist while it's open. */
@@ -97,11 +101,26 @@ export function NotificationsBell({ onNavigate }: { onNavigate: (path: string) =
             path: '/leads',
           }))
       : [];
-    return [...leadItems, ...analyses]
+    // Prospects who completed the Plaid bank connection (RLS scopes agents
+    // to their own leads, so the name lookup already respects row access).
+    const leadName = new Map(leads.map(l => [l.id, l.businessName]));
+    const bankItems: Notif[] = can('leads.view')
+      ? linkRequests
+          .filter(r => r.status === 'completed' && r.completedAt)
+          .map((r): Notif => ({
+            id: `bank-${r.linkToken}`,
+            kind: 'bank',
+            title: `${t('Bank connected')} — ${leadName.get(r.leadId ?? '') ?? r.leadId ?? t('Prospect')}`,
+            detail: r.emailedAt ? t('Via emailed connect link') : t('Via connect link'),
+            at: r.completedAt as string,
+            path: '/leads',
+          }))
+      : [];
+    return [...leadItems, ...analyses, ...bankItems]
       .filter(n => new Date(n.at).getTime() >= cutoff)
       .sort((a, b) => b.at.localeCompare(a.at))
       .slice(0, MAX_ITEMS);
-  }, [leads, analyses, can, t]);
+  }, [leads, linkRequests, analyses, can, t]);
 
   const unreadCount = useMemo(
     () => items.filter(n => new Date(n.at).getTime() > seenAt).length,
@@ -167,10 +186,12 @@ export function NotificationsBell({ onNavigate }: { onNavigate: (path: string) =
                     className="w-full px-4 py-2.5 text-left hover:bg-white/[0.05] transition-colors flex items-start gap-3"
                   >
                     <span className={`mt-0.5 w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${
-                      n.kind === 'lead' ? 'bg-(--dp-accent-soft)' : 'bg-white/[0.06]'
+                      n.kind === 'lead' ? 'bg-(--dp-accent-soft)' : n.kind === 'bank' ? 'bg-emerald-500/15' : 'bg-white/[0.06]'
                     }`}>
                       {n.kind === 'lead'
                         ? <UserPlus className="w-3.5 h-3.5 text-(--dp-accent-text)" />
+                        : n.kind === 'bank'
+                        ? <Landmark className="w-3.5 h-3.5 text-emerald-400" />
                         : <FileText className="w-3.5 h-3.5 text-(--dp-text-muted)" />}
                     </span>
                     <span className="flex-1 min-w-0">

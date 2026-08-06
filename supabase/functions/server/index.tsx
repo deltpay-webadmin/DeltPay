@@ -20,6 +20,7 @@ import {
   svc,
 } from "../_shared/plaid.ts";
 import { adsStatus, connectMeta, syncMeta, disconnectMeta, syncMetaLeads, importMetaLeads } from "../_shared/meta.ts";
+import { emailHostedLink, loadLeadScoped } from "../_shared/lead_email.ts";
 import { requireUser, hasPerm, verifyCronSecret, verifyApplySecret, type AuthContext } from "../_shared/auth.ts";
 import { sweepInFlightEnvelopes } from "../_shared/docusign_status.ts";
 const app = new Hono();
@@ -315,15 +316,41 @@ app.post(`${PLAID_BASE}/sync-all`, needPerm("underwriting.review"), async (c) =>
 // Mint a Plaid-hosted connect URL for a prospect. Staff text/email it;
 // the prospect completes Link on their own device and the connection is
 // exchanged into the vault by webhook (or the sweep above).
-app.post(`${PLAID_BASE}/hosted-link`, needPerm("underwriting.review"), async (c) => {
+// leads.edit (not underwriting.review) so agents can invite their own
+// leads; loadLeadScoped enforces the row scope needPerm can't.
+app.post(`${PLAID_BASE}/hosted-link`, needPerm("leads.edit"), async (c) => {
   try {
     const body = await c.req.json().catch(() => ({}));
     const leadId = String(body.leadId ?? "");
     if (!leadId) return c.json({ ok: false, error: "leadId is required" }, 400);
+    const ctx = c.get("authCtx") as AuthContext;
+    const scoped = await loadLeadScoped(leadId, ctx);
+    if (!("lead" in scoped)) return c.json(scoped.body, scoped.status as any);
     const out = await createHostedLink(leadId);
     return c.json({ ok: true, ...out });
   } catch (err: any) {
     console.error("plaid hosted-link error", err);
+    return c.json({ ok: false, error: String(err?.message ?? err) }, 500);
+  }
+});
+
+// Email the hosted connect link to the lead: reuse-or-mint the link, send
+// the branded invite (open pixel + click-tracked CTA), log the 'sent'
+// outreach event, stamp the request row, append the lead timeline, and
+// advance New → Contacted. Same gate + row scope as /hosted-link.
+app.post(`${PLAID_BASE}/hosted-link/email`, needPerm("leads.edit"), async (c) => {
+  try {
+    const body = await c.req.json().catch(() => ({}));
+    const leadId = String(body.leadId ?? "");
+    if (!leadId) return c.json({ ok: false, error: "leadId is required" }, 400);
+    const ctx = c.get("authCtx") as AuthContext;
+    const out = await emailHostedLink(leadId, ctx, {
+      to: typeof body.to === "string" ? body.to : undefined,
+      note: typeof body.note === "string" ? body.note : undefined,
+    });
+    return c.json(out.body, out.status as any);
+  } catch (err: any) {
+    console.error("plaid hosted-link email error", err);
     return c.json({ ok: false, error: String(err?.message ?? err) }, 500);
   }
 });

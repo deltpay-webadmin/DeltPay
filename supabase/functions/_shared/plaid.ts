@@ -25,6 +25,7 @@
 
 import { createClient, type SupabaseClient } from "jsr:@supabase/supabase-js@2.49.8";
 import { runDecisionModel, MODEL_VERSION, type ModelInput } from "./decision_model.ts";
+import { renderStaffConnectNotice, sendResendEmail } from "./email.ts";
 
 // ══════════════════════════════════════════════════════════════
 // Config
@@ -572,11 +573,108 @@ async function completeHostedLink(
   institution?: { institution_id?: string; name?: string },
 ) {
   const out = await exchangePublicToken(leadId, publicToken, institution);
-  await svc()
+  const db = svc();
+  const { data: reqRow } = await db
+    .from("plaid_link_requests")
+    .select("emailed_to, emailed_at, tracking_id")
+    .eq("link_token", linkToken)
+    .maybeSingle();
+  await db
     .from("plaid_link_requests")
     .update({ status: "completed", item_id: out.item_id, completed_at: new Date().toISOString() })
     .eq("link_token", linkToken);
+  await confirmHostedConnection(leadId, out, reqRow ?? null);
   return out;
+}
+
+/** CRM confirmation for a completed hosted-link connection: lead timeline,
+ * stage advance (New/Contacted → Qualified, forward-only), the funnel's
+ * 'responded' outreach event, and a heads-up email to the assigned agent
+ * + the lead inbox. Lives here — not in the routes — so the webhook and
+ * the sweep produce identical results. Best-effort throughout: the bank
+ * connection is already exchanged and must never fail over bookkeeping. */
+async function confirmHostedConnection(
+  leadId: string,
+  out: { item_id: string; institution_name: string },
+  reqRow: { emailed_to?: string | null; emailed_at?: string | null; tracking_id?: string | null } | null,
+) {
+  const db = svc();
+  const instLabel = out.institution_name || "bank";
+  try {
+    const { data: lead } = await db
+      .from("pipeline_leads")
+      .select("id, org_id, agent_id, business_name, contact_email, stage, timeline")
+      .eq("id", leadId)
+      .maybeSingle();
+    if (!lead) return;
+
+    // Timeline entries in the CRM Activity-tab shape (title/description/
+    // user/timestamp), prepended newest-first like leadActions.addTimeline.
+    const now = new Date();
+    const entry = (title: string, description: string) => ({
+      title,
+      description,
+      user: "System",
+      timestamp: now.toLocaleString("en-US", {
+        month: "short", day: "numeric", year: "numeric",
+        hour: "numeric", minute: "2-digit", timeZone: "America/New_York",
+      }),
+      date: now.toISOString(),
+    });
+    const via = reqRow?.emailed_at ? "the emailed connect link" : "a connect link";
+    const entries = [entry("Bank connected", `Prospect connected ${instLabel} via ${via}.`)];
+
+    const patch: Record<string, unknown> = {};
+    if (lead.stage === "New" || lead.stage === "Contacted") {
+      patch.stage = "Qualified";
+      entries.unshift(entry("Stage advanced to Qualified", "Bank connection completed."));
+    }
+    const timeline = Array.isArray(lead.timeline) ? lead.timeline : [];
+    patch.timeline = [...entries, ...timeline];
+    await db.from("pipeline_leads").update(patch).eq("id", leadId);
+
+    // Funnel completion — only for links that were actually emailed, so
+    // clipboard-copied links don't inflate the campaign's response rate.
+    if (reqRow?.emailed_at) {
+      const { error: evErr } = await db.from("outreach_events").insert({
+        org_id: lead.org_id,
+        lead_id: lead.id,
+        lead_email: reqRow.emailed_to ?? lead.contact_email,
+        lead_name: lead.business_name,
+        campaign: "crm-connect-link",
+        channel: "email",
+        event: "responded",
+        meta: { kind: "bank_connected", item_id: out.item_id, tracking_id: reqRow.tracking_id ?? null },
+      });
+      if (evErr) console.error("hosted-link confirm: outreach insert failed:", evErr.message);
+    }
+
+    // Staff heads-up: the assigned agent (if they have an email) + the
+    // lead inbox. Skipped silently when RESEND_API_KEY isn't configured.
+    try {
+      const recipients = new Set<string>(["david@deltpay.com"]);
+      if (lead.agent_id) {
+        const { data: agent } = await db
+          .from("agents").select("email").eq("id", lead.agent_id).maybeSingle();
+        if (agent?.email) recipients.add(agent.email.toLowerCase());
+      }
+      const notice = renderStaffConnectNotice({
+        businessName: lead.business_name,
+        institutionName: out.institution_name,
+        leadId: lead.id,
+      });
+      await sendResendEmail({
+        to: [...recipients],
+        subject: notice.subject,
+        html: notice.html,
+        text: notice.text,
+      });
+    } catch (err: any) {
+      console.error("hosted-link confirm: staff notice failed:", err?.message ?? err);
+    }
+  } catch (err: any) {
+    console.error("hosted-link confirm failed:", err?.message ?? err);
+  }
 }
 
 /** Pull completed sessions out of /link/token/get (shape mirrors the

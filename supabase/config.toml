@@ -9,6 +9,9 @@
 #   - docusign-connect: called by DocuSign Connect; HMAC-verified
 #                       (DOCUSIGN_CONNECT_HMAC_KEY), fails closed.
 #   - plaid-config-check: public config self-check (returns booleans only).
+#   - email-track:      open-pixel + click-redirect hit by prospects' email
+#                       clients (no JWT possible); tokens are unguessable
+#                       per-send uuids and unknown tokens write nothing.
 #
 # The pg_cron jobs dispatcher lives INSIDE make-server-940653c6 (POST /jobs,
 # gated by x-cron-secret); pg_cron sends the public anon key to satisfy the
@@ -31,4 +34,7 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.plaid-config-check]
+verify_jwt = false
+
+[functions.email-track]
 verify_jwt = false

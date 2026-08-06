@@ -70,6 +70,11 @@ export interface PlaidLinkRequest {
   createdAt: string;
   expiresAt: string | null;
   completedAt: string | null;
+  /** Token the public email-track endpoints resolve (opens/clicks). */
+  trackingId: string | null;
+  /** Set when the CRM emailed the invite (vs clipboard copy). */
+  emailedTo: string | null;
+  emailedAt: string | null;
 }
 
 export interface PlaidStatus {
@@ -159,6 +164,9 @@ function fromDbRequest(r: any): PlaidLinkRequest {
     createdAt: r.created_at ?? '',
     expiresAt: r.expires_at ?? null,
     completedAt: r.completed_at ?? null,
+    trackingId: r.tracking_id ?? null,
+    emailedTo: r.emailed_to ?? null,
+    emailedAt: r.emailed_at ?? null,
   };
 }
 
@@ -431,6 +439,38 @@ export const plaidActions = {
       return url;
     } catch (err: any) {
       toast.error(`Couldn't create connect link: ${err.message}`);
+      throw err;
+    } finally {
+      markBusy(`invite:${leadId}`, false);
+    }
+  },
+
+  /**
+   * Email the hosted connect link to the lead. The server reuses the
+   * pending link (or mints one), sends the branded invite with open/click
+   * tracking, logs the outreach event, appends the lead timeline, and
+   * advances New → Contacted.
+   */
+  async emailHostedLink(
+    leadId: string,
+    opts: { to?: string; note?: string } = {},
+  ): Promise<{ emailedTo: string; duplicate: boolean }> {
+    markBusy(`invite:${leadId}`, true);
+    try {
+      const json = await authFetch('/hosted-link/email', {
+        method: 'POST',
+        body: JSON.stringify({ leadId, ...opts }),
+      });
+      const emailedTo = String(json.emailed_to ?? opts.to ?? '');
+      if (json.duplicate) {
+        toast.info?.(`Already sent to ${emailedTo} moments ago.`);
+      } else {
+        toast.success(`Application link emailed to ${emailedTo} — valid for 7 days.`);
+      }
+      await plaidActions.refresh();
+      return { emailedTo, duplicate: Boolean(json.duplicate) };
+    } catch (err: any) {
+      toast.error(`Couldn't email the connect link: ${err.message}`);
       throw err;
     } finally {
       markBusy(`invite:${leadId}`, false);
