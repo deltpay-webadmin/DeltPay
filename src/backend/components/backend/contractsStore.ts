@@ -73,7 +73,7 @@ export interface Contract {
   sentAt: string | null;
   completedAt: string | null;
   createdAt: string;
-  kind: 'mca' | 'deal_application';
+  kind: 'mca' | 'deal_application' | 'mpa';
   submissionId: string | null;
   signedStoragePath: string | null;
 }
@@ -345,6 +345,48 @@ export const contractActions = {
     } finally {
       markBusy('send', false);
     }
+  },
+
+  /** Fill the processor MPA from the merchant application and open an
+   * envelope. mode 'embedded' = in-person signing (iPad); 'email' = remote. */
+  async sendMpa(req: {
+    applicationId: string;
+    mode: 'embedded' | 'email';
+    signerName?: string;
+    signerEmail?: string;
+  }): Promise<{ contract: Contract; warnings: string[] }> {
+    markBusy('send', true);
+    try {
+      const json = await callDocusign({ action: 'send-mpa', ...req });
+      const contract = fromDb(json.contract);
+      const exists = state.contracts.some(c => c.id === contract.id);
+      set({
+        contracts: exists
+          ? state.contracts.map(c => (c.id === contract.id ? contract : c))
+          : [contract, ...state.contracts],
+      });
+      toast.success(
+        req.mode === 'embedded'
+          ? 'MPA is ready — open the signing session on the tablet.'
+          : `MPA sent to ${contract.signerEmail} for signature.`,
+      );
+      return { contract, warnings: (json.warnings as string[]) ?? [] };
+    } catch (err: any) {
+      toast.error(`MPA send failed: ${err.message}`);
+      throw err;
+    } finally {
+      markBusy('send', false);
+    }
+  },
+
+  /** Mint a fresh embedded-signing URL (≈5-minute TTL; never stored). */
+  async signingUrl(contractId: string): Promise<string> {
+    const json = await callDocusign({
+      action: 'signing-url',
+      contractId,
+      returnUrl: `${window.location.origin}/#/signing-complete`,
+    });
+    return json.url as string;
   },
 
   /** Pull the envelope's live status from DocuSign and sync the row. */

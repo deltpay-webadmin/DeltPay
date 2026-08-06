@@ -14,6 +14,7 @@ import { AgentDealDesk } from './AgentDealDesk';
 import { fmtUsd, activationBonus } from '../agentComp';
 import { useSession } from '../SessionContext';
 import { DealDocumentsPanel, CopyButton } from '../DealDocumentsPanel';
+import { MpaBoardingPanel } from '../MpaBoardingPanel';
 
 const STATUS_BADGE: Record<SubmissionStatus, string> = {
   Submitted: 'bg-blue-50 text-blue-700 border-blue-200',
@@ -304,6 +305,8 @@ export function BackendAgentDesk() {
                                 />
                               </div>
                             </div>
+                            {/* Unified MPA application + processor boarding */}
+                            <MpaBoardingPanel submission={s} />
                           </td>
                         </tr>
                       )}
