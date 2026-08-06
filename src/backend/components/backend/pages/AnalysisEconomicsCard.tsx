@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { Lock } from 'lucide-react';
 import {
   estimateProgramEconomics, INTERCHANGE_EST,
-  type RiskTierKey,
+  type ProgramOverrides, type RiskTierKey,
 } from '../pricingPrograms';
 import type { ExtractedData } from './BackendAnalysis';
 import { useLang } from '../i18n';
@@ -12,19 +12,21 @@ const fmtWhole = (n: number) => n.toLocaleString('en-US', { style: 'currency', c
 interface AnalysisEconomicsCardProps {
   extracted: ExtractedData;
   riskTier: RiskTierKey;
-  /** Key of the program recommended to the merchant (best savings), for the margin-vs-savings footnote. */
+  /** Live per-deal rate edits from the analyzer, so margins track what's actually being quoted. */
+  overrides?: ProgramOverrides;
+  /** Key of the program featured in the merchant proposal, for the margin-vs-savings footnote. */
   bestSavingsKey: string | null;
 }
 
 /** Internal-only Delt economics for the analyzed statement. Never rendered in Merchant View. */
-export function AnalysisEconomicsCard({ extracted, riskTier, bestSavingsKey }: AnalysisEconomicsCardProps) {
+export function AnalysisEconomicsCard({ extracted, riskTier, overrides, bestSavingsKey }: AnalysisEconomicsCardProps) {
   const { t } = useLang();
   const economics = useMemo(() => estimateProgramEconomics({
     monthlyVolume: extracted.totalVolume,
     monthlyTransactions: extracted.totalTransactions,
     currentMonthlyCost: extracted.currentMonthlyCost,
     riskTier,
-  }), [extracted, riskTier]);
+  }, overrides), [extracted, riskTier, overrides]);
 
   const bestMargin = useMemo(
     () => economics.reduce((best, e) => (!best || e.margin > best.margin ? e : best), economics[0] ?? null),

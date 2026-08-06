@@ -101,6 +101,19 @@ export const ES: Record<string, string> = {
 
   // ── Statement Analyzer ──
   'Cost calculator and statement analysis tools.': 'Calculadora de costos y herramientas de análisis de estados de cuenta.',
+  'Upload a merchant statement for a full analysis — or run a quick quote without one.':
+    'Suba un estado de cuenta del comercio para un análisis completo — o genere una cotización rápida sin uno.',
+  'No statement? Quick quote': '¿Sin estado de cuenta? Cotización rápida',
+  'Qualify, price, and get the selling playbook from volume alone': 'Califique, cotice y obtenga la guía de venta solo con el volumen',
+  'In Proposal': 'En Propuesta',
+  'Reset rates': 'Restablecer tasas',
+  'Service fee %': '% tarifa de servicio',
+  'Program $/mo': 'Programa $/mes',
+  'Rate %': 'Tasa %',
+  'Per txn $': 'Por trans. $',
+  'All-in effective %': '% efectiva total',
+  'Click a program to feature it in the proposal — rates are editable and every number on this page updates live.':
+    'Haga clic en un programa para destacarlo en la propuesta — las tasas son editables y cada número de esta página se actualiza en vivo.',
   'Cost Calculator': 'Calculadora de Costos',
   'Statement Analyzer': 'Analizador de Estados de Cuenta',
   'Drag & drop merchant statements here': 'Arrastre y suelte aquí los estados de cuenta del comercio',

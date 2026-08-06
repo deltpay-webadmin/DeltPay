@@ -1,7 +1,7 @@
 import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import {
   Upload, FileText, Sparkles, Download, UserPlus, Clock,
-  CheckCircle2, TrendingDown, Store,
+  CheckCircle2, TrendingDown, Store, Calculator, ChevronDown, RotateCcw,
   AlertCircle, Loader2, X, File, ArrowRight, Presentation,
 } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
@@ -15,7 +15,10 @@ import {
 } from 'recharts';
 import { supabase } from '../../../lib/supabase';
 import { leadActions } from '../crmStore';
-import { quotePrograms, RISK_TIERS, type ProgramQuote, type RiskTierKey } from '../pricingPrograms';
+import {
+  quotePrograms, resolveProgramRates, RISK_TIERS,
+  type ProgramOverrides, type ProgramQuote, type RiskTierKey,
+} from '../pricingPrograms';
 import { openProposalPdf } from '../proposalDoc';
 import { useSession } from '../SessionContext';
 import { useLang } from '../i18n';
@@ -144,7 +147,7 @@ export function BackendAnalysis() {
   const { navigate } = useAppNavigate();
   const { displayName, email: sessionEmail } = useSession();
   const { t, tTerms, lang } = useLang();
-  const [activeView, setActiveView] = useState<'cost-calculator' | 'statement-analyzer'>('cost-calculator');
+  const [calcOpen, setCalcOpen] = useState(false);
   const [status, setStatus] = useState<AnalysisStatus>('idle');
   const [files, setFiles] = useState<File[]>([]);
   const [dragOver, setDragOver] = useState(false);
@@ -158,6 +161,10 @@ export function BackendAnalysis() {
   const [historyView, setHistoryView] = useState<'all' | 'merchant'>('all');
   const [merchantFilter, setMerchantFilter] = useState<string | null>(null);
   const [riskTier, setRiskTier] = useState<RiskTierKey>('medium');
+  /** Program the agent clicked to feature in the proposal; null = follow the recommendation. */
+  const [selectedProgramKey, setSelectedProgramKey] = useState<ProgramQuote['key'] | null>(null);
+  /** Live per-deal rate edits layered over the band × tier defaults. */
+  const [overrides, setOverrides] = useState<ProgramOverrides>({});
   const [merchantView, setMerchantView] = useState(false);
   /** Filename of a saved analysis reopened from history (no File object exists for it). */
   const [openedFilename, setOpenedFilename] = useState<string | null>(null);
@@ -254,6 +261,8 @@ export function BackendAnalysis() {
       setStatus('done');
       setMerchantView(false);
       setOpenedFilename(null);
+      setSelectedProgramKey(null);
+      setOverrides({});
 
       // Persist so the history / merchant view survives reloads.
       const { data: saved, error: insErr } = await supabase.from('statement_analyses').insert({
@@ -349,6 +358,8 @@ export function BackendAnalysis() {
     setSavedAnalysisId(null);
     setMerchantView(false);
     setOpenedFilename(null);
+    setSelectedProgramKey(null);
+    setOverrides({});
   };
 
   /** Reopen a saved analysis from history in the full results view. */
@@ -365,6 +376,8 @@ export function BackendAnalysis() {
     setOpenedFilename(row.filename);
     setSavedAnalysisId(row.id);
     setMerchantView(false);
+    setSelectedProgramKey(null);
+    setOverrides({});
     setAutoLeadCreated(Boolean(row.leadId));
     setAutoLeadName(row.leadId ? row.merchantName : '');
     setLeadBannerVisible(false);
@@ -372,19 +385,57 @@ export function BackendAnalysis() {
   };
 
   // ── Delt program quotes against the extracted statement ──
-  const programs: ProgramQuote[] = useMemo(() => {
-    if (!extracted) return [];
-    return quotePrograms({
-      monthlyVolume: extracted.totalVolume,
-      monthlyTransactions: extracted.totalTransactions,
-      currentMonthlyCost: extracted.currentMonthlyCost,
-      riskTier,
-    });
-  }, [extracted, riskTier]);
+  const quoteInput = useMemo(() => (extracted ? {
+    monthlyVolume: extracted.totalVolume,
+    monthlyTransactions: extracted.totalTransactions,
+    currentMonthlyCost: extracted.currentMonthlyCost,
+    riskTier,
+  } : null), [extracted, riskTier]);
+  const programs: ProgramQuote[] = useMemo(
+    () => (quoteInput ? quotePrograms(quoteInput, overrides) : []),
+    [quoteInput, overrides],
+  );
   const bestProgram = useMemo(
     () => programs.reduce<ProgramQuote | null>((best, p) => (!best || p.annualSavings > best.annualSavings ? p : best), null),
     [programs],
   );
+  /** The program driving the proposal card, PDF, and merchant view: the agent's pick, else the recommendation. */
+  const activeProgram = useMemo(
+    () => programs.find(p => p.key === selectedProgramKey) ?? bestProgram,
+    [programs, selectedProgramKey, bestProgram],
+  );
+  /** Resolved rates (defaults + overrides) backing the editable inputs on the program cards. */
+  const rates = useMemo(
+    () => (quoteInput ? resolveProgramRates(quoteInput, overrides) : null),
+    [quoteInput, overrides],
+  );
+  const hasOverrides = Object.keys(overrides).length > 0;
+
+  const setOverride = (patch: ProgramOverrides) => {
+    setOverrides(prev => {
+      const next: ProgramOverrides = { ...prev };
+      for (const k of Object.keys(patch) as Array<keyof ProgramOverrides>) {
+        next[k] = { ...prev[k], ...patch[k] } as any;
+      }
+      return next;
+    });
+  };
+
+  /** Proposal numbers re-derived live from the featured program (rate edits included). */
+  const displayProposal: SavingsProposal | null = useMemo(() => {
+    if (!proposal) return null;
+    if (!extracted || !activeProgram) return proposal;
+    return {
+      currentRate: extracted.effectiveRatePct,
+      deltRate: activeProgram.effectiveRatePct ?? proposal.deltRate,
+      currentMonthlyCost: extracted.currentMonthlyCost,
+      deltMonthlyCost: activeProgram.monthlyCost,
+      currentAnnualCost: Math.round(extracted.currentMonthlyCost * 12),
+      deltAnnualCost: activeProgram.annualCost,
+      annualSavings: activeProgram.annualSavings,
+      savingsPercent: activeProgram.savingsPct,
+    };
+  }, [proposal, extracted, activeProgram]);
 
   // ── Merchant rollup for the "By merchant" view ──
   const merchants = useMemo(() => {
@@ -425,37 +476,10 @@ export function BackendAnalysis() {
       <div className="max-w-[1400px] mx-auto px-6 py-6 space-y-6">
         {/* ── Header ── */}
         <div>
-          <p className="text-sm text-gray-500 mt-0.5">{t('Cost calculator and statement analysis tools.')}</p>
+          <p className="text-sm text-gray-500 mt-0.5">{t('Upload a merchant statement for a full analysis — or run a quick quote without one.')}</p>
         </div>
 
-        {/* ── View Tabs ── */}
-        <div className="border-b border-gray-200">
-          <div className="flex gap-1">
-            {([
-              { key: 'cost-calculator' as const, label: 'Cost Calculator' },
-              { key: 'statement-analyzer' as const, label: 'Statement Analyzer' },
-            ]).map(tab => (
-              <button
-                key={tab.key}
-                onClick={() => setActiveView(tab.key)}
-                className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-[1px] ${
-                  activeView === tab.key
-                    ? 'text-brand border-brand'
-                    : 'text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                {t(tab.label)}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {activeView === 'cost-calculator' && (
-          <BackendCostCalculator />
-        )}
-
-        {activeView === 'statement-analyzer' && (
-          <>
+        <>
             {/* ── Upload Section ── */}
             {status !== 'done' && (
               <div className="bg-white rounded-[8px] border border-gray-200 p-6">
@@ -535,6 +559,30 @@ export function BackendAnalysis() {
               </div>
             )}
 
+            {/* ── Quick quote (the old Cost Calculator, folded in) ── */}
+            {status !== 'done' && (
+              <div className="bg-white rounded-[8px] border border-gray-200 overflow-hidden">
+                <button
+                  onClick={() => setCalcOpen(o => !o)}
+                  className="w-full px-5 py-4 flex items-center justify-between gap-3 text-left hover:bg-gray-50/60 transition-colors"
+                >
+                  <span className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                    <Calculator className="w-4 h-4 text-brand" />
+                    {t('No statement? Quick quote')}
+                  </span>
+                  <span className="flex items-center gap-2 text-xs text-gray-400">
+                    {t('Qualify, price, and get the selling playbook from volume alone')}
+                    <ChevronDown className={`w-4 h-4 shrink-0 transition-transform ${calcOpen ? 'rotate-180' : ''}`} />
+                  </span>
+                </button>
+                {calcOpen && (
+                  <div className="border-t border-gray-100 p-5">
+                    <BackendCostCalculator />
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* ── Results: two-column layout ── */}
             {status === 'done' && extracted && proposal && (
               <>
@@ -579,7 +627,7 @@ export function BackendAnalysis() {
                   <MerchantSavingsView
                     extracted={extracted}
                     programs={programs}
-                    bestProgramKey={bestProgram?.key ?? null}
+                    bestProgramKey={activeProgram?.key ?? null}
                     onExit={() => setMerchantView(false)}
                     onDownloadProposal={key => {
                       const ok = openProposalPdf({ extracted, programs, focusKey: key, preparedBy: displayName, preparedByEmail: sessionEmail, lang });
@@ -711,15 +759,22 @@ export function BackendAnalysis() {
                   </div>
 
                   {/* ── Right: Delt Savings Proposal ── */}
-                  <div className="bg-white rounded-[8px] border border-gray-200 overflow-hidden flex flex-col">
-                    <div className="px-5 py-4 border-b border-gray-100">
+                  {/* self-start keeps the card content-height — no stretch-to-match
+                      the taller extraction column, no dead space above the CTAs. */}
+                  <div className="bg-white rounded-[8px] border border-gray-200 overflow-hidden lg:self-start">
+                    <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between gap-2">
                       <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
                         <TrendingDown className="w-4 h-4 text-emerald-600" />
                         {t('Delt Savings Proposal')}
                       </h2>
+                      {activeProgram && (
+                        <span className="px-2 py-0.5 rounded-full bg-brand/10 text-brand text-[10px] font-bold uppercase tracking-wide">
+                          {t(activeProgram.name)}
+                        </span>
+                      )}
                     </div>
 
-                    <div className="px-5 py-4 flex-1 flex flex-col">
+                    <div className="px-5 py-4">
                       {/* Comparison table */}
                       <div className="border border-gray-200 rounded-[6px] overflow-hidden">
                         <table className="w-full">
@@ -731,21 +786,21 @@ export function BackendAnalysis() {
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-gray-100">
-                            <CompareRow label={t('Effective Rate')} current={`${proposal.currentRate}%`} delt={`${proposal.deltRate}%`} />
-                            <CompareRow label={t('Monthly Cost')} current={fmt(proposal.currentMonthlyCost)} delt={fmt(proposal.deltMonthlyCost)} />
-                            <CompareRow label={t('Annual Cost')} current={fmtWhole(proposal.currentAnnualCost)} delt={fmtWhole(proposal.deltAnnualCost)} />
+                            <CompareRow label={t('Effective Rate')} current={`${displayProposal!.currentRate}%`} delt={`${displayProposal!.deltRate}%`} />
+                            <CompareRow label={t('Monthly Cost')} current={fmt(displayProposal!.currentMonthlyCost)} delt={fmt(displayProposal!.deltMonthlyCost)} />
+                            <CompareRow label={t('Annual Cost')} current={fmtWhole(displayProposal!.currentAnnualCost)} delt={fmtWhole(displayProposal!.deltAnnualCost)} />
                             <tr className="bg-emerald-50/50">
                               <td className="px-3 py-3 text-sm font-semibold text-gray-900">{t('Annual Savings')}</td>
                               <td className="px-3 py-3 text-right"></td>
                               <td className="px-3 py-3 text-right">
-                                <span className="text-base font-bold text-emerald-600">{fmtWhole(proposal.annualSavings)}</span>
+                                <span className="text-base font-bold text-emerald-600">{fmtWhole(displayProposal!.annualSavings)}</span>
                               </td>
                             </tr>
                             <tr className="bg-emerald-50/50">
                               <td className="px-3 py-3 text-sm font-semibold text-gray-900">{t('Savings %')}</td>
                               <td className="px-3 py-3 text-right"></td>
                               <td className="px-3 py-3 text-right">
-                                <span className="inline-block px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-sm font-bold">{proposal.savingsPercent}%</span>
+                                <span className="inline-block px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-sm font-bold">{displayProposal!.savingsPercent}%</span>
                               </td>
                             </tr>
                           </tbody>
@@ -755,15 +810,18 @@ export function BackendAnalysis() {
                       {/* Savings callout */}
                       <div className="mt-4 bg-emerald-50 border border-emerald-200 rounded-[8px] p-4 text-center">
                         <p className="text-xs text-emerald-600 font-medium mb-1">{t('Projected Annual Savings')}</p>
-                        <p className="text-3xl font-bold text-emerald-700">{fmtWhole(proposal.annualSavings)}</p>
-                        <p className="text-xs text-emerald-500 mt-1">{proposal.savingsPercent}% {t('reduction in processing costs')}</p>
+                        <p className="text-3xl font-bold text-emerald-700">{fmtWhole(displayProposal!.annualSavings)}</p>
+                        <p className="text-xs text-emerald-500 mt-1">
+                          {displayProposal!.savingsPercent}% {t('reduction in processing costs')}
+                          {activeProgram && <> · {tTerms(activeProgram.terms)}</>}
+                        </p>
                       </div>
 
                       {/* CTA buttons */}
-                      <div className="mt-auto pt-5 flex items-center gap-3">
+                      <div className="mt-5 flex items-center gap-3">
                         <button
                           onClick={() => {
-                            const ok = openProposalPdf({ extracted, programs, focusKey: bestProgram?.key ?? null, preparedBy: displayName, preparedByEmail: sessionEmail, lang });
+                            const ok = openProposalPdf({ extracted, programs, focusKey: activeProgram?.key ?? null, preparedBy: displayName, preparedByEmail: sessionEmail, lang });
                             if (!ok) toast.error('Pop-up blocked — allow pop-ups for this site to generate the proposal.');
                           }}
                           className="flex-1 px-4 py-2.5 bg-brand text-white text-sm font-medium rounded-[6px] hover:bg-brand-hover transition-colors flex items-center justify-center gap-2"
@@ -800,7 +858,15 @@ export function BackendAnalysis() {
                       <Sparkles className="w-4 h-4 text-brand" />
                       {t('Delt Pricing Programs')}
                     </h2>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-3">
+                      {hasOverrides && (
+                        <button
+                          onClick={() => setOverrides({})}
+                          className="flex items-center gap-1 text-xs font-medium text-gray-400 hover:text-gray-600 transition-colors"
+                        >
+                          <RotateCcw className="w-3 h-3" /> {t('Reset rates')}
+                        </button>
+                      )}
                       <span className="text-xs text-gray-400">{t('Risk tier')}</span>
                       <div className="flex rounded-[6px] border border-gray-200 overflow-hidden">
                         {RISK_TIERS.map(tier => (
@@ -822,23 +888,61 @@ export function BackendAnalysis() {
                   <div className="p-5 grid grid-cols-1 lg:grid-cols-3 gap-4">
                     {programs.map(p => {
                       const recommended = bestProgram?.key === p.key;
+                      const selected = activeProgram?.key === p.key;
                       return (
                         <div
                           key={p.key}
-                          className={`rounded-[8px] border p-4 flex flex-col ${
-                            recommended ? 'border-brand bg-brand/[0.03] shadow-[0_0_0_1px_var(--brand,#2E6BFF)]' : 'border-gray-200'
+                          role="button"
+                          tabIndex={0}
+                          onClick={() => setSelectedProgramKey(p.key)}
+                          onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedProgramKey(p.key); } }}
+                          className={`rounded-[8px] border p-4 flex flex-col text-left cursor-pointer transition-all ${
+                            selected
+                              ? 'border-brand bg-brand/[0.03] shadow-[0_0_0_1px_var(--brand,#2E6BFF)]'
+                              : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'
                           }`}
                         >
-                          <div className="flex items-center justify-between">
+                          <div className="flex items-center justify-between gap-2">
                             <p className="text-sm font-semibold text-gray-900">{t(p.name)}</p>
-                            {recommended && (
-                              <span className="px-2 py-0.5 rounded-full bg-brand text-white text-[10px] font-bold uppercase tracking-wide">
-                                {t('Recommended')}
-                              </span>
-                            )}
+                            <span className="flex items-center gap-1.5">
+                              {selected && (
+                                <span className="px-2 py-0.5 rounded-full bg-brand text-white text-[10px] font-bold uppercase tracking-wide">
+                                  {t('In Proposal')}
+                                </span>
+                              )}
+                              {recommended && !selected && (
+                                <span className="px-2 py-0.5 rounded-full bg-brand/10 text-brand text-[10px] font-bold uppercase tracking-wide">
+                                  {t('Recommended')}
+                                </span>
+                              )}
+                            </span>
                           </div>
                           <p className="text-xs text-gray-500 mt-1 leading-snug">{t(p.tagline)}</p>
-                          <p className="mt-3 inline-block text-xs font-mono text-gray-600 bg-gray-100 px-2 py-1 rounded-[6px] self-start">{tTerms(p.terms)}</p>
+
+                          {/* Live rate editors — edits recompute every number on the page. */}
+                          <div className="mt-3 flex flex-wrap gap-2" onClick={e => e.stopPropagation()}>
+                            {p.key === 'cash_discount' && rates && (
+                              <>
+                                <RateInput label={t('Service fee %')} value={rates.cashDiscount.serviceFee} step={0.05}
+                                  onChange={v => setOverride({ cashDiscount: { serviceFee: v } })} />
+                                <RateInput label={t('Program $/mo')} value={rates.cashDiscount.monthlyFee} step={5}
+                                  onChange={v => setOverride({ cashDiscount: { monthlyFee: v } })} />
+                              </>
+                            )}
+                            {p.key === 'flat_rate' && rates && (
+                              <>
+                                <RateInput label={t('Rate %')} value={rates.flatRate.rate} step={0.05}
+                                  onChange={v => setOverride({ flatRate: { rate: v } })} />
+                                <RateInput label={t('Per txn $')} value={rates.flatRate.perTxn} step={0.01}
+                                  onChange={v => setOverride({ flatRate: { perTxn: v } })} />
+                              </>
+                            )}
+                            {p.key === 'interchange_plus' && rates && (
+                              <RateInput label={t('All-in effective %')} value={rates.interchangePlus.ratePct} step={0.05}
+                                onChange={v => setOverride({ interchangePlus: { ratePct: v } })} />
+                            )}
+                          </div>
+
                           <div className="mt-4 pt-3 border-t border-gray-100 grid grid-cols-2 gap-2">
                             <div>
                               <p className="text-[11px] text-gray-500">{t('Merchant pays')}</p>
@@ -892,6 +996,7 @@ export function BackendAnalysis() {
                       </ResponsiveContainer>
                     </div>
                     <p className="text-[11px] text-gray-400 mt-2">
+                      {t('Click a program to feature it in the proposal — rates are editable and every number on this page updates live.')}{' '}
                       {t("Cash Discount shows the merchant's own cost — the ≈4% service fee is customer-paid. Program pricing keyed to this statement's volume band and the selected risk tier.")}
                     </p>
                   </div>
@@ -901,7 +1006,8 @@ export function BackendAnalysis() {
                 <AnalysisEconomicsCard
                   extracted={extracted}
                   riskTier={riskTier}
-                  bestSavingsKey={bestProgram?.key ?? null}
+                  overrides={overrides}
+                  bestSavingsKey={activeProgram?.key ?? null}
                 />
                 </>
                 )}
@@ -1115,8 +1221,7 @@ export function BackendAnalysis() {
               )}
             </div>
             )}
-          </>
-        )}
+        </>
       </div>
     </div>
   );
@@ -1137,6 +1242,25 @@ function MetaField({ label, value, highlight, warn }: { label: string; value: st
         {warn && <AlertCircle className="inline w-3.5 h-3.5 ml-1 -mt-0.5" />}
       </p>
     </div>
+  );
+}
+
+function RateInput({ label, value, step, onChange }: { label: string; value: number; step: number; onChange: (v: number) => void }) {
+  return (
+    <label className="block">
+      <span className="block text-[10px] font-medium text-gray-400 uppercase tracking-wide mb-0.5">{label}</span>
+      <input
+        type="number"
+        value={value}
+        step={step}
+        min={0}
+        onChange={e => {
+          const v = parseFloat(e.target.value);
+          if (!Number.isNaN(v) && v >= 0) onChange(v);
+        }}
+        className="w-[92px] px-2 py-1 bg-white border border-gray-300 rounded-[6px] text-xs font-mono text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand"
+      />
+    </label>
   );
 }
 
