@@ -208,6 +208,25 @@ export interface KybIntake {
 /** Product lines a lead can be tagged with — either or both. */
 export type ProductTag = 'Capital' | 'Processing';
 
+/**
+ * The product line a lead type already names: "MCA" is the Capital line,
+ * type "Processing" is the Processing line. Residual and Leasing map to
+ * neither, so their product tags always carry information.
+ */
+const IMPLIED_PRODUCT: Partial<Record<Lead['type'], ProductTag>> = {
+  MCA: 'Capital',
+  Processing: 'Processing',
+};
+
+/**
+ * Product tags worth displaying next to the type chip — the ones the type
+ * doesn't already imply. An MCA lead tagged Capital shows no extra badge;
+ * an MCA lead also tagged Processing shows the cross-sell "Processing".
+ */
+export function extraProductTags(lead: Pick<Lead, 'type' | 'products'>): ProductTag[] {
+  return (lead.products ?? []).filter(p => p !== IMPLIED_PRODUCT[lead.type]);
+}
+
 export interface Lead {
   id: string;
   businessName: string;

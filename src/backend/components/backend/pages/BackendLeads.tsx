@@ -54,6 +54,7 @@ import {
   programActions,
   isDummyLead,
   scoreLead,
+  extraProductTags,
   type Lead as StoreLead,
   type ProductTag,
 } from '../crmStore';
@@ -1666,7 +1667,7 @@ export function BackendLeads({ openImport = false }: { openImport?: boolean } = 
                             <p className="text-xs text-gray-500 mb-2">{lead.contactName}</p>
                             <div className="flex items-center gap-1.5 flex-wrap">
                               <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${getTypeColor(lead.type)}`}>{lead.type}</span>
-                              <ProductBadges products={lead.products} size="xxs" />
+                              <ProductBadges products={extraProductTags(lead)} size="xxs" />
                             </div>
                             {lead.blocker && (
                               <p className="text-[10px] text-red-600 mt-2 line-clamp-1">{lead.blocker}</p>
@@ -1748,9 +1749,11 @@ export function BackendLeads({ openImport = false }: { openImport?: boolean } = 
                         <td className="px-5 py-4">
                           <div className="flex flex-col items-start gap-1.5">
                             <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${getTypeColor(lead.type)}`}>{lead.type}</span>
-                            <div className="flex items-center gap-1">
-                              <ProductBadges products={lead.products} />
-                            </div>
+                            {extraProductTags(lead).length > 0 && (
+                              <div className="flex items-center gap-1">
+                                <ProductBadges products={extraProductTags(lead)} />
+                              </div>
+                            )}
                           </div>
                         </td>
                         <td className="px-5 py-4">
