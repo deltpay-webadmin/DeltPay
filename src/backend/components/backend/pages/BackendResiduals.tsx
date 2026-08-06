@@ -536,12 +536,22 @@ export function BackendResiduals() {
                       <tr key={r.id} className="hover:bg-gray-50/60 transition-colors">
                         <td className="pl-5 py-3">
                           {r.merchantId ? (
-                            <button
-                              onClick={() => navigate(`/merchants/${r.merchantId}`)}
-                              className="text-sm font-medium text-brand hover:underline underline-offset-2"
-                            >
-                              {r.merchantName}
-                            </button>
+                            <div className="flex items-baseline gap-2">
+                              <button
+                                onClick={() => navigate(`/merchants/${r.merchantId}`)}
+                                className="text-sm font-medium text-brand hover:underline underline-offset-2"
+                              >
+                                {r.merchantName}
+                              </button>
+                              {/* The only inbound link to the per-merchant residual history. */}
+                              <button
+                                onClick={() => navigate(`/residuals/${r.merchantId}`)}
+                                className="text-[11px] text-gray-400 hover:text-brand hover:underline underline-offset-2"
+                                title="Month-by-month residual history"
+                              >
+                                history
+                              </button>
+                            </div>
                           ) : (
                             <span className="text-sm font-medium text-gray-900">{r.merchantName}</span>
                           )}
