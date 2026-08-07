@@ -38,3 +38,12 @@ create policy plaid_api_events_staff_read on public.plaid_api_events
 
 grant select on public.plaid_api_events to authenticated;
 grant all on public.plaid_api_events to service_role;
+
+-- Realtime — the CRM's Products & Spend view streams new billable calls.
+do $$
+begin
+  begin
+    alter publication supabase_realtime add table public.plaid_api_events;
+  exception when duplicate_object then null;
+  end;
+end $$;

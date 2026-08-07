@@ -384,11 +384,13 @@ export function DeltBackendLayout() {
   const [cmdPaletteOpen, setCmdPaletteOpen] = useState(false);
   const [cmdQuery, setCmdQuery] = useState('');
   const [helpCenterOpen, setHelpCenterOpen] = useState(false);
+  // Light is the CRM default — dark only when the user has explicitly
+  // chosen it (persisted under delt-crm-theme).
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
     try {
-      return localStorage.getItem('delt-crm-theme') === 'light' ? 'light' : 'dark';
+      return localStorage.getItem('delt-crm-theme') === 'dark' ? 'dark' : 'light';
     } catch {
-      return 'dark';
+      return 'light';
     }
   });
 

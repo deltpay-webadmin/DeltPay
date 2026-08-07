@@ -86,15 +86,36 @@ export interface PlaidStatus {
   /** true when PLAID_REDIRECT_URI is set (OAuth banks enabled). */
   redirectUriSet: boolean;
   products: string[];
+  /** Deferred one-time-fee products (billed on first verification). */
+  optionalProducts: string[];
+  /** Whether PLAID_MONITOR_PROGRAM_ID is set (AML screening available). */
+  monitorConfigured: boolean;
+  /** Whether the recurring-transactions add-on is opted in. */
+  recurringEnabled: boolean;
+  /** Days of dead-lead inactivity before nightly auto-retire (0 = off). */
+  retireAfterDays: number;
   webhookUrl: string;
   items: number;
   prospects: number;
+}
+
+/** One billable Plaid API call (plaid_api_events row). */
+export interface PlaidUsageEvent {
+  id: string;
+  createdAt: string;
+  product: string;
+  endpoint: string;
+  pricingModel: string;
+  itemId: string | null;
+  leadId: string | null;
+  status: 'ok' | 'error';
 }
 
 interface PlaidState {
   items: PlaidItem[];
   nodes: PlaidNode[];
   requests: PlaidLinkRequest[];
+  usage: PlaidUsageEvent[];
   status: PlaidStatus | null;
 }
 
@@ -109,7 +130,7 @@ interface PlaidSyncState {
 // Store
 // ══════════════════════════════════════════════════════════════
 
-let state: PlaidState = { items: [], nodes: [], requests: [], status: null };
+let state: PlaidState = { items: [], nodes: [], requests: [], usage: [], status: null };
 let sync: PlaidSyncState = { isLoading: isSupabaseConfigured, busy: [], lastError: null };
 
 const listeners = new Set<() => void>();
@@ -168,6 +189,19 @@ function fromDbRequest(r: any): PlaidLinkRequest {
   };
 }
 
+function fromDbUsage(r: any): PlaidUsageEvent {
+  return {
+    id: r.id,
+    createdAt: r.created_at ?? '',
+    product: r.product ?? '',
+    endpoint: r.endpoint ?? '',
+    pricingModel: r.pricing_model ?? '',
+    itemId: r.item_id ?? null,
+    leadId: r.lead_id ?? null,
+    status: r.status === 'error' ? 'error' : 'ok',
+  };
+}
+
 function fromDbNode(r: any): PlaidNode {
   return {
     path: r.path,
@@ -199,10 +233,11 @@ async function maybeHydrate() {
   hydrating = true;
   setSync({ isLoading: true, lastError: null });
   try {
-    const [itemsRes, nodesRes, reqsRes] = await Promise.all([
+    const [itemsRes, nodesRes, reqsRes, usageRes] = await Promise.all([
       supabase.from('plaid_items').select('*').order('created_at', { ascending: false }),
       supabase.from('plaid_nodes').select('*').order('path', { ascending: true }),
       supabase.from('plaid_link_requests').select('*').order('created_at', { ascending: false }),
+      supabase.from('plaid_api_events').select('*').order('created_at', { ascending: false }).limit(1000),
     ]);
     const firstErr = itemsRes.error || nodesRes.error;
     if (firstErr) throw firstErr;
@@ -212,6 +247,8 @@ async function maybeHydrate() {
       // Tolerate a missing table (migration not applied yet) — invites are
       // an enhancement, not a load-bearing read.
       requests: reqsRes.error ? [] : (reqsRes.data || []).map(fromDbRequest),
+      // Same tolerance for the billable-call ledger.
+      usage: usageRes.error ? [] : (usageRes.data || []).map(fromDbUsage),
     });
     hydrated = true;
     setSync({ isLoading: false, lastError: null });
@@ -265,6 +302,14 @@ function subscribeRealtime() {
             : [...state.nodes, mapped].sort((a, b) => (a.path < b.path ? -1 : 1));
           set({ nodes });
         }
+      },
+    )
+    .on(
+      'postgres_changes',
+      { event: 'INSERT', schema: 'public', table: 'plaid_api_events' },
+      payload => {
+        const mapped = fromDbUsage((payload as any).new);
+        set({ usage: [mapped, ...state.usage].slice(0, 1000) });
       },
     )
     .on(
@@ -326,14 +371,16 @@ export const plaidActions = {
   /** Re-fetch items + nodes from Postgres (realtime usually covers this). */
   async refresh() {
     if (!supabase) return;
-    const [itemsRes, nodesRes, reqsRes] = await Promise.all([
+    const [itemsRes, nodesRes, reqsRes, usageRes] = await Promise.all([
       supabase.from('plaid_items').select('*').order('created_at', { ascending: false }),
       supabase.from('plaid_nodes').select('*').order('path', { ascending: true }),
       supabase.from('plaid_link_requests').select('*').order('created_at', { ascending: false }),
+      supabase.from('plaid_api_events').select('*').order('created_at', { ascending: false }).limit(1000),
     ]);
     if (!itemsRes.error && itemsRes.data) set({ items: itemsRes.data.map(fromDbItem) });
     if (!nodesRes.error && nodesRes.data) set({ nodes: nodesRes.data.map(fromDbNode) });
     if (!reqsRes.error && reqsRes.data) set({ requests: reqsRes.data.map(fromDbRequest) });
+    if (!usageRes.error && usageRes.data) set({ usage: usageRes.data.map(fromDbUsage) });
   },
 
   /** Server-side config status (are Plaid keys set, which env, webhook URL). */
@@ -347,6 +394,10 @@ export const plaidActions = {
         envSource: json.env_source === 'default' ? 'default' : 'env',
         redirectUriSet: Boolean(json.redirect_uri_set),
         products: json.products ?? [],
+        optionalProducts: json.optional_products ?? [],
+        monitorConfigured: Boolean(json.monitor_configured),
+        recurringEnabled: Boolean(json.recurring_enabled),
+        retireAfterDays: Number(json.retire_after_days ?? 0),
         webhookUrl: json.webhook_url ?? '',
         items: json.items ?? 0,
         prospects: json.prospects ?? 0,
@@ -692,6 +743,11 @@ export function usePlaidNodes() {
 
 export function usePlaidLinkRequests() {
   const selector = useCallback(() => state.requests, []);
+  return useSyncExternalStore(subscribe, selector, selector);
+}
+
+export function usePlaidUsage() {
+  const selector = useCallback(() => state.usage, []);
   return useSyncExternalStore(subscribe, selector, selector);
 }
 

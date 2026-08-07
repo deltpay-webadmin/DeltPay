@@ -14,7 +14,7 @@ import {
 import { toast } from 'sonner@2.0.3';
 import { useLeads, underwritingActions, type Lead } from '../crmStore';
 import {
-  usePlaidItems, usePlaidNodes, usePlaidStatus, usePlaidSync, usePlaidLinkRequests, plaidActions,
+  usePlaidItems, usePlaidNodes, usePlaidStatus, usePlaidSync, usePlaidLinkRequests, usePlaidUsage, plaidActions,
   PLAID_LINK_SESSION_KEY, PLAID_OAUTH_HREF_KEY,
   type PlaidItem, type PlaidNode,
 } from '../plaidStore';
@@ -580,6 +580,9 @@ function ProspectDetail({
   const recurringDocs = nodes.filter(n => n.leadId === lead.id && n.docKind === 'recurring');
   const idvDocs = nodes.filter(n => n.leadId === lead.id && n.docKind === 'identity_verification');
   const assetReport = nodes.find(n => n.leadId === lead.id && n.docKind === 'asset_report') ?? null;
+  const balanceDocs = nodes.filter(n => n.leadId === lead.id && n.docKind === 'balance_snapshot');
+  const screeningDocs = nodes.filter(n => n.leadId === lead.id && n.docKind === 'watchlist_screening');
+  const usage = usePlaidUsage().filter(u => u.leadId === lead.id);
   const [idvInput, setIdvInput] = useState('');
   const m = cashFlow?.metrics;
 
@@ -729,6 +732,137 @@ function ProspectDetail({
               <p className={`text-xs ${TXT_MUTED} mt-1`}>
                 {fmtMoney(summary?.monthly_debt_service ?? 0)}/mo · {summary?.detected_debt_positions ?? 0} position(s)
               </p>
+            </div>
+          </div>
+
+          {/* Operations strip — live balances, AML screening, connections & spend */}
+          <div className="grid lg:grid-cols-3 gap-4">
+            {/* Live balance snapshots */}
+            <div className={`${GLASS} p-4`}>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className={`text-sm font-semibold ${TXT} flex items-center gap-2`}>
+                  <Wallet className="w-4 h-4 text-[#8FB0FF]" /> Live balances
+                </h3>
+                <button
+                  onClick={() => plaidActions.checkBalances(lead.id)}
+                  disabled={busy.includes(`balance:${lead.id}`)}
+                  className="px-2.5 py-1 rounded-lg border border-(--dp-border) bg-white/[0.06] text-[11px] font-medium text-(--dp-text-secondary) hover:bg-(--dp-bg-raised) disabled:opacity-50"
+                >
+                  {busy.includes(`balance:${lead.id}`) ? 'Checking…' : 'Check now'}
+                </button>
+              </div>
+              {balanceDocs.length === 0 ? (
+                <p className={`text-xs ${TXT_FAINT}`}>
+                  No real-time checks yet. Cached balances refresh on sync; run a live check right before an ACH pull (small per-call fee).
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {balanceDocs.map(doc => (
+                    <div key={doc.path} className={`${GLASS_SOFT} p-3`}>
+                      <div className="flex items-center justify-between">
+                        <p className={`text-xs font-medium ${TXT}`}>{doc.name.replace('Real-time balance — ', '')}</p>
+                        <span className={`text-[10px] ${TXT_FAINT}`}>{timeAgo(doc.data?.checked_at)}</span>
+                      </div>
+                      {(doc.data?.accounts ?? []).map((a: any) => (
+                        <div key={a.account_id} className="flex items-center justify-between mt-1">
+                          <span className={`text-xs ${TXT_MUTED}`}>{a.name ?? 'Account'} ••{a.mask ?? ''}</span>
+                          <span className={`text-xs font-medium ${TXT}`}>
+                            {fmtMoney(a.available ?? a.current)}{a.available != null ? ' avail' : ''}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* AML / watchlist screening */}
+            <div className={`${GLASS} p-4`}>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className={`text-sm font-semibold ${TXT} flex items-center gap-2`}>
+                  <ShieldAlert className="w-4 h-4 text-[#8FB0FF]" /> AML screening
+                </h3>
+                <button
+                  onClick={() => plaidActions.screenLead(lead.id)}
+                  disabled={busy.includes(`screen:${lead.id}`)}
+                  className="px-2.5 py-1 rounded-lg border border-(--dp-border) bg-white/[0.06] text-[11px] font-medium text-(--dp-text-secondary) hover:bg-(--dp-bg-raised) disabled:opacity-50"
+                >
+                  {busy.includes(`screen:${lead.id}`) ? 'Screening…' : screeningDocs.length ? 'Re-screen' : 'Screen now'}
+                </button>
+              </div>
+              {screeningDocs.length === 0 ? (
+                <p className={`text-xs ${TXT_FAINT}`}>
+                  Not screened. Plaid Monitor checks OFAC and global watchlists, then keeps rescanning automatically — reserve for funded merchants.
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {screeningDocs.map(doc => (
+                    <div key={doc.path} className={`${GLASS_SOFT} p-3`}>
+                      <div className="flex items-center justify-between">
+                        <p className={`text-xs font-medium ${TXT}`}>{doc.name.replace('Watchlist screening — ', '')}</p>
+                        {doc.data?.hit_count ? (
+                          <span className="text-[10px] px-2 py-0.5 rounded-full border bg-red-400/10 border-red-400/30 text-red-300">
+                            {doc.data.hit_count} hit(s)
+                          </span>
+                        ) : (
+                          <span className="text-[10px] px-2 py-0.5 rounded-full border bg-emerald-400/10 border-emerald-400/30 text-emerald-300">
+                            Clear
+                          </span>
+                        )}
+                      </div>
+                      <p className={`text-[11px] ${TXT_MUTED} mt-1`}>
+                        Status: {doc.data?.status ?? '—'} · last checked {timeAgo(doc.data?.last_checked_at)}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Connections & Plaid spend */}
+            <div className={`${GLASS} p-4`}>
+              <h3 className={`text-sm font-semibold ${TXT} mb-3 flex items-center gap-2`}>
+                <Link2 className="w-4 h-4 text-[#8FB0FF]" /> Connections & spend
+              </h3>
+              <div className="space-y-2 mb-3">
+                {items.map(it => (
+                  <div key={it.id} className="flex items-center justify-between">
+                    <span className={`text-xs ${TXT_MUTED} inline-flex items-center gap-1.5`}>
+                      <Landmark className="w-3.5 h-3.5" /> {it.institutionName ?? it.itemKey}
+                    </span>
+                    <span className="inline-flex items-center gap-1.5">
+                      {it.status === 'retired' ? (
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded-full border border-(--dp-border) ${TXT_FAINT}`}>Retired</span>
+                      ) : it.verifiedAt ? (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full border bg-emerald-400/10 border-emerald-400/30 text-emerald-300">Verified</span>
+                      ) : (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full border bg-amber-400/10 border-amber-400/30 text-amber-300">Unverified</span>
+                      )}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <div className="border-t border-(--dp-border) pt-2">
+                <p className={`text-[11px] ${TXT_FAINT} mb-1.5`}>Billable Plaid calls on this file</p>
+                {usage.length === 0 ? (
+                  <p className={`text-xs ${TXT_MUTED}`}>None yet — only the Transactions subscription applies.</p>
+                ) : (
+                  <div className="space-y-1">
+                    {Object.entries(
+                      usage.reduce<Record<string, number>>((acc, u) => {
+                        if (u.status === 'ok') acc[u.product] = (acc[u.product] ?? 0) + 1;
+                        return acc;
+                      }, {}),
+                    ).map(([product, count]) => (
+                      <div key={product} className="flex items-center justify-between">
+                        <span className={`text-xs ${TXT_MUTED} capitalize`}>{product.replace(/_/g, ' ')}</span>
+                        <span className={`text-xs font-medium ${TXT}`}>{count}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -1609,7 +1743,11 @@ function ConnectionsTab() {
                 : <span className="text-red-400">Missing</span>}
             />
             <MetricTile label="Environment" value={status.env} />
-            <MetricTile label="Products" value={status.products.join(', ') || '—'} sub="+ liabilities & investments when supported" />
+            <MetricTile
+              label="Products"
+              value={status.products.join(', ') || '—'}
+              sub={`deferred: ${status.optionalProducts.join(', ') || 'none'} · monitor ${status.monitorConfigured ? 'ready' : 'not configured'}`}
+            />
             <MetricTile
               label="Webhook URL"
               value={
@@ -1640,10 +1778,160 @@ function ConnectionsTab() {
 }
 
 // ══════════════════════════════════════════════════════════════
+// Products & Spend — utilization board + billable-call ledger
+// ══════════════════════════════════════════════════════════════
+
+interface ProductDef {
+  key: string;
+  name: string;
+  pricing: string;
+  trigger: string;
+  Icon: React.ElementType;
+}
+
+const PRODUCT_BOARD: ProductDef[] = [
+  { key: 'transactions', name: 'Transactions', pricing: 'Monthly per connection', trigger: 'Starts at bank connect; nightly + webhook syncs are included', Icon: Activity },
+  { key: 'auth', name: 'Auth', pricing: 'One-time per connection', trigger: '“Verify ownership” — account & routing numbers for ACH', Icon: Banknote },
+  { key: 'identity', name: 'Identity', pricing: 'One-time per connection', trigger: '“Verify ownership” — account owners on file at the bank', Icon: User },
+  { key: 'transactions_refresh', name: 'Transactions Refresh', pricing: 'Per call', trigger: '“Fresh pull” — decision-time data freshness', Icon: Zap },
+  { key: 'balance', name: 'Balance', pricing: 'Per call', trigger: '“Live balance” — real-time check before an ACH pull', Icon: Wallet },
+  { key: 'assets', name: 'Assets', pricing: 'Per report', trigger: '“Asset report” — Plaid-certified 90-day evidence', Icon: FileJson },
+  { key: 'identity_verification', name: 'Identity Verification', pricing: 'Per verification', trigger: 'IDV Link session on the application, or attach an idv_ id', Icon: ShieldCheck },
+  { key: 'monitor', name: 'Monitor', pricing: 'Base + monthly rescans', trigger: '“AML screen” — ongoing watchlist screening for funded deals', Icon: ShieldAlert },
+];
+
+function ProductsSpendTab() {
+  const usage = usePlaidUsage();
+  const status = usePlaidStatus();
+  const items = usePlaidItems();
+  const leads = useLeads();
+  const leadName = (id: string | null) => leads.find(l => l.id === id)?.businessName ?? id ?? '—';
+
+  const monthStart = new Date();
+  monthStart.setUTCDate(1);
+  monthStart.setUTCHours(0, 0, 0, 0);
+  const okCalls = usage.filter(u => u.status === 'ok');
+  const countFor = (key: string) => okCalls.filter(u => u.product === key).length;
+  const monthCountFor = (key: string) =>
+    okCalls.filter(u => u.product === key && new Date(u.createdAt) >= monthStart).length;
+
+  const activeSubs = items.filter(i => i.status === 'active' || i.status === 'error').length;
+  const retired = items.filter(i => i.status === 'retired').length;
+
+  const productLive = (key: string): { live: boolean; note?: string } => {
+    if (!status) return { live: false, note: 'status unavailable' };
+    switch (key) {
+      case 'transactions':
+        return { live: status.products.includes('transactions') };
+      case 'auth':
+      case 'identity':
+        return {
+          live: status.products.includes(key) || status.optionalProducts.includes(key),
+          note: status.optionalProducts.includes(key) ? 'deferred — bills on first verification' : undefined,
+        };
+      case 'monitor':
+        return { live: status.monitorConfigured, note: status.monitorConfigured ? undefined : 'set PLAID_MONITOR_PROGRAM_ID' };
+      default:
+        return { live: true }; // per-request products need no link-time enablement
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Subscription posture */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <MetricTile label="Active subscriptions" value={activeSubs} sub="connections billing monthly (Transactions)" />
+        <MetricTile label="Retired connections" value={retired} sub="billing stopped, data kept" />
+        <MetricTile label="Billable calls (this month)" value={okCalls.filter(u => new Date(u.createdAt) >= monthStart).length} sub="logged in plaid_api_events" />
+        <MetricTile label="Auto-retire window" value={status?.retireAfterDays ? `${status.retireAfterDays}d` : 'Off'} sub="dead leads → subscription ends" />
+      </div>
+
+      {/* Product utilization board */}
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        {PRODUCT_BOARD.map(p => {
+          const { live, note } = productLive(p.key);
+          const total = countFor(p.key);
+          const month = monthCountFor(p.key);
+          return (
+            <div key={p.key} className={`${GLASS} p-4`}>
+              <div className="flex items-center justify-between">
+                <div className={`flex items-center gap-2 text-sm font-medium ${TXT}`}>
+                  <p.Icon className="w-4 h-4 text-[#8FB0FF]" /> {p.name}
+                </div>
+                {live ? (
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full border bg-emerald-400/10 border-emerald-400/30 text-emerald-300">Live</span>
+                ) : (
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full border bg-amber-400/10 border-amber-400/30 text-amber-300" title={note}>Needs setup</span>
+                )}
+              </div>
+              <p className={`text-[11px] ${TXT_FAINT} mt-1.5`}>{p.trigger}</p>
+              <div className="flex items-center justify-between mt-2.5">
+                <span className={`text-[10px] uppercase tracking-wide ${TXT_FAINT}`}>{p.pricing}</span>
+                <span className={`text-xs ${TXT_MUTED}`}>
+                  <span className={`font-semibold ${TXT}`}>{month}</span> this mo · {total} total
+                </span>
+              </div>
+              {note && live && <p className={`text-[10px] ${TXT_FAINT} mt-1`}>{note}</p>}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Billable-call ledger */}
+      <div className={`${GLASS} overflow-hidden`}>
+        <div className="flex items-center justify-between px-4 pt-4 pb-2">
+          <div>
+            <h3 className={`text-sm font-semibold ${TXT}`}>Billable-call ledger</h3>
+            <p className={`text-xs ${TXT_FAINT}`}>Every Plaid call that costs money, newest first — reconcile against the Plaid invoice monthly.</p>
+          </div>
+          <span className={`text-xs ${TXT_MUTED}`}>{usage.length} event(s)</span>
+        </div>
+        {usage.length === 0 ? (
+          <p className={`px-4 pb-4 text-sm ${TXT_FAINT}`}>No billable calls yet — connect a bank and run a verification, fresh pull, balance check, asset report or screening.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className={`text-left text-xs ${TXT_FAINT}`}>
+                  <th className="py-2 px-4 font-medium">When</th>
+                  <th className="py-2 px-4 font-medium">Product</th>
+                  <th className="py-2 px-4 font-medium">Prospect</th>
+                  <th className="py-2 px-4 font-medium">Endpoint</th>
+                  <th className="py-2 px-4 font-medium">Pricing</th>
+                  <th className="py-2 px-4 font-medium">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {usage.slice(0, 100).map(u => (
+                  <tr key={u.id} className="border-t border-white/[0.06]">
+                    <td className={`py-2 px-4 text-xs ${TXT_MUTED} whitespace-nowrap`}>{timeAgo(u.createdAt)}</td>
+                    <td className={`py-2 px-4 text-xs font-medium ${TXT} capitalize whitespace-nowrap`}>{u.product.replace(/_/g, ' ')}</td>
+                    <td className={`py-2 px-4 text-xs ${TXT_MUTED}`}>{leadName(u.leadId)}</td>
+                    <td className={`py-2 px-4 text-[11px] font-mono ${TXT_FAINT}`}>{u.endpoint}</td>
+                    <td className={`py-2 px-4 text-[11px] ${TXT_FAINT} capitalize whitespace-nowrap`}>{u.pricingModel.replace(/_/g, ' ')}</td>
+                    <td className="py-2 px-4">
+                      {u.status === 'ok' ? (
+                        <span className="inline-flex items-center gap-1 text-emerald-400 text-xs"><CheckCircle2 className="w-3.5 h-3.5" /> ok</span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-red-400 text-xs"><XCircle className="w-3.5 h-3.5" /> error</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
 // Page
 // ══════════════════════════════════════════════════════════════
 
-type TabKey = 'prospects' | 'explorer' | 'connections';
+type TabKey = 'prospects' | 'explorer' | 'connections' | 'products';
 
 export function BackendPlaid() {
   const prospects = useProspects();
@@ -1770,6 +2058,7 @@ export function BackendPlaid() {
             ['prospects', 'Lending Prospects', Landmark],
             ['explorer', 'Data Explorer', FolderTree],
             ['connections', 'Connections', Link2],
+            ['products', 'Products & Spend', PieChart],
           ] as [TabKey, string, React.ElementType][]).map(([key, label, Icon]) => (
             <button
               key={key}
@@ -1794,6 +2083,8 @@ export function BackendPlaid() {
           <DataExplorer initialPath={explorerPath} onClearInitial={() => setExplorerPath(null)} />
         ) : tab === 'connections' ? (
           <ConnectionsTab />
+        ) : tab === 'products' ? (
+          <ProductsSpendTab />
         ) : detail ? (
           <ProspectDetail
             prospect={detail}

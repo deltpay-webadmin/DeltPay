@@ -49,8 +49,12 @@ only `/accounts/balance/get` (real-time) bills.
 ## Spend visibility
 
 Every billable call writes a row to `plaid_api_events` (product, pricing
-model, lead, item, status). Per-lead rollup: `GET /plaid/usage?leadId=…`;
-account-wide: `GET /plaid/usage`. Reconcile against the Plaid dashboard
+model, lead, item, status). In the CRM, the Plaid vault's **Products &
+Spend** tab shows a live product-utilization board, subscription counts,
+and the full billable-call ledger (realtime); each prospect's detail view
+shows its own connections, verification state, and per-product call
+counts. API rollups: `GET /plaid/usage?leadId=…` (per lead) or
+`GET /plaid/usage` (account-wide). Reconcile against the Plaid dashboard
 invoice monthly.
 
 ## Retire vs. disconnect
