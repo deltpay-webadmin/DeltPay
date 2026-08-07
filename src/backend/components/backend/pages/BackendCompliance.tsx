@@ -114,115 +114,76 @@ function ControlDetail({ controlKey, state, onClose }: {
 }
 
 /* ═══════════════════════════════════════════════════
-   DATA — Regulatory Reference (preserved)
+   DATA — Regulatory reference
    ═══════════════════════════════════════════════════ */
 
-const PCI = [
-  { title: 'PCI DSS 4.0.1', subtitle: 'All v4.0 future-dated requirements enforced 2026.', items: [
-    { item: 'SAQ type & completion', type: 'track', detail: 'Per merchant: SAQ A/A-EP/B/C/D, completion status, expiration. Non-compliant = ~$99/mo fee via Global.' },
-    { item: 'Quarterly ASV scans', type: 'alert', detail: 'Every 90 days. Track last scan, pass/fail, vulnerabilities. Auto-alert 14 days before expiry.' },
-    { item: 'Non-compliance fee tracking', type: 'track', detail: 'Flag merchants charged PCI fees. Create outreach trigger.' },
-    { item: 'MFA enforcement', type: 'audit', detail: 'PCI 4.0 requires MFA for ALL cardholder data access. Validate Delt + merchant configs.' },
-    { item: 'EMV / contactless status', type: 'track', detail: 'Per merchant terminal capability. Non-EMV = liability shift on fraud.' },
-    { item: 'PCI documentation export', type: 'audit', detail: 'One-click export: SAQ, scan history, remediation, EMV, fees.' },
-  ]},
-  { title: 'Visa VAMP', subtitle: 'Consolidated monitoring. Lower thresholds Jan 2026.', items: [
-    { item: 'Per-merchant fraud-to-sales ratio', type: 'alert', detail: 'Track against VAMP thresholds. Alert at 80% of trigger.' },
-    { item: 'Portfolio aggregate monitoring', type: 'alert', detail: 'Global bears liability as sponsor. Track portfolio-wide ratio.' },
-    { item: 'Fine exposure calculator', type: 'track', detail: 'Project monthly fine if merchant breaches.' },
-    { item: 'Remediation plan tracking', type: 'audit', detail: '15 calendar day acknowledgment window.' },
-  ]},
-  { title: 'Mastercard ECM & BRAM', subtitle: 'ECM: 1.5% CB ratio or 100+ CBs/month.', items: [
-    { item: 'ECM threshold monitoring', type: 'alert', detail: 'Alert at 80% of either trigger. Escalating monthly fines.' },
-    { item: 'BRAM category tracking', type: 'track', detail: 'Flag merchants in BRAM-monitored MCCs at boarding.' },
-    { item: 'Dual-network comparison', type: 'track', detail: 'Side-by-side: CB ratio vs Visa VAMP vs MC ECM, trend, projected breach.' },
-  ]},
-  { title: 'MATCH / TMF', subtitle: 'Terminated Merchant File \u2014 5-year blacklist.', items: [
-    { item: 'Boarding-time check', type: 'compliance', detail: 'Check every principal against MATCH at boarding. Block if match.' },
-    { item: 'Periodic re-screening', type: 'alert', detail: 'Re-check quarterly or when risk signals fire.' },
-    { item: 'Placement risk tracking', type: 'track', detail: 'Track terminations, reasons, MATCH placement status.' },
-  ]},
-  { title: 'Network mandates', subtitle: 'Upcoming Visa/MC rule changes.', items: [
-    { item: 'CE 3.0 compelling evidence', type: 'track', detail: 'Required fields for fraud representment (IP, device ID, shipping match).' },
-    { item: 'MC authentication requirements', type: 'track', detail: 'Track 3DS/SCA enablement per merchant.' },
-    { item: 'Mandate tracker', type: 'alert', detail: 'Calendar: effective date, network, impact, required changes, status.' },
-  ]},
-];
+interface PciSection {
+  title: string;
+  subtitle: string;
+  items: { item: string; type: string; detail: string }[];
+}
 
-const STATES = [
-  { st: 'CA', name: 'California', status: 'enforced' as const, law: 'SB 1235 + SB 362 (Jan 2026)', threshold: '$500k', aprReq: true, regReq: true, regBody: 'DFPI', contractMod: true, contractNote: 'State-specific addendum required. DFPI-formatted APR. Cannot use factor rate without simultaneous APR.', disclosureItems: ['Total funds provided', 'Total dollar cost', 'Term or estimated term', 'Method, frequency, amount of each payment', 'Other potential fees', 'Total repayment amount', 'Estimated APR \u2014 MANDATORY', 'Prepayment policy'], notes: 'SB 362: Prohibits factor rate without APR. DFPI examination authority. Private right of action.', cofRestriction: 'COJ unconstitutional (1978).', forumRestriction: 'CA courts have jurisdiction for CA merchants.' },
-  { st: 'NY', name: 'New York', status: 'enforced' as const, law: 'CFDL (2023) + FAIR Act (Feb 2026)', threshold: '$2.5M', aprReq: true, regReq: false, regBody: 'DFS', contractMod: true, contractNote: 'Broker compensation disclosure required when agent/ISO involved. COJ exclusion for out-of-state.', disclosureItems: ['Total funds provided', 'Disbursement amount', 'Total finance charge', 'Estimated APR \u2014 MANDATORY', 'Total repayment', 'Payment amounts and frequency', 'Other fees', 'Prepayment penalties', 'Broker compensation disclosure'], notes: 'FAIR Act expanded DFS enforcement. APR must be stated whenever cost is quoted.', cofRestriction: 'COJ banned for out-of-state merchants (CPLR \u00A7 3218).', forumRestriction: 'Most MCA litigation in NY regardless of contract.' },
-  { st: 'VA', name: 'Virginia', status: 'enforced' as const, law: 'HB 1027 / SB 1195', threshold: '$500k', aprReq: false, regReq: true, regBody: 'State Corp Commission', contractMod: true, contractNote: 'Most restrictive. Mandatory VA jurisdiction. COJ prohibited. SCC # required. 3-business-day review period.', disclosureItems: ['Total funds provided', 'Purchased amount', 'Total dollar cost', 'Payment manner/frequency/amount', 'Other fees', 'Prepayment costs/discounts', 'Returned payment fees', 'Assignment disclosure', 'Collateral requirements'], notes: 'Unique 3-business-day review. AG enforcement under consumer protection.', cofRestriction: 'COJ expressly prohibited.', forumRestriction: 'All actions must be brought in Virginia.' },
-  { st: 'UT', name: 'Utah', status: 'enforced' as const, law: 'HB 198', threshold: '$1M', aprReq: false, regReq: true, regBody: 'Dept of Commerce', contractMod: false, disclosureItems: ['Total funds', 'Purchased amount', 'Estimated cost', 'Annualized rate', 'Payment schedule', 'Additional fees', 'Prepayment policies', 'Reconciliation provision', 'COJ disclosure'], notes: 'Private right of action. Must disclose whether COJ and reconciliation exist.', cofRestriction: 'Must disclose if COJ exists.', forumRestriction: 'No mandatory override.' },
-  { st: 'CT', name: 'Connecticut', status: 'enforced' as const, law: 'SB 1032 (Jul 2024)', threshold: '$250k', aprReq: false, regReq: true, regBody: 'Banking Dept', contractMod: false, disclosureItems: ['Total funded', 'Finance charge', 'Total repayment', 'Payment schedule', 'All fees', 'Estimated term', 'Prepayment terms'], notes: 'Annual registration. Exempts 5 or fewer CT transactions/yr.', cofRestriction: 'No explicit ban.', forumRestriction: 'No override.' },
-  { st: 'TX', name: 'Texas', status: 'enforced' as const, law: 'HB 700 (Sep 2025)', threshold: 'No cap', aprReq: false, regReq: true, regBody: 'OCCC', contractMod: false, disclosureItems: ['Total funded', 'Finance charge', 'Total repayment', 'All fees', 'Payment schedule', 'Repayment terms'], notes: 'Registration by Dec 31, 2026. No de minimis exemption. Largest new market.', cofRestriction: 'Generally not permitted.', forumRestriction: 'No override.' },
-  { st: 'MO', name: 'Missouri', status: 'enforced' as const, law: 'SB 1100', threshold: '$500k', aprReq: false, regReq: true, regBody: 'Div of Finance', contractMod: false, disclosureItems: ['Total funded', 'Total cost', 'Total repayment', 'Fees', 'Payment schedule', 'Prepayment terms'], notes: 'Combined disclosure + licensing. Unlicensed contracts may be voidable.', cofRestriction: 'No explicit ban.', forumRestriction: 'No override.' },
-  { st: 'LA', name: 'Louisiana', status: 'enforced' as const, law: 'Revenue-Based Financing Disclosure Act (2025)', threshold: '$500k', aprReq: false, regReq: false, regBody: 'OFI', contractMod: false, disclosureItems: ['Annual cost metric', 'Total repayment', 'Payment frequency and amount'], notes: 'No registration required.', cofRestriction: 'No explicit ban.', forumRestriction: 'No override.' },
-  { st: 'MD', name: 'Maryland', status: 'enforced' as const, law: 'HB 1297 (2023)', threshold: '$2M', aprReq: true, regReq: false, regBody: 'OFR', contractMod: false, disclosureItems: ['Total funded', 'Total dollar cost', 'Estimated APR \u2014 MANDATORY', 'Total repayment', 'Payment schedule', 'Fees', 'Prepayment terms'], notes: 'Modeled on CA SB 1235.', cofRestriction: 'No explicit ban.', forumRestriction: 'No override.' },
-  { st: 'FL', name: 'Florida', status: 'pending' as const, law: 'Pending legislation', threshold: 'TBD', aprReq: false, regReq: false, regBody: 'OFR', contractMod: false, disclosureItems: [], notes: 'No enacted law. FDUTPA used against MCA providers. Critical for Delt.', cofRestriction: 'FL bans COJ entirely.', forumRestriction: 'No override.' },
-  { st: 'NJ', name: 'New Jersey', status: 'pending' as const, law: 'S1760 (2026-2027)', threshold: '$500k', aprReq: true, regReq: false, regBody: 'Commissioner of Banking', contractMod: false, disclosureItems: ['APR via Reg Z methodology', 'Broker fee disclosure', 'Total funded', 'Total repayment', 'Payment terms'], notes: 'Reintroduced Jan 2026. De minimis: 5 NJ deals/yr.', cofRestriction: 'NJ prohibits COJ (2020).', forumRestriction: 'No override.' },
-  { st: 'IL', name: 'Illinois', status: 'pending' as const, law: 'Expected 2026-2027', threshold: 'TBD', aprReq: false, regReq: false, regBody: 'IDFPR', contractMod: false, disclosureItems: [], notes: 'Consumer Fraud Act applied in commercial contexts.', cofRestriction: 'COJ with procedural requirements.', forumRestriction: 'No override.' },
-];
+interface StateRule {
+  st: string;
+  name: string;
+  status: 'enforced' | 'pending';
+  law: string;
+  threshold: string;
+  aprReq: boolean;
+  regReq: boolean;
+  regBody: string;
+  contractMod: boolean;
+  contractNote?: string;
+  disclosureItems: string[];
+  notes: string;
+  cofRestriction: string;
+  forumRestriction: string;
+}
 
-const VENDORS = [
-  { id: 'global', name: 'Global Payments', role: 'Processor / Sponsor', color: '#2E6BFF', obligations: [
-    { item: 'ISO registration renewal', type: 'deadline', detail: 'Annual $5k fee. Renew with Visa/MC through Global.' },
-    { item: 'Merchant boarding standards', type: 'compliance', detail: 'KYC, business verification, prohibited MCCs, volume projections.' },
-    { item: 'Reserve account monitoring', type: 'track', detail: 'Rolling reserves on high-risk merchants.' },
-    { item: 'CB ratio reporting', type: 'alert', detail: 'Global reports to Visa/MC. They bear VAMP/ECM liability.' },
-    { item: 'PCI validation', type: 'audit', detail: 'Global requires merchant PCI compliance. Non-compliance fees flow through Delt.' },
-    { item: 'Settlement SLAs', type: 'track', detail: 'Settlement timing, next-day eligibility, holds.' },
-    { item: 'Processing agreement', type: 'deadline', detail: 'Contract term, volume commitments, renewal windows.' },
-  ]},
-  { id: 'plaid', name: 'Plaid', role: 'Banking / Identity / CRA', color: '#0FAF62', obligations: [
-    { item: 'Permissible purpose', type: 'compliance', detail: 'Documented per product per merchant.' },
-    { item: 'Consent flows', type: 'compliance', detail: 'Plaid Link completion with proper consent.' },
-    { item: 'Biometric retention (IDV)', type: 'deadline', detail: 'BIPA-style schedules. Track destruction dates.' },
-    { item: 'Security questionnaire', type: 'deadline', detail: 'Annual renewal.' },
-    { item: 'Data minimization', type: 'compliance', detail: 'Only access data needed for stated purpose.' },
-    { item: 'FCRA (CRA product)', type: 'compliance', detail: 'Adverse action notices when CRA data influences decline.' },
-  ]},
-  { id: 'crs', name: 'CRS Credit', role: 'Credit / Lien Search', color: '#E8850C', obligations: [
-    { item: 'Permissible purpose per pull', type: 'audit', detail: 'Log merchant, date, purpose code, analyst. Retain 5+ years.' },
-    { item: 'Adverse action notices', type: 'generate', detail: 'Auto-generate within 30 days when report influences decline.' },
-    { item: 'Dispute handling', type: 'compliance', detail: 'FCRA: investigate within 30 days.' },
-    { item: 'Pull reconciliation', type: 'track', detail: 'Monthly count vs billing.' },
-  ]},
-  { id: 'datamerch', name: 'DataMerch', role: 'Stacking Detection', color: '#DC2E3A', obligations: [
-    { item: 'Default reporting', type: 'compliance', detail: 'Report defaults back to consortium.' },
-    { item: 'Usage restrictions', type: 'compliance', detail: 'Underwriting/monitoring only.' },
-    { item: 'Alert response SLA', type: 'track', detail: 'Track review, action, outcome on stack flags.' },
-    { item: 'Sync freshness', type: 'track', detail: 'Alert if > 48hr stale.' },
-  ]},
-];
+interface VendorObligation {
+  id: string;
+  name: string;
+  role: string;
+  color: string;
+  obligations: { item: string; type: string; detail: string }[];
+}
 
-const HEALTH_FACTORS = [
-  { id: 'f1', title: 'Reconciliation provision', safe: 'Genuine & available regardless of default', mid: 'Exists but blocked by default provisions', risk: 'Illusory or absent', detail: "If reconciliation is blocked whenever merchant is in 'default', courts call it illusory.", caselaw: 'J.P.R. Mechanical (2025); AFK v. Haven (2024)' },
-  { id: 'f2', title: 'Fixed term', safe: 'No term \u2014 payments tied to revenue %', mid: 'No stated term but calculable from fixed daily amount', risk: 'Stated maturity or fixed schedule', detail: 'If total owed / daily payment = calculable days, courts treat it as fixed term loan.', caselaw: 'AFK v. Haven (2024); J.P.R. Mechanical at *8' },
-  { id: 'f3', title: 'Business failure risk', safe: 'Funder bears loss if merchant closes', mid: 'Limited recourse (security interest only)', risk: 'Absolute repayment regardless of failure', detail: 'If repayment is guaranteed no matter what, it\'s a loan.', caselaw: 'In re McKenzie (2024); In re IVF Orlando (2025)' },
-  { id: 'f4', title: 'Personal guarantee', safe: 'No personal guarantee', mid: 'Limited (performance only)', risk: 'Full guarantee of repayment', detail: "If owner must cover shortfalls from personal funds, funder doesn't bear real risk.", caselaw: 'FTC v. RCG Advances (2023); In re Anadrill (2026)' },
-  { id: 'f5', title: 'Identified receivables', safe: 'Specific receivables identified', mid: "General category ('card receipts')", risk: 'No identification \u2014 just fixed daily payment', detail: "No identification = 'significant indicator of a loan.'", caselaw: 'J.P.R. Mechanical at *9' },
-  { id: 'f6', title: 'UCC / security interest', safe: 'No UCC or only on purchased receivables', mid: 'UCC on all accounts receivable', risk: 'Blanket lien on all assets + equipment', detail: 'Security interest beyond purchased receivables looks like secured lending.', caselaw: 'FTC v. RCG Advances (2023); In re Anadrill at *5' },
-];
+interface HealthFactor {
+  id: string;
+  title: string;
+  safe: string;
+  mid: string;
+  risk: string;
+  detail: string;
+  caselaw: string;
+}
 
-const DOC_CATEGORIES = [
-  { cat: 'Contracts & templates', icon: ScrollText, docs: ['Base MCA agreement (current version)', 'Virginia state addendum', 'California state addendum', 'New York state addendum', 'Disclosure templates by state', 'Personal guarantee (limited performance)', 'ACH authorization form'] },
-  { cat: 'Registrations & licenses', icon: FileCheck, docs: ['Global Payments ISO registration (Visa)', 'Global Payments ISO registration (Mastercard)', 'Virginia SCC registration', 'Utah Dept of Commerce license', 'Connecticut Banking Dept registration', 'Texas OCCC registration (due Dec 31, 2026)', 'Missouri Div of Finance license'] },
-  { cat: 'Vendor agreements', icon: Building2, docs: ['Global Payments processing agreement', 'Plaid data processing agreement', 'Plaid vendor security questionnaire', 'CRS Credit service agreement', 'DataMerch consortium membership agreement', 'FiCoSo UCC filing service agreement', 'ACH.com origination agreement'] },
-  { cat: 'Policies & plans', icon: ShieldCheck, docs: ['GLBA written information security plan', 'Privacy policy (CCPA/GLBA)', 'Data breach incident response plan', 'Biometric data retention schedule', 'UDAAP marketing review documentation', 'BSA/AML KYC policy'] },
-  { cat: 'Regulatory references', icon: Landmark, docs: ['Visa Core Rules (current edition)', 'Mastercard Security Rules & Procedures', 'PCI DSS 4.0.1 standard', 'Nacha Operating Rules (ACH)', 'NY CFDL final regulations', 'CA SB 362 + DFPI regs', 'VA HB 1027 full text'] },
-];
+interface DocumentCategory {
+  cat: string;
+  icon: React.ElementType;
+  docs: string[];
+}
 
-const RESEARCH = [
-  { topic: 'MCA legal structure', icon: Scale, sources: ['Pullman & Comley \u2014 \'When Is an MCA Really a Loan?\' (Feb 2026)', 'Fleetwood Services v. Ram Capital (2d Cir. 2023)', 'In re J.P.R. Mechanical (Bankr. S.D.N.Y. May 2025)', 'In re IVF Orlando (Bankr. M.D. Fla. Oct 2025)', 'In re Anadrill (Bankr. S.D. Tex. Jan 2026)', 'In re Butler Trucking (Bankr. N.D. Ohio Jul 2025)'] },
-  { topic: 'State disclosure laws', icon: Landmark, sources: ['Onyx IQ \u2014 State-by-State Map (2026)', 'Credible Law \u2014 MCA Laws by State (2026)', 'Venable LLP \u2014 State Disclosure Laws (Mar 2026)', 'Buchalter \u2014 CA SB 362 Analysis (Feb 2026)', 'Grant Phillips Law \u2014 NY CFDL Analysis'] },
-  { topic: 'Federal regulation', icon: Building2, sources: ['CFPB \u2014 Non-Preemption Determination (CA, NY, UT, VA)', 'FTC Section 5 \u2014 Commercial financing enforcement', 'Dodd-Frank 1071 \u2014 Small biz data collection (Jan 2028)', 'Dilendorf Law \u2014 ISO Regulatory Risks (Mar 2026)'] },
-  { topic: 'Card network compliance', icon: CreditCard, sources: ['Visa Core Rules (Oct 2025)', 'Mastercard Security Rules (Feb 2026)', 'Decta \u2014 Visa/MC Compliance 2026 Changes', 'PCI DSS 4.0.1 \u2014 PCI SSC documentation'] },
-  { topic: 'Confession of judgment', icon: Gavel, sources: ['NY CPLR \u00A7 3218 \u2014 2019 reform', 'NJ COJ ban (2020)', 'CA COJ unconstitutional (1978)', 'VA HB 1027 \u2014 express prohibition', 'State-by-state COJ tracker'] },
-];
+interface ResearchItem {
+  topic: string;
+  icon: React.ElementType;
+  sources: string[];
+}
+
+const PCI: PciSection[] = [];
+
+const STATES: StateRule[] = [];
+
+const VENDORS: VendorObligation[] = [];
+
+const HEALTH_FACTORS: HealthFactor[] = [];
+
+const DOC_CATEGORIES: DocumentCategory[] = [];
+
+const RESEARCH: ResearchItem[] = [];
 
 /* ═══════════════════════════════════════════════════
-   MOCK DATA — Merchants, Deals, Events
+   DATA — Merchants, deals, and events
    ═══════════════════════════════════════════════════ */
 
 interface Merchant {
@@ -231,68 +192,7 @@ interface Merchant {
   controls: Record<string, ControlState>;
 }
 
-const MERCHANTS: Merchant[] = [
-  { id: 'M-1001', name: 'Havana Bites Cafe', state: 'FL', type: 'both', activeDeals: 1, monthlyVolume: '$42k', riskScore: 22,
-    controls: {
-      kyc: { status: 'green', rule: 'Plaid IDV + EIN verification required at boarding', currentStatus: 'Verified Apr 14, 2026. Principal: Maria Gonzalez. EIN confirmed.', missingProof: '', nextAction: 'Annual re-verification due Apr 2027', lastCompleted: 'Apr 14, 2026' },
-      ofac: { status: 'green', rule: 'SDN list screening at boarding + quarterly', currentStatus: 'Clear. Last checked Apr 14, 2026.', missingProof: '', nextAction: 'Quarterly re-screen Jul 2026', lastCompleted: 'Apr 14, 2026' },
-      disclosures: { status: 'green', rule: 'FL \u2014 no enacted MCA disclosure law', currentStatus: 'No state-specific disclosure required. FDUTPA general protections apply.', missingProof: '', nextAction: 'Monitor FL legislation', lastCompleted: 'Apr 14, 2026' },
-      contract: { status: 'green', rule: '6-factor recharacterization assessment', currentStatus: 'Defensible. All 6 factors assessed: safe.', missingProof: '', nextAction: 'Re-assess at renewal', lastCompleted: 'Apr 14, 2026' },
-      pci: { status: 'yellow', rule: 'SAQ + quarterly ASV scans required', currentStatus: 'SAQ-A on file. ASV scan expires tomorrow (Apr 18, 2026).', missingProof: 'Current ASV scan result', nextAction: 'Renew ASV scan immediately', lastCompleted: 'Jan 18, 2026' },
-      match: { status: 'green', rule: 'MATCH check at boarding + quarterly', currentStatus: 'Clear. No match found.', missingProof: '', nextAction: 'Q3 re-screen Jul 2026', lastCompleted: 'Apr 14, 2026' },
-      registrations: { status: 'green', rule: 'FL \u2014 no state registration required', currentStatus: 'Not applicable.', missingProof: '', nextAction: 'Monitor FL legislation', lastCompleted: 'N/A' },
-      vendor: { status: 'green', rule: 'Global + Plaid + DataMerch active', currentStatus: 'All vendor connections active and current.', missingProof: '', nextAction: 'Plaid security questionnaire renewal May 5', lastCompleted: 'Apr 14, 2026' },
-    },
-  },
-  { id: 'M-1002', name: 'Brooklyn Vinyl Records', state: 'NY', type: 'mca', activeDeals: 1, monthlyVolume: '$28k', riskScore: 58,
-    controls: {
-      kyc: { status: 'green', rule: 'Plaid IDV + EIN verification', currentStatus: 'Verified Apr 16, 2026. Principal: David Park.', missingProof: '', nextAction: 'Annual re-verification', lastCompleted: 'Apr 16, 2026' },
-      ofac: { status: 'green', rule: 'SDN screening', currentStatus: 'Clear.', missingProof: '', nextAction: 'Quarterly re-screen', lastCompleted: 'Apr 16, 2026' },
-      disclosures: { status: 'red', rule: 'NY CFDL: 9 items + APR mandatory. Broker compensation disclosure required.', currentStatus: 'Disclosure generated but NOT DELIVERED. Broker compensation NOT generated.', missingProof: 'Signed disclosure acknowledgment, broker compensation disclosure', nextAction: 'Generate broker disclosure, deliver both, capture acknowledgment', lastCompleted: 'Not yet completed' },
-      contract: { status: 'green', rule: '6-factor recharacterization', currentStatus: 'Defensible.', missingProof: '', nextAction: 'Re-assess at renewal', lastCompleted: 'Apr 16, 2026' },
-      pci: { status: 'gray', rule: 'MCA-only \u2014 PCI not applicable', currentStatus: 'N/A for MCA-only relationship.', missingProof: '', nextAction: 'N/A', lastCompleted: 'N/A' },
-      match: { status: 'green', rule: 'MATCH check at boarding', currentStatus: 'Clear.', missingProof: '', nextAction: 'Quarterly re-screen', lastCompleted: 'Apr 16, 2026' },
-      registrations: { status: 'green', rule: 'NY \u2014 no registration required (disclosure only)', currentStatus: 'N/A.', missingProof: '', nextAction: 'N/A', lastCompleted: 'N/A' },
-      vendor: { status: 'yellow', rule: 'DataMerch stacking alert pending review', currentStatus: '1 existing position found: Rapid Capital $28k. Flagged for review.', missingProof: 'Stacking review decision record', nextAction: 'Review stacking flag and document decision', lastCompleted: 'Apr 16, 2026' },
-    },
-  },
-  { id: 'M-1003', name: 'Richmond Auto Detailing', state: 'VA', type: 'mca', activeDeals: 0, monthlyVolume: '$0', riskScore: 45,
-    controls: {
-      kyc: { status: 'yellow', rule: 'Plaid IDV required', currentStatus: 'Awaiting identity verification.', missingProof: 'IDV completion record', nextAction: 'Complete Plaid identity verification', lastCompleted: 'Not yet completed' },
-      ofac: { status: 'green', rule: 'SDN screening', currentStatus: 'Clear.', missingProof: '', nextAction: 'Quarterly', lastCompleted: 'Apr 17, 2026' },
-      disclosures: { status: 'yellow', rule: 'VA HB 1027: 9 items. 3-business-day review. Mandatory VA jurisdiction. COJ prohibited.', currentStatus: 'Disclosure generated. In 3-business-day review period. Cannot fund before Apr 22.', missingProof: 'Signed acknowledgment after review period', nextAction: 'Wait for review period to expire Apr 22, then collect signature', lastCompleted: 'Not yet completed' },
-      contract: { status: 'yellow', rule: 'VA-specific addendum required. SCC # must display.', currentStatus: 'VA addendum generated, pending review.', missingProof: 'Executed VA addendum', nextAction: 'Review and attach VA addendum to contract', lastCompleted: 'Not yet completed' },
-      pci: { status: 'gray', rule: 'MCA-only', currentStatus: 'N/A.', missingProof: '', nextAction: 'N/A', lastCompleted: 'N/A' },
-      match: { status: 'green', rule: 'MATCH check', currentStatus: 'Clear.', missingProof: '', nextAction: 'Quarterly', lastCompleted: 'Apr 17, 2026' },
-      registrations: { status: 'green', rule: 'VA SCC registration required', currentStatus: 'Virginia SCC registration active. Renewal Jun 2027.', missingProof: '', nextAction: 'Renewal Jun 2027', lastCompleted: 'Jun 15, 2025' },
-      vendor: { status: 'green', rule: 'All vendors active', currentStatus: 'Current.', missingProof: '', nextAction: 'Routine', lastCompleted: 'Apr 17, 2026' },
-    },
-  },
-  { id: 'M-1004', name: 'Coral Reef Auto Spa', state: 'FL', type: 'processing', activeDeals: 0, monthlyVolume: '$87k', riskScore: 82,
-    controls: {
-      kyc: { status: 'green', rule: 'Verified at boarding', currentStatus: 'Verified.', missingProof: '', nextAction: 'Annual', lastCompleted: 'Nov 3, 2025' },
-      ofac: { status: 'green', rule: 'SDN screening', currentStatus: 'Clear.', missingProof: '', nextAction: 'Quarterly', lastCompleted: 'Apr 1, 2026' },
-      disclosures: { status: 'green', rule: 'Processing-only \u2014 standard merchant agreement', currentStatus: 'On file.', missingProof: '', nextAction: 'N/A', lastCompleted: 'Nov 3, 2025' },
-      contract: { status: 'green', rule: 'Processing agreement', currentStatus: 'Active.', missingProof: '', nextAction: 'Renewal Nov 2026', lastCompleted: 'Nov 3, 2025' },
-      pci: { status: 'yellow', rule: 'SAQ + quarterly ASV', currentStatus: 'SAQ-B on file. ASV scan expired 14 days ago. Non-compliance fee activating.', missingProof: 'Current ASV scan', nextAction: 'Schedule ASV scan immediately', lastCompleted: 'Jan 3, 2026' },
-      match: { status: 'green', rule: 'MATCH screening', currentStatus: 'Clear.', missingProof: '', nextAction: 'Quarterly', lastCompleted: 'Apr 1, 2026' },
-      registrations: { status: 'green', rule: 'FL \u2014 no registration', currentStatus: 'N/A.', missingProof: '', nextAction: 'N/A', lastCompleted: 'N/A' },
-      vendor: { status: 'red', rule: 'Visa VAMP monitoring', currentStatus: 'Fraud-to-sales at 0.82%. VAMP trigger is 0.9%. Breach projected in ~11 days.', missingProof: 'Remediation plan', nextAction: 'Issue VAMP intervention notice immediately', lastCompleted: 'Not yet initiated' },
-    },
-  },
-  { id: 'M-1005', name: 'Midtown Taqueria', state: 'NY', type: 'both', activeDeals: 1, monthlyVolume: '$54k', riskScore: 67,
-    controls: {
-      kyc: { status: 'green', rule: 'Verified', currentStatus: 'Verified.', missingProof: '', nextAction: 'Annual', lastCompleted: 'Aug 12, 2025' },
-      ofac: { status: 'green', rule: 'Clear', currentStatus: 'Clear.', missingProof: '', nextAction: 'Quarterly', lastCompleted: 'Apr 1, 2026' },
-      disclosures: { status: 'green', rule: 'NY CFDL delivered and acknowledged', currentStatus: 'On file.', missingProof: '', nextAction: 'Re-disclose at renewal', lastCompleted: 'Aug 12, 2025' },
-      contract: { status: 'green', rule: 'Defensible', currentStatus: '6/6 safe.', missingProof: '', nextAction: 'Re-assess at renewal', lastCompleted: 'Aug 12, 2025' },
-      pci: { status: 'green', rule: 'SAQ-A + ASV current', currentStatus: 'Last scan Mar 15, 2026 \u2014 PASS.', missingProof: '', nextAction: 'Next scan Jun 15, 2026', lastCompleted: 'Mar 15, 2026' },
-      match: { status: 'green', rule: 'Clear', currentStatus: 'Clear.', missingProof: '', nextAction: 'Quarterly', lastCompleted: 'Apr 1, 2026' },
-      registrations: { status: 'green', rule: 'NY \u2014 no registration', currentStatus: 'N/A.', missingProof: '', nextAction: 'N/A', lastCompleted: 'N/A' },
-      vendor: { status: 'yellow', rule: 'Mastercard ECM monitoring', currentStatus: 'CB ratio at 1.17% (threshold 1.5%). 87 CBs (threshold 100). Climbing.', missingProof: 'ECM remediation plan', nextAction: 'Draft ECM remediation plan before breach', lastCompleted: 'Not yet initiated' },
-    },
-  },
-];
+const MERCHANTS: Merchant[] = [];
 
 interface Deal {
   id: string; merchantId: string; merchant: string; state: string;
@@ -301,77 +201,35 @@ interface Deal {
   controls: Record<string, ControlState>;
 }
 
-const DEALS: Deal[] = [
-  { id: 'DL-2026-0412', merchantId: 'M-1001', merchant: 'Havana Bites Cafe', state: 'FL', amount: '$45,000', factorRate: '1.38', stage: 'Funded', agent: 'Marcus Johnson', date: 'Apr 14', blocked: false, blockReason: '',
-    controls: MERCHANTS[0].controls },
-  { id: 'DL-2026-0415', merchantId: 'M-1002', merchant: 'Brooklyn Vinyl Records', state: 'NY', amount: '$62,000', factorRate: '1.42', stage: 'Disclosure', agent: 'Sarah Kim', date: 'Apr 16', blocked: true, blockReason: 'Broker compensation disclosure not generated',
-    controls: MERCHANTS[1].controls },
-  { id: 'DL-2026-0416', merchantId: 'M-1003', merchant: 'Richmond Auto Detailing', state: 'VA', amount: '$38,000', factorRate: '1.35', stage: '3-Day Review', agent: 'Marcus Johnson', date: 'Apr 17', blocked: true, blockReason: 'VA 3-business-day review period (until Apr 22)',
-    controls: MERCHANTS[2].controls },
-];
+const DEALS: Deal[] = [];
 
 interface Deadline {
   id: string; date: string; dateShort: string; title: string; category: string;
   severity: 'critical' | 'warning' | 'info'; daysLeft: number;
 }
 
-const DEADLINES: Deadline[] = [
-  { id: 'd1', date: 'Apr 17', dateShort: '17', title: 'VAMP intervention \u2014 Coral Reef Auto Spa', category: 'Card Networks', severity: 'critical', daysLeft: 0 },
-  { id: 'd2', date: 'Apr 18', dateShort: '18', title: 'ASV scan renewal \u2014 3 merchants', category: 'PCI DSS', severity: 'critical', daysLeft: 1 },
-  { id: 'd3', date: 'Apr 19', dateShort: '19', title: 'Adverse action notice \u2014 Doral Fresh Market', category: 'FCRA', severity: 'warning', daysLeft: 2 },
-  { id: 'd4', date: 'Apr 21', dateShort: '21', title: 'CRS credit pull reconciliation \u2014 March', category: 'Vendor', severity: 'info', daysLeft: 4 },
-  { id: 'd5', date: 'Apr 22', dateShort: '22', title: 'VA review period expires \u2014 Richmond Auto', category: 'Disclosure', severity: 'warning', daysLeft: 5 },
-  { id: 'd6', date: 'Apr 22', dateShort: '22', title: 'ECM remediation plan \u2014 Midtown Taqueria', category: 'Card Networks', severity: 'warning', daysLeft: 5 },
-  { id: 'd7', date: 'Apr 23', dateShort: '23', title: 'MATCH re-screen Q2 batch (127 merchants)', category: 'MATCH', severity: 'info', daysLeft: 6 },
-  { id: 'd8', date: 'Apr 23', dateShort: '23', title: 'Report 2 defaults to DataMerch', category: 'Vendor', severity: 'info', daysLeft: 6 },
-  { id: 'd9', date: 'May 5', dateShort: '5', title: 'Plaid security questionnaire renewal', category: 'Vendor', severity: 'warning', daysLeft: 18 },
-  { id: 'd10', date: 'Jun 3', dateShort: '3', title: 'Global Payments ISO renewal', category: 'Registration', severity: 'info', daysLeft: 47 },
-];
+const DEADLINES: Deadline[] = [];
 
 interface RiskCategory {
   label: string; icon: React.ElementType; current: string; threshold: string;
   pct: number; trend: 'up' | 'down' | 'flat'; status: 'green' | 'yellow' | 'red';
 }
 
-const RISK_CATEGORIES: RiskCategory[] = [
-  { label: 'Nacha return rate', icon: Activity, current: '1.2%', threshold: '3.0%', pct: 40, trend: 'flat', status: 'green' },
-  { label: 'Visa VAMP (portfolio)', icon: CreditCard, current: '0.41%', threshold: '0.9%', pct: 46, trend: 'up', status: 'yellow' },
-  { label: 'MC ECM (portfolio)', icon: CreditCard, current: '0.89%', threshold: '1.5%', pct: 59, trend: 'up', status: 'yellow' },
-  { label: 'PCI compliance rate', icon: Lock, current: '94%', threshold: '100%', pct: 94, trend: 'down', status: 'yellow' },
-  { label: 'State registrations', icon: FileCheck, current: '6/7', threshold: '7/7', pct: 86, trend: 'flat', status: 'yellow' },
-  { label: 'DataMerch sync', icon: Server, current: '53hr', threshold: '48hr', pct: 110, trend: 'up', status: 'red' },
-];
+const RISK_CATEGORIES: RiskCategory[] = [];
 
 interface ChangeEvent {
   id: string; date: string; type: 'regulatory' | 'network' | 'vendor';
   title: string; impact: string; taskCreated: boolean;
 }
 
-const CHANGES: ChangeEvent[] = [
-  { id: 'ch1', date: 'Apr 15', type: 'regulatory', title: 'NJ S1760 passed committee', impact: 'If enacted: APR via Reg Z for NJ merchants. Monitor for floor vote.', taskCreated: false },
-  { id: 'ch2', date: 'Apr 12', type: 'network', title: 'Visa VAMP threshold reminder', impact: 'Jan 2026 lower thresholds now fully enforced. 2 merchants at 80%+.', taskCreated: true },
-  { id: 'ch3', date: 'Apr 10', type: 'vendor', title: 'DataMerch API maintenance window', impact: 'Sync gap Apr 14-15. Data may be stale. Verify before boarding decisions.', taskCreated: true },
-  { id: 'ch4', date: 'Apr 8', type: 'regulatory', title: 'TX OCCC registration portal open', impact: 'Registration form available. Dec 31, 2026 deadline. Begin preparation.', taskCreated: true },
-  { id: 'ch5', date: 'Apr 3', type: 'network', title: 'MC ECM fine schedule updated', impact: 'Escalation fines increased 15% effective Jun 2026. Review exposure.', taskCreated: false },
-];
+const CHANGES: ChangeEvent[] = [];
 
 interface EvidenceRecord {
   id: string; date: string; merchant: string; dealId?: string;
   control: string; type: string; detail: string; exportable: boolean;
 }
 
-const EVIDENCE: EvidenceRecord[] = [
-  { id: 'ev1', date: 'Apr 17, 2026 09:14', merchant: 'Richmond Auto Detailing', dealId: 'DL-2026-0416', control: 'disclosures', type: 'VA Disclosure Package', detail: 'VA HB 1027 disclosure generated. 9 items included. 3-day review period initiated.', exportable: true },
-  { id: 'ev2', date: 'Apr 16, 2026 10:05', merchant: 'Brooklyn Vinyl Records', dealId: 'DL-2026-0415', control: 'ofac', type: 'OFAC Clearance', detail: 'SDN list check \u2014 no hits. Principal: David Park.', exportable: true },
-  { id: 'ev3', date: 'Apr 16, 2026 10:04', merchant: 'Brooklyn Vinyl Records', dealId: 'DL-2026-0415', control: 'match', type: 'MATCH Clearance', detail: 'No match found in MATCH/TMF database.', exportable: true },
-  { id: 'ev4', date: 'Apr 16, 2026 10:06', merchant: 'Brooklyn Vinyl Records', dealId: 'DL-2026-0415', control: 'kyc', type: 'KYC Verification', detail: 'Plaid IDV complete. EIN confirmed. Business verified.', exportable: true },
-  { id: 'ev5', date: 'Apr 14, 2026 09:12', merchant: 'Havana Bites Cafe', dealId: 'DL-2026-0412', control: 'match', type: 'MATCH Clearance', detail: 'No match found.', exportable: true },
-  { id: 'ev6', date: 'Apr 14, 2026 09:13', merchant: 'Havana Bites Cafe', dealId: 'DL-2026-0412', control: 'contract', type: 'Contract Health Scorecard', detail: '6/6 factors assessed: Defensible. All safe.', exportable: true },
-  { id: 'ev7', date: 'Apr 14, 2026 09:14', merchant: 'Havana Bites Cafe', dealId: 'DL-2026-0412', control: 'disclosures', type: 'State Determination', detail: 'FL \u2014 no enacted MCA disclosure law. No disclosure required.', exportable: true },
-  { id: 'ev8', date: 'Apr 1, 2026', merchant: 'Coral Reef Auto Spa', control: 'ofac', type: 'OFAC Quarterly Re-screen', detail: 'Q2 screening \u2014 clear.', exportable: true },
-  { id: 'ev9', date: 'Mar 28, 2026', merchant: 'Havana Bites Cafe', control: 'pci', type: 'ASV Scan Result', detail: 'Quarterly scan \u2014 PASS. No vulnerabilities.', exportable: true },
-  { id: 'ev10', date: 'Mar 15, 2026', merchant: 'Midtown Taqueria', control: 'pci', type: 'ASV Scan Result', detail: 'Quarterly scan \u2014 PASS.', exportable: true },
-];
+const EVIDENCE: EvidenceRecord[] = [];
 
 /* ═══════════════════════════════════════════════════
    HELPERS
@@ -441,6 +299,10 @@ export function BackendCompliance() {
 
   const activeMerchant = MERCHANTS.find(m => m.id === selectedMerchant);
   const activeDeal = DEALS.find(d => d.id === selectedDeal);
+  const hasDealData = DEALS.length > 0;
+  const hasMerchantData = MERCHANTS.length > 0;
+  const hasDeadlineData = DEADLINES.length > 0;
+  const hasRiskData = RISK_CATEGORIES.length > 0;
 
   const TABS: { id: Tab; label: string; icon: React.ElementType; badge?: number; badgeColor?: string }[] = [
     { id: 'today', label: 'Today', icon: Target, badge: dealsBlocked + obligationsDue7d > 0 ? dealsBlocked + obligationsDue7d : undefined, badgeColor: 'bg-red-500 text-white' },
@@ -497,10 +359,10 @@ export function BackendCompliance() {
               {/* Top row: 4 KPIs */}
               <div className="grid grid-cols-4 gap-3">
                 {[
-                  { label: 'Deals blocked from funding', value: dealsBlocked, color: dealsBlocked > 0 ? 'border-t-red-500' : 'border-t-emerald-500', icon: Ban, sub: dealsBlocked > 0 ? DEALS.filter(d => d.blocked).map(d => d.merchant).join(', ') : 'All clear' },
-                  { label: 'Merchants blocked from boarding', value: merchantsBlocked, color: merchantsBlocked > 0 ? 'border-t-red-500' : 'border-t-emerald-500', icon: Store, sub: merchantsBlocked > 0 ? MERCHANTS.filter(m => Object.values(m.controls).some(c => c.status === 'red')).map(m => m.name).join(', ') : 'All clear' },
-                  { label: 'Obligations due in 7 days', value: obligationsDue7d, color: obligationsDue7d > 0 ? 'border-t-amber-500' : 'border-t-emerald-500', icon: Clock, sub: `${DEADLINES.filter(d => d.daysLeft <= 0).length} overdue, ${DEADLINES.filter(d => d.daysLeft > 0 && d.daysLeft <= 7).length} upcoming` },
-                  { label: 'High-risk trends', value: highRiskCount, color: highRiskCount > 0 ? 'border-t-amber-500' : 'border-t-emerald-500', icon: TrendingUp, sub: RISK_CATEGORIES.filter(r => r.status !== 'green').map(r => r.label).slice(0, 3).join(', ') || 'All within thresholds' },
+                  { label: 'Deals blocked from funding', value: dealsBlocked, color: dealsBlocked > 0 ? 'border-t-red-500' : 'border-t-emerald-500', icon: Ban, sub: hasDealData ? (dealsBlocked > 0 ? DEALS.filter(d => d.blocked).map(d => d.merchant).join(', ') : 'No blocks') : 'No deal data yet' },
+                  { label: 'Merchants blocked from boarding', value: merchantsBlocked, color: merchantsBlocked > 0 ? 'border-t-red-500' : 'border-t-emerald-500', icon: Store, sub: hasMerchantData ? (merchantsBlocked > 0 ? MERCHANTS.filter(m => Object.values(m.controls).some(c => c.status === 'red')).map(m => m.name).join(', ') : 'No blocks') : 'No merchant data yet' },
+                  { label: 'Obligations due in 7 days', value: obligationsDue7d, color: obligationsDue7d > 0 ? 'border-t-amber-500' : 'border-t-emerald-500', icon: Clock, sub: hasDeadlineData ? `${DEADLINES.filter(d => d.daysLeft <= 0).length} overdue, ${DEADLINES.filter(d => d.daysLeft > 0 && d.daysLeft <= 7).length} upcoming` : 'No deadline data yet' },
+                  { label: 'High-risk trends', value: highRiskCount, color: highRiskCount > 0 ? 'border-t-amber-500' : 'border-t-emerald-500', icon: TrendingUp, sub: hasRiskData ? (RISK_CATEGORIES.filter(r => r.status !== 'green').map(r => r.label).slice(0, 3).join(', ') || 'No high-risk trends') : 'No risk data yet' },
                 ].map((k, i) => {
                   const Icon = k.icon;
                   return (
@@ -543,6 +405,9 @@ export function BackendCompliance() {
                         </div>
                       );
                     })}
+                    {DEADLINES.filter(d => d.daysLeft <= 7).length === 0 && (
+                      <p className="py-8 text-center text-sm text-gray-400">No compliance actions due yet</p>
+                    )}
                   </div>
                 </div>
 
@@ -563,6 +428,9 @@ export function BackendCompliance() {
                         </div>
                       );
                     })}
+                    {DEADLINES.length === 0 && (
+                      <p className="py-8 text-center text-sm text-gray-400">No compliance deadlines yet</p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -599,6 +467,9 @@ export function BackendCompliance() {
                         </div>
                       );
                     })}
+                    {RISK_CATEGORIES.length === 0 && (
+                      <p className="py-8 text-center text-sm text-gray-400">No portfolio risk data yet</p>
+                    )}
                   </div>
                 </div>
 
@@ -623,6 +494,9 @@ export function BackendCompliance() {
                         </div>
                       );
                     })}
+                    {CHANGES.length === 0 && (
+                      <p className="py-8 text-center text-sm text-gray-400">No compliance changes yet</p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -689,6 +563,9 @@ export function BackendCompliance() {
                     )}
                   </div>
                 ))}
+                {DEALS.length === 0 && (
+                  <p className="py-12 text-center text-sm text-gray-400">No deals yet</p>
+                )}
               </div>
             </div>
           )}
@@ -736,6 +613,9 @@ export function BackendCompliance() {
                     </div>
                   );
                 })}
+                {MERCHANTS.length === 0 && (
+                  <p className="py-12 text-center text-sm text-gray-400">No merchants yet</p>
+                )}
               </div>
             </div>
           )}
@@ -812,6 +692,9 @@ export function BackendCompliance() {
                       </div>
                     );
                   })}
+                  {EVIDENCE.filter(e => e.merchant === activeMerchant.name).length === 0 && (
+                    <p className="py-6 text-center text-sm text-gray-400">No evidence records yet</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -869,6 +752,9 @@ export function BackendCompliance() {
                         </div>
                       );
                     })}
+                    {filteredDeadlines.length === 0 && (
+                      <p className="py-12 text-center text-sm text-gray-400">No compliance deadlines yet</p>
+                    )}
                   </div>
                 </div>
               )}
@@ -909,6 +795,9 @@ export function BackendCompliance() {
                       </div>
                     );
                   })}
+                  {RISK_CATEGORIES.length === 0 && (
+                    <p className="py-12 text-center text-sm text-gray-400">No threshold data yet</p>
+                  )}
                 </div>
               )}
 
@@ -931,6 +820,9 @@ export function BackendCompliance() {
                       </div>
                     );
                   })}
+                  {CHANGES.length === 0 && (
+                    <p className="py-12 text-center text-sm text-gray-400">No regulatory changes yet</p>
+                  )}
                 </div>
               )}
             </div>
@@ -986,6 +878,9 @@ export function BackendCompliance() {
                     </div>
                   );
                 })}
+                {filteredEvidence.length === 0 && (
+                  <p className="px-5 py-12 text-center text-sm text-gray-400">No evidence records yet</p>
+                )}
               </div>
 
               {/* Document vault */}
@@ -1016,6 +911,9 @@ export function BackendCompliance() {
                       </div>
                     );
                   })}
+                  {DOC_CATEGORIES.length === 0 && (
+                    <p className="py-12 text-center text-sm text-gray-400">No documents yet</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -1113,6 +1011,9 @@ export function BackendCompliance() {
                         </div>
                       );
                     })}
+                    {filteredStates.length === 0 && (
+                      <p className="py-12 text-center text-sm text-gray-400">No state rules yet</p>
+                    )}
                   </div>
                   <div className="mt-4 bg-amber-50 rounded-[8px] border border-amber-200 p-4 flex items-start gap-2">
                     <AlertTriangle className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
@@ -1150,6 +1051,9 @@ export function BackendCompliance() {
                       </div>
                     </div>
                   ))}
+                  {PCI.length === 0 && (
+                    <p className="py-12 text-center text-sm text-gray-400">No card network or PCI rules yet</p>
+                  )}
                 </div>
               )}
 
@@ -1161,7 +1065,7 @@ export function BackendCompliance() {
                     <p className="text-xs text-gray-600 leading-relaxed"><span className="font-bold text-gray-900">Recharacterization risk.</span> Courts can decide an MCA is a loan. If that happens, usury laws apply (factor rate = 150-300%+ APR), contract can be voided, and collected payments clawed back. These 6 factors are what courts use. This runs automatically per deal.</p>
                   </div>
                   <div className="grid grid-cols-4 gap-3 mb-5">
-                    <div className="bg-gray-50 rounded-[8px] border border-gray-200 p-3.5"><p className="text-[10px] font-mono text-gray-400 uppercase mb-1">Assessed</p><p className="text-xl font-extrabold text-gray-900">{hAssessed}/6</p></div>
+                    <div className="bg-gray-50 rounded-[8px] border border-gray-200 p-3.5"><p className="text-[10px] font-mono text-gray-400 uppercase mb-1">Assessed</p><p className="text-xl font-extrabold text-gray-900">{hAssessed}/{HEALTH_FACTORS.length}</p></div>
                     <div className={`rounded-[8px] border p-3.5 ${hRisk > 0 ? 'bg-red-50 border-red-200' : 'bg-gray-50 border-gray-200'}`}><p className="text-[10px] font-mono text-gray-400 uppercase mb-1">Risk</p><p className={`text-xl font-extrabold ${hRisk > 0 ? 'text-red-700' : 'text-gray-400'}`}>{hRisk}</p></div>
                     <div className={`rounded-[8px] border p-3.5 ${hSafe > 0 ? 'bg-emerald-50 border-emerald-200' : 'bg-gray-50 border-gray-200'}`}><p className="text-[10px] font-mono text-gray-400 uppercase mb-1">Safe</p><p className={`text-xl font-extrabold ${hSafe > 0 ? 'text-emerald-700' : 'text-gray-400'}`}>{hSafe}</p></div>
                     <div className={`rounded-[8px] border p-3.5 ${hLevel.includes('High') ? 'bg-red-50 border-red-200' : hLevel === 'Elevated' ? 'bg-amber-50 border-amber-200' : hLevel === 'Defensible' ? 'bg-emerald-50 border-emerald-200' : 'bg-gray-50 border-gray-200'}`}><p className="text-[10px] font-mono text-gray-400 uppercase mb-1">Assessment</p><p className={`text-xl font-extrabold ${hColor}`}>{hLevel}</p></div>
@@ -1185,6 +1089,9 @@ export function BackendCompliance() {
                         </div>
                       </div>
                     ))}
+                    {HEALTH_FACTORS.length === 0 && (
+                      <p className="py-12 text-center text-sm text-gray-400">No contract health factors yet</p>
+                    )}
                   </div>
                 </div>
               )}
@@ -1212,6 +1119,9 @@ export function BackendCompliance() {
                       </div>
                     </div>
                   ))}
+                  {VENDORS.length === 0 && (
+                    <p className="py-12 text-center text-sm text-gray-400">No vendor obligations yet</p>
+                  )}
                 </div>
               )}
 
@@ -1235,6 +1145,9 @@ export function BackendCompliance() {
                       </div>
                     );
                   })}
+                  {RESEARCH.length === 0 && (
+                    <p className="py-12 text-center text-sm text-gray-400">No case law or research entries yet</p>
+                  )}
                 </div>
               )}
             </div>

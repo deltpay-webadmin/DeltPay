@@ -80,83 +80,20 @@ interface PipelineRow {
 }
 
 // ── Data ──
-const agents: Agent[] = [
-  { id: 'AGT-001', name: 'Marcus Johnson', email: 'marcus.j@deltpay.com', phone: '(555) 234-5678', status: 'Active', merchants: 14, monthlyVolume: 218500, dealsFunded: 6, commissionEarned: 6555, defaultRate: 4.2, lastActivity: '2 hours ago', agreementDate: 'Jan 15, 2024', commissionTier: 'Tier 3 — 70% Split', initials: 'MJ', type: 'W-2' },
-  { id: 'AGT-002', name: 'Sarah Kim', email: 'sarah.k@deltpay.com', phone: '(555) 345-6789', status: 'Active', merchants: 11, monthlyVolume: 174200, dealsFunded: 4, commissionEarned: 5226, defaultRate: 12.5, lastActivity: '5 hours ago', agreementDate: 'Mar 1, 2024', commissionTier: 'Tier 2 — 60% Split', initials: 'SK', type: 'W-2' },
-  { id: 'AGT-003', name: 'Devon Richards', email: 'devon.r@deltpay.com', phone: '(555) 456-7890', status: 'Active', merchants: 8, monthlyVolume: 132800, dealsFunded: 3, commissionEarned: 3984, defaultRate: 8.3, lastActivity: 'Yesterday', agreementDate: 'Jun 10, 2024', commissionTier: 'Tier 2 — 60% Split', initials: 'DR', type: 'Sub-ISO' },
-  { id: 'AGT-004', name: 'Priya Patel', email: 'priya.p@deltpay.com', phone: '(555) 567-8901', status: 'Probation', merchants: 5, monthlyVolume: 68400, dealsFunded: 1, commissionEarned: 1368, defaultRate: 22.0, lastActivity: '3 days ago', agreementDate: 'Sep 22, 2024', commissionTier: 'Tier 1 — 50% Split', initials: 'PP', type: 'W-2' },
-  { id: 'AGT-005', name: 'Jamal Foster', email: 'jamal.f@deltpay.com', phone: '(555) 678-9012', status: 'Active', merchants: 19, monthlyVolume: 295000, dealsFunded: 8, commissionEarned: 8850, defaultRate: 3.1, lastActivity: '1 hour ago', agreementDate: 'Nov 5, 2023', commissionTier: 'Tier 3 — 70% Split', initials: 'JF', type: 'Sub-ISO' },
-  { id: 'AGT-006', name: 'Lisa Tran', email: 'lisa.t@deltpay.com', phone: '(555) 789-0123', status: 'Inactive', merchants: 0, monthlyVolume: 0, dealsFunded: 0, commissionEarned: 0, defaultRate: 0, lastActivity: '45 days ago', agreementDate: 'Feb 14, 2025', commissionTier: 'Tier 1 — 50% Split', initials: 'LT', type: 'W-2' },
-];
+const agents: Agent[] = [];
 
-const merchantPortfolios: Record<string, MerchantRow[]> = {
-  'AGT-001': [
-    { name: 'Metro Diner Group', volume: 42000, mcaStatus: 'Current', type: 'MCA' },
-    { name: 'Bright Auto Sales', volume: 38000, mcaStatus: 'Current', type: 'Residual' },
-    { name: 'Sunset Logistics LLC', volume: 31500, mcaStatus: 'Delinquent', type: 'MCA' },
-    { name: 'Peak Construction Co', volume: 52000, mcaStatus: 'Current', type: 'Lease' },
-    { name: 'Apex Fitness Studio', volume: 28000, mcaStatus: 'Current', type: 'MCA' },
-    { name: 'Riverdale Dental Care', volume: 27000, mcaStatus: 'Pending', type: 'MCA' },
-  ],
-  'AGT-005': [
-    { name: 'Bay Area Plumbing', volume: 55000, mcaStatus: 'Current', type: 'MCA' },
-    { name: 'Greenfield Markets', volume: 48000, mcaStatus: 'Current', type: 'Residual' },
-    { name: 'Coastal Seafood Inc', volume: 62000, mcaStatus: 'Current', type: 'MCA' },
-    { name: 'Summit HVAC Services', volume: 45000, mcaStatus: 'Current', type: 'Lease' },
-    { name: 'Downtown Auto Body', volume: 38000, mcaStatus: 'Delinquent', type: 'MCA' },
-    { name: 'Lakeside Catering', volume: 47000, mcaStatus: 'Current', type: 'Residual' },
-  ],
-};
+const merchantPortfolios: Record<string, MerchantRow[]> = {};
 
-const commissionHistories: Record<string, CommissionHistoryRow[]> = {
-  'AGT-001': [
-    { month: 'April 2026', earned: 6555, deals: 5, status: 'Pending', paidDate: 'Apr 15, 2026' },
-    { month: 'March 2026', earned: 5820, deals: 4, status: 'Paid', paidDate: 'Mar 15, 2026' },
-    { month: 'February 2026', earned: 4290, deals: 3, status: 'Paid', paidDate: 'Feb 15, 2026' },
-    { month: 'January 2026', earned: 7110, deals: 6, status: 'Paid', paidDate: 'Jan 15, 2026' },
-    { month: 'December 2025', earned: 3680, deals: 3, status: 'Paid', paidDate: 'Dec 15, 2025' },
-  ],
-  'AGT-005': [
-    { month: 'April 2026', earned: 8850, deals: 8, status: 'Pending', paidDate: 'Apr 15, 2026' },
-    { month: 'March 2026', earned: 7420, deals: 7, status: 'Paid', paidDate: 'Mar 15, 2026' },
-    { month: 'February 2026', earned: 6105, deals: 5, status: 'Paid', paidDate: 'Feb 15, 2026' },
-    { month: 'January 2026', earned: 8310, deals: 8, status: 'Paid', paidDate: 'Jan 15, 2026' },
-    { month: 'December 2025', earned: 5900, deals: 5, status: 'Paid', paidDate: 'Dec 15, 2025' },
-  ],
-};
+const commissionHistories: Record<string, CommissionHistoryRow[]> = {};
 
-const pipelineData: Record<string, PipelineRow[]> = {
-  'AGT-001': [
-    { leadName: 'Sunrise Cafe LLC', status: 'In Review', amount: 60000, submitted: 'Apr 5, 2026' },
-    { leadName: 'Harbor Marine Supply', status: 'New', amount: 85000, submitted: 'Apr 7, 2026' },
-    { leadName: 'Greenfield Markets', status: 'Declined', amount: 40000, submitted: 'Mar 28, 2026' },
-    { leadName: 'Atlas Transport Co', status: 'Approved', amount: 120000, submitted: 'Apr 1, 2026' },
-    { leadName: 'Metro Diner Group', status: 'Funded', amount: 75000, submitted: 'Mar 15, 2026' },
-  ],
-  'AGT-005': [
-    { leadName: 'Pacific Coast Roofing', status: 'In Review', amount: 95000, submitted: 'Apr 6, 2026' },
-    { leadName: 'Redwood Landscaping', status: 'New', amount: 45000, submitted: 'Apr 8, 2026' },
-    { leadName: 'Coastal Seafood Inc', status: 'Funded', amount: 62000, submitted: 'Mar 20, 2026' },
-    { leadName: 'Summit HVAC Services', status: 'Funded', amount: 45000, submitted: 'Mar 10, 2026' },
-    { leadName: 'Pine Valley Farms', status: 'Approved', amount: 70000, submitted: 'Apr 3, 2026' },
-  ],
-};
+const pipelineData: Record<string, PipelineRow[]> = {};
 
 // Default data for agents without specific entries
-const defaultMerchants: MerchantRow[] = [
-  { name: 'Sample Merchant A', volume: 35000, mcaStatus: 'Current', type: 'MCA' },
-  { name: 'Sample Merchant B', volume: 28000, mcaStatus: 'Current', type: 'Residual' },
-];
+const defaultMerchants: MerchantRow[] = [];
 
-const defaultCommHistory: CommissionHistoryRow[] = [
-  { month: 'April 2026', earned: 2100, deals: 2, status: 'Pending', paidDate: 'Apr 15, 2026' },
-  { month: 'March 2026', earned: 1850, deals: 2, status: 'Paid', paidDate: 'Mar 15, 2026' },
-];
+const defaultCommHistory: CommissionHistoryRow[] = [];
 
-const defaultPipeline: PipelineRow[] = [
-  { leadName: 'New Lead A', status: 'New', amount: 50000, submitted: 'Apr 5, 2026' },
-  { leadName: 'Lead In Review', status: 'In Review', amount: 35000, submitted: 'Apr 2, 2026' },
-];
+const defaultPipeline: PipelineRow[] = [];
 
 const fmt = (n: number) => n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
 const fmtFull = (n: number) => n.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 });
@@ -197,15 +134,6 @@ function typeBadge(t: string) {
     default: return 'bg-gray-100 text-gray-500 border-gray-200';
   }
 }
-
-// ── Summary stats ──
-const activeAgents = agents.filter(a => a.status === 'Active').length;
-const totalVolume = agents.reduce((s, a) => s + a.monthlyVolume, 0);
-const totalCommPaid = agents.reduce((s, a) => s + a.commissionEarned, 0);
-const activeWithDeals = agents.filter(a => a.status === 'Active' && a.dealsFunded > 0);
-const avgConversion = activeWithDeals.length > 0
-  ? Math.round(activeWithDeals.reduce((s, a) => s + (a.dealsFunded / Math.max(a.merchants, 1)) * 100, 0) / activeWithDeals.length)
-  : 0;
 
 // ════════════════════════════════════════
 // Main Component
@@ -285,9 +213,9 @@ export function BackendAgents() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <SummaryCard icon={Users} label="Total Agents" value={String(activeAgents)} sub={`${agents.length} total, ${agents.length - activeAgents} inactive/probation`} variant="indigo" />
+        <SummaryCard icon={Users} label="Total Agents" value={String(activeAgents)} sub={`${agentList.length} total, ${agentList.length - activeAgents} inactive/probation`} variant="indigo" />
         <SummaryCard icon={DollarSign} label="Total Agent Volume" value={fmt(totalVolume)} sub="Combined monthly processing" variant="emerald" />
-        <SummaryCard icon={TrendingUp} label="Commissions Paid This Month" value={fmt(totalCommPaid)} sub={`Across ${agents.filter(a => a.commissionEarned > 0).length} agents`} variant="purple" />
+        <SummaryCard icon={TrendingUp} label="Commissions Paid This Month" value={fmt(totalCommPaid)} sub={`Across ${agentList.filter(a => a.commissionEarned > 0).length} agents`} variant="purple" />
         <SummaryCard icon={Percent} label="Avg Agent Conversion Rate" value={`${avgConversion}%`} sub="Active agents with deals" variant="blue" />
       </div>
 
@@ -391,15 +319,13 @@ export function BackendAgents() {
                   </td>
                 </tr>
               ))}
+              {filtered.length === 0 && (
+                <tr><td colSpan={9} className="px-5 py-12 text-center text-sm text-gray-400">No agents yet</td></tr>
+              )}
             </tbody>
           </table>
         </div>
 
-        {filtered.length === 0 && (
-          <div className="px-5 py-12 text-center text-sm text-gray-500">
-            No agents match your search or filter criteria.
-          </div>
-        )}
       </div>
     </div>
   );
@@ -440,12 +366,7 @@ interface ScheduleBTier {
   split: number;
 }
 
-const scheduleBTiers: ScheduleBTier[] = [
-  { id: 'standard', label: 'Standard', split: 50 },
-  { id: 'silver', label: 'Silver', split: 55 },
-  { id: 'gold', label: 'Gold', split: 60 },
-  { id: 'platinum', label: 'Platinum', split: 65 },
-];
+const scheduleBTiers: ScheduleBTier[] = [];
 
 interface ScheduleABreakdown {
   qualifiedRate: number;
@@ -456,24 +377,9 @@ interface ScheduleABreakdown {
   effectiveRate: number;
 }
 
-const merchantScheduleA: Record<string, ScheduleABreakdown> = {
-  'Metro Diner Group': { qualifiedRate: 1.69, midQual: 2.49, nonQual: 3.49, transactionFee: 0.10, monthlyFee: 9.95, effectiveRate: 2.85 },
-  'Bright Auto Sales': { qualifiedRate: 1.79, midQual: 2.59, nonQual: 3.59, transactionFee: 0.12, monthlyFee: 12.95, effectiveRate: 2.95 },
-  'Sunset Logistics LLC': { qualifiedRate: 1.89, midQual: 2.69, nonQual: 3.69, transactionFee: 0.15, monthlyFee: 9.95, effectiveRate: 3.10 },
-  'Peak Construction Co': { qualifiedRate: 1.59, midQual: 2.39, nonQual: 3.39, transactionFee: 0.10, monthlyFee: 14.95, effectiveRate: 2.72 },
-  'Apex Fitness Studio': { qualifiedRate: 1.75, midQual: 2.55, nonQual: 3.55, transactionFee: 0.10, monthlyFee: 9.95, effectiveRate: 2.88 },
-  'Riverdale Dental Care': { qualifiedRate: 1.72, midQual: 2.52, nonQual: 3.52, transactionFee: 0.10, monthlyFee: 9.95, effectiveRate: 2.82 },
-  'Bay Area Plumbing': { qualifiedRate: 1.65, midQual: 2.45, nonQual: 3.45, transactionFee: 0.10, monthlyFee: 9.95, effectiveRate: 2.78 },
-  'Greenfield Markets': { qualifiedRate: 1.55, midQual: 2.35, nonQual: 3.35, transactionFee: 0.08, monthlyFee: 14.95, effectiveRate: 2.65 },
-  'Coastal Seafood Inc': { qualifiedRate: 1.72, midQual: 2.52, nonQual: 3.52, transactionFee: 0.12, monthlyFee: 9.95, effectiveRate: 2.91 },
-  'Summit HVAC Services': { qualifiedRate: 1.82, midQual: 2.62, nonQual: 3.62, transactionFee: 0.15, monthlyFee: 12.95, effectiveRate: 3.02 },
-  'Downtown Auto Body': { qualifiedRate: 1.85, midQual: 2.65, nonQual: 3.65, transactionFee: 0.12, monthlyFee: 9.95, effectiveRate: 3.05 },
-  'Lakeside Catering': { qualifiedRate: 1.68, midQual: 2.48, nonQual: 3.48, transactionFee: 0.10, monthlyFee: 9.95, effectiveRate: 2.82 },
-  'Sample Merchant A': { qualifiedRate: 1.75, midQual: 2.55, nonQual: 3.55, transactionFee: 0.10, monthlyFee: 9.95, effectiveRate: 2.88 },
-  'Sample Merchant B': { qualifiedRate: 1.80, midQual: 2.60, nonQual: 3.60, transactionFee: 0.12, monthlyFee: 9.95, effectiveRate: 2.95 },
-};
+const merchantScheduleA: Record<string, ScheduleABreakdown> = {};
 
-const DELT_BUY_RATE = 1.55;
+const DELT_BUY_RATE = 0;
 
 // ════════════════════════════════════════
 // Agent Detail View
@@ -487,7 +393,7 @@ function AgentDetailView({ agent, onBack }: { agent: Agent; onBack: () => void }
   // ── Schedule B tier state ──
   const parseTier = (tier: string): { tierId: string; split: number } => {
     const match = tier.match(/(\d+)%/);
-    const split = match ? parseInt(match[1]) : 50;
+    const split = match ? parseInt(match[1]) : 0;
     const found = scheduleBTiers.find(t => t.split === split);
     return { tierId: found?.id || 'custom', split };
   };
@@ -495,15 +401,15 @@ function AgentDetailView({ agent, onBack }: { agent: Agent; onBack: () => void }
   const [tierDropdownOpen, setTierDropdownOpen] = useState(false);
   const [selectedTierId, setSelectedTierId] = useState(initial.tierId);
   const [customSplit, setCustomSplit] = useState(initial.split);
-  const [tierEffectiveDate] = useState('Apr 9, 2026');
+  const tierEffectiveDate = '—';
   const [tierSaved, setTierSaved] = useState(false);
   const tierRef = useRef<HTMLDivElement>(null);
 
   const currentSplit = selectedTierId === 'custom'
     ? customSplit
-    : scheduleBTiers.find(t => t.id === selectedTierId)?.split || 50;
+    : scheduleBTiers.find(t => t.id === selectedTierId)?.split || 0;
   const currentTierLabel = selectedTierId === 'custom'
-    ? `Custom — ${currentSplit}% Split`
+    ? (currentSplit > 0 ? `Custom — ${currentSplit}% Split` : 'Commission tier not configured')
     : `${scheduleBTiers.find(t => t.id === selectedTierId)?.label} — ${currentSplit}% Split`;
 
   useEffect(() => {
@@ -531,7 +437,7 @@ function AgentDetailView({ agent, onBack }: { agent: Agent; onBack: () => void }
 
   // ── Schedule A / rate popover state ──
   const [ratePopover, setRatePopover] = useState<string | null>(null);
-  const [uploadedScheduleA, setUploadedScheduleA] = useState<Set<string>>(new Set(['Metro Diner Group', 'Peak Construction Co', 'Bay Area Plumbing', 'Coastal Seafood Inc']));
+  const [uploadedScheduleA, setUploadedScheduleA] = useState<Set<string>>(new Set());
 
   const merchants = merchantPortfolios[agent.id] || defaultMerchants;
   const commHistory = commissionHistories[agent.id] || defaultCommHistory;
@@ -616,6 +522,9 @@ function AgentDetailView({ agent, onBack }: { agent: Agent; onBack: () => void }
                               </div>
                             </button>
                           ))}
+                          {scheduleBTiers.length === 0 && (
+                            <p className="px-3 py-3 text-center text-xs text-gray-400">No commission tiers configured yet</p>
+                          )}
                           <div className="border-t border-gray-100 mt-1 pt-1">
                             <button
                               onClick={() => setSelectedTierId('custom')}
@@ -844,6 +753,9 @@ function AgentDetailView({ agent, onBack }: { agent: Agent; onBack: () => void }
                     </tr>
                   );
                 })}
+                {merchants.length === 0 && (
+                  <tr><td colSpan={7} className="px-5 py-12 text-center text-sm text-gray-400">No merchants in this portfolio yet</td></tr>
+                )}
               </tbody>
               <tfoot>
                 <tr className="bg-gray-50 border-t-2 border-gray-200">
@@ -898,6 +810,9 @@ function AgentDetailView({ agent, onBack }: { agent: Agent; onBack: () => void }
                     </td>
                   </tr>
                 ))}
+                {commHistory.length === 0 && (
+                  <tr><td colSpan={6} className="px-5 py-12 text-center text-sm text-gray-400">No commission history yet</td></tr>
+                )}
               </tbody>
               <tfoot>
                 <tr className="bg-gray-50 border-t-2 border-gray-200">
@@ -955,6 +870,9 @@ function AgentDetailView({ agent, onBack }: { agent: Agent; onBack: () => void }
                       </tr>
                     );
                   })}
+                  {pipeline.length === 0 && (
+                    <tr><td colSpan={4} className="px-5 py-12 text-center text-sm text-gray-400">No pipeline activity yet</td></tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -1062,7 +980,7 @@ function OnboardAgentModal({
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [type, setType] = useState<'W-2' | 'Sub-ISO'>('W-2');
-  const [tier, setTier] = useState('Tier 1 — 50% Split');
+  const [tier, setTier] = useState('');
 
   const inputCls =
     'w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-[8px] text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500';
@@ -1083,12 +1001,12 @@ function OnboardAgentModal({
         <div className="px-5 py-4 space-y-3">
           <div>
             <label className="block text-[12px] font-medium text-gray-600 mb-1">Full name</label>
-            <input required autoFocus value={name} onChange={e => setName(e.target.value)} placeholder="Jordan Alvarez" className={inputCls} />
+            <input required autoFocus value={name} onChange={e => setName(e.target.value)} placeholder="Agent name" className={inputCls} />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-[12px] font-medium text-gray-600 mb-1">Email</label>
-              <input required type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="jordan@deltpay.com" className={inputCls} />
+              <input required type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="name@company.com" className={inputCls} />
             </div>
             <div>
               <label className="block text-[12px] font-medium text-gray-600 mb-1">Phone</label>
@@ -1106,9 +1024,7 @@ function OnboardAgentModal({
             <div>
               <label className="block text-[12px] font-medium text-gray-600 mb-1">Commission tier</label>
               <select value={tier} onChange={e => setTier(e.target.value)} className={inputCls}>
-                <option>Tier 1 — 50% Split</option>
-                <option>Tier 2 — 60% Split</option>
-                <option>Tier 3 — 70% Split</option>
+                <option value="">No commission tier configured</option>
               </select>
             </div>
           </div>
