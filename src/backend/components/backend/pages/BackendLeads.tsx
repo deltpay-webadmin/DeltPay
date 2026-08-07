@@ -44,6 +44,7 @@ import {
   ArrowUpDown,
   Sparkles,
   PenTool,
+  Landmark,
 } from 'lucide-react';
 import {
   useLeads,
@@ -117,6 +118,7 @@ function UnifiedTagBadges({ lead, size = 'xs' }: { lead: Lead; size?: 'xs' | 'xx
 }
 import { stageEsignDraft } from '../contractsStore';
 import { LeadProgressBar } from '../LeadProgressBar';
+import { plaidActions, usePlaidItems, usePlaidLinkRequests, usePlaidSync } from '../plaidStore';
 import { useAppNavigate } from '../NavigationContext';
 
 // ── CRM sales cycle (short) ──
@@ -426,6 +428,99 @@ function StageProgress({ stage }: { stage: StageName }) {
 }
 
 // ── Lead Detail Panel ──
+/**
+ * One-click bank connection, right on the lead — no trip to the Plaid
+ * portal needed. Status-aware: offers the action until a bank is
+ * connected, then shows what's connected.
+ */
+function ConnectBankCard({ lead }: { lead: Lead }) {
+  const items = usePlaidItems().filter(i => i.leadId === lead.id && i.status !== 'retired' && i.status !== 'disconnected');
+  const invites = usePlaidLinkRequests().filter(r => r.leadId === lead.id);
+  const { busy } = usePlaidSync();
+  const { navigate } = useAppNavigate();
+  const pending = invites.find(r => r.status === 'pending');
+  const sending = busy.includes(`invite:${lead.id}`);
+  const hasEmail = Boolean((lead.contactEmail || '').trim());
+
+  // Connected — show what's linked and where to review it.
+  if (items.length > 0) {
+    return (
+      <div className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50/60 px-4 py-3">
+        <div>
+          <p className="text-xs font-semibold text-emerald-800">
+            Bank connected — {items.map(i => i.institutionName || 'bank').join(', ')}
+          </p>
+          <p className="text-[11px] text-emerald-700/80 mt-0.5">
+            Transactions, cash-flow metrics and the model recommendation update automatically on every sync.
+          </p>
+        </div>
+        <button
+          onClick={() => navigate('/underwriting')}
+          className="shrink-0 px-3 py-1.5 text-xs font-semibold rounded-md border border-emerald-300 text-emerald-700 bg-white hover:bg-emerald-50"
+        >
+          Review in Plaid portal →
+        </button>
+      </div>
+    );
+  }
+
+  // Invite out — show exactly where it stands.
+  if (pending) {
+    const sentAgoH = Math.max(0, Math.round((Date.now() - new Date(pending.createdAt).getTime()) / 3600000));
+    const expDays = pending.expiresAt ? Math.max(0, Math.ceil((new Date(pending.expiresAt).getTime() - Date.now()) / 86400000)) : null;
+    return (
+      <div className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-blue-200 bg-blue-50/60 px-4 py-3">
+        <div>
+          <p className="text-xs font-semibold text-blue-800">
+            Connect link sent {sentAgoH < 1 ? 'just now' : sentAgoH < 24 ? `${sentAgoH}h ago` : `${Math.round(sentAgoH / 24)}d ago`}
+            {expDays != null && ` · expires in ${expDays}d`}
+          </p>
+          <p className="text-[11px] text-blue-700/80 mt-0.5">
+            Waiting on the prospect. Automatic email reminders go out on day 1 and day 3 — the moment they connect, this flips green and you get an email.
+          </p>
+        </div>
+        <div className="shrink-0 flex items-center gap-1.5">
+          <button
+            onClick={() => { void navigator.clipboard.writeText(pending.hostedLinkUrl); toast.success('Connect link copied — paste into a text.'); }}
+            className="px-3 py-1.5 text-xs font-semibold rounded-md border border-blue-300 text-blue-700 bg-white hover:bg-blue-50"
+          >
+            Copy link to text
+          </button>
+          <button
+            onClick={() => void plaidActions.createHostedLink(lead.id).catch(() => {})}
+            disabled={sending}
+            className="px-3 py-1.5 text-xs font-semibold rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+          >
+            {sending ? 'Sending…' : 'Resend'}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Not connected, no invite — the single next action.
+  return (
+    <div className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-gray-200 bg-gray-50/70 px-4 py-3">
+      <div>
+        <p className="text-xs font-semibold text-gray-800">Next step: connect the business bank</p>
+        <p className="text-[11px] text-gray-500 mt-0.5">
+          {hasEmail
+            ? `One click emails ${lead.contactEmail} a secure Plaid link (auto-reminders day 1 & 3). Data lands here automatically — no statements to chase.`
+            : 'No email on this lead — the button copies a secure link you can text instead.'}
+        </p>
+      </div>
+      <button
+        onClick={() => void plaidActions.createHostedLink(lead.id).catch(() => {})}
+        disabled={sending}
+        className="shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-md bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50"
+      >
+        <Landmark className="w-3.5 h-3.5" />
+        {sending ? 'Sending…' : hasEmail ? 'Email secure connect link' : 'Create connect link'}
+      </button>
+    </div>
+  );
+}
+
 function LeadDetailPanel({ lead, onClose, onEdit, onDelete }: { lead: Lead | null; onClose: () => void; onEdit?: () => void; onDelete?: () => void }) {
   const [activeTab, setActiveTab] = useState<'activity' | 'notes' | 'tasks'>('activity');
   const [newNote, setNewNote] = useState('');
@@ -605,6 +700,7 @@ function LeadDetailPanel({ lead, onClose, onEdit, onDelete }: { lead: Lead | nul
         {/* Funding journey — live milestones (checks advance in realtime) */}
         <div className="bg-white border-b border-gray-200 px-6 py-4">
           <LeadProgressBar lead={lead} light />
+          <ConnectBankCard lead={lead} />
         </div>
 
         {/* Quick Stats */}
