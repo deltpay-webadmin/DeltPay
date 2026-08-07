@@ -76,6 +76,45 @@ function ProductBadges({ products, size = 'xs' }: { products?: ProductTag[]; siz
     </>
   );
 }
+
+// ── Unified tags ──
+// One tag per concept: the legacy lead `type` is folded into the product
+// vocabulary (MCA → Capital) and deduped against the product tags, so a
+// lead never shows "MCA + Capital" or "Processing + Processing". A lead
+// genuinely sold both products still shows Capital + Processing — that's
+// two products, not a duplicate.
+const TYPE_TO_TAG: Record<string, string> = {
+  MCA: 'Capital',
+  Processing: 'Processing',
+  Residual: 'Residual',
+  Leasing: 'Leasing',
+};
+
+const UNIFIED_CHIP_CLS: Record<string, string> = {
+  Capital: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  Processing: 'bg-sky-50 text-sky-700 border-sky-200',
+  Residual: 'bg-purple-50 text-purple-700 border-purple-200',
+  Leasing: 'bg-amber-50 text-amber-700 border-amber-200',
+};
+
+function unifiedTags(lead: Lead): string[] {
+  const tags: string[] = [];
+  for (const p of lead.products ?? []) if (!tags.includes(p)) tags.push(p);
+  const fromType = TYPE_TO_TAG[lead.type] ?? lead.type;
+  if (fromType && !tags.includes(fromType)) tags.push(fromType);
+  return tags;
+}
+
+function UnifiedTagBadges({ lead, size = 'xs' }: { lead: Lead; size?: 'xs' | 'xxs' }) {
+  const cls = size === 'xxs' ? 'px-1.5 py-0.5 text-[9px]' : 'px-2.5 py-1 text-xs';
+  return (
+    <>
+      {unifiedTags(lead).map(t => (
+        <span key={t} className={`inline-flex rounded-full border font-medium ${cls} ${UNIFIED_CHIP_CLS[t] ?? 'bg-gray-100 text-gray-700 border-gray-200'}`}>{t}</span>
+      ))}
+    </>
+  );
+}
 import { stageEsignDraft } from '../contractsStore';
 import { LeadProgressBar } from '../LeadProgressBar';
 import { useAppNavigate } from '../NavigationContext';
@@ -1671,8 +1710,7 @@ export function BackendLeads({ openImport = false }: { openImport?: boolean } = 
                             </div>
                             <p className="text-xs text-gray-500 mb-2">{lead.contactName}</p>
                             <div className="flex items-center gap-1.5 flex-wrap">
-                              <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${getTypeColor(lead.type)}`}>{lead.type}</span>
-                              <ProductBadges products={lead.products} size="xxs" />
+                              <UnifiedTagBadges lead={lead} size="xxs" />
                             </div>
                             {lead.blocker && (
                               <p className="text-[10px] text-red-600 mt-2 line-clamp-1">{lead.blocker}</p>
@@ -1752,11 +1790,8 @@ export function BackendLeads({ openImport = false }: { openImport?: boolean } = 
                           <p className="text-xs text-gray-500">{lead.contactPhone}</p>
                         </td>
                         <td className="px-5 py-4">
-                          <div className="flex flex-col items-start gap-1.5">
-                            <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${getTypeColor(lead.type)}`}>{lead.type}</span>
-                            <div className="flex items-center gap-1">
-                              <ProductBadges products={lead.products} />
-                            </div>
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <UnifiedTagBadges lead={lead} />
                           </div>
                         </td>
                         <td className="px-5 py-4">
