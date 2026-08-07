@@ -25,6 +25,17 @@
 
 import { createClient, type SupabaseClient } from "jsr:@supabase/supabase-js@2.49.8";
 import { runDecisionModel, MODEL_VERSION, type ModelInput } from "./decision_model.ts";
+import {
+  emailConfigured,
+  withinSendWindow,
+  sendEmail,
+  notifyStaff,
+  connectLinkEmail,
+  reminderEmail,
+  connectedProspectEmail,
+  connectedStaffEmail,
+  expiredStaffEmail,
+} from "./plaid_notify.ts";
 
 // ══════════════════════════════════════════════════════════════
 // Config
@@ -572,6 +583,17 @@ export async function applyPlaidExchange(
       event: `Bank connected via the deltcapital.com application (${out.institution_name || "bank"}).`,
     });
     await db.from("pipeline_leads").update({ timeline }).eq("id", leadId);
+
+    // Instant staff heads-up — the apply flow shows the prospect their own
+    // on-screen confirmation, so only the internal notification goes out.
+    const staffTpl = connectedStaffEmail({
+      businessName: applicant.businessName || applicant.fullName || applicant.email,
+      leadId,
+      institution: out.institution_name || "",
+      source: "deltcapital.com application",
+      accounts: accounts.length || undefined,
+    });
+    notifyStaff(staffTpl.subject, staffTpl.html).catch(() => {});
   } catch { /* best-effort */ }
 
   return {
@@ -619,18 +641,48 @@ export async function createHostedLink(leadId: string) {
   if (!out.hosted_link_url) {
     throw new Error("Plaid did not return a hosted link URL for this token.");
   }
+  const expiresAt = out.expiration ?? new Date(Date.now() + HOSTED_LINK_LIFETIME_SECONDS * 1000).toISOString();
   const { error } = await db.from("plaid_link_requests").insert({
     link_token: out.link_token,
     lead_id: leadId,
     hosted_link_url: out.hosted_link_url,
     status: "pending",
-    expires_at: out.expiration ?? new Date(Date.now() + HOSTED_LINK_LIFETIME_SECONDS * 1000).toISOString(),
+    expires_at: expiresAt,
   });
   if (error) throw new Error(`Failed to record link request: ${error.message}`);
+
+  // Email the link to the prospect immediately — staff clicked "send", so
+  // this is a deliberate, expected touch (no quiet-hours gate). Falls back
+  // silently to copy/text when the lead has no email or Resend is unset.
+  let emailed = false;
+  try {
+    const { data: lead } = await db
+      .from("pipeline_leads")
+      .select("business_name, contact_email, timeline")
+      .eq("id", leadId)
+      .maybeSingle();
+    const to = (lead?.contact_email ?? "").trim();
+    if (to && emailConfigured()) {
+      const tpl = connectLinkEmail(lead?.business_name || "your business", out.hosted_link_url, expiresAt);
+      emailed = await sendEmail({ to, subject: tpl.subject, html: tpl.html });
+      if (emailed) {
+        const timeline = Array.isArray(lead?.timeline) ? lead.timeline : [];
+        timeline.push({
+          date: new Date().toISOString(),
+          event: `Secure bank-connect link emailed to ${to}.`,
+        });
+        await db.from("pipeline_leads").update({ timeline }).eq("id", leadId);
+      }
+    }
+  } catch (err) {
+    console.error("hosted-link email failed:", err);
+  }
+
   return {
     link_token: out.link_token,
     hosted_link_url: out.hosted_link_url,
     expiration: out.expiration ?? null,
+    emailed,
   };
 }
 
@@ -642,10 +694,36 @@ async function completeHostedLink(
   institution?: { institution_id?: string; name?: string },
 ) {
   const out = await exchangePublicToken(leadId, publicToken, institution);
-  await svc()
+  const db = svc();
+  await db
     .from("plaid_link_requests")
     .update({ status: "completed", item_id: out.item_id, completed_at: new Date().toISOString() })
     .eq("link_token", linkToken);
+
+  // Close the loop: staff get an instant heads-up, the prospect gets a
+  // confirmation. Both fire-and-forget — the exchange already succeeded.
+  try {
+    const { data: lead } = await db
+      .from("pipeline_leads")
+      .select("business_name, contact_email")
+      .eq("id", leadId)
+      .maybeSingle();
+    const businessName = lead?.business_name || leadId;
+    const staffTpl = connectedStaffEmail({
+      businessName,
+      leadId,
+      institution: out.institution_name || "",
+      source: "hosted connect link",
+    });
+    notifyStaff(staffTpl.subject, staffTpl.html).catch(() => {});
+    const to = (lead?.contact_email ?? "").trim();
+    if (to) {
+      const tpl = connectedProspectEmail(businessName, out.institution_name || "");
+      sendEmail({ to, subject: tpl.subject, html: tpl.html }).catch(() => {});
+    }
+  } catch (err) {
+    console.error("connect notifications failed:", err);
+  }
   return out;
 }
 
@@ -694,6 +772,7 @@ export async function sweepHostedLinks(leadId?: string) {
       } else if (r.expires_at && new Date(r.expires_at).getTime() < Date.now()) {
         await db.from("plaid_link_requests").update({ status: "expired" }).eq("link_token", r.link_token);
         out.expired++;
+        notifyLinkExpired(db, r.lead_id).catch(() => {});
       }
     } catch (err: any) {
       // An expired/invalid link token is a normal end state, not an error.
@@ -701,10 +780,85 @@ export async function sweepHostedLinks(leadId?: string) {
       if (code === "INVALID_FIELD" || code === "INVALID_LINK_TOKEN") {
         await db.from("plaid_link_requests").update({ status: "expired" }).eq("link_token", r.link_token);
         out.expired++;
+        notifyLinkExpired(db, r.lead_id).catch(() => {});
       } else {
         out.errors++;
         console.error(`hosted-link sweep failed for ${r.link_token.slice(-6)}:`, err?.message ?? err);
       }
+    }
+  }
+  return out;
+}
+
+/** Staff note when a connect link lapses — the prospect already got two
+ * automatic reminders, so a human touch is the right next step. */
+async function notifyLinkExpired(db: SupabaseClient, leadId: string | null) {
+  if (!leadId) return;
+  const { data: lead } = await db
+    .from("pipeline_leads")
+    .select("business_name")
+    .eq("id", leadId)
+    .maybeSingle();
+  const tpl = expiredStaffEmail(lead?.business_name || leadId, leadId);
+  await notifyStaff(tpl.subject, tpl.html);
+}
+
+// ════════════════════════════════════════════════════════
+// Connect-link reminders — hourly job, quiet-hours aware
+// ════════════════════════════════════════════════════════
+// Cadence: reminder 1 at ~24h pending, reminder 2 at ~72h, then silence
+// until the link expires (staff get the expiry note above). Runs hourly
+// so reminders land shortly after their threshold — during business
+// hours — instead of whenever a nightly job happens to fire.
+
+export async function sendConnectReminders() {
+  if (!emailConfigured()) return { skipped: "resend-not-configured" };
+  if (!withinSendWindow()) return { skipped: "quiet-hours" };
+  const db = svc();
+  const { data: pending } = await db
+    .from("plaid_link_requests")
+    .select("link_token, lead_id, hosted_link_url, created_at, expires_at, reminder_count")
+    .eq("status", "pending");
+
+  const out = { checked: 0, sent: 0, errors: 0 };
+  const now = Date.now();
+  for (const r of pending ?? []) {
+    out.checked++;
+    try {
+      if (!r.lead_id) continue;
+      if (r.expires_at && new Date(r.expires_at).getTime() < now) continue; // sweep handles expiry
+      const ageHours = (now - new Date(r.created_at).getTime()) / 3600000;
+      const count = r.reminder_count ?? 0;
+      const due: 1 | 2 | null = count === 0 && ageHours >= 24 ? 1 : count === 1 && ageHours >= 72 ? 2 : null;
+      if (!due) continue;
+
+      const { data: lead } = await db
+        .from("pipeline_leads")
+        .select("business_name, contact_email, timeline, stage, status")
+        .eq("id", r.lead_id)
+        .maybeSingle();
+      const to = (lead?.contact_email ?? "").trim();
+      if (!to) continue;
+      // Never nudge dead files.
+      if ([lead?.stage, lead?.status].some((s) => ["Not Qualified", "Declined", "Lost"].includes(s ?? ""))) continue;
+
+      const tpl = reminderEmail(lead?.business_name || "your business", r.hosted_link_url, due);
+      const ok = await sendEmail({ to, subject: tpl.subject, html: tpl.html });
+      if (!ok) { out.errors++; continue; }
+      await db
+        .from("plaid_link_requests")
+        .update({ reminder_count: due, last_reminder_at: new Date().toISOString() })
+        .eq("link_token", r.link_token);
+      const timeline = Array.isArray(lead?.timeline) ? lead.timeline : [];
+      timeline.push({
+        date: new Date().toISOString(),
+        event: `Bank-connect reminder ${due} of 2 emailed to ${to}.`,
+      });
+      await db.from("pipeline_leads").update({ timeline }).eq("id", r.lead_id);
+      out.sent++;
+    } catch (err: any) {
+      out.errors++;
+      console.error(`connect reminder failed for ${String(r.link_token).slice(-6)}:`, err?.message ?? err);
     }
   }
   return out;

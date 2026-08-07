@@ -17,6 +17,7 @@ import {
   applyPlaidExchange,
   createHostedLink,
   sweepHostedLinks,
+  sendConnectReminders,
   verifyItem,
   verifyLead,
   refreshLeadTransactions,
@@ -88,6 +89,8 @@ const JOB_TASKS: Record<string, () => Promise<unknown>> = {
     // subscription stops accruing on files that will never fund.
     retired: await retireStaleItems().catch((err: any) => ({ error: String(err?.message ?? err) })),
   }),
+  // Prospect follow-ups for pending connect links (quiet-hours aware).
+  "plaid-link-nudges": () => sendConnectReminders(),
   "meta-insights": () => syncMeta(90),
   // syncMetaLeads already reconciles matches against pipeline_leads
   "meta-leads": () => syncMetaLeads(),

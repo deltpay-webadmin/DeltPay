@@ -474,13 +474,20 @@ export const plaidActions = {
         body: JSON.stringify({ leadId }),
       });
       const url = String(json.hosted_link_url ?? '');
+      const emailed = Boolean(json.emailed);
       let copied = false;
       try {
         await navigator.clipboard.writeText(url);
         copied = true;
       } catch { /* clipboard blocked — fall through to prompt */ }
-      if (copied) {
-        toast.success('Secure connect link copied — text or email it to the prospect. Valid for 7 days.');
+      if (emailed) {
+        toast.success(
+          copied
+            ? 'Connect link emailed to the prospect (auto-reminders on day 1 & 3) — also copied if you want to text it.'
+            : 'Connect link emailed to the prospect — automatic reminders follow on day 1 and day 3.',
+        );
+      } else if (copied) {
+        toast.success('Secure connect link copied — text or email it to the prospect. Valid for 7 days. (No email on file, so nothing was auto-sent.)');
       } else {
         window.prompt('Copy this secure connect link and send it to the prospect (valid 7 days):', url);
       }
