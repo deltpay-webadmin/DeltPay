@@ -104,26 +104,29 @@ interface ChatMessage {
   source?: string;
 }
 
-const sampleResponse: ChatMessage = {
+/**
+ * Ask Lens is not connected to a model or to the portfolio yet.
+ *
+ * This used to answer every question — whatever you typed — with the same
+ * canned analysis: named agents, their default rates, their total exposure,
+ * and a sources footnote citing "31 deals funded since Jan 2025". After a
+ * simulated thinking delay it was indistinguishable from a real answer, which
+ * makes it the most dangerous kind of placeholder: someone could have acted
+ * on it. Until the query path is real, Lens says it cannot answer.
+ */
+const NOT_CONNECTED_RESPONSE: ChatMessage = {
   role: 'assistant',
   content:
-    'Based on the current portfolio, **3 agents** have default rates exceeding the benchmark on deals over $50K. Marcus J. has the highest at 18.2%, driven primarily by two transportation-sector defaults in Q1 2026. Sarah K. follows at 12.5% with exposure concentrated in food & beverage. Devon R. sits at 8.3% — within acceptable range but trending upward.',
-  table: {
-    headers: ['Agent', 'Deals >$50K', 'Defaults', 'Default Rate', 'Total Exposure'],
-    rows: [
-      ['Marcus J.', '11', '2', '18.2%', '$142,000'],
-      ['Sarah K.', '8', '1', '12.5%', '$81,000'],
-      ['Devon R.', '12', '1', '8.3%', '$62,100'],
-    ],
-  },
-  source: 'Analysis based on 31 deals funded since Jan 2025. Default defined as 60+ days delinquent. Data as of Apr 9, 2026.',
+    "Ask Lens isn't connected to your portfolio data yet, so I can't answer that. Once the analysis layer is wired up I'll be able to query deals, merchants, agents, and projections directly.",
 };
 
 export function BackendLensAI() {
   const [tab, setTab] = useState<Tab>('dashboard');
   const [chatInput, setChatInput] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [thinking, setThinking] = useState(false);
+  // Stays false while Lens is unconnected — nothing is being computed. The
+  // indicator below is kept for when a real query path sets this.
+  const [thinking] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -136,12 +139,9 @@ export function BackendLensAI() {
     const userMsg: ChatMessage = { role: 'user', content: msg };
     setMessages((prev) => [...prev, userMsg]);
     setChatInput('');
-    // Simulate AI response
-    setThinking(true);
-    setTimeout(() => {
-      setThinking(false);
-      setMessages((prev) => [...prev, sampleResponse]);
-    }, 900);
+    // No simulated delay — there is nothing being computed, and a fake wait
+    // only makes the canned reply read as a real analysis.
+    setMessages((prev) => [...prev, NOT_CONNECTED_RESPONSE]);
   };
 
   if (tab === 'ask') {
