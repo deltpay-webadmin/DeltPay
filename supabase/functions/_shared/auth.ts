@@ -98,12 +98,33 @@ function timingSafeEqual(expected: string, given: string): boolean {
   return diff === 0;
 }
 
-/** Timing-safe compare of the x-cron-secret header against CRON_SECRET. */
-export function verifyCronSecret(req: Request): boolean {
-  return timingSafeEqual(
-    Deno.env.get("CRON_SECRET") ?? "",
-    req.headers.get("x-cron-secret") ?? "",
-  );
+/** Timing-safe compare of the x-cron-secret header against the shared
+ * cron secret.
+ *
+ * Source of truth is the Postgres vault entry `cron_secret` — the same
+ * value public.invoke_job() sends — fetched via the service-role-only
+ * public.cron_secret() RPC and cached for the life of the isolate. The
+ * CRON_SECRET env secret still works as an override/fallback so a
+ * mismatch between the two stores can never silently disable every
+ * scheduled job again (which is exactly what happened before this fix:
+ * pg_cron POSTs answered 403 for a week while job_run_details said
+ * "succeeded"). Fails closed when neither source yields a secret. */
+let vaultCronSecret: string | null = null;
+
+export async function verifyCronSecret(req: Request): Promise<boolean> {
+  const header = req.headers.get("x-cron-secret") ?? "";
+  if (!header) return false;
+  const env = Deno.env.get("CRON_SECRET") ?? "";
+  if (env && timingSafeEqual(env, header)) return true;
+  if (vaultCronSecret == null) {
+    try {
+      const { data, error } = await svc().rpc("cron_secret");
+      if (!error && typeof data === "string" && data) vaultCronSecret = data;
+    } catch (err) {
+      console.error("verifyCronSecret: vault lookup failed:", err);
+    }
+  }
+  return Boolean(vaultCronSecret) && timingSafeEqual(vaultCronSecret!, header);
 }
 
 /** Timing-safe compare of the x-apply-secret header against

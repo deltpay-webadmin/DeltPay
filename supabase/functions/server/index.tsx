@@ -98,7 +98,7 @@ const JOB_TASKS: Record<string, () => Promise<unknown>> = {
 };
 
 app.post("/make-server-940653c6/jobs", async (c) => {
-  if (!verifyCronSecret(c.req.raw)) {
+  if (!(await verifyCronSecret(c.req.raw))) {
     return c.json({ ok: false, error: "Forbidden" }, 403);
   }
   const body = await c.req.json().catch(() => ({}));
