@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Inbox, ChevronRight, ChevronDown, XCircle, ClipboardCopy, Paperclip } from 'lucide-react';
+import { Inbox, ChevronRight, ChevronDown, XCircle, ClipboardCopy, Paperclip, FileSpreadsheet } from 'lucide-react';
 import {
   useDealSubmissions,
   dealSubmissionActions,
@@ -14,6 +14,7 @@ import { AgentDealDesk } from './AgentDealDesk';
 import { fmtUsd, activationBonus } from '../agentComp';
 import { useSession } from '../SessionContext';
 import { DealDocumentsPanel, CopyButton } from '../DealDocumentsPanel';
+import { ScheduleAComposer } from '../ScheduleAComposer';
 
 const STATUS_BADGE: Record<SubmissionStatus, string> = {
   Submitted: 'bg-blue-50 text-blue-700 border-blue-200',
@@ -112,6 +113,7 @@ export function BackendAgentDesk() {
   const [statusFilter, setStatusFilter] = useState<'All' | SubmissionStatus>('All');
   const [openId, setOpenId] = useState<string | null>(null);
   const [packetCopied, setPacketCopied] = useState(false);
+  const [scheduleDeal, setScheduleDeal] = useState<DealSubmission | null>(null);
   const { org, displayName } = useSession();
 
   const openThreads = threads.filter(t => t.status === 'Open').length;
@@ -272,6 +274,14 @@ export function BackendAgentDesk() {
                                       <ClipboardCopy className="w-3.5 h-3.5" />
                                       {packetCopied ? 'Copied!' : 'Copy packet'}
                                     </button>
+                                    <button
+                                      onClick={e => { e.stopPropagation(); setScheduleDeal(s); }}
+                                      title="Pre-populated merchant Schedule A from Delt's contracted buy rates"
+                                      className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-md border border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-colors"
+                                    >
+                                      <FileSpreadsheet className="w-3.5 h-3.5" />
+                                      Schedule A
+                                    </button>
                                   </div>
                                 </div>
                                 <div className="rounded-[8px] border border-gray-200 bg-white px-4 py-2">
@@ -324,6 +334,14 @@ export function BackendAgentDesk() {
           </div>
         )}
       </div>
+      {scheduleDeal && (
+        <ScheduleAComposer
+          merchantName={scheduleDeal.merchantName}
+          contactName={scheduleDeal.contactName}
+          channel={scheduleDeal.channel}
+          onClose={() => setScheduleDeal(null)}
+        />
+      )}
     </div>
   );
 }
