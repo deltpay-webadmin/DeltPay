@@ -22,6 +22,7 @@ import {
   scorePlaid, evaluateApplication, defaultScoreInputs,
   type PlaidInputs, type SubScoreBreakdown, type ScoringResult,
 } from '../underwritingScore';
+import { LeadProgressBar } from '../LeadProgressBar';
 
 // ══════════════════════════════════════════════════════════════
 // Delt liquid-glass design tokens (dark navy var(--dp-bg-card) / indigo #2E6BFF)
@@ -670,6 +671,9 @@ function ProspectDetail({
           <PlaidLinkButton leadId={lead.id} />
         </div>
       </div>
+
+      {/* Funding journey — live milestones */}
+      <LeadProgressBar lead={lead} />
 
       {items.length === 0 ? (
         <div className={`${GLASS} border-dashed p-10 text-center`}>

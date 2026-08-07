@@ -77,6 +77,7 @@ function ProductBadges({ products, size = 'xs' }: { products?: ProductTag[]; siz
   );
 }
 import { stageEsignDraft } from '../contractsStore';
+import { LeadProgressBar } from '../LeadProgressBar';
 import { useAppNavigate } from '../NavigationContext';
 
 // ── CRM sales cycle (short) ──
@@ -560,6 +561,11 @@ function LeadDetailPanel({ lead, onClose, onEdit, onDelete }: { lead: Lead | nul
             <div className="flex items-center gap-2 text-gray-600"><Mail className="w-4 h-4" /><span className="truncate">{lead.contactEmail}</span></div>
             <div className="flex items-center gap-2 text-gray-600"><Building2 className="w-4 h-4" /><span>{lead.industry}</span></div>
           </div>
+        </div>
+
+        {/* Funding journey — live milestones (checks advance in realtime) */}
+        <div className="bg-white border-b border-gray-200 px-6 py-4">
+          <LeadProgressBar lead={lead} light />
         </div>
 
         {/* Quick Stats */}
