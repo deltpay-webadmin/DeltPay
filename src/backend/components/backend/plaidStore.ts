@@ -42,8 +42,12 @@ export interface PlaidItem {
   institutionName: string | null;
   itemKey: string;
   products: string[];
-  status: 'active' | 'error' | 'disconnected';
+  status: 'active' | 'error' | 'disconnected' | 'retired';
   error: string | null;
+  /** Set once Auth + Identity (one-time fees) have been deliberately run. */
+  verifiedAt?: string | null;
+  /** Set when the item was retired (billing stopped, vault data kept). */
+  retiredAt?: string | null;
   lastSyncedAt: string | null;
   createdAt: string;
 }
@@ -82,15 +86,36 @@ export interface PlaidStatus {
   /** true when PLAID_REDIRECT_URI is set (OAuth banks enabled). */
   redirectUriSet: boolean;
   products: string[];
+  /** Deferred one-time-fee products (billed on first verification). */
+  optionalProducts: string[];
+  /** Whether PLAID_MONITOR_PROGRAM_ID is set (AML screening available). */
+  monitorConfigured: boolean;
+  /** Whether the recurring-transactions add-on is opted in. */
+  recurringEnabled: boolean;
+  /** Days of dead-lead inactivity before nightly auto-retire (0 = off). */
+  retireAfterDays: number;
   webhookUrl: string;
   items: number;
   prospects: number;
+}
+
+/** One billable Plaid API call (plaid_api_events row). */
+export interface PlaidUsageEvent {
+  id: string;
+  createdAt: string;
+  product: string;
+  endpoint: string;
+  pricingModel: string;
+  itemId: string | null;
+  leadId: string | null;
+  status: 'ok' | 'error';
 }
 
 interface PlaidState {
   items: PlaidItem[];
   nodes: PlaidNode[];
   requests: PlaidLinkRequest[];
+  usage: PlaidUsageEvent[];
   status: PlaidStatus | null;
 }
 
@@ -105,7 +130,7 @@ interface PlaidSyncState {
 // Store
 // ══════════════════════════════════════════════════════════════
 
-let state: PlaidState = { items: [], nodes: [], requests: [], status: null };
+let state: PlaidState = { items: [], nodes: [], requests: [], usage: [], status: null };
 let sync: PlaidSyncState = { isLoading: isSupabaseConfigured, busy: [], lastError: null };
 
 const listeners = new Set<() => void>();
@@ -144,6 +169,8 @@ function fromDbItem(r: any): PlaidItem {
     products: r.products ?? [],
     status: r.status ?? 'active',
     error: r.error ?? null,
+    verifiedAt: r.verified_at ?? null,
+    retiredAt: r.retired_at ?? null,
     lastSyncedAt: r.last_synced_at ?? null,
     createdAt: r.created_at ?? '',
   };
@@ -159,6 +186,19 @@ function fromDbRequest(r: any): PlaidLinkRequest {
     createdAt: r.created_at ?? '',
     expiresAt: r.expires_at ?? null,
     completedAt: r.completed_at ?? null,
+  };
+}
+
+function fromDbUsage(r: any): PlaidUsageEvent {
+  return {
+    id: r.id,
+    createdAt: r.created_at ?? '',
+    product: r.product ?? '',
+    endpoint: r.endpoint ?? '',
+    pricingModel: r.pricing_model ?? '',
+    itemId: r.item_id ?? null,
+    leadId: r.lead_id ?? null,
+    status: r.status === 'error' ? 'error' : 'ok',
   };
 }
 
@@ -193,10 +233,11 @@ async function maybeHydrate() {
   hydrating = true;
   setSync({ isLoading: true, lastError: null });
   try {
-    const [itemsRes, nodesRes, reqsRes] = await Promise.all([
+    const [itemsRes, nodesRes, reqsRes, usageRes] = await Promise.all([
       supabase.from('plaid_items').select('*').order('created_at', { ascending: false }),
       supabase.from('plaid_nodes').select('*').order('path', { ascending: true }),
       supabase.from('plaid_link_requests').select('*').order('created_at', { ascending: false }),
+      supabase.from('plaid_api_events').select('*').order('created_at', { ascending: false }).limit(1000),
     ]);
     const firstErr = itemsRes.error || nodesRes.error;
     if (firstErr) throw firstErr;
@@ -206,6 +247,8 @@ async function maybeHydrate() {
       // Tolerate a missing table (migration not applied yet) — invites are
       // an enhancement, not a load-bearing read.
       requests: reqsRes.error ? [] : (reqsRes.data || []).map(fromDbRequest),
+      // Same tolerance for the billable-call ledger.
+      usage: usageRes.error ? [] : (usageRes.data || []).map(fromDbUsage),
     });
     hydrated = true;
     setSync({ isLoading: false, lastError: null });
@@ -259,6 +302,14 @@ function subscribeRealtime() {
             : [...state.nodes, mapped].sort((a, b) => (a.path < b.path ? -1 : 1));
           set({ nodes });
         }
+      },
+    )
+    .on(
+      'postgres_changes',
+      { event: 'INSERT', schema: 'public', table: 'plaid_api_events' },
+      payload => {
+        const mapped = fromDbUsage((payload as any).new);
+        set({ usage: [mapped, ...state.usage].slice(0, 1000) });
       },
     )
     .on(
@@ -320,14 +371,16 @@ export const plaidActions = {
   /** Re-fetch items + nodes from Postgres (realtime usually covers this). */
   async refresh() {
     if (!supabase) return;
-    const [itemsRes, nodesRes, reqsRes] = await Promise.all([
+    const [itemsRes, nodesRes, reqsRes, usageRes] = await Promise.all([
       supabase.from('plaid_items').select('*').order('created_at', { ascending: false }),
       supabase.from('plaid_nodes').select('*').order('path', { ascending: true }),
       supabase.from('plaid_link_requests').select('*').order('created_at', { ascending: false }),
+      supabase.from('plaid_api_events').select('*').order('created_at', { ascending: false }).limit(1000),
     ]);
     if (!itemsRes.error && itemsRes.data) set({ items: itemsRes.data.map(fromDbItem) });
     if (!nodesRes.error && nodesRes.data) set({ nodes: nodesRes.data.map(fromDbNode) });
     if (!reqsRes.error && reqsRes.data) set({ requests: reqsRes.data.map(fromDbRequest) });
+    if (!usageRes.error && usageRes.data) set({ usage: usageRes.data.map(fromDbUsage) });
   },
 
   /** Server-side config status (are Plaid keys set, which env, webhook URL). */
@@ -341,6 +394,10 @@ export const plaidActions = {
         envSource: json.env_source === 'default' ? 'default' : 'env',
         redirectUriSet: Boolean(json.redirect_uri_set),
         products: json.products ?? [],
+        optionalProducts: json.optional_products ?? [],
+        monitorConfigured: Boolean(json.monitor_configured),
+        recurringEnabled: Boolean(json.recurring_enabled),
+        retireAfterDays: Number(json.retire_after_days ?? 0),
         webhookUrl: json.webhook_url ?? '',
         items: json.items ?? 0,
         prospects: json.prospects ?? 0,
@@ -417,13 +474,20 @@ export const plaidActions = {
         body: JSON.stringify({ leadId }),
       });
       const url = String(json.hosted_link_url ?? '');
+      const emailed = Boolean(json.emailed);
       let copied = false;
       try {
         await navigator.clipboard.writeText(url);
         copied = true;
       } catch { /* clipboard blocked — fall through to prompt */ }
-      if (copied) {
-        toast.success('Secure connect link copied — text or email it to the prospect. Valid for 7 days.');
+      if (emailed) {
+        toast.success(
+          copied
+            ? 'Connect link emailed to the prospect (auto-reminders on day 1 & 3) — also copied if you want to text it.'
+            : 'Connect link emailed to the prospect — automatic reminders follow on day 1 and day 3.',
+        );
+      } else if (copied) {
+        toast.success('Secure connect link copied — text or email it to the prospect. Valid for 7 days. (No email on file, so nothing was auto-sent.)');
       } else {
         window.prompt('Copy this secure connect link and send it to the prospect (valid 7 days):', url);
       }
@@ -497,6 +561,111 @@ export const plaidActions = {
       throw err;
     } finally {
       markBusy('sync:all', false);
+    }
+  },
+
+  /** Bill Auth + Identity deliberately — run when a file advances to
+   * underwriting. One-time fees per connection; syncs stay free after. */
+  async verifyLead(leadId: string) {
+    markBusy(`verify:${leadId}`, true);
+    try {
+      const json = await authFetch('/verify', {
+        method: 'POST',
+        body: JSON.stringify({ leadId }),
+      });
+      const results: any[] = json.results ?? [];
+      const failed = results.filter(r => r && r.ok === false).length;
+      toast.success(
+        failed
+          ? `Verification ran on ${results.length - failed}/${results.length} connection(s).`
+          : 'Bank ownership + account numbers verified (Auth + Identity).',
+      );
+      await plaidActions.refresh();
+      return json;
+    } catch (err: any) {
+      toast.error(`Verification failed: ${err.message}`);
+      throw err;
+    } finally {
+      markBusy(`verify:${leadId}`, false);
+    }
+  },
+
+  /** Decision-time freshness: ask the bank for brand-new transactions now.
+   * Per-call fee; the webhook auto-syncs the vault when data lands. */
+  async refreshTransactions(leadId: string) {
+    markBusy(`refresh:${leadId}`, true);
+    try {
+      const json = await authFetch('/refresh', {
+        method: 'POST',
+        body: JSON.stringify({ leadId }),
+      });
+      toast.success(
+        `Fresh pull requested from ${json.requested ?? 0} bank(s) — new transactions sync in automatically (usually 1–5 min).`,
+      );
+      return json;
+    } catch (err: any) {
+      toast.error(`Transactions refresh failed: ${err.message}`);
+      throw err;
+    } finally {
+      markBusy(`refresh:${leadId}`, false);
+    }
+  },
+
+  /** Real-time balance check (per-call fee) — run right before an ACH pull. */
+  async checkBalances(leadId: string) {
+    markBusy(`balance:${leadId}`, true);
+    try {
+      const json = await authFetch('/balance', {
+        method: 'POST',
+        body: JSON.stringify({ leadId }),
+      });
+      const ok = (json.results ?? []).filter((r: any) => r.ok).length;
+      toast.success(`Live balances pulled from ${ok} connection(s).`);
+      await plaidActions.refresh();
+      return json;
+    } catch (err: any) {
+      toast.error(`Balance check failed: ${err.message}`);
+      throw err;
+    } finally {
+      markBusy(`balance:${leadId}`, false);
+    }
+  },
+
+  /** Watchlist-screen a lead's principal (Monitor). Reserve for funded deals. */
+  async screenLead(leadId: string, legalName?: string) {
+    markBusy(`screen:${leadId}`, true);
+    try {
+      const json = await authFetch('/monitor/screen', {
+        method: 'POST',
+        body: JSON.stringify(legalName ? { leadId, legalName } : { leadId }),
+      });
+      toast.success(
+        json.hit_count
+          ? `Screening complete — ${json.hit_count} potential hit(s) need review.`
+          : 'Screening complete — no watchlist hits. Plaid keeps rescanning automatically.',
+      );
+      await plaidActions.refresh();
+      return json;
+    } catch (err: any) {
+      toast.error(`Screening failed: ${err.message}`);
+      throw err;
+    } finally {
+      markBusy(`screen:${leadId}`, false);
+    }
+  },
+
+  /** Stop monthly billing on an item but keep all its vault data. */
+  async retireItem(itemId: string) {
+    markBusy(`retire:${itemId}`, true);
+    try {
+      await authFetch(`/items/${encodeURIComponent(itemId)}/retire`, { method: 'POST' });
+      toast.success('Connection retired — billing stopped, data kept.');
+      await plaidActions.refresh();
+    } catch (err: any) {
+      toast.error(`Retire failed: ${err.message}`);
+      throw err;
+    } finally {
+      markBusy(`retire:${itemId}`, false);
     }
   },
 
@@ -581,6 +750,11 @@ export function usePlaidNodes() {
 
 export function usePlaidLinkRequests() {
   const selector = useCallback(() => state.requests, []);
+  return useSyncExternalStore(subscribe, selector, selector);
+}
+
+export function usePlaidUsage() {
+  const selector = useCallback(() => state.usage, []);
   return useSyncExternalStore(subscribe, selector, selector);
 }
 

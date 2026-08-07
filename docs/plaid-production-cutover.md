@@ -17,7 +17,10 @@ referenced in step 5.
 - **Production access approved.** Apply under Plaid dashboard → Settings →
   Compliance/Production. Plaid's review can take days — start early.
 - **Products enabled for production must cover everything the code requests:**
-  - `PLAID_PRODUCTS` (default): Auth, Transactions, Identity
+  - `PLAID_PRODUCTS` (default): Transactions — the only product billed at
+    link time. Auth + Identity ride along via `PLAID_OPTIONAL_PRODUCTS`
+    (default `auth,identity`) and bill only when verification is run
+    (see docs/plaid-cost-optimization.md).
   - Optional extras (Liabilities, Investments) are OFF by default — enable
     the products in the Plaid dashboard first, then opt in by setting the
     `PLAID_OPTIONAL_PRODUCTS=liabilities,investments` secret. Listing a

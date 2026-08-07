@@ -17,6 +17,15 @@ import {
   applyPlaidExchange,
   createHostedLink,
   sweepHostedLinks,
+  sendConnectReminders,
+  verifyItem,
+  verifyLead,
+  refreshLeadTransactions,
+  realtimeBalances,
+  screenLead,
+  refreshScreening,
+  retireItem,
+  retireStaleItems,
   svc,
 } from "../_shared/plaid.ts";
 import { adsStatus, connectMeta, syncMeta, disconnectMeta, syncMetaLeads, importMetaLeads } from "../_shared/meta.ts";
@@ -76,7 +85,12 @@ const JOB_TASKS: Record<string, () => Promise<unknown>> = {
   "plaid-sync-all": async () => ({
     hosted_links: await sweepHostedLinks().catch((err: any) => ({ error: String(err?.message ?? err) })),
     items: await syncAllItems(),
+    // Retire items on dead leads afterwards so the monthly Transactions
+    // subscription stops accruing on files that will never fund.
+    retired: await retireStaleItems().catch((err: any) => ({ error: String(err?.message ?? err) })),
   }),
+  // Prospect follow-ups for pending connect links (quiet-hours aware).
+  "plaid-link-nudges": () => sendConnectReminders(),
   "meta-insights": () => syncMeta(90),
   // syncMetaLeads already reconciles matches against pipeline_leads
   "meta-leads": () => syncMetaLeads(),
@@ -236,6 +250,10 @@ app.get(`${PLAID_BASE}/status`, needPerm("underwriting.view"), async (c) => {
     env_source: cfg.envSource,
     redirect_uri_set: Boolean(cfg.redirectUri),
     products: cfg.products,
+    optional_products: cfg.optionalProducts,
+    monitor_configured: Boolean(cfg.monitorProgramId),
+    recurring_enabled: cfg.recurringEnabled,
+    retire_after_days: cfg.retireAfterDays,
     webhook_url: webhookUrl(),
     items,
     prospects,
@@ -366,6 +384,121 @@ app.post(`${PLAID_BASE}/asset-report/refresh`, needPerm("underwriting.review"), 
     return c.json(out);
   } catch (err: any) {
     console.error("plaid asset-report refresh error", err);
+    return c.json({ ok: false, error: String(err?.message ?? err) }, 500);
+  }
+});
+
+// Bill Auth + Identity deliberately — "this file advanced to underwriting".
+// Body: { leadId } (verify every connection) or { itemId } (just one).
+app.post(`${PLAID_BASE}/verify`, needPerm("underwriting.review"), async (c) => {
+  try {
+    const body = await c.req.json().catch(() => ({}));
+    const leadId = String(body.leadId ?? "");
+    const itemId = String(body.itemId ?? "");
+    if (!leadId && !itemId) return c.json({ ok: false, error: "leadId or itemId is required" }, 400);
+    const out = itemId ? await verifyItem(itemId) : await verifyLead(leadId);
+    return c.json({ ok: true, results: out });
+  } catch (err: any) {
+    console.error("plaid verify error", err);
+    return c.json({ ok: false, error: String(err?.message ?? err) }, 500);
+  }
+});
+
+// Decision-time freshness: ask the banks for brand-new transactions now
+// (per-call fee). The TRANSACTIONS webhook auto-syncs the vault when the
+// fresh data lands.
+app.post(`${PLAID_BASE}/refresh`, needPerm("underwriting.review"), async (c) => {
+  try {
+    const body = await c.req.json().catch(() => ({}));
+    const leadId = String(body.leadId ?? "");
+    if (!leadId) return c.json({ ok: false, error: "leadId is required" }, 400);
+    const out = await refreshLeadTransactions(leadId);
+    return c.json({ ok: true, ...out });
+  } catch (err: any) {
+    console.error("plaid refresh error", err);
+    return c.json({ ok: false, error: String(err?.message ?? err) }, 500);
+  }
+});
+
+// Real-time balances (per-call fee) — run right before an ACH pull.
+app.post(`${PLAID_BASE}/balance`, needPerm("underwriting.review"), async (c) => {
+  try {
+    const body = await c.req.json().catch(() => ({}));
+    const leadId = String(body.leadId ?? "");
+    if (!leadId) return c.json({ ok: false, error: "leadId is required" }, 400);
+    const out = await realtimeBalances(leadId);
+    return c.json({ ok: true, results: out });
+  } catch (err: any) {
+    console.error("plaid balance error", err);
+    return c.json({ ok: false, error: String(err?.message ?? err) }, 500);
+  }
+});
+
+// Monitor — ongoing watchlist screening; reserve for funded merchants.
+app.post(`${PLAID_BASE}/monitor/screen`, needPerm("underwriting.review"), async (c) => {
+  try {
+    const body = await c.req.json().catch(() => ({}));
+    const leadId = String(body.leadId ?? "");
+    if (!leadId) return c.json({ ok: false, error: "leadId is required" }, 400);
+    const out = await screenLead(leadId, {
+      legalName: body.legalName ? String(body.legalName) : undefined,
+      dateOfBirth: body.dateOfBirth ? String(body.dateOfBirth) : undefined,
+      country: body.country ? String(body.country) : undefined,
+    });
+    return c.json(out);
+  } catch (err: any) {
+    console.error("plaid monitor screen error", err);
+    return c.json({ ok: false, error: String(err?.message ?? err) }, 500);
+  }
+});
+
+app.post(`${PLAID_BASE}/monitor/refresh`, needPerm("underwriting.review"), async (c) => {
+  try {
+    const body = await c.req.json().catch(() => ({}));
+    const screeningId = String(body.screeningId ?? "");
+    if (!screeningId) return c.json({ ok: false, error: "screeningId is required" }, 400);
+    const out = await refreshScreening(screeningId);
+    return c.json(out);
+  } catch (err: any) {
+    console.error("plaid monitor refresh error", err);
+    return c.json({ ok: false, error: String(err?.message ?? err) }, 500);
+  }
+});
+
+// Retire (stop billing, keep vault data) — the gentle alternative to DELETE.
+app.post(`${PLAID_BASE}/items/:itemId/retire`, needPerm("underwriting.review"), async (c) => {
+  try {
+    const out = await retireItem(c.req.param("itemId"));
+    return c.json(out);
+  } catch (err: any) {
+    console.error("plaid retire error", err);
+    return c.json({ ok: false, error: String(err?.message ?? err) }, 500);
+  }
+});
+
+// Per-lead Plaid spend summary from the billable-call ledger.
+app.get(`${PLAID_BASE}/usage`, needPerm("underwriting.view"), async (c) => {
+  try {
+    const leadId = c.req.query("leadId") ?? "";
+    const db = svc();
+    let q = db
+      .from("plaid_api_events")
+      .select("product, pricing_model, lead_id, status, created_at")
+      .order("created_at", { ascending: false })
+      .limit(2000);
+    if (leadId) q = q.eq("lead_id", leadId);
+    const { data, error } = await q;
+    if (error) throw new Error(error.message);
+    const byProduct: Record<string, { calls: number; pricing_model: string }> = {};
+    for (const row of data ?? []) {
+      if (row.status !== "ok") continue;
+      const key = row.product;
+      byProduct[key] = byProduct[key] ?? { calls: 0, pricing_model: row.pricing_model };
+      byProduct[key].calls++;
+    }
+    return c.json({ ok: true, events: (data ?? []).length, by_product: byProduct });
+  } catch (err: any) {
+    console.error("plaid usage error", err);
     return c.json({ ok: false, error: String(err?.message ?? err) }, 500);
   }
 });

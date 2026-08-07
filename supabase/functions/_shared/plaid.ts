@@ -25,6 +25,17 @@
 
 import { createClient, type SupabaseClient } from "jsr:@supabase/supabase-js@2.49.8";
 import { runDecisionModel, MODEL_VERSION, type ModelInput } from "./decision_model.ts";
+import {
+  emailConfigured,
+  withinSendWindow,
+  sendEmail,
+  notifyStaff,
+  connectLinkEmail,
+  reminderEmail,
+  connectedProspectEmail,
+  connectedStaffEmail,
+  expiredStaffEmail,
+} from "./plaid_notify.ts";
 
 // ══════════════════════════════════════════════════════════════
 // Config
@@ -42,17 +53,33 @@ export function plaidConfig() {
   const secret = Deno.env.get("PLAID_SECRET") ?? "";
   const rawEnv = Deno.env.get("PLAID_ENV");
   const env = (rawEnv ?? "sandbox").toLowerCase();
-  const products = (Deno.env.get("PLAID_PRODUCTS") ?? "auth,transactions,identity")
+  // Cost posture: Transactions is the only product billed at link time
+  // (monthly subscription per item). Auth + Identity ride along as
+  // optional_products — Plaid does not charge one-time-fee products added
+  // via optional_products until their endpoint is actually called, so
+  // verification is a deliberate, per-file spend (see verifyItem below).
+  const products = (Deno.env.get("PLAID_PRODUCTS") ?? "transactions")
     .split(",")
     .map((p) => p.trim())
     .filter(Boolean);
-  // Extra products requested opportunistically on link tokens. Off by
-  // default: production rejects link-token creation outright when the
-  // account isn't enabled for a listed product, even an optional one.
-  const optionalProducts = (Deno.env.get("PLAID_OPTIONAL_PRODUCTS") ?? "")
+  // Extra products requested opportunistically on link tokens. Production
+  // rejects link-token creation outright when the account isn't enabled
+  // for a listed product, even an optional one — Delt is approved for
+  // auth + identity, so they are safe defaults here.
+  const optionalProducts = (Deno.env.get("PLAID_OPTIONAL_PRODUCTS") ?? "auth,identity")
     .split(",")
     .map((p) => p.trim())
     .filter(Boolean);
+  // Restore the old bill-everything-at-connect behavior if ever needed.
+  const eagerVerification = (Deno.env.get("PLAID_EAGER_VERIFICATION") ?? "").toLowerCase() === "true";
+  // Recurring Transactions is a separately billed subscription add-on —
+  // never call it unless explicitly enabled for the Plaid account.
+  const recurringEnabled = (Deno.env.get("PLAID_RECURRING_ENABLED") ?? "").toLowerCase() === "true";
+  // Monitor (ongoing watchlist screening) — required for screenLead().
+  const monitorProgramId = (Deno.env.get("PLAID_MONITOR_PROGRAM_ID") ?? "").trim();
+  // Auto-retire Plaid items on dead leads after this many days of lead
+  // inactivity (ends the monthly Transactions subscription). 0 disables.
+  const retireAfterDays = Number(Deno.env.get("PLAID_RETIRE_AFTER_DAYS") ?? "30") || 0;
   return {
     clientId,
     secret,
@@ -64,6 +91,10 @@ export function plaidConfig() {
     envValid: env in PLAID_HOSTS,
     products,
     optionalProducts,
+    eagerVerification,
+    recurringEnabled,
+    monitorProgramId,
+    retireAfterDays,
     host: PLAID_HOSTS[env] ?? "",
     redirectUri: Deno.env.get("PLAID_REDIRECT_URI") ?? "",
     configured: Boolean(clientId && secret),
@@ -82,8 +113,56 @@ export function svc(): SupabaseClient {
   );
 }
 
+// ──────────────────────────────────────────────────────────────
+// Billable-call ledger — one plaid_api_events row per call that
+// costs money, so spend is attributable per lead and per product.
+// Mirrors the AI metering rule: bookkeeping must never break the
+// feature it measures (inserts are fire-and-forget).
+// ──────────────────────────────────────────────────────────────
+
+interface PlaidCallCtx {
+  itemId?: string;
+  leadId?: string;
+}
+
+const BILLABLE: Record<string, { product: string; pricing: string }> = {
+  "/auth/get": { product: "auth", pricing: "one_time" },
+  "/identity/get": { product: "identity", pricing: "one_time" },
+  "/transactions/sync": { product: "transactions", pricing: "subscription" },
+  "/transactions/refresh": { product: "transactions_refresh", pricing: "per_request" },
+  "/transactions/recurring/get": { product: "recurring_transactions", pricing: "subscription" },
+  "/accounts/balance/get": { product: "balance", pricing: "per_request" },
+  "/asset_report/create": { product: "assets", pricing: "per_report" },
+  "/identity_verification/get": { product: "identity_verification", pricing: "per_event" },
+  "/liabilities/get": { product: "liabilities", pricing: "subscription" },
+  "/investments/holdings/get": { product: "investments", pricing: "subscription" },
+  "/watchlist_screening/individual/create": { product: "monitor", pricing: "per_event" },
+};
+
+function logPlaidCall(path: string, ctx: PlaidCallCtx | undefined, status: "ok" | "error") {
+  const billable = BILLABLE[path];
+  if (!billable) return; // link/item/institution/accounts-get calls are free
+  try {
+    svc()
+      .from("plaid_api_events")
+      .insert({
+        product: billable.product,
+        endpoint: path,
+        pricing_model: billable.pricing,
+        item_id: ctx?.itemId ?? null,
+        lead_id: ctx?.leadId ?? null,
+        status,
+      })
+      .then(({ error }) => {
+        if (error) console.error("plaid_api_events insert failed:", error.message);
+      });
+  } catch (err) {
+    console.error("plaid_api_events logging failed:", err);
+  }
+}
+
 /** Raw Plaid API call. Throws with Plaid's error_message on failure. */
-async function plaid(path: string, body: Record<string, unknown>): Promise<any> {
+async function plaid(path: string, body: Record<string, unknown>, ctx?: PlaidCallCtx): Promise<any> {
   const cfg = plaidConfig();
   if (!cfg.configured) {
     throw new Error(
@@ -102,11 +181,13 @@ async function plaid(path: string, body: Record<string, unknown>): Promise<any> 
   });
   const json = await res.json().catch(() => ({}));
   if (!res.ok) {
+    logPlaidCall(path, ctx, "error");
     const msg = json?.error_message || json?.error_code || `Plaid ${path} failed (${res.status})`;
     const err = new Error(msg) as Error & { plaid?: any };
     err.plaid = json;
     throw err;
   }
+  logPlaidCall(path, ctx, "ok");
   return json;
 }
 
@@ -502,6 +583,17 @@ export async function applyPlaidExchange(
       event: `Bank connected via the deltcapital.com application (${out.institution_name || "bank"}).`,
     });
     await db.from("pipeline_leads").update({ timeline }).eq("id", leadId);
+
+    // Instant staff heads-up — the apply flow shows the prospect their own
+    // on-screen confirmation, so only the internal notification goes out.
+    const staffTpl = connectedStaffEmail({
+      businessName: applicant.businessName || applicant.fullName || applicant.email,
+      leadId,
+      institution: out.institution_name || "",
+      source: "deltcapital.com application",
+      accounts: accounts.length || undefined,
+    });
+    notifyStaff(staffTpl.subject, staffTpl.html).catch(() => {});
   } catch { /* best-effort */ }
 
   return {
@@ -549,18 +641,48 @@ export async function createHostedLink(leadId: string) {
   if (!out.hosted_link_url) {
     throw new Error("Plaid did not return a hosted link URL for this token.");
   }
+  const expiresAt = out.expiration ?? new Date(Date.now() + HOSTED_LINK_LIFETIME_SECONDS * 1000).toISOString();
   const { error } = await db.from("plaid_link_requests").insert({
     link_token: out.link_token,
     lead_id: leadId,
     hosted_link_url: out.hosted_link_url,
     status: "pending",
-    expires_at: out.expiration ?? new Date(Date.now() + HOSTED_LINK_LIFETIME_SECONDS * 1000).toISOString(),
+    expires_at: expiresAt,
   });
   if (error) throw new Error(`Failed to record link request: ${error.message}`);
+
+  // Email the link to the prospect immediately — staff clicked "send", so
+  // this is a deliberate, expected touch (no quiet-hours gate). Falls back
+  // silently to copy/text when the lead has no email or Resend is unset.
+  let emailed = false;
+  try {
+    const { data: lead } = await db
+      .from("pipeline_leads")
+      .select("business_name, contact_email, timeline")
+      .eq("id", leadId)
+      .maybeSingle();
+    const to = (lead?.contact_email ?? "").trim();
+    if (to && emailConfigured()) {
+      const tpl = connectLinkEmail(lead?.business_name || "your business", out.hosted_link_url, expiresAt);
+      emailed = await sendEmail({ to, subject: tpl.subject, html: tpl.html });
+      if (emailed) {
+        const timeline = Array.isArray(lead?.timeline) ? lead.timeline : [];
+        timeline.push({
+          date: new Date().toISOString(),
+          event: `Secure bank-connect link emailed to ${to}.`,
+        });
+        await db.from("pipeline_leads").update({ timeline }).eq("id", leadId);
+      }
+    }
+  } catch (err) {
+    console.error("hosted-link email failed:", err);
+  }
+
   return {
     link_token: out.link_token,
     hosted_link_url: out.hosted_link_url,
     expiration: out.expiration ?? null,
+    emailed,
   };
 }
 
@@ -572,10 +694,36 @@ async function completeHostedLink(
   institution?: { institution_id?: string; name?: string },
 ) {
   const out = await exchangePublicToken(leadId, publicToken, institution);
-  await svc()
+  const db = svc();
+  await db
     .from("plaid_link_requests")
     .update({ status: "completed", item_id: out.item_id, completed_at: new Date().toISOString() })
     .eq("link_token", linkToken);
+
+  // Close the loop: staff get an instant heads-up, the prospect gets a
+  // confirmation. Both fire-and-forget — the exchange already succeeded.
+  try {
+    const { data: lead } = await db
+      .from("pipeline_leads")
+      .select("business_name, contact_email")
+      .eq("id", leadId)
+      .maybeSingle();
+    const businessName = lead?.business_name || leadId;
+    const staffTpl = connectedStaffEmail({
+      businessName,
+      leadId,
+      institution: out.institution_name || "",
+      source: "hosted connect link",
+    });
+    notifyStaff(staffTpl.subject, staffTpl.html).catch(() => {});
+    const to = (lead?.contact_email ?? "").trim();
+    if (to) {
+      const tpl = connectedProspectEmail(businessName, out.institution_name || "");
+      sendEmail({ to, subject: tpl.subject, html: tpl.html }).catch(() => {});
+    }
+  } catch (err) {
+    console.error("connect notifications failed:", err);
+  }
   return out;
 }
 
@@ -624,6 +772,7 @@ export async function sweepHostedLinks(leadId?: string) {
       } else if (r.expires_at && new Date(r.expires_at).getTime() < Date.now()) {
         await db.from("plaid_link_requests").update({ status: "expired" }).eq("link_token", r.link_token);
         out.expired++;
+        notifyLinkExpired(db, r.lead_id).catch(() => {});
       }
     } catch (err: any) {
       // An expired/invalid link token is a normal end state, not an error.
@@ -631,10 +780,85 @@ export async function sweepHostedLinks(leadId?: string) {
       if (code === "INVALID_FIELD" || code === "INVALID_LINK_TOKEN") {
         await db.from("plaid_link_requests").update({ status: "expired" }).eq("link_token", r.link_token);
         out.expired++;
+        notifyLinkExpired(db, r.lead_id).catch(() => {});
       } else {
         out.errors++;
         console.error(`hosted-link sweep failed for ${r.link_token.slice(-6)}:`, err?.message ?? err);
       }
+    }
+  }
+  return out;
+}
+
+/** Staff note when a connect link lapses — the prospect already got two
+ * automatic reminders, so a human touch is the right next step. */
+async function notifyLinkExpired(db: SupabaseClient, leadId: string | null) {
+  if (!leadId) return;
+  const { data: lead } = await db
+    .from("pipeline_leads")
+    .select("business_name")
+    .eq("id", leadId)
+    .maybeSingle();
+  const tpl = expiredStaffEmail(lead?.business_name || leadId, leadId);
+  await notifyStaff(tpl.subject, tpl.html);
+}
+
+// ════════════════════════════════════════════════════════
+// Connect-link reminders — hourly job, quiet-hours aware
+// ════════════════════════════════════════════════════════
+// Cadence: reminder 1 at ~24h pending, reminder 2 at ~72h, then silence
+// until the link expires (staff get the expiry note above). Runs hourly
+// so reminders land shortly after their threshold — during business
+// hours — instead of whenever a nightly job happens to fire.
+
+export async function sendConnectReminders() {
+  if (!emailConfigured()) return { skipped: "resend-not-configured" };
+  if (!withinSendWindow()) return { skipped: "quiet-hours" };
+  const db = svc();
+  const { data: pending } = await db
+    .from("plaid_link_requests")
+    .select("link_token, lead_id, hosted_link_url, created_at, expires_at, reminder_count")
+    .eq("status", "pending");
+
+  const out = { checked: 0, sent: 0, errors: 0 };
+  const now = Date.now();
+  for (const r of pending ?? []) {
+    out.checked++;
+    try {
+      if (!r.lead_id) continue;
+      if (r.expires_at && new Date(r.expires_at).getTime() < now) continue; // sweep handles expiry
+      const ageHours = (now - new Date(r.created_at).getTime()) / 3600000;
+      const count = r.reminder_count ?? 0;
+      const due: 1 | 2 | null = count === 0 && ageHours >= 24 ? 1 : count === 1 && ageHours >= 72 ? 2 : null;
+      if (!due) continue;
+
+      const { data: lead } = await db
+        .from("pipeline_leads")
+        .select("business_name, contact_email, timeline, stage, status")
+        .eq("id", r.lead_id)
+        .maybeSingle();
+      const to = (lead?.contact_email ?? "").trim();
+      if (!to) continue;
+      // Never nudge dead files.
+      if ([lead?.stage, lead?.status].some((s) => ["Not Qualified", "Declined", "Lost"].includes(s ?? ""))) continue;
+
+      const tpl = reminderEmail(lead?.business_name || "your business", r.hosted_link_url, due);
+      const ok = await sendEmail({ to, subject: tpl.subject, html: tpl.html });
+      if (!ok) { out.errors++; continue; }
+      await db
+        .from("plaid_link_requests")
+        .update({ reminder_count: due, last_reminder_at: new Date().toISOString() })
+        .eq("link_token", r.link_token);
+      const timeline = Array.isArray(lead?.timeline) ? lead.timeline : [];
+      timeline.push({
+        date: new Date().toISOString(),
+        event: `Bank-connect reminder ${due} of 2 emailed to ${to}.`,
+      });
+      await db.from("pipeline_leads").update({ timeline }).eq("id", r.lead_id);
+      out.sent++;
+    } catch (err: any) {
+      out.errors++;
+      console.error(`connect reminder failed for ${String(r.link_token).slice(-6)}:`, err?.message ?? err);
     }
   }
   return out;
@@ -655,10 +879,16 @@ async function loadItem(itemId: string) {
 // Full item sync → vault
 // ══════════════════════════════════════════════════════════════
 
-export async function syncItem(itemId: string) {
+export async function syncItem(itemId: string, opts?: { verification?: boolean }) {
   const db = svc();
+  const cfg = plaidConfig();
   const { item, accessToken } = await loadItem(itemId);
   const leadId: string = item.lead_id;
+  // Auth + Identity are one-time-fee products deferred via optional_products:
+  // the first call bills them. Only call once verification has been
+  // deliberately requested (verifyItem / eager env flag); after that the
+  // data is already paid for, so every sync keeps it fresh for free.
+  const runVerification = Boolean(opts?.verification) || Boolean(item.verified_at) || cfg.eagerVerification;
   const itemKey: string = item.item_key || `item-${itemId.slice(-4).toLowerCase()}`;
   if (!leadId) throw new Error(`Plaid item ${itemId} is not attached to a lead`);
 
@@ -673,14 +903,14 @@ export async function syncItem(itemId: string) {
   const now = new Date().toISOString();
 
   try {
-    // ── 1. Accounts + balances ──
+    // ── 1. Accounts + balances (cached — /accounts/get is free) ──
     const accountsRes = await plaid("/accounts/get", { access_token: accessToken });
     const accounts: any[] = accountsRes.accounts ?? [];
 
     // ── 2. Bank account verification (Auth) — store masked numbers only ──
     const routingByAccount = new Map<string, { routingLast4: string; accountLast4: string; wireRouting?: string }>();
-    try {
-      const auth = await plaid("/auth/get", { access_token: accessToken });
+    if (runVerification) try {
+      const auth = await plaid("/auth/get", { access_token: accessToken }, { itemId, leadId });
       for (const n of auth?.numbers?.ach ?? []) {
         routingByAccount.set(n.account_id, {
           routingLast4: String(n.routing ?? "").slice(-4),
@@ -692,8 +922,8 @@ export async function syncItem(itemId: string) {
 
     // ── 3. Identity ──
     let owners: any[] = [];
-    try {
-      const identity = await plaid("/identity/get", { access_token: accessToken });
+    if (runVerification) try {
+      const identity = await plaid("/identity/get", { access_token: accessToken }, { itemId, leadId });
       const seen = new Set<string>();
       for (const acc of identity?.accounts ?? []) {
         for (const o of acc.owners ?? []) {
@@ -710,17 +940,18 @@ export async function syncItem(itemId: string) {
       }
     } catch { /* identity product unavailable */ }
 
-    // ── 4. Credit data (liabilities) ──
+    // ── 4. Credit data (liabilities) — subscription-billed once called;
+    // only touch it when explicitly opted in via PLAID_OPTIONAL_PRODUCTS ──
     let liabilities: any = null;
-    try {
-      const li = await plaid("/liabilities/get", { access_token: accessToken });
+    if (cfg.optionalProducts.includes("liabilities")) try {
+      const li = await plaid("/liabilities/get", { access_token: accessToken }, { itemId, leadId });
       liabilities = li?.liabilities ?? null;
     } catch { /* liabilities unavailable — fine */ }
 
-    // ── 4b. Investments (holdings) ──
+    // ── 4b. Investments (holdings) — same subscription-billing rule ──
     let investments: any = null;
-    try {
-      const inv = await plaid("/investments/holdings/get", { access_token: accessToken });
+    if (cfg.optionalProducts.includes("investments")) try {
+      const inv = await plaid("/investments/holdings/get", { access_token: accessToken }, { itemId, leadId });
       const securities = new Map<string, any>(
         (inv?.securities ?? []).map((s: any) => [s.security_id, s]),
       );
@@ -747,10 +978,11 @@ export async function syncItem(itemId: string) {
       }
     } catch { /* investments product unavailable on this item */ }
 
-    // ── 4c. Recurring transaction streams (revenue streams + debt service) ──
+    // ── 4c. Recurring transaction streams — separately billed monthly
+    // add-on; opt in via PLAID_RECURRING_ENABLED=true ──
     let recurring: any = null;
-    try {
-      const rec = await plaid("/transactions/recurring/get", { access_token: accessToken });
+    if (cfg.recurringEnabled) try {
+      const rec = await plaid("/transactions/recurring/get", { access_token: accessToken }, { itemId, leadId });
       const slimStream = (s: any) => ({
         stream_id: s.stream_id,
         description: s.description ?? null,
@@ -782,7 +1014,7 @@ export async function syncItem(itemId: string) {
           access_token: accessToken,
           cursor: cursor ?? undefined,
           count: 500,
-        });
+        }, guard === 1 ? { itemId, leadId } : undefined);
         added.push(...(page.added ?? []));
         modified.push(...(page.modified ?? []));
         removedIds.push(...((page.removed ?? []).map((r: any) => r.transaction_id)));
@@ -1226,7 +1458,7 @@ export async function syncItem(itemId: string) {
 
 export async function syncAllItems(leadId?: string) {
   const db = svc();
-  let q = db.from("plaid_items").select("item_id").neq("status", "disconnected");
+  let q = db.from("plaid_items").select("item_id").in("status", ["active", "error"]);
   if (leadId) q = q.eq("lead_id", leadId);
   const { data: items } = await q;
   const results: any[] = [];
@@ -1238,6 +1470,313 @@ export async function syncAllItems(leadId?: string) {
     }
   }
   return results;
+}
+
+// ════════════════════════════════════════════════════════
+// Verification (Auth + Identity) — deliberate one-time spend
+// ════════════════════════════════════════════════════════
+
+/** Bill Auth + Identity on one item (first call incurs each one-time fee)
+ * and refresh its vault docs with the verification data. */
+export async function verifyItem(itemId: string) {
+  const db = svc();
+  const { error } = await db
+    .from("plaid_items")
+    .update({ verified_at: new Date().toISOString() })
+    .eq("item_id", itemId);
+  if (error) throw new Error(`Failed to mark item verified: ${error.message}`);
+  return syncItem(itemId, { verification: true });
+}
+
+/** Run verification across every active connection on a lead — the
+ * "file advanced to underwriting" action. */
+export async function verifyLead(leadId: string) {
+  const db = svc();
+  const { data: items } = await db
+    .from("plaid_items")
+    .select("item_id")
+    .eq("lead_id", leadId)
+    .eq("status", "active");
+  if (!items?.length) throw new Error("No active Plaid connections on this lead");
+  const results: any[] = [];
+  for (const it of items) {
+    try {
+      results.push(await verifyItem(it.item_id));
+    } catch (err: any) {
+      results.push({ ok: false, item_id: it.item_id, error: String(err?.message ?? err) });
+    }
+  }
+  return results;
+}
+
+// ════════════════════════════════════════════════════════
+// Transactions Refresh — decision-time freshness (per-call fee)
+// ════════════════════════════════════════════════════════
+
+/** Ask Plaid to pull fresh transactions from the bank right now for every
+ * active connection on a lead. Plaid fires TRANSACTIONS webhooks
+ * (SYNC_UPDATES_AVAILABLE) as new data lands, which auto-syncs the vault —
+ * call this right before an underwriting decision. */
+export async function refreshLeadTransactions(leadId: string) {
+  const db = svc();
+  const { data: items } = await db
+    .from("plaid_items")
+    .select("item_id")
+    .eq("lead_id", leadId)
+    .eq("status", "active");
+  if (!items?.length) throw new Error("No active Plaid connections on this lead");
+  const out = { requested: 0, errors: [] as string[] };
+  for (const it of items) {
+    try {
+      const { accessToken } = await loadItem(it.item_id);
+      await plaid("/transactions/refresh", { access_token: accessToken }, { itemId: it.item_id, leadId });
+      out.requested++;
+    } catch (err: any) {
+      out.errors.push(`${it.item_id.slice(-4)}: ${String(err?.message ?? err)}`);
+    }
+  }
+  return out;
+}
+
+// ════════════════════════════════════════════════════════
+// Balance — real-time balance check before an ACH pull (per-call fee)
+// ════════════════════════════════════════════════════════
+
+/** Live (non-cached) balances across a lead's connections, with a
+ * balance-snapshot vault doc per item for the ACH decision audit trail. */
+export async function realtimeBalances(leadId: string) {
+  const db = svc();
+  const { data: items } = await db
+    .from("plaid_items")
+    .select("item_id, item_key, institution_name")
+    .eq("lead_id", leadId)
+    .eq("status", "active");
+  if (!items?.length) throw new Error("No active Plaid connections on this lead");
+
+  const { data: leadRow } = await db
+    .from("pipeline_leads")
+    .select("business_name")
+    .eq("id", leadId)
+    .maybeSingle();
+  const base = `/prospects/${leadId}`;
+  const now = new Date().toISOString();
+  const results: any[] = [];
+
+  for (const it of items) {
+    try {
+      const { accessToken } = await loadItem(it.item_id);
+      const res = await plaid("/accounts/balance/get", { access_token: accessToken }, { itemId: it.item_id, leadId });
+      const accounts = (res.accounts ?? []).map((a: any) => ({
+        account_id: a.account_id,
+        name: a.name ?? null,
+        mask: a.mask ?? null,
+        type: a.type ?? null,
+        subtype: a.subtype ?? null,
+        available: a.balances?.available ?? null,
+        current: a.balances?.current ?? null,
+        iso_currency_code: a.balances?.iso_currency_code ?? "USD",
+      }));
+      const itemKey = it.item_key || `item-${it.item_id.slice(-4).toLowerCase()}`;
+      await writeNodes(
+        db,
+        [
+          folderRow("/prospects", "Prospects"),
+          folderRow(base, leadRow?.business_name || leadId, leadId),
+          folderRow(`${base}/financials`, "Financials", leadId),
+        ],
+        [
+          {
+            path: `${base}/financials/${itemKey}/balance-snapshot`,
+            name: `Real-time balance — ${it.institution_name || itemKey}`,
+            node_type: "document",
+            doc_kind: "balance_snapshot",
+            lead_id: leadId,
+            item_id: it.item_id,
+            data: { checked_at: now, accounts },
+          },
+        ],
+      );
+      results.push({ ok: true, item_id: it.item_id, institution: it.institution_name, accounts });
+    } catch (err: any) {
+      results.push({ ok: false, item_id: it.item_id, error: String(err?.message ?? err) });
+    }
+  }
+  return results;
+}
+
+// ════════════════════════════════════════════════════════
+// Monitor — ongoing watchlist screening for funded merchants
+// ════════════════════════════════════════════════════════
+// Monitor bills a base fee per new user screened plus a monthly rescan
+// fee, so screening is reserved for funded deals (real exposure), not
+// raw leads. Requires PLAID_MONITOR_PROGRAM_ID (dashboard → Monitor →
+// programs) with ongoing screening enabled; the SCREENING webhook keeps
+// the vault doc current as Plaid rescans.
+
+function screeningDoc(scr: any, hits: any[]) {
+  return {
+    id: scr.id,
+    status: scr.status ?? null,
+    search_terms: scr.search_terms ?? null,
+    assignee: scr.assignee ?? null,
+    client_user_id: scr.client_user_id ?? null,
+    hit_count: hits.length,
+    hits: hits.map((h: any) => ({
+      id: h.id,
+      review_status: h.review_status ?? null,
+      list_code: h.list_code ?? null,
+      plaid_generated: h.plaid_generated ?? null,
+      first_active: h.first_active ?? null,
+    })),
+    last_checked_at: new Date().toISOString(),
+  };
+}
+
+async function writeScreeningNode(db: SupabaseClient, leadId: string, doc: any, personName: string) {
+  const { data: leadRow } = await db
+    .from("pipeline_leads")
+    .select("business_name")
+    .eq("id", leadId)
+    .maybeSingle();
+  const base = `/prospects/${leadId}`;
+  await writeNodes(
+    db,
+    [
+      folderRow("/prospects", "Prospects"),
+      folderRow(base, leadRow?.business_name || leadId, leadId),
+      folderRow(`${base}/compliance`, "Compliance", leadId),
+    ],
+    [
+      {
+        path: `${base}/compliance/screening-${doc.id.slice(-8)}`,
+        name: `Watchlist screening — ${personName}`,
+        node_type: "document",
+        doc_kind: "watchlist_screening",
+        lead_id: leadId,
+        data: doc,
+      },
+    ],
+  );
+}
+
+/** Screen a person tied to a lead against the configured watchlist
+ * program. Name defaults to the lead's contact when not provided. */
+export async function screenLead(leadId: string, opts?: { legalName?: string; dateOfBirth?: string; country?: string }) {
+  const cfg = plaidConfig();
+  if (!cfg.monitorProgramId) {
+    throw new Error(
+      "Monitor is not configured. Create a screening program in the Plaid dashboard and set the PLAID_MONITOR_PROGRAM_ID edge-function secret.",
+    );
+  }
+  const db = svc();
+  let legalName = (opts?.legalName ?? "").trim();
+  if (!legalName) {
+    const { data: leadRow } = await db
+      .from("pipeline_leads")
+      .select("contact_name, business_name")
+      .eq("id", leadId)
+      .maybeSingle();
+    legalName = (leadRow?.contact_name ?? "").trim();
+    if (!legalName) throw new Error("No legal name — pass one or set the lead's contact name.");
+  }
+  const search_terms: Record<string, unknown> = {
+    watchlist_program_id: cfg.monitorProgramId,
+    legal_name: legalName,
+  };
+  if (opts?.dateOfBirth) search_terms.date_of_birth = opts.dateOfBirth;
+  if (opts?.country) search_terms.country = opts.country;
+
+  const scr = await plaid("/watchlist_screening/individual/create", {
+    search_terms,
+    client_user_id: leadId,
+  }, { leadId });
+  const hitsRes = await plaid("/watchlist_screening/individual/hit/list", {
+    watchlist_screening_id: scr.id,
+  });
+  const doc = screeningDoc(scr, hitsRes?.watchlist_screening_hits ?? []);
+  await writeScreeningNode(db, leadId, doc, legalName);
+  return { ok: true, id: scr.id, status: scr.status, hit_count: doc.hit_count };
+}
+
+/** Re-pull a screening (used by the SCREENING webhook when Plaid's
+ * ongoing rescans change its status or add hits). */
+export async function refreshScreening(screeningId: string) {
+  const db = svc();
+  const scr = await plaid("/watchlist_screening/individual/get", {
+    watchlist_screening_id: screeningId,
+  });
+  const hitsRes = await plaid("/watchlist_screening/individual/hit/list", {
+    watchlist_screening_id: screeningId,
+  });
+  const leadId = String(scr.client_user_id ?? "");
+  if (!leadId) return { ok: false, error: "Screening has no client_user_id" };
+  const doc = screeningDoc(scr, hitsRes?.watchlist_screening_hits ?? []);
+  const { data: existing } = await db
+    .from("plaid_nodes")
+    .select("name")
+    .eq("path", `/prospects/${leadId}/compliance/screening-${screeningId.slice(-8)}`)
+    .maybeSingle();
+  const personName = existing?.name?.replace(/^Watchlist screening — /, "") || (doc.search_terms as any)?.legal_name || leadId;
+  await writeScreeningNode(db, leadId, doc, personName);
+  return { ok: true, id: screeningId, status: doc.status, hit_count: doc.hit_count };
+}
+
+// ════════════════════════════════════════════════════════
+// Item retirement — stop monthly Transactions billing on dead files
+// ════════════════════════════════════════════════════════
+
+const DEAD_LEAD_STATES = ["Not Qualified", "Declined", "Lost"];
+
+/** Remove the item at Plaid (ends its subscription) but KEEP the vault
+ * documents — unlike removeItem, which erases the analysis too. */
+export async function retireItem(itemId: string) {
+  const db = svc();
+  const { accessToken } = await loadItem(itemId);
+  try {
+    await plaid("/item/remove", { access_token: accessToken });
+  } catch { /* token may already be revoked — still mark it retired */ }
+  await db.from("plaid_credentials").delete().eq("item_id", itemId);
+  await db
+    .from("plaid_items")
+    .update({ status: "retired", retired_at: new Date().toISOString(), error: null })
+    .eq("item_id", itemId);
+  return { ok: true, retired: itemId };
+}
+
+/** Nightly sweep: retire items whose lead is in a dead stage/status and
+ * hasn't been touched for PLAID_RETIRE_AFTER_DAYS days. */
+export async function retireStaleItems() {
+  const cfg = plaidConfig();
+  if (!cfg.retireAfterDays) return { checked: 0, retired: 0, skipped: "disabled" };
+  const db = svc();
+  const { data: items } = await db
+    .from("plaid_items")
+    .select("item_id, lead_id")
+    .in("status", ["active", "error"]);
+  const out = { checked: 0, retired: 0, errors: 0 };
+  const cutoff = Date.now() - cfg.retireAfterDays * 24 * 60 * 60 * 1000;
+  for (const it of items ?? []) {
+    if (!it.lead_id) continue;
+    out.checked++;
+    try {
+      const { data: lead } = await db
+        .from("pipeline_leads")
+        .select("stage, status, updated_at")
+        .eq("id", it.lead_id)
+        .maybeSingle();
+      if (!lead) continue;
+      const dead = DEAD_LEAD_STATES.includes(lead.stage) || DEAD_LEAD_STATES.includes(lead.status);
+      const stale = lead.updated_at ? new Date(lead.updated_at).getTime() < cutoff : false;
+      if (dead && stale) {
+        await retireItem(it.item_id);
+        out.retired++;
+      }
+    } catch (err: any) {
+      out.errors++;
+      console.error(`retire sweep failed for ${it.item_id.slice(-4)}:`, err?.message ?? err);
+    }
+  }
+  return out;
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -1493,6 +2032,22 @@ export async function handlePlaidWebhook(body: any): Promise<{ handled: string }
       }
     }
     return { handled: `assets:${code}` };
+  }
+
+  // Monitor — Plaid's ongoing rescans fire SCREENING webhooks when a
+  // screening's status changes or new hits land; re-pull into the vault.
+  if (type === "SCREENING") {
+    const screeningId: string = body?.screening_id ?? "";
+    if (code === "STATUS_UPDATED" && screeningId) {
+      try {
+        await refreshScreening(screeningId);
+        return { handled: `screening-updated:${screeningId}` };
+      } catch (err: any) {
+        console.error("[plaid-webhook] screening refresh failed:", err?.message ?? err);
+        return { handled: `screening-error:${screeningId}` };
+      }
+    }
+    return { handled: `screening:${code}` };
   }
 
   // Hosted-link sessions (CRM "send connect link") finish with a LINK
