@@ -65,6 +65,12 @@ const CAMPAIGN_META: Record<string, { name: string; description: string; channel
     channel: 'email',
     automated: true,
   },
+  'plaid-bank-connect': {
+    name: 'Plaid Apply Link',
+    description: 'One-click send from the CRM — secure link for the lead to apply and connect their bank',
+    channel: 'email',
+    automated: false,
+  },
   'sms-nudge': {
     name: 'SMS Short-Link Taps',
     description: 'Lead tapped the deltcapital.com/r/… short link from a text',

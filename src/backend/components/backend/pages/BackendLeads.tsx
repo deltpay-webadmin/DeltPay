@@ -44,6 +44,7 @@ import {
   ArrowUpDown,
   Sparkles,
   PenTool,
+  Landmark,
 } from 'lucide-react';
 import {
   useLeads,
@@ -57,6 +58,7 @@ import {
   type Lead as StoreLead,
   type ProductTag,
 } from '../crmStore';
+import { plaidActions } from '../plaidStore';
 
 // ── Product-line tags (Capital / Processing) ──
 const PRODUCT_TAGS: ProductTag[] = ['Capital', 'Processing'];
@@ -390,6 +392,7 @@ function LeadDetailPanel({ lead, onClose, onEdit, onDelete }: { lead: Lead | nul
   const [activeTab, setActiveTab] = useState<'activity' | 'notes' | 'tasks'>('activity');
   const [newNote, setNewNote] = useState('');
   const [newTask, setNewTask] = useState('');
+  const [sendingApplyLink, setSendingApplyLink] = useState(false);
   const { navigate } = useAppNavigate();
   if (!lead) return null;
 
@@ -422,6 +425,30 @@ function LeadDetailPanel({ lead, onClose, onEdit, onDelete }: { lead: Lead | nul
       },
     });
     navigate('/documents');
+  };
+
+  /**
+   * One click: mail this lead a secure Plaid link to apply.
+   *
+   * The edge function mints (or re-uses) the hosted connect URL, emails it
+   * to the lead's contact, and logs the send to Outreach + the lead's
+   * timeline. The prospect connects their bank on their own device and the
+   * data lands in the Plaid vault on its own — nothing to chase here.
+   */
+  const handleEmailApplyLink = async () => {
+    if (sendingApplyLink) return;
+    if (!lead.contactEmail?.trim()) {
+      toast.error('Add a contact email to this lead before sending the apply link');
+      return;
+    }
+    setSendingApplyLink(true);
+    try {
+      await plaidActions.emailHostedLink(lead.id);
+    } catch {
+      /* the store already surfaced the reason */
+    } finally {
+      setSendingApplyLink(false);
+    }
   };
 
   const isDeadEnd = lead.status === 'Not Qualified' || lead.status === 'Lost';
@@ -729,6 +756,23 @@ function LeadDetailPanel({ lead, onClose, onEdit, onDelete }: { lead: Lead | nul
               className="flex-1 px-4 py-2.5 bg-emerald-600 text-white text-sm font-medium rounded-[6px] hover:bg-emerald-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Convert
+            </button>
+            <button
+              onClick={handleEmailApplyLink}
+              disabled={isDeadEnd || sendingApplyLink || !lead.contactEmail?.trim()}
+              title={
+                !lead.contactEmail?.trim()
+                  ? 'Add a contact email to this lead first'
+                  : isDeadEnd
+                    ? 'Change the status before sending an apply link'
+                    : `Email ${lead.contactEmail} a secure link to apply and connect their bank through Plaid`
+              }
+              className="px-4 py-2.5 bg-white border border-emerald-300 text-emerald-700 text-sm font-medium rounded-[6px] hover:bg-emerald-50 transition-colors whitespace-nowrap inline-flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {sendingApplyLink
+                ? <Loader2 className="w-4 h-4 animate-spin" />
+                : <Landmark className="w-4 h-4" />}
+              {sendingApplyLink ? 'Sending…' : 'Apply Link'}
             </button>
             <button
               onClick={handleSendEsign}

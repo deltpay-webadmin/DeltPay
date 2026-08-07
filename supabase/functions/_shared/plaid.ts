@@ -20,11 +20,15 @@
  *
  * Secrets (Supabase → Edge Functions → Secrets):
  *   PLAID_CLIENT_ID, PLAID_SECRET, PLAID_ENV (sandbox|production),
- *   PLAID_PRODUCTS (optional, default "auth,transactions,identity")
+ *   PLAID_PRODUCTS (optional, default "auth,transactions,identity"),
+ *   RESEND_API_KEY (required only by emailHostedLink — see ./email.ts)
  */
 
 import { createClient, type SupabaseClient } from "jsr:@supabase/supabase-js@2.49.8";
 import { runDecisionModel, MODEL_VERSION, type ModelInput } from "./decision_model.ts";
+import {
+  emailConfig, isEmailAddress, renderActionEmail, renderActionEmailText, sendEmail,
+} from "./email.ts";
 
 // ══════════════════════════════════════════════════════════════
 // Config
@@ -549,18 +553,220 @@ export async function createHostedLink(leadId: string) {
   if (!out.hosted_link_url) {
     throw new Error("Plaid did not return a hosted link URL for this token.");
   }
+  const expiresAt = out.expiration ??
+    new Date(Date.now() + HOSTED_LINK_LIFETIME_SECONDS * 1000).toISOString();
   const { error } = await db.from("plaid_link_requests").insert({
     link_token: out.link_token,
     lead_id: leadId,
     hosted_link_url: out.hosted_link_url,
     status: "pending",
-    expires_at: out.expiration ?? new Date(Date.now() + HOSTED_LINK_LIFETIME_SECONDS * 1000).toISOString(),
+    expires_at: expiresAt,
   });
   if (error) throw new Error(`Failed to record link request: ${error.message}`);
   return {
     link_token: out.link_token,
     hosted_link_url: out.hosted_link_url,
     expiration: out.expiration ?? null,
+    /** What the sweep will actually expire this invite on (Plaid's value
+     * when it gave one, else the hosted-link lifetime). */
+    expires_at: expiresAt,
+  };
+}
+
+/**
+ * One-click "email this lead their apply link".
+ *
+ * Same hosted link as above, except the CRM doesn't hand the URL back to
+ * staff to paste somewhere — it addresses the prospect directly from the
+ * lead's contact email, logs the send to outreach_events (so it shows up
+ * on the Outreach page next to every other touch), and drops a note on
+ * the lead's timeline.
+ */
+
+/** Campaign key this send is logged under in outreach_events. */
+export const BANK_CONNECT_CAMPAIGN = "plaid-bank-connect";
+
+/**
+ * Re-send the existing invite instead of minting a new Plaid token when the
+ * pending one still has this much life left. Two clicks a minute apart
+ * should put the same working URL in the prospect's inbox — and any link
+ * about to die is replaced rather than mailed out.
+ */
+const HOSTED_LINK_REUSE_FLOOR_MS = 60 * 60 * 1000;
+
+export interface HostedLinkEmailResult {
+  lead_id: string;
+  sent_to: string;
+  hosted_link_url: string;
+  link_token: string;
+  expires_at: string | null;
+  /** True when an existing pending invite was re-sent as-is. */
+  reused: boolean;
+  message_id: string;
+}
+
+export async function emailHostedLink(
+  leadId: string,
+  opts: { to?: string; sender?: { name?: string; email?: string } } = {},
+): Promise<HostedLinkEmailResult> {
+  const db = svc();
+
+  // Check deliverability before minting anything — a Plaid token created
+  // for a send that can't happen is a dead row in plaid_link_requests.
+  if (!emailConfig().configured) {
+    throw new Error(
+      "Email is not configured. Add RESEND_API_KEY as an Edge Function secret.",
+    );
+  }
+
+  const { data: lead, error: leadErr } = await db
+    .from("pipeline_leads")
+    .select("id, business_name, contact_name, contact_email, timeline")
+    .eq("id", leadId)
+    .maybeSingle();
+  if (leadErr) throw new Error(`Couldn't load lead ${leadId}: ${leadErr.message}`);
+  if (!lead) throw new Error(`Unknown lead ${leadId}`);
+
+  const to = String(opts.to ?? lead.contact_email ?? "").trim();
+  if (!to) {
+    throw new Error(
+      `${lead.business_name || "This lead"} has no contact email — add one before sending the apply link.`,
+    );
+  }
+  if (!isEmailAddress(to)) {
+    throw new Error(`"${to}" doesn't look like a valid email address.`);
+  }
+
+  // Reuse a still-good pending invite, otherwise mint a fresh one.
+  const { data: pending } = await db
+    .from("plaid_link_requests")
+    .select("link_token, hosted_link_url, expires_at")
+    .eq("lead_id", leadId)
+    .eq("status", "pending")
+    .order("created_at", { ascending: false })
+    .limit(5);
+  const reusable = (pending ?? []).find((r: any) => {
+    const ms = r.expires_at ? new Date(r.expires_at).getTime() - Date.now() : 0;
+    return Boolean(r.hosted_link_url) && ms > HOSTED_LINK_REUSE_FLOOR_MS;
+  });
+
+  let link: { link_token: string; hosted_link_url: string; expires_at: string | null };
+  if (reusable) {
+    link = {
+      link_token: reusable.link_token,
+      hosted_link_url: reusable.hosted_link_url,
+      expires_at: reusable.expires_at ?? null,
+    };
+  } else {
+    const minted = await createHostedLink(leadId);
+    link = {
+      link_token: minted.link_token,
+      hosted_link_url: minted.hosted_link_url,
+      expires_at: minted.expires_at,
+    };
+  }
+
+  const firstName = String(lead.contact_name ?? "").trim().split(/\s+/)[0] ?? "";
+  const business = String(lead.business_name ?? "").trim();
+  const expires = link.expires_at ? new Date(link.expires_at) : null;
+  const expiryNote = expires && !Number.isNaN(expires.getTime())
+    ? `This link is just for you, and it expires ${expires.toLocaleDateString("en-US", {
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+        timeZone: "America/New_York",
+      })}.`
+    : "This link was created just for you.";
+
+  const email = {
+    preheader: "Verify your business bank account through Plaid — about two minutes.",
+    badge: "Application",
+    heading: "One step left — connect your bank",
+    greeting: firstName ? `Hi ${firstName},` : "Hi there,",
+    paragraphs: [
+      business
+        ? `We're ready to keep ${business}'s funding application moving. The last thing we need is to verify your business bank account.`
+        : "We're ready to keep your funding application moving. The last thing we need is to verify your business bank account.",
+      "Use the secure link below to connect through Plaid, the same bank-linking service behind thousands of financial apps. It takes about two minutes on your phone or your computer, and there are no statements to dig up or upload.",
+    ],
+    ctaLabel: "Connect my bank securely",
+    ctaUrl: link.hosted_link_url,
+    ctaNote: expiryNote,
+    bullets: [
+      "Read-only access — we can never move money out of your account",
+      "Your bank credentials go to Plaid, never to Delt Capital",
+      "Bank-grade 256-bit encryption from end to end",
+      "You can disconnect the account at any time",
+    ],
+    signOff: opts.sender?.name
+      ? `Questions? Just reply to this email.\n— ${opts.sender.name}, Delt Capital`
+      : "Questions? Just reply to this email.\n— The Delt Capital team",
+  };
+
+  const sent = await sendEmail({
+    to,
+    subject: business
+      ? `Connect your bank to finish ${business}'s application`
+      : "Connect your bank to finish your application",
+    html: renderActionEmail(email),
+    text: renderActionEmailText(email),
+    replyTo: opts.sender?.email && isEmailAddress(opts.sender.email)
+      ? opts.sender.email
+      : undefined,
+  });
+
+  // Telemetry + CRM trail — cosmetic next to the send itself, so neither
+  // failure is allowed to report the email as un-sent.
+  try {
+    await db.from("outreach_events").insert({
+      lead_id: leadId,
+      lead_email: to,
+      lead_name: lead.contact_name || lead.business_name || null,
+      campaign: BANK_CONNECT_CAMPAIGN,
+      channel: "email",
+      event: "sent",
+      meta: {
+        link_token: link.link_token,
+        expires_at: link.expires_at,
+        reused: Boolean(reusable),
+        message_id: sent.id,
+        sent_by: opts.sender?.email ?? null,
+      },
+    });
+  } catch (err: any) {
+    console.error("hosted-link email: outreach log failed:", err?.message ?? err);
+  }
+
+  try {
+    const timeline = Array.isArray(lead.timeline) ? lead.timeline : [];
+    // Shape + ordering the CRM's Activity tab renders: newest first,
+    // {title, description, user, timestamp}.
+    timeline.unshift({
+      title: "Apply link emailed",
+      description: `Secure Plaid bank-connect link sent to ${to}.`,
+      user: opts.sender?.name || opts.sender?.email || "CRM",
+      timestamp: new Date().toLocaleString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        timeZone: "America/New_York",
+      }) + " ET",
+    });
+    await db.from("pipeline_leads").update({ timeline }).eq("id", leadId);
+  } catch (err: any) {
+    console.error("hosted-link email: timeline note failed:", err?.message ?? err);
+  }
+
+  return {
+    lead_id: leadId,
+    sent_to: to,
+    hosted_link_url: link.hosted_link_url,
+    link_token: link.link_token,
+    expires_at: link.expires_at,
+    reused: Boolean(reusable),
+    message_id: sent.id,
   };
 }
 

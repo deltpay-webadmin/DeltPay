@@ -161,41 +161,66 @@ function PlaidLinkButton({
 }
 
 /**
- * "Send connect link" — the remote counterpart to PlaidLinkButton.
+ * "Email apply link" — the remote counterpart to PlaidLinkButton.
  *
  * Staff can't type a prospect's bank credentials, so the local Link modal
- * only works with the customer present. This mints a Plaid-hosted URL
- * (valid 7 days), copies it to the clipboard for staff to text/email, and
- * the prospect completes Link on their own device. The connection lands in
- * the vault automatically via webhook (or the Sync-all / nightly sweep).
+ * only works with the customer present. One click here mints a Plaid-hosted
+ * URL (valid 7 days) and emails it straight to the lead's contact; the
+ * prospect applies on their own device and the connection lands in the vault
+ * automatically via webhook (or the Sync-all / nightly sweep).
+ *
+ * The chained icon button is the escape hatch: same link, copied to the
+ * clipboard, for staff who'd rather text it or paste it into their own
+ * thread. It's also the only path when a lead has no contact email yet.
  */
 function SendLinkButton({ leadId, compact }: { leadId: string; compact?: boolean }) {
   const { busy } = usePlaidSync();
   const requests = usePlaidLinkRequests();
+  const leads = useLeads();
   const isBusy = busy.includes(`invite:${leadId}`);
   const pending = requests.find(r => r.leadId === leadId && r.status === 'pending');
-  const title = pending
-    ? `Connect link sent ${timeAgo(pending.createdAt)} — click to copy a fresh one`
-    : 'Copy a secure Plaid link to text or email the prospect — they connect their bank on their own device';
+  const email = (leads.find(l => l.id === leadId)?.contactEmail ?? '').trim();
 
-  const send = () => plaidActions.createHostedLink(leadId).catch(() => {});
+  const emailTitle = !email
+    ? "This lead has no contact email — add one, or copy the link and send it yourself"
+    : pending
+      ? `Apply link sent ${timeAgo(pending.createdAt)} — click to email ${email} again`
+      : `Email ${email} a secure link to apply — they connect their bank on their own device`;
+
+  const send = () => plaidActions.emailHostedLink(leadId).catch(() => {});
+  const copy = () => plaidActions.createHostedLink(leadId).catch(() => {});
 
   return (
-    <button
-      onClick={send}
-      disabled={isBusy}
-      title={title}
-      className={
-        compact
-          ? 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/[0.06] border border-(--dp-border) text-xs text-(--dp-text-secondary) hover:bg-(--dp-bg-raised) disabled:opacity-50'
-          : BTN_GLASS
-      }
-    >
-      <Send className={compact ? 'w-3 h-3' : 'w-4 h-4'} />
-      {compact
-        ? (isBusy ? '…' : pending ? 'Link sent' : 'Send link')
-        : (isBusy ? 'Creating link…' : pending ? `Link sent ${timeAgo(pending.createdAt)} — resend` : 'Send connect link')}
-    </button>
+    <span className="inline-flex items-center gap-1">
+      <button
+        onClick={send}
+        disabled={isBusy || !email}
+        title={emailTitle}
+        className={
+          compact
+            ? 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/[0.06] border border-(--dp-border) text-xs text-(--dp-text-secondary) hover:bg-(--dp-bg-raised) disabled:opacity-50'
+            : BTN_GLASS
+        }
+      >
+        <Send className={compact ? 'w-3 h-3' : 'w-4 h-4'} />
+        {compact
+          ? (isBusy ? '…' : pending ? 'Resend' : 'Email link')
+          : (isBusy ? 'Sending…' : pending ? `Link sent ${timeAgo(pending.createdAt)} — resend` : 'Email apply link')}
+      </button>
+      <button
+        onClick={copy}
+        disabled={isBusy}
+        title="Copy the apply link instead — text it or paste it into your own message"
+        aria-label="Copy apply link"
+        className={
+          compact
+            ? 'inline-flex items-center p-1 rounded-lg bg-white/[0.06] border border-(--dp-border) text-(--dp-text-secondary) hover:bg-(--dp-bg-raised) disabled:opacity-50'
+            : 'inline-flex items-center p-2 rounded-[10px] bg-white/[0.06] border border-(--dp-border) text-(--dp-text-secondary) hover:bg-(--dp-bg-raised) disabled:opacity-50 transition-colors'
+        }
+      >
+        <Link2 className={compact ? 'w-3 h-3' : 'w-4 h-4'} />
+      </button>
+    </span>
   );
 }
 

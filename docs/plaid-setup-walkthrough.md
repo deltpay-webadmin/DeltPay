@@ -125,7 +125,7 @@ What each line does:
 - `functions deploy make-server-940653c6` uploads the server. Success
   looks like `Deployed Function make-server-940653c6`.
 - `functions deploy plaid-webhook` uploads the webhook receiver (it now
-  also completes "Send connect link" bank connections automatically).
+  also completes "Email apply link" bank connections automatically).
 
 ⚠️ Use exactly `make-server-940653c6` — NOT `deploy server`. (A stray
 function named `server` already exists in the Supabase dashboard from a
@@ -231,9 +231,9 @@ no-op. Full runbook: `docs/plaid-production-cutover.md`.
   built to fail safe (worst case: the connection isn't persisted and the
   applicant notices nothing), but bugs will be discovered live.
 - **You CAN still self-test the CRM side safely**: connecting a bank via
-  *Connect bank* or *Send connect link* uses only Auth/Transactions/
-  Identity — no KYC, no repeat-applicant flagging. Send yourself a
-  connect link, log into your own real bank, watch the vault populate,
+  *Connect bank* or *Email apply link* uses only Auth/Transactions/
+  Identity — no KYC, no repeat-applicant flagging. Email yourself an
+  apply link, log into your own real bank, watch the vault populate,
   then remove the connection. That's a legitimate production test.
 - **Billing starts**: production Plaid charges per connected account /
   product and per identity verification (typically cents to a few

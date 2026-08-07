@@ -130,9 +130,10 @@ is what makes the cross-app exchange possible at all.
 The CRM's local *Connect bank* button opens Plaid Link on the staff
 member's screen, so it only works when the customer is present (staff
 obviously can't type the customer's bank credentials). For everyone
-else, use **Send connect link** (next to Connect bank on the vault
-page): it mints a Plaid-hosted URL (valid 7 days), copies it to the
-clipboard, and staff text/email it to the prospect. The prospect
+else, use **Email apply link** — one click on the lead in Leads
+(*Apply Link*) or on the vault page (next to Connect bank). It mints a
+Plaid-hosted URL (valid 7 days) and emails it to the lead's contact
+address with reply-to set to the staffer who clicked. The prospect
 completes Link on their own device — including OAuth banks like Chase,
 with no redirect-URI setup needed, since the whole flow runs on Plaid's
 hosted page. The connection is exchanged into the vault automatically by
@@ -140,6 +141,19 @@ the `LINK` webhook, with a sweep during *Sync all connections* and the
 nightly `plaid-sync-all` cron as the safety net. Invites live in
 `plaid_link_requests` (pending / completed / expired), and the button
 shows "Link sent Xh ago" while one is outstanding.
+
+Clicking again inside the invite's lifetime re-sends the *same* URL
+rather than minting a new token, so a nudge never invalidates the link
+the prospect already has. Every send is logged to `outreach_events`
+under the `plaid-bank-connect` campaign (visible on the Outreach page)
+and noted on the lead's timeline. The chain-link icon next to the
+button is the manual escape hatch: same URL, copied to the clipboard,
+for texting it yourself — and the only option for a lead with no
+contact email on file.
+
+Sending requires the `RESEND_API_KEY` edge-function secret (see
+`.env.example`); without it the button fails with a clear message
+rather than silently minting an unsent link.
 
 There is nothing to import from *past* application sessions: the old
 deltcapital.com exchange endpoint discarded access tokens, and Plaid

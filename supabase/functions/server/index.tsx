@@ -16,6 +16,7 @@ import {
   refreshAssetReport,
   applyPlaidExchange,
   createHostedLink,
+  emailHostedLink,
   sweepHostedLinks,
   svc,
 } from "../_shared/plaid.ts";
@@ -324,6 +325,40 @@ app.post(`${PLAID_BASE}/hosted-link`, needPerm("underwriting.review"), async (c)
     return c.json({ ok: true, ...out });
   } catch (err: any) {
     console.error("plaid hosted-link error", err);
+    return c.json({ ok: false, error: String(err?.message ?? err) }, 500);
+  }
+});
+
+// One-click send: mint (or re-use) the hosted connect URL and email it
+// straight to the lead's contact, logged to outreach_events. Body:
+// { leadId, email? } — email overrides the lead's contact_email for
+// this send only (the CRM passes it when staff pick a different address).
+app.post(`${PLAID_BASE}/hosted-link/email`, needPerm("underwriting.review"), async (c) => {
+  try {
+    const body = await c.req.json().catch(() => ({}));
+    const leadId = String(body.leadId ?? "");
+    if (!leadId) return c.json({ ok: false, error: "leadId is required" }, 400);
+    const to = body.email ? String(body.email).trim() : undefined;
+
+    // Reply-to the staffer who clicked, so the prospect's questions land
+    // with a human instead of the no-reply sender.
+    let sender: { name?: string; email?: string } | undefined;
+    const ctx = c.get("authCtx") as AuthContext | undefined;
+    if (ctx?.userId) {
+      const { data: profile } = await svc()
+        .from("staff_profiles")
+        .select("email, full_name")
+        .eq("id", ctx.userId)
+        .maybeSingle();
+      if (profile) {
+        sender = { name: profile.full_name || undefined, email: profile.email || undefined };
+      }
+    }
+
+    const out = await emailHostedLink(leadId, { to, sender });
+    return c.json({ ok: true, ...out });
+  } catch (err: any) {
+    console.error("plaid hosted-link email error", err);
     return c.json({ ok: false, error: String(err?.message ?? err) }, 500);
   }
 });

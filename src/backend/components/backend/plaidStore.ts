@@ -423,14 +423,44 @@ export const plaidActions = {
         copied = true;
       } catch { /* clipboard blocked — fall through to prompt */ }
       if (copied) {
-        toast.success('Secure connect link copied — text or email it to the prospect. Valid for 7 days.');
+        toast.success('Apply link copied — text or paste it to the prospect. Valid for 7 days.');
       } else {
-        window.prompt('Copy this secure connect link and send it to the prospect (valid 7 days):', url);
+        window.prompt('Copy this secure apply link and send it to the prospect (valid 7 days):', url);
       }
       await plaidActions.refresh();
       return url;
     } catch (err: any) {
       toast.error(`Couldn't create connect link: ${err.message}`);
+      throw err;
+    } finally {
+      markBusy(`invite:${leadId}`, false);
+    }
+  },
+
+  /**
+   * One click: mint (or re-use) the prospect's hosted connect URL and email
+   * it to them, no copy/paste step. The send is logged to outreach_events
+   * and noted on the lead's timeline server-side.
+   */
+  async emailHostedLink(leadId: string, opts: { email?: string } = {}) {
+    markBusy(`invite:${leadId}`, true);
+    try {
+      const json = await authFetch('/hosted-link/email', {
+        method: 'POST',
+        body: JSON.stringify({ leadId, email: opts.email }),
+      });
+      toast.success(
+        `Apply link emailed to ${json.sent_to}${json.reused ? ' (re-sent the active link)' : ''}.`,
+      );
+      await plaidActions.refresh();
+      return json as {
+        sent_to: string;
+        hosted_link_url: string;
+        expires_at: string | null;
+        reused: boolean;
+      };
+    } catch (err: any) {
+      toast.error(`Couldn't email the apply link: ${err.message}`);
       throw err;
     } finally {
       markBusy(`invite:${leadId}`, false);
