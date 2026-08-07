@@ -4,9 +4,10 @@ import {
   BarChart3, Activity, Shield, CheckCircle, AlertTriangle, Monitor,
   Wifi, WifiOff, ChevronRight, ExternalLink, Calendar, FileText,
   CreditCard, ArrowUpRight, ArrowDownRight, Building2, User, Phone,
-  Mail, MapPin, Clock, Search, ChevronDown, Info,
+  Mail, MapPin, Clock, Search, ChevronDown, Info, Store,
 } from 'lucide-react';
 import { useAppNavigate } from '../NavigationContext';
+import { EmptyState } from '../EmptyPageState';
 
 // ── Helpers ──
 const fmt = (n: number) => n.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 });
@@ -51,51 +52,24 @@ interface BatchItem {
   date: string; txns: number; amount: number; settled: boolean; time: string;
 }
 
-const MERCHANTS: Record<string, MerchantData> = {
-  'merchant-001': { name: 'Sunrise Cafe & Bakery', dba: 'Sunrise Cafe', legalName: 'Sunrise Cafe & Bakery LLC', mid: '4485-7721-0093', status: 'Active', industry: 'Food & Beverage / Restaurant', owner: 'Michael Roberts', email: 'michael@sunrisecafe.com', phone: '(305) 555-0147', address: '2847 SW 8th St, Miami, FL 33135', agent: 'Sarah Johnson', agentSplit: 50, onboarded: '2025-08-12', processor: 'North / NAB', platform: 'Clover Flex + Clover Station Duo', pricingModel: 'Tiered + Pass-Through', mcc: '5812', riskLevel: 'Low', lensScore: 78, chargebackRate: 0.004, planTier: 'Growth' },
-  'merchant-002': { name: 'TechStart Solutions', dba: 'TechStart', legalName: 'TechStart Solutions Inc.', mid: '4485-9932-1187', status: 'Active', industry: 'Technology / SaaS', owner: 'David Kim', email: 'david@techstart.io', phone: '(305) 555-0298', address: '1200 Brickell Ave #1420, Miami, FL 33131', agent: 'Michael Chen', agentSplit: 50, onboarded: '2025-06-20', processor: 'North / NAB', platform: 'Clover Virtual Terminal', pricingModel: 'Interchange Plus', mcc: '5734', riskLevel: 'Low', lensScore: 85, chargebackRate: 0.002, planTier: 'Pro' },
-  'merchant-003': { name: 'Urban Fitness Center', dba: 'Urban Fitness', legalName: 'Urban Fitness Center LLC', mid: '4485-6643-0521', status: 'Active', industry: 'Health & Fitness', owner: 'Rachel Torres', email: 'rachel@urbanfitness.com', phone: '(305) 555-0366', address: '990 NE 125th St, North Miami, FL 33161', agent: 'Sarah Johnson', agentSplit: 50, onboarded: '2025-07-15', processor: 'North / NAB', platform: 'Clover Station Duo', pricingModel: 'Tiered', mcc: '7941', riskLevel: 'Low', lensScore: 72, chargebackRate: 0.006, planTier: 'Growth' },
-  'merchant-005': { name: 'Bella Vista Restaurant', dba: 'Bella Vista', legalName: 'Bella Vista Restaurant Group LLC', mid: '4485-3314-0877', status: 'Active', industry: 'Food & Beverage / Restaurant', owner: 'Marco Deluca', email: 'marco@bellavista.com', phone: '(305) 555-0412', address: '3100 Coral Way, Coral Gables, FL 33145', agent: 'Michael Chen', agentSplit: 50, onboarded: '2025-05-10', processor: 'North / NAB', platform: 'Clover Station Duo + Clover Flex', pricingModel: 'Tiered + Pass-Through', mcc: '5812', riskLevel: 'Low', lensScore: 81, chargebackRate: 0.003, planTier: 'Pro' },
-  'merchant-006': { name: 'Green Leaf Landscaping', dba: 'Green Leaf', legalName: 'Green Leaf Landscaping Services LLC', mid: '4485-8827-0234', status: 'Active', industry: 'Services / Landscaping', owner: 'Carlos Mendez', email: 'carlos@greenleafmiami.com', phone: '(305) 555-0533', address: '7400 SW 117th Ave, Kendall, FL 33183', agent: 'Sarah Johnson', agentSplit: 50, onboarded: '2025-09-01', processor: 'North / NAB', platform: 'Clover Go', pricingModel: 'Flat Rate', mcc: '0780', riskLevel: 'Low', lensScore: 65, chargebackRate: 0.001, planTier: 'Free' },
-  'merchant-007': { name: 'Metro Diner Group', dba: 'Metro Diner', legalName: 'Metro Diner Group Inc.', mid: '4485-2256-0991', status: 'Active', industry: 'Food & Beverage / Restaurant', owner: 'James Park', email: 'james@metrodiner.com', phone: '(305) 555-0644', address: '5820 NW 7th Ave, Miami, FL 33127', agent: 'James Miller', agentSplit: 50, onboarded: '2025-04-22', processor: 'North / NAB', platform: 'Clover Station Duo x2', pricingModel: 'Interchange Plus', mcc: '5812', riskLevel: 'Medium', lensScore: 70, chargebackRate: 0.008, planTier: 'Pro' },
-  'merchant-008': { name: 'Luxe Nail Studio', dba: 'Luxe Nails', legalName: 'Luxe Nail Studio LLC', mid: '4485-1178-0445', status: 'Active', industry: 'Personal Care / Salon', owner: 'Lisa Nguyen', email: 'lisa@luxenails.com', phone: '(305) 555-0755', address: '1040 Lincoln Rd, Miami Beach, FL 33139', agent: 'Michael Chen', agentSplit: 50, onboarded: '2025-08-05', processor: 'North / NAB', platform: 'Clover Mini', pricingModel: 'Flat Rate', mcc: '7230', riskLevel: 'Low', lensScore: 74, chargebackRate: 0.002, planTier: 'Growth' },
-  'merchant-009': { name: 'Harbor Marine Supply', dba: 'Harbor Marine', legalName: 'Harbor Marine Supply Corp.', mid: '4485-5589-0668', status: 'Active', industry: 'Retail / Marine', owner: 'Tom Sullivan', email: 'tom@harbormarine.com', phone: '(305) 555-0866', address: '15400 Biscayne Blvd, Aventura, FL 33160', agent: 'James Miller', agentSplit: 50, onboarded: '2025-10-15', processor: 'North / NAB', platform: 'Clover Station Duo', pricingModel: 'Tiered', mcc: '5551', riskLevel: 'Low', lensScore: 69, chargebackRate: 0.005, planTier: 'Growth' },
-};
+// Merchant records come from the merchants table. This detail view resolves
+// the id out of the route; an unknown id renders an empty state rather than
+// falling back to a stand-in merchant.
+const MERCHANTS: Record<string, MerchantData> = {};
 
-// Residual data per merchant
+
+// Residual history per merchant, keyed by merchant id. Previously this
+// generated a synthetic six-month series from a hash of the id for any
+// merchant without a hand-written entry — plausible-looking revenue that was
+// never real. It now returns what is on file, and nothing more.
 function getResiduals(id: string): MonthlyResidual[] {
-  const base: Record<string, MonthlyResidual[]> = {
-    'merchant-001': [
-      { month: 'Mar 2026', volume: 37500, txns: 812, grossRev: 1282.50, procFees: 487.50, netRev: 795.00, agentShare: 397.50, deltNet: 397.50, effRate: 0.0342, avgTicket: 46.18 },
-      { month: 'Feb 2026', volume: 33400, txns: 724, grossRev: 1123.46, procFees: 434.10, netRev: 689.36, agentShare: 344.68, deltNet: 344.68, effRate: 0.0336, avgTicket: 46.13 },
-      { month: 'Jan 2026', volume: 31200, txns: 688, grossRev: 1060.80, procFees: 405.60, netRev: 655.20, agentShare: 327.60, deltNet: 327.60, effRate: 0.0340, avgTicket: 45.35 },
-      { month: 'Dec 2025', volume: 39800, txns: 876, grossRev: 1393.00, procFees: 517.40, netRev: 875.60, agentShare: 437.80, deltNet: 437.80, effRate: 0.0350, avgTicket: 45.43 },
-      { month: 'Nov 2025', volume: 28900, txns: 642, grossRev: 982.60, procFees: 375.70, netRev: 606.90, agentShare: 303.45, deltNet: 303.45, effRate: 0.0340, avgTicket: 45.02 },
-      { month: 'Oct 2025', volume: 26100, txns: 578, grossRev: 887.40, procFees: 339.30, netRev: 548.10, agentShare: 274.05, deltNet: 274.05, effRate: 0.0340, avgTicket: 45.16 },
-    ],
-  };
-  if (base[id]) return base[id];
-  // Generate synthetic data for other merchants
-  const seed = id.charCodeAt(id.length - 1);
-  const baseVol = 25000 + seed * 1200;
-  return ['Mar 2026', 'Feb 2026', 'Jan 2026', 'Dec 2025', 'Nov 2025', 'Oct 2025'].map((month, i) => {
-    const vol = Math.round(baseVol * (1 - i * 0.06) * (0.92 + Math.sin(seed + i) * 0.12));
-    const txns = Math.round(vol / (38 + seed % 15));
-    const grossRev = vol * (0.033 + (seed % 5) * 0.001);
-    const procFees = grossRev * (0.37 + (seed % 3) * 0.02);
-    const netRev = grossRev - procFees;
-    return { month, volume: vol, txns, grossRev: +grossRev.toFixed(2), procFees: +procFees.toFixed(2), netRev: +netRev.toFixed(2), agentShare: +(netRev / 2).toFixed(2), deltNet: +(netRev / 2).toFixed(2), effRate: +(grossRev / vol).toFixed(4), avgTicket: +(vol / txns).toFixed(2) };
-  });
+  const byMerchant: Record<string, MonthlyResidual[]> = {};
+  return byMerchant[id] ?? [];
 }
 
-const INTERCHANGE_BREAKDOWN: InterchangeRow[] = [
-  { category: 'Visa Credit — Qual', volume: 14250, pct: 0.38, rate: '1.65% + $0.10', cost: 248.63 },
-  { category: 'Visa Credit — Mid-Qual', volume: 3375, pct: 0.09, rate: '2.30% + $0.10', cost: 81.00 },
-  { category: 'Visa Debit — Regulated', volume: 7500, pct: 0.20, rate: '0.05% + $0.22', cost: 19.51 },
-  { category: 'MC Credit — Qual', volume: 8625, pct: 0.23, rate: '1.73% + $0.10', cost: 157.80 },
-  { category: 'MC Debit — Regulated', volume: 2250, pct: 0.06, rate: '0.05% + $0.22', cost: 6.08 },
-  { category: 'Amex OptBlue', volume: 1500, pct: 0.04, rate: '2.40% + $0.10', cost: 37.50 },
-];
+
+const INTERCHANGE_BREAKDOWN: InterchangeRow[] = [];
+
 
 // ─── PUBLISHED INTERCHANGE REFERENCE (April 2026) ───
 const IC_SCHEDULE = { version: 'April 2026', effectiveDate: 'April 18, 2026', nextUpdate: 'October 2026', lastChecked: '2026-04-15' };
@@ -159,53 +133,33 @@ const FEE_SCHEDULE: FeeItem[] = [
   { fee: 'Annual Fee', amount: 99.00, type: 'annual', note: 'Billed August' },
 ];
 
-const CHARGEBACKS: ChargebackItem[] = [
-  { date: '2026-03-22', amount: 87.50, reason: '4837 — No Cardholder Auth', status: 'Won', resolution: '2026-04-05' },
-  { date: '2026-01-14', amount: 142.00, reason: '4853 — Not as Described', status: 'Lost', resolution: '2026-02-10' },
-  { date: '2025-11-30', amount: 56.25, reason: '4840 — Fraudulent Processing', status: 'Won', resolution: '2025-12-18' },
-];
+const CHARGEBACKS: ChargebackItem[] = [];
 
-function getEquipment(merchant: MerchantData): EquipmentItem[] {
-  const base: EquipmentItem[] = [
-    { device: 'Clover Station Duo', serial: 'C06-2841-XR', location: 'Front Counter', status: 'Active', deployed: '2025-08-15', warranty: '2027-08-15', connectivity: 'Ethernet', firmware: 'v4.12.3', lastPing: '2 min ago' },
-    { device: 'Clover Flex (LTE)', serial: 'CFX-9917-BM', location: 'Mobile', status: 'Active', deployed: '2025-09-02', warranty: '2027-09-02', connectivity: 'LTE + WiFi', firmware: 'v4.12.3', lastPing: '8 min ago' },
-  ];
-  if (merchant.platform.includes('Mini')) base.push({ device: 'Clover Mini (WiFi)', serial: 'CMN-4402-KL', location: 'Secondary', status: 'Active', deployed: '2026-01-10', warranty: '2028-01-10', connectivity: 'WiFi', firmware: 'v4.11.8', lastPing: '1 min ago' });
-  return base;
+
+function getEquipment(_merchant: MerchantData): EquipmentItem[] {
+  // Deployed terminals come from the equipment records for this merchant.
+  return [];
 }
 
-const BATCHES_RECENT: BatchItem[] = [
-  { date: 'Apr 14', txns: 28, amount: 1294.50, settled: true, time: '11:02 PM' },
-  { date: 'Apr 13', txns: 31, amount: 1387.00, settled: true, time: '11:01 PM' },
-  { date: 'Apr 12', txns: 24, amount: 1102.75, settled: true, time: '11:03 PM' },
-  { date: 'Apr 11', txns: 33, amount: 1521.25, settled: true, time: '11:01 PM' },
-  { date: 'Apr 10', txns: 27, amount: 1245.80, settled: true, time: '11:02 PM' },
-  { date: 'Apr 9', txns: 22, amount: 998.50, settled: true, time: '11:04 PM' },
-  { date: 'Apr 8', txns: 30, amount: 1356.20, settled: true, time: '11:01 PM' },
-];
+
+const BATCHES_RECENT: BatchItem[] = [];
+
 
 // ── Interchange Downgrade Data ──
-const DOWNGRADE_ALERTS = [
-  { txnDate: 'Mar 28', cardType: 'Visa Business', amount: 847.50, qualifiedAt: 'EIRF (Mid-Qual)', shouldBe: 'CPS Retail', cause: 'Missing Level II data on B2B card', lostBps: 65, lostDollars: 5.51 },
-  { txnDate: 'Mar 22', cardType: 'MC World Elite', amount: 1240.00, qualifiedAt: 'Standard', shouldBe: 'Merit III', cause: 'Non-EMV fallback — chip read failed', lostBps: 45, lostDollars: 5.58 },
-  { txnDate: 'Mar 18', cardType: 'Visa Signature', amount: 392.00, qualifiedAt: 'EIRF', shouldBe: 'CPS Rewards 1', cause: 'Keyed entry when terminal available', lostBps: 55, lostDollars: 2.16 },
-  { txnDate: 'Mar 15', cardType: 'Visa Business', amount: 1650.00, qualifiedAt: 'EIRF (Mid-Qual)', shouldBe: 'CPS Retail', cause: 'Missing Level II data on B2B card', lostBps: 65, lostDollars: 10.73 },
-  { txnDate: 'Mar 11', cardType: 'MC Corporate', amount: 2100.00, qualifiedAt: 'Standard', shouldBe: 'Data Rate I', cause: 'Missing Level II data on B2B card', lostBps: 70, lostDollars: 14.70 },
-  { txnDate: 'Mar 8', cardType: 'Visa Credit', amount: 156.80, qualifiedAt: 'Mid-Qual', shouldBe: 'CPS Retail', cause: 'Keyed entry when terminal available', lostBps: 55, lostDollars: 0.86 },
-];
+interface DowngradeAlert { txnDate: string; cardType: string; amount: number; qualifiedAt: string; shouldBe: string; cause: string; lostBps: number; lostDollars: number }
+
+const DOWNGRADE_ALERTS: DowngradeAlert[] = [];
+
 const DOWNGRADE_MONTHLY_LOSS = DOWNGRADE_ALERTS.reduce((s, d) => s + d.lostDollars, 0);
 
 // ── Approval/Decline Data ──
-const APPROVAL_DECLINE = {
-  total: 812, approved: 764, declined: 41, referred: 7,
-  declineReasons: [
-    { reason: 'Insufficient Funds', count: 18, pct: 43.9, revenue: 832.40 },
-    { reason: 'AVS Mismatch', count: 8, pct: 19.5, revenue: 412.00 },
-    { reason: 'Velocity Limit', count: 6, pct: 14.6, revenue: 287.50 },
-    { reason: 'Card Expired', count: 5, pct: 12.2, revenue: 198.75 },
-    { reason: 'Fraud Block', count: 3, pct: 7.3, revenue: 156.00 },
-    { reason: 'Other', count: 1, pct: 2.4, revenue: 45.00 },
-  ],
+// Authorization outcomes for the period, read from the processor's auth log.
+const APPROVAL_DECLINE: {
+  total: number; approved: number; declined: number; referred: number;
+  declineReasons: { reason: string; count: number; pct: number; revenue: number }[];
+} = {
+  total: 0, approved: 0, declined: 0, referred: 0,
+  declineReasons: [],
 };
 const TOTAL_DECLINED_REVENUE = APPROVAL_DECLINE.declineReasons.reduce((s, d) => s + d.revenue, 0);
 
@@ -220,13 +174,19 @@ export function MerchantResidualDetail() {
   const [showSchedule, setShowSchedule] = useState(false);
   const [disputeModal, setDisputeModal] = useState<{ open: boolean; chargeback: ChargebackItem | null }>({ open: false, chargeback: null });
 
-  const merchantId = currentPage.split('/residuals/')[1] || 'merchant-001';
-  const M = MERCHANTS[merchantId] || MERCHANTS['merchant-001'];
+  const merchantId = currentPage.split('/residuals/')[1] || '';
+  const M = MERCHANTS[merchantId] as MerchantData | undefined;
   const residuals = useMemo(() => getResiduals(merchantId), [merchantId]);
-  const equipment = useMemo(() => getEquipment(M), [merchantId]);
+  const equipment = useMemo(() => (M ? getEquipment(M) : []), [merchantId, M]);
 
-  const latestMonth = residuals[0];
-  const prevMonth = residuals[1];
+  // An empty month keeps the headline cards renderable before any residual
+  // statement has been imported for this merchant.
+  const EMPTY_MONTH: MonthlyResidual = {
+    month: '—', volume: 0, txns: 0, grossRev: 0, procFees: 0,
+    netRev: 0, agentShare: 0, deltNet: 0, effRate: 0, avgTicket: 0,
+  };
+  const latestMonth = residuals[0] ?? EMPTY_MONTH;
+  const prevMonth = residuals[1] ?? EMPTY_MONTH;
   const volDelta = prevMonth.volume > 0 ? (latestMonth.volume - prevMonth.volume) / prevMonth.volume : 0;
   const revDelta = prevMonth.netRev > 0 ? (latestMonth.netRev - prevMonth.netRev) / prevMonth.netRev : 0;
   const totalInterchangeCost = INTERCHANGE_BREAKDOWN.reduce((s, r) => s + r.cost, 0);
@@ -244,6 +204,27 @@ export function MerchantResidualDetail() {
     { key: 'chargebacks' as const, label: 'Chargebacks & Risk', icon: Shield },
     { key: 'batches' as const, label: 'Batch History', icon: FileText },
   ];
+
+  if (!M) {
+    return (
+      <div className="h-full overflow-y-auto bg-canvas">
+        <div className="max-w-[1440px] mx-auto px-6 py-6">
+          <div className="flex items-center gap-1.5 text-sm text-gray-400 mb-6">
+            <button onClick={() => navigate('/residuals')} className="text-brand hover:underline font-medium">Residuals</button>
+            <ChevronRight className="w-3.5 h-3.5" />
+            <span className="text-gray-600 font-medium">Merchant</span>
+          </div>
+          <div className="bg-white rounded-[8px] border border-gray-200">
+            <EmptyState
+              icon={Store}
+              title="Merchant not found"
+              description="This merchant has no record on file. Pick one from the residuals list to see its statement detail."
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-full overflow-y-auto bg-canvas">
@@ -406,6 +387,11 @@ export function MerchantResidualDetail() {
                         <td className="px-3 py-2.5 text-sm tabular-nums text-gray-700">{fmt(r.avgTicket)}</td>
                       </tr>
                     ))}
+                    {residuals.length === 0 && (
+                      <tr><td colSpan={99} className="p-0">
+                        <EmptyState icon={DollarSign} title="No residual history" description="Monthly residual statements for this merchant will appear here once imported." compact />
+                      </td></tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -675,6 +661,11 @@ export function MerchantResidualDetail() {
                           </Fragment>
                         );
                       })}
+                      {verifications.length === 0 && (
+                        <tr><td colSpan={99} className="p-0">
+                          <EmptyState icon={BarChart3} title="No interchange lines" description="Import a residual statement to verify reported rates against the published schedule." compact />
+                        </td></tr>
+                      )}
                       {/* Totals row */}
                       <tr className="bg-gray-50 font-semibold">
                         {verifyMode && <td className="px-3 py-2.5" />}
@@ -723,7 +714,13 @@ export function MerchantResidualDetail() {
                         <td className="px-3 py-2.5 text-xs text-gray-500 max-w-[200px]">{d.cause}</td>
                         <td className="px-3 py-2.5 text-sm tabular-nums font-semibold text-red-600">-{fmt(d.lostDollars)}</td>
                       </tr>
-                    ))}</tbody>
+                    ))}
+                    {DOWNGRADE_ALERTS.length === 0 && (
+                      <tr><td colSpan={99} className="p-0">
+                        <EmptyState icon={TrendingDown} title="No downgrades detected" description="Transactions that missed their target interchange tier will be flagged here." compact />
+                      </td></tr>
+                    )}
+                    </tbody>
                     <tfoot><tr className="border-t-2 border-gray-200 bg-red-50/30"><td colSpan={6} className="px-3 py-2.5 text-sm font-semibold text-gray-900">Total Monthly Downgrade Loss</td><td className="px-3 py-2.5 text-sm font-bold tabular-nums text-red-700">-{fmt(DOWNGRADE_MONTHLY_LOSS)}</td></tr></tfoot>
                   </table>
                 </div>
@@ -893,6 +890,9 @@ export function MerchantResidualDetail() {
                     </div>
                   </div>
                 ))}
+                {equipment.length === 0 && (
+                  <EmptyState icon={Monitor} title="No terminals deployed" description="Devices assigned to this merchant will be listed here." compact />
+                )}
               </div>
             </Card>
           </div>
@@ -930,6 +930,11 @@ export function MerchantResidualDetail() {
                         <td className="px-3 py-2.5"><span className="text-xs text-brand font-medium opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">Open Dispute <ChevronRight className="w-3 h-3" /></span></td>
                       </tr>
                     ))}
+                    {CHARGEBACKS.length === 0 && (
+                      <tr><td colSpan={99} className="p-0">
+                        <EmptyState icon={Shield} title="No chargebacks" description="Disputes filed against this merchant will be listed here." compact />
+                      </td></tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -1004,6 +1009,11 @@ export function MerchantResidualDetail() {
                         <td className="px-3 py-2.5 text-sm tabular-nums text-gray-700">{fmt(b.amount / b.txns)}</td>
                       </tr>
                     ))}
+                    {BATCHES_RECENT.length === 0 && (
+                      <tr><td colSpan={99} className="p-0">
+                        <EmptyState icon={Calendar} title="No batches" description="Nightly settlement batches appear here." compact />
+                      </td></tr>
+                    )}
                   </tbody>
                 </table>
               </div>

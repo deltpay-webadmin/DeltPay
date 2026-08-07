@@ -118,44 +118,51 @@ export function TemplateEditor() {
     return true;
   });
 
-  // Render preview with resolved merge tags (mock data)
-  const resolvePreview = (html: string) => {
-    return html
-      .replace(/\{\{merchant_name\}\}/g, 'Sunrise Cafe & Bakery')
-      .replace(/\{\{contact_name\}\}/g, 'John Smith')
-      .replace(/\{\{agent_name\}\}/g, 'Sarah Johnson')
-      .replace(/\{\{monthly_volume\}\}/g, '$37,500')
-      .replace(/\{\{monthly_savings\}\}/g, '$312')
-      .replace(/\{\{savings_percent\}\}/g, '0.18')
-      .replace(/\{\{current_rate\}\}/g, '3.2')
-      .replace(/\{\{proposed_rate\}\}/g, '2.85')
-      .replace(/\{\{booking_link\}\}/g, '#')
-      .replace(/\{\{approved_amount\}\}/g, '$75,000')
-      .replace(/\{\{factor_rate\}\}/g, '1.35')
-      .replace(/\{\{daily_payment\}\}/g, '$420')
-      .replace(/\{\{term\}\}/g, '8 months')
-      .replace(/\{\{phone\}\}/g, '(800) 555-DELT')
-      .replace(/\{\{percent_paid\}\}/g, '65')
-      .replace(/\{\{recommended_plan\}\}/g, 'Growth')
-      .replace(/\{\{upgrade_link\}\}/g, '#')
-      .replace(/\{\{feature_name\}\}/g, 'Tap to Pay')
-      .replace(/\{\{feature_description\}\}/g, 'Accept contactless payments directly on your phone.')
-      .replace(/\{\{feature_link\}\}/g, '#')
-      .replace(/\{\{visitors\}\}/g, '2,847')
-      .replace(/\{\{page_views\}\}/g, '8,234')
-      .replace(/\{\{avg_session\}\}/g, '2m 34s')
-      .replace(/\{\{bounce_rate\}\}/g, '42%')
-      .replace(/\{\{growth\}\}/g, '12')
-      .replace(/\{\{month\}\}/g, 'March 2026')
-      .replace(/\{\{dashboard_link\}\}/g, '#')
-      .replace(/\{\{apply_link\}\}/g, '#')
-      .replace(/\{\{renew_link\}\}/g, '#')
-      .replace(/\{\{report_link\}\}/g, '#')
-      .replace(/\{\{seo_link\}\}/g, '#')
-      .replace(/\{\{seo_tip_1\}\}/g, 'Add alt text to all images')
-      .replace(/\{\{seo_tip_2\}\}/g, 'Improve page load speed')
-      .replace(/\{\{seo_tip_3\}\}/g, 'Add a blog section');
+  /**
+   * Fill merge tags so the editor can show what a template looks like laid out.
+   * Values are bracketed placeholders, not sample records — a preview that
+   * reads "Sunrise Cafe & Bakery — save $312/mo" is indistinguishable from a
+   * real merchant at a glance, and these previews get screenshotted.
+   */
+  const PREVIEW_VALUES: Record<string, string> = {
+    merchant_name: '[Merchant Name]',
+    contact_name: '[Contact Name]',
+    agent_name: '[Agent Name]',
+    monthly_volume: '[Monthly Volume]',
+    monthly_savings: '[Monthly Savings]',
+    savings_percent: '[Savings %]',
+    current_rate: '[Current Rate]',
+    proposed_rate: '[Proposed Rate]',
+    approved_amount: '[Approved Amount]',
+    factor_rate: '[Factor Rate]',
+    daily_payment: '[Daily Payment]',
+    term: '[Term]',
+    phone: '[Phone]',
+    percent_paid: '[% Paid]',
+    recommended_plan: '[Recommended Plan]',
+    feature_name: '[Feature Name]',
+    feature_description: '[Feature Description]',
+    visitors: '[Visitors]',
+    page_views: '[Page Views]',
+    avg_session: '[Avg Session]',
+    bounce_rate: '[Bounce Rate]',
+    growth: '[Growth %]',
+    month: '[Month]',
+    seo_tip_1: '[SEO Tip 1]',
+    seo_tip_2: '[SEO Tip 2]',
+    seo_tip_3: '[SEO Tip 3]',
+    booking_link: '#',
+    upgrade_link: '#',
+    feature_link: '#',
+    dashboard_link: '#',
+    apply_link: '#',
+    renew_link: '#',
+    report_link: '#',
+    seo_link: '#',
   };
+
+  const resolvePreview = (html: string) =>
+    html.replace(/\{\{(\w+)\}\}/g, (match, tag: string) => PREVIEW_VALUES[tag] ?? match);
 
   const productLabel = (p: TemplateProduct) =>
     p === 'payments' ? 'Payments' : p === 'capital' ? 'Capital' : p === 'website' ? 'Website' : 'General';

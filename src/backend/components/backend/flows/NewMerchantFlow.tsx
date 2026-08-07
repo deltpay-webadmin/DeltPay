@@ -43,7 +43,10 @@ const STATES = [
   'NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY',
 ];
 
-const AGENTS = ['Sarah Johnson', 'Michael Chen', 'James Miller', 'Unassigned'];
+// Assignment options. These were hardcoded sample reps, which meant a real
+// lead could be assigned to a colleague who does not exist. Until the agent
+// roster is readable from Supabase, the only honest option is no assignment.
+const AGENTS = ['Unassigned'];
 
 export interface NewMerchantFlowProps {
   open: boolean;
@@ -61,7 +64,7 @@ export function NewMerchantFlow({ open, onClose, onCreated }: NewMerchantFlowPro
     contactName: '',
     contactEmail: '',
     contactPhone: '',
-    agent: 'Sarah Johnson',
+    agent: 'Unassigned',
     plan: 'Growth' as PlanTier,
     products: {
       processing: true,

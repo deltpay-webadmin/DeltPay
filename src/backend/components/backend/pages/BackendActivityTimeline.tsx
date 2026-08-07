@@ -133,11 +133,11 @@ export function BackendActivityTimeline() {
     let currentDate = '';
     for (const ev of filtered) {
       const d = ev.timestamp.split(' ')[0];
-      const label = d === '2026-04-17' ? 'Today — Apr 17' : d === '2026-04-16' ? 'Yesterday — Apr 16' : d.replace('2026-0', 'Apr ').replace('4-', '').replace('2026-', '');
-      const dateLabel = d === '2026-04-17' ? 'Today — Apr 17' : d === '2026-04-16' ? 'Yesterday — Apr 16' :
-        d === '2026-04-15' ? 'Apr 15' : d === '2026-04-14' ? 'Apr 14' : d === '2026-04-13' ? 'Apr 13' :
-        d === '2026-04-12' ? 'Apr 12' : d === '2026-04-11' ? 'Apr 11' : d === '2026-04-10' ? 'Apr 10' :
-        d === '2026-04-09' ? 'Apr 9' : d === '2026-04-08' ? 'Apr 8' : d;
+      // Relative labels for the two most recent days, absolute dates before that.
+      const today = new Date().toISOString().slice(0, 10);
+      const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+      const absolute = new Date(d + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      const dateLabel = d === today ? `Today — ${absolute}` : d === yesterday ? `Yesterday — ${absolute}` : absolute;
       if (d !== currentDate) {
         groups.push({ date: dateLabel, events: [] });
         currentDate = d;

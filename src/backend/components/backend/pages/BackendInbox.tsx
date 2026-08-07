@@ -5,7 +5,7 @@ import {
   Paperclip, Star, StarOff, Archive, Reply, Forward,
   Edit3, Filter, ArrowRight, Eye, MoreHorizontal,
   Inbox, ChevronDown, Circle, ExternalLink, Calendar,
-  Mic, PhoneOff, PhoneIncoming, PhoneOutgoing,
+  Mic, PhoneOff, PhoneIncoming, PhoneOutgoing, FileText,
 } from 'lucide-react';
 
 // ── Types ──

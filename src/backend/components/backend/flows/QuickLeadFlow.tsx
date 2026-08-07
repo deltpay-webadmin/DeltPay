@@ -26,7 +26,10 @@ const SOURCES = [
   'Other',
 ];
 
-const AGENTS = ['Sarah Johnson', 'Michael Chen', 'James Miller', 'Unassigned'];
+// Assignment options. These were hardcoded sample reps, which meant a real
+// lead could be assigned to a colleague who does not exist. Until the agent
+// roster is readable from Supabase, the only honest option is no assignment.
+const AGENTS = ['Unassigned'];
 
 const PRODUCT_TYPES: { value: Lead['type']; label: string; icon: React.ElementType }[] = [
   { value: 'Processing', label: 'Processing', icon: CreditCard },

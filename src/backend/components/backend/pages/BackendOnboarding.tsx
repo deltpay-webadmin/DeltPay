@@ -40,7 +40,10 @@ const STEP_SHORT: Record<StepName, string> = {
 };
 
 // Team members available for reassignment
-const AGENTS = ['Marcus Johnson', 'Priya Patel', 'Jamal Foster', 'Devon Richards', 'Sarah Kim', 'Alex Rivera'];
+// Assignment options. These were hardcoded sample reps, which meant a real
+// lead could be assigned to a colleague who does not exist. Until the agent
+// roster is readable from Supabase, the only honest option is no assignment.
+const AGENTS = ['Unassigned'];
 
 
 function slaDot(status: SLAStatus) {

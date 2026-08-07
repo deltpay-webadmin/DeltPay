@@ -83,7 +83,10 @@ const SOURCES = [
   'Other',
 ];
 
-const AGENTS = ['Sarah Johnson', 'Michael Chen', 'James Miller', 'Unassigned'];
+// Assignment options. These were hardcoded sample reps, which meant a real
+// lead could be assigned to a colleague who does not exist. Until the agent
+// roster is readable from Supabase, the only honest option is no assignment.
+const AGENTS = ['Unassigned'];
 
 const US_STATES = [
   'AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA',
@@ -232,7 +235,7 @@ export function NewLeadFlow({ open, onClose, onCreated }: NewLeadFlowProps) {
 
     // Step 8 — Assignment + attestation
     source: 'Website Inquiry',
-    assignedAgent: 'Sarah Johnson',
+    assignedAgent: 'Unassigned',
     priority: 'Medium' as Lead['priority'],
     notes: '',
     attestCertified: false,

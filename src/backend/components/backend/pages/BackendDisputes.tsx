@@ -7,6 +7,7 @@ import {
   ChevronDown, X, Paperclip, MessageSquare, User, Calendar,
   Zap, Activity,
 } from 'lucide-react';
+import { EmptyState } from '../EmptyPageState';
 
 // ══════════════════════════════════════
 // TYPES & DATA
@@ -92,6 +93,18 @@ const stageConfig: Record<DisputeStage, { label: string; color: string; bg: stri
   won: { label: 'Won', color: 'text-emerald-700', bg: 'bg-emerald-50' },
   lost: { label: 'Lost', color: 'text-red-700', bg: 'bg-red-50' },
 };
+
+/**
+ * Per-merchant chargeback ratios, measured against the network limit that
+ * applies to that merchant (Visa 1%, Mastercard 1.5% — those thresholds are
+ * published rules). Counts come from the processor; nothing is assumed.
+ */
+interface MerchantCbRatio {
+  merchant: string; txnCount: number; cbCount: number;
+  network: string; threshold: number; ratio: number; pctOfThreshold: number;
+}
+
+const MERCHANT_CB_RATIOS: MerchantCbRatio[] = [];
 
 const STAGE_ORDER: DisputeStage[] = ['new', 'evidence', 'draft', 'review', 'submitted', 'awaiting', 'won'];
 
@@ -840,11 +853,7 @@ export function BackendDisputes() {
               </div>
               <div className="px-5 py-4">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {[
-                    { merchant: 'Havana Bites Cafe', txnCount: 1247, cbCount: 3, ratio: 0.0024, threshold: 0.01, network: 'Visa' },
-                    { merchant: 'Coral Reef Auto Spa', txnCount: 892, cbCount: 2, ratio: 0.0022, threshold: 0.01, network: 'Visa' },
-                    { merchant: 'SoBe Cycle & Fitness', txnCount: 456, cbCount: 1, ratio: 0.0022, threshold: 0.015, network: 'Mastercard' },
-                  ].map((m, i) => {
+                  {MERCHANT_CB_RATIOS.map((m, i) => {
                     const pctOfThreshold = m.ratio / m.threshold;
                     const color = pctOfThreshold >= 0.8 ? 'text-red-600' : pctOfThreshold >= 0.5 ? 'text-amber-600' : 'text-emerald-600';
                     const barColor = pctOfThreshold >= 0.8 ? 'bg-red-500' : pctOfThreshold >= 0.5 ? 'bg-amber-500' : 'bg-emerald-500';
@@ -863,6 +872,9 @@ export function BackendDisputes() {
                     );
                   })}
                 </div>
+                {MERCHANT_CB_RATIOS.length === 0 && (
+                  <EmptyState icon={Activity} title="No ratios to monitor" description="Per-merchant chargeback ratios appear here once transaction and dispute counts are connected." compact />
+                )}
               </div>
             </div>
           </div>
@@ -879,14 +891,7 @@ export function BackendDisputes() {
           const laborPerDispute = LABOR_RATE_PER_HOUR * AVG_HOURS_PER_DISPUTE;
 
           // Merchant CB ratio data for fine exposure
-          const merchantRatios = [
-            { merchant: 'Havana Bites Cafe', txnCount: 1247, cbCount: 3, network: 'Visa', threshold: 0.01 },
-            { merchant: 'Coral Reef Auto Spa', txnCount: 892, cbCount: 2, network: 'Visa', threshold: 0.01 },
-            { merchant: 'SoBe Cycle & Fitness', txnCount: 456, cbCount: 1, network: 'Mastercard', threshold: 0.015 },
-            { merchant: 'Doral Fresh Market', txnCount: 1034, cbCount: 2, network: 'Visa', threshold: 0.01 },
-            { merchant: 'Hialeah Tire & Brake', txnCount: 678, cbCount: 1, network: 'Visa', threshold: 0.01 },
-            { merchant: 'Midtown Taqueria', txnCount: 1560, cbCount: 1, network: 'Visa', threshold: 0.01 },
-          ].map(m => ({ ...m, ratio: m.cbCount / m.txnCount, pctOfThreshold: (m.cbCount / m.txnCount) / m.threshold }));
+          const merchantRatios = MERCHANT_CB_RATIOS;
 
           // Network fine tiers
           const fineExposure = merchantRatios.filter(m => m.pctOfThreshold >= 0.5);

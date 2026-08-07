@@ -20,7 +20,10 @@ import {
 } from './OnboardingFlow';
 import { dealActions, type Deal, type DealType } from '../crmStore';
 
-const AGENTS = ['Marcus J.', 'Sarah K.', 'Michael Chen', 'James Miller', 'Unassigned'];
+// Assignment options. These were hardcoded sample reps, which meant a real
+// lead could be assigned to a colleague who does not exist. Until the agent
+// roster is readable from Supabase, the only honest option is no assignment.
+const AGENTS = ['Unassigned'];
 
 const fmtMoney = (n: number) =>
   n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });

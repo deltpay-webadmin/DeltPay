@@ -14,7 +14,7 @@ import {
 
 const fmtDate = (d: string) => {
   const dt = new Date(d + 'T12:00:00');
-  const now = new Date('2026-04-20T12:00:00');
+  const now = new Date();
   const diff = Math.floor((now.getTime() - dt.getTime()) / 86400000);
   if (diff === 0) return 'Today';
   if (diff === 1) return 'Yesterday';
@@ -142,7 +142,7 @@ export function BackendWorkspace() {
   const filteredTasks = TASKS.filter(t => {
     if (t.status === 'done') return false;
     if (taskFilter === 'overdue') return t.overdue;
-    if (taskFilter === 'today') return t.dueDate === '2026-04-20' || t.overdue;
+    if (taskFilter === 'today') return t.dueDate === new Date().toISOString().slice(0, 10) || t.overdue;
     return true;
   });
 

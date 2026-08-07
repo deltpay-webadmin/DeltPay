@@ -55,6 +55,10 @@ const CATEGORY_CONFIG: Record<TaskCategory, { color: string; bg: string; icon: R
 
 const TASKS: Task[] = [];
 
+// Assignee options, drawn from the people already carrying tasks. Previously a
+// hardcoded trio of names, which let a task be assigned to nobody real.
+const ASSIGNEES = Array.from(new Set(TASKS.map(t => t.assignee))).sort();
+
 // ── New Task Modal ──
 function NewTaskModal({ onClose }: { onClose: () => void }) {
   const [title, setTitle] = useState('');
@@ -109,10 +113,8 @@ function NewTaskModal({ onClose }: { onClose: () => void }) {
               <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1 block">Assignee</label>
               <select value={assignee} onChange={e => setAssignee(e.target.value)}
                 className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-[6px] text-xs focus:outline-none focus:ring-2 focus:ring-brand/20">
-                <option value="">Select...</option>
-                <option>Marcus Johnson</option>
-                <option>Sarah Kim</option>
-                <option>James Miller</option>
+                <option value="">Unassigned</option>
+                {ASSIGNEES.map(a => <option key={a}>{a}</option>)}
               </select>
             </div>
             <div>

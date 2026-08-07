@@ -456,7 +456,8 @@ function AgentDetailView({ agent, onBack }: { agent: Agent; onBack: () => void }
 
   // ── Schedule A / rate popover state ──
   const [ratePopover, setRatePopover] = useState<string | null>(null);
-  const [uploadedScheduleA, setUploadedScheduleA] = useState<Set<string>>(new Set(['Metro Diner Group', 'Peak Construction Co', 'Bay Area Plumbing', 'Coastal Seafood Inc']));
+  // Merchants whose Schedule A has been uploaded this session.
+  const [uploadedScheduleA, setUploadedScheduleA] = useState<Set<string>>(new Set());
 
   const merchants = merchantPortfolios[agent.id] || defaultMerchants;
   const commHistory = commissionHistories[agent.id] || defaultCommHistory;

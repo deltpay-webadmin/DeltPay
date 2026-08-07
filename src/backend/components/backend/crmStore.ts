@@ -420,48 +420,6 @@ export interface CrmState {
 }
 
 // ══════════════════════════════════════════════════════════════
-// Fallback seed data — used only when Supabase is NOT configured.
-// Keeps the app functional in preview / contributor environments.
-// ══════════════════════════════════════════════════════════════
-
-const fallbackSeed: CrmState = {
-  leads: [
-    {
-      id: 'lead-001',
-      businessName: 'Green Valley Auto Repair',
-      industry: 'Automotive',
-      contactName: 'Robert Martinez',
-      contactEmail: 'robert@greenvalleyauto.com',
-      contactPhone: '(555) 123-4567',
-      type: 'MCA',
-      source: 'Website Inquiry',
-      monthlySales: '$45,000',
-      amountRequested: '$75,000',
-      score: 82,
-      status: 'In Progress',
-      priority: 'High',
-      lastActivity: '2 hours ago',
-      assignedAgent: 'Sarah Johnson',
-      stage: 'Qualified',
-      timeline: [
-        { title: 'Follow-up call completed', description: 'Discussed terms and pricing structure', user: 'Sarah Johnson', timestamp: '2 hours ago' },
-      ],
-      notes: 'Strong financials. Owner is motivated and ready to move forward.',
-      referredBy: 'Metro Diner Group',
-      tasks: [
-        { id: 't1', title: 'Follow up call scheduled', due: 'Tomorrow at 2:00 PM', done: false },
-      ],
-    },
-  ],
-  onboarding: [],
-  underwriting: [],
-  referrals: [],
-  program: { rewardAmount: '100', freeMonths: '1', planTier: 'Growth' },
-  merchants: [],
-  deals: [],
-};
-
-// ══════════════════════════════════════════════════════════════
 // Store (pub/sub)
 // ══════════════════════════════════════════════════════════════
 
@@ -856,9 +814,10 @@ async function maybeHydrate() {
   if (hydrated || hydrating) return;
 
   if (!supabase) {
-    // Offline mode — load fallback seed once so screens aren't empty.
+    // Offline mode. The store stays empty — it used to load a seed set of
+    // invented leads here "so screens aren't empty", but a lead that looks
+    // real and cannot be saved is worse than an empty pipeline.
     hydrated = true;
-    set(fallbackSeed);
     setSync({ isLoading: false, isOnline: false });
     return;
   }

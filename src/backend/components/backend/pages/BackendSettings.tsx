@@ -5,13 +5,14 @@ import {
 } from 'lucide-react';
 import { useAppNavigate } from '../NavigationContext';
 import { useLang } from '../i18n';
+import { EmptyState } from '../EmptyPageState';
 
 // ─── ROLE DEFINITIONS ───────────────────────────────────────────
 const ROLES = [
-  { id: 'super_admin', name: 'Super Admin', description: 'Full platform access. Company settings, financials, RBAC, all modules.', color: '#2E6BFF', userCount: 2, isSystem: true },
-  { id: 'admin', name: 'Admin', description: 'Operational access across all modules. Cannot modify roles, billing, or company settings.', color: '#2BB56D', userCount: 1, isSystem: true },
-  { id: 'agent', name: 'Agent', description: 'Portfolio-scoped access. Sees only assigned merchants, leads, and own compensation.', color: '#F0B429', userCount: 4, isSystem: true },
-  { id: 'viewer', name: 'Viewer', description: 'Read-only access to assigned modules. Cannot create, edit, or delete records.', color: '#6b7280', userCount: 1, isSystem: false },
+  { id: 'super_admin', name: 'Super Admin', description: 'Full platform access. Company settings, financials, RBAC, all modules.', color: '#2E6BFF', isSystem: true },
+  { id: 'admin', name: 'Admin', description: 'Operational access across all modules. Cannot modify roles, billing, or company settings.', color: '#2BB56D', isSystem: true },
+  { id: 'agent', name: 'Agent', description: 'Portfolio-scoped access. Sees only assigned merchants, leads, and own compensation.', color: '#F0B429', isSystem: true },
+  { id: 'viewer', name: 'Viewer', description: 'Read-only access to assigned modules. Cannot create, edit, or delete records.', color: '#6b7280', isSystem: false },
 ];
 
 const PERMISSION_MODULES = [
@@ -54,30 +55,37 @@ const DEFAULT_PERMS: Record<string, any> = {
 };
 
 // ─── USERS ──────────────────────────────────────────────────────
-const USERS = [
-  { id: 1, name: 'David Hazday', email: 'david@deltpay.com', role: 'super_admin', avatar: 'DH', status: 'active', lastActive: 'Just now', territories: ['Miami-Dade', 'Broward'], portfolioCount: 8, split: undefined as number | undefined, portfolioCap: undefined as number | undefined, monthlyVolume: undefined as number | undefined },
-  { id: 2, name: 'Anshu', email: 'anshu@deltpay.com', role: 'super_admin', avatar: 'AN', status: 'active', lastActive: '2 hours ago', territories: [] as string[], portfolioCount: 0, split: undefined as number | undefined, portfolioCap: undefined as number | undefined, monthlyVolume: undefined as number | undefined },
-  { id: 3, name: 'Patrick', email: 'patrick@deltpay.com', role: 'admin', avatar: 'PK', status: 'active', lastActive: '1 hour ago', territories: [] as string[], portfolioCount: 0, split: undefined as number | undefined, portfolioCap: undefined as number | undefined, monthlyVolume: undefined as number | undefined },
-  { id: 4, name: 'Sarah Johnson', email: 'sarah@deltpay.com', role: 'agent', avatar: 'SJ', status: 'active', lastActive: '3 hours ago', split: 50, territories: ['Miami-Dade'], portfolioCount: 3, portfolioCap: 25, monthlyVolume: 131900 },
-  { id: 5, name: 'Michael Chen', email: 'michael@deltpay.com', role: 'agent', avatar: 'MC', status: 'active', lastActive: '1 day ago', split: 50, territories: ['Broward', 'Palm Beach'], portfolioCount: 3, portfolioCap: 25, monthlyVolume: 187200 },
-  { id: 6, name: 'James Miller', email: 'james@deltpay.com', role: 'agent', avatar: 'JM', status: 'active', lastActive: '5 hours ago', split: 50, territories: ['Miami-Dade'], portfolioCount: 2, portfolioCap: 25, monthlyVolume: 165700 },
-  { id: 7, name: 'Lyndon', email: 'lyndon@deltpay.com', role: 'agent', avatar: 'LY', status: 'active', lastActive: '1 week ago', split: 40, territories: ['Outbound'], portfolioCount: 0, portfolioCap: 15, monthlyVolume: 0 },
-  { id: 8, name: 'Jason', email: 'jason@deltpay.com', role: 'viewer', avatar: 'JS', status: 'active', lastActive: '3 days ago', territories: [] as string[], portfolioCount: 0, split: undefined as number | undefined, portfolioCap: undefined as number | undefined, monthlyVolume: undefined as number | undefined },
-];
+// The team roster comes from org membership, not a hardcoded list. Empty until
+// that read is wired up — showing invented colleagues with invented books is
+// worse than showing none.
+interface OrgUser {
+  id: number; name: string; email: string; role: string; avatar: string;
+  status: string; lastActive: string; territories: string[]; portfolioCount: number;
+  split?: number; portfolioCap?: number; monthlyVolume?: number;
+}
+
+const USERS: OrgUser[] = [];
 
 // ─── INTEGRATIONS ───────────────────────────────────────────────
-const INTEGRATIONS = [
-  { id: 'north', name: 'North (NAB)', category: 'Processor', status: 'connected', lastSync: 'Apr 14, 2026', health: 98, description: 'ISO payment processing, residual reports' },
-  { id: 'ach', name: 'ACH.com', category: 'Payments', status: 'connected', lastSync: 'Apr 14, 2026', health: 100, description: 'Recurring ACH debits for MCA collections' },
-  { id: 'plaid', name: 'Plaid', category: 'Underwriting', status: 'connected', lastSync: 'Apr 15, 2026', health: 95, description: 'Bank verification, transaction data, identity' },
-  { id: 'sentilink', name: 'SentiLink', category: 'Underwriting', status: 'connected', lastSync: 'Apr 12, 2026', health: 100, description: 'Synthetic identity fraud detection' },
-  { id: 'crs', name: 'CRS Credit', category: 'Underwriting', status: 'connected', lastSync: 'Apr 10, 2026', health: 92, description: 'Commercial credit reporting' },
-  { id: 'ficoso', name: 'FiCoSo', category: 'Legal', status: 'connected', lastSync: 'Apr 14, 2026', health: 100, description: 'UCC filing and lien management' },
-  { id: 'datamerch', name: 'DataMerch', category: 'Risk', status: 'connected', lastSync: 'Apr 14, 2026', health: 100, description: 'MCA industry default database' },
-  { id: '10web', name: '10Web', category: 'Websites', status: 'connected', lastSync: 'Apr 13, 2026', health: 88, description: 'AI website builder — white-label merchant sites' },
-  { id: 'qbo', name: 'QuickBooks Online', category: 'Accounting', status: 'connected', lastSync: 'Apr 15, 2026', health: 97, description: 'Chart of accounts, MCA journal entries' },
-  { id: 'ollama', name: 'Ollama / Qwen', category: 'AI', status: 'connected', lastSync: 'Apr 15, 2026', health: 100, description: 'Local LLM for Lens AI intelligence layer' },
-  { id: 'stripe', name: 'Stripe', category: 'Billing', status: 'disconnected', lastSync: '—', health: 0, description: 'Platform billing and subscription management' },
+// The catalog of integrations Delt supports is real product config. Connection
+// state and health are per-environment readings, so they start unknown rather
+// than claiming every vendor is live.
+const INTEGRATIONS: {
+  id: string; name: string; category: string;
+  status: 'connected' | 'disconnected'; lastSync: string | null; health: number | null;
+  description: string;
+}[] = [
+  { id: 'north', name: 'North (NAB)', category: 'Processor', status: 'disconnected', lastSync: null, health: null, description: 'ISO payment processing, residual reports' },
+  { id: 'ach', name: 'ACH.com', category: 'Payments', status: 'disconnected', lastSync: null, health: null, description: 'Recurring ACH debits for MCA collections' },
+  { id: 'plaid', name: 'Plaid', category: 'Underwriting', status: 'disconnected', lastSync: null, health: null, description: 'Bank verification, transaction data, identity' },
+  { id: 'sentilink', name: 'SentiLink', category: 'Underwriting', status: 'disconnected', lastSync: null, health: null, description: 'Synthetic identity fraud detection' },
+  { id: 'crs', name: 'CRS Credit', category: 'Underwriting', status: 'disconnected', lastSync: null, health: null, description: 'Commercial credit reporting' },
+  { id: 'ficoso', name: 'FiCoSo', category: 'Legal', status: 'disconnected', lastSync: null, health: null, description: 'UCC filing and lien management' },
+  { id: 'datamerch', name: 'DataMerch', category: 'Risk', status: 'disconnected', lastSync: null, health: null, description: 'MCA industry default database' },
+  { id: '10web', name: '10Web', category: 'Websites', status: 'disconnected', lastSync: null, health: null, description: 'AI website builder — white-label merchant sites' },
+  { id: 'qbo', name: 'QuickBooks Online', category: 'Accounting', status: 'disconnected', lastSync: null, health: null, description: 'Chart of accounts, MCA journal entries' },
+  { id: 'ollama', name: 'Ollama / Qwen', category: 'AI', status: 'disconnected', lastSync: null, health: null, description: 'Local LLM for Lens AI intelligence layer' },
+  { id: 'stripe', name: 'Stripe', category: 'Billing', status: 'disconnected', lastSync: null, health: null, description: 'Platform billing and subscription management' },
 ];
 
 // ─── GENERAL SETTINGS ───────────────────────────────────────────
@@ -143,16 +151,9 @@ const GENERAL_SECTIONS: SettingsSection[] = [
 ];
 
 // ─── AUDIT LOG ──────────────────────────────────────────────────
-const AUDIT_LOG = [
-  { time: 'Apr 15, 2:34 PM', user: 'David Hazday', action: 'Updated processing defaults — margin floor set to 0.50%', module: 'Settings' },
-  { time: 'Apr 15, 1:12 PM', user: 'David Hazday', action: 'Verified interchange for Sunrise Cafe — flagged Visa Qual +14bps', module: 'Residuals' },
-  { time: 'Apr 14, 4:45 PM', user: 'Patrick', action: 'Uploaded March 2026 residual report — 8 merchants processed', module: 'Residuals' },
-  { time: 'Apr 14, 11:20 AM', user: 'Michael Chen', action: 'Created new lead: TechForward Solutions', module: 'Pipeline' },
-  { time: 'Apr 13, 3:15 PM', user: 'David Hazday', action: 'Approved MCA UW-2026-0145: Urban Wellness Spa — $150K at 1.36x', module: 'Capital' },
-  { time: 'Apr 12, 9:00 AM', user: 'Sarah Johnson', action: 'Moved Coastal Construction to Bank Verification stage', module: 'Pipeline' },
-  { time: 'Apr 11, 2:30 PM', user: 'David Hazday', action: 'Changed James Miller commission split from 45% → 50%', module: 'Team' },
-  { time: 'Apr 10, 10:45 AM', user: 'David Hazday', action: 'Connected CRS Credit integration — health check passed 92%', module: 'Settings' },
-];
+interface AuditEntry { time: string; user: string; action: string; module: string }
+
+const AUDIT_LOG: AuditEntry[] = [];
 
 type SettingsTab = 'general' | 'integrations' | 'roles' | 'users' | 'audit';
 
@@ -313,7 +314,7 @@ export function BackendSettings() {
                   </span>
                 </div>
                 <p className="text-xs text-gray-500 leading-relaxed">{int.description}</p>
-                {int.status === 'connected' && (
+                {int.status === 'connected' && int.health !== null && (
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 flex-1">
                       <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
@@ -373,7 +374,7 @@ export function BackendSettings() {
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
-                        <span className="text-xs font-mono text-gray-500">{role.userCount} user{role.userCount !== 1 ? 's' : ''}</span>
+                        <span className="text-xs font-mono text-gray-500">{USERS.filter(u => u.role === role.id).length} user{USERS.filter(u => u.role === role.id).length !== 1 ? 's' : ''}</span>
                         {role.isSystem && <span className="text-[10px] font-semibold text-brand bg-brand/8 px-2 py-0.5 rounded">System</span>}
                         <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${open ? 'rotate-180' : ''}`} />
                       </div>
@@ -519,6 +520,9 @@ export function BackendSettings() {
                   })}
                 </tbody>
               </table>
+              {USERS.length === 0 && (
+                <EmptyState icon={Users} title="No team members" description="Users appear here once they are invited to the workspace." compact />
+              )}
             </div>
           </div>
         )}
@@ -536,6 +540,9 @@ export function BackendSettings() {
                   <span className="text-[11px] font-medium text-brand bg-brand/5 px-2.5 py-0.5 rounded shrink-0">{log.module}</span>
                 </div>
               ))}
+              {AUDIT_LOG.length === 0 && (
+                <EmptyState icon={ClipboardList} title="No audit entries" description="Administrative actions are recorded here as they happen." compact />
+              )}
             </div>
           </div>
         )}
