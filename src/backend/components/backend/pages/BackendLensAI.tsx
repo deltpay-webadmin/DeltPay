@@ -21,6 +21,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
+import { EmptyState } from '../EmptyPageState';
 
 type Tab = 'dashboard' | 'ask';
 
@@ -58,38 +59,16 @@ function HealthRing({ score, size = 100 }: { score: number; size?: number }) {
 }
 
 // ── Data ──
-const alerts = [
-  {
-    severity: 'critical' as const,
-    title: 'Cash Shortfall Projected in 47 Days',
-    desc: 'Based on current collection rates and upcoming capital obligations, net cash position will fall below the $50K safety threshold by late May. Three large COC payments due in the same week.',
-    actions: ['View Forecast', 'Adjust Reserves'],
-  },
-  {
-    severity: 'warning' as const,
-    title: '3 Merchants Declining — Not Contacted 30+ Days',
-    desc: 'Sunset Logistics, Coastal Seafood, and Riverdale Dental show declining ACH volumes with no agent touch-points in 30+ days. Estimated revenue at risk: $12,400/mo.',
-    actions: ['Assign Outreach', 'View Merchants'],
-  },
-  {
-    severity: 'warning' as const,
-    title: 'Agent Commission Spike — Marcus J. +38% MoM',
-    desc: 'Commission payout for Marcus J. increased 38% month-over-month. Driven by two large MCA deals funded in the same week. Review for compliance.',
-    actions: ['Review Deals', 'Dismiss'],
-  },
-  {
-    severity: 'info' as const,
-    title: '4 Renewal Opportunities Ready',
-    desc: 'Metro Diner, Bright Auto, Apex Fitness, and Peak Construction have all crossed the 50% repayment threshold. Combined renewal potential: $340K in new funding.',
-    actions: ['Generate Offers', 'View Details'],
-  },
-  {
-    severity: 'info' as const,
-    title: 'Portfolio Concentration Alert — Transportation 28%',
-    desc: 'Transportation & Logistics now represents 28% of deployed capital, exceeding the 25% sector concentration guideline. Consider diversifying new deal flow.',
-    actions: ['View Breakdown', 'Acknowledge'],
-  },
-];
+// Lens AI surfaces alerts from the live portfolio. Nothing is pre-seeded — an
+// invented "cash shortfall in 47 days" is worse than no alert at all.
+interface LensAlert {
+  severity: 'critical' | 'warning' | 'info';
+  title: string;
+  desc: string;
+  actions: string[];
+}
+
+const alerts: LensAlert[] = [];
 
 const sevConfig = {
   critical: { bg: 'bg-red-50 border-red-200', iconBg: 'bg-red-100', icon: 'text-red-500', badge: 'bg-red-500 text-white' },
@@ -97,21 +76,19 @@ const sevConfig = {
   info: { bg: 'bg-indigo-50/60 border-indigo-200', iconBg: 'bg-indigo-100', icon: 'text-indigo-600', badge: 'bg-indigo-500 text-white' },
 };
 
-const flowCastData = [
-  { month: 'May', projected: 142000, low: 118000, high: 166000, actual: null },
-  { month: 'Jun', projected: 155000, low: 125000, high: 185000, actual: null },
-  { month: 'Jul', projected: 148000, low: 112000, high: 184000, actual: null },
-  { month: 'Aug', projected: 162000, low: 128000, high: 196000, actual: null },
-  { month: 'Sep', projected: 170000, low: 134000, high: 206000, actual: null },
-  { month: 'Oct', projected: 178000, low: 140000, high: 216000, actual: null },
-];
+// FlowCast projection: forecast months plus the trailing actuals they are
+// anchored to. Both come from the ledger once it is connected.
+interface FlowCastPoint {
+  month: string;
+  projected: number;
+  low: number;
+  high: number;
+  actual: number | null;
+}
 
-// prepend 2 months of actuals
-const chartData = [
-  { month: 'Mar', projected: 138000, low: 138000, high: 138000, actual: 138000 },
-  { month: 'Apr', projected: 145000, low: 145000, high: 145000, actual: 131000 },
-  ...flowCastData,
-];
+const flowCastData: FlowCastPoint[] = [];
+
+const chartData: FlowCastPoint[] = [...flowCastData];
 
 const suggestedPrompts = [
   { icon: Users, text: 'Which agents have the highest default rate over $50K?' },
@@ -233,9 +210,9 @@ function DashboardTab() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Health Score */}
         <div className="bg-white rounded-[8px] border border-gray-200 p-5 flex flex-col items-center">
-          <HealthRing score={74} size={96} />
+          <HealthRing score={0} size={96} />
           <p className="text-sm font-semibold text-gray-900 mt-3">Portfolio Health</p>
-          <p className="text-xs text-gray-500">Good — 2 items need attention</p>
+          <p className="text-xs text-gray-500">Not enough data to score</p>
         </div>
 
         {/* Predicted Collections */}
@@ -244,9 +221,8 @@ function DashboardTab() {
             <div className="w-9 h-9 bg-emerald-50 rounded-lg flex items-center justify-center">
               <TrendingUp className="w-5 h-5 text-emerald-600" />
             </div>
-            <span className="text-xs text-emerald-600 font-medium bg-emerald-50 px-2 py-0.5 rounded-full">+8.2%</span>
           </div>
-          <p className="text-2xl font-bold text-gray-900 tabular-nums">$142K</p>
+          <p className="text-2xl font-bold text-gray-900 tabular-nums">$0</p>
           <p className="text-sm text-gray-500 mt-1">Predicted Collections</p>
           <p className="text-xs text-gray-400 mt-0.5">Next 30 days</p>
         </div>
@@ -257,11 +233,10 @@ function DashboardTab() {
             <div className="w-9 h-9 bg-amber-50 rounded-lg flex items-center justify-center">
               <AlertTriangle className="w-5 h-5 text-amber-500" />
             </div>
-            <span className="text-xs text-red-500 font-medium bg-red-50 px-2 py-0.5 rounded-full">+1 this week</span>
           </div>
-          <p className="text-2xl font-bold text-gray-900 tabular-nums">5</p>
+          <p className="text-2xl font-bold text-gray-900 tabular-nums">0</p>
           <p className="text-sm text-gray-500 mt-1">At-Risk Deals</p>
-          <p className="text-xs text-gray-400 mt-0.5">$214K total exposure</p>
+          <p className="text-xs text-gray-400 mt-0.5">$0 total exposure</p>
         </div>
 
         {/* Renewal Opportunities */}
@@ -270,9 +245,8 @@ function DashboardTab() {
             <div className="w-9 h-9 bg-indigo-50 rounded-lg flex items-center justify-center">
               <RotateCcw className="w-5 h-5 text-indigo-600" />
             </div>
-            <span className="text-xs text-indigo-600 font-medium bg-indigo-50 px-2 py-0.5 rounded-full">$340K potential</span>
           </div>
-          <p className="text-2xl font-bold text-gray-900 tabular-nums">4</p>
+          <p className="text-2xl font-bold text-gray-900 tabular-nums">0</p>
           <p className="text-sm text-gray-500 mt-1">Renewal Opportunities</p>
           <p className="text-xs text-gray-400 mt-0.5">&gt;50% repaid</p>
         </div>
@@ -326,6 +300,11 @@ function DashboardTab() {
               </div>
             );
           })}
+          {alerts.length === 0 && (
+            <div className="bg-white rounded-[8px] border border-gray-200">
+              <EmptyState icon={Sparkles} title="No alerts" description="Lens AI raises cash-flow, retention, and concentration alerts as portfolio data accumulates." compact />
+            </div>
+          )}
         </div>
       </div>
 
@@ -353,6 +332,11 @@ function DashboardTab() {
         </div>
         <div className="px-5 py-4">
           <div className="h-72">
+            {chartData.length === 0 ? (
+              <div className="h-full flex items-center justify-center">
+                <EmptyState icon={TrendingUp} title="No projection yet" description="FlowCast needs collection history before it can project forward." compact />
+              </div>
+            ) : (
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={chartData}>
                 <defs>
@@ -393,6 +377,7 @@ function DashboardTab() {
                 }} connectNulls={false} />
               </AreaChart>
             </ResponsiveContainer>
+            )}
           </div>
         </div>
       </div>

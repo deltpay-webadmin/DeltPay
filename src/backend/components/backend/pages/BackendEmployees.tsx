@@ -21,7 +21,9 @@ import {
   User,
   Building2,
   TrendingUp,
+  Star,
 } from 'lucide-react';
+import { EmptyState } from '../EmptyPageState';
 
 // ── Types ──
 type EmploymentType = 'Full-Time' | 'Part-Time' | 'Contractor';
@@ -48,139 +50,7 @@ interface Employee {
   notes: { text: string; author: string; date: string }[];
 }
 
-const employees: Employee[] = [
-  {
-    id: 'EMP-001',
-    name: 'Carlos Rivera',
-    initials: 'CR',
-    email: 'carlos.r@deltpay.com',
-    phone: '(555) 301-4420',
-    role: 'Senior Software Engineer',
-    department: 'Engineering',
-    employmentType: 'Full-Time',
-    startDate: 'Jan 15, 2023',
-    compensation: '$145,000/yr',
-    compensationType: 'Salary',
-    status: 'Active',
-    address: 'Austin, TX',
-    manager: 'John Doe',
-    timeOffBalance: { vacation: 12, sick: 5, personal: 3 },
-    documents: [
-      { name: 'W-4', date: 'Jan 15, 2023', status: 'Complete' },
-      { name: 'I-9', date: 'Jan 15, 2023', status: 'Complete' },
-      { name: 'Offer Letter', date: 'Dec 28, 2022', status: 'Complete' },
-      { name: 'NDA', date: 'Jan 15, 2023', status: 'Complete' },
-    ],
-    notes: [
-      { text: 'Promoted to Senior Engineer — effective Q1 2025. Outstanding performance on Lens AI module.', author: 'John Doe', date: 'Jan 5, 2025' },
-      { text: 'Completed AWS Solutions Architect certification.', author: 'HR System', date: 'Sep 12, 2024' },
-    ],
-  },
-  {
-    id: 'EMP-002',
-    name: 'Patrick Oduya',
-    initials: 'PO',
-    email: 'patrick.o@deltpay.com',
-    phone: '(555) 302-8817',
-    role: 'Full-Stack Developer',
-    department: 'Engineering',
-    employmentType: 'Full-Time',
-    startDate: 'Mar 22, 2024',
-    compensation: '$125,000/yr',
-    compensationType: 'Salary',
-    status: 'Active',
-    address: 'Brooklyn, NY',
-    manager: 'Carlos Rivera',
-    timeOffBalance: { vacation: 8, sick: 4, personal: 2 },
-    documents: [
-      { name: 'W-4', date: 'Mar 22, 2024', status: 'Complete' },
-      { name: 'I-9', date: 'Mar 22, 2024', status: 'Complete' },
-      { name: 'Offer Letter', date: 'Mar 1, 2024', status: 'Complete' },
-      { name: 'NDA', date: 'Mar 22, 2024', status: 'Complete' },
-    ],
-    notes: [
-      { text: 'Ramping up well on merchant portal codebase. Paired with Carlos on onboarding tracker feature.', author: 'Carlos Rivera', date: 'Apr 15, 2024' },
-    ],
-  },
-  {
-    id: 'EMP-003',
-    name: 'Jason Park',
-    initials: 'JP',
-    email: 'jason.p@deltpay.com',
-    phone: '(555) 303-5590',
-    role: 'Sales Manager',
-    department: 'Sales',
-    employmentType: 'Full-Time',
-    startDate: 'Aug 10, 2022',
-    compensation: '$110,000/yr',
-    compensationType: 'Salary',
-    status: 'Active',
-    address: 'Miami, FL',
-    manager: 'John Doe',
-    timeOffBalance: { vacation: 15, sick: 6, personal: 3 },
-    documents: [
-      { name: 'W-4', date: 'Aug 10, 2022', status: 'Complete' },
-      { name: 'I-9', date: 'Aug 10, 2022', status: 'Complete' },
-      { name: 'Offer Letter', date: 'Jul 20, 2022', status: 'Complete' },
-      { name: 'NDA', date: 'Aug 10, 2022', status: 'Complete' },
-    ],
-    notes: [
-      { text: 'Exceeded Q4 sales target by 140%. Leading new ISO partner onboarding initiative.', author: 'John Doe', date: 'Jan 8, 2025' },
-    ],
-  },
-  {
-    id: 'EMP-004',
-    name: 'Lyndon Tate',
-    initials: 'LT',
-    email: 'lyndon.t@deltpay.com',
-    phone: '(555) 304-7712',
-    role: 'Operations Lead',
-    department: 'Operations',
-    employmentType: 'Full-Time',
-    startDate: 'Jun 5, 2023',
-    compensation: '$98,000/yr',
-    compensationType: 'Salary',
-    status: 'On Leave',
-    address: 'Chicago, IL',
-    manager: 'John Doe',
-    timeOffBalance: { vacation: 3, sick: 2, personal: 0 },
-    documents: [
-      { name: 'W-4', date: 'Jun 5, 2023', status: 'Complete' },
-      { name: 'I-9', date: 'Jun 5, 2023', status: 'Complete' },
-      { name: 'Offer Letter', date: 'May 18, 2023', status: 'Complete' },
-      { name: 'NDA', date: 'Jun 5, 2023', status: 'Missing' },
-    ],
-    notes: [
-      { text: 'On parental leave — returning May 1, 2026. Coverage handled by Sarah K.', author: 'HR System', date: 'Mar 15, 2026' },
-    ],
-  },
-  {
-    id: 'EMP-005',
-    name: 'Nina Voskresenskaya',
-    initials: 'NV',
-    email: 'nina.v@contractor.deltpay.com',
-    phone: '(555) 305-9934',
-    role: 'QA Engineer',
-    department: 'Engineering',
-    employmentType: 'Contractor',
-    startDate: 'Nov 1, 2025',
-    compensation: '$85/hr',
-    compensationType: 'Hourly',
-    status: 'Active',
-    address: 'Remote — Portland, OR',
-    manager: 'Carlos Rivera',
-    timeOffBalance: { vacation: 0, sick: 0, personal: 0 },
-    documents: [
-      { name: 'W-4', date: 'N/A', status: 'Missing' },
-      { name: 'I-9', date: 'N/A', status: 'Missing' },
-      { name: 'Offer Letter', date: 'Oct 20, 2025', status: 'Complete' },
-      { name: '1099 Agreement', date: 'Nov 1, 2025', status: 'Complete' },
-    ],
-    notes: [
-      { text: 'Contractor — 1099. Engaged for 6-month QA engagement on merchant portal.', author: 'Carlos Rivera', date: 'Nov 1, 2025' },
-    ],
-  },
-];
+const employees: Employee[] = [];
 
 // ── Helpers ──
 const empTypeCls = (t: EmploymentType) => {
@@ -381,64 +251,12 @@ function EmployeeDetailPanel({ employee, onClose }: { employee: Employee; onClos
 
           {detailTab === 'reviews' && (
             <div className="space-y-6">
-              {/* Latest Review */}
-              <div>
-                <h3 className="text-xs text-gray-500 uppercase tracking-wider font-medium mb-3">Latest Performance Review</h3>
-                <div className="bg-white border border-gray-200 rounded-[8px] p-4 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-semibold text-gray-900">Q1 2026 Review</p>
-                      <p className="text-xs text-gray-500">Reviewed by {employee.manager} &middot; Mar 28, 2026</p>
-                    </div>
-                    <span className="px-3 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-md text-xs font-semibold">
-                      {employee.department === 'Engineering' ? 'Exceeds Expectations' : employee.status === 'On Leave' ? 'Meets Expectations' : 'Exceeds Expectations'}
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    {[
-                      { label: 'Technical Skills', score: employee.department === 'Engineering' ? 5 : 4 },
-                      { label: 'Communication', score: 4 },
-                      { label: 'Teamwork', score: employee.department === 'Sales' ? 5 : 4 },
-                      { label: 'Initiative', score: employee.department === 'Engineering' ? 5 : 3 },
-                    ].map(metric => (
-                      <div key={metric.label} className="flex items-center justify-between bg-gray-50 rounded-[6px] px-3 py-2">
-                        <span className="text-xs text-gray-600">{metric.label}</span>
-                        <div className="flex gap-0.5">
-                          {[1,2,3,4,5].map(n => (
-                            <div key={n} className={`w-3 h-3 rounded-full ${n <= metric.score ? 'bg-brand' : 'bg-gray-200'}`} />
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="bg-blue-50 rounded-[6px] p-3">
-                    <p className="text-xs text-blue-800">
-                      <span className="font-medium">Manager Notes:</span> {employee.name.split(' ')[0]} has consistently demonstrated strong performance this quarter.
-                      {employee.department === 'Engineering' ? ' Key contributions to the Lens AI module and merchant portal.' : employee.department === 'Sales' ? ' Exceeded all sales targets and mentored junior agents effectively.' : ' Reliable operations leadership with excellent process improvements.'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Review History */}
-              <div>
-                <h3 className="text-xs text-gray-500 uppercase tracking-wider font-medium mb-3">Review History</h3>
-                <div className="space-y-2">
-                  {[
-                    { period: 'Q4 2025', rating: 'Meets Expectations', date: 'Dec 20, 2025' },
-                    { period: 'Q3 2025', rating: 'Exceeds Expectations', date: 'Sep 30, 2025' },
-                  ].map(review => (
-                    <div key={review.period} className="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-[8px]">
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">{review.period}</p>
-                        <p className="text-xs text-gray-500">{review.date}</p>
-                      </div>
-                      <span className={`px-2.5 py-1 rounded-md text-xs font-medium ${review.rating === 'Exceeds Expectations' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-blue-50 text-blue-700 border border-blue-200'}`}>{review.rating}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
+              <EmptyState
+                icon={Star}
+                title="No performance reviews"
+                description={`Reviews recorded for ${employee.name} will appear here.`}
+                compact
+              />
               <button className="w-full px-4 py-2.5 bg-brand text-white text-sm font-medium rounded-[6px] hover:bg-brand-hover transition-colors">Start New Review</button>
             </div>
           )}
@@ -496,10 +314,25 @@ export function BackendEmployees() {
     toast.success(`${created.name} added`, { description: `${created.role} · ${created.department}` });
   };
 
-  const totalEmployees = employeeList.filter(e => e.status !== 'Terminated').length;
-  const monthlyPayroll = 52_416;
-  const openPositions = 3;
-  const avgTenure = 18;
+  const active = employeeList.filter(e => e.status !== 'Terminated');
+  const totalEmployees = active.length;
+
+  // Monthly cost of the salaried headcount actually on the roster. Hourly
+  // staff are excluded — their cost depends on timesheets the CRM doesn't
+  // hold yet. Compensation is free text ("$120,000/yr"), so parse defensively.
+  const monthlyPayroll = Math.round(
+    active
+      .filter(e => e.compensationType === 'Salary')
+      .reduce((sum, e) => sum + (Number(e.compensation.replace(/[^0-9.]/g, '')) || 0) / 12, 0),
+  );
+
+  const monthsSince = (iso: string) => {
+    const start = new Date(iso);
+    if (Number.isNaN(start.getTime())) return null;
+    return Math.max(0, (Date.now() - start.getTime()) / (1000 * 60 * 60 * 24 * 30.44));
+  };
+  const tenures = active.map(e => monthsSince(e.startDate)).filter((n): n is number => n !== null);
+  const avgTenure = tenures.length ? Math.round(tenures.reduce((s, n) => s + n, 0) / tenures.length) : 0;
 
   const filtered = employeeList.filter(e =>
     e.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -529,9 +362,9 @@ export function BackendEmployees() {
       <div className="px-6 py-6 flex-1 overflow-y-auto space-y-6">
         {/* Summary Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard label="Total Employees" value={totalEmployees.toString()} icon={<Users className="w-5 h-5" />} sub="+1 this month" />
-          <StatCard label="Monthly Payroll Cost" value={`$${monthlyPayroll.toLocaleString()}`} icon={<DollarSign className="w-5 h-5" />} sub="Semi-monthly cycle" />
-          <StatCard label="Open Positions" value={openPositions.toString()} icon={<Briefcase className="w-5 h-5" />} sub="2 Engineering, 1 Support" />
+          <StatCard label="Total Employees" value={totalEmployees.toString()} icon={<Users className="w-5 h-5" />} sub="Active roster" />
+          <StatCard label="Monthly Payroll Cost" value={`$${monthlyPayroll.toLocaleString()}`} icon={<DollarSign className="w-5 h-5" />} sub="Salaried staff only" />
+          <StatCard label="On Leave" value={active.filter(e => e.status === 'On Leave').length.toString()} icon={<Briefcase className="w-5 h-5" />} sub="Currently away" />
           <StatCard label="Avg Tenure" value={`${avgTenure} mo`} icon={<Clock className="w-5 h-5" />} sub="Across all departments" />
         </div>
 
@@ -616,6 +449,14 @@ export function BackendEmployees() {
                 ))}
               </tbody>
             </table>
+            {filtered.length === 0 && (
+              <EmptyState
+                icon={Users}
+                title={searchQuery ? 'No matching employees' : 'No employees yet'}
+                description={searchQuery ? 'Try a different name, role, or department.' : 'Use “Add Employee” to build out the roster.'}
+                compact
+              />
+            )}
           </div>
         </div>
       </div>

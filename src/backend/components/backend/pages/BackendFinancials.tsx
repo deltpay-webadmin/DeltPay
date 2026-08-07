@@ -29,15 +29,26 @@ import {
   Area,
   ReferenceLine,
 } from 'recharts';
+import { EmptyState } from '../EmptyPageState';
 
 type Period = 'month' | 'quarter' | 'year' | 'custom';
 
+/**
+ * ────────────────────────────────────────────────────────────
+ * P&L, cash flow, capital deployment
+ * ────────────────────────────────────────────────────────────
+ * None of these figures are backed by a Supabase table yet, so every series
+ * starts empty and every headline reads zero. A financial statement is the
+ * last place to show placeholder numbers — an invented P&L is indistinguishable
+ * from a real one at a glance.
+ */
+
 // ── Summary Data ──
 const summaryCards = [
-  { label: 'Total Revenue', value: '$536K', raw: 536000, trend: '+12.5%', positive: true, icon: DollarSign, variant: 'emerald' as const },
-  { label: 'Total Expenses', value: '$185K', raw: 185000, trend: '-3.2%', positive: true, icon: CreditCard, variant: 'red' as const },
-  { label: 'Net Profit', value: '$242K', raw: 242000, trend: '+18.7%', positive: true, icon: TrendingUp, variant: 'indigo' as const },
-  { label: 'Cash Flow', value: '$215K', raw: 215000, trend: '+8.4%', positive: true, icon: Activity, variant: 'blue' as const },
+  { label: 'Total Revenue', raw: 0, trend: null, positive: true, icon: DollarSign, variant: 'emerald' as const },
+  { label: 'Total Expenses', raw: 0, trend: null, positive: true, icon: CreditCard, variant: 'red' as const },
+  { label: 'Net Profit', raw: 0, trend: null, positive: true, icon: TrendingUp, variant: 'indigo' as const },
+  { label: 'Cash Flow', raw: 0, trend: null, positive: true, icon: Activity, variant: 'blue' as const },
 ];
 
 const variantStyles: Record<string, { bg: string; icon: string }> = {
@@ -48,45 +59,26 @@ const variantStyles: Record<string, { bg: string; icon: string }> = {
 };
 
 // ── Revenue & Expense Breakdowns ──
-const revenueBreakdown = [
-  { label: 'MCA Interest Income', value: 285000, pct: 53.2, color: 'bg-indigo-500' },
-  { label: 'Lease Commissions', value: 95000, pct: 17.7, color: 'bg-sky-500' },
-  { label: 'Residual Income', value: 47000, pct: 8.8, color: 'bg-teal-500' },
-  { label: 'Merchant SaaS Subscriptions', value: 72000, pct: 13.4, color: 'bg-violet-500' },
-  { label: 'Lens AI Fees', value: 37000, pct: 6.9, color: 'bg-purple-500' },
-];
+// Categories are the chart of accounts (real); the amounts come from the ledger.
+interface BreakdownRow { label: string; value: number; pct: number; color: string }
 
-const expenseBreakdown = [
-  { label: 'Sales Commissions', value: 75000, pct: 40.5, color: 'bg-red-500' },
-  { label: 'Cost of Capital', value: 65000, pct: 35.1, color: 'bg-orange-500' },
-  { label: 'Deployment Fees', value: 28000, pct: 15.1, color: 'bg-amber-500' },
-  { label: 'Operating', value: 17000, pct: 9.2, color: 'bg-gray-400' },
-];
+const revenueBreakdown: BreakdownRow[] = [];
+
+const expenseBreakdown: BreakdownRow[] = [];
 
 // ── Cash Flow Forecast (90 days) ──
-const cashFlowData = Array.from({ length: 13 }, (_, i) => {
-  const week = i;
-  const baseIn = 52000 + Math.sin(i * 0.7) * 12000 + (i > 8 ? -8000 : 0);
-  const baseOut = 38000 + Math.cos(i * 0.5) * 8000 + (i > 6 ? 5000 : 0);
-  const net = baseIn - baseOut;
-  return {
-    week: `W${week + 1}`,
-    label: `Week ${week + 1}`,
-    inflows: Math.round(baseIn),
-    outflows: Math.round(baseOut),
-    net: Math.round(net),
-    threshold: 10000,
-  };
-});
+interface CashFlowWeek { week: string; label: string; inflows: number; outflows: number; net: number; threshold: number }
+
+const cashFlowData: CashFlowWeek[] = [];
 
 const alertWeeks = cashFlowData.filter((d) => d.net < d.threshold);
 
 // ── Capital Deployment ──
 const capitalCards = [
-  { label: 'Available Capital', value: '$340K', icon: PiggyBank, variant: 'emerald' as const },
-  { label: 'Deployed', value: '$1.26M', icon: Zap, variant: 'indigo' as const },
-  { label: 'Utilization', value: '78.8%', icon: Percent, variant: 'blue' as const },
-  { label: '30-Day Need', value: '$185K', icon: Briefcase, variant: 'orange' as const },
+  { label: 'Available Capital', raw: 0, icon: PiggyBank, variant: 'emerald' as const },
+  { label: 'Deployed', raw: 0, icon: Zap, variant: 'indigo' as const },
+  { label: 'Utilization', raw: 0, suffix: '%', icon: Percent, variant: 'blue' as const },
+  { label: '30-Day Need', raw: 0, icon: Briefcase, variant: 'orange' as const },
 ];
 
 const capitalVariants: Record<string, { bg: string; icon: string }> = {
@@ -94,24 +86,14 @@ const capitalVariants: Record<string, { bg: string; icon: string }> = {
   orange: { bg: 'bg-orange-50 border-orange-100', icon: 'text-orange-600' },
 };
 
-const fundingSources = [
-  { name: 'Pinnacle Funding Group', committed: 600000, deployed: 485000, available: 115000, coc: 2.0, returnPct: 14.2 },
-  { name: 'Atlantic Capital Partners', committed: 400000, deployed: 320000, available: 80000, coc: 1.8, returnPct: 16.1 },
-  { name: 'Summit Finance Corp', committed: 350000, deployed: 290000, available: 60000, coc: 2.2, returnPct: 12.8 },
-  { name: 'Delt Internal Reserve', committed: 250000, deployed: 165000, available: 85000, coc: 0, returnPct: 22.5 },
-];
+interface FundingSource { name: string; committed: number; deployed: number; available: number; coc: number; returnPct: number }
+
+const fundingSources: FundingSource[] = [];
 
 // ── Recent Transactions ──
-const transactions = [
-  { date: '2026-04-09', desc: 'Metro Diner Group — daily ACH', type: 'Income' as const, amount: 675, category: 'MCA Repayment' },
-  { date: '2026-04-09', desc: 'Bright Auto Sales — daily ACH', type: 'Income' as const, amount: 1088, category: 'Residual Repayment' },
-  { date: '2026-04-08', desc: 'Marcus J. — commission payout', type: 'Expense' as const, amount: -1575, category: 'Sales Commission' },
-  { date: '2026-04-08', desc: 'Pinnacle Funding — monthly COC', type: 'Expense' as const, amount: -9700, category: 'Cost of Capital' },
-  { date: '2026-04-07', desc: 'Peak Construction — lease payment', type: 'Income' as const, amount: 855, category: 'Lease Payment' },
-  { date: '2026-04-07', desc: 'UCC filing fee — Coastal Seafood', type: 'Expense' as const, amount: -125, category: 'Deployment Fee' },
-  { date: '2026-04-06', desc: 'Apex Fitness — final payoff', type: 'Income' as const, amount: 2600, category: 'MCA Repayment' },
-  { date: '2026-04-05', desc: 'Atlantic Capital — quarterly draw', type: 'Expense' as const, amount: -50000, category: 'Capital Draw' },
-];
+interface LedgerEntry { date: string; desc: string; type: 'Income' | 'Expense'; amount: number; category: string }
+
+const transactions: LedgerEntry[] = [];
 
 const fmt = (n: number) =>
   n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
@@ -175,11 +157,15 @@ export function BackendFinancials() {
                 <p className="text-sm text-gray-600">{card.label}</p>
                 <div className={v.icon}><Icon className="w-5 h-5" /></div>
               </div>
-              <p className="text-xl sm:text-2xl font-bold text-gray-900">{card.value}</p>
-              <p className={`text-xs mt-2 flex items-center gap-1 ${card.positive ? 'text-emerald-600' : 'text-red-600'}`}>
-                {card.positive ? <ArrowUpRight className="w-3.5 h-3.5" /> : <ArrowDownRight className="w-3.5 h-3.5" />}
-                {card.trend} vs last period
-              </p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">{fmtK(card.raw)}</p>
+              {card.trend === null ? (
+                <p className="text-xs mt-2 text-gray-400">No prior period to compare</p>
+              ) : (
+                <p className={`text-xs mt-2 flex items-center gap-1 ${card.positive ? 'text-emerald-600' : 'text-red-600'}`}>
+                  {card.positive ? <ArrowUpRight className="w-3.5 h-3.5" /> : <ArrowDownRight className="w-3.5 h-3.5" />}
+                  {card.trend} vs last period
+                </p>
+              )}
             </div>
           );
         })}
@@ -208,6 +194,9 @@ export function BackendFinancials() {
                 </div>
               </div>
             ))}
+            {revenueBreakdown.length === 0 && (
+              <EmptyState icon={DollarSign} title="No revenue recorded" description="Income by category will break down here once the ledger is connected." compact />
+            )}
           </div>
         </div>
 
@@ -232,6 +221,9 @@ export function BackendFinancials() {
                 </div>
               </div>
             ))}
+            {expenseBreakdown.length === 0 && (
+              <EmptyState icon={CreditCard} title="No expenses recorded" description="Commissions, cost of capital, and operating costs will break down here." compact />
+            )}
           </div>
         </div>
       </div>
@@ -271,6 +263,11 @@ export function BackendFinancials() {
             </div>
           </div>
           <div className="h-72">
+            {cashFlowData.length === 0 ? (
+              <div className="h-full flex items-center justify-center">
+                <EmptyState icon={Activity} title="No forecast available" description="A 90-day inflow/outflow projection appears once repayment schedules and capital draws are connected." compact />
+              </div>
+            ) : (
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={cashFlowData}>
                 <defs>
@@ -300,6 +297,7 @@ export function BackendFinancials() {
                 <Area type="monotone" dataKey="outflows" stroke="#F87F83" strokeWidth={2} fill="none" dot={false} />
               </AreaChart>
             </ResponsiveContainer>
+            )}
           </div>
         </div>
       </div>
@@ -317,7 +315,7 @@ export function BackendFinancials() {
                   <p className="text-sm text-gray-600">{card.label}</p>
                   <div className={v.icon}><Icon className="w-5 h-5" /></div>
                 </div>
-                <p className="text-xl sm:text-2xl font-bold text-gray-900">{card.value}</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{'suffix' in card ? `${card.raw}${card.suffix}` : fmtK(card.raw)}</p>
               </div>
             );
           })}
@@ -368,11 +366,14 @@ export function BackendFinancials() {
                   <td className="px-4 py-3 text-right font-semibold text-gray-900">{fmt(fundingSources.reduce((s, f) => s + f.committed, 0))}</td>
                   <td className="px-4 py-3 text-right font-semibold text-gray-900">{fmt(fundingSources.reduce((s, f) => s + f.deployed, 0))}</td>
                   <td className="px-4 py-3 text-right font-semibold text-emerald-600">{fmt(fundingSources.reduce((s, f) => s + f.available, 0))}</td>
-                  <td className="px-4 py-3 text-right text-gray-500">Avg {(fundingSources.filter(f => f.coc > 0).reduce((s, f) => s + f.coc, 0) / fundingSources.filter(f => f.coc > 0).length).toFixed(1)}%</td>
-                  <td className="px-4 py-3 text-right font-semibold text-indigo-600">{(fundingSources.reduce((s, f) => s + f.returnPct, 0) / fundingSources.length).toFixed(1)}%</td>
+                  <td className="px-4 py-3 text-right text-gray-500">{fundingSources.some(f => f.coc > 0) ? `Avg ${(fundingSources.filter(f => f.coc > 0).reduce((s, f) => s + f.coc, 0) / fundingSources.filter(f => f.coc > 0).length).toFixed(1)}%` : '—'}</td>
+                  <td className="px-4 py-3 text-right font-semibold text-indigo-600">{fundingSources.length > 0 ? `${(fundingSources.reduce((s, f) => s + f.returnPct, 0) / fundingSources.length).toFixed(1)}%` : '—'}</td>
                 </tr>
               </tfoot>
             </table>
+            {fundingSources.length === 0 && (
+              <EmptyState icon={PiggyBank} title="No funding sources" description="Committed capital lines and their deployment will be listed here." compact />
+            )}
           </div>
         </div>
       </div>
@@ -417,6 +418,9 @@ export function BackendFinancials() {
               ))}
             </tbody>
           </table>
+          {transactions.length === 0 && (
+            <EmptyState icon={Activity} title="No transactions" description="Ledger entries appear here as repayments, payouts, and draws are recorded." compact />
+          )}
         </div>
         <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 text-sm text-gray-500">
           <span>Showing 8 most recent</span>

@@ -22,6 +22,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { useAppNavigate } from '../NavigationContext';
+import { EmptyState } from '../EmptyPageState';
 
 // ── Types ──
 type PlanTier = 'Free' | 'Growth' | 'Custom';
@@ -49,133 +50,12 @@ interface RetentionMerchant {
   riskBreakdown: RiskBreakdown[];
 }
 
-// ── Sample Data ──
-const merchants: RetentionMerchant[] = [
-  {
-    id: 'MER-041',
-    merchantName: 'Peak Construction Co',
-    riskScore: 92,
-    signals: ['Volume Declining', 'No Portal Login 30d', 'Support Tickets Up'],
-    plan: 'Growth',
-    monthlyVolume: 18200,
-    agent: 'Priya Patel',
-    daysSinceContact: 34,
-    volumeTrend: [42000, 38000, 31000, 26000, 22000, 18200],
-    portalLogins30d: 0,
-    supportTickets30d: 5,
-    lastAgentContact: 'Mar 6, 2026',
-    riskBreakdown: [
-      { factor: 'Revenue Decline', weight: 35, detail: '57% volume drop over 6 months' },
-      { factor: 'No Portal Activity', weight: 25, detail: 'Zero logins in last 30 days' },
-      { factor: 'Support Escalations', weight: 20, detail: '5 tickets opened, 2 unresolved' },
-      { factor: 'Agent Contact Gap', weight: 12, detail: '34 days since last outreach' },
-    ],
-  },
-  {
-    id: 'MER-019',
-    merchantName: 'Sunset Logistics LLC',
-    riskScore: 84,
-    signals: ['Volume Declining', 'Chargeback Spike', 'Late Payments'],
-    plan: 'Free',
-    monthlyVolume: 9400,
-    agent: 'Devon Richards',
-    daysSinceContact: 21,
-    volumeTrend: [22000, 19500, 16800, 14200, 11600, 9400],
-    portalLogins30d: 2,
-    supportTickets30d: 1,
-    lastAgentContact: 'Mar 19, 2026',
-    riskBreakdown: [
-      { factor: 'Revenue Decline', weight: 30, detail: '57% volume drop over 6 months' },
-      { factor: 'Chargeback Rate', weight: 28, detail: '3.2% chargeback rate — above 1.5% threshold' },
-      { factor: 'Late Payments', weight: 18, detail: '2 late MCA payments in last 60 days' },
-      { factor: 'Low Plan Tier', weight: 8, detail: 'Free plan — limited engagement tools' },
-    ],
-  },
-  {
-    id: 'MER-027',
-    merchantName: 'Bright Auto Sales',
-    riskScore: 78,
-    signals: ['No Portal Login 30d', 'Plan Downgrade Request'],
-    plan: 'Growth',
-    monthlyVolume: 31500,
-    agent: 'Marcus Johnson',
-    daysSinceContact: 12,
-    volumeTrend: [35000, 34200, 33800, 33100, 32400, 31500],
-    portalLogins30d: 0,
-    supportTickets30d: 0,
-    lastAgentContact: 'Mar 28, 2026',
-    riskBreakdown: [
-      { factor: 'No Portal Activity', weight: 30, detail: 'Zero logins in last 30 days' },
-      { factor: 'Downgrade Request', weight: 28, detail: 'Requested switch from Growth to Starter' },
-      { factor: 'Slight Volume Decline', weight: 12, detail: '10% gradual decline over 6 months' },
-      { factor: 'Low Engagement', weight: 8, detail: 'Has not opened last 3 email campaigns' },
-    ],
-  },
-  {
-    id: 'MER-008',
-    merchantName: 'Lakeside Catering',
-    riskScore: 63,
-    signals: ['Support Tickets Up', 'Volume Declining'],
-    plan: 'Free',
-    monthlyVolume: 14700,
-    agent: 'Jamal Foster',
-    daysSinceContact: 8,
-    volumeTrend: [19000, 18200, 17400, 16500, 15600, 14700],
-    portalLogins30d: 4,
-    supportTickets30d: 3,
-    lastAgentContact: 'Apr 1, 2026',
-    riskBreakdown: [
-      { factor: 'Support Escalations', weight: 25, detail: '3 tickets — billing confusion' },
-      { factor: 'Revenue Decline', weight: 22, detail: '23% gradual decline over 6 months' },
-      { factor: 'Low Plan Tier', weight: 10, detail: 'Free plan with limited features' },
-      { factor: 'Industry Headwinds', weight: 6, detail: 'Catering sector seasonal dip' },
-    ],
-  },
-  {
-    id: 'MER-033',
-    merchantName: 'Metro Diner Group',
-    riskScore: 51,
-    signals: ['Chargeback Spike'],
-    plan: 'Custom',
-    monthlyVolume: 67000,
-    agent: 'Marcus Johnson',
-    daysSinceContact: 3,
-    volumeTrend: [62000, 63500, 65000, 66200, 66800, 67000],
-    portalLogins30d: 12,
-    supportTickets30d: 1,
-    lastAgentContact: 'Apr 6, 2026',
-    riskBreakdown: [
-      { factor: 'Chargeback Rate', weight: 30, detail: '2.1% rate — elevated but improving' },
-      { factor: 'Industry Risk', weight: 12, detail: 'Restaurant sector volatility' },
-      { factor: 'High Concentration', weight: 9, detail: 'Single-location revenue dependency' },
-    ],
-  },
-  {
-    id: 'MER-055',
-    merchantName: 'Coastal Seafood Inc',
-    riskScore: 38,
-    signals: ['Volume Declining'],
-    plan: 'Custom',
-    monthlyVolume: 54000,
-    agent: 'Jamal Foster',
-    daysSinceContact: 5,
-    volumeTrend: [58000, 57200, 56400, 55600, 54800, 54000],
-    portalLogins30d: 9,
-    supportTickets30d: 0,
-    lastAgentContact: 'Apr 4, 2026',
-    riskBreakdown: [
-      { factor: 'Slight Volume Decline', weight: 20, detail: '7% decline — seasonal pattern likely' },
-      { factor: 'Market Conditions', weight: 10, detail: 'Seafood supply chain tightening' },
-      { factor: 'Renewal Approaching', weight: 8, detail: 'Contract up for renewal in 45 days' },
-    ],
-  },
-];
+// Churn monitoring is not yet backed by a Supabase table. Until it is, this
+// page reports on an empty book rather than on invented merchants.
+const merchants: RetentionMerchant[] = [];
 
 // ── Stats ──
 const atRiskCount = merchants.filter(m => m.riskScore >= 50).length;
-const churnedThisMonth = 3;
-const saveRate = 68;
-const avgLifetime = 14.2;
 
 // ── Helpers ──
 const fmt = (n: number) => n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
@@ -278,20 +158,20 @@ export function BackendRetention() {
       {/* Summary Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <SummaryCard icon={ShieldAlert} label="At-Risk Merchants" value={String(atRiskCount)} sub="Risk score ≥ 50" variant="amber" />
-        <SummaryCard icon={UserMinus} label="Churned This Month" value={String(churnedThisMonth)} sub="Accounts closed or inactive" variant="red" />
-        <SummaryCard icon={Heart} label="Save Rate" value={`${saveRate}%`} sub="At-risk merchants retained" variant="emerald" />
-        <SummaryCard icon={Calendar} label="Avg Merchant Lifetime" value={`${avgLifetime} mo`} sub="Across all merchants" variant="blue" />
+        <SummaryCard icon={UserMinus} label="Critical Risk" value={String(merchants.filter(m => m.riskScore >= 75).length)} sub="Risk score ≥ 75" variant="red" />
+        <SummaryCard icon={Heart} label="Healthy" value={String(merchants.filter(m => m.riskScore < 50).length)} sub="Risk score below 50" variant="emerald" />
+        <SummaryCard icon={Calendar} label="Merchants Monitored" value={String(merchants.length)} sub="Across all agents" variant="blue" />
       </div>
 
-      {/* Outreach Engagement Insight */}
+      {/* Outreach cross-link */}
       <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-[8px] border border-indigo-200 p-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-full bg-brand/10 flex items-center justify-center shrink-0">
             <Megaphone className="w-4.5 h-4.5 text-brand" />
           </div>
           <div>
-            <p className="text-sm font-semibold text-gray-900">Outreach engagement correlates with +3.5 pt health score improvement</p>
-            <p className="text-xs text-gray-500 mt-0.5">6 of 8 engaged merchants show rising health scores — 2 disengaged merchants are declining. <span className="font-medium text-gray-700">Merchants who open &amp; respond to outreach churn 42% less.</span></p>
+            <p className="text-sm font-semibold text-gray-900">Pair risk scores with outreach</p>
+            <p className="text-xs text-gray-500 mt-0.5">Campaign engagement is tracked in Outreach. Once both are populated you can compare health-score movement against who is actually opening and replying.</p>
           </div>
         </div>
         <button onClick={() => navigate('/outreach')} className="px-4 py-2 bg-brand text-white text-xs font-medium rounded-[6px] hover:bg-brand-hover transition-colors flex items-center gap-1.5 shrink-0">View Outreach <ExternalLink className="w-3 h-3" /></button>
@@ -387,6 +267,14 @@ export function BackendRetention() {
               })}
             </tbody>
           </table>
+          {merchants.length === 0 && (
+            <EmptyState
+              icon={ShieldAlert}
+              title="No merchants monitored"
+              description="Churn risk scores appear here once merchant volume and contact history are connected."
+              compact
+            />
+          )}
         </div>
       </div>
 

@@ -7,6 +7,7 @@ import {
   Banknote, ArrowRight, Phone, Mail, MoreHorizontal,
   Wallet, ArrowLeftRight, ShieldAlert, Zap, ChevronDown,
 } from 'lucide-react';
+import { EmptyState } from '../EmptyPageState';
 
 // ── Types ──
 type PaymentStatus = 'success' | 'failed' | 'pending' | 'returned' | 'scheduled';
@@ -61,31 +62,11 @@ const COLLECTION_STATUS_CONFIG: Record<CollectionStatus, { color: string; bg: st
   paid_off: { color: 'text-gray-500', bg: 'bg-gray-50 border-gray-200', label: 'Paid Off' },
 };
 
-const PAYMENTS: Payment[] = [
-  { id: 'PMT-4501', merchant: 'Havana Bites Cafe', merchantId: 'M-1001', dealId: 'DL-2026-0412', amount: 145, status: 'success', method: 'ach', date: '2026-04-17', type: 'collection', description: 'Daily ACH collection' },
-  { id: 'PMT-4500', merchant: 'Havana Bites Cafe', merchantId: 'M-1001', dealId: 'DL-2026-0412', amount: 145, status: 'success', method: 'ach', date: '2026-04-16', type: 'collection', description: 'Daily ACH collection' },
-  { id: 'PMT-4499', merchant: 'SoBe Cycle & Fitness', merchantId: 'M-1010', amount: 210, status: 'success', method: 'ach', date: '2026-04-17', type: 'collection', description: 'Daily ACH collection' },
-  { id: 'PMT-4498', merchant: 'Little Havana Barbershop', merchantId: 'M-1006', amount: 68, status: 'failed', method: 'ach', date: '2026-04-17', type: 'collection', description: 'Daily ACH collection', failReason: 'NSF — Insufficient Funds', retryDate: '2026-04-19' },
-  { id: 'PMT-4497', merchant: 'Little Havana Barbershop', merchantId: 'M-1006', amount: 68, status: 'failed', method: 'ach', date: '2026-04-16', type: 'collection', description: 'Daily ACH collection', failReason: 'NSF — Insufficient Funds' },
-  { id: 'PMT-4496', merchant: 'Little Havana Barbershop', merchantId: 'M-1006', amount: 68, status: 'failed', method: 'ach', date: '2026-04-15', type: 'collection', description: 'Daily ACH collection', failReason: 'NSF — Insufficient Funds' },
-  { id: 'PMT-4495', merchant: 'Havana Bites Cafe', merchantId: 'M-1001', dealId: 'DL-2026-0412', amount: 45000, status: 'success', method: 'wire', date: '2026-04-14', type: 'funding', description: 'MCA funding — wire transfer' },
-  { id: 'PMT-4494', merchant: 'Midtown Taqueria', merchantId: 'M-1005', amount: 185, status: 'success', method: 'ach', date: '2026-04-17', type: 'collection', description: 'Daily ACH collection' },
-  { id: 'PMT-4493', merchant: 'Metro Diner Group', merchantId: 'M-1011', amount: 320, status: 'success', method: 'ach', date: '2026-04-17', type: 'collection', description: 'Daily ACH collection' },
-  { id: 'PMT-4492', merchant: 'Harbor Marine Supply', merchantId: 'M-1009', amount: 29, status: 'success', method: 'card', date: '2026-04-17', type: 'fee', description: 'Website hosting — monthly subscription' },
-  { id: 'PMT-4491', merchant: 'Coral Reef Auto Spa', merchantId: 'M-1004', amount: 175, status: 'pending', method: 'ach', date: '2026-04-17', type: 'collection', description: 'Daily ACH collection — processing' },
-  { id: 'PMT-4490', merchant: 'Brooklyn Vinyl Records', merchantId: 'M-1002', amount: 79, status: 'success', method: 'card', date: '2026-04-16', type: 'fee', description: 'Website hosting — monthly subscription' },
-  { id: 'PMT-4489', merchant: 'TechStart Solutions', merchantId: 'M-1002', amount: 149, status: 'success', method: 'card', date: '2026-04-15', type: 'fee', description: 'Website hosting — premium plan' },
-  { id: 'PMT-4488', merchant: 'Bella Vista Restaurant', merchantId: 'M-1005', amount: 79, status: 'success', method: 'card', date: '2026-04-15', type: 'fee', description: 'Website hosting — business plan' },
-];
+// Payments and collection accounts are not yet backed by a Supabase table.
+// Until they are, this page shows nothing rather than invented activity.
+const PAYMENTS: Payment[] = [];
 
-const COLLECTIONS: CollectionAccount[] = [
-  { id: 'C-001', merchant: 'Havana Bites Cafe', merchantId: 'M-1001', dealId: 'DL-2026-0412', status: 'current', totalOwed: 62100, totalCollected: 17820, dailyAmount: 145, consecutiveNSF: 0, lastPaymentDate: '2026-04-17', nextPaymentDate: '2026-04-18', percentPaid: 28.7, agent: 'Marcus Johnson', daysPastDue: 0 },
-  { id: 'C-002', merchant: 'SoBe Cycle & Fitness', merchantId: 'M-1010', dealId: 'DL-2026-0388', status: 'current', totalOwed: 84000, totalCollected: 52920, dailyAmount: 210, consecutiveNSF: 0, lastPaymentDate: '2026-04-17', nextPaymentDate: '2026-04-18', percentPaid: 63.0, agent: 'James Miller', daysPastDue: 0 },
-  { id: 'C-003', merchant: 'Metro Diner Group', merchantId: 'M-1011', dealId: 'DL-2026-0371', status: 'current', totalOwed: 101250, totalCollected: 54800, dailyAmount: 320, consecutiveNSF: 0, lastPaymentDate: '2026-04-17', nextPaymentDate: '2026-04-18', percentPaid: 54.1, agent: 'Sarah Kim', daysPastDue: 0 },
-  { id: 'C-004', merchant: 'Midtown Taqueria', merchantId: 'M-1005', dealId: 'DL-2026-0395', status: 'current', totalOwed: 48000, totalCollected: 31450, dailyAmount: 185, consecutiveNSF: 0, lastPaymentDate: '2026-04-17', nextPaymentDate: '2026-04-18', percentPaid: 65.5, agent: 'Marcus Johnson', daysPastDue: 0 },
-  { id: 'C-005', merchant: 'Coral Reef Auto Spa', merchantId: 'M-1004', dealId: 'DL-2026-0405', status: 'current', totalOwed: 56000, totalCollected: 22400, dailyAmount: 175, consecutiveNSF: 0, lastPaymentDate: '2026-04-16', nextPaymentDate: '2026-04-17', percentPaid: 40.0, agent: 'James Miller', daysPastDue: 0 },
-  { id: 'C-006', merchant: 'Little Havana Barbershop', merchantId: 'M-1006', dealId: 'DL-2026-0380', status: 'slow_pay', totalOwed: 28560, totalCollected: 14960, dailyAmount: 68, consecutiveNSF: 3, lastPaymentDate: '2026-04-12', nextPaymentDate: '2026-04-19', percentPaid: 52.4, agent: 'Marcus Johnson', daysPastDue: 5 },
-];
+const COLLECTIONS: CollectionAccount[] = [];
 
 // ── Main ──
 export function BackendPayments() {
@@ -116,8 +97,10 @@ export function BackendPayments() {
     });
   }, [search, collectionStatusFilter]);
 
-  const todayCollected = PAYMENTS.filter(p => p.date === '2026-04-17' && p.status === 'success' && p.type === 'collection').reduce((s, p) => s + p.amount, 0);
-  const todayFailed = PAYMENTS.filter(p => p.date === '2026-04-17' && p.status === 'failed').length;
+  const today = new Date().toISOString().slice(0, 10);
+  const todaySuccessfulCollections = PAYMENTS.filter(p => p.date === today && p.status === 'success' && p.type === 'collection');
+  const todayCollected = todaySuccessfulCollections.reduce((s, p) => s + p.amount, 0);
+  const todayFailed = PAYMENTS.filter(p => p.date === today && p.status === 'failed').length;
   const totalOutstanding = COLLECTIONS.reduce((s, c) => s + (c.totalOwed - c.totalCollected), 0);
   const avgCollectionRate = COLLECTIONS.filter(c => c.status !== 'paid_off').reduce((s, c, _, a) => s + c.percentPaid / a.length, 0);
 
@@ -146,7 +129,7 @@ export function BackendPayments() {
       {/* KPIs */}
       <div className="grid grid-cols-4 gap-3">
         {[
-          { label: "Today's Collections", value: `$${todayCollected.toLocaleString()}`, sub: `${PAYMENTS.filter(p => p.date === '2026-04-17' && p.status === 'success' && p.type === 'collection').length} successful`, color: 'border-t-emerald-500', icon: DollarSign },
+          { label: "Today's Collections", value: `$${todayCollected.toLocaleString()}`, sub: `${todaySuccessfulCollections.length} successful`, color: 'border-t-emerald-500', icon: DollarSign },
           { label: 'Failed Today', value: todayFailed, sub: `${todayFailed} NSF returns`, color: 'border-t-red-500', icon: XCircle },
           { label: 'Outstanding Balance', value: `$${(totalOutstanding / 1000).toFixed(0)}K`, sub: `${COLLECTIONS.length} active accounts`, color: 'border-t-brand', icon: Banknote },
           { label: 'Avg % Collected', value: `${avgCollectionRate.toFixed(1)}%`, sub: 'across active deals', color: 'border-t-blue-500', icon: TrendingUp },
@@ -236,6 +219,14 @@ export function BackendPayments() {
                 </div>
               );
             })}
+            {filteredPayments.length === 0 && (
+              <EmptyState
+                icon={Wallet}
+                title="No transactions"
+                description="ACH collections, fundings, and fees will appear here once payment activity is connected."
+                compact
+              />
+            )}
           </div>
         </>
       ) : (
@@ -302,6 +293,14 @@ export function BackendPayments() {
                 </div>
               );
             })}
+            {filteredCollections.length === 0 && (
+              <EmptyState
+                icon={Banknote}
+                title="No collection accounts"
+                description="Funded deals on an active repayment schedule will be listed here."
+                compact
+              />
+            )}
           </div>
         </>
       )}

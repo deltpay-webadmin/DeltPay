@@ -1,4 +1,20 @@
 import React from 'react';
+import { Inbox } from 'lucide-react';
+
+/**
+ * ────────────────────────────────────────────────────────────
+ * Empty states
+ * ────────────────────────────────────────────────────────────
+ * The CRM shows real data or it shows nothing — it never shows
+ * invented records. Pages that are not yet wired to a Supabase
+ * table render one of these instead of a fabricated sample set,
+ * so an empty workspace reads as "nothing here yet" rather than
+ * as someone else's book of business.
+ *
+ *   • `EmptyPageState` — whole-page placeholder, owns its header.
+ *   • `EmptyState`     — inline block for a table body, list, or
+ *                        card that has no rows to show.
+ */
 
 interface EmptyPageStateProps {
   title: string;
@@ -18,7 +34,7 @@ export function EmptyPageState({ title, description, actionButton }: EmptyPageSt
         {actionButton && (
           <button
             onClick={actionButton.onClick}
-            className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 transition-colors"
+            className="px-4 py-2 bg-brand text-white text-sm font-medium rounded-[6px] hover:bg-brand-hover transition-colors"
           >
             {actionButton.label}
           </button>
@@ -27,28 +43,31 @@ export function EmptyPageState({ title, description, actionButton }: EmptyPageSt
 
       {/* Empty State Content */}
       <div className="flex-1 flex items-center justify-center px-6">
-        <div className="text-center">
-          <div className="w-16 h-16 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-4">
-            <svg
-              className="w-8 h-8 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={1.5}
-                d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
-              />
-            </svg>
-          </div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">No data yet</h3>
-          {description && (
-            <p className="text-sm text-gray-500 max-w-sm mx-auto">{description}</p>
-          )}
-        </div>
+        <EmptyState title="No data yet" description={description} />
       </div>
+    </div>
+  );
+}
+
+interface EmptyStateProps {
+  /** Defaults to a generic inbox glyph. */
+  icon?: React.ElementType;
+  title: string;
+  description?: string;
+  /** Tightens the vertical padding for use inside a table body. */
+  compact?: boolean;
+}
+
+export function EmptyState({ icon: Icon = Inbox, title, description, compact }: EmptyStateProps) {
+  return (
+    <div className={`flex flex-col items-center justify-center text-center px-6 ${compact ? 'py-10' : 'py-16'}`}>
+      <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mb-3">
+        <Icon className="w-5 h-5 text-gray-400" />
+      </div>
+      <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
+      {description && (
+        <p className="mt-1 text-xs text-gray-500 max-w-sm">{description}</p>
+      )}
     </div>
   );
 }
