@@ -42,8 +42,12 @@ export interface PlaidItem {
   institutionName: string | null;
   itemKey: string;
   products: string[];
-  status: 'active' | 'error' | 'disconnected';
+  status: 'active' | 'error' | 'disconnected' | 'retired';
   error: string | null;
+  /** Set once Auth + Identity (one-time fees) have been deliberately run. */
+  verifiedAt?: string | null;
+  /** Set when the item was retired (billing stopped, vault data kept). */
+  retiredAt?: string | null;
   lastSyncedAt: string | null;
   createdAt: string;
 }
@@ -144,6 +148,8 @@ function fromDbItem(r: any): PlaidItem {
     products: r.products ?? [],
     status: r.status ?? 'active',
     error: r.error ?? null,
+    verifiedAt: r.verified_at ?? null,
+    retiredAt: r.retired_at ?? null,
     lastSyncedAt: r.last_synced_at ?? null,
     createdAt: r.created_at ?? '',
   };
@@ -497,6 +503,111 @@ export const plaidActions = {
       throw err;
     } finally {
       markBusy('sync:all', false);
+    }
+  },
+
+  /** Bill Auth + Identity deliberately — run when a file advances to
+   * underwriting. One-time fees per connection; syncs stay free after. */
+  async verifyLead(leadId: string) {
+    markBusy(`verify:${leadId}`, true);
+    try {
+      const json = await authFetch('/verify', {
+        method: 'POST',
+        body: JSON.stringify({ leadId }),
+      });
+      const results: any[] = json.results ?? [];
+      const failed = results.filter(r => r && r.ok === false).length;
+      toast.success(
+        failed
+          ? `Verification ran on ${results.length - failed}/${results.length} connection(s).`
+          : 'Bank ownership + account numbers verified (Auth + Identity).',
+      );
+      await plaidActions.refresh();
+      return json;
+    } catch (err: any) {
+      toast.error(`Verification failed: ${err.message}`);
+      throw err;
+    } finally {
+      markBusy(`verify:${leadId}`, false);
+    }
+  },
+
+  /** Decision-time freshness: ask the bank for brand-new transactions now.
+   * Per-call fee; the webhook auto-syncs the vault when data lands. */
+  async refreshTransactions(leadId: string) {
+    markBusy(`refresh:${leadId}`, true);
+    try {
+      const json = await authFetch('/refresh', {
+        method: 'POST',
+        body: JSON.stringify({ leadId }),
+      });
+      toast.success(
+        `Fresh pull requested from ${json.requested ?? 0} bank(s) — new transactions sync in automatically (usually 1–5 min).`,
+      );
+      return json;
+    } catch (err: any) {
+      toast.error(`Transactions refresh failed: ${err.message}`);
+      throw err;
+    } finally {
+      markBusy(`refresh:${leadId}`, false);
+    }
+  },
+
+  /** Real-time balance check (per-call fee) — run right before an ACH pull. */
+  async checkBalances(leadId: string) {
+    markBusy(`balance:${leadId}`, true);
+    try {
+      const json = await authFetch('/balance', {
+        method: 'POST',
+        body: JSON.stringify({ leadId }),
+      });
+      const ok = (json.results ?? []).filter((r: any) => r.ok).length;
+      toast.success(`Live balances pulled from ${ok} connection(s).`);
+      await plaidActions.refresh();
+      return json;
+    } catch (err: any) {
+      toast.error(`Balance check failed: ${err.message}`);
+      throw err;
+    } finally {
+      markBusy(`balance:${leadId}`, false);
+    }
+  },
+
+  /** Watchlist-screen a lead's principal (Monitor). Reserve for funded deals. */
+  async screenLead(leadId: string, legalName?: string) {
+    markBusy(`screen:${leadId}`, true);
+    try {
+      const json = await authFetch('/monitor/screen', {
+        method: 'POST',
+        body: JSON.stringify(legalName ? { leadId, legalName } : { leadId }),
+      });
+      toast.success(
+        json.hit_count
+          ? `Screening complete — ${json.hit_count} potential hit(s) need review.`
+          : 'Screening complete — no watchlist hits. Plaid keeps rescanning automatically.',
+      );
+      await plaidActions.refresh();
+      return json;
+    } catch (err: any) {
+      toast.error(`Screening failed: ${err.message}`);
+      throw err;
+    } finally {
+      markBusy(`screen:${leadId}`, false);
+    }
+  },
+
+  /** Stop monthly billing on an item but keep all its vault data. */
+  async retireItem(itemId: string) {
+    markBusy(`retire:${itemId}`, true);
+    try {
+      await authFetch(`/items/${encodeURIComponent(itemId)}/retire`, { method: 'POST' });
+      toast.success('Connection retired — billing stopped, data kept.');
+      await plaidActions.refresh();
+    } catch (err: any) {
+      toast.error(`Retire failed: ${err.message}`);
+      throw err;
+    } finally {
+      markBusy(`retire:${itemId}`, false);
     }
   },
 

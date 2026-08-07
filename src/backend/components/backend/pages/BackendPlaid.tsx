@@ -623,6 +623,46 @@ function ProspectDetail({
           >
             <RefreshCw className="w-4 h-4" /> Sync
           </button>
+          {items.length > 0 && !items.some(i => i.verifiedAt) && (
+            <button
+              onClick={() => plaidActions.verifyLead(lead.id)}
+              disabled={busy.includes(`verify:${lead.id}`)}
+              className={BTN_GLASS}
+              title="Runs Plaid Auth + Identity on every connection (one-time fee each) — do this when the file advances to underwriting."
+            >
+              <ShieldCheck className="w-4 h-4" /> {busy.includes(`verify:${lead.id}`) ? 'Verifying…' : 'Verify ownership'}
+            </button>
+          )}
+          {items.length > 0 && (
+            <button
+              onClick={() => plaidActions.refreshTransactions(lead.id)}
+              disabled={busy.includes(`refresh:${lead.id}`)}
+              className={BTN_GLASS}
+              title="Asks the bank for brand-new transactions right now (small per-call fee) — run before an underwriting decision."
+            >
+              <Zap className="w-4 h-4" /> {busy.includes(`refresh:${lead.id}`) ? 'Requesting…' : 'Fresh pull'}
+            </button>
+          )}
+          {items.length > 0 && (
+            <button
+              onClick={() => plaidActions.checkBalances(lead.id)}
+              disabled={busy.includes(`balance:${lead.id}`)}
+              className={BTN_GLASS}
+              title="Live (non-cached) balances from the bank (small per-call fee) — run right before an ACH pull."
+            >
+              <Wallet className="w-4 h-4" /> {busy.includes(`balance:${lead.id}`) ? 'Checking…' : 'Live balance'}
+            </button>
+          )}
+          {items.length > 0 && (
+            <button
+              onClick={() => plaidActions.screenLead(lead.id)}
+              disabled={busy.includes(`screen:${lead.id}`)}
+              className={BTN_GLASS}
+              title="Ongoing AML watchlist screening via Plaid Monitor — reserve for funded merchants (base fee + monthly rescans)."
+            >
+              <ShieldAlert className="w-4 h-4" /> {busy.includes(`screen:${lead.id}`) ? 'Screening…' : 'AML screen'}
+            </button>
+          )}
           <SendLinkButton leadId={lead.id} />
           <PlaidLinkButton leadId={lead.id} />
         </div>
@@ -1043,6 +1083,8 @@ const KIND_ICONS: Record<string, React.ElementType> = {
   identity_verification: ShieldCheck,
   asset_report: FileJson,
   recommendation: Gauge,
+  balance_snapshot: Wallet,
+  watchlist_screening: ShieldAlert,
 };
 
 function DataExplorer({
@@ -1504,6 +1546,8 @@ function ConnectionsTab() {
                     <span className="inline-flex items-center gap-1 text-emerald-400 text-xs"><CheckCircle2 className="w-3.5 h-3.5" /> Active</span>
                   ) : it.status === 'error' ? (
                     <span className="inline-flex items-center gap-1 text-red-400 text-xs" title={it.error ?? ''}><AlertTriangle className="w-3.5 h-3.5" /> Error</span>
+                  ) : it.status === 'retired' ? (
+                    <span className={`inline-flex items-center gap-1 ${TXT_FAINT} text-xs`} title="Billing stopped; vault data kept."><Clock className="w-3.5 h-3.5" /> Retired</span>
                   ) : (
                     <span className={`inline-flex items-center gap-1 ${TXT_FAINT} text-xs`}><XCircle className="w-3.5 h-3.5" /> Disconnected</span>
                   )}
@@ -1519,6 +1563,20 @@ function ConnectionsTab() {
                     >
                       <RefreshCw className={`w-4 h-4 ${busy.includes(`sync:${it.itemId}`) ? 'animate-spin' : ''}`} />
                     </button>
+                    {it.status !== 'retired' && (
+                      <button
+                        onClick={() => {
+                          if (confirm(`Retire ${it.institutionName ?? it.itemKey}? Monthly billing stops; all vault data is kept.`)) {
+                            plaidActions.retireItem(it.itemId);
+                          }
+                        }}
+                        disabled={busy.includes(`retire:${it.itemId}`)}
+                        className="p-1.5 rounded-lg border border-(--dp-border) text-(--dp-text-secondary) hover:bg-(--dp-bg-raised) disabled:opacity-50"
+                        title="Retire — stop billing, keep data"
+                      >
+                        <Clock className="w-4 h-4" />
+                      </button>
+                    )}
                     <button
                       onClick={() => {
                         if (confirm(`Disconnect ${it.institutionName ?? it.itemKey} and delete its vault data?`)) {
