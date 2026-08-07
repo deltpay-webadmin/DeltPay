@@ -40,7 +40,7 @@ const STEP_SHORT: Record<StepName, string> = {
 };
 
 // Team members available for reassignment
-const AGENTS = ['Marcus Johnson', 'Priya Patel', 'Jamal Foster', 'Devon Richards', 'Sarah Kim', 'Alex Rivera'];
+const AGENTS: string[] = [];
 
 
 function slaDot(status: SLAStatus) {
@@ -583,7 +583,7 @@ function SlideOutPanel({ app, onClose }: { app: OnboardingApp; onClose: () => vo
             {reassignOpen && (
               <div className="rounded-[6px] border border-gray-200 bg-white p-2 space-y-1">
                 <p className="text-xs text-gray-500 px-2 py-1">Select a new agent</p>
-                {AGENTS.map(agent => (
+                {AGENTS.length > 0 ? AGENTS.map(agent => (
                   <button
                     key={agent}
                     onClick={() => reassign(agent)}
@@ -596,7 +596,9 @@ function SlideOutPanel({ app, onClose }: { app: OnboardingApp; onClose: () => vo
                     {agent}
                     {agent === app.agent && <span className="text-xs text-indigo-500 ml-2">(current)</span>}
                   </button>
-                ))}
+                )) : (
+                  <p className="px-2 py-3 text-center text-xs text-gray-400">No agents available — assign from live users.</p>
+                )}
               </div>
             )}
             {app.currentStep !== 'Funded' && (

@@ -118,7 +118,7 @@ const NETWORK_FEES = {
 
 // ─── SAMPLE MERCHANT DATA (from screenshots) ───────────────────
 const MERCHANT = {
-  name: "Sunrise Cafe & Bakery",
+  name: "",
   mid: "4485-7721-0093",
   mcc: "5812",
   category: "Food & Beverage",

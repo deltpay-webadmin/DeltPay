@@ -190,7 +190,6 @@ const GENERAL_SECTIONS = [
 // ─── AUDIT LOG ──────────────────────────────────────────────────
 const AUDIT_LOG = [
   { time: "Apr 15, 2:34 PM", user: "David Hazday", action: "Updated processing defaults — margin floor set to 0.50%", module: "Settings" },
-  { time: "Apr 15, 1:12 PM", user: "David Hazday", action: "Verified interchange for Sunrise Cafe — flagged Visa Qual +14bps", module: "Residuals" },
   { time: "Apr 14, 4:45 PM", user: "Patrick", action: "Uploaded March 2026 residual report — 8 merchants processed", module: "Residuals" },
   { time: "Apr 14, 11:20 AM", user: "Michael Chen", action: "Created new lead: TechForward Solutions", module: "Pipeline" },
   { time: "Apr 13, 3:15 PM", user: "David Hazday", action: "Approved MCA UW-2026-0145: Urban Wellness Spa — $150K at 1.36x", module: "Capital" },

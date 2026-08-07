@@ -447,7 +447,6 @@ const fallbackSeed: CrmState = {
         { title: 'Follow-up call completed', description: 'Discussed terms and pricing structure', user: 'Sarah Johnson', timestamp: '2 hours ago' },
       ],
       notes: 'Strong financials. Owner is motivated and ready to move forward.',
-      referredBy: 'Metro Diner Group',
       tasks: [
         { id: 't1', title: 'Follow up call scheduled', due: 'Tomorrow at 2:00 PM', done: false },
       ],

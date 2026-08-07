@@ -98,7 +98,7 @@ export function NewDealFlow({ open, onClose, onCreated, initialBorrower }: NewDe
                     label="Borrower"
                     value={form.borrower}
                     onChange={v => update('borrower', v)}
-                    placeholder="Metro Diner Group"
+                    placeholder="Enter borrower name"
                     autoFocus
                   />
                 </div>
