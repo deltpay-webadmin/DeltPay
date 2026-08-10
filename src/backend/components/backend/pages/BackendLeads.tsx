@@ -55,6 +55,7 @@ import {
   programActions,
   isDummyLead,
   scoreLead,
+  extraProductTags,
   type Lead as StoreLead,
   type ProductTag,
 } from '../crmStore';

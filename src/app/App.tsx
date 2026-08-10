@@ -41,6 +41,8 @@ const LensAIChatPage = lazy(() => named(import('@/app/pages/LensAIChatPage'), 'L
 const WebsiteBuilderDemo = lazy(() => named(import('@/app/pages/WebsiteBuilderDemo'), 'WebsiteBuilderDemo'));
 const ApplicationPage = lazy(() => named(import('@/app/pages/ApplicationPage'), 'ApplicationPage'));
 const OnboardingPage = lazy(() => named(import('@/app/pages/OnboardingPage'), 'OnboardingPage'));
+const MpaApplyPage = lazy(() => named(import('@/app/pages/MpaApplyPage'), 'MpaApplyPage'));
+const SigningCompletePage = lazy(() => named(import('@/app/pages/SigningCompletePage'), 'SigningCompletePage'));
 const AboutPage = lazy(() => named(import('@/app/pages/AboutPage'), 'AboutPage'));
 const CareersPage = lazy(() => named(import('@/app/pages/CareersPage'), 'CareersPage'));
 const PrivacyPolicyPage = lazy(() => named(import('@/app/pages/PrivacyPolicyPage'), 'PrivacyPolicyPage'));
@@ -122,6 +124,8 @@ export default function App() {
           <Route path="/lens-ai/chat" element={<LensAIChatPage />} />
           <Route path="/website-builder" element={<WebsiteBuilderDemo />} />
           <Route path="/onboarding" element={<OnboardingPage />} />
+          <Route path="/apply/mpa/:token" element={<MpaApplyPage />} />
+          <Route path="/signing-complete" element={<SigningCompletePage />} />
           <Route path="*" element={
             <div className="min-h-screen bg-white relative">
               <Navigation />

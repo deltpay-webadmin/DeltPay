@@ -30,6 +30,9 @@ import { renderAgreementHtml, type AgreementTerms } from "./mca_agreement.ts";
 import { renderApplicationHtml } from "./deal_application.ts";
 import { requirePerm, hasPerm } from "../_shared/auth.ts";
 import { getAccessToken, getAccount, oauthHost, STATUS_MAP } from "../_shared/docusign_status.ts";
+import { base64FromBytes, generateMpaPdf, type MpaApplicationRow } from "../_shared/mpa/generate.ts";
+import { DATE1_ANCHOR, SIG1_ANCHOR } from "../_shared/mpa/anchors.ts";
+import type { ApplicationData } from "../_shared/mpa/schema.ts";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -233,6 +236,34 @@ async function createEnvelopeFromHtml(
   return { envelopeId: body.envelopeId as string };
 }
 
+/** Pre-filled PDF → envelope (the MPA path; documents are already rendered). */
+async function createEnvelopeFromPdf(
+  baseUri: string,
+  accountId: string,
+  token: string,
+  args: { pdfBase64: string; docName: string; emailSubject: string; signers: any[] },
+): Promise<{ envelopeId: string } | { error: string }> {
+  const envelope = {
+    emailSubject: args.emailSubject,
+    documents: [{
+      documentId: "1",
+      name: args.docName,
+      fileExtension: "pdf",
+      documentBase64: args.pdfBase64,
+    }],
+    recipients: { signers: dedupeSigners(args.signers) },
+    status: "sent",
+  };
+  const res = await fetch(`${baseUri}/v2.1/accounts/${accountId}/envelopes`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify(envelope),
+  });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) return { error: `Envelope create failed: ${body?.message || body?.errorCode || `HTTP ${res.status}`}` };
+  return { envelopeId: body.envelopeId as string };
+}
+
 // ── Request handling ──────────────────────────────────────────
 
 Deno.serve(async (req) => {
@@ -255,7 +286,8 @@ Deno.serve(async (req) => {
   // merchants.edit (mirrors the contracts RLS policies). send-application is
   // agent-facing and gates on leads.create; ownership is checked in-handler.
   const neededPerm =
-    action === "send" || action === "void" ? "merchants.edit"
+    action === "send" || action === "void" || action === "send-mpa" || action === "signing-url"
+      ? "merchants.edit"
     : action === "send-application" ? "leads.create"
     : "merchants.view";
   const auth = await requirePerm(req.headers.get("Authorization") ?? undefined, neededPerm);
@@ -428,6 +460,158 @@ Deno.serve(async (req) => {
       return json({ error: `Envelope ${env.envelopeId} was sent, but recording it failed: ${insErr.message}`, envelopeId: env.envelopeId }, 500);
     }
     return json({ ok: true, contract: row });
+  }
+
+  // ── send-mpa: fill the processor MPA PDF and open an envelope ──
+  // mode 'embedded' (default): merchant signs in person on the iPad via a
+  // recipient-view URL (clientUserId set, no DocuSign email). mode 'email':
+  // classic remote signing for when the merchant isn't in the room.
+  if (action === "send-mpa") {
+    const applicationId = body?.applicationId as string;
+    const mode = (body?.mode as string) === "email" ? "email" : "embedded";
+    if (!applicationId) return json({ error: "applicationId required" }, 400);
+
+    const { data: app } = await admin
+      .from("merchant_applications")
+      .select("*")
+      .eq("id", applicationId)
+      .maybeSingle();
+    if (!app || app.org_id !== auth.ctx.orgId) return json({ error: "Application not found" }, 404);
+    if (!["draft", "submitted"].includes(app.status)) {
+      return json({ error: `Application is ${app.status}` }, 409);
+    }
+
+    const { data: sub } = await admin
+      .from("deal_submissions")
+      .select("*")
+      .eq("id", app.submission_id)
+      .maybeSingle();
+    if (!sub) return json({ error: "Deal submission not found" }, 404);
+    const channel = sub.channel as string;
+    if (!["Luqra", "Paysafe"].includes(channel)) {
+      return json({ error: "Set the boarding channel to Luqra or Paysafe first (Square uses the OrderOut portal)" }, 400);
+    }
+
+    const appData = app.data as ApplicationData;
+    const owner1 = appData?.owners?.[0];
+    const signerName = (body?.signerName as string) ||
+      (owner1 ? `${owner1.firstName} ${owner1.lastName}`.trim() : "") ||
+      sub.contact_name || sub.merchant_name;
+    const signerEmail = (body?.signerEmail as string) || owner1?.email || sub.email;
+    if (!signerEmail) {
+      return json({ error: "No signer email on file — add the owner's email to the application." }, 400);
+    }
+
+    const generated = await generateMpaPdf(admin, app as MpaApplicationRow, channel as "Luqra" | "Paysafe", {
+      withAnchors: true,
+    });
+    if ("error" in generated) return json({ error: generated.error }, 400);
+
+    const anchorTab = (anchorString: string) => ({
+      anchorString,
+      anchorUnits: "pixels",
+      anchorXOffset: "0",
+      anchorYOffset: "0",
+    });
+    const merchantSigner: any = {
+      recipientId: "1",
+      routingOrder: "1",
+      name: signerName,
+      email: signerEmail,
+      roleName: "Merchant",
+      tabs: {
+        signHereTabs: [anchorTab(SIG1_ANCHOR)],
+        dateSignedTabs: [anchorTab(DATE1_ANCHOR)],
+      },
+    };
+    // clientUserId marks the recipient as embedded/captive: DocuSign sends
+    // no email and the signing session is fetched on demand (signing-url).
+    if (mode === "embedded") merchantSigner.clientUserId = applicationId;
+
+    // No Delt countersigner on processor MPAs: the counterparty approval
+    // lines (LQ/Bank approval, Paysafe acceptance) belong to the processor
+    // and are executed in their own boarding flow after submission.
+    const signers: any[] = [merchantSigner];
+
+    const tok = await getAccessToken();
+    if ("error" in tok) return json({ error: tok.error }, 400);
+    const acct = await getAccount(tok.token);
+    if ("error" in acct) return json({ error: acct.error }, 400);
+
+    const env = await createEnvelopeFromPdf(acct.baseUri, acct.accountId, tok.token, {
+      pdfBase64: base64FromBytes(generated.pdf),
+      docName: `${channel} Merchant Application - ${sub.merchant_name}.pdf`,
+      emailSubject: (body?.emailSubject as string) || `${channel} Merchant Processing Agreement — ${sub.merchant_name}`,
+      signers,
+    });
+    if ("error" in env) return json({ error: env.error }, 400);
+
+    const { data: contractRow, error: insErr } = await admin
+      .from("contracts")
+      .insert({
+        kind: "mpa",
+        submission_id: app.submission_id,
+        merchant_name: sub.merchant_name,
+        signer_name: signerName,
+        signer_email: signerEmail,
+        terms: { channel, mode, applicationId },
+        envelope_id: env.envelopeId,
+        status: "sent",
+        docusign_status: "sent",
+        sent_at: new Date().toISOString(),
+        created_by: auth.ctx.userId,
+        org_id: app.org_id,
+      })
+      .select("*")
+      .single();
+    if (insErr) {
+      return json({ error: `Envelope ${env.envelopeId} was sent, but recording it failed: ${insErr.message}`, envelopeId: env.envelopeId }, 500);
+    }
+    return json({ ok: true, contract: contractRow, warnings: generated.warnings, mode });
+  }
+
+  // ── signing-url: on-demand embedded signing session (≈5-min TTL) ──
+  // Called right before handing the iPad to the merchant; call again to
+  // regenerate after expiry. The URL is never stored.
+  if (action === "signing-url") {
+    const contractId = body?.contractId as string;
+    if (!contractId) return json({ error: "contractId required" }, 400);
+    const { data: row } = await admin.from("contracts").select("*").eq("id", contractId).maybeSingle();
+    if (!row || row.org_id !== auth.ctx.orgId) return json({ error: "Contract not found" }, 404);
+    if (row.kind !== "mpa" || !row.envelope_id) return json({ error: "Not an MPA envelope" }, 400);
+    if (["completed", "voided", "declined"].includes(row.status)) {
+      return json({ error: `Envelope is already ${row.status}` }, 400);
+    }
+    const applicationId = (row.terms as any)?.applicationId as string;
+    if ((row.terms as any)?.mode !== "embedded" || !applicationId) {
+      return json({ error: "This envelope was sent for remote (email) signing" }, 400);
+    }
+
+    const tok = await getAccessToken();
+    if ("error" in tok) return json({ error: tok.error }, 400);
+    const acct = await getAccount(tok.token);
+    if ("error" in acct) return json({ error: acct.error }, 400);
+
+    const returnUrl = (body?.returnUrl as string) || "https://deltpay.com/#/signing-complete";
+    const res = await fetch(
+      `${acct.baseUri}/v2.1/accounts/${acct.accountId}/envelopes/${row.envelope_id}/views/recipient`,
+      {
+        method: "POST",
+        headers: { Authorization: `Bearer ${tok.token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          returnUrl,
+          authenticationMethod: "none",
+          email: row.signer_email,
+          userName: row.signer_name,
+          clientUserId: applicationId,
+        }),
+      },
+    );
+    const view = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return json({ error: `Signing session failed: ${view?.message || `HTTP ${res.status}`}` }, 400);
+    }
+    return json({ ok: true, url: view.url });
   }
 
   // ── status ──

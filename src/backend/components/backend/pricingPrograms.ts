@@ -72,15 +72,56 @@ export interface QuoteInput {
   riskTier: RiskTierKey;
 }
 
+// ── Per-deal rate overrides ──────────────────────────────────────────────
+// The Statement Analyzer lets staff nudge program rates live while quoting.
+// Overrides replace the matrix/heuristic number field-by-field; anything
+// left undefined falls back to the band × tier default.
+
+export interface ProgramOverrides {
+  cashDiscount?: { serviceFee?: number; monthlyFee?: number };
+  flatRate?: { rate?: number; perTxn?: number };
+  interchangePlus?: { ratePct?: number };
+}
+
+export interface ResolvedProgramRates {
+  cashDiscount: { serviceFee: number; monthlyFee: number };
+  flatRate: { rate: number; perTxn: number };
+  interchangePlus: { ratePct: number };
+}
+
+/**
+ * The effective rates a quote runs on: band × tier defaults (plus the IC+
+ * heuristic) with any per-deal overrides applied. Single source for
+ * quotePrograms, estimateProgramEconomics, and the analyzer's rate editors.
+ */
+export function resolveProgramRates(input: QuoteInput, overrides?: ProgramOverrides): ResolvedProgramRates {
+  const band = volumeBandKey(input.monthlyVolume);
+  const cd = CASH_DISCOUNT_MATRIX[band][input.riskTier];
+  const fr = FLAT_RATE_MATRIX[band][input.riskTier];
+  const currentRate = input.monthlyVolume > 0 ? (input.currentMonthlyCost / input.monthlyVolume) * 100 : 0;
+  // Interchange-plus estimate: undercut the current effective rate ~22%
+  // with a 2.15% floor (heuristic pending the full interchange engine).
+  const icRate = Math.max(2.15, Math.round(currentRate * 0.78 * 100) / 100);
+  return {
+    cashDiscount: {
+      serviceFee: overrides?.cashDiscount?.serviceFee ?? cd.serviceFee,
+      monthlyFee: overrides?.cashDiscount?.monthlyFee ?? cd.monthlyFee,
+    },
+    flatRate: {
+      rate: overrides?.flatRate?.rate ?? fr.rate,
+      perTxn: overrides?.flatRate?.perTxn ?? fr.perTxn,
+    },
+    interchangePlus: { ratePct: overrides?.interchangePlus?.ratePct ?? icRate },
+  };
+}
+
 /**
  * Quote all three Delt programs against a merchant's current statement.
  * Cash discount passes the service fee to customers, so the merchant's own
  * cost collapses to the program fee — that's the headline program.
  */
-export function quotePrograms(input: QuoteInput): ProgramQuote[] {
-  const { monthlyVolume, monthlyTransactions, currentMonthlyCost, riskTier } = input;
-  const band = volumeBandKey(monthlyVolume);
-  const currentRate = monthlyVolume > 0 ? (currentMonthlyCost / monthlyVolume) * 100 : 0;
+export function quotePrograms(input: QuoteInput, overrides?: ProgramOverrides): ProgramQuote[] {
+  const { monthlyVolume, monthlyTransactions, currentMonthlyCost } = input;
 
   const build = (
     key: ProgramQuote['key'],
@@ -104,12 +145,8 @@ export function quotePrograms(input: QuoteInput): ProgramQuote[] {
     };
   };
 
-  const cd = CASH_DISCOUNT_MATRIX[band][riskTier];
-  const fr = FLAT_RATE_MATRIX[band][riskTier];
-
-  // Interchange-plus estimate: undercut the current effective rate ~22%
-  // with a 2.15% floor (heuristic pending the full interchange engine).
-  const icRate = Math.max(2.15, Math.round(currentRate * 0.78 * 100) / 100);
+  const { cashDiscount: cd, flatRate: fr, interchangePlus } = resolveProgramRates(input, overrides);
+  const icRate = interchangePlus.ratePct;
 
   return [
     build(
@@ -164,16 +201,13 @@ export interface ProgramEconomics {
  * Unlike the calculator, no card-ratio factor is applied: the analyzer's
  * volume is already card volume extracted from the statement.
  */
-export function estimateProgramEconomics(input: QuoteInput): ProgramEconomics[] {
-  const { monthlyVolume, monthlyTransactions, currentMonthlyCost, riskTier } = input;
-  const band = volumeBandKey(monthlyVolume);
-  const currentRate = monthlyVolume > 0 ? (currentMonthlyCost / monthlyVolume) * 100 : 0;
+export function estimateProgramEconomics(input: QuoteInput, overrides?: ProgramOverrides): ProgramEconomics[] {
+  const { monthlyVolume, monthlyTransactions } = input;
   const annualVolume = monthlyVolume * 12;
   const interchangeCost = annualVolume * (INTERCHANGE_EST / 100);
 
-  const cd = CASH_DISCOUNT_MATRIX[band][riskTier];
-  const fr = FLAT_RATE_MATRIX[band][riskTier];
-  const icRate = Math.max(2.15, Math.round(currentRate * 0.78 * 100) / 100);
+  const { cashDiscount: cd, flatRate: fr, interchangePlus } = resolveProgramRates(input, overrides);
+  const icRate = interchangePlus.ratePct;
 
   const build = (key: ProgramQuote['key'], name: string, grossRevenue: number): ProgramEconomics => {
     const margin = grossRevenue - interchangeCost;

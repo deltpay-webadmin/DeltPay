@@ -44,7 +44,7 @@ async function captureSignedApplication(contractId: string): Promise<void> {
       .select("id, kind, submission_id, envelope_id, org_id, merchant_name, signed_storage_path, status")
       .eq("id", contractId)
       .single();
-    if (!row || row.kind !== "deal_application" || !row.submission_id) return;
+    if (!row || !["deal_application", "mpa"].includes(row.kind) || !row.submission_id) return;
     if (row.signed_storage_path || row.status !== "completed" || !row.envelope_id) return;
 
     const tok = await getAccessToken();
@@ -70,7 +70,9 @@ async function captureSignedApplication(contractId: string): Promise<void> {
       org_id: row.org_id,
       submission_id: row.submission_id,
       doc_kind: "signed_application",
-      filename: `Signed Application - ${row.merchant_name}.pdf`,
+      filename: row.kind === "mpa"
+        ? `Signed MPA - ${row.merchant_name}.pdf`
+        : `Signed Application - ${row.merchant_name}.pdf`,
       storage_path: path,
       extract_status: "none",
       uploaded_by: "DocuSign",

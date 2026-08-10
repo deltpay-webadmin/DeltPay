@@ -50,6 +50,7 @@ import { AgentResources } from './pages/AgentResources';
 import { AgentLeaderboard } from './pages/AgentLeaderboard';
 import { AgentTraining } from './pages/AgentTraining';
 import { BackendAgentDesk } from './pages/BackendAgentDesk';
+import { MpaApplicationPage } from './pages/MpaApplicationPage';
 import {
   LayoutDashboard,
   Users,
@@ -784,6 +785,7 @@ export function DeltBackendLayout() {
               <Route path="leaderboard" element={<AgentLeaderboard />} />
               <Route path="training" element={<AgentTraining />} />
               <Route path="agent-desk" element={<Guard perm="agents.edit"><BackendAgentDesk /></Guard>} />
+              <Route path="mpa/:applicationId" element={<Guard perm="leads.create"><MpaApplicationPage /></Guard>} />
               <Route path="support" element={<SupportPage />} />
               <Route path="settings" element={<Guard perm="general.view"><BackendSettings /></Guard>} />
               <Route path="settings/integrations" element={<Guard perm="integrations.view"><BackendSettings /></Guard>} />
