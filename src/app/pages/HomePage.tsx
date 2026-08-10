@@ -3,7 +3,6 @@ import { ByTheNumbers } from '@/app/components/ByTheNumbers';
 import { GlobeStats } from '@/app/components/GlobeStats';
 import { ResultsBento } from '@/app/components/ResultsBento';
 import { FeatureShowcase } from '@/app/components/FeatureShowcase';
-import { SeeItInAction } from '@/app/components/SeeItInAction';
 import { FinalCTA } from '@/app/components/FinalCTA';
 import { ScrollRevealText } from '@/app/components/ScrollRevealText';
 import { SpotlightTestimonial } from '@/app/components/SpotlightTestimonial';
@@ -52,11 +51,6 @@ Thousands of merchants run on Delt.
       {/* Globe + headline stats — desktop only (heavy decorative globe) */}
       <div className="hidden md:block">
         <GlobeStats />
-      </div>
-
-      {/* Desktop dashboard preview — hidden on mobile (unreadable when shrunk) */}
-      <div className="hidden md:block">
-        <SeeItInAction />
       </div>
 
       {/* Email capture — relocated below the product showcase where intent is warmer */}
