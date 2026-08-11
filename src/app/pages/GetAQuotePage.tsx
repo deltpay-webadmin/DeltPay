@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
 import { trackQuoteRequest } from '@/lib/pixel';
 import { supabase } from '@/app/lib/supabase';
+import { useHoneypot } from '@/app/components/Honeypot';
 import logoWhite from 'figma:asset/419e83442bb1bf5965a966a8870b00dd4288dd57.png';
 
 const NAVY   = '#041E42';
@@ -334,6 +335,7 @@ export function GetAQuotePage() {
   // immediately instead of waiting for the team to reach out.
   const [selfServeStatus, setSelfServeStatus] = useState<'none' | 'loading' | 'ready' | 'failed'>('none');
   const [selfServePath, setSelfServePath] = useState<string | null>(null);
+  const { honeypotField, honeypotValue } = useHoneypot();
 
   const toggleFeature = (id: string) =>
     setFeatures(prev => prev.includes(id) ? prev.filter(f => f !== id) : [...prev, id]);
@@ -371,6 +373,7 @@ export function GetAQuotePage() {
         volume,
         recommendedPlan: rec.plan,
         route: isSelfServeTier ? 'self-serve' : 'assisted',
+        hp_extra_field: honeypotValue(),
       }),
     }).catch(() => { /* non-blocking: success screen already shown */ });
     // Self-serve lane: open a merchant application and surface the secure
@@ -386,6 +389,7 @@ export function GetAQuotePage() {
             phone: form.phone,
             business: form.business,
             volume,
+            hp_extra_field: honeypotValue(),
           },
         })
         .then(({ data, error }) => {
@@ -606,6 +610,7 @@ export function GetAQuotePage() {
 
                 {/* Form */}
                 <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+                  {honeypotField}
                   {[
                     { key: 'name', label: 'Full name', placeholder: 'Jane Smith', type: 'text', required: true },
                     { key: 'email', label: 'Work email', placeholder: 'jane@business.com', type: 'email', required: true },
