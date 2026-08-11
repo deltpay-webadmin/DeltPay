@@ -18,7 +18,14 @@
  * which never includes `secure`. The UI renders `masks` (last-4s) instead.
  *
  * Actions: create, get, save, submit, upload-doc, save-pricing, preview-mpa,
- * packet, mark-boarded, create-link, void-link.
+ * packet, mark-boarded, create-link, void-link, self-start.
+ *
+ *   • self-start (public, unauthenticated) — the hybrid-onboarding entry:
+ *     low-volume merchants coming out of the deltpay.com quote flow create
+ *     their own deal submission + application draft and receive a tokenized
+ *     wizard link immediately, instead of waiting for a rep to send one.
+ *     Guarded by honeypot fields, a volume-tier allowlist, and a global
+ *     hourly rate cap on website-sourced submissions.
  */
 
 import { createClient } from "npm:@supabase/supabase-js@2";
@@ -92,6 +99,94 @@ Deno.serve(async (req) => {
     return json({ error: "Invalid JSON body" }, 400);
   }
   const action = body?.action as string;
+
+  // ── self-start (public): quote-flow merchants open their own application ──
+  if (action === "self-start") {
+    const WEBSITE_AGENT = "Website — Self-serve";
+    const clean = (v: unknown, max = 200) =>
+      typeof v === "string" ? v.trim().slice(0, max) : "";
+    const name = clean(body?.name);
+    const business = clean(body?.business) || name;
+    const email = clean(body?.email, 254).toLowerCase();
+    const phone = clean(body?.phone, 40);
+    const volume = clean(body?.volume, 40);
+    // Honeypot tripped → pretend success, create nothing.
+    if (clean(body?.company_website) || clean(body?.hp_extra_field)) {
+      return json({ ok: true });
+    }
+    if (!name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return json({ error: "A valid name and email are required" }, 400);
+    }
+    // Self-serve is only offered for the lower volume tiers; larger
+    // merchants go through the assisted quote path.
+    const VOLUME_EST: Record<string, number> = { under10k: 5_000, "10k_50k": 30_000 };
+    if (!(volume in VOLUME_EST)) {
+      return json({ error: "Self-serve onboarding is not available for this volume" }, 400);
+    }
+    // Cheap global throttle: cap website-sourced submissions per hour.
+    const hourAgo = new Date(Date.now() - 3_600_000).toISOString();
+    const { count } = await admin
+      .from("deal_submissions")
+      .select("id", { count: "exact", head: true })
+      .eq("agent_name", WEBSITE_AGENT)
+      .gte("created_at", hourAgo);
+    if ((count ?? 0) >= 20) {
+      return json({ error: "We're receiving a lot of applications right now — our team will email your secure link shortly." }, 429);
+    }
+    // Single-tenant org resolution: default_org_id(), falling back to the
+    // first org row (matches the set_org_id() trigger's own coalesce).
+    let orgId: string | null = null;
+    const { data: defOrg } = await admin.rpc("default_org_id");
+    if (typeof defOrg === "string" && defOrg) orgId = defOrg;
+    if (!orgId) {
+      const { data: orgs } = await admin.from("orgs").select("id").order("created_at").limit(1);
+      orgId = orgs?.[0]?.id ?? null;
+    }
+    if (!orgId) return json({ error: "Organization is not configured" }, 500);
+
+    const { data: sub, error: subErr } = await admin
+      .from("deal_submissions")
+      .insert({
+        org_id: orgId,
+        agent_name: WEBSITE_AGENT,
+        merchant_name: business,
+        contact_name: name,
+        email,
+        phone: phone || null,
+        monthly_volume: VOLUME_EST[volume],
+        notes: `Self-serve application started from the deltpay.com quote flow (${volume}).`,
+      })
+      .select("*")
+      .single();
+    if (subErr) return json({ error: subErr.message }, 500);
+
+    const seed: Partial<ApplicationData> = {
+      business: {
+        legalName: business,
+        dba: business,
+        phone,
+        email,
+        contactFirstName: name.split(/\s+/)[0] ?? "",
+        contactLastName: name.split(/\s+/).slice(1).join(" "),
+      } as ApplicationData["business"],
+    };
+    const token = newToken();
+    const tokenHash = await sha256Hex(token);
+    const expiresAt = new Date(Date.now() + 14 * 24 * 3600 * 1000).toISOString();
+    const { error: appErr } = await admin
+      .from("merchant_applications")
+      .insert({
+        org_id: orgId,
+        submission_id: sub.id,
+        data: seed,
+        token_hash: tokenHash,
+        token_expires_at: expiresAt,
+        applicant_email: email,
+      });
+    if (appErr) return json({ error: appErr.message }, 500);
+    // The raw token is returned exactly once and never stored.
+    return json({ ok: true, path: `/apply/mpa/${token}`, expiresAt });
+  }
 
   // ── Resolve context: token (merchant) or JWT (staff) ──
   let ctx: Ctx;

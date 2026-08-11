@@ -133,8 +133,9 @@ export default async function handler(req: any, res: any) {
   if (!name || !emailOk(email)) {
     return res.status(400).json({ ok: false, error: "Please enter a valid name and email." });
   }
+  const route = clean(body.route, 40); // 'self-serve' | 'assisted'
   const r = await sendLeadEmail({
-    subject: `${spamSuspect ? "[possible spam] " : ""}New quote request — ${name}`,
+    subject: `${spamSuspect ? "[possible spam] " : ""}${route === "self-serve" ? "[self-serve] " : ""}New quote request — ${name}`,
     heading: "New Get-a-Quote request",
     subtitle: `${name} just requested a quote through the DeltPay site.`,
     badge: "Quote request",
@@ -149,6 +150,7 @@ export default async function handler(req: any, res: any) {
       ["Monthly volume", clean(body.volume, 80)],
       ["Features", cleanList(body.features).join(", ")],
       ["Recommended plan", clean(body.recommendedPlan, 80)],
+      ["Onboarding route", route === "self-serve" ? "Self-serve — merchant offered the MPA application link" : route === "assisted" ? "Assisted — team reaches out with a quote" : ""],
       ["Notes", clean(body.notes, 2000)],
     ],
   });

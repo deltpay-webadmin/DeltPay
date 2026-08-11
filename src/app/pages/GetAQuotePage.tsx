@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
 import { trackQuoteRequest } from '@/lib/pixel';
+import { supabase } from '@/app/lib/supabase';
 import logoWhite from 'figma:asset/419e83442bb1bf5965a966a8870b00dd4288dd57.png';
 
 const NAVY   = '#041E42';
@@ -329,6 +330,10 @@ export function GetAQuotePage() {
   const [volume, setVolume] = useState('');
   const [form, setForm] = useState({ name: '', email: '', phone: '', business: '', notes: '' });
   const [submitted, setSubmitted] = useState(false);
+  // Hybrid onboarding: lower-volume merchants can start their MPA application
+  // immediately instead of waiting for the team to reach out.
+  const [selfServeStatus, setSelfServeStatus] = useState<'none' | 'loading' | 'ready' | 'failed'>('none');
+  const [selfServePath, setSelfServePath] = useState<string | null>(null);
 
   const toggleFeature = (id: string) =>
     setFeatures(prev => prev.includes(id) ? prev.filter(f => f !== id) : [...prev, id]);
@@ -339,6 +344,10 @@ export function GetAQuotePage() {
   const canSubmit = form.name.trim() && form.email.trim();
 
   const rec = getRecommendation(features, volume);
+
+  // Volume-tier routing: under $50K/mo gets the self-serve application lane;
+  // $50K+ stays on the assisted "we'll reach out" quote lane.
+  const isSelfServeTier = volume === 'under10k' || volume === '10k_50k';
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -361,8 +370,34 @@ export function GetAQuotePage() {
         bizType,
         volume,
         recommendedPlan: rec.plan,
+        route: isSelfServeTier ? 'self-serve' : 'assisted',
       }),
     }).catch(() => { /* non-blocking: success screen already shown */ });
+    // Self-serve lane: open a merchant application and surface the secure
+    // wizard link right on the success screen.
+    if (isSelfServeTier) {
+      setSelfServeStatus('loading');
+      supabase.functions
+        .invoke('mpa-application', {
+          body: {
+            action: 'self-start',
+            name: form.name,
+            email: form.email,
+            phone: form.phone,
+            business: form.business,
+            volume,
+          },
+        })
+        .then(({ data, error }) => {
+          if (!error && data?.ok && typeof data.path === 'string') {
+            setSelfServePath(data.path);
+            setSelfServeStatus('ready');
+          } else {
+            setSelfServeStatus('failed');
+          }
+        })
+        .catch(() => setSelfServeStatus('failed'));
+    }
     setSubmitted(true);
   }
 
@@ -391,16 +426,41 @@ export function GetAQuotePage() {
             You're all set, {form.name.split(' ')[0]}!
           </h2>
           <p style={{ fontSize: 15, color: '#6B7280', lineHeight: 1.7, marginBottom: 8 }}>
-            Our team will review your needs and reach out within <strong>1 business day</strong> with a tailored quote.
+            {isSelfServeTier ? (
+              <>You can open your merchant account right now — the application takes about <strong>10 minutes</strong> and your progress saves as you go.</>
+            ) : (
+              <>Our team will review your needs and reach out within <strong>1 business day</strong> with a tailored quote.</>
+            )}
           </p>
           <div style={{ display: 'inline-block', margin: '24px 0', padding: '14px 24px', borderRadius: 12, background: 'rgba(73,69,255,0.06)', border: '1.5px solid rgba(73,69,255,0.15)' }}>
             <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: INDIGO, marginBottom: 4 }}>Recommended plan</div>
             <div style={{ fontSize: 22, fontWeight: 800, color: rec.color }}>{rec.plan}</div>
             <div style={{ fontSize: 13, color: '#6B7280', marginTop: 6, maxWidth: 280 }}>{rec.why}</div>
           </div>
+          {isSelfServeTier && selfServeStatus !== 'failed' && (
+            <button
+              onClick={() => selfServePath && navigate(selfServePath)}
+              disabled={selfServeStatus !== 'ready'}
+              style={{ display: 'block', width: '100%', padding: '15px', borderRadius: 10, background: selfServeStatus === 'ready' ? INDIGO : '#C7C9F5', color: '#fff', fontFamily: JAK, fontSize: 15, fontWeight: 700, border: 'none', cursor: selfServeStatus === 'ready' ? 'pointer' : 'wait', marginTop: 8 }}
+            >
+              {selfServeStatus === 'ready' ? 'Start my application →' : 'Preparing your secure application…'}
+            </button>
+          )}
+          {isSelfServeTier && selfServeStatus === 'failed' && (
+            <p style={{ fontSize: 14, color: '#6B7280', lineHeight: 1.6, margin: '4px 0 8px' }}>
+              We'll email you a secure application link shortly so you can finish opening your account.
+            </p>
+          )}
+          {isSelfServeTier && (
+            <p style={{ fontSize: 13, color: '#94A3B8', lineHeight: 1.6, marginTop: 12 }}>
+              {volume === '10k_50k'
+                ? 'Prefer to talk it through? A payments specialist will also check in within 1 business day.'
+                : "Prefer to talk it through first? Just reply to the quote email we're sending you."}
+            </p>
+          )}
           <button
             onClick={() => navigate('/pricing')}
-            style={{ display: 'block', width: '100%', padding: '14px', borderRadius: 10, background: INDIGO, color: '#fff', fontFamily: JAK, fontSize: 15, fontWeight: 700, border: 'none', cursor: 'pointer', marginTop: 8 }}
+            style={{ display: 'block', width: '100%', padding: '14px', borderRadius: 10, background: isSelfServeTier ? 'transparent' : INDIGO, color: isSelfServeTier ? '#6B7280' : '#fff', fontFamily: JAK, fontSize: 15, fontWeight: isSelfServeTier ? 600 : 700, border: isSelfServeTier ? '1.5px solid #E5E7EB' : 'none', cursor: 'pointer', marginTop: 8 }}
           >
             Back to pricing
           </button>
