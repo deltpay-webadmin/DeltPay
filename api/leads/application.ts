@@ -114,6 +114,50 @@ async function sendLeadEmail(o: {
   }
 }
 
+
+// ── DB-first lead capture ─────────────────────────────────────────
+// Persist every lead to the CRM (crm_leads) via the shared submit-lead
+// edge function BEFORE attempting email, so a mail failure can never
+// lose a lead again. Best-effort: errors are logged, never thrown.
+const LEAD_FN_URL =
+  process.env.LEAD_FN_URL ||
+  "https://ytemrmpnwmzqeradbeoa.supabase.co/functions/v1/submit-lead";
+const LEAD_FN_KEY = process.env.SUPABASE_ANON_KEY || "";
+async function captureLead(
+  formName: string,
+  fields: Record<string, unknown>,
+): Promise<string | null> {
+  if (!LEAD_FN_KEY) {
+    console.warn("lead capture skipped: SUPABASE_ANON_KEY not set");
+    return null;
+  }
+  try {
+    const r = await fetch(LEAD_FN_URL, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${LEAD_FN_KEY}`,
+        apikey: LEAD_FN_KEY,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        source: "delt_pay_site",
+        form_name: formName,
+        product_interest: "payments",
+        ...fields,
+      }),
+    });
+    if (!r.ok) {
+      console.error("lead capture failed:", r.status, (await r.text().catch(() => "")).slice(0, 200));
+      return null;
+    }
+    const d = await r.json().catch(() => null);
+    return d && d.id ? String(d.id) : null;
+  } catch (err) {
+    console.error("lead capture error:", (err as Error)?.message || err);
+    return null;
+  }
+}
+
 export default async function handler(req: any, res: any) {
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
@@ -129,6 +173,16 @@ export default async function handler(req: any, res: any) {
   if (!fullName || !emailOk(email)) {
     return res.status(400).json({ ok: false, error: "Please enter a valid name and email." });
   }
+  // DB first, email second — a mail failure can never lose the lead.
+  const leadId = spamSuspect
+    ? null
+    : await captureLead("application", {
+        full_name: fullName,
+        email,
+        phone: clean(body.phone, 40),
+        company: clean(body.businessName, 200),
+      });
+
   const r = await sendLeadEmail({
     subject: `${spamSuspect ? "[possible spam] " : ""}New application — ${fullName}`,
     heading: "New merchant application",
@@ -144,5 +198,5 @@ export default async function handler(req: any, res: any) {
       ["Business type", clean(body.businessType, 80)],
     ],
   });
-  return res.status(200).json({ ok: true, emailed: r.ok, emailError: r.error });
+  return res.status(200).json({ ok: true, leadId, emailed: r.ok, emailError: r.error });
 }

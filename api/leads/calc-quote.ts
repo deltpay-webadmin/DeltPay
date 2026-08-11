@@ -157,6 +157,50 @@ async function send(payload: Record<string, unknown>): Promise<{ ok: boolean; er
   }
 }
 
+
+// ── DB-first lead capture ─────────────────────────────────────────
+// Persist every lead to the CRM (crm_leads) via the shared submit-lead
+// edge function BEFORE attempting email, so a mail failure can never
+// lose a lead again. Best-effort: errors are logged, never thrown.
+const LEAD_FN_URL =
+  process.env.LEAD_FN_URL ||
+  "https://ytemrmpnwmzqeradbeoa.supabase.co/functions/v1/submit-lead";
+const LEAD_FN_KEY = process.env.SUPABASE_ANON_KEY || "";
+async function captureLead(
+  formName: string,
+  fields: Record<string, unknown>,
+): Promise<string | null> {
+  if (!LEAD_FN_KEY) {
+    console.warn("lead capture skipped: SUPABASE_ANON_KEY not set");
+    return null;
+  }
+  try {
+    const r = await fetch(LEAD_FN_URL, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${LEAD_FN_KEY}`,
+        apikey: LEAD_FN_KEY,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        source: "delt_pay_site",
+        form_name: formName,
+        product_interest: "payments",
+        ...fields,
+      }),
+    });
+    if (!r.ok) {
+      console.error("lead capture failed:", r.status, (await r.text().catch(() => "")).slice(0, 200));
+      return null;
+    }
+    const d = await r.json().catch(() => null);
+    return d && d.id ? String(d.id) : null;
+  } catch (err) {
+    console.error("lead capture error:", (err as Error)?.message || err);
+    return null;
+  }
+}
+
 export default async function handler(req: any, res: any) {
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
@@ -184,6 +228,15 @@ export default async function handler(req: any, res: any) {
     annual: body.annual !== undefined ? num(body.annual) : savings * 12,
   };
 
+  // DB first, email second — a mail failure can never lose the lead.
+  const leadId = spamSuspect
+    ? null
+    : await captureLead("calculator", {
+        email,
+        monthly_volume: q.monthlyVolume,
+        message: `Calculator: rate ${q.processingRate || "?"}, est. savings $${q.savings}/mo`,
+      });
+
   // Notify the team (always).
   const team = await send({
     from: LEAD_NOTIFY_FROM, to: [LEAD_NOTIFY_TO], bcc: [LEAD_NOTIFY_BCC],
@@ -207,6 +260,6 @@ export default async function handler(req: any, res: any) {
   }
 
   return res.status(200).json({
-    ok: true, emailed: team.ok, emailError: team.error, visitorEmailed,
+    ok: true, leadId, emailed: team.ok, emailError: team.error, visitorEmailed,
   });
 }
