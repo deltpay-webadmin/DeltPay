@@ -45,3 +45,11 @@ create policy email_suppressions_select on public.email_suppressions
 
 -- Weekday 13:10 UTC (9:10am ET in summer) — right after the stale-lead digest.
 select cron.schedule('email-health-digest-daily', '10 13 * * 1-5', $$select public.invoke_job('email-health-digest')$$);
+
+-- The hardening migration revokes default privileges on new tables; grant
+-- explicitly (service role writes, staff reads).
+grant select, insert, update, delete on public.email_events to service_role;
+grant select, insert, update, delete on public.email_suppressions to service_role;
+grant usage, select on all sequences in schema public to service_role;
+grant select on public.email_events to authenticated;
+grant select on public.email_suppressions to authenticated;
