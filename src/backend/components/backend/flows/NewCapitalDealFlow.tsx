@@ -116,7 +116,7 @@ export function NewCapitalDealFlow({
                     label="Merchant"
                     value={form.merchant}
                     onChange={v => update('merchant', v)}
-                    placeholder="Metro Diner Group"
+                    placeholder="Enter merchant name"
                     autoFocus
                   />
                 </div>

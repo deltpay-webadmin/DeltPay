@@ -49,66 +49,9 @@ const CHANNEL_CONFIG: Record<ChannelType, { icon: React.ElementType; color: stri
   note: { icon: Edit3, color: 'text-gray-600', bg: 'bg-gray-50 border-gray-200', label: 'Note' },
 };
 
-// ── Mock Threads ──
-const THREADS: Thread[] = [
-  {
-    id: 'th-1', merchant: 'Brooklyn Vinyl Records', merchantId: 'M-1002', contact: 'David Park', contactEmail: 'david@brooklynvinyl.com', contactPhone: '(718) 555-0198',
-    channel: 'email', status: 'unread', starred: true, lastMessage: 'Hi Sarah, I received the disclosure documents but I have a question about the broker compensation section...', lastTimestamp: '2026-04-17 10:30', messageCount: 4, agent: 'Sarah Kim', dealId: 'DL-2026-0415',
-    messages: [
-      { id: 'm1a', direction: 'outbound', channel: 'email', from: 'Sarah Kim <sarah@deltpay.com>', to: 'david@brooklynvinyl.com', subject: 'NY CFDL Disclosure Package — Brooklyn Vinyl Records', body: 'Hi David,\n\nAttached is your Commercial Finance Disclosure as required by New York law. Please review all 9 items carefully.\n\nKey points:\n- Total funds provided: $62,000\n- Estimated APR: 42.8%\n- Daily payment: $285\n- Total repayment: $88,040\n\nPlease sign and return the acknowledgment at your earliest convenience.\n\nBest,\nSarah Kim\nDelt Pay', timestamp: '2026-04-16 15:10', attachments: ['NY_CFDL_Disclosure_DL-2026-0415.pdf', 'Acknowledgment_Form.pdf'] },
-      { id: 'm1b', direction: 'inbound', channel: 'email', from: 'david@brooklynvinyl.com', to: 'sarah@deltpay.com', subject: 'Re: NY CFDL Disclosure Package — Brooklyn Vinyl Records', body: 'Hi Sarah,\n\nThank you for sending this over. I\'ve reviewed most of it. Two questions:\n\n1. The estimated APR seems high — is that typical for this type of financing?\n2. I don\'t see the broker compensation disclosure. I thought that was required in NY?\n\nThanks,\nDavid', timestamp: '2026-04-16 16:45' },
-      { id: 'm1c', direction: 'outbound', channel: 'email', from: 'Sarah Kim <sarah@deltpay.com>', to: 'david@brooklynvinyl.com', subject: 'Re: Re: NY CFDL Disclosure Package — Brooklyn Vinyl Records', body: 'Hi David,\n\nGreat questions.\n\n1. The estimated APR is required by NY law to be disclosed — it converts the factor rate (1.42) into an annualized percentage. The actual dollar cost of financing is $26,040.\n\n2. You\'re correct — the broker compensation disclosure is a separate document. I\'m generating it now and will send it over by end of day tomorrow.\n\nPlease don\'t sign the acknowledgment until you\'ve received both documents.\n\nBest,\nSarah', timestamp: '2026-04-16 17:20' },
-      { id: 'm1d', direction: 'inbound', channel: 'email', from: 'david@brooklynvinyl.com', to: 'sarah@deltpay.com', subject: 'Re: Re: Re: NY CFDL Disclosure Package — Brooklyn Vinyl Records', body: 'Hi Sarah, I received the disclosure documents but I have a question about the broker compensation section. Specifically, does the $3,100 commission include all fees, or are there additional charges I should know about?\n\nAlso, once I sign everything, how quickly can the funds be deposited?\n\nThanks,\nDavid', timestamp: '2026-04-17 10:30' },
-    ],
-  },
-  {
-    id: 'th-2', merchant: 'Havana Bites Cafe', merchantId: 'M-1001', contact: 'Maria Gonzalez', contactEmail: 'maria@havanabites.com', contactPhone: '(305) 555-0142',
-    channel: 'sms', status: 'read', starred: false, lastMessage: 'Great, thank you for the update! We are excited about the renewal offer.', lastTimestamp: '2026-04-16 14:15', messageCount: 5, agent: 'Marcus Johnson',
-    messages: [
-      { id: 'm2a', direction: 'outbound', channel: 'sms', from: 'Delt Pay', to: '(305) 555-0142', body: 'Hi Maria! This is Marcus from Delt Pay. Your funding of $45,000 has been deposited. Daily payments of $145 begin tomorrow. Questions? Reply here or call (305) 555-0100.', timestamp: '2026-04-14 10:30' },
-      { id: 'm2b', direction: 'inbound', channel: 'sms', from: '(305) 555-0142', to: 'Delt Pay', body: 'Thank you Marcus!! I see the deposit. 🙏 Quick question — if we have a slow day can we adjust the payment?', timestamp: '2026-04-14 11:15' },
-      { id: 'm2c', direction: 'outbound', channel: 'sms', from: 'Delt Pay', to: '(305) 555-0142', body: 'Great to hear! Yes, your agreement includes a reconciliation provision. If your daily receipts drop significantly you can request an adjustment. Just reach out and we\'ll review.', timestamp: '2026-04-14 11:30' },
-      { id: 'm2d', direction: 'outbound', channel: 'sms', from: 'Delt Pay', to: '(305) 555-0142', body: 'Hi Maria! Just a heads up — you\'ve repaid 73% of your advance. You\'re pre-qualified for a renewal of up to $50K. Want me to send over the details?', timestamp: '2026-04-15 09:15' },
-      { id: 'm2e', direction: 'inbound', channel: 'sms', from: '(305) 555-0142', to: 'Delt Pay', body: 'Great, thank you for the update! We are excited about the renewal offer.', timestamp: '2026-04-16 14:15' },
-    ],
-  },
-  {
-    id: 'th-3', merchant: 'Midtown Taqueria', merchantId: 'M-1005', contact: 'Roberto Fuentes', contactEmail: 'roberto@midtowntaq.com', contactPhone: '(212) 555-0167',
-    channel: 'call', status: 'read', starred: false, lastMessage: 'Inbound call — 12m 05s. Owner asked about chargeback on Mar 28. Explained dispute process.', lastTimestamp: '2026-04-14 16:45', messageCount: 3, agent: 'Marcus Johnson',
-    messages: [
-      { id: 'm3a', direction: 'outbound', channel: 'call', from: 'Marcus Johnson', to: '(212) 555-0167', body: 'Called to introduce Delt\'s dispute management service. Owner interested. Explained process for MC chargebacks and timeline. Scheduled follow-up for next week.', timestamp: '2026-04-10 10:30' },
-      { id: 'm3b', direction: 'outbound', channel: 'email', from: 'Marcus Johnson <marcus@deltpay.com>', to: 'roberto@midtowntaq.com', subject: 'Chargeback Management — Next Steps', body: 'Hi Roberto,\n\nGreat speaking with you. As discussed, here\'s how our dispute management works:\n\n1. We monitor your chargebacks in real-time\n2. When a CB comes in, we draft the response with compelling evidence\n3. We file within the deadline\n\nYour current MC CB ratio is 1.17% — below the 1.5% ECM threshold, but climbing. We\'ll keep an eye on it.\n\nBest,\nMarcus', timestamp: '2026-04-10 11:00' },
-      { id: 'm3c', direction: 'inbound', channel: 'call', from: '(212) 555-0167', to: 'Marcus Johnson', body: 'Inbound call — 12m 05s. Owner asked about chargeback on Mar 28 transaction ($315). Customer claims food not delivered, but merchant has DoorDash delivery confirmation. Explained how to compile compelling evidence. Will follow up with documentation request email.', timestamp: '2026-04-14 16:45' },
-    ],
-  },
-  {
-    id: 'th-4', merchant: 'Richmond Auto Detailing', merchantId: 'M-1003', contact: 'James Richardson', contactEmail: 'james@richmondauto.com', contactPhone: '(804) 555-0134',
-    channel: 'call', status: 'read', starred: true, lastMessage: 'Called re: VA 3-day review period. Merchant confirms receipt of disclosure. Funding Apr 22.', lastTimestamp: '2026-04-17 09:15', messageCount: 2, agent: 'Marcus Johnson', dealId: 'DL-2026-0416',
-    messages: [
-      { id: 'm4a', direction: 'outbound', channel: 'email', from: 'Marcus Johnson <marcus@deltpay.com>', to: 'james@richmondauto.com', subject: 'VA Disclosure Package — Richmond Auto Detailing', body: 'Hi James,\n\nAttached is your Virginia commercial financing disclosure as required by HB 1027.\n\nIMPORTANT: Virginia law requires a 3-business-day review period before we can proceed with funding. This means we cannot fund before April 22, 2026.\n\nPlease review the attached documents carefully. I\'ll call you tomorrow to answer any questions.\n\nBest,\nMarcus Johnson\nDelt Pay', timestamp: '2026-04-17 08:55', attachments: ['VA_Disclosure_DL-2026-0416.pdf', 'VA_Addendum.pdf'] },
-      { id: 'm4b', direction: 'outbound', channel: 'call', from: 'Marcus Johnson', to: '(804) 555-0134', body: 'Called re: VA 3-day review period. Merchant confirms receipt of disclosure. Understands cannot fund before Apr 22. No questions at this time. Will call back on Apr 22 to collect signature and initiate funding.', timestamp: '2026-04-17 09:15' },
-    ],
-  },
-  {
-    id: 'th-5', merchant: 'Coral Reef Auto Spa', merchantId: 'M-1004', contact: 'Carlos Mendez', contactEmail: 'carlos@coralreefauto.com', contactPhone: '(954) 555-0189',
-    channel: 'email', status: 'unread', starred: false, lastMessage: 'I spoke with my web developer. He says enabling 3DS will cost about $200/mo. Is that normal?', lastTimestamp: '2026-04-16 09:20', messageCount: 3, agent: 'James Miller',
-    messages: [
-      { id: 'm5a', direction: 'outbound', channel: 'call', from: 'James Miller', to: '(954) 555-0189', body: 'Called about rising chargeback rate. 3 recent CBs from single card-not-present customer. Recommended enabling 3DS for online bookings. Owner will discuss with web developer.', timestamp: '2026-04-10 09:30' },
-      { id: 'm5b', direction: 'outbound', channel: 'email', from: 'James Miller <james.m@deltpay.com>', to: 'carlos@coralreefauto.com', subject: 'Chargeback Prevention — 3DS Recommendation', body: 'Hi Carlos,\n\nFollowing up on our call. Your fraud-to-sales ratio is 0.82% — getting close to Visa\'s VAMP threshold of 0.9%. We need to act quickly.\n\nHere\'s what I recommend:\n1. Enable 3D Secure for all card-not-present transactions\n2. Block the specific card that\'s been causing issues\n3. Add AVS matching for online bookings\n\nIf we don\'t get below the threshold, Visa can impose fines starting at $25,000/month.\n\nPlease let me know what your developer says.\n\nBest,\nJames', timestamp: '2026-04-12 10:00' },
-      { id: 'm5c', direction: 'inbound', channel: 'email', from: 'carlos@coralreefauto.com', to: 'james.m@deltpay.com', subject: 'Re: Chargeback Prevention — 3DS Recommendation', body: 'James,\n\nI spoke with my web developer. He says enabling 3DS will cost about $200/mo. Is that normal? Also, he mentioned something about liability shift — can you explain that?\n\nWe definitely don\'t want those fines.\n\nCarlos', timestamp: '2026-04-16 09:20' },
-    ],
-  },
-  {
-    id: 'th-6', merchant: 'Little Havana Barbershop', merchantId: 'M-1006', contact: 'Tony Ramirez', contactEmail: 'tony@littlehavanabarber.com', contactPhone: '(305) 555-0156',
-    channel: 'call', status: 'read', starred: false, lastMessage: 'No answer — left voicemail regarding 3 consecutive NSFs and payment plan options.', lastTimestamp: '2026-04-15 14:00', messageCount: 2, agent: 'Marcus Johnson',
-    messages: [
-      { id: 'm6a', direction: 'outbound', channel: 'sms', from: 'Delt Pay', to: '(305) 555-0156', body: 'Hi Tony, this is Marcus from Delt Pay. We noticed your last 3 ACH payments didn\'t go through. Please call me at (305) 555-0100 so we can discuss options. Thank you.', timestamp: '2026-04-14 10:00' },
-      { id: 'm6b', direction: 'outbound', channel: 'call', from: 'Marcus Johnson', to: '(305) 555-0156', body: 'No answer — left voicemail regarding 3 consecutive NSFs and payment plan options. Mentioned we can discuss reducing daily amount or switching to weekly. Asked to call back by EOD Friday.', timestamp: '2026-04-15 14:00' },
-    ],
-  },
-];
+// ── Live inbox data (loaded from the backend when available) ──
+const THREADS: Thread[] = [];
 
-// ── Compose Modal ──
 function ComposeModal({ onClose }: { onClose: () => void }) {
   const [channel, setChannel] = useState<'email' | 'sms'>('email');
   const [to, setTo] = useState('');

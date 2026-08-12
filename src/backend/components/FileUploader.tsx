@@ -9,6 +9,7 @@ interface FileUploaderProps {
 export function FileUploader({ onFilesUploaded, title = "Upload Residual Report" }: FileUploaderProps) {
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [isDragging, setIsDragging] = useState(false);
+  const [parsedAccountCount, setParsedAccountCount] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -51,7 +52,7 @@ export function FileUploader({ onFilesUploaded, title = "Upload Residual Report"
       
       // Simple CSV parsing - assumes format: Account Name,Month1,Month2,Month3
       const lines = text.split('\n').filter(line => line.trim());
-      const accounts = [];
+      const accounts: Array<{ accountName: string; month1: number; month2: number; month3: number }> = [];
       
       for (let i = 1; i < lines.length; i++) { // Skip header
         const parts = lines[i].split(',').map(p => p.trim());
@@ -65,21 +66,7 @@ export function FileUploader({ onFilesUploaded, title = "Upload Residual Report"
         }
       }
       
-      // If no CSV data, use sample data
-      if (accounts.length === 0) {
-        accounts.push(
-          { accountName: 'Acme Corp', month1: 1200, month2: 1250, month3: 1180 },
-          { accountName: 'Smith & Sons', month1: 850, month2: 900, month3: 875 },
-          { accountName: 'Green Valley Retail', month1: 450, month2: 480, month3: 465 },
-          { accountName: 'Tech Solutions LLC', month1: 320, month2: 315, month3: 330 },
-          { accountName: 'Downtown Cafe', month1: 280, month2: 295, month3: 270 },
-          { accountName: 'Metro Services', month1: 220, month2: 210, month3: 225 },
-          { accountName: 'Valley Medical', month1: 180, month2: 185, month3: 175 },
-          { accountName: 'City Hardware', month1: 150, month2: 160, month3: 155 },
-          { accountName: 'Sunrise Bakery', month1: 95, month2: 100, month3: 92 },
-          { accountName: 'Riverside Auto', month1: 75, month2: 80, month3: 78 },
-        );
-      }
+      setParsedAccountCount(accounts.length);
       
       onFilesUploaded(accounts);
     };
@@ -124,6 +111,10 @@ export function FileUploader({ onFilesUploaded, title = "Upload Residual Report"
           className="hidden"
         />
       </div>
+
+      {parsedAccountCount === 0 && (
+        <p className="mt-4 py-4 text-center text-sm text-gray-400">No account rows found in this file.</p>
+      )}
 
       {/* Uploaded Files List */}
       {uploadedFiles.length > 0 && (

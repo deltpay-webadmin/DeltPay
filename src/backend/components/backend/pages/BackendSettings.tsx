@@ -143,16 +143,7 @@ const GENERAL_SECTIONS: SettingsSection[] = [
 ];
 
 // ─── AUDIT LOG ──────────────────────────────────────────────────
-const AUDIT_LOG = [
-  { time: 'Apr 15, 2:34 PM', user: 'David Hazday', action: 'Updated processing defaults — margin floor set to 0.50%', module: 'Settings' },
-  { time: 'Apr 15, 1:12 PM', user: 'David Hazday', action: 'Verified interchange for Sunrise Cafe — flagged Visa Qual +14bps', module: 'Residuals' },
-  { time: 'Apr 14, 4:45 PM', user: 'Patrick', action: 'Uploaded March 2026 residual report — 8 merchants processed', module: 'Residuals' },
-  { time: 'Apr 14, 11:20 AM', user: 'Michael Chen', action: 'Created new lead: TechForward Solutions', module: 'Pipeline' },
-  { time: 'Apr 13, 3:15 PM', user: 'David Hazday', action: 'Approved MCA UW-2026-0145: Urban Wellness Spa — $150K at 1.36x', module: 'Capital' },
-  { time: 'Apr 12, 9:00 AM', user: 'Sarah Johnson', action: 'Moved Coastal Construction to Bank Verification stage', module: 'Pipeline' },
-  { time: 'Apr 11, 2:30 PM', user: 'David Hazday', action: 'Changed James Miller commission split from 45% → 50%', module: 'Team' },
-  { time: 'Apr 10, 10:45 AM', user: 'David Hazday', action: 'Connected CRS Credit integration — health check passed 92%', module: 'Settings' },
-];
+const AUDIT_LOG: { time: string; user: string; action: string; module: string }[] = [];
 
 type SettingsTab = 'general' | 'integrations' | 'roles' | 'users' | 'audit';
 
@@ -536,6 +527,9 @@ export function BackendSettings() {
                   <span className="text-[11px] font-medium text-brand bg-brand/5 px-2.5 py-0.5 rounded shrink-0">{log.module}</span>
                 </div>
               ))}
+              {AUDIT_LOG.length === 0 && (
+                <p className="py-12 text-center text-sm text-gray-400">No audit activity yet</p>
+              )}
             </div>
           </div>
         )}

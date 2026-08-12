@@ -7,7 +7,9 @@
     "build": "vite build",
     "dev": "vite",
     "test": "vitest run",
-    "check:functions": "node scripts/check-functions.mjs"
+    "check:functions": "node scripts/check-functions.mjs",
+    "check:dummy-data": "node scripts/check-dummy-data.mjs",
+    "prebuild": "npm run check:dummy-data"
   },
   "dependencies": {
     "@emotion/react": "11.14.0",
