@@ -25,6 +25,7 @@ on:
       - "supabase/functions/plaid-webhook/**"
       - "supabase/functions/plaid-config-check/**"
       - "supabase/functions/resend-webhook/**"
+      - "supabase/functions/email-unsubscribe/**"
       - "supabase/functions/_shared/**"
       - "supabase/config.toml"
 
@@ -54,3 +55,6 @@ jobs:
           supabase functions deploy plaid-webhook --project-ref "$SUPABASE_PROJECT_ID"
           supabase functions deploy plaid-config-check --project-ref "$SUPABASE_PROJECT_ID"
           supabase functions deploy resend-webhook --no-verify-jwt --project-ref "$SUPABASE_PROJECT_ID"
+          # Public unsubscribe endpoint: auth is the HMAC token in the URL,
+          # not a JWT — recipients click it straight from an email.
+          supabase functions deploy email-unsubscribe --no-verify-jwt --project-ref "$SUPABASE_PROJECT_ID"

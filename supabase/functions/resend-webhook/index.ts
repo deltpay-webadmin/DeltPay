@@ -1,11 +1,23 @@
 /**
- * Resend delivery webhook — the deliverability safety net.
+ * Resend delivery webhook — deliverability safety net *and* engagement feed.
  *
- * Subscribed events (configured in the Resend dashboard/API):
+ * Subscribed events (configured in the Resend dashboard/API — enabling the
+ * engagement three is what turns every sequence into a measurable funnel):
+ *   email.delivered         → log
+ *   email.opened            → log            (tracking pixel)
+ *   email.clicked           → log + link_url (tracked link)
  *   email.bounced           → log + suppress (permanent bounces)
  *   email.complained        → log + suppress (spam complaint = never again)
  *   email.failed            → log
  *   email.delivery_delayed  → log
+ *
+ * Open and click tracking must also be switched on for the domain in Resend
+ * (Domains → Tracking); without it these events never fire.
+ *
+ * Campaign attribution: the sender writes a `sent` row carrying Resend's
+ * email_id plus the blueprint code, and every later event for that id
+ * inherits it — so opens and clicks roll up per sequence without depending
+ * on Resend echoing our metadata back.
  *
  * Suppressed addresses are skipped by every automated sender (lifecycle
  * jobs, Plaid reminders, DeltCapital lifecycle) so sequences can never
@@ -16,7 +28,7 @@
  * Deployed with --no-verify-jwt — the Svix signature is the auth.
  */
 
-import { isSuppressed, logEmailEvent, suppress } from "../_shared/suppression.ts";
+import { contextForEmailId, isSuppressed, logEmailEvent, suppress } from "../_shared/suppression.ts";
 
 const enc = new TextEncoder();
 
@@ -74,6 +86,9 @@ Deno.serve(async (req: Request) => {
   const subject = data?.subject || null;
 
   const handled: Record<string, { event: string; suppressReason?: string }> = {
+    "email.delivered": { event: "delivered" },
+    "email.opened": { event: "opened" },
+    "email.clicked": { event: "clicked" },
     "email.bounced": { event: "bounced", suppressReason: "hard bounce" },
     "email.complained": { event: "complained", suppressReason: "spam complaint" },
     "email.failed": { event: "failed" },
@@ -87,11 +102,26 @@ Deno.serve(async (req: Request) => {
   const bounceType = String(data?.bounce?.type || data?.bounce?.subType || "").toLowerCase();
   const transient = h.event === "bounced" && bounceType.includes("transient");
   const reason = data?.bounce?.message || data?.failed?.reason || data?.reason || bounceType || null;
+  // Resend puts the followed URL on click events (shape has varied across
+  // payload versions — check both).
+  const linkUrl = h.event === "clicked"
+    ? (data?.click?.link || data?.link || data?.url || null)
+    : null;
+
+  // Inherit campaign/variant/kind from the `sent` row this event belongs to.
+  const ctx = await contextForEmailId(emailId);
 
   for (const to of recipients) {
-    await logEmailEvent({ emailId, recipient: to, event: h.event, reason, subject, payload: evt });
-    if (h.suppressReason && !transient && !(await isSuppressed(to))) {
-      await suppress(to, h.suppressReason, type);
+    await logEmailEvent({
+      emailId, recipient: to, event: h.event, reason, subject,
+      campaign: ctx.campaign, variant: ctx.variant, kind: ctx.kind,
+      linkUrl, payload: evt,
+    });
+    // Skip only if already blocked for *everything* — the 'transactional'
+    // check is true exactly when scope='all'. Someone carrying a narrower
+    // marketing opt-out who then hard-bounces still gets widened to 'all'.
+    if (h.suppressReason && !transient && !(await isSuppressed(to, "transactional"))) {
+      await suppress(to, h.suppressReason, type, "all");
       console.log(`[resend-webhook] suppressed ${to} (${h.suppressReason})`);
     }
   }

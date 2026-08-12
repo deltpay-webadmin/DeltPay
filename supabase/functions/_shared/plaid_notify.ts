@@ -49,6 +49,10 @@ export async function sendEmail(opts: {
   subject: string;
   html: string;
   bcc?: string | null;
+  /** Blueprint campaign code, so this path feeds the same funnel as
+   * lifecycle mail. Omitted on staff alerts — internal mail isn't a
+   * sequence and shouldn't dilute the rollups. */
+  campaign?: string;
 }): Promise<boolean> {
   const key = Deno.env.get("RESEND_API_KEY");
   if (!key) {
@@ -77,13 +81,20 @@ export async function sendEmail(opts: {
     if (!res.ok) {
       const detail = (await res.text().catch(() => "")).slice(0, 300);
       console.error("[plaid-notify] Resend send failed:", res.status, detail);
-      await logEmailEvent({ recipient: opts.to, event: "send_error", reason: `resend ${res.status}: ${detail}`, subject: opts.subject });
+      await logEmailEvent({ recipient: opts.to, event: "send_error", reason: `resend ${res.status}: ${detail}`, subject: opts.subject, campaign: opts.campaign, kind: "transactional" });
       return false;
     }
+    // Log the success too — the email_id is what the webhook joins opens and
+    // clicks onto, and it's the lead's communication history in the CRM.
+    const sent = await res.json().catch(() => null);
+    await logEmailEvent({
+      emailId: sent?.id ?? null, recipient: opts.to, event: "sent",
+      subject: opts.subject, campaign: opts.campaign, kind: "transactional",
+    });
     return true;
   } catch (err) {
     console.error("[plaid-notify] Resend send threw:", err);
-    await logEmailEvent({ recipient: opts.to, event: "send_error", reason: String((err as Error)?.message || err), subject: opts.subject });
+    await logEmailEvent({ recipient: opts.to, event: "send_error", reason: String((err as Error)?.message || err), subject: opts.subject, campaign: opts.campaign, kind: "transactional" });
     return false;
   }
 }

@@ -15,16 +15,28 @@
  *   capital-renewal-sweep daily  — DC-15: renewal-eligible advances
  *   growth-sweep         weekly  — DP-14 cross-sell, DP-15 referral, DC-16
  *
+ * Every send is tagged with its blueprint campaign code and logged to
+ * email_events, so each sequence has a real sent → opened → clicked funnel
+ * (see _shared/suppression.ts). Marketing sends additionally carry a
+ * one-click unsubscribe and a postal address — CAN-SPAM applies to the
+ * cross-sell, referral and renewal mail, and an opt-out is far cheaper than
+ * a spam complaint (which kills the address for every sequence at once).
+ *
  * From-addresses (env-overridable):
  *   LIFECYCLE_FROM_SYSTEM   "DeltPay <noreply@deltpay.com>"     — system mail
  *   LIFECYCLE_FROM_SALES    "David Hazday <david@deltpay.com>"  — human touch
  *   LIFECYCLE_FROM_CAPITAL  "David Hazday <david@deltcapital.com>"
  *   LIFECYCLE_REPLY_TO      "david@deltpay.com"
+ *
+ * Marketing-only secrets (both REQUIRED before any marketing send goes out —
+ * without them the send is skipped, loudly, rather than mailed non-compliant):
+ *   UNSUBSCRIBE_SECRET         HMAC key for unsubscribe links
+ *   LIFECYCLE_POSTAL_ADDRESS   physical mailing address, CAN-SPAM §7704(a)(5)
  */
 
 import { svc } from "./plaid.ts";
 import { notifyStaff, withinSendWindow } from "./plaid_notify.ts";
-import { isSuppressed, logEmailEvent } from "./suppression.ts";
+import { isSuppressed, logEmailEvent, type MailKind, unsubscribeUrl } from "./suppression.ts";
 
 const FROM_SYSTEM = () => Deno.env.get("LIFECYCLE_FROM_SYSTEM") || "DeltPay <noreply@deltpay.com>";
 const FROM_SALES = () => Deno.env.get("LIFECYCLE_FROM_SALES") || "David Hazday <david@deltpay.com>";
@@ -40,45 +52,137 @@ const PHONE = () => Deno.env.get("LIFECYCLE_PHONE") || "";
 const REFERRAL_REWARD_PAY = "$250";
 const REFERRAL_REWARD_CAPITAL = "1% of their first advance (up to $1,000)";
 
+const POSTAL_ADDRESS = () => Deno.env.get("LIFECYCLE_POSTAL_ADDRESS") || "";
+
+/**
+ * CAN-SPAM footer for marketing mail: a working opt-out and a physical
+ * postal address. Sits under the card, in the small grey type people
+ * actually look for when they want out — burying it is how you turn an
+ * unsubscribe into a spam complaint.
+ */
+function marketingFooter(unsubUrl: string): string {
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6fb;padding:0 0 28px;">
+    <tr><td align="center">
+      <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;">
+        <tr><td style="padding:0 28px;text-align:center;">
+          <p style="margin:0 0 6px;font-size:11px;line-height:1.6;color:#8a93a8;">
+            You're getting this because you're a Delt customer.
+            <a href="${esc(unsubUrl)}" style="color:#8a93a8;text-decoration:underline;">Unsubscribe from emails like this</a> —
+            you'll still get anything about your account or applications.
+          </p>
+          ${POSTAL_ADDRESS() ? `<p style="margin:0;font-size:11px;line-height:1.6;color:#8a93a8;">${esc(POSTAL_ADDRESS())}</p>` : ""}
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>`;
+}
+
+/**
+ * Send + record. One chokepoint, so every automated email in the product
+ * gets the same three things: a suppression check, a logged `sent` row
+ * carrying Resend's email_id (which the webhook later joins opens/clicks
+ * onto), and — for marketing — a compliant opt-out.
+ */
 export async function sendLifecycle(opts: {
   to: string;
   from: string;
   subject: string;
   html: string;
   replyTo?: string;
+  /** Blueprint template code — DP-4, DC-15, … Drives the funnel rollups. */
+  campaign?: string;
+  /** Subject/body variant key, when the template A/B tests. */
+  variant?: string;
+  /** Marketing mail honours opt-outs and carries an unsubscribe. Defaults
+   * to transactional — the safe side for account and application mail. */
+  kind?: MailKind;
 }): Promise<boolean> {
   const key = Deno.env.get("RESEND_API_KEY");
+  const kind: MailKind = opts.kind || "transactional";
+  const tag = opts.campaign ? `${opts.campaign} — ` : "";
   if (!key) {
-    console.warn("[lifecycle] RESEND_API_KEY not set — skipping:", opts.subject);
+    console.warn("[lifecycle] RESEND_API_KEY not set — skipping:", tag + opts.subject);
     return false;
   }
-  // Deliverability gate: never auto-email a bounced/complained address.
-  if (await isSuppressed(opts.to)) {
-    console.warn("[lifecycle] suppressed recipient — skipping:", opts.to, opts.subject);
+  // Deliverability gate: never auto-email a bounced/complained address, and
+  // never send marketing to someone who opted out of it.
+  if (await isSuppressed(opts.to, kind)) {
+    console.warn("[lifecycle] suppressed recipient — skipping:", opts.to, tag + opts.subject);
     return false;
   }
+
+  let html = opts.html;
+  const headers: Record<string, string> = {};
+  if (kind === "marketing") {
+    const unsub = await unsubscribeUrl(opts.to, opts.campaign);
+    if (!unsub) {
+      // No token secret means no working opt-out. Sending anyway would be a
+      // CAN-SPAM violation, so don't — the loud log is the fix instruction.
+      console.error("[lifecycle] marketing send blocked (UNSUBSCRIBE_SECRET unset):", tag + opts.subject);
+      await logEmailEvent({
+        recipient: opts.to, event: "send_error", subject: opts.subject,
+        campaign: opts.campaign, variant: opts.variant, kind,
+        reason: "blocked: UNSUBSCRIBE_SECRET not set — marketing mail requires a working opt-out",
+      });
+      return false;
+    }
+    if (!POSTAL_ADDRESS()) {
+      console.warn("[lifecycle] LIFECYCLE_POSTAL_ADDRESS unset — marketing footer is missing the required postal address");
+    }
+    html = html.replace("</body>", `${marketingFooter(unsub)}</body>`);
+    // Gmail/Yahoo bulk-sender requirement: a header-level one-click opt-out.
+    // Mail clients surface this as their own "Unsubscribe" button, which is
+    // the button people press instead of "Report spam".
+    headers["List-Unsubscribe"] = `<${unsub}>`;
+    headers["List-Unsubscribe-Post"] = "List-Unsubscribe=One-Click";
+  }
+
   try {
+    const body: Record<string, unknown> = {
+      from: opts.from,
+      to: [opts.to],
+      subject: opts.subject,
+      html,
+      reply_to: opts.replyTo || REPLY_TO(),
+    };
+    if (Object.keys(headers).length > 0) body.headers = headers;
+    // Tags mirror what we log, so the Resend dashboard is filterable too.
+    // Resend only accepts [A-Za-z0-9_-] in tag values.
+    const tagSafe = (v: string) => v.replace(/[^A-Za-z0-9_-]/g, "-").slice(0, 60);
+    const tags = [{ name: "kind", value: kind }];
+    if (opts.campaign) tags.push({ name: "campaign", value: tagSafe(opts.campaign) });
+    if (opts.variant) tags.push({ name: "variant", value: tagSafe(opts.variant) });
+    body.tags = tags;
+
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
-      body: JSON.stringify({
-        from: opts.from,
-        to: [opts.to],
-        subject: opts.subject,
-        html: opts.html,
-        reply_to: opts.replyTo || REPLY_TO(),
-      }),
+      body: JSON.stringify(body),
     });
     if (!res.ok) {
       const detail = (await res.text().catch(() => "")).slice(0, 300);
       console.error("[lifecycle] send failed:", res.status, detail);
-      await logEmailEvent({ recipient: opts.to, event: "send_error", reason: `resend ${res.status}: ${detail}`, subject: opts.subject });
+      await logEmailEvent({
+        recipient: opts.to, event: "send_error", reason: `resend ${res.status}: ${detail}`,
+        subject: opts.subject, campaign: opts.campaign, variant: opts.variant, kind,
+      });
       return false;
     }
+    // The `sent` row is what makes the funnel work: it carries the email_id
+    // the webhook joins opens/clicks back to, and it's the per-lead
+    // communication history the CRM reads.
+    const sent = await res.json().catch(() => null);
+    await logEmailEvent({
+      emailId: sent?.id ?? null, recipient: opts.to, event: "sent",
+      subject: opts.subject, campaign: opts.campaign, variant: opts.variant, kind,
+    });
     return true;
   } catch (err) {
     console.error("[lifecycle] send threw:", err);
-    await logEmailEvent({ recipient: opts.to, event: "send_error", reason: String((err as Error)?.message || err), subject: opts.subject });
+    await logEmailEvent({
+      recipient: opts.to, event: "send_error", reason: String((err as Error)?.message || err),
+      subject: opts.subject, campaign: opts.campaign, variant: opts.variant, kind,
+    });
     return false;
   }
 }
@@ -221,7 +325,11 @@ export async function mpaStallReminders() {
         btn(r.link_url, "Finish it now") +
         p(`That's the last automated note from me. If now's not the time, all good — we'll be here when it is.`);
     }
-    const ok = await sendLifecycle({ to, from: FROM_SYSTEM(), subject, html: shell(body + signPay()) });
+    // Transactional: they started this application, we're helping them finish it.
+    const ok = await sendLifecycle({
+      to, from: FROM_SYSTEM(), subject, html: shell(body + signPay()),
+      campaign: `DP-${due + 3}`, kind: "transactional",
+    });
     if (!ok) { out.errors++; continue; }
     out.sent++;
     await db
@@ -274,7 +382,10 @@ export async function dealStatusNotify() {
         p(`If you were also looking at working capital, that review is done in-house by us — a processing decline doesn't affect it. Worth a look: <a href="${esc(CAPITAL_URL())}" style="color:#4945FF;">${esc(CAPITAL_URL())}</a>`) +
         p(`Either way, thanks for giving us the shot.`);
     }
-    const ok = await sendLifecycle({ to, from: FROM_SALES(), subject, html: shell(body + signPay()) });
+    const ok = await sendLifecycle({
+      to, from: FROM_SALES(), subject, html: shell(body + signPay()),
+      campaign: r.status === "Approved" ? "DP-8" : "DP-10", kind: "transactional",
+    });
     if (!ok) { out.errors++; continue; }
     out.sent++;
     await db
@@ -393,11 +504,15 @@ export async function capitalRenewalSweep() {
         p(`&bull; <strong>Up to ~${fmtMoney(renewalEstimate)}</strong> — pre-qualified estimate, subject to underwriting review<br/>&bull; <strong>Cleaner terms than round one</strong> — clean history earns better pricing<br/>&bull; <strong>Remaining balance handled</strong> in the new agreement — one payment stream, not two`) +
         p(`You're ${Math.round(paidPct * 100)}% paid down. Reply "numbers" and I'll bring the real figures — takes one business day, no credit pull to look.`) +
         signCapital();
+      // Marketing: an unsolicited offer to an existing customer is still
+      // promotional — it gets an opt-out, and honours one.
       const ok = await sendLifecycle({
         to,
         from: FROM_CAPITAL(),
         subject: `${r.merchant} is renewal-eligible: up to ~${fmtMoney(renewalEstimate)}`,
         html: shell(body, "capital"),
+        campaign: "DC-15",
+        kind: "marketing",
       });
       if (!ok) { out.errors++; continue; }
       out.merchant_emails++;
@@ -420,10 +535,69 @@ export async function capitalRenewalSweep() {
 }
 
 // ══════════════════════════════════════════════════════════════
-// Job: email-health-digest (weekday mornings) — the "nothing breaks
-// silently" report: bounces, complaints, failures, send errors, and
-// new suppressions since the last business day. Silent when clean.
+// Job: email-health-digest (weekday mornings) — two reports in one.
+//
+//   Problems: bounces, complaints, failures, send errors and new
+//   suppressions since the last business day. Silent when clean, so a
+//   digest landing in the inbox always means something needs attention.
+//
+//   Engagement: the 7-day sent → opened → clicked funnel per campaign,
+//   attached whenever the digest fires and pushed every Monday regardless,
+//   so there's a standing weekly read on which sequences actually work.
 // ══════════════════════════════════════════════════════════════
+
+/** Events that mean something went wrong. Everything else (sent, delivered,
+ * opened, clicked, unsubscribed) is normal traffic and must not trigger the
+ * digest — otherwise "the digest arrived" stops meaning anything. */
+const PROBLEM_EVENTS = ["bounced", "complained", "failed", "delivery_delayed", "send_error"];
+
+const pct = (num: number, den: number) => (den > 0 ? `${Math.round((num / den) * 100)}%` : "—");
+
+/** 7-day per-campaign funnel. Opens are pixel-based and undercount (image
+ * blocking, Apple Mail Privacy Protection inflates the other way) — clicks
+ * are the number to steer on. */
+async function engagementTable(db: ReturnType<typeof svc>): Promise<string> {
+  const since = new Date(Date.now() - 7 * 86400000).toISOString();
+  const { data, error } = await db
+    .from("email_events")
+    .select("campaign, event, recipient")
+    .not("campaign", "is", null)
+    .in("event", ["sent", "opened", "clicked", "unsubscribed"])
+    .gte("created_at", since)
+    .limit(10000);
+  if (error || !data || data.length === 0) return "";
+
+  // Unique recipients per campaign+event — one person opening five times is
+  // one open.
+  const uniq = new Map<string, Set<string>>();
+  for (const r of data) {
+    const k = `${r.campaign}|${r.event}`;
+    if (!uniq.has(k)) uniq.set(k, new Set());
+    uniq.get(k)!.add(r.recipient);
+  }
+  const n = (campaign: string, event: string) => uniq.get(`${campaign}|${event}`)?.size ?? 0;
+  const campaigns = [...new Set(data.map((r) => String(r.campaign)))]
+    .sort((a, b) => n(b, "sent") - n(a, "sent"));
+
+  const rows = campaigns
+    .map((c) => {
+      const sent = n(c, "sent"), opened = n(c, "opened"), clicked = n(c, "clicked"), unsub = n(c, "unsubscribed");
+      const td = (v: string, muted = false) =>
+        `<td style="padding:7px 10px;border-bottom:1px solid #eef1f7;font-size:13px;color:${muted ? "#8a93a8" : "#1a2333"};white-space:nowrap;">${v}</td>`;
+      return `<tr>${td(`<strong>${esc(c)}</strong>`)}${td(String(sent))}${td(`${opened} <span style="color:#8a93a8;">(${pct(opened, sent)})</span>`)}${td(`${clicked} <span style="color:#8a93a8;">(${pct(clicked, sent)})</span>`)}${td(unsub ? String(unsub) : "—", true)}</tr>`;
+    })
+    .join("");
+
+  const th = (v: string) =>
+    `<th align="left" style="padding:7px 10px;border-bottom:2px solid #e8ecf5;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:#8a93a8;font-weight:700;">${v}</th>`;
+  return (
+    p("<strong>Engagement — last 7 days</strong>") +
+    `<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;margin:0 0 10px;">
+      <tr>${th("Campaign")}${th("Sent")}${th("Opened")}${th("Clicked")}${th("Opt-out")}</tr>${rows}
+    </table>` +
+    `<p style="margin:0 0 14px;font-size:12px;line-height:1.5;color:#8a93a8;">Unique recipients, not raw events. Opens are pixel-based and undercount when images are blocked — clicks are the honest signal.</p>`
+  );
+}
 
 export async function emailHealthDigest() {
   const db = svc();
@@ -434,38 +608,63 @@ export async function emailHealthDigest() {
 
   const { data: events, error } = await db
     .from("email_events")
-    .select("recipient, event, reason, subject, created_at")
+    .select("recipient, event, reason, subject, campaign, created_at")
+    .in("event", PROBLEM_EVENTS)
     .gte("created_at", cutoff)
     .order("created_at", { ascending: false })
     .limit(200);
   if (error) return { error: error.message };
   const { data: sups } = await db
     .from("email_suppressions")
-    .select("email, reason, created_at")
+    .select("email, reason, scope, created_at")
     .gte("created_at", cutoff);
 
-  if ((events?.length ?? 0) === 0 && (sups?.length ?? 0) === 0) return { clean: true, sent: 0 };
+  // Marketing opt-outs are healthy, not incidents — they shouldn't page
+  // anyone. They're reported inside the digest, never the reason for one.
+  const problemSups = (sups ?? []).filter((s) => s.scope !== "marketing");
+  const optOuts = (sups ?? []).filter((s) => s.scope === "marketing");
+  const nothingWrong = (events?.length ?? 0) === 0 && problemSups.length === 0;
+
+  // Silent when clean — except Monday, which carries the weekly funnel.
+  const weeklyReport = weekday === "Mon";
+  if (nothingWrong && !weeklyReport) return { clean: true, sent: 0 };
 
   const counts: Record<string, number> = {};
   for (const e of events ?? []) counts[e.event] = (counts[e.event] || 0) + 1;
-  const summary = Object.entries(counts).map(([k, v]) => `${v} ${k}`).join(" · ") || "0 events";
+  const summary = Object.entries(counts).map(([k, v]) => `${v} ${k}`).join(" · ") || "no issues";
 
   const rows = (events ?? [])
-    .map((e) => `<li style="margin:0 0 8px;font-size:14px;line-height:1.5;"><strong>${esc(e.event)}</strong> — ${esc(e.recipient)}<br/><span style="color:#8a93a8;">${esc(e.subject || "(no subject)")} &middot; ${esc(e.reason || "no detail")} &middot; ${esc(String(e.created_at).slice(0, 16).replace("T", " "))} UTC</span></li>`)
+    .map((e) => `<li style="margin:0 0 8px;font-size:14px;line-height:1.5;"><strong>${esc(e.event)}</strong> — ${esc(e.recipient)}<br/><span style="color:#8a93a8;">${esc(e.campaign || "untagged")} &middot; ${esc(e.subject || "(no subject)")} &middot; ${esc(e.reason || "no detail")} &middot; ${esc(String(e.created_at).slice(0, 16).replace("T", " "))} UTC</span></li>`)
     .join("");
-  const supRows = (sups ?? [])
+  const supRows = problemSups
     .map((s) => `<li style="margin:0 0 8px;font-size:14px;"><strong>${esc(s.email)}</strong> <span style="color:#8a93a8;">(${esc(s.reason)}) — future automated emails to this address are blocked</span></li>`)
     .join("");
+  const optOutRows = optOuts
+    .map((s) => `<li style="margin:0 0 8px;font-size:14px;"><strong>${esc(s.email)}</strong> <span style="color:#8a93a8;">— opted out of marketing; account and application email still sends</span></li>`)
+    .join("");
+
+  const engagement = await engagementTable(db);
 
   const html = shell(
-    h1("Email health — issues since last check") +
+    h1(nothingWrong ? "Email weekly — engagement report" : "Email health — issues since last check") +
       p(`<strong>${esc(summary)}</strong>`) +
-      (rows ? p("<strong>Delivery events:</strong>") + `<ul style="margin:0 0 14px;padding-left:18px;">${rows}</ul>` : "") +
+      (rows ? p("<strong>Delivery problems:</strong>") + `<ul style="margin:0 0 14px;padding-left:18px;">${rows}</ul>` : "") +
       (supRows ? p("<strong>Newly suppressed addresses:</strong>") + `<ul style="margin:0 0 14px;padding-left:18px;">${supRows}</ul>` : "") +
+      engagement +
+      (optOutRows ? p("<strong>Marketing opt-outs:</strong>") + `<ul style="margin:0 0 14px;padding-left:18px;">${optOutRows}</ul>` : "") +
       p(`Suppressed addresses are skipped by all automated sequences. To un-suppress one (e.g. a fixed typo), delete its row in email_suppressions.`),
   );
-  const ok = await notifyStaff(`📮 Email health: ${summary}`, html);
-  return { events: events?.length ?? 0, suppressions: sups?.length ?? 0, sent: ok ? 1 : 0 };
+  const subject = nothingWrong
+    ? "📈 Email weekly — sequence engagement"
+    : `📮 Email health: ${summary}`;
+  const ok = await notifyStaff(subject, html);
+  return {
+    problems: events?.length ?? 0,
+    suppressions: problemSups.length,
+    opt_outs: optOuts.length,
+    weekly: weeklyReport,
+    sent: ok ? 1 : 0,
+  };
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -502,7 +701,10 @@ export async function growthSweep() {
         btn(CAPITAL_URL(), "See my exact range in 2 minutes") +
         `<p style="margin:0 0 14px;font-size:12px;line-height:1.5;color:#8a93a8;">Pre-qualification is not a guarantee of funding. Final terms depend on underwriting review.</p>` +
         signPay();
-      const ok = await sendLifecycle({ to, from: FROM_SALES(), subject: `${business} pre-qualifies for working capital`, html: shell(body) });
+      const ok = await sendLifecycle({
+        to, from: FROM_SALES(), subject: `${business} pre-qualifies for working capital`,
+        html: shell(body), campaign: "DP-14", kind: "marketing",
+      });
       if (!ok) { out.errors++; continue; }
       out.crosssell_sent++;
       await db.from("deal_submissions").update({ crosssell_notified_at: new Date().toISOString() }).eq("id", r.id);
@@ -531,7 +733,10 @@ export async function growthSweep() {
         p(`&bull; <strong>They get</strong> the same treatment you got — free statement audit, custom rate, no contract games.<br/>&bull; <strong>You get ${REFERRAL_REWARD_PAY}</strong> when they activate — and if they take working capital instead, you get ${REFERRAL_REWARD_CAPITAL}.`) +
         p(`Just reply with their name and number, or forward this email. We take it from there and never cold-blast anyone you send.`) +
         signPay();
-      const ok = await sendLifecycle({ to, from: FROM_SALES(), subject: "Know an owner who'd want your rate?", html: shell(body) });
+      const ok = await sendLifecycle({
+        to, from: FROM_SALES(), subject: "Know an owner who'd want your rate?",
+        html: shell(body), campaign: "DP-15", kind: "marketing",
+      });
       if (!ok) { out.errors++; continue; }
       out.referral_sent++;
       await db.from("deal_submissions").update({ referral_invited_at: new Date().toISOString() }).eq("id", r.id);

@@ -121,6 +121,7 @@ import { stageEsignDraft } from '../contractsStore';
 import { LeadProgressBar } from '../LeadProgressBar';
 import { plaidActions, usePlaidItems, usePlaidLinkRequests, usePlaidSync } from '../plaidStore';
 import { useAppNavigate } from '../NavigationContext';
+import { EmailTimeline } from './EmailTimeline';
 
 // ── CRM sales cycle (short) ──
 // Onboarding / underwriting lives outside the CRM; a lead only moves through
@@ -523,7 +524,7 @@ function ConnectBankCard({ lead }: { lead: Lead }) {
 }
 
 function LeadDetailPanel({ lead, onClose, onEdit, onDelete }: { lead: Lead | null; onClose: () => void; onEdit?: () => void; onDelete?: () => void }) {
-  const [activeTab, setActiveTab] = useState<'activity' | 'notes' | 'tasks'>('activity');
+  const [activeTab, setActiveTab] = useState<'activity' | 'emails' | 'notes' | 'tasks'>('activity');
   const [newNote, setNewNote] = useState('');
   const [newTask, setNewTask] = useState('');
   const { navigate } = useAppNavigate();
@@ -736,7 +737,7 @@ function LeadDetailPanel({ lead, onClose, onEdit, onDelete }: { lead: Lead | nul
         {/* Tabs */}
         <div className="border-b border-gray-200">
           <div className="flex px-6">
-            {(['activity', 'notes', 'tasks'] as const).map(tab => (
+            {(['activity', 'emails', 'notes', 'tasks'] as const).map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -746,6 +747,7 @@ function LeadDetailPanel({ lead, onClose, onEdit, onDelete }: { lead: Lead | nul
               >
                 <div className="flex items-center gap-2">
                   {tab === 'activity' && <Clock className="w-4 h-4" />}
+                  {tab === 'emails' && <Mail className="w-4 h-4" />}
                   {tab === 'notes' && <MessageSquare className="w-4 h-4" />}
                   {tab === 'tasks' && <CheckSquare className="w-4 h-4" />}
                   {tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -777,6 +779,7 @@ function LeadDetailPanel({ lead, onClose, onEdit, onDelete }: { lead: Lead | nul
               ))}
             </div>
           )}
+          {activeTab === 'emails' && <EmailTimeline email={lead.contactEmail} />}
           {activeTab === 'notes' && (
             <div className="space-y-4">
               {lead.notes && (

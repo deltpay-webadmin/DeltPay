@@ -197,7 +197,7 @@ Deno.serve(async (req) => {
     // DP-2: email the link too — self-starters lose the on-screen link the
     // moment the tab closes; this is what makes the draft recoverable.
     const tpl = dp2ApplicationLink({ firstName: name.split(/\s+/)[0], businessName: business, url: linkUrl });
-    sendLifecycle({ to: email, from: FROM_SYSTEM(), subject: tpl.subject, html: tpl.html }).catch(() => {});
+    sendLifecycle({ to: email, from: FROM_SYSTEM(), subject: tpl.subject, html: tpl.html, campaign: "DP-2", kind: "transactional" }).catch(() => {});
     // The raw token is returned exactly once and never stored.
     return json({ ok: true, path: `/apply/mpa/${token}`, expiresAt });
   }
@@ -396,7 +396,7 @@ Deno.serve(async (req) => {
       const to = String(updated.applicant_email || submission?.email || "").trim();
       if (to) {
         const tpl = dp7Submitted({ firstName: contactFirst, businessName: merchantName });
-        sendLifecycle({ to, from: FROM_SYSTEM(), subject: tpl.subject, html: tpl.html }).catch(() => {});
+        sendLifecycle({ to, from: FROM_SYSTEM(), subject: tpl.subject, html: tpl.html, campaign: "DP-7", kind: "transactional" }).catch(() => {});
       }
       notifyStaff(
         `📥 MPA submitted: ${merchantName}`,
@@ -537,7 +537,7 @@ Deno.serve(async (req) => {
       const merchantName = (submission?.merchant_name as string) || "your business";
       const contactFirst = String(submission?.contact_name || "").trim().split(/\s+/)[0] || "";
       const tpl = dp2ApplicationLink({ firstName: contactFirst, businessName: merchantName, url: linkUrl });
-      sendLifecycle({ to: applicantEmail, from: FROM_SYSTEM(), subject: tpl.subject, html: tpl.html }).catch(() => {});
+      sendLifecycle({ to: applicantEmail, from: FROM_SYSTEM(), subject: tpl.subject, html: tpl.html, campaign: "DP-2", kind: "transactional" }).catch(() => {});
     }
     // The raw token is returned exactly once and never stored.
     return json({ ok: true, token, path: `/apply/mpa/${token}`, expiresAt });

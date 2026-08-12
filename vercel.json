@@ -1,5 +1,9 @@
 {
   "rewrites": [
+    {
+      "source": "/unsubscribe",
+      "destination": "https://ytemrmpnwmzqeradbeoa.supabase.co/functions/v1/email-unsubscribe"
+    },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]
 }

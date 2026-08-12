@@ -664,7 +664,7 @@ export async function createHostedLink(leadId: string) {
     const to = (lead?.contact_email ?? "").trim();
     if (to && emailConfigured()) {
       const tpl = connectLinkEmail(lead?.business_name || "your business", out.hosted_link_url, expiresAt);
-      emailed = await sendEmail({ to, subject: tpl.subject, html: tpl.html });
+      emailed = await sendEmail({ to, subject: tpl.subject, html: tpl.html, campaign: "PLAID-1" });
       if (emailed) {
         const timeline = Array.isArray(lead?.timeline) ? lead.timeline : [];
         timeline.push({
@@ -719,7 +719,7 @@ async function completeHostedLink(
     const to = (lead?.contact_email ?? "").trim();
     if (to) {
       const tpl = connectedProspectEmail(businessName, out.institution_name || "");
-      sendEmail({ to, subject: tpl.subject, html: tpl.html }).catch(() => {});
+      sendEmail({ to, subject: tpl.subject, html: tpl.html, campaign: "PLAID-4" }).catch(() => {});
     }
   } catch (err) {
     console.error("connect notifications failed:", err);
@@ -843,7 +843,7 @@ export async function sendConnectReminders() {
       if ([lead?.stage, lead?.status].some((s) => ["Not Qualified", "Declined", "Lost"].includes(s ?? ""))) continue;
 
       const tpl = reminderEmail(lead?.business_name || "your business", r.hosted_link_url, due);
-      const ok = await sendEmail({ to, subject: tpl.subject, html: tpl.html });
+      const ok = await sendEmail({ to, subject: tpl.subject, html: tpl.html, campaign: `PLAID-${due + 1}` });
       if (!ok) { out.errors++; continue; }
       await db
         .from("plaid_link_requests")
