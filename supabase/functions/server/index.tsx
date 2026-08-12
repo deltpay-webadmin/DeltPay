@@ -31,6 +31,14 @@ import {
 import { adsStatus, connectMeta, syncMeta, disconnectMeta, syncMetaLeads, importMetaLeads } from "../_shared/meta.ts";
 import { requireUser, hasPerm, verifyCronSecret, verifyApplySecret, type AuthContext } from "../_shared/auth.ts";
 import { sweepInFlightEnvelopes } from "../_shared/docusign_status.ts";
+import {
+  capitalRenewalSweep,
+  dealStatusNotify,
+  growthSweep,
+  mpaStallReminders,
+  slaWatch,
+  staleLeadDigest,
+} from "../_shared/lifecycle.ts";
 const app = new Hono();
 
 // Per-route RBAC gate. The group middleware below resolves the caller once
@@ -91,6 +99,14 @@ const JOB_TASKS: Record<string, () => Promise<unknown>> = {
   }),
   // Prospect follow-ups for pending connect links (quiet-hours aware).
   "plaid-link-nudges": () => sendConnectReminders(),
+  // Lifecycle emails (see _shared/lifecycle.ts) — all idempotent, merchant
+  // sends are quiet-hours aware.
+  "mpa-stall-reminders": () => mpaStallReminders(),
+  "deal-status-notify": () => dealStatusNotify(),
+  "sla-watch": () => slaWatch(),
+  "stale-lead-digest": () => staleLeadDigest(),
+  "capital-renewal-sweep": () => capitalRenewalSweep(),
+  "growth-sweep": () => growthSweep(),
   "meta-insights": () => syncMeta(90),
   // syncMetaLeads already reconciles matches against pipeline_leads
   "meta-leads": () => syncMetaLeads(),

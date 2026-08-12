@@ -40,6 +40,11 @@ import {
   type SecureData,
 } from "../_shared/mpa/schema.ts";
 import { decryptJson, encryptJson, newToken, sha256Hex } from "../_shared/mpa/crypto.ts";
+import { dp2ApplicationLink, dp7Submitted, sendLifecycle } from "../_shared/lifecycle.ts";
+import { notifyStaff } from "../_shared/plaid_notify.ts";
+
+const SITE_URL = () => (Deno.env.get("SITE_URL") || "https://www.deltpay.com").replace(/\/$/, "");
+const FROM_SYSTEM = () => Deno.env.get("LIFECYCLE_FROM_SYSTEM") || "DeltPay <noreply@deltpay.com>";
 import { base64FromBytes, generateMpaPdf, type MpaApplicationRow } from "../_shared/mpa/generate.ts";
 import { squarePacketText } from "../_shared/mpa/packet.ts";
 
@@ -173,6 +178,7 @@ Deno.serve(async (req) => {
     const token = newToken();
     const tokenHash = await sha256Hex(token);
     const expiresAt = new Date(Date.now() + 14 * 24 * 3600 * 1000).toISOString();
+    const linkUrl = `${SITE_URL()}/apply/mpa/${token}`;
     const { error: appErr } = await admin
       .from("merchant_applications")
       .insert({
@@ -182,8 +188,16 @@ Deno.serve(async (req) => {
         token_hash: tokenHash,
         token_expires_at: expiresAt,
         applicant_email: email,
+        // Stored (same convention as plaid_link_requests.hosted_link_url)
+        // so the DP-4/5/6 stall reminders can carry the resume link.
+        link_url: linkUrl,
+        link_sent_at: new Date().toISOString(),
       });
     if (appErr) return json({ error: appErr.message }, 500);
+    // DP-2: email the link too — self-starters lose the on-screen link the
+    // moment the tab closes; this is what makes the draft recoverable.
+    const tpl = dp2ApplicationLink({ firstName: name.split(/\s+/)[0], businessName: business, url: linkUrl });
+    sendLifecycle({ to: email, from: FROM_SYSTEM(), subject: tpl.subject, html: tpl.html }).catch(() => {});
     // The raw token is returned exactly once and never stored.
     return json({ ok: true, path: `/apply/mpa/${token}`, expiresAt });
   }
@@ -375,6 +389,21 @@ Deno.serve(async (req) => {
       .select("*")
       .single();
     if (updErr) return json({ error: updErr.message }, 500);
+    // DP-7 + internal alert — exactly once per application.
+    if (!updated.submit_notified_at) {
+      const merchantName = (submission?.merchant_name as string) || "your business";
+      const contactFirst = String(submission?.contact_name || "").trim().split(/\s+/)[0] || "";
+      const to = String(updated.applicant_email || submission?.email || "").trim();
+      if (to) {
+        const tpl = dp7Submitted({ firstName: contactFirst, businessName: merchantName });
+        sendLifecycle({ to, from: FROM_SYSTEM(), subject: tpl.subject, html: tpl.html }).catch(() => {});
+      }
+      notifyStaff(
+        `📥 MPA submitted: ${merchantName}`,
+        `<p style="font-family:sans-serif;font-size:14px;">Merchant application for <b>${merchantName}</b> was just submitted${ctx.kind === "merchant" ? " by the merchant (self-serve link)" : " from the staff wizard"}. Open the CRM → Deals to review and push to the processor.</p>`,
+      ).catch(() => {});
+      await admin.from("merchant_applications").update({ submit_notified_at: new Date().toISOString() }).eq("id", updated.id);
+    }
     return json({ ok: true, application: toClientShape(updated, ctx, submission) });
   }
 
@@ -486,16 +515,30 @@ Deno.serve(async (req) => {
     const token = newToken();
     const tokenHash = await sha256Hex(token);
     const expiresAt = new Date(Date.now() + expiresDays * 24 * 3600 * 1000).toISOString();
+    const applicantEmail = ((body?.applicantEmail as string) ?? "").trim().toLowerCase() || null;
+    const linkUrl = `${SITE_URL()}/apply/mpa/${token}`;
     const { error: updErr } = await admin
       .from("merchant_applications")
       .update({
         token_hash: tokenHash,
         token_expires_at: expiresAt,
-        applicant_email: (body?.applicantEmail as string) ?? null,
+        applicant_email: applicantEmail,
+        link_url: linkUrl,
+        link_sent_at: new Date().toISOString(),
+        reminder_count: 0,
+        last_reminder_at: null,
         updated_at: new Date().toISOString(),
       })
       .eq("id", row.id);
     if (updErr) return json({ error: updErr.message }, 500);
+    // DP-2: deliver the link by email when the rep provided an address —
+    // a fresh link resets the reminder sequence above.
+    if (applicantEmail) {
+      const merchantName = (submission?.merchant_name as string) || "your business";
+      const contactFirst = String(submission?.contact_name || "").trim().split(/\s+/)[0] || "";
+      const tpl = dp2ApplicationLink({ firstName: contactFirst, businessName: merchantName, url: linkUrl });
+      sendLifecycle({ to: applicantEmail, from: FROM_SYSTEM(), subject: tpl.subject, html: tpl.html }).catch(() => {});
+    }
     // The raw token is returned exactly once and never stored.
     return json({ ok: true, token, path: `/apply/mpa/${token}`, expiresAt });
   }

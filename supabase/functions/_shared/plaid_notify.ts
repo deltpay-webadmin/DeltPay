@@ -20,10 +20,9 @@
 
 const FROM = () => Deno.env.get("PLAID_EMAIL_FROM") || "DeltPay <noreply@deltpay.com>";
 const NOTIFY_TO = () => Deno.env.get("PLAID_NOTIFY_TO") || "david@deltpay.com";
-const NOTIFY_BCC = () => {
-  const v = Deno.env.get("PLAID_NOTIFY_BCC");
-  return v === "" ? null : (v || "carlos@deltpay.com");
-};
+// No BCC by default (per operator request, Aug 2026) — set PLAID_NOTIFY_BCC
+// to re-enable a copy for someone else.
+const NOTIFY_BCC = () => Deno.env.get("PLAID_NOTIFY_BCC") || null;
 
 export function emailConfigured(): boolean {
   return Boolean(Deno.env.get("RESEND_API_KEY"));
