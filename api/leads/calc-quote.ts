@@ -7,7 +7,7 @@
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY || "";
 const LEAD_NOTIFY_TO = "david@deltpay.com";
-const LEAD_NOTIFY_BCC = "carlos@deltpay.com";
+const LEAD_NOTIFY_BCC = process.env.LEAD_NOTIFY_BCC || "";
 const LEAD_NOTIFY_FROM =
   process.env.LEAD_NOTIFY_FROM || "DeltPay Leads <noreply@deltpay.com>";
 const VISITOR_FROM =
@@ -239,7 +239,7 @@ export default async function handler(req: any, res: any) {
 
   // Notify the team (always).
   const team = await send({
-    from: LEAD_NOTIFY_FROM, to: [LEAD_NOTIFY_TO], bcc: [LEAD_NOTIFY_BCC],
+    from: LEAD_NOTIFY_FROM, to: [LEAD_NOTIFY_TO], ...(LEAD_NOTIFY_BCC ? { bcc: [LEAD_NOTIFY_BCC] } : {}),
     reply_to: email,
     subject: `${spamSuspect ? "[possible spam] " : ""}Calculator quote — ${email}`,
     html: teamEmailHtml(q),

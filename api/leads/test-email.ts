@@ -3,7 +3,7 @@
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY || "";
 const LEAD_NOTIFY_TO = "david@deltpay.com";
-const LEAD_NOTIFY_BCC = "carlos@deltpay.com";
+const LEAD_NOTIFY_BCC = process.env.LEAD_NOTIFY_BCC || "";
 const LEAD_NOTIFY_FROM =
   process.env.LEAD_NOTIFY_FROM || "DeltPay Leads <noreply@deltpay.com>";
 const FONT_STACK =
@@ -75,7 +75,7 @@ export default async function handler(req: any, res: any) {
         method: "POST",
         headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          from: LEAD_NOTIFY_FROM, to: [LEAD_NOTIFY_TO], bcc: [LEAD_NOTIFY_BCC],
+          from: LEAD_NOTIFY_FROM, to: [LEAD_NOTIFY_TO], ...(LEAD_NOTIFY_BCC ? { bcc: [LEAD_NOTIFY_BCC] } : {}),
           subject: "DeltPay Resend test email",
           html: renderLeadEmail({
             heading: "Resend test email",
@@ -84,7 +84,7 @@ export default async function handler(req: any, res: any) {
             rows: [
               ["Status", "If you received this, Resend delivery is working."],
               ["Recipient", LEAD_NOTIFY_TO],
-              ["BCC", LEAD_NOTIFY_BCC],
+              ["BCC", LEAD_NOTIFY_BCC || "(none)"],
               ["Sender", LEAD_NOTIFY_FROM],
               ["Sent at", new Date().toISOString()],
             ],
@@ -101,7 +101,7 @@ export default async function handler(req: any, res: any) {
   return res.status(result.ok ? 200 : 500).json({
     ok: result.ok,
     sentTo: LEAD_NOTIFY_TO,
-    bcc: LEAD_NOTIFY_BCC,
+    bcc: LEAD_NOTIFY_BCC || null,
     from: LEAD_NOTIFY_FROM,
     keyConfigured: RESEND_API_KEY !== "",
     tokenGate,

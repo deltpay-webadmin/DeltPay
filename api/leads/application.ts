@@ -3,7 +3,7 @@
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY || "";
 const LEAD_NOTIFY_TO = "david@deltpay.com";
-const LEAD_NOTIFY_BCC = "carlos@deltpay.com";
+const LEAD_NOTIFY_BCC = process.env.LEAD_NOTIFY_BCC || "";
 const LEAD_NOTIFY_FROM =
   process.env.LEAD_NOTIFY_FROM || "DeltPay Leads <noreply@deltpay.com>";
 const FONT_STACK =
@@ -99,7 +99,7 @@ async function sendLeadEmail(o: {
       method: "POST",
       headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        from: LEAD_NOTIFY_FROM, to: [LEAD_NOTIFY_TO], bcc: [LEAD_NOTIFY_BCC],
+        from: LEAD_NOTIFY_FROM, to: [LEAD_NOTIFY_TO], ...(LEAD_NOTIFY_BCC ? { bcc: [LEAD_NOTIFY_BCC] } : {}),
         subject: o.subject, html: renderLeadEmail(o),
         ...(o.replyTo ? { reply_to: o.replyTo } : {}),
       }),

@@ -1,11 +1,11 @@
 // Consolidated lead endpoint for every site form. One self-contained function
 // (no imports — the project is ESM with no tsconfig, so cross-file imports crash
 // at load). A FORMS registry themes the branded email per form `type`.
-// All notifications go to david@deltpay.com, BCC carlos@deltpay.com, via Resend.
+// All notifications go to david@deltpay.com via Resend. Optional BCC via LEAD_NOTIFY_BCC env.
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY || "";
 const LEAD_NOTIFY_TO = "david@deltpay.com";
-const LEAD_NOTIFY_BCC = "carlos@deltpay.com";
+const LEAD_NOTIFY_BCC = process.env.LEAD_NOTIFY_BCC || "";
 const LEAD_NOTIFY_FROM =
   process.env.LEAD_NOTIFY_FROM || "DeltPay Leads <noreply@deltpay.com>";
 const FONT_STACK =
@@ -137,7 +137,7 @@ async function sendLeadEmail(o: {
       method: "POST",
       headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        from: LEAD_NOTIFY_FROM, to: [LEAD_NOTIFY_TO], bcc: [LEAD_NOTIFY_BCC],
+        from: LEAD_NOTIFY_FROM, to: [LEAD_NOTIFY_TO], ...(LEAD_NOTIFY_BCC ? { bcc: [LEAD_NOTIFY_BCC] } : {}),
         subject: o.subject, html: renderLeadEmail(o),
         ...(o.replyTo ? { reply_to: o.replyTo } : {}),
         ...(o.attachments && o.attachments.length ? { attachments: o.attachments } : {}),
