@@ -32,6 +32,7 @@ import { adsStatus, connectMeta, syncMeta, disconnectMeta, syncMetaLeads, import
 import { requireUser, hasPerm, verifyCronSecret, verifyApplySecret, type AuthContext } from "../_shared/auth.ts";
 import { sweepInFlightEnvelopes } from "../_shared/docusign_status.ts";
 import {
+  capitalOfferSweep,
   capitalRenewalSweep,
   dealStatusNotify,
   emailHealthDigest,
@@ -107,6 +108,8 @@ const JOB_TASKS: Record<string, () => Promise<unknown>> = {
   "sla-watch": () => slaWatch(),
   "stale-lead-digest": () => staleLeadDigest(),
   "capital-renewal-sweep": () => capitalRenewalSweep(),
+  // DC-7…DC-11 — the Capital offer sequence, driven off capital_offers.status.
+  "capital-offer-sweep": () => capitalOfferSweep(),
   "growth-sweep": () => growthSweep(),
   "email-health-digest": () => emailHealthDigest(),
   "meta-insights": () => syncMeta(90),

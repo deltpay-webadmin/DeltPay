@@ -13,6 +13,7 @@
  *   sla-watch            15 min  — P-INT: New lead untouched > 1 business hour
  *   stale-lead-digest    daily   — P-INT: leads sitting in "New" > 2 days
  *   capital-renewal-sweep daily  — DC-15: renewal-eligible advances
+ *   capital-offer-sweep  15 min  — DC-7/8/9/10/11: the Capital offer sequence
  *   growth-sweep         weekly  — DP-14 cross-sell, DP-15 referral, DC-16
  *
  * Every send is tagged with its blueprint campaign code and logged to
@@ -474,6 +475,255 @@ export async function staleLeadDigest() {
 function fmtMoney(n: number): string {
   if (!Number.isFinite(n) || n <= 0) return "$0";
   return "$" + Math.round(n).toLocaleString("en-US");
+}
+
+// ══════════════════════════════════════════════════════════════
+// Job: capital-offer-sweep (15 min) — the offer sequence, DC-7…DC-11
+//
+// Reads capital_offers (migration 20260812_03) and drives five emails off
+// the status column. Every send is guarded by a one-shot timestamp on the
+// row, so a re-run — or two overlapping runs — can't double-mail anyone.
+//
+//   DC-7   offer sent            status → sent
+//   DC-8   48h reminder          still 'sent' 48h later, not yet expired
+//   DC-9   decline pivot         status → declined
+//   DC-10  unsigned chase        'contract_out' 24h / 72h after the envelope
+//   DC-11  funded welcome        status → funded
+//
+// Plus expiry hygiene: a 'sent' offer past expires_at flips to 'expired' so
+// the reminder stops chasing a number we're no longer honouring.
+//
+// Campaign codes: DC-7…DC-11 are assigned here. DC-15 (renewal) and DC-16
+// (Capital referral) were already taken; if the master blueprint numbers
+// these differently, remap at the five sendLifecycle calls below — nothing
+// else reads the codes.
+// ══════════════════════════════════════════════════════════════
+
+interface OfferRow {
+  id: string;
+  merchant_name: string;
+  contact_name: string | null;
+  contact_email: string | null;
+  amount: number;
+  factor: number;
+  payback: number;
+  term_days: number | null;
+  holdback_pct: number | null;
+  payment_amount: number | null;
+  payment_frequency: string;
+  expires_at: string;
+  status: string;
+  declined_reason: string | null;
+  offer_sent_at: string | null;
+  reminder_sent_at: string | null;
+  decline_notified_at: string | null;
+  chase_count: number;
+  last_chase_at: string | null;
+  funded_notified_at: string | null;
+  contract_sent_at: string | null;
+}
+
+const OFFER_FIELDS =
+  "id, merchant_name, contact_name, contact_email, amount, factor, payback, term_days, " +
+  "holdback_pct, payment_amount, payment_frequency, expires_at, status, declined_reason, " +
+  "offer_sent_at, reminder_sent_at, decline_notified_at, chase_count, last_chase_at, " +
+  "funded_notified_at, contract_sent_at";
+
+/** "$450 daily" / "12% of daily card volume" — whichever we actually quoted.
+ * Never invents a number: an offer email that states a payment we didn't
+ * agree to is worse than one that omits it. */
+function paymentLine(o: OfferRow): string {
+  const freq = o.payment_frequency === "weekly" ? "weekly" : o.payment_frequency === "monthly" ? "monthly" : "daily";
+  if (o.payment_amount && o.payment_amount > 0) {
+    return `${fmtMoney(o.payment_amount)} ${freq}`;
+  }
+  if (o.holdback_pct && o.holdback_pct > 0) {
+    return `${o.holdback_pct}% of ${freq} card volume`;
+  }
+  return "";
+}
+
+/** The terms block every offer email repeats verbatim, so what they read in
+ * the reminder is exactly what they read in the offer. */
+function termsList(o: OfferRow): string {
+  const pay = paymentLine(o);
+  const rows = [
+    `<strong>Amount:</strong> ${fmtMoney(o.amount)}`,
+    `<strong>Total payback:</strong> ${fmtMoney(o.payback)} (${o.factor} factor)`,
+    pay ? `<strong>Payment:</strong> ${pay}` : "",
+    o.term_days ? `<strong>Estimated term:</strong> ~${o.term_days} days` : "",
+  ].filter(Boolean);
+  return `<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;margin:0 0 18px;background:#f7f9fd;border-radius:10px;">
+    ${rows.map((r) => `<tr><td style="padding:10px 16px;font-size:15px;line-height:1.5;color:#1a2333;border-bottom:1px solid #e8ecf5;">${r}</td></tr>`).join("")}
+  </table>`;
+}
+
+/** Whole days until expiry, floored at 0. */
+function daysToExpiry(expiresAt: string): number {
+  return Math.max(0, Math.ceil((new Date(expiresAt).getTime() - Date.now()) / 86400000));
+}
+
+function expiryPhrase(expiresAt: string): string {
+  const d = daysToExpiry(expiresAt);
+  if (d === 0) return "today";
+  if (d === 1) return "tomorrow";
+  return `in ${d} days`;
+}
+
+export async function capitalOfferSweep() {
+  const db = svc();
+  const { data: rows, error } = await db
+    .from("capital_offers")
+    .select(OFFER_FIELDS)
+    .in("status", ["sent", "declined", "contract_out", "funded"])
+    .limit(200);
+  if (error) return { error: error.message };
+
+  const out = { checked: 0, offer_sent: 0, reminded: 0, declined: 0, chased: 0, welcomed: 0, expired: 0, errors: 0 };
+  const now = Date.now();
+  const nowIso = new Date().toISOString();
+  const open = withinSendWindow();
+
+  for (const r of (rows ?? []) as OfferRow[]) {
+    out.checked++;
+    const to = String(r.contact_email || "").trim();
+    const first = firstNameOf(r.contact_name);
+    const biz = r.merchant_name || "your business";
+    const expired = new Date(r.expires_at).getTime() < now;
+
+    // ── Expiry hygiene. Runs outside quiet hours (it sends nothing) so a
+    // weekend expiry is reflected before Monday's reminder pass.
+    if (r.status === "sent" && expired) {
+      await db.from("capital_offers").update({ status: "expired" }).eq("id", r.id);
+      out.expired++;
+      continue;
+    }
+
+    // Everything below sends merchant-facing mail.
+    if (!open || !to) continue;
+
+    // ── DC-7 — the offer itself.
+    if (r.status === "sent" && !r.offer_sent_at) {
+      const body =
+        h1(`Your offer for ${esc(biz)}`) +
+        p(hi(first)) +
+        p(`Underwriting is done. Here's what we can do:`) +
+        termsList(r) +
+        p(`Two things worth knowing about how this is priced:<br/>&bull; <strong>It's based on your actual deposits</strong>, not a broker's guess at what you'd accept.<br/>&bull; <strong>There's no prepayment penalty.</strong> Pay it down early and you stop paying.`) +
+        p(`This offer holds until <strong>${expiryPhrase(r.expires_at)}</strong>. After that we'd have to re-pull your numbers, which usually means a different figure.`) +
+        p(`Reply "accept" and I'll send the agreement for signature today. Want a different amount or a longer term? Reply with the number you had in mind — I'd rather structure something that works than have you sign something that doesn't.`) +
+        signCapital();
+      const ok = await sendLifecycle({
+        to, from: FROM_CAPITAL(), subject: `${biz}: ${fmtMoney(r.amount)} approved — terms inside`,
+        html: shell(body, "capital"), campaign: "DC-7", kind: "transactional",
+      });
+      if (!ok) { out.errors++; continue; }
+      out.offer_sent++;
+      await db.from("capital_offers").update({ offer_sent_at: nowIso }).eq("id", r.id);
+      continue;
+    }
+
+    // ── DC-8 — 48h reminder, once, while it's still live.
+    if (
+      r.status === "sent" && r.offer_sent_at && !r.reminder_sent_at &&
+      now - new Date(r.offer_sent_at).getTime() >= 48 * 3600000
+    ) {
+      const body =
+        h1(`Still holding ${fmtMoney(r.amount)} for ${esc(biz)}`) +
+        p(hi(first)) +
+        p(`Your offer is still on the table, unchanged:`) +
+        termsList(r) +
+        p(`It expires <strong>${expiryPhrase(r.expires_at)}</strong>.`) +
+        p(`If the timing's wrong, tell me and I'll close the file rather than keep emailing you — no hard feelings, and you can come back whenever. If something about the terms is the problem, tell me that instead. I can usually move on structure even when I can't move on price.`) +
+        signCapital();
+      const ok = await sendLifecycle({
+        to, from: FROM_CAPITAL(), subject: `Your ${fmtMoney(r.amount)} offer expires ${expiryPhrase(r.expires_at)}`,
+        html: shell(body, "capital"), campaign: "DC-8", kind: "transactional",
+      });
+      if (!ok) { out.errors++; continue; }
+      out.reminded++;
+      await db.from("capital_offers").update({ reminder_sent_at: nowIso }).eq("id", r.id);
+      continue;
+    }
+
+    // ── DC-9 — decline pivot.
+    if (r.status === "declined" && !r.decline_notified_at) {
+      const body =
+        h1("Straight answer on your file") +
+        p(hi(first)) +
+        p(`We can't fund <strong>${esc(biz)}</strong> at the amount we discussed right now.${r.declined_reason ? ` The short version: ${esc(r.declined_reason)}.` : ""}`) +
+        p(`I'd rather tell you what would change it than leave you guessing. Usually it's one of three things:<br/>&bull; <strong>Deposit consistency.</strong> A few more months of steady volume moves most files.<br/>&bull; <strong>Existing positions.</strong> Paying down or clearing another advance frees up room.<br/>&bull; <strong>Amount.</strong> A smaller number is often approvable today when the full one isn't — reply "smaller" and I'll tell you what we could do.`) +
+        p(`In the meantime, the other side of the business might be worth more to you than the advance was. If you're processing cards anywhere, we'll audit your statement free and show you the real number — no obligation, and it's money back every month rather than once.`) +
+        btn(SITE_URL(), "Get a free statement audit") +
+        p(`Either way, I'll flag your file to revisit in 90 days. Thanks for giving us the look.`) +
+        signCapital();
+      const ok = await sendLifecycle({
+        to, from: FROM_CAPITAL(), subject: `About ${biz}'s funding request`,
+        html: shell(body, "capital"), campaign: "DC-9", kind: "transactional",
+      });
+      if (!ok) { out.errors++; continue; }
+      out.declined++;
+      await db.from("capital_offers").update({ decline_notified_at: nowIso }).eq("id", r.id);
+      continue;
+    }
+
+    // ── DC-10 — contract out, unsigned. Two chases (24h, 72h), then stop.
+    if (r.status === "contract_out" && r.contract_sent_at && r.chase_count < 2) {
+      const ageH = (now - new Date(r.contract_sent_at).getTime()) / 3600000;
+      const due = r.chase_count === 0 && ageH >= 24 ? 1 : r.chase_count === 1 && ageH >= 72 ? 2 : 0;
+      if (due) {
+        const body = due === 1
+          ? h1("Your agreement is waiting for a signature") +
+            p(hi(first)) +
+            p(`The funding agreement for <strong>${esc(biz)}</strong> is sitting in your inbox unsigned — check for the DocuSign email (it's worth a look in spam, it hides there).`) +
+            termsList(r) +
+            p(`Once you sign, funding typically lands in <strong>one business day</strong>. Nothing else is needed from you after the signature.`) +
+            p(`If a term stopped you, reply and tell me which one before you sign. Changing it now is easy; changing it after is a new agreement.`)
+          : h1("Last note on your funding agreement") +
+            p(hi(first)) +
+            p(`Your agreement for <strong>${esc(biz)}</strong> is still unsigned, and the offer behind it expires <strong>${expiryPhrase(r.expires_at)}</strong>.`) +
+            p(`That's the last automated note from me. If you want it, sign the DocuSign and we'll fund. If you don't, reply "close" and I'll take the file off the board — a straight no is genuinely more useful to me than silence.`);
+        const ok = await sendLifecycle({
+          to, from: FROM_CAPITAL(),
+          subject: due === 1
+            ? `${biz}: one signature away from funding`
+            : `Closing your file unless I hear back`,
+          html: shell(body + signCapital(), "capital"), campaign: "DC-10", kind: "transactional",
+        });
+        if (!ok) { out.errors++; continue; }
+        out.chased++;
+        await db.from("capital_offers").update({ chase_count: due, last_chase_at: nowIso }).eq("id", r.id);
+        continue;
+      }
+    }
+
+    // ── DC-11 — funded welcome.
+    if (r.status === "funded" && !r.funded_notified_at) {
+      const pay = paymentLine(r);
+      const body =
+        h1(`${esc(biz)} is funded`) +
+        p(hi(first)) +
+        p(`<strong>${fmtMoney(r.amount)} is on its way to your account.</strong> ACH usually posts within one business day — sometimes same day if we sent it early.`) +
+        p(`So there are no surprises, here's exactly what happens next:`) +
+        p(`&bull; <strong>Repayment starts on the next business day</strong> after the funds land${pay ? `, at ${pay}` : ""}.<br/>&bull; <strong>Total payback is ${fmtMoney(r.payback)}</strong> — that number doesn't change and there's no penalty for finishing early.<br/>&bull; <strong>If a payment is going to bounce, tell me first.</strong> A heads-up costs you nothing; a returned payment costs you a fee and puts a mark on the file.`) +
+        p(`Once you're ~60% paid down you're eligible for a renewal, usually at better pricing than round one. I'll reach out — you don't need to track it.`) +
+        p(PHONE()
+          ? `Call or text me at <strong>${esc(PHONE())}</strong> for anything, including the awkward months. Those are the ones worth calling about.`
+          : `Reply here for anything, including the awkward months. Those are the ones worth writing in about.`) +
+        signCapital();
+      const ok = await sendLifecycle({
+        to, from: FROM_CAPITAL(), subject: `${fmtMoney(r.amount)} is on its way — what happens next`,
+        html: shell(body, "capital"), campaign: "DC-11", kind: "transactional",
+      });
+      if (!ok) { out.errors++; continue; }
+      out.welcomed++;
+      await db.from("capital_offers").update({ funded_notified_at: nowIso }).eq("id", r.id);
+      continue;
+    }
+  }
+
+  if (!open && out.checked > 0) return { ...out, note: "quiet-hours: expiry swept, sends deferred" };
+  return out;
 }
 
 export async function capitalRenewalSweep() {

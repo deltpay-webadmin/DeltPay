@@ -9,6 +9,7 @@ import { NewCapitalDealFlow } from '../flows/NewCapitalDealFlow';
 import { AchImportFlow } from '../flows/AchImportFlow';
 import { useCapital, capitalActions, type CapitalDeal, type CapitalDealStatus, type CapitalChannel, type LoanPaymentCategory } from '../capitalStore';
 import { useAchActivity, type AchDailyActivity } from '../achStore';
+import { CapitalOffersTab } from './CapitalOffersTab';
 
 // ══════════════════════════════════════════
 // Helpers
@@ -40,7 +41,7 @@ const achLabels: Record<string, string> = {
   current: 'Current', completed: 'Completed', 'nsf-retry': 'NSF Retry', suspended: 'Suspended',
 };
 
-type TabKey = 'portfolio' | 'activity' | 'risk' | 'collections' | 'renewals' | 'concentration';
+type TabKey = 'portfolio' | 'offers' | 'activity' | 'risk' | 'collections' | 'renewals' | 'concentration';
 
 const PAYMENT_CATEGORIES: { key: LoanPaymentCategory; label: string }[] = [
   { key: 'debit', label: 'ACH Debit' },
@@ -234,16 +235,18 @@ export function BackendCapital() {
           </div>
         </div>
 
-        {/* ── Empty state ── */}
-        {isEmpty && <EmptyState onAdd={() => setNewDealOpen(true)} />}
+        {/* ── Empty state ── replaces the portfolio only. Offers come
+            before deals exist, so that tab stays reachable at zero. */}
+        {isEmpty && activeTab === 'portfolio' && <EmptyState onAdd={() => setNewDealOpen(true)} />}
 
-        {!isEmpty && (
+        {(
           <>
             {/* ── View Tabs ── */}
             <div className="border-b border-gray-200">
               <div className="flex gap-1">
                 {([
                   { key: 'portfolio' as TabKey, label: 'Portfolio Overview' },
+                  { key: 'offers' as TabKey, label: 'Offers' },
                   { key: 'activity' as TabKey, label: 'ACH Activity' },
                   { key: 'risk' as TabKey, label: 'Risk & Fraud' },
                   { key: 'collections' as TabKey, label: 'Collections' },
@@ -265,8 +268,11 @@ export function BackendCapital() {
               </div>
             </div>
 
+            {/* ═══ OFFERS TAB ═══ */}
+            {activeTab === 'offers' && <CapitalOffersTab />}
+
             {/* ═══ PORTFOLIO TAB ═══ */}
-            {activeTab === 'portfolio' && (
+            {activeTab === 'portfolio' && !isEmpty && (
               <>
                 {/* Channel Summary Strip */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
