@@ -44,6 +44,7 @@ import { BackendPayments } from './pages/BackendPayments';
 import { BackendReports } from './pages/BackendReports';
 import { BackendPlaid } from './pages/BackendPlaid';
 import { BackendMarketing } from './pages/BackendMarketing';
+import { BackendCallPlaybooks } from './pages/BackendCallPlaybooks';
 import { AgentSubmitDeal } from './pages/AgentSubmitDeal';
 import { AgentDealDesk } from './pages/AgentDealDesk';
 import { AgentResources } from './pages/AgentResources';
@@ -78,6 +79,7 @@ import {
   FileText,
   Package,
   Megaphone,
+  PhoneCall,
   Inbox,
   Globe,
   BarChart3,
@@ -125,6 +127,7 @@ const adminGroups: NavGroup[] = [
     label: 'Pipeline',
     items: [
       { label: 'Leads', path: '/leads', icon: Users, perm: 'leads.view' },
+      { label: 'Call Playbooks', path: '/call-playbooks', icon: PhoneCall, perm: 'leads.view' },
       { label: 'Onboarding', path: '/onboarding', icon: Package, perm: 'merchants.view' },
       { label: 'Underwriting', path: '/underwriting', icon: ClipboardCheck, perm: 'underwriting.view' },
       { label: 'Analysis', path: '/analysis', icon: FileText, perm: 'analysis.view' },
@@ -190,6 +193,7 @@ const agentGroups: NavGroup[] = [
       { label: 'Dashboard', path: '/', icon: LayoutDashboard },
       { label: 'My Merchants', path: '/merchants', icon: Store, perm: 'merchants.view' },
       { label: 'My Leads', path: '/leads', icon: Users, perm: 'leads.view' },
+      { label: 'Call Playbooks', path: '/call-playbooks', icon: PhoneCall, perm: 'leads.view' },
       { label: 'Sales Tools', path: '/analysis', icon: Sparkles, perm: 'analysis.view' },
       { label: 'Training', path: '/training', icon: GraduationCap },
       { label: 'My Residuals', path: '/my-residuals', icon: Receipt, perm: 'residuals.view' },
@@ -300,6 +304,7 @@ const allCommands: CommandItem[] = [
   { label: 'Overview', path: '/', group: 'Navigation', icon: Home },
   { label: 'Workspace', path: '/workspace', group: 'Navigation', icon: Inbox, keywords: 'inbox email sms call messages tasks activity timeline' },
   { label: 'Leads', path: '/leads', group: 'Pipeline', icon: Users, keywords: 'sales pipeline', perm: 'leads.view' },
+  { label: 'Call Playbooks', path: '/call-playbooks', group: 'Pipeline', icon: PhoneCall, keywords: 'cold call script dialer objections talk track appointments meetings ab test glencoco', perm: 'leads.view' },
   { label: 'Import Leads', path: '/leads/import', group: 'Pipeline', icon: Upload, keywords: 'upload csv xlsx spreadsheet meta facebook instagram bulk import', perm: 'leads.create' },
   { label: 'Onboarding', path: '/onboarding', group: 'Pipeline', icon: Package, keywords: 'merchant setup sla bank connections activation', perm: 'merchants.view' },
   { label: 'Underwriting', path: '/underwriting', group: 'Pipeline', icon: ClipboardCheck, keywords: 'plaid portal vault lending prospects bank credit identity verification', perm: 'underwriting.view' },
@@ -767,6 +772,7 @@ export function DeltBackendLayout() {
               <Route path="documents" element={<Guard perm="merchants.view"><BackendDocuments /></Guard>} />
               <Route path="disputes" element={<Guard perm="merchants.view"><BackendDisputes /></Guard>} />
               <Route path="marketing" element={<Guard perm="integrations.view"><MarketingHub /></Guard>} />
+              <Route path="call-playbooks" element={<Guard perm="leads.view"><BackendCallPlaybooks /></Guard>} />
               <Route path="outreach" element={<Guard perm="integrations.view"><MarketingHub initialView="outreach" /></Guard>} />
               <Route path="compliance" element={<Guard perm="general.view"><BackendCompliance /></Guard>} />
               <Route path="agents" element={<Guard perm="agents.view"><BackendAgents /></Guard>} />
