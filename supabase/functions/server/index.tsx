@@ -34,6 +34,7 @@ import { sweepInFlightEnvelopes } from "../_shared/docusign_status.ts";
 import {
   capitalRenewalSweep,
   dealStatusNotify,
+  emailHealthDigest,
   growthSweep,
   mpaStallReminders,
   slaWatch,
@@ -107,6 +108,7 @@ const JOB_TASKS: Record<string, () => Promise<unknown>> = {
   "stale-lead-digest": () => staleLeadDigest(),
   "capital-renewal-sweep": () => capitalRenewalSweep(),
   "growth-sweep": () => growthSweep(),
+  "email-health-digest": () => emailHealthDigest(),
   "meta-insights": () => syncMeta(90),
   // syncMetaLeads already reconciles matches against pipeline_leads
   "meta-leads": () => syncMetaLeads(),

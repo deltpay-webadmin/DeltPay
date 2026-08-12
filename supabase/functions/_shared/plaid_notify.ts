@@ -55,6 +55,12 @@ export async function sendEmail(opts: {
     console.warn("[plaid-notify] RESEND_API_KEY not set — skipping:", opts.subject);
     return false;
   }
+  // Deliverability gate — skip addresses that hard-bounced or complained.
+  const { isSuppressed, logEmailEvent } = await import("./suppression.ts");
+  if (await isSuppressed(opts.to)) {
+    console.warn("[plaid-notify] suppressed recipient — skipping:", opts.to, opts.subject);
+    return false;
+  }
   try {
     const body: Record<string, unknown> = {
       from: FROM(),
@@ -69,12 +75,15 @@ export async function sendEmail(opts: {
       body: JSON.stringify(body),
     });
     if (!res.ok) {
-      console.error("[plaid-notify] Resend send failed:", res.status, await res.text().catch(() => ""));
+      const detail = (await res.text().catch(() => "")).slice(0, 300);
+      console.error("[plaid-notify] Resend send failed:", res.status, detail);
+      await logEmailEvent({ recipient: opts.to, event: "send_error", reason: `resend ${res.status}: ${detail}`, subject: opts.subject });
       return false;
     }
     return true;
   } catch (err) {
     console.error("[plaid-notify] Resend send threw:", err);
+    await logEmailEvent({ recipient: opts.to, event: "send_error", reason: String((err as Error)?.message || err), subject: opts.subject });
     return false;
   }
 }

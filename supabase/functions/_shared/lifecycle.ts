@@ -24,6 +24,7 @@
 
 import { svc } from "./plaid.ts";
 import { notifyStaff, withinSendWindow } from "./plaid_notify.ts";
+import { isSuppressed, logEmailEvent } from "./suppression.ts";
 
 const FROM_SYSTEM = () => Deno.env.get("LIFECYCLE_FROM_SYSTEM") || "DeltPay <noreply@deltpay.com>";
 const FROM_SALES = () => Deno.env.get("LIFECYCLE_FROM_SALES") || "David Hazday <david@deltpay.com>";
@@ -51,6 +52,11 @@ export async function sendLifecycle(opts: {
     console.warn("[lifecycle] RESEND_API_KEY not set — skipping:", opts.subject);
     return false;
   }
+  // Deliverability gate: never auto-email a bounced/complained address.
+  if (await isSuppressed(opts.to)) {
+    console.warn("[lifecycle] suppressed recipient — skipping:", opts.to, opts.subject);
+    return false;
+  }
   try {
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -64,12 +70,15 @@ export async function sendLifecycle(opts: {
       }),
     });
     if (!res.ok) {
-      console.error("[lifecycle] send failed:", res.status, await res.text().catch(() => ""));
+      const detail = (await res.text().catch(() => "")).slice(0, 300);
+      console.error("[lifecycle] send failed:", res.status, detail);
+      await logEmailEvent({ recipient: opts.to, event: "send_error", reason: `resend ${res.status}: ${detail}`, subject: opts.subject });
       return false;
     }
     return true;
   } catch (err) {
     console.error("[lifecycle] send threw:", err);
+    await logEmailEvent({ recipient: opts.to, event: "send_error", reason: String((err as Error)?.message || err), subject: opts.subject });
     return false;
   }
 }
@@ -408,6 +417,55 @@ export async function capitalRenewalSweep() {
     );
   }
   return out;
+}
+
+// ══════════════════════════════════════════════════════════════
+// Job: email-health-digest (weekday mornings) — the "nothing breaks
+// silently" report: bounces, complaints, failures, send errors, and
+// new suppressions since the last business day. Silent when clean.
+// ══════════════════════════════════════════════════════════════
+
+export async function emailHealthDigest() {
+  const db = svc();
+  // Monday looks back over the weekend; other weekdays cover ~1 day.
+  const weekday = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", weekday: "short" }).format(new Date());
+  const hours = weekday === "Mon" ? 74 : 26;
+  const cutoff = new Date(Date.now() - hours * 3600000).toISOString();
+
+  const { data: events, error } = await db
+    .from("email_events")
+    .select("recipient, event, reason, subject, created_at")
+    .gte("created_at", cutoff)
+    .order("created_at", { ascending: false })
+    .limit(200);
+  if (error) return { error: error.message };
+  const { data: sups } = await db
+    .from("email_suppressions")
+    .select("email, reason, created_at")
+    .gte("created_at", cutoff);
+
+  if ((events?.length ?? 0) === 0 && (sups?.length ?? 0) === 0) return { clean: true, sent: 0 };
+
+  const counts: Record<string, number> = {};
+  for (const e of events ?? []) counts[e.event] = (counts[e.event] || 0) + 1;
+  const summary = Object.entries(counts).map(([k, v]) => `${v} ${k}`).join(" · ") || "0 events";
+
+  const rows = (events ?? [])
+    .map((e) => `<li style="margin:0 0 8px;font-size:14px;line-height:1.5;"><strong>${esc(e.event)}</strong> — ${esc(e.recipient)}<br/><span style="color:#8a93a8;">${esc(e.subject || "(no subject)")} &middot; ${esc(e.reason || "no detail")} &middot; ${esc(String(e.created_at).slice(0, 16).replace("T", " "))} UTC</span></li>`)
+    .join("");
+  const supRows = (sups ?? [])
+    .map((s) => `<li style="margin:0 0 8px;font-size:14px;"><strong>${esc(s.email)}</strong> <span style="color:#8a93a8;">(${esc(s.reason)}) — future automated emails to this address are blocked</span></li>`)
+    .join("");
+
+  const html = shell(
+    h1("Email health — issues since last check") +
+      p(`<strong>${esc(summary)}</strong>`) +
+      (rows ? p("<strong>Delivery events:</strong>") + `<ul style="margin:0 0 14px;padding-left:18px;">${rows}</ul>` : "") +
+      (supRows ? p("<strong>Newly suppressed addresses:</strong>") + `<ul style="margin:0 0 14px;padding-left:18px;">${supRows}</ul>` : "") +
+      p(`Suppressed addresses are skipped by all automated sequences. To un-suppress one (e.g. a fixed typo), delete its row in email_suppressions.`),
+  );
+  const ok = await notifyStaff(`📮 Email health: ${summary}`, html);
+  return { events: events?.length ?? 0, suppressions: sups?.length ?? 0, sent: ok ? 1 : 0 };
 }
 
 // ══════════════════════════════════════════════════════════════
