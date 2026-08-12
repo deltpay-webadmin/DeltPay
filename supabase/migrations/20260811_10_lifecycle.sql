@@ -37,12 +37,20 @@ alter table public.capital_deals
   add column if not exists contact_email text,
   add column if not exists renewal_notified_at timestamptz;
 
--- DeltCapital website leads (DC-3/4 stall emails + DC-8 in-review) — the
--- deltcapital.com Vercel functions read/write these on the shared database.
-alter table public.leads
+-- deltcapital.com leads live in the delt_capital schema; public.leads is a
+-- pass-through view used by the website's PostgREST calls. Add the email
+-- lifecycle columns to the base table, then rebuild the view to expose them
+-- (simple single-table view stays auto-updatable, so PATCH keeps working).
+alter table delt_capital.leads
   add column if not exists email_nudge_count integer not null default 0,
   add column if not exists email_nudged_at timestamptz,
   add column if not exists review_emailed_at timestamptz;
+
+create or replace view public.leads as
+  select id, created_at, user_id, first_name, business_name, email, phone,
+         source, estimate, nudged_at, completed_at,
+         email_nudge_count, email_nudged_at, review_emailed_at
+  from delt_capital.leads;
 
 -- ── Schedules ───────────────────────────────────────────────────────────
 -- cron.schedule() upserts by job name, so re-applying is safe.
