@@ -6,6 +6,9 @@ import {
   plaidConfig,
   webhookUrl,
   createLinkToken,
+  createUpdateLinkToken,
+  markItemRepaired,
+  recordLinkEvent,
   exchangePublicToken,
   sandboxQuickConnect,
   syncItem,
@@ -480,6 +483,74 @@ app.post(`${PLAID_BASE}/monitor/refresh`, needPerm("underwriting.review"), async
   } catch (err: any) {
     console.error("plaid monitor refresh error", err);
     return c.json({ ok: false, error: String(err?.message ?? err) }, 500);
+  }
+});
+
+// ── Link update mode: repair an existing connection in place ──
+// (re-auth after ITEM_LOGIN_REQUIRED, consent repair after
+// ADDITIONAL_CONSENT_REQUIRED, pre-emptive fix for PENDING_* warnings)
+
+// Token for the CRM's in-app "Reconnect now" (staff with the merchant).
+app.post(`${PLAID_BASE}/items/:itemId/update-link-token`, needPerm("underwriting.review"), async (c) => {
+  try {
+    const out = await createUpdateLinkToken(
+      c.req.param("itemId"),
+      String(c.get("staffUserId" as never) ?? ""),
+    );
+    return c.json({ ok: true, ...out });
+  } catch (err: any) {
+    console.error("plaid update-link-token error", err);
+    return c.json({ ok: false, error: String(err?.message ?? err) }, 500);
+  }
+});
+
+// Hosted repair link — emailed to the prospect to reconnect on their own
+// device (same rail as "Send connect link").
+app.post(`${PLAID_BASE}/items/:itemId/repair-link`, needPerm("underwriting.review"), async (c) => {
+  try {
+    const out = await createUpdateLinkToken(
+      c.req.param("itemId"),
+      String(c.get("staffUserId" as never) ?? ""),
+      { hosted: true },
+    );
+    return c.json({ ok: true, ...out });
+  } catch (err: any) {
+    console.error("plaid repair-link error", err);
+    return c.json({ ok: false, error: String(err?.message ?? err) }, 500);
+  }
+});
+
+// Called by the CRM after an in-app update-mode Link session succeeds.
+app.post(`${PLAID_BASE}/items/:itemId/repair-complete`, needPerm("underwriting.review"), async (c) => {
+  try {
+    const out = await markItemRepaired(c.req.param("itemId"));
+    return c.json(out);
+  } catch (err: any) {
+    console.error("plaid repair-complete error", err);
+    return c.json({ ok: false, error: String(err?.message ?? err) }, 500);
+  }
+});
+
+// Link funnel telemetry from the CRM's Link handlers (onEvent / onExit).
+// Fire-and-forget on the client; never fails the caller.
+app.post(`${PLAID_BASE}/link-event`, needPerm("underwriting.review"), async (c) => {
+  const allowed = new Set(["opened", "exit", "error"]);
+  try {
+    const body = await c.req.json().catch(() => ({}));
+    const event = String(body.event ?? "");
+    if (!allowed.has(event)) return c.json({ ok: false, error: "invalid event" }, 400);
+    recordLinkEvent({
+      event: event as "opened" | "exit" | "error",
+      leadId: body.leadId ? String(body.leadId) : null,
+      itemId: body.itemId ? String(body.itemId) : null,
+      linkSessionId: body.linkSessionId ? String(body.linkSessionId) : null,
+      errorCode: body.errorCode ? String(body.errorCode) : null,
+      institution: body.institution ? String(body.institution) : null,
+      meta: typeof body.meta === "object" && body.meta ? body.meta : {},
+    });
+    return c.json({ ok: true });
+  } catch {
+    return c.json({ ok: true }); // telemetry must never break the UI
   }
 });
 

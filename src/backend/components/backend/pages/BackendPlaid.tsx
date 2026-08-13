@@ -15,6 +15,7 @@ import { toast } from 'sonner@2.0.3';
 import { useLeads, underwritingActions, type Lead } from '../crmStore';
 import {
   usePlaidItems, usePlaidNodes, usePlaidStatus, usePlaidSync, usePlaidLinkRequests, usePlaidUsage, plaidActions,
+  itemUiStatus,
   PLAID_LINK_SESSION_KEY, PLAID_OAUTH_HREF_KEY,
   type PlaidItem, type PlaidNode,
 } from '../plaidStore';
@@ -87,15 +88,49 @@ function timeAgo(iso?: string | null): string {
 
 /** Mounted only once a link_token exists; auto-opens the Plaid Link modal. */
 function PlaidLinkOpener({
-  token, receivedRedirectUri, onSuccess, onExit,
+  token, receivedRedirectUri, onSuccess, onExit, leadId, itemId,
 }: {
   token: string;
   /** Set when resuming after an OAuth bank redirect (must be the full return URL). */
   receivedRedirectUri?: string;
   onSuccess: (publicToken: string, metadata: any) => void;
-  onExit: () => void;
+  onExit: (err?: any, metadata?: any) => void;
+  /** Telemetry context — funnel events land in plaid_link_events. */
+  leadId?: string | null;
+  itemId?: string | null;
 }) {
-  const { open, ready } = usePlaidLink({ token, receivedRedirectUri, onSuccess, onExit });
+  // Funnel telemetry: OPEN + ERROR from onEvent, structured exits from
+  // onExit. Fire-and-forget — never blocks the Link flow.
+  const onEvent = useCallback(
+    (eventName: string, metadata: any) => {
+      if (eventName !== 'OPEN' && eventName !== 'ERROR') return;
+      plaidActions.recordLinkEvent({
+        event: eventName === 'OPEN' ? 'opened' : 'error',
+        leadId,
+        itemId,
+        linkSessionId: metadata?.link_session_id ?? null,
+        errorCode: metadata?.error_code ?? null,
+        institution: metadata?.institution_name ?? null,
+      });
+    },
+    [leadId, itemId],
+  );
+  const handleExit = useCallback(
+    (err: any, metadata: any) => {
+      plaidActions.recordLinkEvent({
+        event: 'exit',
+        leadId,
+        itemId,
+        linkSessionId: metadata?.link_session_id ?? null,
+        errorCode: err?.error_code ?? null,
+        institution: metadata?.institution?.name ?? null,
+        meta: { exit_status: metadata?.status ?? null },
+      });
+      onExit(err, metadata);
+    },
+    [leadId, itemId, onExit],
+  );
+  const { open, ready } = usePlaidLink({ token, receivedRedirectUri, onSuccess, onExit: handleExit, onEvent });
   useEffect(() => {
     if (ready) open();
   }, [ready, open]);
@@ -153,11 +188,100 @@ function PlaidLinkButton({
       {token && (
         <PlaidLinkOpener
           token={token}
+          leadId={leadId}
           onSuccess={onSuccess}
           onExit={() => { setToken(null); plaidActions.clearLinkSession(); }}
         />
       )}
     </>
+  );
+}
+
+/**
+ * "Reconnect now" — in-app Link **update mode** for an item flagged as
+ * repairable (login re-auth, missing Transactions consent, pending
+ * expiration). The item keeps its id, cursor, and vault history; on
+ * success the server clears the flag and resyncs.
+ */
+function ReconnectButton({ item, compact }: { item: PlaidItem; compact?: boolean }) {
+  const [token, setToken] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const launch = async () => {
+    setBusy(true);
+    try {
+      const t = await plaidActions.createUpdateLinkToken(item.itemId);
+      setToken(t);
+    } catch (err: any) {
+      toast.error(`Couldn't start reconnect: ${err.message}`);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const onSuccess = useCallback(() => {
+    // Update mode returns no usable public_token — the repair is complete
+    // server-side once the session succeeds.
+    setToken(null);
+    plaidActions.clearLinkSession();
+    plaidActions.completeRepair(item.itemId).catch(() => {});
+  }, [item.itemId]);
+
+  return (
+    <>
+      <button
+        onClick={launch}
+        disabled={busy}
+        title={item.error || 'Re-authenticate this bank connection'}
+        className={
+          compact
+            ? 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/90 text-white text-xs font-medium hover:bg-amber-500 disabled:opacity-50'
+            : 'inline-flex items-center gap-2 px-4 py-2 rounded-[10px] bg-amber-500/90 text-white text-sm font-bold hover:bg-amber-500 disabled:opacity-50 transition-all'
+        }
+      >
+        <RefreshCw className={compact ? 'w-3 h-3' : 'w-4 h-4'} />
+        {busy ? 'Starting…' : 'Reconnect now'}
+      </button>
+      {token && (
+        <PlaidLinkOpener
+          token={token}
+          leadId={item.leadId}
+          itemId={item.itemId}
+          onSuccess={onSuccess}
+          onExit={() => { setToken(null); plaidActions.clearLinkSession(); }}
+        />
+      )}
+    </>
+  );
+}
+
+/** "Send repair link" — hosted update-mode counterpart to ReconnectButton:
+ * emails the prospect a secure reconnect URL for their own device. */
+function SendRepairLinkButton({ item, compact }: { item: PlaidItem; compact?: boolean }) {
+  const { busy } = usePlaidSync();
+  const requests = usePlaidLinkRequests();
+  const isBusy = busy.includes(`repair:${item.itemId}`);
+  const pending = requests.find(r => r.itemId === item.itemId && r.mode === 'update' && r.status === 'pending');
+  const send = () => plaidActions.sendRepairLink(item.itemId).catch(() => {});
+
+  return (
+    <button
+      onClick={send}
+      disabled={isBusy}
+      title={pending
+        ? `Reconnect link sent ${timeAgo(pending.createdAt)} — click to send a fresh one`
+        : 'Email/text the prospect a secure link to reconnect this bank on their own device'}
+      className={
+        compact
+          ? 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/[0.06] border border-(--dp-border) text-xs text-(--dp-text-secondary) hover:bg-(--dp-bg-raised) disabled:opacity-50'
+          : BTN_GLASS
+      }
+    >
+      <Send className={compact ? 'w-3 h-3' : 'w-4 h-4'} />
+      {compact
+        ? (isBusy ? '…' : pending ? 'Repair sent' : 'Send repair link')
+        : (isBusy ? 'Creating link…' : pending ? `Repair link sent ${timeAgo(pending.createdAt)} — resend` : 'Send repair link')}
+    </button>
   );
 }
 
@@ -210,15 +334,22 @@ function SendLinkButton({ leadId, compact }: { leadId: string; compact?: boolean
  * receivedRedirectUri, and runs the normal exchange.
  */
 function PlaidOAuthResume() {
-  const [ctx, setCtx] = useState<{ href: string; token: string; leadId: string } | null>(() => {
+  const [ctx, setCtx] = useState<{
+    href: string;
+    token: string;
+    leadId?: string;
+    itemId?: string;
+    mode: 'add' | 'update';
+  } | null>(() => {
     try {
       const href = sessionStorage.getItem(PLAID_OAUTH_HREF_KEY);
       const raw = sessionStorage.getItem(PLAID_LINK_SESSION_KEY);
       if (!href || !raw) return null;
-      const { token, leadId, ts } = JSON.parse(raw);
+      const { token, leadId, itemId, mode, ts } = JSON.parse(raw);
       // OAuth link tokens are short-lived (~30 min) — drop stale contexts.
-      if (!token || !leadId || !ts || Date.now() - ts > 30 * 60_000) return null;
-      return { href, token, leadId };
+      if (!token || !ts || Date.now() - ts > 30 * 60_000) return null;
+      if (mode === 'update' ? !itemId : !leadId) return null;
+      return { href, token, leadId, itemId, mode: mode === 'update' ? 'update' : 'add' };
     } catch {
       return null;
     }
@@ -234,12 +365,18 @@ function PlaidOAuthResume() {
     <PlaidLinkOpener
       token={ctx.token}
       receivedRedirectUri={ctx.href}
+      leadId={ctx.leadId ?? null}
+      itemId={ctx.itemId ?? null}
       onSuccess={(publicToken, metadata) => {
         finish();
-        plaidActions.exchange(ctx.leadId, publicToken, {
-          institution_id: metadata?.institution?.institution_id,
-          name: metadata?.institution?.name,
-        });
+        if (ctx.mode === 'update') {
+          plaidActions.completeRepair(ctx.itemId!).catch(() => {});
+        } else {
+          plaidActions.exchange(ctx.leadId!, publicToken, {
+            institution_id: metadata?.institution?.institution_id,
+            name: metadata?.institution?.name,
+          });
+        }
       }}
       onExit={finish}
     />
@@ -672,6 +809,21 @@ function ProspectDetail({
         </div>
       </div>
 
+      {/* Repair banner — a connection needs the prospect back in Link */}
+      {items.filter(i => itemUiStatus(i) === 'reconnect').map(it => (
+        <div key={it.id} className={`${GLASS} border-amber-400/40 p-3 flex flex-wrap items-center justify-between gap-3`}>
+          <span className="inline-flex items-center gap-2 text-sm text-amber-300">
+            <AlertTriangle className="w-4 h-4" />
+            {it.institutionName ?? it.itemKey} needs to be reconnected
+            {it.error ? <span className={`text-xs ${TXT_FAINT}`}>— {it.error}</span> : null}
+          </span>
+          <span className="inline-flex items-center gap-2">
+            <ReconnectButton item={it} compact />
+            <SendRepairLinkButton item={it} compact />
+          </span>
+        </div>
+      ))}
+
       {/* Funding journey — live milestones */}
       <LeadProgressBar lead={lead} />
 
@@ -836,7 +988,11 @@ function ProspectDetail({
                       <Landmark className="w-3.5 h-3.5" /> {it.institutionName ?? it.itemKey}
                     </span>
                     <span className="inline-flex items-center gap-1.5">
-                      {it.status === 'retired' ? (
+                      {itemUiStatus(it) === 'reconnect' ? (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full border bg-amber-400/10 border-amber-400/30 text-amber-300" title={it.error ?? ''}>Reconnect needed</span>
+                      ) : itemUiStatus(it) === 'verifying' ? (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full border bg-amber-400/10 border-amber-400/30 text-amber-300">Verifying data</span>
+                      ) : it.status === 'retired' ? (
                         <span className={`text-[10px] px-1.5 py-0.5 rounded-full border border-(--dp-border) ${TXT_FAINT}`}>Retired</span>
                       ) : it.verifiedAt ? (
                         <span className="text-[10px] px-1.5 py-0.5 rounded-full border bg-emerald-400/10 border-emerald-400/30 text-emerald-300">Verified</span>
@@ -1680,11 +1836,15 @@ function ConnectionsTab() {
                 <td className="py-2.5 px-4 text-(--dp-text-secondary)">{leadName(it.leadId)}</td>
                 <td className={`py-2.5 px-4 ${TXT_MUTED} text-xs`}>{it.products.join(', ')}</td>
                 <td className="py-2.5 px-4">
-                  {it.status === 'active' ? (
+                  {itemUiStatus(it) === 'active' ? (
                     <span className="inline-flex items-center gap-1 text-emerald-400 text-xs"><CheckCircle2 className="w-3.5 h-3.5" /> Active</span>
-                  ) : it.status === 'error' ? (
+                  ) : itemUiStatus(it) === 'verifying' ? (
+                    <span className="inline-flex items-center gap-1 text-amber-300 text-xs" title="Connected — waiting for the first successful transactions sync."><RefreshCw className="w-3.5 h-3.5 animate-spin" /> Verifying</span>
+                  ) : itemUiStatus(it) === 'reconnect' ? (
+                    <span className="inline-flex items-center gap-1 text-amber-400 text-xs" title={it.error ?? ''}><AlertTriangle className="w-3.5 h-3.5" /> Reconnect needed</span>
+                  ) : itemUiStatus(it) === 'error' ? (
                     <span className="inline-flex items-center gap-1 text-red-400 text-xs" title={it.error ?? ''}><AlertTriangle className="w-3.5 h-3.5" /> Error</span>
-                  ) : it.status === 'retired' ? (
+                  ) : itemUiStatus(it) === 'retired' ? (
                     <span className={`inline-flex items-center gap-1 ${TXT_FAINT} text-xs`} title="Billing stopped; vault data kept."><Clock className="w-3.5 h-3.5" /> Retired</span>
                   ) : (
                     <span className={`inline-flex items-center gap-1 ${TXT_FAINT} text-xs`}><XCircle className="w-3.5 h-3.5" /> Disconnected</span>
@@ -1693,6 +1853,12 @@ function ConnectionsTab() {
                 <td className={`py-2.5 px-4 ${TXT_MUTED} text-xs`}>{timeAgo(it.lastSyncedAt)}</td>
                 <td className="py-2.5 px-4 text-right">
                   <div className="inline-flex items-center gap-1.5">
+                    {(itemUiStatus(it) === 'reconnect' || itemUiStatus(it) === 'error') && (
+                      <>
+                        <ReconnectButton item={it} compact />
+                        <SendRepairLinkButton item={it} compact />
+                      </>
+                    )}
                     <button
                       onClick={() => plaidActions.syncItem(it.itemId)}
                       disabled={busy.includes(`sync:${it.itemId}`)}
@@ -2144,7 +2310,17 @@ export function BackendPlaid() {
                         </td>
                         <td className="py-2.5 px-4 text-(--dp-text-secondary)">{p.lead.amountRequested || '—'}</td>
                         <td className="py-2.5 px-4" onClick={e => e.stopPropagation()}>
-                          {p.items.length > 0 ? (
+                          {p.items.some(i => itemUiStatus(i) === 'reconnect') ? (
+                            <span className="inline-flex items-center gap-1 text-amber-400 text-xs" title="A bank connection needs the prospect back in Plaid Link.">
+                              <AlertTriangle className="w-3.5 h-3.5" />
+                              Reconnect needed
+                            </span>
+                          ) : p.items.length > 0 && p.items.every(i => itemUiStatus(i) === 'verifying') ? (
+                            <span className="inline-flex items-center gap-1 text-amber-300 text-xs" title="Connected — waiting for the first successful transactions sync.">
+                              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                              Verifying
+                            </span>
+                          ) : p.items.length > 0 ? (
                             <span className="inline-flex items-center gap-1 text-emerald-400 text-xs">
                               <CheckCircle2 className="w-3.5 h-3.5" />
                               {p.items.length} bank{p.items.length > 1 ? 's' : ''}
