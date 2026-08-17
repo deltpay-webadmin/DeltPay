@@ -520,6 +520,7 @@ export async function exchangePublicToken(
   leadId: string,
   publicToken: string,
   institution?: { institution_id?: string; name?: string },
+  extras?: { linkSessionId?: string | null },
 ) {
   const db = svc();
   const cfg = plaidConfig();
@@ -589,6 +590,7 @@ export async function exchangePublicToken(
     event: "exchanged",
     leadId,
     itemId,
+    linkSessionId: extras?.linkSessionId ?? null,
     institution: instName || instId || null,
     meta: duplicateOf ? { duplicate_of: duplicateOf } : {},
   });
@@ -643,6 +645,8 @@ export interface ApplyApplicant {
   businessName?: string;
   /** The deltcapital.com lead uuid (delt_capital.leads.id), if known. */
   leadId?: string;
+  /** Plaid Link session id from the applicant's Link flow — funnel telemetry. */
+  linkSessionId?: string;
 }
 
 /** Match an applicant to a pipeline lead by email, or create one using the
@@ -690,7 +694,9 @@ export async function applyPlaidExchange(
   institution?: { institution_id?: string; name?: string },
 ) {
   const leadId = await resolveApplyLead(applicant);
-  const out = await exchangePublicToken(leadId, publicToken, institution);
+  const out = await exchangePublicToken(leadId, publicToken, institution, {
+    linkSessionId: applicant.linkSessionId ?? null,
+  });
 
   // Friendly summary for the applicant-facing UI (name/mask/subtype only).
   let accounts: { name: string; mask: string; subtype: string }[] = [];
