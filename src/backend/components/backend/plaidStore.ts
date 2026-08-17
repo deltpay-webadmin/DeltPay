@@ -44,12 +44,43 @@ export interface PlaidItem {
   products: string[];
   status: 'active' | 'error' | 'disconnected' | 'retired';
   error: string | null;
+  /** Plaid's machine-readable error code (ITEM_LOGIN_REQUIRED, ...). */
+  errorCode: string | null;
   /** Set once Auth + Identity (one-time fees) have been deliberately run. */
   verifiedAt?: string | null;
   /** Set when the item was retired (billing stopped, vault data kept). */
   retiredAt?: string | null;
   lastSyncedAt: string | null;
   createdAt: string;
+}
+
+/** How the CRM should present a connection — derived, not stored.
+ *  - 'verifying': exchanged but no successful transactions sync yet
+ *    ("Verifying bank data", not "Connected").
+ *  - 'reconnect': the user needs to run through Link again (login repair,
+ *    consent gap, pending expiration) — repairable, not a dead end. */
+export type PlaidUiStatus = 'active' | 'verifying' | 'reconnect' | 'error' | 'disconnected' | 'retired';
+
+/** Mirror of the backend's REPAIR_ERROR_CODES. */
+const REPAIR_CODES = new Set([
+  'ITEM_LOGIN_REQUIRED',
+  'ADDITIONAL_CONSENT_REQUIRED',
+  'ACCESS_NOT_GRANTED',
+  'PENDING_EXPIRATION',
+  'PENDING_DISCONNECT',
+  'USER_PERMISSION_REVOKED',
+]);
+
+export function itemUiStatus(i: PlaidItem): PlaidUiStatus {
+  if (i.status === 'active' && i.errorCode) return 'reconnect'; // PENDING_* warnings stay active
+  if (i.status === 'active' && !i.lastSyncedAt) return 'verifying';
+  if (i.status === 'error') {
+    if (i.errorCode && REPAIR_CODES.has(i.errorCode)) return 'reconnect';
+    // Rows written before error_code existed: consent failures are repairable.
+    if (!i.errorCode && /user consent|ITEM_LOGIN_REQUIRED/i.test(i.error ?? '')) return 'reconnect';
+    return 'error';
+  }
+  return i.status;
 }
 
 export interface PlaidNode {
@@ -70,7 +101,10 @@ export interface PlaidLinkRequest {
   leadId: string | null;
   hostedLinkUrl: string;
   status: 'pending' | 'completed' | 'expired';
+  /** 'add' = new connection; 'update' = repair/re-auth of an existing item. */
+  mode: 'add' | 'update';
   itemId: string | null;
+  linkSessionId: string | null;
   createdAt: string;
   expiresAt: string | null;
   completedAt: string | null;
@@ -169,6 +203,7 @@ function fromDbItem(r: any): PlaidItem {
     products: r.products ?? [],
     status: r.status ?? 'active',
     error: r.error ?? null,
+    errorCode: r.error_code ?? null,
     verifiedAt: r.verified_at ?? null,
     retiredAt: r.retired_at ?? null,
     lastSyncedAt: r.last_synced_at ?? null,
@@ -182,7 +217,9 @@ function fromDbRequest(r: any): PlaidLinkRequest {
     leadId: r.lead_id ?? null,
     hostedLinkUrl: r.hosted_link_url ?? '',
     status: r.status ?? 'pending',
+    mode: r.mode === 'update' ? 'update' : 'add',
     itemId: r.item_id ?? null,
+    linkSessionId: r.link_session_id ?? null,
     createdAt: r.created_at ?? '',
     expiresAt: r.expires_at ?? null,
     completedAt: r.completed_at ?? null,
@@ -421,10 +458,96 @@ export const plaidActions = {
     try {
       sessionStorage.setItem(
         PLAID_LINK_SESSION_KEY,
-        JSON.stringify({ token: json.link_token, leadId, ts: Date.now() }),
+        JSON.stringify({ token: json.link_token, leadId, mode: 'add', ts: Date.now() }),
       );
     } catch { /* storage unavailable — OAuth resume just won't work */ }
     return json.link_token as string;
+  },
+
+  /** Update-mode Link token: repair an existing connection in place
+   * (re-auth / consent). Same OAuth-resume stash as createLinkToken. */
+  async createUpdateLinkToken(itemId: string): Promise<string> {
+    const json = await authFetch(`/items/${encodeURIComponent(itemId)}/update-link-token`, {
+      method: 'POST',
+      body: JSON.stringify({}),
+    });
+    try {
+      sessionStorage.setItem(
+        PLAID_LINK_SESSION_KEY,
+        JSON.stringify({ token: json.link_token, itemId, mode: 'update', ts: Date.now() }),
+      );
+    } catch { /* storage unavailable — OAuth resume just won't work */ }
+    return json.link_token as string;
+  },
+
+  /** Finish an in-app update-mode session: clear the item's repair flag
+   * and resync. */
+  async completeRepair(itemId: string) {
+    markBusy(`sync:${itemId}`, true);
+    try {
+      const json = await authFetch(`/items/${encodeURIComponent(itemId)}/repair-complete`, {
+        method: 'POST',
+        body: JSON.stringify({}),
+      });
+      toast.success('Reconnected — verifying bank data now.');
+      await plaidActions.refresh();
+      return json;
+    } catch (err: any) {
+      toast.error(`Reconnect finished but resync failed: ${err.message}`);
+      throw err;
+    } finally {
+      markBusy(`sync:${itemId}`, false);
+    }
+  },
+
+  /** Email the prospect a hosted reconnect (repair) link for one item,
+   * and copy it for texting — mirror of createHostedLink. */
+  async sendRepairLink(itemId: string): Promise<string> {
+    markBusy(`repair:${itemId}`, true);
+    try {
+      const json = await authFetch(`/items/${encodeURIComponent(itemId)}/repair-link`, {
+        method: 'POST',
+        body: JSON.stringify({}),
+      });
+      const url = String(json.hosted_link_url ?? '');
+      const emailed = Boolean(json.emailed);
+      let copied = false;
+      try {
+        await navigator.clipboard.writeText(url);
+        copied = true;
+      } catch { /* clipboard blocked — fall through to prompt */ }
+      if (emailed) {
+        toast.success(
+          copied
+            ? 'Reconnect link emailed to the prospect — also copied if you want to text it.'
+            : 'Reconnect link emailed to the prospect.',
+        );
+      } else if (copied) {
+        toast.success('Reconnect link copied — text or email it to the prospect. Valid for 7 days. (No email on file, so nothing was auto-sent.)');
+      } else {
+        window.prompt('Copy this secure reconnect link and send it to the prospect (valid 7 days):', url);
+      }
+      await plaidActions.refresh();
+      return url;
+    } catch (err: any) {
+      toast.error(`Couldn't create reconnect link: ${err.message}`);
+      throw err;
+    } finally {
+      markBusy(`repair:${itemId}`, false);
+    }
+  },
+
+  /** Link funnel telemetry (onEvent / onExit) — strictly fire-and-forget. */
+  recordLinkEvent(payload: {
+    event: 'opened' | 'exit' | 'error';
+    leadId?: string | null;
+    itemId?: string | null;
+    linkSessionId?: string | null;
+    errorCode?: string | null;
+    institution?: string | null;
+    meta?: Record<string, unknown>;
+  }) {
+    authFetch('/link-event', { method: 'POST', body: JSON.stringify(payload) }).catch(() => {});
   },
 
   /** Drop any stashed OAuth-resume context (call on Link success/exit). */
@@ -447,9 +570,23 @@ export const plaidActions = {
         method: 'POST',
         body: JSON.stringify({ leadId, publicToken, institution }),
       });
-      toast.success(
-        `Connected ${json.institution_name || 'bank'} — pulled ${json.sync?.accounts ?? 0} account(s).`,
-      );
+      // "Connected" only once transaction data actually landed; until then
+      // the honest state is "verifying bank data".
+      const bank = json.institution_name || 'bank';
+      if (json.sync?.ok && json.sync?.tx_ready) {
+        toast.success(`Connected ${bank} — pulled ${json.sync?.accounts ?? 0} account(s).`);
+      } else if (json.sync?.ok === false) {
+        toast.warning(
+          `${bank} is connected, but the first data pull failed (${json.sync?.error_code || json.sync?.error || 'unknown error'}). The connection is flagged for repair.`,
+        );
+      } else {
+        toast.info(
+          `Connected ${bank} — verifying bank data. Transactions usually land within a couple of minutes.`,
+        );
+      }
+      if (json.duplicate_of) {
+        toast.warning(`Heads up: ${bank} was already connected for this lead — possible duplicate connection.`);
+      }
       await plaidActions.refresh();
       return json;
     } catch (err: any) {
@@ -681,6 +818,28 @@ export const plaidActions = {
       return json;
     } catch (err: any) {
       toast.error(`IDV attach failed: ${err.message}`);
+      throw err;
+    }
+  },
+
+  /** Retry a failed/expired IDV session (new Plaid session, same user +
+   * template). Returns the new session incl. shareable_url to send on. */
+  async retryIdv(leadId: string, identityVerificationId: string, strategy: 'reset' | 'incomplete' = 'reset') {
+    try {
+      const json = await authFetch('/idv/retry', {
+        method: 'POST',
+        body: JSON.stringify({ leadId, identityVerificationId, strategy }),
+      });
+      if (json.shareable_url) {
+        try { await navigator.clipboard.writeText(String(json.shareable_url)); } catch { /* ignore */ }
+        toast.success('New IDV session created — link copied to send to the applicant.');
+      } else {
+        toast.success(`New IDV session created (status: ${json.status ?? 'unknown'}).`);
+      }
+      await plaidActions.refresh();
+      return json;
+    } catch (err: any) {
+      toast.error(`IDV retry failed: ${err.message}`);
       throw err;
     }
   },

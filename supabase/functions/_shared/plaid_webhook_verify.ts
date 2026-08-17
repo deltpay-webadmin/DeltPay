@@ -59,22 +59,53 @@ export async function verifyPlaidWebhook(
   if (alg !== "ES256") return { ok: false, reason: `unexpected alg ${alg}` };
   if (!kid) return { ok: false, reason: "missing kid" };
 
+  // The cache lives for the isolate's lifetime and Plaid rotates signing
+  // keys, so a cached entry can go stale. On a cache hit that is expired
+  // or fails signature verification, refetch the key once before failing.
   let jwk = keyCache.get(kid);
+  let fromCache = Boolean(jwk);
   if (!jwk) {
     jwk = (await fetchKey(kid)) ?? undefined;
     if (!jwk) return { ok: false, reason: `unknown key id ${kid}` };
     keyCache.set(kid, jwk);
   }
-  if (jwk.expired_at != null) return { ok: false, reason: "signing key expired" };
+
+  const refetch = async (): Promise<boolean> => {
+    if (!fromCache) return false;
+    fromCache = false; // one refetch attempt per verification
+    const fresh = await fetchKey(kid!);
+    if (!fresh) return false;
+    keyCache.set(kid!, fresh);
+    jwk = fresh;
+    return true;
+  };
+
+  if (jwk.expired_at != null && !(await refetch())) {
+    return { ok: false, reason: "signing key expired" };
+  }
+  if (jwk!.expired_at != null) return { ok: false, reason: "signing key expired" };
+
+  const verify = (key: PlaidJWK) =>
+    importJWK(key, "ES256").then((k) =>
+      jwtVerify(jwtHeader, k, {
+        maxTokenAge: "5 minutes",
+        clockTolerance: "30 seconds",
+      }),
+    );
 
   let payload: Record<string, unknown>;
   try {
-    ({ payload } = await jwtVerify(jwtHeader, await importJWK(jwk, "ES256"), {
-      maxTokenAge: "5 minutes",
-      clockTolerance: "30 seconds",
-    }));
+    ({ payload } = await verify(jwk!));
   } catch (err) {
-    return { ok: false, reason: `signature/claims invalid: ${(err as Error).message}` };
+    if (await refetch()) {
+      try {
+        ({ payload } = await verify(jwk!));
+      } catch (err2) {
+        return { ok: false, reason: `signature/claims invalid: ${(err2 as Error).message}` };
+      }
+    } else {
+      return { ok: false, reason: `signature/claims invalid: ${(err as Error).message}` };
+    }
   }
 
   const digest = await crypto.subtle.digest(

@@ -163,6 +163,27 @@ export function reminderEmail(businessName: string, url: string, attempt: 1 | 2)
       };
 }
 
+export function repairLinkEmail(
+  businessName: string,
+  institution: string,
+  url: string,
+  expiresAt?: string | null,
+): { subject: string; html: string } {
+  const days = expiresAt
+    ? Math.max(1, Math.round((new Date(expiresAt).getTime() - Date.now()) / 86400000))
+    : 7;
+  const bank = institution || "your bank";
+  return {
+    subject: `Action needed — reconnect ${bank} for ${businessName}`,
+    html: shell(
+      h(`${bank} needs a quick reconnect`) +
+      p(`The secure connection between ${esc(bank)} and ${esc(businessName)}'s funding file needs to be refreshed — banks periodically ask you to re-confirm access. It takes about a minute and keeps your review moving without chasing statements.`) +
+      p(btn(url, `Reconnect ${bank} securely`)) +
+      p(`This secure link works for about ${days} day${days === 1 ? "" : "s"} and can be opened from your phone. It's read-only and your credentials go to Plaid (used by Venmo and American Express) — never to Delt.`),
+    ),
+  };
+}
+
 export function connectedProspectEmail(businessName: string, institution: string): { subject: string; html: string } {
   return {
     subject: `You're all set — ${institution || "your bank"} is connected`,

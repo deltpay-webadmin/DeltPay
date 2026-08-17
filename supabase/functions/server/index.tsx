@@ -6,6 +6,9 @@ import {
   plaidConfig,
   webhookUrl,
   createLinkToken,
+  createUpdateLinkToken,
+  markItemRepaired,
+  recordLinkEvent,
   exchangePublicToken,
   sandboxQuickConnect,
   syncItem,
@@ -17,7 +20,9 @@ import {
   applyPlaidExchange,
   createHostedLink,
   sweepHostedLinks,
+  sweepRepairLinks,
   sendConnectReminders,
+  retryIdentityVerification,
   verifyItem,
   verifyLead,
   refreshLeadTransactions,
@@ -94,6 +99,10 @@ const JOB_TASKS: Record<string, () => Promise<unknown>> = {
   "plaid-sync-all": async () => ({
     hosted_links: await sweepHostedLinks().catch((err: any) => ({ error: String(err?.message ?? err) })),
     items: await syncAllItems(),
+    // Repair safety net: any item flagged repair-needed without an
+    // outstanding reconnect invite gets one emailed (webhooks are the
+    // fast path; this catches missed webhooks and sync-detected flags).
+    repair_links: await sweepRepairLinks().catch((err: any) => ({ error: String(err?.message ?? err) })),
     // Retire items on dead leads afterwards so the monthly Transactions
     // subscription stops accruing on files that will never fund.
     retired: await retireStaleItems().catch((err: any) => ({ error: String(err?.message ?? err) })),
@@ -380,6 +389,26 @@ app.post(`${PLAID_BASE}/idv/attach`, needPerm("underwriting.review"), async (c) 
   }
 });
 
+// Retry a failed/expired IDV session — Plaid mints a fresh session for the
+// same user + template; the new session is filed on the lead and its
+// shareable_url is returned for sending to the applicant.
+app.post(`${PLAID_BASE}/idv/retry`, needPerm("underwriting.review"), async (c) => {
+  try {
+    const body = await c.req.json().catch(() => ({}));
+    const leadId = String(body.leadId ?? "");
+    const idvId = String(body.identityVerificationId ?? "").trim();
+    const strategy = String(body.strategy ?? "reset");
+    if (!leadId || !idvId) {
+      return c.json({ ok: false, error: "leadId and identityVerificationId are required" }, 400);
+    }
+    const out = await retryIdentityVerification(leadId, idvId, strategy);
+    return c.json(out);
+  } catch (err: any) {
+    console.error("plaid idv retry error", err);
+    return c.json({ ok: false, error: String(err?.message ?? err) }, 500);
+  }
+});
+
 app.post(`${PLAID_BASE}/asset-report`, needPerm("underwriting.review"), async (c) => {
   try {
     const body = await c.req.json().catch(() => ({}));
@@ -480,6 +509,74 @@ app.post(`${PLAID_BASE}/monitor/refresh`, needPerm("underwriting.review"), async
   } catch (err: any) {
     console.error("plaid monitor refresh error", err);
     return c.json({ ok: false, error: String(err?.message ?? err) }, 500);
+  }
+});
+
+// ── Link update mode: repair an existing connection in place ──
+// (re-auth after ITEM_LOGIN_REQUIRED, consent repair after
+// ADDITIONAL_CONSENT_REQUIRED, pre-emptive fix for PENDING_* warnings)
+
+// Token for the CRM's in-app "Reconnect now" (staff with the merchant).
+app.post(`${PLAID_BASE}/items/:itemId/update-link-token`, needPerm("underwriting.review"), async (c) => {
+  try {
+    const out = await createUpdateLinkToken(
+      c.req.param("itemId"),
+      String(c.get("staffUserId" as never) ?? ""),
+    );
+    return c.json({ ok: true, ...out });
+  } catch (err: any) {
+    console.error("plaid update-link-token error", err);
+    return c.json({ ok: false, error: String(err?.message ?? err) }, 500);
+  }
+});
+
+// Hosted repair link — emailed to the prospect to reconnect on their own
+// device (same rail as "Send connect link").
+app.post(`${PLAID_BASE}/items/:itemId/repair-link`, needPerm("underwriting.review"), async (c) => {
+  try {
+    const out = await createUpdateLinkToken(
+      c.req.param("itemId"),
+      String(c.get("staffUserId" as never) ?? ""),
+      { hosted: true },
+    );
+    return c.json({ ok: true, ...out });
+  } catch (err: any) {
+    console.error("plaid repair-link error", err);
+    return c.json({ ok: false, error: String(err?.message ?? err) }, 500);
+  }
+});
+
+// Called by the CRM after an in-app update-mode Link session succeeds.
+app.post(`${PLAID_BASE}/items/:itemId/repair-complete`, needPerm("underwriting.review"), async (c) => {
+  try {
+    const out = await markItemRepaired(c.req.param("itemId"));
+    return c.json(out);
+  } catch (err: any) {
+    console.error("plaid repair-complete error", err);
+    return c.json({ ok: false, error: String(err?.message ?? err) }, 500);
+  }
+});
+
+// Link funnel telemetry from the CRM's Link handlers (onEvent / onExit).
+// Fire-and-forget on the client; never fails the caller.
+app.post(`${PLAID_BASE}/link-event`, needPerm("underwriting.review"), async (c) => {
+  const allowed = new Set(["opened", "exit", "error"]);
+  try {
+    const body = await c.req.json().catch(() => ({}));
+    const event = String(body.event ?? "");
+    if (!allowed.has(event)) return c.json({ ok: false, error: "invalid event" }, 400);
+    recordLinkEvent({
+      event: event as "opened" | "exit" | "error",
+      leadId: body.leadId ? String(body.leadId) : null,
+      itemId: body.itemId ? String(body.itemId) : null,
+      linkSessionId: body.linkSessionId ? String(body.linkSessionId) : null,
+      errorCode: body.errorCode ? String(body.errorCode) : null,
+      institution: body.institution ? String(body.institution) : null,
+      meta: typeof body.meta === "object" && body.meta ? body.meta : {},
+    });
+    return c.json({ ok: true });
+  } catch {
+    return c.json({ ok: true }); // telemetry must never break the UI
   }
 });
 

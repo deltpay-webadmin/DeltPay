@@ -32,6 +32,7 @@ import {
   notifyStaff,
   connectLinkEmail,
   reminderEmail,
+  repairLinkEmail,
   connectedProspectEmail,
   connectedStaffEmail,
   expiredStaffEmail,
@@ -106,6 +107,13 @@ export function webhookUrl(): string {
   return base ? `${base}/functions/v1/plaid-webhook` : "";
 }
 
+/** The brand shown inside Plaid Link. One name on every surface — the
+ * merchant is always the person consenting, whether staff-assisted in
+ * the CRM or self-serve on a Plaid-hosted page. */
+export function plaidClientName(): string {
+  return (Deno.env.get("PLAID_CLIENT_NAME") ?? "").trim() || "Delt Capital";
+}
+
 export function svc(): SupabaseClient {
   return createClient(
     Deno.env.get("SUPABASE_URL")!,
@@ -134,12 +142,18 @@ const BILLABLE: Record<string, { product: string; pricing: string }> = {
   "/accounts/balance/get": { product: "balance", pricing: "per_request" },
   "/asset_report/create": { product: "assets", pricing: "per_report" },
   "/identity_verification/get": { product: "identity_verification", pricing: "per_event" },
+  "/identity_verification/retry": { product: "identity_verification", pricing: "per_event" },
   "/liabilities/get": { product: "liabilities", pricing: "subscription" },
   "/investments/holdings/get": { product: "investments", pricing: "subscription" },
   "/watchlist_screening/individual/create": { product: "monitor", pricing: "per_event" },
 };
 
-function logPlaidCall(path: string, ctx: PlaidCallCtx | undefined, status: "ok" | "error") {
+function logPlaidCall(
+  path: string,
+  ctx: PlaidCallCtx | undefined,
+  status: "ok" | "error",
+  meta?: Record<string, unknown>,
+) {
   const billable = BILLABLE[path];
   if (!billable) return; // link/item/institution/accounts-get calls are free
   try {
@@ -152,12 +166,76 @@ function logPlaidCall(path: string, ctx: PlaidCallCtx | undefined, status: "ok" 
         item_id: ctx?.itemId ?? null,
         lead_id: ctx?.leadId ?? null,
         status,
+        ...(meta && Object.keys(meta).length ? { meta } : {}),
       })
       .then(({ error }) => {
         if (error) console.error("plaid_api_events insert failed:", error.message);
       });
   } catch (err) {
     console.error("plaid_api_events logging failed:", err);
+  }
+}
+
+// ──────────────────────────────────────────────────────────────
+// Link funnel telemetry — one plaid_link_events row per observable
+// step of a connect or repair journey (token created → link sent →
+// opened → session finished → exchanged → first sync, plus exits,
+// errors, and webhook callbacks). Same rule as the billable ledger:
+// telemetry must never break the flow it observes.
+// ──────────────────────────────────────────────────────────────
+
+type LinkEventName =
+  | "created"
+  | "sent"
+  | "opened"
+  | "callback"
+  | "session_finished"
+  | "exchanged"
+  | "first_sync"
+  | "exit"
+  | "error";
+
+/** Plaid error codes that mean "get the user back into Link" (update
+ * mode) rather than a hard technical failure. */
+export const REPAIR_ERROR_CODES = new Set([
+  "ITEM_LOGIN_REQUIRED",
+  "ADDITIONAL_CONSENT_REQUIRED",
+  "ACCESS_NOT_GRANTED",
+  "PENDING_EXPIRATION",
+  "PENDING_DISCONNECT",
+  "USER_PERMISSION_REVOKED",
+]);
+
+export function recordLinkEvent(evt: {
+  event: LinkEventName;
+  leadId?: string | null;
+  itemId?: string | null;
+  linkToken?: string | null;
+  linkSessionId?: string | null;
+  errorCode?: string | null;
+  institution?: string | null;
+  requestId?: string | null;
+  meta?: Record<string, unknown>;
+}): void {
+  try {
+    svc()
+      .from("plaid_link_events")
+      .insert({
+        event: evt.event,
+        lead_id: evt.leadId ?? null,
+        item_id: evt.itemId ?? null,
+        link_token: evt.linkToken ?? null,
+        link_session_id: evt.linkSessionId ?? null,
+        error_code: evt.errorCode ?? null,
+        institution: evt.institution ?? null,
+        request_id: evt.requestId ?? null,
+        meta: evt.meta ?? {},
+      })
+      .then(({ error }) => {
+        if (error) console.error("plaid_link_events insert failed:", error.message);
+      });
+  } catch (err) {
+    console.error("plaid_link_events logging failed:", err);
   }
 }
 
@@ -180,14 +258,21 @@ async function plaid(path: string, body: Record<string, unknown>, ctx?: PlaidCal
     body: JSON.stringify({ client_id: cfg.clientId, secret: cfg.secret, ...body }),
   });
   const json = await res.json().catch(() => ({}));
+  // Plaid returns a request_id on every response — persisting it is what
+  // makes a support ticket to Plaid actionable.
+  const requestId: string | null = json?.request_id ?? null;
   if (!res.ok) {
-    logPlaidCall(path, ctx, "error");
+    logPlaidCall(path, ctx, "error", {
+      ...(requestId ? { request_id: requestId } : {}),
+      ...(json?.error_code ? { error_code: json.error_code } : {}),
+    });
     const msg = json?.error_message || json?.error_code || `Plaid ${path} failed (${res.status})`;
-    const err = new Error(msg) as Error & { plaid?: any };
+    const err = new Error(msg) as Error & { plaid?: any; plaidRequestId?: string | null };
     err.plaid = json;
+    err.plaidRequestId = requestId;
     throw err;
   }
-  logPlaidCall(path, ctx, "ok");
+  logPlaidCall(path, ctx, "ok", requestId ? { request_id: requestId } : undefined);
   return json;
 }
 
@@ -410,7 +495,7 @@ export async function createLinkToken(leadId: string, userId: string) {
   const cfg = plaidConfig();
   const req: Record<string, unknown> = {
     user: { client_user_id: userId || leadId || "delt-crm" },
-    client_name: "Delt Pay CRM",
+    client_name: plaidClientName(),
     language: "en",
     country_codes: ["US"],
     products: cfg.products,
@@ -422,6 +507,12 @@ export async function createLinkToken(leadId: string, userId: string) {
   // matches one registered in the Plaid dashboard → API → Allowed redirect URIs.
   if (cfg.redirectUri) req.redirect_uri = cfg.redirectUri;
   const out = await plaid("/link/token/create", req);
+  recordLinkEvent({
+    event: "created",
+    leadId,
+    linkToken: out.link_token,
+    meta: { mode: "add", surface: "crm" },
+  });
   return { link_token: out.link_token, expiration: out.expiration };
 }
 
@@ -455,6 +546,24 @@ export async function exchangePublicToken(
   }
   const itemKey = `${slugify(instName || instId || "bank")}-${itemId.slice(-4).toLowerCase()}`;
 
+  // Duplicate-connection guard: the same bank actively connected for this
+  // lead already. Warn-only — the older item may hold cursor/history state
+  // for a legitimately re-linked bank, so nothing is removed automatically.
+  let duplicateOf: string | null = null;
+  if (instId) {
+    try {
+      const { data: dupes } = await db
+        .from("plaid_items")
+        .select("item_id")
+        .eq("lead_id", leadId)
+        .eq("institution_id", instId)
+        .eq("status", "active")
+        .neq("item_id", itemId)
+        .limit(1);
+      duplicateOf = dupes?.[0]?.item_id ?? null;
+    } catch { /* guard is best-effort */ }
+  }
+
   const { error: itemErr } = await db.from("plaid_items").upsert(
     {
       item_id: itemId,
@@ -465,6 +574,7 @@ export async function exchangePublicToken(
       products: cfg.products,
       status: "active",
       error: null,
+      error_code: null,
     },
     { onConflict: "item_id" },
   );
@@ -475,8 +585,30 @@ export async function exchangePublicToken(
     .upsert({ item_id: itemId, access_token: accessToken }, { onConflict: "item_id" });
   if (credErr) throw new Error(`Failed to save Plaid credentials: ${credErr.message}`);
 
-  const sync = await syncItem(itemId);
-  return { item_id: itemId, item_key: itemKey, institution_name: instName, sync };
+  recordLinkEvent({
+    event: "exchanged",
+    leadId,
+    itemId,
+    institution: instName || instId || null,
+    meta: duplicateOf ? { duplicate_of: duplicateOf } : {},
+  });
+
+  // The connection is established at this point — a failed first sync
+  // (consent gap, PRODUCT_NOT_READY race, bank hiccup) must not fail the
+  // exchange. syncItem already flagged the item; the CRM shows "reconnect
+  // needed"/"verifying" and the webhook/repair machinery takes it from here.
+  let sync: any;
+  try {
+    sync = await syncItem(itemId);
+  } catch (err: any) {
+    sync = {
+      ok: false,
+      item_id: itemId,
+      error: String(err?.message ?? err),
+      error_code: err?.plaid?.error_code ?? null,
+    };
+  }
+  return { item_id: itemId, item_key: itemKey, institution_name: instName, sync, duplicate_of: duplicateOf };
 }
 
 /** Sandbox-only: create + exchange a test item without going through Link. */
@@ -624,7 +756,7 @@ export async function createHostedLink(leadId: string) {
   const req: Record<string, unknown> = {
     user: { client_user_id: leadId || "delt-crm" },
     // Prospect-facing brand: this name shows on the Plaid-hosted page.
-    client_name: "Delt Capital",
+    client_name: plaidClientName(),
     language: "en",
     country_codes: ["US"],
     products: cfg.products,
@@ -650,6 +782,12 @@ export async function createHostedLink(leadId: string) {
     expires_at: expiresAt,
   });
   if (error) throw new Error(`Failed to record link request: ${error.message}`);
+  recordLinkEvent({
+    event: "created",
+    leadId,
+    linkToken: out.link_token,
+    meta: { mode: "add", hosted: true },
+  });
 
   // Email the link to the prospect immediately — staff clicked "send", so
   // this is a deliberate, expected touch (no quiet-hours gate). Falls back
@@ -666,6 +804,7 @@ export async function createHostedLink(leadId: string) {
       const tpl = connectLinkEmail(lead?.business_name || "your business", out.hosted_link_url, expiresAt);
       emailed = await sendEmail({ to, subject: tpl.subject, html: tpl.html });
       if (emailed) {
+        recordLinkEvent({ event: "sent", leadId, linkToken: out.link_token, meta: { mode: "add" } });
         const timeline = Array.isArray(lead?.timeline) ? lead.timeline : [];
         timeline.push({
           date: new Date().toISOString(),
@@ -684,6 +823,206 @@ export async function createHostedLink(leadId: string) {
     expiration: out.expiration ?? null,
     emailed,
   };
+}
+
+// ══════════════════════════════════════════════════════════════
+// Link update mode — re-auth / consent repair on an existing item
+// ══════════════════════════════════════════════════════════════
+// Fixes ITEM_LOGIN_REQUIRED, PENDING_EXPIRATION / PENDING_DISCONNECT,
+// and "client does not have user consent to access PRODUCT_TRANSACTIONS"
+// (ADDITIONAL_CONSENT_REQUIRED) without creating a new item: the token
+// is minted against the stored access_token, the user runs through Link
+// once more, and the item keeps its id, cursor, and vault history.
+
+export async function createUpdateLinkToken(
+  itemId: string,
+  userId?: string,
+  opts?: { hosted?: boolean },
+) {
+  const cfg = plaidConfig();
+  const { item, accessToken } = await loadItem(itemId);
+  const leadId: string | null = item.lead_id ?? null;
+  const hosted = Boolean(opts?.hosted);
+
+  const req: Record<string, unknown> = {
+    user: { client_user_id: userId || leadId || "delt-crm" },
+    client_name: plaidClientName(),
+    language: "en",
+    country_codes: ["US"],
+    // Update mode: access_token instead of a products array.
+    access_token: accessToken,
+    // Re-collect consent for everything the integration uses — this is
+    // what repairs items whose Transactions consent was never granted.
+    additional_consented_products: [...cfg.products, ...cfg.optionalProducts],
+  };
+  const hook = webhookUrl();
+  if (hook) req.webhook = hook;
+  if (hosted) {
+    // Plaid's hosted page handles OAuth itself — no redirect_uri needed.
+    req.hosted_link = { url_lifetime_seconds: HOSTED_LINK_LIFETIME_SECONDS };
+  } else if (cfg.redirectUri) {
+    req.redirect_uri = cfg.redirectUri;
+  }
+
+  let out: any;
+  try {
+    out = await plaid("/link/token/create", req);
+  } catch (err: any) {
+    // additional_consented_products isn't accepted on every client
+    // configuration — plain update mode still repairs login errors.
+    if (err?.plaid?.error_code !== "INVALID_FIELD") throw err;
+    delete req.additional_consented_products;
+    out = await plaid("/link/token/create", req);
+  }
+
+  recordLinkEvent({
+    event: "created",
+    leadId,
+    itemId,
+    linkToken: out.link_token,
+    institution: item.institution_name ?? null,
+    meta: { mode: "update", hosted },
+  });
+
+  if (!hosted) return { link_token: out.link_token, expiration: out.expiration };
+
+  if (!out.hosted_link_url) {
+    throw new Error("Plaid did not return a hosted link URL for this token.");
+  }
+  const db = svc();
+  const expiresAt =
+    out.expiration ?? new Date(Date.now() + HOSTED_LINK_LIFETIME_SECONDS * 1000).toISOString();
+  const { error } = await db.from("plaid_link_requests").insert({
+    link_token: out.link_token,
+    lead_id: leadId,
+    hosted_link_url: out.hosted_link_url,
+    status: "pending",
+    mode: "update",
+    item_id: itemId,
+    expires_at: expiresAt,
+  });
+  if (error) throw new Error(`Failed to record repair link request: ${error.message}`);
+
+  // Email the reconnect link to the prospect (deliberate touch, same
+  // posture as createHostedLink) — falls back silently to copy/text.
+  let emailed = false;
+  try {
+    if (leadId) {
+      const { data: lead } = await db
+        .from("pipeline_leads")
+        .select("business_name, contact_email, timeline")
+        .eq("id", leadId)
+        .maybeSingle();
+      const to = (lead?.contact_email ?? "").trim();
+      if (to && emailConfigured()) {
+        const tpl = repairLinkEmail(
+          lead?.business_name || "your business",
+          item.institution_name || "your bank",
+          out.hosted_link_url,
+          expiresAt,
+        );
+        emailed = await sendEmail({ to, subject: tpl.subject, html: tpl.html });
+        if (emailed) {
+          recordLinkEvent({
+            event: "sent",
+            leadId,
+            itemId,
+            linkToken: out.link_token,
+            meta: { mode: "update" },
+          });
+          const timeline = Array.isArray(lead?.timeline) ? lead.timeline : [];
+          timeline.push({
+            date: new Date().toISOString(),
+            event: `Bank reconnect link emailed to ${to} (${item.institution_name || "bank"}).`,
+          });
+          await db.from("pipeline_leads").update({ timeline }).eq("id", leadId);
+        }
+      }
+    }
+  } catch (err) {
+    console.error("repair-link email failed:", err);
+  }
+
+  return {
+    link_token: out.link_token,
+    hosted_link_url: out.hosted_link_url,
+    expiration: out.expiration ?? null,
+    emailed,
+  };
+}
+
+/** Clear repair state after a successful update-mode Link session and
+ * pull fresh data. A failed resync re-flags the item via syncItem's own
+ * error path — which is the correct end state, not a repair failure. */
+export async function markItemRepaired(itemId: string) {
+  const db = svc();
+  await db
+    .from("plaid_items")
+    .update({ status: "active", error: null, error_code: null })
+    .eq("item_id", itemId);
+  try {
+    const sync = await syncItem(itemId);
+    return { ok: true, item_id: itemId, sync };
+  } catch (err: any) {
+    return { ok: false, item_id: itemId, error: String(err?.message ?? err) };
+  }
+}
+
+/** Auto-repair rail: when an item is flagged as needing the user back in
+ * Link, email the prospect a hosted update-mode link. Idempotent (one
+ * outstanding repair link per item) and never nudges dead files.
+ * Best-effort — a failure here must never break the caller. */
+async function autoSendRepairLink(itemId: string): Promise<string> {
+  try {
+    const db = svc();
+    const { data: existing } = await db
+      .from("plaid_link_requests")
+      .select("link_token")
+      .eq("item_id", itemId)
+      .eq("mode", "update")
+      .eq("status", "pending")
+      .limit(1);
+    if (existing?.length) return "already-pending";
+    const { data: item } = await db
+      .from("plaid_items")
+      .select("lead_id, status")
+      .eq("item_id", itemId)
+      .maybeSingle();
+    if (!item?.lead_id || item.status === "retired" || item.status === "disconnected") return "not-eligible";
+    const { data: lead } = await db
+      .from("pipeline_leads")
+      .select("contact_email, stage, status")
+      .eq("id", item.lead_id)
+      .maybeSingle();
+    if (!(lead?.contact_email ?? "").trim()) return "no-email";
+    if ([lead?.stage, lead?.status].some((s) => ["Not Qualified", "Declined", "Lost"].includes(s ?? ""))) return "dead-lead";
+    const out = await createUpdateLinkToken(itemId, undefined, { hosted: true });
+    return out.emailed ? "sent" : "created-not-emailed";
+  } catch (err: any) {
+    console.error(`auto repair link failed for ${itemId}:`, err?.message ?? err);
+    return "error";
+  }
+}
+
+/** Safety net alongside the webhook rail: send a reconnect link for every
+ * item flagged repair-needed that has no outstanding repair invite — e.g.
+ * when the ITEM error webhook was missed or the flag was set by a failed
+ * sync rather than a webhook. Runs in the plaid-sync-all job (nightly +
+ * on demand); autoSendRepairLink's idempotence makes re-runs safe. */
+export async function sweepRepairLinks() {
+  const db = svc();
+  const { data: flagged } = await db
+    .from("plaid_items")
+    .select("item_id, error_code")
+    .in("status", ["active", "error"])
+    .not("error_code", "is", null);
+  const out: Record<string, number> = {};
+  for (const it of flagged ?? []) {
+    if (!REPAIR_ERROR_CODES.has(it.error_code ?? "")) continue;
+    const result = await autoSendRepairLink(it.item_id);
+    out[result] = (out[result] ?? 0) + 1;
+  }
+  return out;
 }
 
 /** Exchange one completed hosted-link session and close out its request row. */
@@ -753,7 +1092,7 @@ export async function sweepHostedLinks(leadId?: string) {
   const db = svc();
   let q = db
     .from("plaid_link_requests")
-    .select("link_token, lead_id, expires_at")
+    .select("link_token, lead_id, expires_at, mode, item_id")
     .eq("status", "pending");
   if (leadId) q = q.eq("lead_id", leadId);
   const { data: pending } = await q;
@@ -763,6 +1102,30 @@ export async function sweepHostedLinks(leadId?: string) {
     out.checked++;
     try {
       const data = await plaid("/link/token/get", { link_token: r.link_token });
+
+      // Update-mode (repair) sessions don't produce a public_token — a
+      // finished session means the user re-authed/re-consented in place.
+      if ((r.mode ?? "add") === "update") {
+        const session = (data?.link_sessions ?? []).find((s: any) => s?.finished_at);
+        if (session && r.item_id) {
+          await db
+            .from("plaid_link_requests")
+            .update({
+              status: "completed",
+              completed_at: new Date().toISOString(),
+              link_session_id: session.link_session_id ?? null,
+            })
+            .eq("link_token", r.link_token);
+          await markItemRepaired(r.item_id);
+          out.completed++;
+        } else if (r.expires_at && new Date(r.expires_at).getTime() < Date.now()) {
+          await db.from("plaid_link_requests").update({ status: "expired" }).eq("link_token", r.link_token);
+          out.expired++;
+          notifyLinkExpired(db, r.lead_id).catch(() => {});
+        }
+        continue;
+      }
+
       const completions = extractHostedCompletions(data);
       if (completions.length) {
         for (const c of completions) {
@@ -1002,29 +1365,51 @@ export async function syncItem(itemId: string, opts?: { verification?: boolean }
     } catch { /* recurring not ready / unavailable */ }
 
     // ── 5. Transactions (incremental /transactions/sync) ──
-    let cursor: string | null = item.transactions_cursor ?? null;
-    const added: Txn[] = [];
-    const modified: Txn[] = [];
-    const removedIds: string[] = [];
-    try {
-      let hasMore = true;
-      let guard = 0;
-      while (hasMore && guard++ < 50) {
-        const page = await plaid("/transactions/sync", {
-          access_token: accessToken,
-          cursor: cursor ?? undefined,
-          count: 500,
-        }, guard === 1 ? { itemId, leadId } : undefined);
-        added.push(...(page.added ?? []));
-        modified.push(...(page.modified ?? []));
-        removedIds.push(...((page.removed ?? []).map((r: any) => r.transaction_id)));
-        cursor = page.next_cursor;
-        hasMore = Boolean(page.has_more);
+    const originalCursor: string | null = item.transactions_cursor ?? null;
+    let cursor: string | null = originalCursor;
+    let added: Txn[] = [];
+    let modified: Txn[] = [];
+    let removedIds: string[] = [];
+    // False when Plaid hasn't finished preparing transactions yet — the
+    // item stays in the "verifying" state (no last_synced_at stamp) until
+    // the INITIAL_UPDATE webhook retriggers a sync that actually lands data.
+    let txReady = true;
+    // Plaid can mutate the underlying data mid-pagination
+    // (TRANSACTIONS_SYNC_MUTATION_DURING_PAGINATION); its prescribed fix is
+    // to restart pagination from the cursor the run began with.
+    for (let attempt = 0; attempt < 3; attempt++) {
+      cursor = originalCursor;
+      added = [];
+      modified = [];
+      removedIds = [];
+      try {
+        let hasMore = true;
+        let guard = 0;
+        while (hasMore && guard++ < 50) {
+          const page = await plaid("/transactions/sync", {
+            access_token: accessToken,
+            cursor: cursor ?? undefined,
+            count: 500,
+          }, guard === 1 && attempt === 0 ? { itemId, leadId } : undefined);
+          added.push(...(page.added ?? []));
+          modified.push(...(page.modified ?? []));
+          removedIds.push(...((page.removed ?? []).map((r: any) => r.transaction_id)));
+          cursor = page.next_cursor;
+          hasMore = Boolean(page.has_more);
+        }
+        break;
+      } catch (err) {
+        const code = (err as any)?.plaid?.error_code;
+        if (code === "TRANSACTIONS_SYNC_MUTATION_DURING_PAGINATION" && attempt < 2) continue;
+        // PRODUCT_NOT_READY right after linking — webhook will retrigger us.
+        if (code !== "PRODUCT_NOT_READY") throw err;
+        txReady = false;
+        cursor = originalCursor;
+        added = [];
+        modified = [];
+        removedIds = [];
+        break;
       }
-    } catch (err) {
-      // PRODUCT_NOT_READY right after linking — webhook will retrigger us.
-      const code = (err as any)?.plaid?.error_code;
-      if (code !== "PRODUCT_NOT_READY") throw err;
     }
 
     // ── Merge transactions into monthly vault documents ──
@@ -1426,15 +1811,29 @@ export async function syncItem(itemId: string, opts?: { verification?: boolean }
     ];
     await writeNodes(db, [], analysisDocs);
 
+    const firstSync = txReady && !item.last_synced_at;
     await db
       .from("plaid_items")
       .update({
         transactions_cursor: cursor,
-        last_synced_at: now,
+        // Only stamp last_synced_at once transaction data actually landed —
+        // "active with no last_synced_at" is the CRM's "verifying bank
+        // data" state between exchange and the first real sync.
+        ...(txReady ? { last_synced_at: now } : {}),
         status: "active",
         error: null,
+        error_code: null,
       })
       .eq("item_id", itemId);
+    if (firstSync) {
+      recordLinkEvent({
+        event: "first_sync",
+        leadId,
+        itemId,
+        institution: item.institution_name ?? null,
+        meta: { transactions_added: added.length },
+      });
+    }
 
     return {
       ok: true,
@@ -1445,12 +1844,20 @@ export async function syncItem(itemId: string, opts?: { verification?: boolean }
       transactions_added: added.length,
       transactions_modified: modified.length,
       transactions_removed: removedIds.length,
+      tx_ready: txReady,
       metrics: m,
     };
   } catch (err: any) {
+    const errorCode: string | null = err?.plaid?.error_code ?? null;
+    const requestId: string | null = err?.plaidRequestId ?? err?.plaid?.request_id ?? null;
+    const msg = String(err?.message ?? err);
     await db
       .from("plaid_items")
-      .update({ status: "error", error: String(err?.message ?? err) })
+      .update({
+        status: "error",
+        error: requestId ? `${msg} (request_id ${requestId})` : msg,
+        error_code: errorCode,
+      })
       .eq("item_id", itemId);
     throw err;
   }
@@ -1738,7 +2145,7 @@ export async function retireItem(itemId: string) {
   await db.from("plaid_credentials").delete().eq("item_id", itemId);
   await db
     .from("plaid_items")
-    .update({ status: "retired", retired_at: new Date().toISOString(), error: null })
+    .update({ status: "retired", retired_at: new Date().toISOString(), error: null, error_code: null })
     .eq("item_id", itemId);
   return { ok: true, retired: itemId };
 }
@@ -1851,6 +2258,28 @@ export async function attachIdentityVerification(leadId: string, idvId: string) 
     ],
   );
   return { ok: true, id: idv.id, status: idv.status };
+}
+
+/**
+ * Retry a failed/expired IDV session: Plaid mints a fresh session for the
+ * same client_user_id + template, and the new session is filed on the lead.
+ * strategy "reset" re-runs every step; "incomplete" resumes where the user
+ * stopped. Billed per verification like the original session.
+ */
+export async function retryIdentityVerification(leadId: string, idvId: string, strategy = "reset") {
+  const prior = await plaid("/identity_verification/get", { identity_verification_id: idvId });
+  const templateId: string = prior?.template?.id ?? Deno.env.get("PLAID_IDV_TEMPLATE_ID") ?? "";
+  const clientUserId: string = prior?.client_user_id ?? "";
+  if (!templateId || !clientUserId) {
+    throw new Error("Cannot retry this IDV session: the original lacks a template id or client_user_id.");
+  }
+  const retried = await plaid("/identity_verification/retry", {
+    client_user_id: clientUserId,
+    template_id: templateId,
+    strategy,
+  }, { leadId });
+  const attached = await attachIdentityVerification(leadId, retried.id);
+  return { ...attached, retried_from: idvId, shareable_url: retried.shareable_url ?? null };
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -2053,19 +2482,51 @@ export async function handlePlaidWebhook(body: any): Promise<{ handled: string }
   // Hosted-link sessions (CRM "send connect link") finish with a LINK
   // webhook carrying the public_token(s) — no item_id yet.
   if (type === "LINK") {
+    const linkToken: string = body?.link_token ?? "";
+    const linkSessionId: string | null = body?.link_session_id ?? null;
     if (code === "SESSION_FINISHED") {
-      const linkToken: string = body?.link_token ?? "";
       const publicTokens: string[] = (body?.public_tokens ?? []).filter(Boolean);
       if (!linkToken) return { handled: "link:no-token" };
       const db = svc();
       const { data: reqRow } = await db
         .from("plaid_link_requests")
-        .select("lead_id, status")
+        .select("lead_id, status, mode, item_id")
         .eq("link_token", linkToken)
         .maybeSingle();
-      if (!reqRow?.lead_id) return { handled: "link:unknown-token" };
+      if (!reqRow) return { handled: "link:unknown-token" };
+      if (linkSessionId) {
+        await db
+          .from("plaid_link_requests")
+          .update({ link_session_id: linkSessionId })
+          .eq("link_token", linkToken);
+      }
+      recordLinkEvent({
+        event: "session_finished",
+        leadId: reqRow.lead_id ?? null,
+        itemId: reqRow.item_id ?? null,
+        linkToken,
+        linkSessionId,
+        meta: { status: body?.status ?? null, mode: reqRow.mode ?? "add" },
+      });
       if (reqRow.status !== "pending") return { handled: "link:already-handled" };
-      if (String(body?.status ?? "").toUpperCase() !== "SUCCESS" || !publicTokens.length) {
+      const finished = String(body?.status ?? "").toUpperCase() === "SUCCESS";
+
+      // Update-mode (repair) sessions fix an existing item in place — no
+      // public_token arrives; success means re-auth/consent completed.
+      if ((reqRow.mode ?? "add") === "update") {
+        if (!finished || !reqRow.item_id) {
+          return { handled: `link:finished-${body?.status ?? "no-status"}` };
+        }
+        await db
+          .from("plaid_link_requests")
+          .update({ status: "completed", completed_at: new Date().toISOString() })
+          .eq("link_token", linkToken);
+        const repaired = await markItemRepaired(reqRow.item_id);
+        return { handled: repaired.ok ? `link:repaired:${reqRow.item_id}` : "link:repair-sync-error" };
+      }
+
+      if (!reqRow.lead_id) return { handled: "link:unknown-token" };
+      if (!finished || !publicTokens.length) {
         return { handled: `link:finished-${body?.status ?? "no-status"}` };
       }
       try {
@@ -2078,6 +2539,15 @@ export async function handlePlaidWebhook(body: any): Promise<{ handled: string }
         return { handled: "link:exchange-error" };
       }
     }
+    // Every other LINK callback (EVENTS, ITEM_ADD_RESULT, ...) used to be
+    // discarded — keep them: they are the funnel between "link sent" and
+    // "session finished".
+    recordLinkEvent({
+      event: "callback",
+      linkToken: linkToken || null,
+      linkSessionId,
+      meta: { code },
+    });
     return { handled: `link:${code}` };
   }
 
@@ -2104,17 +2574,49 @@ export async function handlePlaidWebhook(body: any): Promise<{ handled: string }
 
   if (type === "ITEM") {
     const db = svc();
-    if (code === "ERROR" || code === "PENDING_EXPIRATION" || code === "PENDING_DISCONNECT") {
+    if (code === "ERROR") {
+      const errCode: string = body?.error?.error_code ?? code;
       await db
         .from("plaid_items")
-        .update({ status: "error", error: body?.error?.error_message ?? code })
+        .update({
+          status: "error",
+          error: body?.error?.error_message ?? code,
+          error_code: errCode,
+        })
         .eq("item_id", itemId);
+      // Repairable errors (login required, consent gaps) get the prospect
+      // a reconnect link automatically; hard errors just stay flagged.
+      if (REPAIR_ERROR_CODES.has(errCode)) await autoSendRepairLink(itemId);
       return { handled: `item-error:${itemId}` };
+    }
+    if (code === "PENDING_EXPIRATION" || code === "PENDING_DISCONNECT") {
+      // The connection still works until it actually lapses — keep it
+      // active (syncs continue) but flag it so the CRM shows "reconnect
+      // needed" and the prospect gets a repair link before data stops.
+      await db
+        .from("plaid_items")
+        .update({
+          error: "Bank connection is expiring — reconnect needed.",
+          error_code: code,
+        })
+        .eq("item_id", itemId);
+      await autoSendRepairLink(itemId);
+      return { handled: `item-repair-needed:${itemId}` };
+    }
+    if (code === "LOGIN_REPAIRED") {
+      // The user fixed the connection at their bank on their own — clear
+      // our repair flag and pull fresh data.
+      await markItemRepaired(itemId);
+      return { handled: `item-repaired:${itemId}` };
+    }
+    if (code === "NEW_ACCOUNTS_AVAILABLE") {
+      recordLinkEvent({ event: "callback", itemId, meta: { code } });
+      return { handled: `item-new-accounts:${itemId}` };
     }
     if (code === "USER_PERMISSION_REVOKED" || code === "USER_ACCOUNT_REVOKED") {
       await db
         .from("plaid_items")
-        .update({ status: "disconnected", error: code })
+        .update({ status: "disconnected", error: code, error_code: code })
         .eq("item_id", itemId);
       return { handled: `revoked:${itemId}` };
     }

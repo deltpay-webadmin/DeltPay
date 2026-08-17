@@ -119,7 +119,7 @@ function UnifiedTagBadges({ lead, size = 'xs' }: { lead: Lead; size?: 'xs' | 'xx
 }
 import { stageEsignDraft } from '../contractsStore';
 import { LeadProgressBar } from '../LeadProgressBar';
-import { plaidActions, usePlaidItems, usePlaidLinkRequests, usePlaidSync } from '../plaidStore';
+import { plaidActions, usePlaidItems, usePlaidLinkRequests, usePlaidSync, itemUiStatus } from '../plaidStore';
 import { useAppNavigate } from '../NavigationContext';
 
 // ── CRM sales cycle (short) ──
@@ -442,6 +442,64 @@ function ConnectBankCard({ lead }: { lead: Lead }) {
   const pending = invites.find(r => r.status === 'pending');
   const sending = busy.includes(`invite:${lead.id}`);
   const hasEmail = Boolean((lead.contactEmail || '').trim());
+
+  const needsRepair = items.filter(i => itemUiStatus(i) === 'reconnect');
+  const allVerifying = items.length > 0 && items.every(i => itemUiStatus(i) === 'verifying');
+
+  // A connection needs the prospect back in Plaid Link (login/consent repair).
+  if (needsRepair.length > 0) {
+    const it = needsRepair[0];
+    const repairing = busy.includes(`repair:${it.itemId}`);
+    return (
+      <div className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-amber-300 bg-amber-50/70 px-4 py-3">
+        <div>
+          <p className="text-xs font-semibold text-amber-800">
+            Bank connection needs attention — {it.institutionName || 'bank'}
+          </p>
+          <p className="text-[11px] text-amber-700/80 mt-0.5">
+            {it.error || 'The prospect needs to reconnect through Plaid.'} One click emails them a secure reconnect link.
+          </p>
+        </div>
+        <div className="shrink-0 flex items-center gap-1.5">
+          <button
+            onClick={() => void plaidActions.sendRepairLink(it.itemId).catch(() => {})}
+            disabled={repairing}
+            className="px-3 py-1.5 text-xs font-semibold rounded-md bg-amber-600 text-white hover:bg-amber-700 disabled:opacity-50"
+          >
+            {repairing ? 'Sending…' : 'Send repair link'}
+          </button>
+          <button
+            onClick={() => navigate('/underwriting')}
+            className="px-3 py-1.5 text-xs font-semibold rounded-md border border-amber-300 text-amber-700 bg-white hover:bg-amber-50"
+          >
+            Open portal →
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Connected but the first transactions sync hasn't landed yet.
+  if (allVerifying) {
+    return (
+      <div className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-blue-200 bg-blue-50/60 px-4 py-3">
+        <div>
+          <p className="text-xs font-semibold text-blue-800">
+            Bank connected — verifying data ({items.map(i => i.institutionName || 'bank').join(', ')})
+          </p>
+          <p className="text-[11px] text-blue-700/80 mt-0.5">
+            Waiting for the first transactions pull from the bank — usually a couple of minutes. Metrics appear automatically.
+          </p>
+        </div>
+        <button
+          onClick={() => navigate('/underwriting')}
+          className="shrink-0 px-3 py-1.5 text-xs font-semibold rounded-md border border-blue-300 text-blue-700 bg-white hover:bg-blue-50"
+        >
+          Review in Plaid portal →
+        </button>
+      </div>
+    );
+  }
 
   // Connected — show what's linked and where to review it.
   if (items.length > 0) {

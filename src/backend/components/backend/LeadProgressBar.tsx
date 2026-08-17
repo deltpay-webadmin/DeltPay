@@ -20,7 +20,7 @@
 import React from 'react';
 import { Check, X } from 'lucide-react';
 import { useUnderwriting, useOnboarding, useDeals, type Lead } from './crmStore';
-import { usePlaidItems, usePlaidLinkRequests } from './plaidStore';
+import { usePlaidItems, usePlaidLinkRequests, itemUiStatus } from './plaidStore';
 
 type StepState = 'done' | 'active' | 'upcoming';
 
@@ -78,7 +78,11 @@ export function useLeadMilestones(lead: Lead): { steps: Step[]; dead: string | n
   const uwActive = !uwDone && (Boolean(uwApp) || (onbApp ? onbIdx <= uwIdx : false));
 
   // ── Bank connected ──
+  // "Connected" (done) only once transaction data has actually landed;
+  // until the first successful sync the step pulses as "verifying".
   const connected = leadItems.length > 0;
+  const verifying = connected && leadItems.every(i => itemUiStatus(i) === 'verifying');
+  const needsRepair = leadItems.some(i => itemUiStatus(i) === 'reconnect');
   const firstItem = leadItems.slice().sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1))[0];
 
   const steps: Step[] = [
@@ -91,12 +95,16 @@ export function useLeadMilestones(lead: Lead): { steps: Step[]; dead: string | n
     {
       key: 'plaid',
       label: 'Bank connected',
-      state: connected ? 'done' : pendingInvite ? 'active' : 'upcoming',
-      caption: connected
-        ? (firstItem?.institutionName || `${leadItems.length} connection${leadItems.length === 1 ? '' : 's'}`)
-        : pendingInvite
-          ? `invite sent ${timeAgo(pendingInvite.createdAt)}`
-          : 'not connected',
+      state: connected && !verifying ? 'done' : (verifying || pendingInvite) ? 'active' : 'upcoming',
+      caption: needsRepair
+        ? 'reconnect needed'
+        : verifying
+          ? 'verifying bank data'
+          : connected
+            ? (firstItem?.institutionName || `${leadItems.length} connection${leadItems.length === 1 ? '' : 's'}`)
+            : pendingInvite
+              ? `invite sent ${timeAgo(pendingInvite.createdAt)}`
+              : 'not connected',
     },
     {
       key: 'underwriting',
