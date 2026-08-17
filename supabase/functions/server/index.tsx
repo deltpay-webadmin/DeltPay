@@ -46,6 +46,7 @@ import {
   staleLeadDigest,
 } from "../_shared/lifecycle.ts";
 const app = new Hono();
+// Build marker: vault-token rollout (see 20260817_plaid_tokens_into_vault.sql).
 
 // Per-route RBAC gate. The group middleware below resolves the caller once
 // (requireUser) and stashes the AuthContext; needPerm checks a specific
