@@ -54,3 +54,5 @@ create policy plaid_link_events_staff_read on public.plaid_link_events
 
 grant select on public.plaid_link_events to authenticated;
 grant all on public.plaid_link_events to service_role;
+-- The bigserial's sequence needs its own grant — table grants don't cover it.
+grant usage, select on sequence public.plaid_link_events_id_seq to service_role;
