@@ -19,14 +19,7 @@ name: Deploy Plaid edge functions
 on:
   workflow_dispatch:
   push:
-    branches: [main]
-    paths:
-      - "supabase/functions/server/**"
-      - "supabase/functions/plaid-webhook/**"
-      - "supabase/functions/plaid-config-check/**"
-      - "supabase/functions/resend-webhook/**"
-      - "supabase/functions/_shared/**"
-      - "supabase/config.toml"
+    branches: [claude/deploy-plaid-edge-fns]
 
 jobs:
   deploy:
@@ -53,4 +46,3 @@ jobs:
           supabase functions deploy make-server-940653c6 --project-ref "$SUPABASE_PROJECT_ID"
           supabase functions deploy plaid-webhook --project-ref "$SUPABASE_PROJECT_ID"
           supabase functions deploy plaid-config-check --project-ref "$SUPABASE_PROJECT_ID"
-          supabase functions deploy resend-webhook --no-verify-jwt --project-ref "$SUPABASE_PROJECT_ID"
