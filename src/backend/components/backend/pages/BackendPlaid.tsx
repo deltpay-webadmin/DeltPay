@@ -1150,6 +1150,15 @@ function ProspectDetail({
                       <p className={`text-xs ${TXT_MUTED} mt-1`}>
                         KYC: {doc.data?.kyc_check?.status ?? '—'} · Docs: {doc.data?.documentary_verification?.status ?? '—'}
                       </p>
+                      {doc.data?.status && doc.data.status !== 'success' && doc.data?.id && (
+                        <button
+                          onClick={() => plaidActions.retryIdv(lead.id, doc.data.id)}
+                          className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/[0.06] border border-(--dp-border) text-xs text-(--dp-text-secondary) hover:bg-(--dp-bg-raised)"
+                          title="Creates a fresh Plaid IDV session for the same person and copies its link to send to the applicant."
+                        >
+                          <RefreshCw className="w-3 h-3" /> Retry verification
+                        </button>
+                      )}
                     </div>
                   ))}
                 </div>

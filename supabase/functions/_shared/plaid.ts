@@ -142,6 +142,7 @@ const BILLABLE: Record<string, { product: string; pricing: string }> = {
   "/accounts/balance/get": { product: "balance", pricing: "per_request" },
   "/asset_report/create": { product: "assets", pricing: "per_report" },
   "/identity_verification/get": { product: "identity_verification", pricing: "per_event" },
+  "/identity_verification/retry": { product: "identity_verification", pricing: "per_event" },
   "/liabilities/get": { product: "liabilities", pricing: "subscription" },
   "/investments/holdings/get": { product: "investments", pricing: "subscription" },
   "/watchlist_screening/individual/create": { product: "monitor", pricing: "per_event" },
@@ -967,11 +968,11 @@ export async function markItemRepaired(itemId: string) {
   }
 }
 
-/** Auto-repair rail: when a webhook flags an item as needing the user
- * back in Link, email the prospect a hosted update-mode link. Idempotent
- * (one outstanding repair link per item) and never nudges dead files.
- * Best-effort — a failure here must never break webhook handling. */
-async function autoSendRepairLink(itemId: string) {
+/** Auto-repair rail: when an item is flagged as needing the user back in
+ * Link, email the prospect a hosted update-mode link. Idempotent (one
+ * outstanding repair link per item) and never nudges dead files.
+ * Best-effort — a failure here must never break the caller. */
+async function autoSendRepairLink(itemId: string): Promise<string> {
   try {
     const db = svc();
     const { data: existing } = await db
@@ -981,24 +982,47 @@ async function autoSendRepairLink(itemId: string) {
       .eq("mode", "update")
       .eq("status", "pending")
       .limit(1);
-    if (existing?.length) return;
+    if (existing?.length) return "already-pending";
     const { data: item } = await db
       .from("plaid_items")
       .select("lead_id, status")
       .eq("item_id", itemId)
       .maybeSingle();
-    if (!item?.lead_id || item.status === "retired" || item.status === "disconnected") return;
+    if (!item?.lead_id || item.status === "retired" || item.status === "disconnected") return "not-eligible";
     const { data: lead } = await db
       .from("pipeline_leads")
       .select("contact_email, stage, status")
       .eq("id", item.lead_id)
       .maybeSingle();
-    if (!(lead?.contact_email ?? "").trim()) return;
-    if ([lead?.stage, lead?.status].some((s) => ["Not Qualified", "Declined", "Lost"].includes(s ?? ""))) return;
-    await createUpdateLinkToken(itemId, undefined, { hosted: true });
+    if (!(lead?.contact_email ?? "").trim()) return "no-email";
+    if ([lead?.stage, lead?.status].some((s) => ["Not Qualified", "Declined", "Lost"].includes(s ?? ""))) return "dead-lead";
+    const out = await createUpdateLinkToken(itemId, undefined, { hosted: true });
+    return out.emailed ? "sent" : "created-not-emailed";
   } catch (err: any) {
     console.error(`auto repair link failed for ${itemId}:`, err?.message ?? err);
+    return "error";
   }
+}
+
+/** Safety net alongside the webhook rail: send a reconnect link for every
+ * item flagged repair-needed that has no outstanding repair invite — e.g.
+ * when the ITEM error webhook was missed or the flag was set by a failed
+ * sync rather than a webhook. Runs in the plaid-sync-all job (nightly +
+ * on demand); autoSendRepairLink's idempotence makes re-runs safe. */
+export async function sweepRepairLinks() {
+  const db = svc();
+  const { data: flagged } = await db
+    .from("plaid_items")
+    .select("item_id, error_code")
+    .in("status", ["active", "error"])
+    .not("error_code", "is", null);
+  const out: Record<string, number> = {};
+  for (const it of flagged ?? []) {
+    if (!REPAIR_ERROR_CODES.has(it.error_code ?? "")) continue;
+    const result = await autoSendRepairLink(it.item_id);
+    out[result] = (out[result] ?? 0) + 1;
+  }
+  return out;
 }
 
 /** Exchange one completed hosted-link session and close out its request row. */
@@ -2234,6 +2258,28 @@ export async function attachIdentityVerification(leadId: string, idvId: string) 
     ],
   );
   return { ok: true, id: idv.id, status: idv.status };
+}
+
+/**
+ * Retry a failed/expired IDV session: Plaid mints a fresh session for the
+ * same client_user_id + template, and the new session is filed on the lead.
+ * strategy "reset" re-runs every step; "incomplete" resumes where the user
+ * stopped. Billed per verification like the original session.
+ */
+export async function retryIdentityVerification(leadId: string, idvId: string, strategy = "reset") {
+  const prior = await plaid("/identity_verification/get", { identity_verification_id: idvId });
+  const templateId: string = prior?.template?.id ?? Deno.env.get("PLAID_IDV_TEMPLATE_ID") ?? "";
+  const clientUserId: string = prior?.client_user_id ?? "";
+  if (!templateId || !clientUserId) {
+    throw new Error("Cannot retry this IDV session: the original lacks a template id or client_user_id.");
+  }
+  const retried = await plaid("/identity_verification/retry", {
+    client_user_id: clientUserId,
+    template_id: templateId,
+    strategy,
+  }, { leadId });
+  const attached = await attachIdentityVerification(leadId, retried.id);
+  return { ...attached, retried_from: idvId, shareable_url: retried.shareable_url ?? null };
 }
 
 // ══════════════════════════════════════════════════════════════

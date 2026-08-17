@@ -20,7 +20,9 @@ import {
   applyPlaidExchange,
   createHostedLink,
   sweepHostedLinks,
+  sweepRepairLinks,
   sendConnectReminders,
+  retryIdentityVerification,
   verifyItem,
   verifyLead,
   refreshLeadTransactions,
@@ -97,6 +99,10 @@ const JOB_TASKS: Record<string, () => Promise<unknown>> = {
   "plaid-sync-all": async () => ({
     hosted_links: await sweepHostedLinks().catch((err: any) => ({ error: String(err?.message ?? err) })),
     items: await syncAllItems(),
+    // Repair safety net: any item flagged repair-needed without an
+    // outstanding reconnect invite gets one emailed (webhooks are the
+    // fast path; this catches missed webhooks and sync-detected flags).
+    repair_links: await sweepRepairLinks().catch((err: any) => ({ error: String(err?.message ?? err) })),
     // Retire items on dead leads afterwards so the monthly Transactions
     // subscription stops accruing on files that will never fund.
     retired: await retireStaleItems().catch((err: any) => ({ error: String(err?.message ?? err) })),
@@ -379,6 +385,26 @@ app.post(`${PLAID_BASE}/idv/attach`, needPerm("underwriting.review"), async (c) 
     return c.json(out);
   } catch (err: any) {
     console.error("plaid idv attach error", err);
+    return c.json({ ok: false, error: String(err?.message ?? err) }, 500);
+  }
+});
+
+// Retry a failed/expired IDV session — Plaid mints a fresh session for the
+// same user + template; the new session is filed on the lead and its
+// shareable_url is returned for sending to the applicant.
+app.post(`${PLAID_BASE}/idv/retry`, needPerm("underwriting.review"), async (c) => {
+  try {
+    const body = await c.req.json().catch(() => ({}));
+    const leadId = String(body.leadId ?? "");
+    const idvId = String(body.identityVerificationId ?? "").trim();
+    const strategy = String(body.strategy ?? "reset");
+    if (!leadId || !idvId) {
+      return c.json({ ok: false, error: "leadId and identityVerificationId are required" }, 400);
+    }
+    const out = await retryIdentityVerification(leadId, idvId, strategy);
+    return c.json(out);
+  } catch (err: any) {
+    console.error("plaid idv retry error", err);
     return c.json({ ok: false, error: String(err?.message ?? err) }, 500);
   }
 });

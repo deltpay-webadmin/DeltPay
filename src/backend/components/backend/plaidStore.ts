@@ -822,6 +822,28 @@ export const plaidActions = {
     }
   },
 
+  /** Retry a failed/expired IDV session (new Plaid session, same user +
+   * template). Returns the new session incl. shareable_url to send on. */
+  async retryIdv(leadId: string, identityVerificationId: string, strategy: 'reset' | 'incomplete' = 'reset') {
+    try {
+      const json = await authFetch('/idv/retry', {
+        method: 'POST',
+        body: JSON.stringify({ leadId, identityVerificationId, strategy }),
+      });
+      if (json.shareable_url) {
+        try { await navigator.clipboard.writeText(String(json.shareable_url)); } catch { /* ignore */ }
+        toast.success('New IDV session created — link copied to send to the applicant.');
+      } else {
+        toast.success(`New IDV session created (status: ${json.status ?? 'unknown'}).`);
+      }
+      await plaidActions.refresh();
+      return json;
+    } catch (err: any) {
+      toast.error(`IDV retry failed: ${err.message}`);
+      throw err;
+    }
+  },
+
   /** Kick off a 90-day verified Asset Report across a lead's connections. */
   async createAssetReport(leadId: string) {
     try {
