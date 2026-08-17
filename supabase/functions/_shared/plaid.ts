@@ -581,10 +581,7 @@ export async function exchangePublicToken(
   );
   if (itemErr) throw new Error(`Failed to save Plaid item: ${itemErr.message}`);
 
-  const { error: credErr } = await db
-    .from("plaid_credentials")
-    .upsert({ item_id: itemId, access_token: accessToken }, { onConflict: "item_id" });
-  if (credErr) throw new Error(`Failed to save Plaid credentials: ${credErr.message}`);
+  await storeAccessToken(itemId, accessToken);
 
   recordLinkEvent({
     event: "exchanged",
@@ -1233,6 +1230,36 @@ export async function sendConnectReminders() {
   return out;
 }
 
+// ── Access-token storage: encrypted at rest in Supabase Vault ──
+// The plaid_credentials row is the credential *marker* (existence checks,
+// delete/cascade semantics, and the vault-cleanup trigger); the token
+// itself lives in vault.secrets under 'plaid:<item_id>', reachable only
+// via the service-role-only plaid_token_store / plaid_token_get RPCs.
+
+async function storeAccessToken(itemId: string, accessToken: string) {
+  const db = svc();
+  const { error: rpcErr } = await db.rpc("plaid_token_store", {
+    p_item_id: itemId,
+    p_token: accessToken,
+  });
+  if (rpcErr) throw new Error(`Failed to vault Plaid credentials: ${rpcErr.message}`);
+  const { error: credErr } = await db
+    .from("plaid_credentials")
+    .upsert({ item_id: itemId, access_token: "" }, { onConflict: "item_id" });
+  if (credErr) throw new Error(`Failed to save Plaid credentials: ${credErr.message}`);
+}
+
+/** Decrypt one item's access token from the vault. Falls back to a legacy
+ * plaintext column value (pre-vault rows) so a half-rolled-out deploy
+ * never strands an item. */
+async function getAccessToken(itemId: string, legacyPlaintext?: string | null): Promise<string> {
+  const db = svc();
+  const { data, error } = await db.rpc("plaid_token_get", { p_item_id: itemId });
+  if (!error && typeof data === "string" && data) return data;
+  if (legacyPlaintext) return legacyPlaintext;
+  throw new Error(`No credentials stored for item ${itemId}`);
+}
+
 async function loadItem(itemId: string) {
   const db = svc();
   const [{ data: item, error: e1 }, { data: cred, error: e2 }] = await Promise.all([
@@ -1241,7 +1268,8 @@ async function loadItem(itemId: string) {
   ]);
   if (e1 || !item) throw new Error(`Unknown Plaid item ${itemId}`);
   if (e2 || !cred) throw new Error(`No credentials stored for item ${itemId}`);
-  return { item, accessToken: cred.access_token as string };
+  const accessToken = await getAccessToken(itemId, cred.access_token as string | null);
+  return { item, accessToken };
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -2303,9 +2331,14 @@ export async function createAssetReport(leadId: string) {
 
   const { data: creds } = await db
     .from("plaid_credentials")
-    .select("access_token")
+    .select("item_id, access_token")
     .in("item_id", items.map((i: any) => i.item_id));
-  const tokens = (creds ?? []).map((c: any) => c.access_token);
+  const tokens: string[] = [];
+  for (const c of creds ?? []) {
+    try {
+      tokens.push(await getAccessToken(c.item_id, c.access_token));
+    } catch { /* item without a retrievable token — skip it */ }
+  }
   if (!tokens.length) throw new Error("No stored credentials for this lead's connections");
 
   const hook = webhookUrl();
