@@ -223,6 +223,8 @@ app.post("/make-server-940653c6/apply/plaid-exchange", async (c) => {
         fullName: typeof applicant.fullName === "string" ? applicant.fullName.slice(0, 200) : undefined,
         businessName: typeof applicant.businessName === "string" ? applicant.businessName.slice(0, 200) : undefined,
         leadId: typeof applicant.leadId === "string" ? applicant.leadId.slice(0, 64) : undefined,
+        linkSessionId:
+          typeof applicant.linkSessionId === "string" ? applicant.linkSessionId.slice(0, 64) : undefined,
       },
       body.institution,
     );
@@ -234,6 +236,33 @@ app.post("/make-server-940653c6/apply/plaid-exchange", async (c) => {
       error: String(err?.message ?? err),
       plaid_error_code: err?.plaid?.error_code ?? null,
     }, 500);
+  }
+});
+
+// Link funnel telemetry from the deltcapital.com application (opened /
+// exit / error from the applicant's Link session). Same x-apply-secret
+// gate as the exchange; strictly fire-and-forget — always returns 200
+// so a telemetry hiccup can never surface in the applicant flow.
+app.post("/make-server-940653c6/apply/plaid-link-event", async (c) => {
+  if (!verifyApplySecret(c.req.raw)) {
+    return c.json({ ok: false, error: "Forbidden" }, 403);
+  }
+  const allowed = new Set(["opened", "exit", "error"]);
+  try {
+    const body = await c.req.json().catch(() => ({}));
+    const event = String(body.event ?? "");
+    if (!allowed.has(event)) return c.json({ ok: false, error: "invalid event" }, 400);
+    const email = String(body.email ?? "").trim().toLowerCase().slice(0, 254);
+    recordLinkEvent({
+      event: event as "opened" | "exit" | "error",
+      linkSessionId: body.linkSessionId ? String(body.linkSessionId).slice(0, 64) : null,
+      errorCode: body.errorCode ? String(body.errorCode).slice(0, 64) : null,
+      institution: body.institution ? String(body.institution).slice(0, 120) : null,
+      meta: { surface: "apply", ...(email ? { email } : {}) },
+    });
+    return c.json({ ok: true });
+  } catch {
+    return c.json({ ok: true });
   }
 });
 
