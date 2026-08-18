@@ -807,6 +807,10 @@ export async function createHostedLink(leadId: string) {
       const tpl = connectLinkEmail(lead?.business_name || "your business", out.hosted_link_url, expiresAt);
       emailed = await sendEmail({ to, subject: tpl.subject, html: tpl.html });
       if (emailed) {
+        await db
+          .from("plaid_link_requests")
+          .update({ emailed_to: to, emailed_at: new Date().toISOString() })
+          .eq("link_token", out.link_token);
         recordLinkEvent({ event: "sent", leadId, linkToken: out.link_token, meta: { mode: "add" } });
         const timeline = Array.isArray(lead?.timeline) ? lead.timeline : [];
         timeline.push({
@@ -906,6 +910,18 @@ export async function createUpdateLinkToken(
   });
   if (error) throw new Error(`Failed to record repair link request: ${error.message}`);
 
+  // A fresh hosted link supersedes any older outstanding invite for the
+  // same item — one live reconnect thread per item, so reminders never
+  // double-nudge a merchant who was re-sent a link. Plaid still honors
+  // the old URL; the SESSION_FINISHED handler accepts superseded rows.
+  await db
+    .from("plaid_link_requests")
+    .update({ status: "superseded" })
+    .eq("item_id", itemId)
+    .eq("mode", "update")
+    .eq("status", "pending")
+    .neq("link_token", out.link_token);
+
   // Email the reconnect link to the prospect (deliberate touch, same
   // posture as createHostedLink) — falls back silently to copy/text.
   let emailed = false;
@@ -926,6 +942,10 @@ export async function createUpdateLinkToken(
         );
         emailed = await sendEmail({ to, subject: tpl.subject, html: tpl.html });
         if (emailed) {
+          await db
+            .from("plaid_link_requests")
+            .update({ emailed_to: to, emailed_at: new Date().toISOString() })
+            .eq("link_token", out.link_token);
           recordLinkEvent({
             event: "sent",
             leadId,
@@ -1183,12 +1203,24 @@ export async function sendConnectReminders() {
   const db = svc();
   const { data: pending } = await db
     .from("plaid_link_requests")
-    .select("link_token, lead_id, hosted_link_url, created_at, expires_at, reminder_count")
+    .select("link_token, lead_id, item_id, mode, hosted_link_url, created_at, expires_at, reminder_count")
     .eq("status", "pending");
+
+  // Belt-and-braces alongside the supersede-on-resend rule: if a lead
+  // somehow holds several live invites for the same connection, remind
+  // through the newest one only.
+  const newestPerKey = new Map<string, { link_token: string; at: number }>();
+  for (const r of pending ?? []) {
+    const key = `${r.lead_id}|${r.mode ?? "add"}|${r.item_id ?? ""}`;
+    const at = new Date(r.created_at).getTime();
+    if ((newestPerKey.get(key)?.at ?? -1) < at) newestPerKey.set(key, { link_token: r.link_token, at });
+  }
 
   const out = { checked: 0, sent: 0, errors: 0 };
   const now = Date.now();
   for (const r of pending ?? []) {
+    const key = `${r.lead_id}|${r.mode ?? "add"}|${r.item_id ?? ""}`;
+    if (newestPerKey.get(key)?.link_token !== r.link_token) continue;
     out.checked++;
     try {
       if (!r.lead_id) continue;
@@ -2547,7 +2579,12 @@ export async function handlePlaidWebhook(body: any): Promise<{ handled: string }
         linkSessionId,
         meta: { status: body?.status ?? null, mode: reqRow.mode ?? "add" },
       });
-      if (reqRow.status !== "pending") return { handled: "link:already-handled" };
+      // "superseded" = an older invite replaced by a newer one; Plaid
+      // still honors its URL, so a merchant finishing through the older
+      // email must complete normally.
+      if (!["pending", "superseded"].includes(String(reqRow.status))) {
+        return { handled: "link:already-handled" };
+      }
       const finished = String(body?.status ?? "").toUpperCase() === "SUCCESS";
 
       // Update-mode (repair) sessions fix an existing item in place — no
