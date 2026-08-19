@@ -599,6 +599,7 @@ function LeadDetailPanel({ lead, onClose, onEdit, onDelete }: { lead: Lead | nul
     const requested = parseFloat((lead.amountRequested || '').replace(/[^0-9.]/g, '')) || 0;
     stageEsignDraft({
       merchantName: lead.businessName,
+      leadId: lead.id,
       signerName: lead.contactName || [rep?.firstName, rep?.lastName].filter(Boolean).join(' '),
       signerEmail: lead.contactEmail || rep?.email || '',
       signerTitle: rep?.title || undefined,

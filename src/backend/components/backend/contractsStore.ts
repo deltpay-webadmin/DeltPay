@@ -60,6 +60,7 @@ export interface Contract {
   merchantId: string | null;
   merchantName: string;
   dealId: string | null;
+  leadId: string | null;
   signerName: string;
   signerEmail: string;
   signerTitle: string | null;
@@ -93,6 +94,7 @@ export interface SendContractRequest {
   merchantId?: string;
   merchantName: string;
   dealId?: string;
+  leadId?: string;
   signerName: string;
   signerEmail: string;
   signerTitle?: string;
@@ -153,6 +155,7 @@ function fromDb(r: any): Contract {
     merchantId: r.merchant_id ?? null,
     merchantName: r.merchant_name ?? '',
     dealId: r.deal_id ?? null,
+    leadId: r.lead_id ?? null,
     signerName: r.signer_name ?? '',
     signerEmail: r.signer_email ?? '',
     signerTitle: r.signer_title ?? null,
@@ -166,7 +169,7 @@ function fromDb(r: any): Contract {
     sentAt: r.sent_at ?? null,
     completedAt: r.completed_at ?? null,
     createdAt: r.created_at ?? '',
-    kind: (r.kind ?? 'mca') as 'mca' | 'deal_application',
+    kind: (r.kind ?? 'mca') as 'mca' | 'deal_application' | 'mpa',
     submissionId: r.submission_id ?? null,
     signedStoragePath: r.signed_storage_path ?? null,
   };

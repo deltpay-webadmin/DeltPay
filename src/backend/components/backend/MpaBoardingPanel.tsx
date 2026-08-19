@@ -150,7 +150,7 @@ function PricingGrid({
 export function MpaBoardingPanel({ submission }: { submission: DealSubmission }) {
   const navigate = useNavigate();
   const app = useApplicationForSubmission(submission.id);
-  const { contracts } = useContracts();
+  const contracts = useContracts();
   const mpaContract = useMemo(
     () => contracts.find((c) => c.kind === 'mpa' && c.submissionId === submission.id
       && !['voided', 'declined'].includes(c.status)) ?? null,

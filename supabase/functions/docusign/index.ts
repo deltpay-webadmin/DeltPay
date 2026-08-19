@@ -91,6 +91,7 @@ interface SendPayload {
   merchantId?: string;
   merchantName: string;
   dealId?: string;
+  leadId?: string;
   signerName: string;
   signerEmail: string;
   signerTitle?: string;
@@ -346,6 +347,7 @@ Deno.serve(async (req) => {
         merchant_id: p.merchantId ?? null,
         merchant_name: p.merchantName,
         deal_id: p.dealId ?? null,
+        lead_id: p.leadId ?? null,
         signer_name: p.signerName,
         signer_email: p.signerEmail,
         signer_title: p.signerTitle ?? null,
