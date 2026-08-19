@@ -27,12 +27,13 @@
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { renderAgreementHtml, type AgreementTerms } from "./mca_agreement.ts";
-import { renderApplicationHtml } from "./deal_application.ts";
-import { requirePerm, hasPerm } from "../_shared/auth.ts";
-import { getAccessToken, getAccount, oauthHost, STATUS_MAP } from "../_shared/docusign_status.ts";
+import { renderDltAppHtml, type DltAppFields } from "./deal_application.ts";
+import { requirePerm, hasPerm, type AuthContext } from "../_shared/auth.ts";
+import { getAccessToken, getAccount, oauthHost, STATUS_MAP, syncCountersign } from "../_shared/docusign_status.ts";
 import { base64FromBytes, generateMpaPdf, type MpaApplicationRow } from "../_shared/mpa/generate.ts";
-import { DATE1_ANCHOR, SIG1_ANCHOR } from "../_shared/mpa/anchors.ts";
-import type { ApplicationData } from "../_shared/mpa/schema.ts";
+import { DATE1_ANCHOR, DATE2_ANCHOR, SIG1_ANCHOR, SIG2_ANCHOR } from "../_shared/mpa/anchors.ts";
+import type { ApplicationData, SecureData } from "../_shared/mpa/schema.ts";
+import { decryptJson } from "../_shared/mpa/crypto.ts";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -46,6 +47,63 @@ const json = (body: unknown, status = 200) =>
 // ── DocuSign OAuth + status mapping live in ../_shared/docusign_status.ts ──
 
 // ── Envelope helpers ──────────────────────────────────────────
+
+/** Reminders + hard expiry on every envelope: nudge every 2 days, expire at
+ * 14 with a 3-day warning — the paper equivalent of the MPA link lifecycle. */
+const ENVELOPE_NOTIFICATION = {
+  useAccountDefaults: "false",
+  reminders: { reminderEnabled: "true", reminderDelay: "2", reminderFrequency: "2" },
+  expirations: { expireEnabled: "true", expireAfter: "14", expireWarn: "3" },
+};
+
+/**
+ * Deterministic embedded-recipient keys. A fresh embedKey (uuid) is minted at
+ * send time and stored in the contract's terms; each embedded recipient's
+ * clientUserId derives from it, so signing-url / countersign-url can re-mint
+ * recipient views for the life of the envelope.
+ */
+const embedClientId = (embedKey: string, role: "mer" | "gua" | "rep" | "cs") => `${embedKey}:${role}`;
+
+/** The Delt countersigner: org setting first, env secrets as fallback. */
+async function resolveCountersigner(
+  admin: ReturnType<typeof createClient>,
+  orgId: string,
+): Promise<{ name: string; email: string } | null> {
+  const { data } = await admin
+    .from("org_esign_settings")
+    .select("countersigner_name, countersigner_email")
+    .eq("org_id", orgId)
+    .maybeSingle();
+  const name = (data?.countersigner_name as string) || Deno.env.get("DOCUSIGN_COUNTERSIGNER_NAME") || "";
+  const email = (data?.countersigner_email as string) || Deno.env.get("DOCUSIGN_COUNTERSIGNER_EMAIL") || "";
+  return name && email ? { name, email } : null;
+}
+
+/** The submitting rep's identity: explicit body fields, else the caller. */
+async function resolveRep(
+  admin: ReturnType<typeof createClient>,
+  ctx: AuthContext,
+  body: { repName?: string; repEmail?: string },
+): Promise<{ name: string; email: string } | null> {
+  if (body.repName && body.repEmail) return { name: body.repName, email: body.repEmail };
+  let name = "";
+  let email = "";
+  if (ctx.agentId) {
+    const { data: agent } = await admin
+      .from("agents")
+      .select("name, email")
+      .eq("id", ctx.agentId)
+      .maybeSingle();
+    name = (agent?.name as string) || "";
+    email = (agent?.email as string) || "";
+  }
+  if (!email) {
+    const { data } = await admin.auth.admin.getUserById(ctx.userId);
+    email = data?.user?.email ?? "";
+    if (!name) name = (data?.user?.user_metadata?.name as string) || email.split("@")[0] || "";
+  }
+  return email ? { name: name || email, email } : null;
+}
 
 function signerTabs(prefix: string) {
   const a = (anchorString: string, extra: Record<string, string> = {}) => ({
@@ -92,6 +150,9 @@ interface SendPayload {
   merchantName: string;
   dealId?: string;
   leadId?: string;
+  submissionId?: string;
+  mode?: "email" | "embedded";
+  useBankOnFile?: boolean;
   signerName: string;
   signerEmail: string;
   signerTitle?: string;
@@ -106,6 +167,11 @@ async function createEnvelope(
   accountId: string,
   token: string,
   p: SendPayload,
+  opts: {
+    mode: "email" | "embedded";
+    embedKey: string;
+    countersigner: { name: string; email: string };
+  },
 ): Promise<{ envelopeId: string } | { error: string }> {
   const html = renderAgreementHtml({
     ...p.terms,
@@ -136,16 +202,17 @@ async function createEnvelope(
   if (!p.terms.bankAccountNumber) merTabs.textTabs.push(bankTab("/mer_acct/", "bank_account", 160, "true"));
   if (!p.terms.bankAccountType) merTabs.textTabs.push(bankTab("/mer_accttype/", "bank_account_type", 140, "false"));
 
-  const signers: any[] = [
-    {
-      recipientId: "1",
-      routingOrder: "1",
-      name: p.signerName,
-      email: p.signerEmail,
-      roleName: "Merchant",
-      tabs: merTabs,
-    },
-  ];
+  const embedded = opts.mode === "embedded";
+  const merchantSigner: any = {
+    recipientId: "1",
+    routingOrder: "1",
+    name: p.signerName,
+    email: p.signerEmail,
+    roleName: "Merchant",
+    tabs: merTabs,
+  };
+  if (embedded) merchantSigner.clientUserId = embedClientId(opts.embedKey, "mer");
+  const signers: any[] = [merchantSigner];
   if (p.guarantorName && p.guarantorEmail) {
     const guaTabs = signerTabs("gua");
     guaTabs.textTabs.push({
@@ -157,27 +224,29 @@ async function createEnvelope(
       width: 300,
       required: "false",
     });
-    signers.push({
+    const guarantorSigner: any = {
       recipientId: "2",
       routingOrder: "1",
       name: p.guarantorName,
       email: p.guarantorEmail,
       roleName: "Guarantor",
       tabs: guaTabs,
-    });
+    };
+    if (embedded) guarantorSigner.clientUserId = embedClientId(opts.embedKey, "gua");
+    signers.push(guarantorSigner);
   }
-  const csName = Deno.env.get("DOCUSIGN_COUNTERSIGNER_NAME");
-  const csEmail = Deno.env.get("DOCUSIGN_COUNTERSIGNER_EMAIL");
-  if (csName && csEmail) {
-    signers.push({
-      recipientId: "3",
-      routingOrder: "2",
-      name: csName,
-      email: csEmail,
-      roleName: "Purchaser",
-      tabs: signerTabs("pur"),
-    });
-  }
+  // The Purchaser (Delt Pay LLC) countersignature at routing order 2. Always
+  // embedded/captive: DocuSign sends the countersigner no email — the CRM's
+  // "Countersign now" button (countersign-url) drives execution.
+  signers.push({
+    recipientId: "3",
+    routingOrder: "2",
+    name: opts.countersigner.name,
+    email: opts.countersigner.email,
+    roleName: "Purchaser",
+    clientUserId: embedClientId(opts.embedKey, "cs"),
+    tabs: signerTabs("pur"),
+  });
 
   const envelope = {
     emailSubject: p.emailSubject || `Delt Pay MCA Agreement — ${p.merchantName}`,
@@ -190,6 +259,7 @@ async function createEnvelope(
       },
     ],
     recipients: { signers: dedupeSigners(signers) },
+    notification: ENVELOPE_NOTIFICATION,
     status: "sent",
   };
 
@@ -225,6 +295,7 @@ async function createEnvelopeFromHtml(
       documentBase64: btoa(binary),
     }],
     recipients: { signers: dedupeSigners(args.signers) },
+    notification: ENVELOPE_NOTIFICATION,
     status: "sent",
   };
   const res = await fetch(`${baseUri}/v2.1/accounts/${accountId}/envelopes`, {
@@ -253,6 +324,7 @@ async function createEnvelopeFromPdf(
       documentBase64: args.pdfBase64,
     }],
     recipients: { signers: dedupeSigners(args.signers) },
+    notification: ENVELOPE_NOTIFICATION,
     status: "sent",
   };
   const res = await fetch(`${baseUri}/v2.1/accounts/${accountId}/envelopes`, {
@@ -287,9 +359,11 @@ Deno.serve(async (req) => {
   // merchants.edit (mirrors the contracts RLS policies). send-application is
   // agent-facing and gates on leads.create; ownership is checked in-handler.
   const neededPerm =
-    action === "send" || action === "void" || action === "send-mpa" || action === "signing-url"
+    action === "send" || action === "void" || action === "send-mpa" || action === "signing-url" || action === "resend"
       ? "merchants.edit"
     : action === "send-application" ? "leads.create"
+    : action === "countersign-url" ? "contracts.countersign"
+    : action === "decision-memo" ? "underwriting.approve"
     : "merchants.view";
   const auth = await requirePerm(req.headers.get("Authorization") ?? undefined, neededPerm);
   if (!auth.ok) return json({ error: auth.error }, auth.status);
@@ -303,7 +377,7 @@ Deno.serve(async (req) => {
       has_integration_key: Boolean(Deno.env.get("DOCUSIGN_INTEGRATION_KEY")),
       has_user_id: Boolean(Deno.env.get("DOCUSIGN_USER_ID")),
       has_private_key: Boolean(Deno.env.get("DOCUSIGN_PRIVATE_KEY")),
-      has_countersigner: Boolean(Deno.env.get("DOCUSIGN_COUNTERSIGNER_EMAIL")),
+      has_countersigner: Boolean(await resolveCountersigner(admin, auth.ctx.orgId)),
       token_ok: false,
     };
     out.configured = out.has_integration_key && out.has_user_id && out.has_private_key;
@@ -333,13 +407,78 @@ Deno.serve(async (req) => {
     if (!p.merchantName || !p.signerName || !p.signerEmail || !p.terms) {
       return json({ error: "merchantName, signerName, signerEmail, and terms are required." }, 400);
     }
+    const mode: "email" | "embedded" = p.mode === "embedded" ? "embedded" : "email";
+
+    // The MCA is not executed until Delt Pay countersigns — a countersigner
+    // identity is mandatory, not optional.
+    const countersigner = await resolveCountersigner(admin, auth.ctx.orgId);
+    if (!countersigner) {
+      return json({
+        error: "Set the Delt countersigner (Settings → E-Sign, or the DOCUSIGN_COUNTERSIGNER_* secrets) before sending an MCA agreement.",
+      }, 400);
+    }
+
+    // Exhibit B bank prefill: decrypt the designated account server-side from
+    // the linked merchant application's secure blob. Plaintext never reaches
+    // the browser and never lands in the stored terms — only masked last-4s.
+    const terms: AgreementTerms = { ...p.terms };
+    let bankMask: { bankName?: string; routingLast4?: string; accountLast4?: string } | null = null;
+    if (p.useBankOnFile !== false && p.submissionId && !terms.bankAccountNumber) {
+      const key = Deno.env.get("APP_ENCRYPTION_KEY");
+      if (key) {
+        const { data: app } = await admin
+          .from("merchant_applications")
+          .select("data, secure")
+          .eq("submission_id", p.submissionId)
+          .neq("status", "void")
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (app?.secure) {
+          try {
+            const secure = await decryptJson<SecureData>(app.secure as any, key);
+            if (secure.bank?.accountNumber) {
+              const appData = app.data as ApplicationData;
+              terms.bankName = terms.bankName || appData?.bank?.bankName || undefined;
+              terms.bankRoutingNumber = secure.bank.routingNumber;
+              terms.bankAccountNumber = secure.bank.accountNumber;
+              terms.bankAccountType = terms.bankAccountType ||
+                (appData?.bank?.accountType === "savings" ? "Savings" : "Checking");
+              bankMask = {
+                bankName: terms.bankName,
+                routingLast4: secure.bank.routingNumber.slice(-4),
+                accountLast4: secure.bank.accountNumber.slice(-4),
+              };
+            }
+          } catch {
+            // Key mismatch → fall through to merchant-typed bank tabs.
+          }
+        }
+      }
+    }
+
     const tok = await getAccessToken();
     if ("error" in tok) return json({ error: tok.error }, 400);
     const acct = await getAccount(tok.token);
     if ("error" in acct) return json({ error: acct.error }, 400);
 
-    const env = await createEnvelope(acct.baseUri, acct.accountId, tok.token, p);
+    const embedKey = crypto.randomUUID();
+    const env = await createEnvelope(acct.baseUri, acct.accountId, tok.token, { ...p, terms }, {
+      mode,
+      embedKey,
+      countersigner,
+    });
     if ("error" in env) return json({ error: env.error }, 400);
+
+    // Stored terms carry masks only — strip the decrypted bank fields.
+    const storedTerms: Record<string, unknown> = {
+      ...p.terms,
+      embedKey,
+      countersigner,
+      bankRoutingNumber: undefined,
+      bankAccountNumber: undefined,
+      ...(bankMask ? { bankOnFile: bankMask } : {}),
+    };
 
     const { data: row, error: insErr } = await admin
       .from("contracts")
@@ -348,12 +487,14 @@ Deno.serve(async (req) => {
         merchant_name: p.merchantName,
         deal_id: p.dealId ?? null,
         lead_id: p.leadId ?? null,
+        submission_id: p.submissionId ?? null,
+        mode,
         signer_name: p.signerName,
         signer_email: p.signerEmail,
         signer_title: p.signerTitle ?? null,
         guarantor_name: p.guarantorName ?? null,
         guarantor_email: p.guarantorEmail ?? null,
-        terms: p.terms,
+        terms: storedTerms,
         envelope_id: env.envelopeId,
         status: "sent",
         docusign_status: "sent",
@@ -366,7 +507,7 @@ Deno.serve(async (req) => {
     if (insErr) {
       return json({ error: `Envelope ${env.envelopeId} was sent, but recording it failed: ${insErr.message}`, envelopeId: env.envelopeId }, 500);
     }
-    return json({ ok: true, contract: row });
+    return json({ ok: true, contract: row, mode });
   }
 
   // ── send-application: Delt merchant application from a deal submission ──
@@ -392,40 +533,132 @@ Deno.serve(async (req) => {
     if (!signerEmail) {
       return json({ error: "The merchant has no email on file — add one to the deal or provide signerEmail." }, 400);
     }
+    const mode: "email" | "embedded" = (body?.mode as string) === "embedded" ? "embedded" : "email";
 
-    const html = renderApplicationHtml({
-      merchantName: sub.merchant_name,
-      contactName: sub.contact_name ?? undefined,
-      phone: sub.phone ?? undefined,
-      email: signerEmail,
-      vertical: sub.vertical ?? undefined,
-      monthlyVolume: Number(sub.monthly_volume) || undefined,
-      wantsPos: Boolean(sub.wants_pos),
-      wantsCapital: Boolean(sub.wants_capital),
-      agentName: sub.agent_name ?? undefined,
-      applicationDate: new Date().toISOString().slice(0, 10),
-    });
+    // Section H requires the submitting rep's signature alongside the owner's.
+    const rep = await resolveRep(admin, auth.ctx, body ?? {});
+    if (!rep) return json({ error: "Could not resolve the submitting rep's email for the rep signature." }, 400);
 
-    const signers: any[] = [{
+    // Prefill from everything the spine already knows: the linked MPA
+    // application (full EIN, owners, masks) and the lead's KYB intake
+    // (financial snapshot, funding request) — last-4s only for identifiers
+    // the paper doesn't need in the clear.
+    const { data: mpaApp } = await admin
+      .from("merchant_applications")
+      .select("data, masks")
+      .eq("submission_id", submissionId)
+      .neq("status", "void")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    let lead: any = null;
+    if (sub.lead_id) {
+      const { data } = await admin
+        .from("pipeline_leads")
+        .select("business_name, industry, monthly_sales, amount_requested, kyb")
+        .eq("id", sub.lead_id)
+        .maybeSingle();
+      lead = data;
+    }
+    const { data: docs } = await admin
+      .from("deal_documents")
+      .select("doc_kind, filename")
+      .eq("submission_id", submissionId);
+
+    const appData = (mpaApp?.data ?? null) as ApplicationData | null;
+    const masks = (mpaApp?.masks ?? null) as {
+      owners?: Array<{ ssnLast4: string; dobYear: string }>;
+    } | null;
+    const kyb = lead?.kyb ?? null;
+    const owner1 = appData?.owners?.[0] ?? null;
+    const num = (s: unknown) => parseFloat(String(s ?? "").replace(/[^0-9.]/g, "")) || undefined;
+    const maskSsn = (last4?: string) => (last4 ? `•••-••-${last4}` : undefined);
+    const docKinds = new Set((docs ?? []).map((d: any) => d.doc_kind as string));
+    const extraDocs = (docs ?? [])
+      .filter((d: any) => !["voided_check", "drivers_license", "statement", "signed_application"].includes(d.doc_kind))
+      .map((d: any) => String(d.filename))
+      .slice(0, 8);
+
+    const fields: DltAppFields = {
+      dateSubmitted: new Date().toISOString().slice(0, 10),
+      repName: rep.name,
+      repEmail: rep.email,
+      repPhone: (body?.repPhone as string) || undefined,
+      amountRequested: num(body?.amountRequested) ?? num(kyb?.funding?.amount) ?? num(lead?.amount_requested),
+      desiredTerm: (body?.desiredTerm as string) || undefined,
+      useOfFunds: (body?.useOfFunds as string) || kyb?.funding?.useOfFunds || undefined,
+      legalName: appData?.business?.legalName || kyb?.business?.legalName || sub.merchant_name,
+      dba: appData?.business?.dba || kyb?.business?.dba || undefined,
+      ein: appData?.business?.ein
+        ? appData.business.ein.replace(/^(\d{2})(\d{7})$/, "$1-$2")
+        : (kyb?.business?.taxIdLast4 ? `••-•••${kyb.business.taxIdLast4}` : undefined),
+      legalStructure: appData?.business?.ownershipType || kyb?.business?.structure || undefined,
+      stateOfIncorporation: appData?.business?.stateIncorporated || kyb?.business?.stateOfIncorporation || undefined,
+      businessStartDate: appData?.business?.establishedDate
+        ? `${appData.business.establishedDate}-01`
+        : (kyb?.business?.yearFounded ? `${kyb.business.yearFounded}-01-01` : undefined),
+      industry: sub.vertical || kyb?.business?.industry || lead?.industry || undefined,
+      businessPhone: appData?.business?.phone || kyb?.business?.phone || sub.phone || undefined,
+      website: appData?.business?.website || kyb?.business?.website || undefined,
+      businessAddress: appData
+        ? [appData.locationAddress?.line1, appData.locationAddress?.city, appData.locationAddress?.state, appData.locationAddress?.zip]
+            .filter(Boolean).join(", ")
+        : (kyb?.business
+            ? [kyb.business.addressLine1, kyb.business.city, kyb.business.state, kyb.business.postalCode].filter(Boolean).join(", ")
+            : undefined),
+      businessEmail: appData?.business?.email || sub.email || undefined,
+      avgMonthlyRevenue: num(kyb?.processing?.monthlyVolume) ?? num(lead?.monthly_sales) ?? num(sub.monthly_volume),
+      monthlyCardVolume: num(appData?.profile?.monthlyVolume) ?? num(sub.monthly_volume),
+      owner1FirstName: owner1?.firstName || kyb?.representative?.firstName || undefined,
+      owner1LastName: owner1?.lastName || kyb?.representative?.lastName || undefined,
+      owner1EquityPct: owner1 ? Number(owner1.equityPct) || undefined : kyb?.representative?.ownershipPct || undefined,
+      owner1SsnMasked: maskSsn(masks?.owners?.[0]?.ssnLast4 ?? kyb?.representative?.ssnLast4),
+      owner1DobMasked: masks?.owners?.[0]?.dobYear || undefined,
+      owner1CellPhone: owner1?.cellPhone || kyb?.representative?.phone || sub.phone || undefined,
+      owner1Email: owner1?.email || kyb?.representative?.email || signerEmail,
+      owner1HomeAddress: owner1
+        ? [owner1.homeAddress, owner1.city, owner1.state, owner1.zip].filter(Boolean).join(", ")
+        : undefined,
+      hasSecondOwner: (appData?.owners?.length ?? 0) > 1 || undefined,
+      owner2FirstName: appData?.owners?.[1]?.firstName,
+      owner2LastName: appData?.owners?.[1]?.lastName,
+      owner2EquityPct: appData?.owners?.[1] ? Number(appData.owners[1].equityPct) || undefined : undefined,
+      owner2SsnMasked: maskSsn(masks?.owners?.[1]?.ssnLast4),
+      owner2Email: appData?.owners?.[1]?.email,
+      brokerNotes: (body?.brokerNotes as string) || sub.notes || undefined,
+      attachments: {
+        bankStatements: docKinds.has("statement"),
+        photoId: docKinds.has("drivers_license"),
+        voidedCheck: docKinds.has("voided_check"),
+        additional: extraDocs,
+      },
+      applicationId: String(submissionId).slice(0, 8).toUpperCase(),
+    };
+
+    const html = renderDltAppHtml(fields);
+
+    const embedKey = crypto.randomUUID();
+    const ownerSigner: any = {
       recipientId: "1",
       routingOrder: "1",
       name: signerName,
       email: signerEmail,
-      roleName: "Merchant",
-      tabs: signerTabs("mer"),
-    }];
-    const csName = Deno.env.get("DOCUSIGN_COUNTERSIGNER_NAME");
-    const csEmail = Deno.env.get("DOCUSIGN_COUNTERSIGNER_EMAIL");
-    if (csName && csEmail) {
-      signers.push({
-        recipientId: "2",
-        routingOrder: "2",
-        name: csName,
-        email: csEmail,
-        roleName: "Delt Pay",
-        tabs: signerTabs("pur"),
-      });
+      roleName: "Owner",
+      tabs: signerTabs("own1"),
+    };
+    const repSigner: any = {
+      recipientId: "2",
+      routingOrder: "1",
+      name: rep.name,
+      email: rep.email,
+      roleName: "Broker/ISO Representative",
+      tabs: signerTabs("rep"),
+    };
+    if (mode === "embedded") {
+      ownerSigner.clientUserId = embedClientId(embedKey, "mer");
+      repSigner.clientUserId = embedClientId(embedKey, "rep");
     }
+    const signers: any[] = [ownerSigner, repSigner];
 
     const tok = await getAccessToken();
     if ("error" in tok) return json({ error: tok.error }, 400);
@@ -434,8 +667,8 @@ Deno.serve(async (req) => {
 
     const env = await createEnvelopeFromHtml(acct.baseUri, acct.accountId, tok.token, {
       html,
-      docName: `Delt Merchant Application - ${sub.merchant_name}.html`,
-      emailSubject: (body?.emailSubject as string) || `Delt Pay Merchant Application — ${sub.merchant_name}`,
+      docName: `Delt Capital Funding Application - ${sub.merchant_name}.html`,
+      emailSubject: (body?.emailSubject as string) || `Delt Capital Funding Application — ${sub.merchant_name}`,
       signers,
     });
     if ("error" in env) return json({ error: env.error }, 400);
@@ -445,10 +678,12 @@ Deno.serve(async (req) => {
       .insert({
         kind: "deal_application",
         submission_id: submissionId,
+        lead_id: sub.lead_id ?? null,
+        mode,
         merchant_name: sub.merchant_name,
         signer_name: signerName,
         signer_email: signerEmail,
-        terms: {},
+        terms: { embedKey, rep },
         envelope_id: env.envelopeId,
         status: "sent",
         docusign_status: "sent",
@@ -461,7 +696,7 @@ Deno.serve(async (req) => {
     if (insErr) {
       return json({ error: `Envelope ${env.envelopeId} was sent, but recording it failed: ${insErr.message}`, envelopeId: env.envelopeId }, 500);
     }
-    return json({ ok: true, contract: row });
+    return json({ ok: true, contract: row, mode });
   }
 
   // ── send-mpa: fill the processor MPA PDF and open an envelope ──
@@ -515,6 +750,7 @@ Deno.serve(async (req) => {
       anchorXOffset: "0",
       anchorYOffset: "0",
     });
+    const embedKey = crypto.randomUUID();
     const merchantSigner: any = {
       recipientId: "1",
       routingOrder: "1",
@@ -528,12 +764,31 @@ Deno.serve(async (req) => {
     };
     // clientUserId marks the recipient as embedded/captive: DocuSign sends
     // no email and the signing session is fetched on demand (signing-url).
-    if (mode === "embedded") merchantSigner.clientUserId = applicationId;
+    if (mode === "embedded") merchantSigner.clientUserId = embedClientId(embedKey, "mer");
+
+    // The rep signs their own stops — the Luqra final-execution agent line
+    // and the Paysafe Section V site-survey certification. Always embedded:
+    // the rep signs from the CRM, never by email round-trip.
+    const rep = await resolveRep(admin, auth.ctx, body ?? {});
+    const repSigner: any = rep
+      ? {
+          recipientId: "2",
+          routingOrder: "1",
+          name: rep.name,
+          email: rep.email,
+          roleName: "Sales Representative",
+          clientUserId: embedClientId(embedKey, "rep"),
+          tabs: {
+            signHereTabs: [anchorTab(SIG2_ANCHOR)],
+            dateSignedTabs: [anchorTab(DATE2_ANCHOR)],
+          },
+        }
+      : null;
 
     // No Delt countersigner on processor MPAs: the counterparty approval
     // lines (LQ/Bank approval, Paysafe acceptance) belong to the processor
     // and are executed in their own boarding flow after submission.
-    const signers: any[] = [merchantSigner];
+    const signers: any[] = repSigner ? [merchantSigner, repSigner] : [merchantSigner];
 
     const tok = await getAccessToken();
     if ("error" in tok) return json({ error: tok.error }, 400);
@@ -553,10 +808,12 @@ Deno.serve(async (req) => {
       .insert({
         kind: "mpa",
         submission_id: app.submission_id,
+        lead_id: sub.lead_id ?? null,
+        mode,
         merchant_name: sub.merchant_name,
         signer_name: signerName,
         signer_email: signerEmail,
-        terms: { channel, mode, applicationId },
+        terms: { channel, mode, applicationId, embedKey, ...(rep ? { rep } : {}) },
         envelope_id: env.envelopeId,
         status: "sent",
         docusign_status: "sent",
@@ -573,20 +830,48 @@ Deno.serve(async (req) => {
   }
 
   // ── signing-url: on-demand embedded signing session (≈5-min TTL) ──
-  // Called right before handing the iPad to the merchant; call again to
-  // regenerate after expiry. The URL is never stored.
+  // Any embedded envelope, any kind. `recipient` picks who signs: 'signer'
+  // (default — the merchant/owner), 'guarantor', or 'rep'. Called right
+  // before handing over the iPad; call again to regenerate after expiry.
   if (action === "signing-url") {
     const contractId = body?.contractId as string;
+    const recipient = (body?.recipient as string) || "signer";
     if (!contractId) return json({ error: "contractId required" }, 400);
     const { data: row } = await admin.from("contracts").select("*").eq("id", contractId).maybeSingle();
     if (!row || row.org_id !== auth.ctx.orgId) return json({ error: "Contract not found" }, 404);
-    if (row.kind !== "mpa" || !row.envelope_id) return json({ error: "Not an MPA envelope" }, 400);
+    if (!row.envelope_id) return json({ error: "Contract has no envelope" }, 400);
     if (["completed", "voided", "declined"].includes(row.status)) {
       return json({ error: `Envelope is already ${row.status}` }, 400);
     }
-    const applicationId = (row.terms as any)?.applicationId as string;
-    if ((row.terms as any)?.mode !== "embedded" || !applicationId) {
+    const terms = (row.terms ?? {}) as any;
+    const embedKey = terms.embedKey as string | undefined;
+    const legacyMpaKey = row.kind === "mpa" ? (terms.applicationId as string | undefined) : undefined;
+    const isEmbedded = row.mode === "embedded" || terms.mode === "embedded";
+    // The rep recipient on an MPA is always embedded, even on email envelopes.
+    if (!isEmbedded && !(row.kind === "mpa" && recipient === "rep")) {
       return json({ error: "This envelope was sent for remote (email) signing" }, 400);
+    }
+
+    let userName: string;
+    let email: string;
+    let clientUserId: string;
+    if (recipient === "guarantor") {
+      if (!row.guarantor_name || !row.guarantor_email) return json({ error: "No guarantor on this envelope" }, 400);
+      if (!embedKey) return json({ error: "This envelope predates guarantor embedded signing — resend it" }, 400);
+      userName = row.guarantor_name;
+      email = row.guarantor_email;
+      clientUserId = embedClientId(embedKey, "gua");
+    } else if (recipient === "rep") {
+      const rep = terms.rep as { name: string; email: string } | undefined;
+      if (!rep || !embedKey) return json({ error: "No rep signer on this envelope" }, 400);
+      userName = rep.name;
+      email = rep.email;
+      clientUserId = embedClientId(embedKey, "rep");
+    } else {
+      userName = row.signer_name;
+      email = row.signer_email;
+      clientUserId = embedKey ? embedClientId(embedKey, "mer") : (legacyMpaKey ?? "");
+      if (!clientUserId) return json({ error: "This envelope has no embedded signer" }, 400);
     }
 
     const tok = await getAccessToken();
@@ -600,13 +885,7 @@ Deno.serve(async (req) => {
       {
         method: "POST",
         headers: { Authorization: `Bearer ${tok.token}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          returnUrl,
-          authenticationMethod: "none",
-          email: row.signer_email,
-          userName: row.signer_name,
-          clientUserId: applicationId,
-        }),
+        body: JSON.stringify({ returnUrl, authenticationMethod: "none", email, userName, clientUserId }),
       },
     );
     const view = await res.json().catch(() => ({}));
@@ -614,6 +893,164 @@ Deno.serve(async (req) => {
       return json({ error: `Signing session failed: ${view?.message || `HTTP ${res.status}`}` }, 400);
     }
     return json({ ok: true, url: view.url });
+  }
+
+  // ── countersign-url: embedded Delt countersignature (routing order 2) ──
+  // 409 until every routing-order-1 recipient has completed. Legacy
+  // envelopes whose countersigner was an email recipient get a resend
+  // instead of a view URL.
+  if (action === "countersign-url") {
+    const contractId = body?.contractId as string;
+    if (!contractId) return json({ error: "contractId required" }, 400);
+    const { data: row } = await admin.from("contracts").select("*").eq("id", contractId).maybeSingle();
+    if (!row || row.org_id !== auth.ctx.orgId) return json({ error: "Contract not found" }, 404);
+    if (!["mca", "deal_application"].includes(row.kind)) {
+      return json({ error: "Only MCA agreements and funding applications carry a Delt countersignature" }, 400);
+    }
+    if (!row.envelope_id) return json({ error: "Contract has no envelope" }, 400);
+    if (row.countersigned_at) return json({ error: "Already countersigned" }, 409);
+    if (["voided", "declined"].includes(row.status)) {
+      return json({ error: `Envelope is ${row.status}` }, 400);
+    }
+
+    const tok = await getAccessToken();
+    if ("error" in tok) return json({ error: tok.error }, 400);
+    const acct = await getAccount(tok.token);
+    if ("error" in acct) return json({ error: acct.error }, 400);
+
+    const recRes = await fetch(
+      `${acct.baseUri}/v2.1/accounts/${acct.accountId}/envelopes/${row.envelope_id}/recipients`,
+      { headers: { Authorization: `Bearer ${tok.token}` } },
+    );
+    const recBody = await recRes.json().catch(() => ({}));
+    if (!recRes.ok) return json({ error: `Recipient lookup failed: HTTP ${recRes.status}` }, 400);
+    const recSigners: any[] = recBody?.signers ?? [];
+    const merchantSide = recSigners.filter((s) => String(s.routingOrder) === "1");
+    const pending = merchantSide.filter((s) => String(s.status).toLowerCase() !== "completed");
+    if (pending.length > 0) {
+      return json({
+        error: `Waiting on ${pending.map((s) => s.name).join(", ")} — the merchant side must sign first.`,
+      }, 409);
+    }
+    const purchaser = recSigners.find((s) => String(s.routingOrder) === "2");
+    if (!purchaser) return json({ error: "This envelope has no Delt countersigner recipient" }, 400);
+
+    if (!purchaser.clientUserId) {
+      // Legacy email-routed countersigner: nudge the email instead.
+      await fetch(
+        `${acct.baseUri}/v2.1/accounts/${acct.accountId}/envelopes/${row.envelope_id}/recipients?resend_envelope=true`,
+        {
+          method: "PUT",
+          headers: { Authorization: `Bearer ${tok.token}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ signers: [] }),
+        },
+      );
+      return json({ ok: true, resent: true, email: purchaser.email });
+    }
+
+    const returnUrl = (body?.returnUrl as string) || "https://deltpay.com/#/signing-complete";
+    const res = await fetch(
+      `${acct.baseUri}/v2.1/accounts/${acct.accountId}/envelopes/${row.envelope_id}/views/recipient`,
+      {
+        method: "POST",
+        headers: { Authorization: `Bearer ${tok.token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          returnUrl,
+          authenticationMethod: "none",
+          email: purchaser.email,
+          userName: purchaser.name,
+          clientUserId: purchaser.clientUserId,
+        }),
+      },
+    );
+    const view = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return json({ error: `Countersign session failed: ${view?.message || `HTTP ${res.status}`}` }, 400);
+    }
+    return json({ ok: true, url: view.url });
+  }
+
+  // ── resend: re-trigger DocuSign's email to pending recipients ──
+  if (action === "resend") {
+    const contractId = body?.contractId as string;
+    if (!contractId) return json({ error: "contractId required" }, 400);
+    const { data: row } = await admin.from("contracts").select("*").eq("id", contractId).maybeSingle();
+    if (!row || row.org_id !== auth.ctx.orgId) return json({ error: "Contract not found" }, 404);
+    if (!row.envelope_id) return json({ error: "Contract has no envelope" }, 400);
+    if (!["sent", "delivered"].includes(row.status)) {
+      return json({ error: `Envelope is ${row.status} — only in-flight envelopes can be resent` }, 400);
+    }
+
+    const tok = await getAccessToken();
+    if ("error" in tok) return json({ error: tok.error }, 400);
+    const acct = await getAccount(tok.token);
+    if ("error" in acct) return json({ error: acct.error }, 400);
+
+    const res = await fetch(
+      `${acct.baseUri}/v2.1/accounts/${acct.accountId}/envelopes/${row.envelope_id}/recipients?resend_envelope=true`,
+      {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${tok.token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ signers: [] }),
+      },
+    );
+    if (!res.ok) {
+      const errBody = await res.json().catch(() => ({}));
+      return json({ error: `Resend failed: ${errBody?.message || `HTTP ${res.status}`}` }, 400);
+    }
+    return json({ ok: true });
+  }
+
+  // ── decision-memo: file the underwriting decision on the deal ──
+  // The signed DLT-APP's decision box is intentionally blank (executed at
+  // intake); this generates the internal memo PDF into deal-docs instead.
+  if (action === "decision-memo") {
+    const submissionId = body?.submissionId as string;
+    if (!submissionId) return json({ error: "submissionId required" }, 400);
+    const { data: sub } = await admin
+      .from("deal_submissions")
+      .select("id, org_id, merchant_name")
+      .eq("id", submissionId)
+      .maybeSingle();
+    if (!sub || sub.org_id !== auth.ctx.orgId) return json({ error: "Deal submission not found" }, 404);
+
+    const decision = body?.decision === "Declined" ? "Declined" : "Approved";
+    const { renderDecisionMemoPdf } = await import("./decision_memo.ts");
+    const pdf = await renderDecisionMemoPdf({
+      merchantName: sub.merchant_name,
+      applicationId: (body?.applicationId as string) || undefined,
+      underwriter: (body?.underwriter as string) || undefined,
+      decision,
+      decidedAt: new Date().toISOString().slice(0, 10),
+      approvedAmount: Number(body?.approvedAmount) || undefined,
+      factorRate: Number(body?.factorRate) || undefined,
+      paybackAmount: Number(body?.paybackAmount) || undefined,
+      termMonths: Number(body?.termMonths) || undefined,
+      paymentFrequency: (body?.paymentFrequency as string) || undefined,
+      holdbackPct: Number(body?.holdbackPct) || undefined,
+      tier: (body?.tier as string) || undefined,
+      compositeScore: Number(body?.compositeScore) || undefined,
+      stipulations: (body?.stipulations as string) || undefined,
+      declineReason: (body?.declineReason as string) || undefined,
+    });
+
+    const path = `org/${sub.org_id}/${sub.id}/decision-memo-${Date.now()}.pdf`;
+    const { error: upErr } = await admin.storage.from("deal-docs").upload(path, pdf, {
+      contentType: "application/pdf",
+      upsert: true,
+    });
+    if (upErr) return json({ error: `Memo upload failed: ${upErr.message}` }, 500);
+    const { error: docErr } = await admin.from("deal_documents").insert({
+      org_id: sub.org_id,
+      submission_id: sub.id,
+      doc_kind: "decision_memo",
+      filename: `Decision Memo (${decision}) - ${sub.merchant_name}.pdf`,
+      storage_path: path,
+      extract_status: "none",
+      uploaded_by: "Underwriting",
+    });
+    if (docErr) return json({ error: `deal_documents insert failed: ${docErr.message}` }, 500);
+    return json({ ok: true, path });
   }
 
   // ── status ──
@@ -641,9 +1078,15 @@ Deno.serve(async (req) => {
     if (mapped === "completed" && !row.completed_at) {
       patch.completed_at = env.completedDateTime || new Date().toISOString();
     }
-    const { data: updated, error: updErr } = await admin
-      .from("contracts").update(patch).eq("id", contractId).select("*").single();
+    const { error: updErr } = await admin
+      .from("contracts").update(patch).eq("id", contractId).select("id").single();
     if (updErr) return json({ error: updErr.message }, 500);
+    if (mapped === "completed" && !row.countersigned_at && ["mca", "deal_application"].includes(row.kind)) {
+      try {
+        await syncCountersign(contractId);
+      } catch { /* best-effort; the sweep retries */ }
+    }
+    const { data: updated } = await admin.from("contracts").select("*").eq("id", contractId).single();
     return json({ ok: true, contract: updated });
   }
 

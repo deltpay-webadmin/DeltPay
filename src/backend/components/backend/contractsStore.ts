@@ -77,6 +77,11 @@ export interface Contract {
   kind: 'mca' | 'deal_application' | 'mpa';
   submissionId: string | null;
   signedStoragePath: string | null;
+  /** 'embedded' = in-person (iPad) signing; 'email' = remote. */
+  mode: 'email' | 'embedded';
+  /** Delt's executed state — an MCA is not done until this is stamped. */
+  countersignedAt: string | null;
+  countersignerEmail: string | null;
 }
 
 export interface DocusignConfig {
@@ -95,6 +100,11 @@ export interface SendContractRequest {
   merchantName: string;
   dealId?: string;
   leadId?: string;
+  submissionId?: string;
+  /** 'embedded' = sign in person on the iPad; 'email' (default) = remote. */
+  mode?: 'email' | 'embedded';
+  /** Prefill Exhibit B server-side from the bank details already on file. */
+  useBankOnFile?: boolean;
   signerName: string;
   signerEmail: string;
   signerTitle?: string;
@@ -172,6 +182,9 @@ function fromDb(r: any): Contract {
     kind: (r.kind ?? 'mca') as 'mca' | 'deal_application' | 'mpa',
     submissionId: r.submission_id ?? null,
     signedStoragePath: r.signed_storage_path ?? null,
+    mode: (r.mode ?? (r.terms?.mode === 'embedded' ? 'embedded' : 'email')) as 'email' | 'embedded',
+    countersignedAt: r.countersigned_at ?? null,
+    countersignerEmail: r.countersigner_email ?? null,
   };
 }
 
@@ -328,8 +341,18 @@ export const contractActions = {
     }
   },
 
-  /** Send the Delt merchant application from a deal submission for e-signature. */
-  async sendApplication(req: { submissionId: string; signerName?: string; signerEmail?: string }): Promise<Contract> {
+  /** Send the Delt Capital funding application (Form DLT-APP) from a deal
+   * submission for e-signature — owner + submitting rep both sign. */
+  async sendApplication(req: {
+    submissionId: string;
+    signerName?: string;
+    signerEmail?: string;
+    mode?: 'email' | 'embedded';
+    amountRequested?: number;
+    desiredTerm?: string;
+    useOfFunds?: string;
+    brokerNotes?: string;
+  }): Promise<Contract> {
     markBusy('send', true);
     try {
       const json = await callDocusign({ action: 'send-application', ...req });
@@ -382,14 +405,53 @@ export const contractActions = {
     }
   },
 
-  /** Mint a fresh embedded-signing URL (≈5-minute TTL; never stored). */
-  async signingUrl(contractId: string): Promise<string> {
+  /** Mint a fresh embedded-signing URL (≈5-minute TTL; never stored).
+   * `recipient` picks who signs: signer (default), guarantor, or rep. */
+  async signingUrl(
+    contractId: string,
+    recipient: 'signer' | 'guarantor' | 'rep' = 'signer',
+    returnUrl?: string,
+  ): Promise<string> {
     const json = await callDocusign({
       action: 'signing-url',
       contractId,
-      returnUrl: `${window.location.origin}/#/signing-complete`,
+      recipient,
+      returnUrl: returnUrl ?? `${window.location.origin}/#/signing-complete`,
     });
     return json.url as string;
+  },
+
+  /**
+   * Delt countersignature session (contracts.countersign perm). Resolves to
+   * a URL to open, or null when the envelope predates embedded countersigning
+   * and a DocuSign email was re-sent to the countersigner instead.
+   */
+  async countersignUrl(contractId: string): Promise<string | null> {
+    const json = await callDocusign({
+      action: 'countersign-url',
+      contractId,
+      returnUrl: `${window.location.origin}/#/signing-complete`,
+    });
+    if (json.resent) {
+      toast.info(`Countersign request re-sent to ${json.email}.`);
+      return null;
+    }
+    return json.url as string;
+  },
+
+  /** Re-trigger DocuSign's email to the pending recipients of an in-flight envelope. */
+  async resend(contractId: string): Promise<boolean> {
+    markBusy(contractId, true);
+    try {
+      await callDocusign({ action: 'resend', contractId });
+      toast.success('Signature request re-sent.');
+      return true;
+    } catch (err: any) {
+      toast.error(`Resend failed: ${err.message}`);
+      return false;
+    } finally {
+      markBusy(contractId, false);
+    }
   },
 
   /** Pull the envelope's live status from DocuSign and sync the row. */
