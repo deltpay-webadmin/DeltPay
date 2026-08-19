@@ -352,6 +352,12 @@ export interface UWApplication {
   approvedDealId?: string;
   declineReason?: string;
   assignedTo?: string;
+  // ── Deal-spine linkage (replaces name-string matching for new files) ──
+  submissionId?: string;
+  leadId?: string;
+  contactName?: string;
+  contactEmail?: string;
+  contactPhone?: string;
 }
 
 // ── Merchants ──
@@ -706,6 +712,11 @@ function fromDbUw(r: any): UWApplication {
     approvedDealId: r.approved_deal_id ?? undefined,
     declineReason: r.decline_reason ?? undefined,
     assignedTo: r.assigned_to ?? undefined,
+    submissionId: r.submission_id ?? undefined,
+    leadId: r.lead_id ?? undefined,
+    contactName: r.contact_name ?? undefined,
+    contactEmail: r.contact_email ?? undefined,
+    contactPhone: r.contact_phone ?? undefined,
   };
 }
 
@@ -731,6 +742,11 @@ function toDbUw(a: Partial<UWApplication>): Record<string, any> {
   if (a.approvedDealId !== undefined) out.approved_deal_id = a.approvedDealId ?? null;
   if (a.declineReason !== undefined) out.decline_reason = a.declineReason ?? null;
   if (a.assignedTo !== undefined) out.assigned_to = a.assignedTo ?? null;
+  if (a.submissionId !== undefined) out.submission_id = a.submissionId ?? null;
+  if (a.leadId !== undefined) out.lead_id = a.leadId ?? null;
+  if (a.contactName !== undefined) out.contact_name = a.contactName ?? null;
+  if (a.contactEmail !== undefined) out.contact_email = a.contactEmail ?? null;
+  if (a.contactPhone !== undefined) out.contact_phone = a.contactPhone ?? null;
   return out;
 }
 
@@ -1779,6 +1795,11 @@ export const underwritingActions = {
       slaThreshold: 2,
       source: partial.source || 'Manual',
       assignedTo: partial.assignedTo || partial.reviewer || undefined,
+      submissionId: partial.submissionId,
+      leadId: partial.leadId,
+      contactName: partial.contactName,
+      contactEmail: partial.contactEmail,
+      contactPhone: partial.contactPhone,
     };
     const app: UWApplication = { ...base, ...deriveScores(base) };
     const prev = state.underwriting;

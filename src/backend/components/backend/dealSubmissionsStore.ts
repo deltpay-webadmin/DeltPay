@@ -37,6 +37,9 @@ export interface DealSubmission {
   id: string;
   agentId: string | null;
   agentName: string;
+  /** Originating pipeline lead — the spine link that makes Plaid, contracts
+   * and underwriting hang together for one prospect. */
+  leadId: string | null;
   channel: BoardingChannel | null;
   merchantName: string;
   contactName: string;
@@ -73,6 +76,7 @@ function fromDb(r: any): DealSubmission {
     id: r.id,
     agentId: r.agent_id ?? null,
     agentName: r.agent_name || 'Unassigned',
+    leadId: r.lead_id ?? null,
     channel: (r.channel as BoardingChannel | null) ?? null,
     merchantName: r.merchant_name,
     contactName: r.contact_name || '',
@@ -172,6 +176,66 @@ export const dealSubmissionActions = {
     }
     await refresh();
     return true;
+  },
+
+  /**
+   * Create (or reuse) the deal submission for a pipeline lead — the "Start
+   * deal" action. Idempotent: an open (non-Declined) submission already
+   * linked to this lead is returned instead of creating a duplicate.
+   */
+  async createFromLead(lead: {
+    id: string;
+    businessName: string;
+    contactName?: string;
+    contactPhone?: string;
+    contactEmail?: string;
+    industry?: string;
+    monthlySales?: string;
+    type?: string;
+    products?: string[];
+    assignedAgent?: string;
+  }): Promise<string | null> {
+    if (!supabase) {
+      toast.error('Supabase is not configured — cannot start a deal.');
+      return null;
+    }
+    const { data: existing } = await supabase
+      .from('deal_submissions')
+      .select('id')
+      .eq('lead_id', lead.id)
+      .neq('status', 'Declined')
+      .limit(1)
+      .maybeSingle();
+    if (existing?.id) return existing.id as string;
+
+    const monthlyVolume = parseFloat((lead.monthlySales || '').replace(/[^0-9.]/g, '')) || 0;
+    const wantsCapital = lead.type === 'MCA' || (lead.products ?? []).includes('Capital');
+    const { data, error } = await supabase
+      .from('deal_submissions')
+      .insert({
+        lead_id: lead.id,
+        agent_name: lead.assignedAgent || '',
+        merchant_name: lead.businessName,
+        contact_name: lead.contactName || null,
+        phone: lead.contactPhone || null,
+        email: lead.contactEmail || null,
+        vertical: lead.industry || null,
+        monthly_volume: monthlyVolume,
+        wants_pos: false,
+        wants_capital: wantsCapital,
+        notes: '',
+        expected_bonus: activationBonus(monthlyVolume, wantsCapital),
+      })
+      .select('id')
+      .single();
+    if (error) {
+      // eslint-disable-next-line no-console
+      console.error('[DealSubmissions] createFromLead failed:', error);
+      toast.error(`Couldn't start the deal: ${error.message}`);
+      return null;
+    }
+    await refresh();
+    return data.id as string;
   },
 
   async setChannel(id: string, channel: BoardingChannel | null): Promise<boolean> {
