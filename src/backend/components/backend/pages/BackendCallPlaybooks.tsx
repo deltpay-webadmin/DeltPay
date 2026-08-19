@@ -8,6 +8,8 @@ import {
 } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '../../../lib/supabase';
 import { useSession } from '../SessionContext';
+import { useAppNavigate } from '../NavigationContext';
+import { dealSubmissionActions } from '../dealSubmissionsStore';
 
 // ══════════════════════════════════════
 // TYPES
@@ -906,6 +908,7 @@ function ActionPanel({ product, lead, repName, onBooked, onLog }: {
   onBooked: (when: string) => void;
   onLog: (entry: string) => void;
 }) {
+  const { navigate } = useAppNavigate();
   const [email, setEmail] = useState(lead?.contact_email ?? '');
   const [phone, setPhone] = useState(lead?.contact_phone ?? '');
   const business = lead?.business_name ?? 'this merchant';
@@ -966,32 +969,23 @@ function ActionPanel({ product, lead, repName, onBooked, onLog }: {
       : `Booked — no confirmation email sent (${email ? 'send failed' : 'no email on file'})`);
   };
 
+  // The application sends from the Deal Room now (DLT-APP e-sign, MPA
+  // merchant link, Plaid connect) — this starts/reuses the deal for the
+  // lead and lands the rep on the page where every send lives.
   const sendLink = async (channel: 'email' | 'sms') => {
-    if (channel === 'email' && !email) { fail('Add an email first'); return; }
-    if (channel === 'sms' && !phone) { fail('Add a phone number first'); return; }
+    if (!lead?.id) { fail('Save the call as a lead first — the application sends from its Deal Room'); return; }
     setSending(channel); setErr(null);
-    const r = await invokeRepAction({
-      action: 'send_app_link',
-      product: appProduct,
-      channel,
-      business,
-      contact_name: contactName,
-      email, phone,
-      rep_name: repName,
-      lead_id: lead?.id ?? null,
+    const id = await dealSubmissionActions.createFromLead({
+      id: lead.id,
+      businessName: lead.business_name,
+      contactName: contactName || undefined,
+      contactEmail: email || undefined,
+      contactPhone: phone || undefined,
     });
     setSending(null);
-    if (r.error) { fail(r.error); return; }
-    const label = appProduct === 'pay' ? 'DeltPay app' : 'Capital app';
-    if (channel === 'email') {
-      onLog(`${label} link emailed to ${email}`);
-      flash(`${label} link emailed`);
-    } else {
-      const sms = r.sms as { uri: string; body: string };
-      onLog(`${label} link texted to ${phone}`);
-      flash('Text ready — opening your SMS app (message copied too)');
-      openSms(sms.uri, sms.body);
-    }
+    if (!id) { fail('Could not start the deal'); return; }
+    onLog(`Opened the Deal Room for ${business} to send the ${appProduct === 'pay' ? 'DeltPay' : 'Capital'} application`);
+    navigate(`/deal-room/${id}`);
   };
 
   const inputCls = 'w-full border border-gray-200 rounded-[6px] px-2.5 py-1.5 text-[13px]';

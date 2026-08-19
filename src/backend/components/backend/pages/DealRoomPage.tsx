@@ -30,6 +30,7 @@ import { usePlaidItems, usePlaidLinkRequests, plaidActions } from '../plaidStore
 import { useContracts, contractActions, type Contract } from '../contractsStore';
 import { useApplicationForSubmission } from '../merchantApplicationsStore';
 import { useDealDocuments } from '../dealDocumentsStore';
+import { useCapital, capitalActions } from '../capitalStore';
 import { DealDocumentsPanel } from '../DealDocumentsPanel';
 import { MpaBoardingPanel } from '../MpaBoardingPanel';
 
@@ -83,6 +84,7 @@ export function DealRoomPage() {
   const contracts = useContracts();
   const mpaApp = useApplicationForSubmission(submissionId);
   const { documents } = useDealDocuments();
+  const { deals: capitalDeals } = useCapital();
 
   const sub = submissions.find(s => s.id === submissionId) ?? null;
   const lead = sub?.leadId ? leads.find(l => l.id === sub.leadId) ?? null : null;
@@ -391,6 +393,38 @@ export function DealRoomPage() {
           </div>
         </div>
       )}
+
+      {/* ── Funding gate ── */}
+      {(() => {
+        const capDeal = capitalDeals.find(d => d.submissionId === sub.id) ?? null;
+        if (!capDeal) return null;
+        return (
+          <div className={card}>
+            <StageHeader n={0} title={`Capital deal ${capDeal.id}`} icon={Banknote}
+              state={capDeal.status === 'approved' ? 'Awaiting funding' : capDeal.status} />
+            <div className="flex flex-wrap items-center gap-2">
+              {capDeal.status === 'approved' && can('capital.fund') && (
+                <button className={btnPrimary} disabled={busy !== null}
+                  onClick={async () => { setBusy('fund'); try { await capitalActions.markFunded(capDeal.id); } finally { setBusy(null); } }}>
+                  {busy === 'fund' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Banknote className="w-3.5 h-3.5" />}
+                  Mark funded
+                </button>
+              )}
+              {capDeal.status === 'approved' && (
+                <span className="text-[11px] text-gray-400">
+                  The server verifies the full signed packet (all chips above green) before funding is allowed.
+                </span>
+              )}
+              {capDeal.status !== 'approved' && capDeal.fundedAt && (
+                <span className="text-[11px] text-emerald-600 font-medium">
+                  Funded {new Date(capDeal.fundedAt).toLocaleDateString()} — ${capDeal.fundedAmt.toLocaleString()} at {capDeal.factor}
+                </span>
+              )}
+              <button className={btnGhost} onClick={() => navigate(`/deals/${capDeal.id}`)}>Open deal →</button>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* ── 6. Processor MPA + boarding ── */}
       <div className={card}>

@@ -153,7 +153,7 @@ export function BackendDashboard() {
   const churnRisk = activeMerchants.filter(m => m.healthScore < 50).length;
 
   // ── Capital ──
-  const openDeals = deals.filter(d => d.status !== 'paid');
+  const openDeals = deals.filter(d => d.status !== 'paid' && d.status !== 'approved');
   const capital = {
     deployed: openDeals.reduce((s, d) => s + d.fundedAmt, 0),
     outstanding: openDeals.reduce((s, d) => s + Math.max(0, d.totalOwed - d.collected), 0),

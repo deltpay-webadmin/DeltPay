@@ -23,7 +23,9 @@ import { supabase } from '../../lib/supabase';
 // Types
 // ══════════════════════════════════════════════════════════════
 
-export type CapitalDealStatus = 'active' | 'paid' | 'slow' | 'default';
+/** 'approved' = underwriting said yes, no money moved yet (awaiting the
+ * signed packet); 'active' = funded and collecting. */
+export type CapitalDealStatus = 'approved' | 'active' | 'paid' | 'slow' | 'default';
 export type CapitalChannel = 'self' | 'fundomate';
 export type CapitalAchStatus = 'current' | 'completed' | 'nsf-retry' | 'suspended';
 
@@ -68,6 +70,9 @@ export interface CapitalDeal {
   uccExpires: string;        // YYYY-MM-DD
   costOfCapitalPaid: number;
   referralCommission: number;
+  submissionId?: string;
+  approvedAt?: string;
+  fundedAt?: string;
   commissionRate?: number;
   commissionPaid?: boolean;
   notes?: string;
@@ -148,6 +153,9 @@ function fromDb(r: any): CapitalDeal {
     uccExpires: r.ucc_expires || '',
     costOfCapitalPaid: Number(r.cost_of_capital_paid) || 0,
     referralCommission: Number(r.referral_commission) || 0,
+    submissionId: r.submission_id || undefined,
+    approvedAt: r.approved_at || undefined,
+    fundedAt: r.funded_at || undefined,
     commissionRate: r.commission_rate == null ? undefined : Number(r.commission_rate),
     commissionPaid: r.commission_paid == null ? undefined : !!r.commission_paid,
     notes: r.notes || undefined,
@@ -383,6 +391,23 @@ function nextId(): string {
 }
 
 export const capitalActions = {
+  /**
+   * Fund an approved deal via the mark_funded RPC — the server verifies the
+   * signed packet (Plaid + application + MCA signed & countersigned + MPA +
+   * ID + voided check) before money is allowed to move.
+   */
+  async markFunded(dealId: string): Promise<boolean> {
+    if (!supabase) return false;
+    const { error } = await supabase.rpc('mark_funded', { p_deal_id: dealId });
+    if (error) {
+      toast.error(`Can't fund yet: ${error.message}`);
+      return false;
+    }
+    toast.success('Deal funded — collections start on the next cycle.');
+    await capitalActions.refresh();
+    return true;
+  },
+
   create(partial: Partial<CapitalDeal>): CapitalDeal {
     const today = new Date().toISOString().slice(0, 10);
     const fundedAmt = partial.fundedAmt ?? 0;

@@ -27,6 +27,7 @@ const daysBetween = (a: string, b: string) => {
 };
 
 const statusConfig: Record<CapitalDealStatus, { label: string; bg: string; text: string; dot: string; bar: string }> = {
+  approved: { label: 'Awaiting Funding', bg: 'bg-violet-50', text: 'text-violet-700', dot: 'bg-violet-500', bar: 'bg-violet-500' },
   active:  { label: 'Active',   bg: 'bg-emerald-50', text: 'text-emerald-700', dot: 'bg-emerald-500', bar: 'bg-emerald-500' },
   paid:    { label: 'Paid Off', bg: 'bg-blue-50',    text: 'text-blue-700',    dot: 'bg-blue-500',    bar: 'bg-blue-500' },
   slow:    { label: 'Slow Pay', bg: 'bg-amber-50',   text: 'text-amber-700',   dot: 'bg-amber-500',   bar: 'bg-amber-500' },
@@ -118,7 +119,7 @@ export function BackendCapital() {
   const M = useMemo(() => {
     const self = DEALS.filter(m => m.channel === 'self');
     const ref = DEALS.filter(m => m.channel === 'fundomate');
-    const selfActive = self.filter(m => m.status !== 'paid');
+    const selfActive = self.filter(m => m.status !== 'paid' && m.status !== 'approved');
 
     const selfDeployed = self.reduce((s, m) => s + m.fundedAmt, 0);
     const selfCollected = self.reduce((s, m) => s + m.collected, 0);
@@ -191,6 +192,7 @@ export function BackendCapital() {
 
   const statusTabs: { key: 'all' | CapitalDealStatus; label: string; count: number }[] = [
     { key: 'all', label: 'All', count: DEALS.length },
+    { key: 'approved', label: 'Awaiting Funding', count: DEALS.filter(m => m.status === 'approved').length },
     { key: 'active', label: 'Active', count: DEALS.filter(m => m.status === 'active').length },
     { key: 'slow', label: 'Slow', count: DEALS.filter(m => m.status === 'slow').length },
     { key: 'default', label: 'Default', count: DEALS.filter(m => m.status === 'default').length },
@@ -204,6 +206,7 @@ export function BackendCapital() {
 
   const statusTabColors: Record<string, { active: string; badge: string }> = {
     all: { active: 'bg-indigo-50 text-indigo-700', badge: 'bg-indigo-100 text-indigo-700' },
+    approved: { active: 'bg-violet-50 text-violet-700', badge: 'bg-violet-100 text-violet-700' },
     active: { active: 'bg-emerald-50 text-emerald-700', badge: 'bg-emerald-100 text-emerald-700' },
     slow: { active: 'bg-amber-50 text-amber-700', badge: 'bg-amber-100 text-amber-700' },
     default: { active: 'bg-red-50 text-red-700', badge: 'bg-red-100 text-red-700' },
@@ -1068,7 +1071,7 @@ function ActivityTab({ onImport }: { onImport: () => void }) {
 // RISK & FRAUD TAB (merged)
 // ══════════════════════════════════════════
 function RiskTab({ DEALS }: { DEALS: CapitalDeal[] }) {
-  const active = DEALS.filter(m => m.status !== 'paid');
+  const active = DEALS.filter(m => m.status !== 'paid' && m.status !== 'approved');
   const tiers = {
     low: active.filter(m => m.achStatus === 'current' && m.stackCount === 0 && (m.avg30d === 0 || m.avg7d >= m.avg30d * 0.9)),
     moderate: active.filter(m => m.achStatus === 'current' && (m.stackCount > 0 || (m.avg30d > 0 && m.avg7d < m.avg30d * 0.9))),
@@ -1079,7 +1082,7 @@ function RiskTab({ DEALS }: { DEALS: CapitalDeal[] }) {
   // Fraud rules (auto-detected only — manual rules collapse into row badges)
   const fraudRules = [
     { rule: 'Multiple MCAs across business names', flagged: DEALS.filter(m => m.stackCount >= 2), severity: 'high' as const, detail: 'Owner may have MCAs under multiple DBAs', source: 'DataMerch' },
-    { rule: 'Stopped processing after MCA funded', flagged: DEALS.filter(m => m.avg7d === 0 && m.status !== 'paid' && m.status !== 'default'), severity: 'critical' as const, detail: 'MCA underwritten on volume, but processing has ceased', source: 'ACH.com' },
+    { rule: 'Stopped processing after MCA funded', flagged: DEALS.filter(m => m.avg7d === 0 && m.status !== 'paid' && m.status !== 'default' && m.status !== 'approved'), severity: 'critical' as const, detail: 'MCA underwritten on volume, but processing has ceased', source: 'ACH.com' },
     { rule: 'Single additional stack position', flagged: DEALS.filter(m => m.stackCount === 1), severity: 'medium' as const, detail: 'One overlapping MCA detected', source: 'DataMerch' },
     { rule: 'UCC expiring in <12 months', flagged: DEALS.filter(m => m.uccExpires && daysBetween(today, m.uccExpires) < 365 && daysBetween(today, m.uccExpires) > 0), severity: 'medium' as const, detail: 'Lien position needs renewal', source: 'FiCoSo' },
   ];
@@ -1159,7 +1162,7 @@ function RiskTab({ DEALS }: { DEALS: CapitalDeal[] }) {
               </tr>
             </thead>
             <tbody>
-              {DEALS.filter(m => m.status !== 'paid').sort((a, b) => {
+              {DEALS.filter(m => m.status !== 'paid' && m.status !== 'approved').sort((a, b) => {
                 const score = (m: CapitalDeal) => (m.achStatus === 'suspended' ? 4 : m.status === 'default' ? 4 : m.achStatus === 'nsf-retry' ? 3 : m.stackCount >= 2 ? 2 : m.stackCount === 1 ? 1 : 0);
                 return score(b) - score(a);
               }).map(m => {
@@ -1183,7 +1186,7 @@ function RiskTab({ DEALS }: { DEALS: CapitalDeal[] }) {
                   </tr>
                 );
               })}
-              {DEALS.filter(m => m.status !== 'paid').length === 0 && (
+              {DEALS.filter(m => m.status !== 'paid' && m.status !== 'approved').length === 0 && (
                 <tr><td colSpan={8} className="py-8 text-center text-sm text-gray-400">No active deals</td></tr>
               )}
             </tbody>
@@ -1272,7 +1275,7 @@ function RenewalsTab({ DEALS }: { DEALS: CapitalDeal[] }) {
         <KpiCard label="Pipeline Value" value={fmt(pipelineValue)} sub="Potential new funding" accent="indigo" />
         <KpiCard label="Est. Revenue" value={fmt(estRevenue)} sub="Factor profit on renewals" accent="emerald" />
         <KpiCard label="Avg Score" value={eligible.length ? avgScore.toString() : '-'} sub="Avg renewal score" accent="blue" />
-        <KpiCard label="Near Payoff" value={DEALS.filter(d => d.totalOwed > 0 && d.collected / d.totalOwed >= 0.8 && d.status !== 'paid').length.toString()} sub="≥80% collected" accent="amber" />
+        <KpiCard label="Near Payoff" value={DEALS.filter(d => d.totalOwed > 0 && d.collected / d.totalOwed >= 0.8 && d.status !== 'paid' && d.status !== 'approved').length.toString()} sub="≥80% collected" accent="amber" />
       </div>
 
       <div className="bg-white rounded-[8px] border border-gray-200">
@@ -1287,7 +1290,7 @@ function RenewalsTab({ DEALS }: { DEALS: CapitalDeal[] }) {
           <table className="w-full"><thead><tr className="border-b border-gray-100 bg-gray-50">
             <Th className="pl-5">Merchant</Th><Th>Channel</Th><Th>Collected</Th><Th>Velocity</Th><Th>Days Since Fund</Th><Th>Renewal Score</Th><Th>Eligible</Th><Th className="pr-5">Suggested Terms</Th>
           </tr></thead>
-            <tbody>{DEALS.filter(m => m.status !== 'paid').sort((a, b) => sc(b) - sc(a)).map(m => {
+            <tbody>{DEALS.filter(m => m.status !== 'paid' && m.status !== 'approved').sort((a, b) => sc(b) - sc(a)).map(m => {
               const pct = m.totalOwed > 0 ? m.collected / m.totalOwed : 0;
               const daysSF = daysBetween(m.funded, today);
               const score = sc(m);
@@ -1304,7 +1307,7 @@ function RenewalsTab({ DEALS }: { DEALS: CapitalDeal[] }) {
                 <td className="py-3">{m.renewalEligible ? <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-violet-50 text-violet-600"><RefreshCw className="w-2.5 h-2.5" /> Yes</span> : <span className="text-xs text-gray-400">Not yet</span>}</td>
                 <td className="pr-5 py-3"><div className="bg-gray-50 rounded-[6px] px-2.5 py-1.5 inline-block"><p className="text-xs font-semibold text-gray-900">{fmtK(sugAmt)} @ {sugFactor.toFixed(2)}x</p><p className="text-[10px] text-gray-400">{score >= 75 ? '25% increase, reduced rate' : 'Same terms renewal'}</p></div></td>
               </tr>);
-            })}{DEALS.filter(m => m.status !== 'paid').length === 0 && (
+            })}{DEALS.filter(m => m.status !== 'paid' && m.status !== 'approved').length === 0 && (
               <tr><td colSpan={8} className="py-8 text-center text-sm text-gray-400">No active deals</td></tr>
             )}</tbody></table>
         </div>

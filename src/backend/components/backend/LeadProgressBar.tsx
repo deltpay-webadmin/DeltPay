@@ -21,6 +21,8 @@ import React from 'react';
 import { Check, X } from 'lucide-react';
 import { useUnderwriting, useOnboarding, useDeals, type Lead } from './crmStore';
 import { usePlaidItems, usePlaidLinkRequests, itemUiStatus } from './plaidStore';
+import { useDealSubmissions } from './dealSubmissionsStore';
+import { useContracts } from './contractsStore';
 
 type StepState = 'done' | 'active' | 'upcoming';
 
@@ -52,13 +54,26 @@ export function useLeadMilestones(lead: Lead): { steps: Step[]; dead: string | n
   const underwriting = useUnderwriting();
   const onboarding = useOnboarding();
   const deals = useDeals();
+  const { submissions } = useDealSubmissions();
+  const contracts = useContracts();
 
   const biz = lead.businessName.trim().toLowerCase();
   const leadItems = items.filter(i => i.leadId === lead.id);
   const pendingInvite = requests.find(r => r.leadId === lead.id && r.status === 'pending');
-  const uwApp = underwriting.find(a => a.businessName.trim().toLowerCase() === biz);
+  // Spine-resolved (submission_id/lead_id) with name-match fallback for
+  // legacy rows that predate the deal spine.
+  const submission = submissions.find(s => s.leadId === lead.id && s.status !== 'Declined') ?? null;
+  const uwApp = underwriting.find(a => a.leadId === lead.id)
+    ?? (submission ? underwriting.find(a => a.submissionId === submission.id) : undefined)
+    ?? underwriting.find(a => a.businessName.trim().toLowerCase() === biz);
   const onbApp = onboarding.find(o => o.merchantName.trim().toLowerCase() === biz);
   const deal = deals.find(d => d.borrower.trim().toLowerCase() === biz);
+  const dealContracts = submission
+    ? contracts.filter(c => c.submissionId === submission.id && !['voided', 'declined'].includes(c.status))
+    : contracts.filter(c => c.leadId === lead.id && !['voided', 'declined'].includes(c.status));
+  const mcaContract = dealContracts.find(c => c.kind === 'mca') ?? null;
+  const signedDone = Boolean(mcaContract && mcaContract.status === 'completed' && mcaContract.countersignedAt);
+  const signedActive = !signedDone && dealContracts.length > 0;
 
   const onbIdx = onbApp ? ONB_ORDER.indexOf(onbApp.currentStep) : -1;
   const uwIdx = ONB_ORDER.indexOf('Underwriting');
@@ -115,6 +130,18 @@ export function useLeadMilestones(lead: Lead): { steps: Step[]; dead: string | n
         : uwActive
           ? (uwApp?.stage || onbApp?.currentStep || 'in review')
           : connected ? 'ready to start' : 'awaiting bank data',
+    },
+    {
+      key: 'signed',
+      label: 'Signed',
+      state: signedDone ? 'done' : signedActive ? 'active' : 'upcoming',
+      caption: signedDone
+        ? 'MCA executed'
+        : mcaContract
+          ? (mcaContract.status === 'completed' ? 'awaiting countersign' : `MCA ${mcaContract.status}`)
+          : signedActive
+            ? `${dealContracts.length} envelope${dealContracts.length === 1 ? '' : 's'} out`
+            : '—',
     },
     {
       key: 'funded',

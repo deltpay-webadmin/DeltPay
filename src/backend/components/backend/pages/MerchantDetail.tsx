@@ -214,7 +214,7 @@ export function MerchantDetail() {
     () => (merchant ? capitalDeals.filter(d => d.merchant.toLowerCase() === merchant.name.toLowerCase()) : []),
     [capitalDeals, merchant],
   );
-  const openDeals = merchantDeals.filter(d => d.status !== 'paid');
+  const openDeals = merchantDeals.filter(d => d.status !== 'paid' && d.status !== 'approved');
   const mcaBalance = openDeals.reduce((s, d) => s + Math.max(0, d.totalOwed - d.collected), 0);
   const riskyDeals = openDeals.filter(d => d.status === 'default' || d.status === 'slow' || d.achStatus === 'nsf-retry' || d.achStatus === 'suspended');
 
