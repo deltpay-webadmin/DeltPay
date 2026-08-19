@@ -6,6 +6,13 @@ fund.** Target: 48–72 hours from first call to wire. Everything below maps to
 what the app already enforces — stage names, buttons, and automations are the
 real ones.
 
+**In the CRM, this whole flow runs from one page: the Deal Room** (lead
+detail → "Deal Room", or Agent Desk → "Deal Room"). Every send and every
+signature below — Plaid link, DLT-APP, MCA (in person or email), Delt
+countersignature, MPA + site survey — happens there, and "Mark funded" is
+blocked server-side until the packet is complete. Rollout/setup:
+`docs/deal-room-rollout.md`.
+
 ```mermaid
 flowchart LR
   A[Lead in CRM<br/>stage: New] -->|qualify call<br/>same day| B[Plaid link sent]
