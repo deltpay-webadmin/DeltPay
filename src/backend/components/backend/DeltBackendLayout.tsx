@@ -52,6 +52,7 @@ import { AgentLeaderboard } from './pages/AgentLeaderboard';
 import { AgentTraining } from './pages/AgentTraining';
 import { BackendAgentDesk } from './pages/BackendAgentDesk';
 import { MpaApplicationPage } from './pages/MpaApplicationPage';
+import { DealRoomPage } from './pages/DealRoomPage';
 import {
   LayoutDashboard,
   Users,
@@ -261,6 +262,7 @@ function titleForPath(path: string): string {
   if (path.startsWith('/merchants/')) return 'Merchant';
   if (path.startsWith('/underwriting/')) return 'Underwriting';
   if (path.startsWith('/deals/')) return 'Deal';
+  if (path.startsWith('/deal-room/')) return 'Deal Room';
   if (path.startsWith('/residuals/')) return 'Residuals';
   if (path.startsWith('/templates/')) return 'Template';
   return 'Overview';
@@ -792,6 +794,7 @@ export function DeltBackendLayout() {
               <Route path="training" element={<AgentTraining />} />
               <Route path="agent-desk" element={<Guard perm="agents.edit"><BackendAgentDesk /></Guard>} />
               <Route path="mpa/:applicationId" element={<Guard perm="leads.create"><MpaApplicationPage /></Guard>} />
+              <Route path="deal-room/:submissionId" element={<Guard perm="leads.view"><DealRoomPage /></Guard>} />
               <Route path="support" element={<SupportPage />} />
               <Route path="settings" element={<Guard perm="general.view"><BackendSettings /></Guard>} />
               <Route path="settings/integrations" element={<Guard perm="integrations.view"><BackendSettings /></Guard>} />

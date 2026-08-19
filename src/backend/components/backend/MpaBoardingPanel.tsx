@@ -433,6 +433,12 @@ export function MpaBoardingPanel({ submission }: { submission: DealSubmission })
             </div>
           )}
 
+          {/* Paysafe Section V — the rep's site-survey certification. Staff
+              capture only; the merchant self-complete link never sees it. */}
+          {channel === 'Paysafe' && app.status !== 'boarded' && (
+            <SiteSurveyCard app={app} />
+          )}
+
           {/* Square: OrderOut handoff */}
           {channel === 'Square' && (
             <div className="flex flex-wrap items-center gap-2 mt-2">
@@ -467,6 +473,27 @@ export function MpaBoardingPanel({ submission }: { submission: DealSubmission })
                 New signing session
               </button>
             )}
+            {(mpaContract.terms as any)?.rep && mpaContract.status !== 'completed' && (
+              <button
+                className={btnGhost}
+                disabled={busy !== null}
+                title="Open your own signature stop (agent line / site-survey certification)"
+                onClick={async () => {
+                  setBusy('rep');
+                  try {
+                    const url = await contractActions.signingUrl(mpaContract.id, 'rep');
+                    window.open(url, '_blank', 'noopener');
+                  } catch (err) {
+                    toast.error(err instanceof Error ? err.message : 'Could not open the rep signing session');
+                  } finally {
+                    setBusy(null);
+                  }
+                }}
+              >
+                {busy === 'rep' ? <Loader2 className="w-3 h-3 animate-spin" /> : <PenLine className="w-3 h-3" />}
+                Sign as rep
+              </button>
+            )}
             <button
               className={btnGhost}
               onClick={() => void contractActions.refreshStatus(mpaContract.id)}
@@ -496,6 +523,115 @@ export function MpaBoardingPanel({ submission }: { submission: DealSubmission })
           <p className="font-semibold mb-0.5">Fill warnings ({warnings.length}):</p>
           {warnings.slice(0, 6).map((w, i) => <p key={i}>• {w}</p>)}
           {warnings.length > 6 && <p>…and {warnings.length - 6} more</p>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Paysafe Section V — Merchant Site Survey (rep's certification) ──
+
+interface SiteSurveyValue {
+  locationType: string;
+  areaZoned: string;
+  businessLocation: string;
+  permanentSignage: boolean;
+  businessLegitimate: boolean;
+  inventoryConsistent: boolean;
+  surveyedBy: string;
+  surveyedAt: string;
+  notes: string;
+}
+
+const EMPTY_SURVEY: SiteSurveyValue = {
+  locationType: '', areaZoned: '', businessLocation: '',
+  permanentSignage: true, businessLegitimate: true, inventoryConsistent: true,
+  surveyedBy: '', surveyedAt: '', notes: '',
+};
+
+function SiteSurveyCard({ app }: { app: MerchantApplication }) {
+  const existing = ((app.data as any)?.siteSurvey ?? null) as SiteSurveyValue | null;
+  const [open, setOpen] = useState(!existing);
+  const [survey, setSurvey] = useState<SiteSurveyValue>(existing ?? EMPTY_SURVEY);
+  const [saving, setSaving] = useState(false);
+  const up = (patch: Partial<SiteSurveyValue>) => setSurvey(s => ({ ...s, ...patch }));
+
+  const save = async () => {
+    if (!survey.locationType || !survey.areaZoned || !survey.businessLocation) {
+      toast.error('Location type, zoning, and owned/leased are required for the survey.');
+      return;
+    }
+    setSaving(true);
+    const ok = await mpaActions.saveData(app.id, {
+      ...(app.data as any),
+      siteSurvey: { ...survey, surveyedAt: survey.surveyedAt || new Date().toISOString().slice(0, 10) },
+    });
+    setSaving(false);
+    if (ok) {
+      toast.success('Site survey saved — it fills Section V on the Paysafe MPA.');
+      setOpen(false);
+    }
+  };
+
+  const sel = 'px-2 py-1.5 bg-white border border-gray-300 rounded-[6px] text-xs text-gray-700 focus:outline-none';
+  const tri = (label: string, value: boolean, onChange: (v: boolean) => void) => (
+    <label className="flex items-center gap-2 text-xs text-gray-600">
+      <input type="checkbox" checked={value} onChange={(e) => onChange(e.target.checked)} className="rounded" />
+      {label}
+    </label>
+  );
+
+  return (
+    <div className="mt-3 rounded-md border border-gray-200 bg-gray-50 px-3 py-2">
+      <button
+        className="flex w-full items-center justify-between text-left"
+        onClick={() => setOpen(v => !v)}
+      >
+        <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">
+          Site survey — Section V (your certification, required by Paysafe)
+        </span>
+        <span className={`text-[11px] font-medium ${existing ? 'text-emerald-600' : 'text-amber-600'}`}>
+          {existing ? `Surveyed ${existing.surveyedAt || ''}` : 'Not completed — Paysafe will kick the file back'}
+        </span>
+      </button>
+      {open && (
+        <div className="mt-2 space-y-2" onClick={(e) => e.stopPropagation()}>
+          <div className="flex flex-wrap gap-2">
+            <select className={sel} value={survey.locationType} onChange={(e) => up({ locationType: e.target.value })}>
+              <option value="">Location type…</option>
+              <option value="storefront">Storefront</option>
+              <option value="office">Office</option>
+              <option value="warehouse">Warehouse</option>
+              <option value="home">Home</option>
+              <option value="website">Website</option>
+              <option value="other">Other</option>
+            </select>
+            <select className={sel} value={survey.areaZoned} onChange={(e) => up({ areaZoned: e.target.value })}>
+              <option value="">Area zoned…</option>
+              <option value="commercial">Commercial</option>
+              <option value="industrial">Industrial</option>
+              <option value="residential">Residential</option>
+            </select>
+            <select className={sel} value={survey.businessLocation} onChange={(e) => up({ businessLocation: e.target.value })}>
+              <option value="">Premises…</option>
+              <option value="owned">Owned</option>
+              <option value="leased">Leased</option>
+            </select>
+          </div>
+          <div className="flex flex-wrap gap-4">
+            {tri('Permanent signage', survey.permanentSignage, (v) => up({ permanentSignage: v }))}
+            {tri('Business appears legitimate', survey.businessLegitimate, (v) => up({ businessLegitimate: v }))}
+            {tri('Inventory consistent with business', survey.inventoryConsistent, (v) => up({ inventoryConsistent: v }))}
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <button className={btnSecondary} disabled={saving} onClick={() => void save()}>
+              {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileSignature className="w-3.5 h-3.5" />}
+              Save survey
+            </button>
+            <span className="text-[11px] text-gray-400">
+              You sign the certification line via “Sign as rep” after the MPA envelope is generated.
+            </span>
+          </div>
         </div>
       )}
     </div>

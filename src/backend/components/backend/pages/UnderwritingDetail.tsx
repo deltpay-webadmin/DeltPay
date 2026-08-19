@@ -359,9 +359,23 @@ export function UnderwritingDetail() {
                 <span>{app.industry}</span>
                 <span>·</span>
                 <span>Stage: {app.stage}</span>
+                {app.contactName && (
+                  <>
+                    <span>·</span>
+                    <span>{app.contactName}{app.contactEmail ? ` (${app.contactEmail})` : ''}</span>
+                  </>
+                )}
               </div>
             </div>
           </div>
+          {app.submissionId && (
+            <button
+              onClick={() => navigate(`/deal-room/${app.submissionId}`)}
+              className="px-3 py-1.5 bg-white border border-indigo-300 text-indigo-700 text-xs font-semibold rounded-[6px] hover:bg-indigo-50 transition-colors"
+            >
+              Open Deal Room →
+            </button>
+          )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
