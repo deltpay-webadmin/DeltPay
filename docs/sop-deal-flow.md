@@ -28,14 +28,22 @@ flowchart LR
   if they fail on the phone, they fail in the model, so kill it early.
 - Dead file → move to **Not Qualified** immediately so the digest stays honest.
 
-## Stage 1 — Plaid link (on the call, never "after")
+## Stage 1 — Signed application + Plaid link (on the call, never "after")
 
-1. From the deal, send the **Plaid bank-connection link** while still on the
-   phone. Stay on the line until the merchant completes it — completion rate
-   collapses once you hang up.
-2. Plaid pulls land in the vault (`underwriting_inputs`, transactions, cash
-   flow, identity). No statements to collect when Plaid connects.
-3. **Plaid fails / bank unsupported** → fallback: collect 3–4 months of bank
+1. **Get the application signed at intake** — the Delt Capital Merchant
+   Funding Application (Form DLT-APP, = the Jotform online application).
+   Owner 1 signs; the rep signs as submitter. Section A is the merchant's
+   authorization for credit pulls and verification — nothing downstream
+   (bureau pull, DataMerch) is allowed until this is signed.
+2. Form DLT-APP Section G requires **with every submission**: the signed
+   application, business bank statements, government photo ID, and a voided
+   business check. Ask for ID + voided check on this call; statements come
+   from the merchant only if Plaid doesn't connect.
+3. Send the **Plaid bank-connection link** while still on the phone. Stay on
+   the line until the merchant completes it — completion rate collapses once
+   you hang up. Plaid pulls land in the vault (`underwriting_inputs`,
+   transactions, cash flow, identity).
+4. **Plaid fails / bank unsupported** → fallback: collect 3–4 months of bank
    statements (upload as `doc_kind: statement`) and run
    `analyze-statement`. This is the slow path; treat it as the exception.
 
@@ -68,6 +76,9 @@ after the model passes:
 2. **MCA History** — DataMerch stacking/default check.
 3. **Final Review** — human sign-off on terms: purchase price, purchased
    amount, factor rate, remittance % / daily amount / frequency, guarantor.
+   The underwriter also completes the decision box on page 2 of the DLT-APP
+   (approved amount, factor rate, term, payment frequency, stipulations) so
+   the paper file matches the system.
 4. **Approve** in the underwriting detail page → creates the deal.
    `deal-status-notify` emails the merchant automatically on
    Approved/Declined — don't hand-write those.
@@ -78,22 +89,106 @@ after the model passes:
 same sitting — in person on the iPad when possible. Every day between verbal
 yes and signed docs is a day for a competing shop to stack in.
 
-### What gets signed — the complete matrix
+### What gets signed — verified against the actual documents
 
-| Document | Who signs | How | System record |
-|---|---|---|---|
-| **MCA Agreement** — "Purchase and Sale of Future Receivables Agreement" (Schedule A terms from the deal) | Owner/merchant | DocuSign envelope (HTML→PDF, anchor tabs) | `contracts.kind = 'mca'` |
-| **Personal Guaranty** (inside the MCA agreement, when guarantor is set) | Guarantor | Same envelope | same |
-| **Exhibit B — ACH Authorization** + designated bank account | Merchant (second signing block, same recipient) | Same envelope; bank fields become **required** DocuSign text tabs if not prefilled | same |
-| **Delt application & processing-services consent** | Owner | DocuSign from the deal | `contracts.kind = 'deal_application'` |
-| **Luqra MPA** (Evolve) or **Paysafe MPA** (Citizens) | Owner + guarantor (disclosure, owner, guarantor lines) | MPA wizard → DocuSign: in-person iPad (link expires ~5 min — regenerate freely) or "Send for remote signature" | `contracts.kind = 'mpa'`; signed PDF auto-files to deal Documents via Connect webhook |
-| Square channel | — (no Delt-signed doc) | OrderOut portal, copy full packet, **Mark boarded** | boarding record |
+Blank templates live in the repo: `docs/capital-templates/` (Delt Capital
+application, Delt Pay MCA agreement) and `docs/mpa-templates/` (Luqra,
+Paysafe).
 
-### Collected, not signed
+**1. Delt Capital Merchant Funding Application** — Form DLT-APP
+(= Jotform online application). Signed at **intake**, not at closing.
 
-- Driver's license (`drivers_license`)
-- Voided check (`voided_check`) — must match Exhibit B's designated account
-- Bank statements (`statement`) — only when Plaid didn't connect
+- Owner 1: signature + date (Section H, fields 51–52).
+- Broker/ISO rep: signature + date (53–54) — the rep signature is a
+  required field. Section A(d) lets the rep sign on the merchant's behalf
+  **only with express authorization** from the merchant and owners.
+- Page 2 decision box (Delt use only) is the underwriter's, at Final Review.
+- System record: `contracts.kind = 'deal_application'` when executed
+  through DocuSign from the deal.
+
+**2. Delt Pay MCA Agreement** — "Purchase and Sale of Future Receivables
+Agreement" (8 pages). One DocuSign envelope, `contracts.kind = 'mca'`.
+
+- **Schedule A (page 1) fully completed before the envelope goes out**:
+  legal name, DBA, state of formation, EIN, address, purchase price,
+  purchased amount, factor rate, remittance % / est. daily ACH, remittance
+  method checkbox (ACH / split funding / lockbox), effective date,
+  principal state.
+- Signature page (page 8): **Merchant** — signature, name, title, date.
+  **Guarantor** — only when Schedule A requires one; it's the Article 7
+  *limited performance* guaranty (triggers: stacking, diverting receivables,
+  closing the account, misrepresentation, fraud, voluntary BK — not a
+  payment guaranty). **Purchaser countersignature (Delt Pay LLC)** — the
+  agreement is not executed until we countersign; don't skip it.
+- The **ACH authorization is Section 3.3 inside the agreement** — there is
+  no separate ACH form to chase. The designated account must be the
+  business's primary operating account (5.1(g)).
+- Funding clock per 2.2: ACH/wire **1–3 business days after execution** and
+  conditions precedent — that's the promise to make on the call.
+- Brief the merchant at the table (these are the covenants that bite):
+  no stacking (5.3(a)), 30 days' written notice before changing processor
+  (5.3(c)), UCC-1 will be filed (6.3), 3+ returned ACH debits in 30 days is
+  a default (3.6), monthly reconciliation right (3.4) and the 30%+ revenue
+  decline adjustment (3.5) — the last two are also your best answer to
+  "what if I have a slow month."
+- ⚠ **Renderer mismatch to reconcile**: the DocuSign renderer
+  (`supabase/functions/docusign/mca_agreement.ts`) still emits an
+  "Exhibit B" ACH block with bank-detail tabs; the current agreement
+  template folds ACH authorization into §3.3 with no exhibit. Align the
+  renderer with the executed template before the next real envelope so
+  anchor tabs land where the paper says.
+
+**3. Luqra Merchant Application** (Evolve Bank & Trust; 3 pages — the repo
+template `luqra-mpa-v1.pdf` is byte-identical to the current form).
+Signature stops, in order:
+
+- **Section 4 — Important Disclosures**: Owner/Officer #1 (and #2 if
+  applicable) print + sign + date.
+- **Section 8 — Bank/ACH**: voided **preprinted** check or bank letter for
+  each account (account #1 = deposits, account #2 = withdrawals).
+- **Section 9 — Unlimited Personal Guaranty** + credit/background-check
+  authorization: guarantor name, SSN, signature, date (up to 2 guarantors).
+- **Final execution (page 3)**: Owner #1 (+#2) sign + date; agent signs;
+  LQ and the bank countersign to make it effective.
+- Disclose the term: 36-month initial term with an early-deconversion fee,
+  then 12-month renewals.
+
+**4. Paysafe MPA** (Citizens Bank; 15 pages — pages 1–4 application,
+5–15 T&Cs incorporated by reference; the repo `paysafe-mpa-v1.pdf` is the
+fill-ready decrypted copy of this form). Signature stops, all on page 4:
+
+- **Section XII — Merchant Acceptance**: Authorized Signer #1 signature +
+  date (this doubles as the **corporate resolution** — mandatory for any
+  LLC / partnership / corporation), plus up to 4 more authorized signers.
+  Each signer checks their **FCRA "I Agree"** consent box — unchecked
+  consent boxes are the #1 kickback on this form.
+- **Section XIII — Personal Guaranty**: Guarantor #1 (+#2) signature +
+  date (unlimited guaranty per Section 31 of the T&Cs, incl. collection
+  costs and attorney fees).
+- **Section V — Merchant Site Survey** is *our rep's* certification of the
+  location — the agent completes and signs it, not the merchant.
+- Disclose the term: 3-year initial term, month-to-month after, early
+  termination fee per location. The agreement only becomes effective when
+  Paysafe issues the MID — submission ≠ approval.
+
+**Square channel** — no Delt-signed doc: OrderOut portal, copy full packet,
+**Mark boarded**.
+
+**Guaranty briefing point**: Delt's own MCA guaranty is *limited
+performance*; the Luqra and Paysafe guaranties are *unlimited personal
+guaranties*. Know the difference before the merchant asks — it's the most
+common objection at the signing table.
+
+### Collected, not signed (the DLT-APP requires all four with every submission)
+
+- Signed application (covered above)
+- Government photo ID (`drivers_license`) — also feeds the MPA owner
+  sections (both processors want DL# / state per principal)
+- Voided **business** check (`voided_check`) — must match the MCA
+  designated account (§3.1) and the Luqra/Paysafe deposit account
+- Business bank statements (`statement`) — Plaid covers underwriting, but
+  the paper file still wants statements; pull them via Plaid assets or from
+  the merchant when Plaid didn't connect
 
 ### MPA mechanics (details in `docs/mpa-boarding.md`)
 
@@ -129,12 +224,15 @@ yes and signed docs is a day for a competing shop to stack in.
 
 ## The shortest path, as a checklist
 
-Day 0 (one call): qualify → Plaid link, completed on the phone → model runs.
-Day 0–1: credit pull + DataMerch → Final Review → Approved → terms call.
-Day 1–2: one signing sitting — MCA envelope (agreement + guaranty + ACH
-auth) **and** MPA — plus license + voided check collected.
+Day 0 (one call): qualify → application signed (DLT-APP) + photo ID +
+voided check requested → Plaid link, completed on the phone → model runs.
+Day 0–1: credit pull + DataMerch → Final Review (underwriter fills the
+DLT-APP decision box) → Approved → terms call.
+Day 1–2: one signing sitting — MCA agreement (Schedule A complete;
+merchant + guarantor sign, **Delt countersigns**) **and** the Luqra or
+Paysafe MPA (owner + guarantor + FCRA consents).
 Day 2–3: MPA submitted to processor; advance funded to the designated
-account; deal active.
+account (1–3 business days per §2.2); deal active.
 
 If any step slips past its day, the deal owner says why in the deal notes the
 same day — silent stalls are how files die.
