@@ -19,142 +19,12 @@
 
 import React from 'react';
 import { Check, X } from 'lucide-react';
-import { useUnderwriting, useOnboarding, useDeals, type Lead } from './crmStore';
-import { usePlaidItems, usePlaidLinkRequests, itemUiStatus } from './plaidStore';
-import { useDealSubmissions } from './dealSubmissionsStore';
-import { useContracts } from './contractsStore';
+import { type Lead } from './crmStore';
+import { useLeadMilestones, type Step, type StepState } from './leadJourney';
 
-type StepState = 'done' | 'active' | 'upcoming';
-
-interface Step {
-  key: string;
-  label: string;
-  state: StepState;
-  caption: string;
-}
-
-function timeAgo(iso?: string | null): string {
-  if (!iso) return '';
-  const ms = Date.now() - new Date(iso).getTime();
-  if (!Number.isFinite(ms) || ms < 0) return '';
-  const mins = Math.floor(ms / 60000);
-  if (mins < 1) return 'just now';
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  const days = Math.floor(hrs / 24);
-  return `${days}d ago`;
-}
-
-const ONB_ORDER = ['Application Submitted', 'Bank Verification', 'Identity Verification', 'Underwriting', 'Docs & E-Sign', 'Funded'];
-
-export function useLeadMilestones(lead: Lead): { steps: Step[]; dead: string | null } {
-  const items = usePlaidItems();
-  const requests = usePlaidLinkRequests();
-  const underwriting = useUnderwriting();
-  const onboarding = useOnboarding();
-  const deals = useDeals();
-  const { submissions } = useDealSubmissions();
-  const contracts = useContracts();
-
-  const biz = lead.businessName.trim().toLowerCase();
-  const leadItems = items.filter(i => i.leadId === lead.id);
-  const pendingInvite = requests.find(r => r.leadId === lead.id && r.status === 'pending');
-  // Spine-resolved (submission_id/lead_id) with name-match fallback for
-  // legacy rows that predate the deal spine.
-  const submission = submissions.find(s => s.leadId === lead.id && s.status !== 'Declined') ?? null;
-  const uwApp = underwriting.find(a => a.leadId === lead.id)
-    ?? (submission ? underwriting.find(a => a.submissionId === submission.id) : undefined)
-    ?? underwriting.find(a => a.businessName.trim().toLowerCase() === biz);
-  const onbApp = onboarding.find(o => o.merchantName.trim().toLowerCase() === biz);
-  const deal = deals.find(d => d.borrower.trim().toLowerCase() === biz);
-  const dealContracts = submission
-    ? contracts.filter(c => c.submissionId === submission.id && !['voided', 'declined'].includes(c.status))
-    : contracts.filter(c => c.leadId === lead.id && !['voided', 'declined'].includes(c.status));
-  const mcaContract = dealContracts.find(c => c.kind === 'mca') ?? null;
-  const signedDone = Boolean(mcaContract && mcaContract.status === 'completed' && mcaContract.countersignedAt);
-  const signedActive = !signedDone && dealContracts.length > 0;
-
-  const onbIdx = onbApp ? ONB_ORDER.indexOf(onbApp.currentStep) : -1;
-  const uwIdx = ONB_ORDER.indexOf('Underwriting');
-
-  // ── Terminal dead states ──
-  const dead =
-    lead.status === 'Not Qualified' ? 'Not Qualified'
-    : lead.status === 'Lost' ? 'Lost'
-    : uwApp?.stage === 'Declined' ? 'Declined in underwriting'
-    : null;
-
-  // ── Funded ──
-  const funded = Boolean(deal) || onbApp?.currentStep === 'Funded';
-
-  // ── Underwriting ──
-  const uwDone = funded || uwApp?.stage === 'Approved' || (onbIdx > uwIdx && onbIdx !== -1);
-  const uwActive = !uwDone && (Boolean(uwApp) || (onbApp ? onbIdx <= uwIdx : false));
-
-  // ── Bank connected ──
-  // "Connected" (done) only once transaction data has actually landed;
-  // until the first successful sync the step pulses as "verifying".
-  const connected = leadItems.length > 0;
-  const verifying = connected && leadItems.every(i => itemUiStatus(i) === 'verifying');
-  const needsRepair = leadItems.some(i => itemUiStatus(i) === 'reconnect');
-  const firstItem = leadItems.slice().sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1))[0];
-
-  const steps: Step[] = [
-    {
-      key: 'created',
-      label: 'Lead created',
-      state: 'done',
-      caption: lead.createdAt ? timeAgo(lead.createdAt) : (lead.source || ''),
-    },
-    {
-      key: 'plaid',
-      label: 'Bank connected',
-      state: connected && !verifying ? 'done' : (verifying || pendingInvite) ? 'active' : 'upcoming',
-      caption: needsRepair
-        ? 'reconnect needed'
-        : verifying
-          ? 'verifying bank data'
-          : connected
-            ? (firstItem?.institutionName || `${leadItems.length} connection${leadItems.length === 1 ? '' : 's'}`)
-            : pendingInvite
-              ? `invite sent ${timeAgo(pendingInvite.createdAt)}`
-              : 'not connected',
-    },
-    {
-      key: 'underwriting',
-      label: 'Underwriting',
-      state: uwDone ? 'done' : uwActive ? 'active' : 'upcoming',
-      caption: uwDone
-        ? (uwApp?.stage === 'Approved' ? 'Approved' : 'cleared')
-        : uwActive
-          ? (uwApp?.stage || onbApp?.currentStep || 'in review')
-          : connected ? 'ready to start' : 'awaiting bank data',
-    },
-    {
-      key: 'signed',
-      label: 'Signed',
-      state: signedDone ? 'done' : signedActive ? 'active' : 'upcoming',
-      caption: signedDone
-        ? 'MCA executed'
-        : mcaContract
-          ? (mcaContract.status === 'completed' ? 'awaiting countersign' : `MCA ${mcaContract.status}`)
-          : signedActive
-            ? `${dealContracts.length} envelope${dealContracts.length === 1 ? '' : 's'} out`
-            : '—',
-    },
-    {
-      key: 'funded',
-      label: 'Funded',
-      state: funded ? 'done' : 'upcoming',
-      caption: funded
-        ? (deal?.fundedDate ? timeAgo(deal.fundedDate) : 'complete')
-        : '—',
-    },
-  ];
-
-  return { steps, dead };
-}
+// The milestone derivation moved to leadJourney.tsx (it now also powers the
+// next-action engine); re-exported here so existing imports keep working.
+export { useLeadMilestones } from './leadJourney';
 
 function StepDot({ state, dead, light }: { state: StepState; dead: boolean; light?: boolean }) {
   if (state === 'done') {
@@ -225,18 +95,19 @@ export function LeadProgressBar({ lead, compact, light }: { lead: Lead; compact?
 }
 
 /** Tiny inline variant for table rows / cards: four dots + connectors. */
-export function LeadProgressDots({ lead }: { lead: Lead }) {
+export function LeadProgressDots({ lead, light }: { lead: Lead; light?: boolean }) {
   const { steps, dead } = useLeadMilestones(lead);
+  const idle = light ? 'bg-gray-300' : 'bg-(--dp-border)';
   return (
     <span className="inline-flex items-center gap-1" title={steps.map(s => `${s.label}: ${s.state === 'done' ? '✓' : s.state === 'active' ? 'in progress' : '—'}`).join('  ·  ')}>
       {steps.map(s => (
         <span
           key={s.key}
           className={`w-2 h-2 rounded-full ${
-            dead ? 'bg-(--dp-border)'
+            dead ? idle
             : s.state === 'done' ? 'bg-emerald-400'
             : s.state === 'active' ? 'bg-[#2E6BFF] animate-pulse'
-            : 'bg-(--dp-border)'
+            : idle
           }`}
         />
       ))}

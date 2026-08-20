@@ -119,7 +119,8 @@ function UnifiedTagBadges({ lead, size = 'xs' }: { lead: Lead; size?: 'xs' | 'xx
 }
 import { stageEsignDraft } from '../contractsStore';
 import { dealSubmissionActions } from '../dealSubmissionsStore';
-import { LeadProgressBar } from '../LeadProgressBar';
+import { LeadProgressBar, LeadProgressDots } from '../LeadProgressBar';
+import { NextActionButton } from '../leadJourney';
 import { plaidActions, usePlaidItems, usePlaidLinkRequests, usePlaidSync, itemUiStatus } from '../plaidStore';
 import { useAppNavigate } from '../NavigationContext';
 
@@ -609,7 +610,21 @@ function LeadDetailPanel({ lead, onClose, onEdit, onDelete }: { lead: Lead | nul
 
   // Stage a prefilled MCA agreement from everything the lead already told us
   // (KYB intake, contact, requested amount) and jump to the e-sign composer.
-  const handleSendEsign = () => {
+  // The envelope is attached to the lead's deal submission (created here if
+  // needed) so the signed doc counts toward the server-side funding packet.
+  const handleSendEsign = async () => {
+    const submissionId = await dealSubmissionActions.createFromLead({
+      id: lead.id,
+      businessName: lead.businessName,
+      contactName: lead.contactName,
+      contactPhone: lead.contactPhone,
+      contactEmail: lead.contactEmail,
+      industry: lead.industry,
+      monthlySales: lead.monthlySales,
+      type: lead.type,
+      products: lead.products,
+      assignedAgent: lead.assignedAgent,
+    });
     const biz = lead.kyb?.business;
     const rep = lead.kyb?.representative;
     const address = biz
@@ -620,6 +635,7 @@ function LeadDetailPanel({ lead, onClose, onEdit, onDelete }: { lead: Lead | nul
     stageEsignDraft({
       merchantName: lead.businessName,
       leadId: lead.id,
+      submissionId: submissionId ?? undefined,
       signerName: lead.contactName || [rep?.firstName, rep?.lastName].filter(Boolean).join(' '),
       signerEmail: lead.contactEmail || rep?.email || '',
       signerTitle: rep?.title || undefined,
@@ -933,13 +949,14 @@ function LeadDetailPanel({ lead, onClose, onEdit, onDelete }: { lead: Lead | nul
           )}
         </div>
 
-        {/* Action Buttons */}
+        {/* Action Buttons — the recommended next step leads, everything else follows */}
         <div className="bg-white border-t border-gray-200 px-6 py-4">
           <div className="flex items-center gap-3">
+            <NextActionButton lead={lead} size="md" className="flex-1 justify-center" />
             <button
               onClick={handleAdvanceStage}
               disabled={isDeadEnd || lead.stage === 'Converted'}
-              className="flex-1 px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-[6px] hover:bg-indigo-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="px-4 py-2.5 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-[6px] hover:bg-gray-50 transition-colors whitespace-nowrap disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Next Stage
             </button>
@@ -947,7 +964,7 @@ function LeadDetailPanel({ lead, onClose, onEdit, onDelete }: { lead: Lead | nul
               onClick={handleConvert}
               disabled={isDeadEnd || lead.stage === 'Converted'}
               title={isDeadEnd ? 'Change the status before converting' : undefined}
-              className="flex-1 px-4 py-2.5 bg-emerald-600 text-white text-sm font-medium rounded-[6px] hover:bg-emerald-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="px-4 py-2.5 bg-white border border-emerald-300 text-emerald-700 text-sm font-medium rounded-[6px] hover:bg-emerald-50 transition-colors whitespace-nowrap disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Convert
             </button>
@@ -1893,8 +1910,11 @@ export function BackendLeads({ openImport = false }: { openImport?: boolean } = 
                               <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-bold ${getScoreColor(lead.score)}`}>{lead.score}</span>
                             </div>
                             <p className="text-xs text-gray-500 mb-2">{lead.contactName}</p>
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              <UnifiedTagBadges lead={lead} size="xxs" />
+                            <div className="flex items-center justify-between gap-1.5">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <UnifiedTagBadges lead={lead} size="xxs" />
+                              </div>
+                              <LeadProgressDots lead={lead} light />
                             </div>
                             {lead.blocker && (
                               <p className="text-[10px] text-red-600 mt-2 line-clamp-1">{lead.blocker}</p>
@@ -1930,6 +1950,7 @@ export function BackendLeads({ openImport = false }: { openImport?: boolean } = 
                     <SortableTh label="Stage" sortKey="stage" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
                     <SortableTh label="Score" sortKey="score" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
                     <SortableTh label="Status" sortKey="status" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
+                    <th className="px-5 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wide">Next step</th>
                     <SortableTh label="Added" sortKey="created" activeKey={sortKey} dir={sortDir} onSort={toggleSort} />
                     <th className="px-5 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wide"><span className="sr-only">Actions</span></th>
                   </tr>
@@ -1937,7 +1958,7 @@ export function BackendLeads({ openImport = false }: { openImport?: boolean } = 
                 <tbody className="divide-y divide-gray-200">
                   {sortedLeads.length === 0 && (
                     <tr>
-                      <td colSpan={9} className="px-5 py-12 text-center text-sm text-gray-400">
+                      <td colSpan={10} className="px-5 py-12 text-center text-sm text-gray-400">
                         No leads match your filters
                       </td>
                     </tr>
@@ -2003,6 +2024,12 @@ export function BackendLeads({ openImport = false }: { openImport?: boolean } = 
                             <option value="Not Qualified">Not Qualified</option>
                             <option value="Lost">Lost</option>
                           </select>
+                        </td>
+                        <td className="px-5 py-4" onClick={e => e.stopPropagation()}>
+                          <div className="flex flex-col items-start gap-1.5">
+                            <LeadProgressDots lead={lead} light />
+                            <NextActionButton lead={lead} size="sm" />
+                          </div>
                         </td>
                         <td className="px-5 py-4">
                           <div className="flex items-center gap-2 text-sm text-gray-700">

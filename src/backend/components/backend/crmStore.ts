@@ -31,6 +31,7 @@ import {
   type DataMerchInputs,
 } from './underwritingScore';
 import { capitalActions } from './capitalStore';
+import { dealSubmissionActions } from './dealSubmissionsStore';
 
 // ══════════════════════════════════════════════════════════════
 // Types (unchanged — pages depend on this exact shape)
@@ -947,6 +948,21 @@ async function maybeHydrate() {
   }
 }
 
+/**
+ * Await CRM hydration from outside the hook surface — for write-backs fired
+ * from pages that never subscribe to this store (e.g. Call Playbooks), where
+ * leadActions would otherwise no-op against an empty state.
+ */
+export async function ensureCrmHydrated(): Promise<void> {
+  await maybeHydrate();
+  while (hydrating) await new Promise(r => setTimeout(r, 100));
+}
+
+/** Snapshot read of a single lead (for non-hook callers like write-backs). */
+export function getLeadById(id: string): Lead | undefined {
+  return state.leads.find(l => l.id === id);
+}
+
 function subscribeRealtime() {
   if (!supabase) return;
   const channel = supabase
@@ -1360,8 +1376,9 @@ export const leadActions = {
     if (idx < 0 || idx >= LEAD_STAGES.length - 1) return false;
     const next = LEAD_STAGES[idx + 1];
     const patch: Partial<Lead> = { stage: next, lastActivity: 'just now' };
-    if (next === 'Converted') patch.status = 'Won';
-    else if (lead.status === 'New') patch.status = 'In Progress';
+    // Won is earned, not clicked: the funding/boarding write-back sets it
+    // (markWon) once money moves or the merchant account is installed.
+    if (lead.status === 'New') patch.status = 'In Progress';
     leadActions.update(id, patch);
     leadActions.addTimeline(id, { title: `Advanced to ${next}`, description: 'Pipeline stage promoted', user: 'You', timestamp: 'just now' });
     return true;
@@ -1389,6 +1406,19 @@ export const leadActions = {
       });
     }
     return true;
+  },
+
+  /**
+   * A deal is won when it's funded (capital) or the merchant account is
+   * boarded (processing) — called by the spine write-backs, never by a
+   * button. Idempotent; forces the terminal success state even past a
+   * stale Not Qualified/Lost flag, because money moving is the ground truth.
+   */
+  markWon(id: string, reason = 'Deal won') {
+    const lead = state.leads.find(l => l.id === id);
+    if (!lead || lead.status === 'Won') return;
+    leadActions.update(id, { stage: 'Converted', status: 'Won', lastActivity: 'just now' });
+    leadActions.addTimeline(id, { title: 'Deal won', description: reason, user: 'System', timestamp: 'just now' });
   },
 
   markLost(id: string) {
@@ -1865,7 +1895,24 @@ export const underwritingActions = {
   },
 
   setStage(id: string, stage: UWStage) {
+    const app = state.underwriting.find(a => a.id === id);
+    const changed = app && app.stage !== stage;
     underwritingActions.update(id, { stage, daysInStage: 0 });
+    if (!app || !changed) return;
+    // Spine write-backs: the submission and the lead follow the UW file so
+    // reps see live pipeline state without opening the underwriting queue.
+    if (app.submissionId && stage !== 'Approved' && stage !== 'Declined') {
+      void dealSubmissionActions.advanceStatus(app.submissionId, 'Underwriting');
+    }
+    if (app.leadId) {
+      leadActions.addTimeline(app.leadId, {
+        title: 'Underwriting update',
+        description: `Stage: ${stage}`,
+        user: app.assignedTo || app.reviewer || 'Underwriting',
+        timestamp: 'just now',
+      });
+      leadActions.update(app.leadId, { lastActivity: 'just now' });
+    }
   },
 
   /**
@@ -1917,6 +1964,18 @@ export const underwritingActions = {
     });
     void capitalActions.refresh();
 
+    // Spine write-backs: submission → Approved, lead timeline entry.
+    if (app.submissionId) void dealSubmissionActions.advanceStatus(app.submissionId, 'Approved');
+    if (app.leadId) {
+      leadActions.addTimeline(app.leadId, {
+        title: 'Underwriting approved',
+        description: `${tier} · factor ${factor} · advance $${(app.requestedAmount || 0).toLocaleString()}`,
+        user: app.assignedTo || app.reviewer || 'Underwriting',
+        timestamp: 'just now',
+      });
+      leadActions.update(app.leadId, { lastActivity: 'just now' });
+    }
+
     // File the internal decision memo on the deal (best-effort; the CRM stays
     // the source of truth if it fails).
     if (app.submissionId) {
@@ -1941,11 +2000,23 @@ export const underwritingActions = {
   },
 
   decline(id: string, reason?: string) {
+    const app = state.underwriting.find(a => a.id === id);
     underwritingActions.update(id, {
       stage: 'Declined',
       daysInStage: 0,
       declineReason: reason || undefined,
     });
+    if (!app) return;
+    if (app.submissionId) void dealSubmissionActions.setStatus(app.submissionId, 'Declined');
+    if (app.leadId) {
+      leadActions.addTimeline(app.leadId, {
+        title: 'Underwriting declined',
+        description: reason || 'Declined in underwriting',
+        user: app.assignedTo || app.reviewer || 'Underwriting',
+        timestamp: 'just now',
+      });
+      leadActions.update(app.leadId, { lastActivity: 'just now' });
+    }
   },
 };
 

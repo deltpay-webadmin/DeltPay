@@ -9,6 +9,7 @@ import { useAppNavigate } from '../NavigationContext';
 import { useCapital, capitalActions, type CapitalDeal, type LoanPayment } from '../capitalStore';
 import { useDeals, useMerchants, type Deal as CrmDeal } from '../crmStore';
 import { stageEsignDraft } from '../contractsStore';
+import { fundingWriteback } from '../spineWritebacks';
 
 // ── Helpers ──
 const fmt = (n: number) => n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
@@ -244,7 +245,10 @@ export function DealDetail() {
                     </button>
                   )}
                   <button
-                    onClick={() => void capitalActions.markFunded(deal.id)}
+                    onClick={async () => {
+                      const ok = await capitalActions.markFunded(deal.id);
+                      if (ok) await fundingWriteback(deal.submissionId, 'funded');
+                    }}
                     title="The server verifies the signed packet (application, MCA signed & countersigned, MPA, Plaid, ID, voided check) before funding"
                     className="px-3.5 py-2 bg-emerald-600 text-white rounded-[6px] text-sm font-medium hover:bg-emerald-700 inline-flex items-center gap-2 transition-colors"
                   >

@@ -271,6 +271,33 @@ export const dealSubmissionActions = {
   },
 
   /**
+   * Move a submission's status forward only — used by cross-store
+   * write-backs (underwriting stage changes, funding, boarding), so a
+   * later status is never clobbered when events replay out of order.
+   * The forward-only guard runs in the UPDATE's WHERE clause, so it's
+   * race-safe even when this store isn't hydrated.
+   */
+  async advanceStatus(id: string, to: SubmissionStatus): Promise<void> {
+    if (!supabase) return;
+    const idx = SUBMISSION_PIPELINE.indexOf(to);
+    if (idx <= 0) return; // 'Submitted' and 'Declined' are never advanced to
+    const earlier = SUBMISSION_PIPELINE.slice(0, idx);
+    const patch: Record<string, unknown> = { status: to, updated_at: new Date().toISOString() };
+    if (to === 'Activated') patch.activated_at = new Date().toISOString();
+    const { error } = await supabase
+      .from('deal_submissions')
+      .update(patch)
+      .eq('id', id)
+      .in('status', earlier);
+    if (error) {
+      // eslint-disable-next-line no-console
+      console.error('[DealSubmissions] advanceStatus failed:', error);
+      return;
+    }
+    await refresh();
+  },
+
+  /**
    * Confirm the merchant's actual monthly volume (comp plan: bands ≥$400 are
    * set by the first full month of real processing) and recompute the bonus.
    */

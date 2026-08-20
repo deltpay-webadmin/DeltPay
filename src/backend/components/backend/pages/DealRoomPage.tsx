@@ -33,6 +33,7 @@ import { useDealDocuments } from '../dealDocumentsStore';
 import { useCapital, capitalActions } from '../capitalStore';
 import { DealDocumentsPanel } from '../DealDocumentsPanel';
 import { MpaBoardingPanel } from '../MpaBoardingPanel';
+import { fundingWriteback } from '../spineWritebacks';
 
 const card = 'bg-white rounded-[8px] border border-gray-200 p-4';
 const btnPrimary = 'inline-flex items-center gap-1.5 px-3 py-1.5 bg-brand text-white rounded-[6px] text-xs font-semibold hover:bg-brand/90 disabled:opacity-50';
@@ -405,7 +406,13 @@ export function DealRoomPage() {
             <div className="flex flex-wrap items-center gap-2">
               {capDeal.status === 'approved' && can('capital.fund') && (
                 <button className={btnPrimary} disabled={busy !== null}
-                  onClick={async () => { setBusy('fund'); try { await capitalActions.markFunded(capDeal.id); } finally { setBusy(null); } }}>
+                  onClick={async () => {
+                    setBusy('fund');
+                    try {
+                      const ok = await capitalActions.markFunded(capDeal.id);
+                      if (ok) await fundingWriteback(sub.id, 'funded');
+                    } finally { setBusy(null); }
+                  }}>
                   {busy === 'fund' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Banknote className="w-3.5 h-3.5" />}
                   Mark funded
                 </button>

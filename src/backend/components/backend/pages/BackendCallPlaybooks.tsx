@@ -6,10 +6,13 @@ import {
   Flame, User, Building2, Pencil, Save, RotateCcw, TrendingUp,
   CalendarPlus, MessageSquare, Mail, Link2, MapPin, Video, ExternalLink,
 } from 'lucide-react';
+import { useSearchParams } from 'react-router';
+import { toast } from 'sonner@2.0.3';
 import { supabase, isSupabaseConfigured } from '../../../lib/supabase';
 import { useSession } from '../SessionContext';
 import { useAppNavigate } from '../NavigationContext';
 import { dealSubmissionActions } from '../dealSubmissionsStore';
+import { applyCallOutcome } from '../callOutcomes';
 
 // ══════════════════════════════════════
 // TYPES
@@ -199,6 +202,11 @@ function CoachingNote({ note, large }: { note: string; large?: boolean }) {
 // ══════════════════════════════════════
 
 export function BackendCallPlaybooks() {
+  // Deep-link from a lead: /call-playbooks?lead=<id>&autostart=1 opens the
+  // Live Call tab with the lead preloaded (and dials straight in).
+  const [searchParams] = useSearchParams();
+  const paramLeadId = searchParams.get('lead');
+  const paramAutostart = searchParams.get('autostart') === '1';
   const [tab, setTab] = useState<'live' | 'meetings' | 'library' | 'performance'>('live');
   const [playbooks, setPlaybooks] = useState<Playbook[]>([]);
   const [cards, setCards] = useState<Card[]>([]);
@@ -268,7 +276,8 @@ export function BackendCallPlaybooks() {
           <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2" /> Loading playbooks…
         </div>
       ) : tab === 'live' ? (
-        <LiveCall playbooks={playbooks} cards={cards} variants={variants} sessions={sessions} leads={leads} onLogged={reload} />
+        <LiveCall playbooks={playbooks} cards={cards} variants={variants} sessions={sessions} leads={leads} onLogged={reload}
+          initialLeadId={paramLeadId} autostart={paramAutostart} />
       ) : tab === 'meetings' ? (
         <MeetingsView meetings={meetings} onChanged={reload} />
       ) : tab === 'library' ? (
@@ -304,14 +313,18 @@ function assignVariant(card: Card, variants: Variant[], sessions: CallSession[])
 // LIVE CALL
 // ══════════════════════════════════════
 
-function LiveCall({ playbooks, cards, variants, sessions, leads, onLogged }: {
+function LiveCall({ playbooks, cards, variants, sessions, leads, onLogged, initialLeadId, autostart }: {
   playbooks: Playbook[]; cards: Card[]; variants: Variant[]; sessions: CallSession[];
   leads: LeadLite[]; onLogged: () => void;
+  /** Preselect this lead (deep link from the pipeline). */
+  initialLeadId?: string | null;
+  /** Start the call as soon as the lead + playbook resolve. */
+  autostart?: boolean;
 }) {
   const session = useSession();
   const [product, setProduct] = useState<'deltpay' | 'deltcapital'>('deltpay');
   const [playbookId, setPlaybookId] = useState<string>('');
-  const [leadId, setLeadId] = useState<string>('');
+  const [leadId, setLeadId] = useState<string>(initialLeadId ?? '');
   const [repName, setRepName] = useState(() => localStorage.getItem('delt_rep_name') ?? '');
   const [inCall, setInCall] = useState(false);
   const [assignment, setAssignment] = useState<Record<string, Variant>>({});
@@ -397,6 +410,17 @@ function LiveCall({ playbooks, cards, variants, sessions, leads, onLogged }: {
   const stopTimer = () => { if (timerRef.current) clearInterval(timerRef.current); timerRef.current = null; };
   useEffect(() => () => stopTimer(), []);
 
+  // Deep-linked with autostart: dial as soon as the lead row and its
+  // auto-matched playbook have resolved. One shot per mount.
+  const autostarted = useRef(false);
+  useEffect(() => {
+    if (!autostart || autostarted.current || inCall || !playbook) return;
+    if (initialLeadId && !lead) return; // lead list still loading
+    autostarted.current = true;
+    startCall();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autostart, playbook, lead, inCall]);
+
   const hitObjection = (c: Card) => {
     setObjectionCard(c);
     setObjectionsHit(prev => (prev.includes(c.id) ? prev : [...prev, c.id]));
@@ -424,8 +448,19 @@ function LiveCall({ playbooks, cards, variants, sessions, leads, onLogged }: {
     });
     setSaving(false);
     if (error) {
-      window.alert(`Could not log the call: ${error.message}`);
+      toast.error(`Could not log the call: ${error.message}`);
       return;
+    }
+    // Write the outcome back to the lead (timeline + stage/status) so the
+    // pipeline reflects the call without anyone re-typing it.
+    if (lead?.id) {
+      void applyCallOutcome(lead.id, disposition, {
+        label: dispo?.label ?? disposition ?? 'Logged',
+        durationSeconds: elapsed,
+        notes: notes || undefined,
+        repName: repName || undefined,
+        meetingWhen: meetingBooked ? actionsLog.find(a => a.startsWith('Meeting booked'))?.replace('Meeting booked — ', '') : undefined,
+      });
     }
     setInCall(false);
     setSavedMsg(true);

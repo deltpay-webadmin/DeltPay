@@ -14,9 +14,11 @@ import {
 } from './OnboardingFlow';
 import {
   underwritingActions,
+  useLeads,
   type ProductType,
   type UWApplication,
 } from '../crmStore';
+import { dealSubmissionActions } from '../dealSubmissionsStore';
 
 const INDUSTRIES = [
   'Restaurant',
@@ -56,6 +58,8 @@ export interface NewApplicationFlowProps {
 }
 
 export function NewApplicationFlow({ open, onClose, onCreated }: NewApplicationFlowProps) {
+  const leads = useLeads();
+  const [leadId, setLeadId] = useState('');
   const [form, setForm] = useState({
     businessName: '',
     industry: 'Restaurant',
@@ -91,6 +95,32 @@ export function NewApplicationFlow({ open, onClose, onCreated }: NewApplicationF
           validate: () => (form.businessName.trim() ? true : 'Business name is required.'),
           render: () => (
             <div className="space-y-4">
+              {/* Spine link: an unlinked file can't produce a decision memo,
+                  open a Deal Room, or pass the funding gate. */}
+              <div>
+                <label className="text-[12px] font-medium text-gray-600 block mb-1">Pipeline lead (recommended)</label>
+                <select
+                  value={leadId}
+                  onChange={e => {
+                    const id = e.target.value;
+                    setLeadId(id);
+                    const l = leads.find(x => x.id === id);
+                    if (l) {
+                      setForm(f => ({
+                        ...f,
+                        businessName: f.businessName || l.businessName,
+                        industry: INDUSTRIES.includes(l.industry) ? l.industry : f.industry,
+                      }));
+                    }
+                  }}
+                  className="w-full border border-gray-200 rounded-[6px] px-3 py-2 text-[13px] bg-white"
+                >
+                  <option value="">No lead — standalone file (no Deal Room, no decision memo)</option>
+                  {leads.map(l => (
+                    <option key={l.id} value={l.id}>{l.businessName}{l.contactName ? ` — ${l.contactName}` : ''}</option>
+                  ))}
+                </select>
+              </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="sm:col-span-2">
                   <TextField
@@ -206,6 +236,23 @@ export function NewApplicationFlow({ open, onClose, onCreated }: NewApplicationF
         },
       ]}
       onSubmit={async () => {
+        // Linked files ride the deal spine: create (or reuse) the lead's
+        // submission so the memo, Deal Room, and funding gate all connect.
+        const lead = leads.find(l => l.id === leadId);
+        const submissionId = lead
+          ? await dealSubmissionActions.createFromLead({
+              id: lead.id,
+              businessName: lead.businessName,
+              contactName: lead.contactName,
+              contactPhone: lead.contactPhone,
+              contactEmail: lead.contactEmail,
+              industry: lead.industry,
+              monthlySales: lead.monthlySales,
+              type: lead.type,
+              products: lead.products,
+              assignedAgent: lead.assignedAgent,
+            })
+          : null;
         const created = underwritingActions.create({
           businessName: form.businessName.trim(),
           industry: form.industry,
@@ -217,6 +264,11 @@ export function NewApplicationFlow({ open, onClose, onCreated }: NewApplicationF
           creditScore,
           monthsInBusiness,
           notes: form.notes,
+          leadId: lead?.id,
+          submissionId: submissionId ?? undefined,
+          contactName: lead?.contactName || undefined,
+          contactEmail: lead?.contactEmail || undefined,
+          contactPhone: lead?.contactPhone || undefined,
         });
         onCreated?.(created);
         return {

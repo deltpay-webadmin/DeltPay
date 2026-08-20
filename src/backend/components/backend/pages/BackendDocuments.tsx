@@ -68,6 +68,8 @@ interface ComposerForm {
   merchantName: string;
   dealId: string;
   leadId: string;
+  /** Deal-spine link — envelopes without it never count toward packet_status(). */
+  submissionId: string;
   signerName: string;
   signerEmail: string;
   signerTitle: string;
@@ -91,7 +93,7 @@ interface ComposerForm {
 }
 
 const emptyForm = (): ComposerForm => ({
-  merchantId: '', merchantName: '', dealId: '', leadId: '',
+  merchantId: '', merchantName: '', dealId: '', leadId: '', submissionId: '',
   signerName: '', signerEmail: '', signerTitle: '',
   hasGuarantor: false, guarantorName: '', guarantorEmail: '',
   merchantLegalName: '', dbaName: '', stateOfFormation: '', ein: '', businessAddress: '',
@@ -106,6 +108,7 @@ function draftToForm(d: Partial<SendContractRequest>): ComposerForm {
   f.merchantName = d.merchantName ?? '';
   f.dealId = d.dealId ?? '';
   f.leadId = d.leadId ?? '';
+  f.submissionId = d.submissionId ?? '';
   f.signerName = d.signerName ?? '';
   f.signerEmail = d.signerEmail ?? '';
   f.signerTitle = d.signerTitle ?? '';
@@ -188,6 +191,7 @@ function ComposerModal({ initial, onClose }: { initial: ComposerForm; onClose: (
         merchantName: form.merchantName.trim(),
         dealId: form.dealId || undefined,
         leadId: form.leadId || undefined,
+        submissionId: form.submissionId || undefined,
         signerName: form.signerName.trim(),
         signerEmail: form.signerEmail.trim(),
         signerTitle: form.signerTitle.trim() || undefined,

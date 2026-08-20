@@ -25,6 +25,7 @@ import {
 import { contractActions, useContracts } from './contractsStore';
 import { applyPricingTemplate, builtInPricingTemplates } from './mpaPricingTemplates';
 import { mpaPricingTemplateActions, useMpaPricingTemplates } from './mpaPricingTemplatesStore';
+import { fundingWriteback } from './spineWritebacks';
 import type { LuqraPricing, PaysafePricing } from '../../../features/mpa/types';
 
 const ORDEROUT_URL = 'https://reseller.orderout.co/portal/links?org=delt&iso=all';
@@ -452,7 +453,13 @@ export function MpaBoardingPanel({ submission }: { submission: DealSubmission })
                 <ClipboardCopy className="w-3.5 h-3.5" /> Copy masked packet
               </button>
               {app.status !== 'boarded' && (
-                <button className={btnGhost} disabled={busy !== null} onClick={() => void mpaActions.markBoarded(app.id)}>
+                <button className={btnGhost} disabled={busy !== null}
+                  onClick={async () => {
+                    const ok = await mpaActions.markBoarded(app.id);
+                    // Boarded = merchant account approved & installed — one of
+                    // the two ways a deal is won; the lead follows.
+                    if (ok) await fundingWriteback(app.submissionId, 'boarded');
+                  }}>
                   Mark boarded
                 </button>
               )}
