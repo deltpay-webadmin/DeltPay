@@ -551,13 +551,18 @@ function MetricTile({ label, value, sub }: { label: string; value: React.ReactNo
 
 function GateRow({ g }: { g: any }) {
   return (
-    <div className="flex items-center gap-2 py-1">
-      {g.passed
-        ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
-        : <XCircle className="w-3.5 h-3.5 text-red-400 flex-shrink-0" />}
-      <span className={`text-xs flex-1 ${g.passed ? 'text-(--dp-text-secondary)' : 'text-red-300'}`}>{g.label}</span>
-      <span className={`text-[11px] ${g.passed ? TXT_FAINT : 'text-red-300'}`}>{g.value}</span>
-      <span className={`text-[10px] ${TXT_FAINT} w-20 text-right`}>{g.threshold}</span>
+    <div className="py-1">
+      <div className="flex items-center gap-2">
+        {g.passed
+          ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
+          : <XCircle className="w-3.5 h-3.5 text-red-400 flex-shrink-0" />}
+        <span className={`text-xs flex-1 ${g.passed ? 'text-(--dp-text-secondary)' : 'text-red-300'}`}>{g.label}</span>
+        <span className={`text-[11px] ${g.passed ? TXT_FAINT : 'text-red-300'}`}>{g.value}</span>
+        <span className={`text-[10px] ${TXT_FAINT} w-20 text-right`}>{g.threshold}</span>
+      </div>
+      {!g.passed && g.note && (
+        <div className="pl-[22px] pt-0.5 text-[10px] text-red-300/80">{g.note}</div>
+      )}
     </div>
   );
 }

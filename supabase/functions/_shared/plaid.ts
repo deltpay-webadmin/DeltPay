@@ -1308,6 +1308,18 @@ async function loadItem(itemId: string) {
 // Full item sync → vault
 // ══════════════════════════════════════════════════════════════
 
+// Why no account rolled up as verified — rendered next to the failed
+// bank_verified gate. Picks the most actionable cause across accounts.
+function describeBankVerificationGap(accounts: any[]): string {
+  if (!accounts.length) return "No linked bank accounts";
+  const reasons: string[] = accounts.map((a: any) => a.verification?.reason ?? "not_checked");
+  const authFailed = reasons.find((r) => r.startsWith("auth_failed:"));
+  if (authFailed) return `Plaid Auth call failed (${authFailed.slice("auth_failed:".length).trim()})`;
+  if (reasons.includes("no_ach_numbers")) return "Institution returned no ACH numbers (Auth unsupported or no depository account)";
+  if (reasons.includes("not_requested")) return 'Verification not requested — use "Verify ownership"';
+  return "Not checked yet — re-sync to refresh verification status";
+}
+
 export async function syncItem(itemId: string, opts?: { verification?: boolean }) {
   const db = svc();
   const cfg = plaidConfig();
@@ -1338,6 +1350,7 @@ export async function syncItem(itemId: string, opts?: { verification?: boolean }
 
     // ── 2. Bank account verification (Auth) — store masked numbers only ──
     const routingByAccount = new Map<string, { routingLast4: string; accountLast4: string; wireRouting?: string }>();
+    let authError: string | null = null;
     if (runVerification) try {
       const auth = await plaid("/auth/get", { access_token: accessToken }, { itemId, leadId });
       for (const n of auth?.numbers?.ach ?? []) {
@@ -1347,7 +1360,11 @@ export async function syncItem(itemId: string, opts?: { verification?: boolean }
           wireRouting: n.wire_routing ? String(n.wire_routing).slice(-4) : undefined,
         });
       }
-    } catch { /* auth product unavailable on this item */ }
+    } catch (err: any) {
+      // Auth product unavailable on this item, or a transient Plaid error.
+      // Keep the code so the failed bank_verified gate can say which.
+      authError = err?.plaid?.error_code ?? String(err?.message ?? err);
+    }
 
     // ── 3. Identity ──
     let owners: any[] = [];
@@ -1560,6 +1577,15 @@ export async function syncItem(itemId: string, opts?: { verification?: boolean }
           verification: {
             method: "Plaid Auth",
             verified: Boolean(routing),
+            // Machine-readable cause when unverified, so the decision gate
+            // can tell "never requested" apart from "Auth call failed".
+            ...(routing ? {} : {
+              reason: !runVerification
+                ? "not_requested"
+                : authError
+                  ? `auth_failed: ${authError}`
+                  : "no_ach_numbers",
+            }),
             routing_last4: routing?.routingLast4 ?? null,
             account_last4: routing?.accountLast4 ?? (a.mask || null),
             wire_routing_last4: routing?.wireRouting ?? null,
@@ -1767,6 +1793,7 @@ export async function syncItem(itemId: string, opts?: { verification?: boolean }
 
     // ── 7. Run the standardized decision model (versioned, deterministic) ──
     const bankVerified = allAccounts.some((a: any) => a.verification?.verified);
+    const bankVerifiedReason = bankVerified ? undefined : describeBankVerificationGap(allAccounts);
     const modelInput: ModelInput = {
       monthlyRevenue: m.monthlyRevenue,
       revenueStdDevPct: m.revenueStdDevPct,
@@ -1784,6 +1811,7 @@ export async function syncItem(itemId: string, opts?: { verification?: boolean }
       debtServiceToRevenuePct: m.debtServiceToRevenuePct,
       requestedAmount: parseMoney(leadRow?.amount_requested),
       bankVerified,
+      bankVerifiedReason,
       identityVerified,
       institutionsConnected: (leadItems ?? []).length,
     };

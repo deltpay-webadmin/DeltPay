@@ -105,6 +105,8 @@ export interface ModelInput {
   /** Context */
   requestedAmount: number;             // 0 = size the offer purely from caps
   bankVerified: boolean;
+  /** Operator-readable cause when bankVerified is false */
+  bankVerifiedReason?: string;
   identityVerified: boolean;
   institutionsConnected: number;
 }
@@ -115,6 +117,8 @@ export interface GateResult {
   passed: boolean;
   value: string;
   threshold: string;
+  /** Why the gate failed, when the value alone doesn't say */
+  note?: string;
 }
 
 export interface ScoreComponent {
@@ -165,9 +169,9 @@ const usd = (n: number) => `$${Math.round(n).toLocaleString("en-US")}`;
 const pct = (n: number) => `${(n * 100).toFixed(1)}%`;
 
 function gate(
-  code: string, label: string, passed: boolean, value: string, threshold: string,
+  code: string, label: string, passed: boolean, value: string, threshold: string, note?: string,
 ): GateResult {
-  return { code, label, passed, value, threshold };
+  return { code, label, passed, value, threshold, ...(note ? { note } : {}) };
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -327,7 +331,7 @@ export function runDecisionModel(i: ModelInput): ModelOutput {
   const sufficiency: GateResult[] = [
     gate("months_of_data", "Months of transaction history", i.monthsOfData >= POLICY.MIN_MONTHS_OF_DATA, `${i.monthsOfData} mo`, `≥ ${POLICY.MIN_MONTHS_OF_DATA} mo`),
     gate("transaction_count", "Transaction sample size", i.transactionCount >= POLICY.MIN_TRANSACTIONS, `${i.transactionCount}`, `≥ ${POLICY.MIN_TRANSACTIONS}`),
-    gate("bank_verified", "Bank account verified (Plaid Auth)", i.bankVerified, i.bankVerified ? "yes" : "no", "yes"),
+    gate("bank_verified", "Bank account verified (Plaid Auth)", i.bankVerified, i.bankVerified ? "yes" : "no", "yes", i.bankVerified ? undefined : i.bankVerifiedReason),
   ];
   const insufficient = sufficiency.filter(g => !g.passed);
 
