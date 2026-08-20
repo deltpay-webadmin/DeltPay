@@ -19,6 +19,7 @@ import {
   createAssetReport,
   refreshAssetReport,
   applyPlaidExchange,
+  applyIntake,
   createHostedLink,
   sweepHostedLinks,
   sweepRepairLinks,
@@ -186,6 +187,63 @@ app.post("/make-server-940653c6/leads/pricing-guide", async (c) => {
     return c.json({ ok: true });
   } catch (err) {
     console.error("pricing-guide lead error", err);
+    return c.json({ ok: false, error: "Something went wrong. Please try again." }, 500);
+  }
+});
+
+// ────────────────────────────────────────────────────────────────
+// Public deltpay.com /apply intake — browser-callable with the anon
+// key only (same posture as the pricing-guide capture above). Creates
+// or matches a pipeline lead and returns a Plaid-hosted connect link;
+// the bank connection completes via webhook with no client Plaid SDK.
+// Guards mirror mpa-application self-start: honeypot → fake success,
+// email validation, and an hourly cap on new leads from this source.
+// ────────────────────────────────────────────────────────────────
+
+app.post("/make-server-940653c6/apply/intake", async (c) => {
+  try {
+    const body = await c.req.json().catch(() => ({} as Record<string, unknown>));
+
+    // Honeypot: bots fill hidden fields — pretend success, create nothing.
+    if (
+      (typeof body.company_website === "string" && body.company_website.trim() !== "") ||
+      (typeof body.hp_extra_field === "string" && body.hp_extra_field.trim() !== "")
+    ) {
+      return c.json({ ok: true });
+    }
+
+    const rawEmail = typeof body.email === "string" ? body.email.trim() : "";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(rawEmail) || rawEmail.length > 254) {
+      return c.json({ ok: false, error: "Please enter a valid email." }, 400);
+    }
+    const fullName = typeof body.fullName === "string" ? body.fullName.trim().slice(0, 200) : "";
+    const businessName = typeof body.businessName === "string" ? body.businessName.trim().slice(0, 200) : "";
+    const phone = typeof body.phone === "string" ? body.phone.trim().slice(0, 40) : "";
+    const businessType = typeof body.businessType === "string" ? body.businessType.trim().slice(0, 40) : "";
+
+    // Throttle: cap brand-new leads from this public source at 20/hour.
+    // (Resubmits that match an existing lead don't insert and reuse the
+    // pending connect link, so they stay cheap either way.)
+    const hourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    const { count } = await svc()
+      .from("pipeline_leads")
+      .select("id", { count: "exact", head: true })
+      .eq("source", "deltpay.com application")
+      .gte("created_at", hourAgo);
+    if ((count ?? 0) >= 20) {
+      return c.json({ ok: false, error: "We're receiving a lot of applications right now — please try again in a bit." }, 429);
+    }
+
+    const out = await applyIntake({
+      email: rawEmail,
+      fullName: fullName || undefined,
+      businessName: businessName || undefined,
+      phone: phone || undefined,
+      businessType: businessType || undefined,
+    });
+    return c.json({ ok: true, ...out });
+  } catch (err: any) {
+    console.error("apply intake error", err);
     return c.json({ ok: false, error: "Something went wrong. Please try again." }, 500);
   }
 });

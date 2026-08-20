@@ -24,7 +24,8 @@ import {
    Five steps:
      1. Business      — entity / location / contact
      2. Processing    — what you sell, volume, ticket size
-     3. Bank          — Plaid (placeholder; UI-only for now)
+     3. Bank          — Plaid (placeholder; UI-only for now — TODO: reuse
+                        the /apply/intake hosted-link flow from ApplicationPage)
      4. Identity      — owner KYC details
      5. Done          — success state with next-step list
    ═══════════════════════════════════════════════════════════ */

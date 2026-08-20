@@ -32,6 +32,19 @@ function riskTone(score: number): StatusTone {
   return 'danger';
 }
 
+// Model score pill. compositeScore == null means the file has no bank data
+// yet ("not scored") — neutral, never the red a genuine 0 would get.
+function ScorePill({ app }: { app: Application }) {
+  if (app.compositeScore == null) {
+    return (
+      <span title="Not scored — no bank data connected">
+        <StatusPill tone="neutral">—</StatusPill>
+      </span>
+    );
+  }
+  return <StatusPill tone={riskTone(app.riskScore)}>{app.riskScore}</StatusPill>;
+}
+
 // ── Kanban Card ──
 function KanbanCard({ app, onView }: { app: Application; onView: () => void }) {
   const overSLA = app.daysInStage >= app.slaThreshold;
@@ -42,7 +55,7 @@ function KanbanCard({ app, onView }: { app: Application; onView: () => void }) {
     >
       <div className="flex items-start justify-between mb-2">
         <span className="font-mono text-[10px] text-(--dp-accent-text)">{app.applicationId}</span>
-        <StatusPill tone={riskTone(app.riskScore)}>{app.riskScore}</StatusPill>
+        <ScorePill app={app} />
       </div>
       <h4 className="text-[13px] font-bold text-(--dp-text) leading-snug mb-0.5">{app.businessName}</h4>
       <p className="text-[11px] text-(--dp-text-faint) mb-3">{app.industry}{app.state ? ` · ${app.state}` : ''}</p>
@@ -340,7 +353,7 @@ export function BackendUnderwriting() {
                           : <span className="text-[12px] text-(--dp-text-faint) tabular-nums">0</span>}
                       </td>
                       <td className="px-4 text-[12px] text-right tabular-nums text-(--dp-text-muted)">{app.monthsInBusiness}mo</td>
-                      <td className="px-4 text-right"><StatusPill tone={riskTone(app.riskScore)}>{app.riskScore}</StatusPill></td>
+                      <td className="px-4 text-right"><ScorePill app={app} /></td>
                       <td className="px-4">
                         <div className="relative inline-flex items-center">
                           <span className="w-1.5 h-1.5 rounded-full absolute left-2.5 pointer-events-none" style={{ backgroundColor: cfg.dot }} />

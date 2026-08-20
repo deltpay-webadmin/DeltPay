@@ -20,7 +20,7 @@
 import React from 'react';
 import { Check, X } from 'lucide-react';
 import { useUnderwriting, useOnboarding, useDeals, type Lead } from './crmStore';
-import { usePlaidItems, usePlaidLinkRequests, itemUiStatus } from './plaidStore';
+import { usePlaidItems, usePlaidLinkRequests, usePlaidNodes, itemUiStatus } from './plaidStore';
 import { useDealSubmissions } from './dealSubmissionsStore';
 import { useContracts } from './contractsStore';
 
@@ -51,6 +51,7 @@ const ONB_ORDER = ['Application Submitted', 'Bank Verification', 'Identity Verif
 export function useLeadMilestones(lead: Lead): { steps: Step[]; dead: string | null } {
   const items = usePlaidItems();
   const requests = usePlaidLinkRequests();
+  const nodes = usePlaidNodes();
   const underwriting = useUnderwriting();
   const onboarding = useOnboarding();
   const deals = useDeals();
@@ -59,6 +60,8 @@ export function useLeadMilestones(lead: Lead): { steps: Step[]; dead: string | n
 
   const biz = lead.businessName.trim().toLowerCase();
   const leadItems = items.filter(i => i.leadId === lead.id);
+  // Server-side decision model verdict (advisory: shapes captions, never states).
+  const rec = nodes.find(n => n.leadId === lead.id && n.docKind === 'recommendation')?.data ?? null;
   const pendingInvite = requests.find(r => r.leadId === lead.id && r.status === 'pending');
   // Spine-resolved (submission_id/lead_id) with name-match fallback for
   // legacy rows that predate the deal spine.
@@ -129,7 +132,12 @@ export function useLeadMilestones(lead: Lead): { steps: Step[]; dead: string | n
         ? (uwApp?.stage === 'Approved' ? 'Approved' : 'cleared')
         : uwActive
           ? (uwApp?.stage || onbApp?.currentStep || 'in review')
-          : connected ? 'ready to start' : 'awaiting bank data',
+          : connected
+            ? (rec?.decision === 'PRE_APPROVE' ? 'model: pre-approved'
+              : rec?.decision === 'REVIEW' ? 'model: review — ready to start'
+              : rec?.decision === 'DECLINE' ? 'model: declined'
+              : 'ready to start')
+            : 'awaiting bank data',
     },
     {
       key: 'signed',

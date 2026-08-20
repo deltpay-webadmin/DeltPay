@@ -6,33 +6,20 @@ import {
   ChevronDown,
   ChevronRight,
   Check,
-  X,
   AlertTriangle,
   ShieldCheck,
-  ShieldAlert,
   FileText,
   Printer,
   RefreshCw,
   Link2,
+  Landmark,
 } from 'lucide-react';
 import { useAppNavigate } from '../NavigationContext';
-import { useUnderwriting, underwritingActions, type UWApplication, type UWStage } from '../crmStore';
-import {
-  scorePlaid,
-  scoreCrs,
-  scoreDataMerch,
-  computeComposite,
-  tierFromComposite,
-  evaluateDisqualifiers,
-  stressTest,
-  defaultScoreInputs,
-  WEIGHTS,
-  type PlaidInputs,
-  type CrsInputs,
-  type DataMerchInputs,
-  type RevenueTrend,
-  type DepositConcentration,
-} from '../underwritingScore';
+import { useUnderwriting, underwritingActions, type UWApplication, type UWTier } from '../crmStore';
+import { usePlaidNodes } from '../plaidStore';
+import { RecommendationView } from '../RecommendationView';
+import { tierFromModel, factorFromOffer, holdbackFromOffer, checkProposedAmount } from '../modelMapping';
+import type { PlaidInputs, CrsInputs, DataMerchInputs, RevenueTrend, DepositConcentration } from '../uwInputs';
 
 // ══════════════════════════════════════════════════════════════
 // Helpers
@@ -47,24 +34,56 @@ const tierStyle: Record<string, { bg: string; text: string; ring: string }> = {
   Decline: { bg: 'bg-gray-400', text: 'text-gray-600', ring: 'ring-gray-400' },
 };
 
-function tierLabelFrom(tier: 1 | 2 | 3 | 4 | 'decline'): string {
-  return tier === 'decline' ? 'Decline' : `Tier ${tier}`;
+// Neutral evidence seeds for a file whose blocks haven't been keyed yet.
+// (Same defaults the retired composite engine used, so drafts round-trip.)
+const safe = (v: number | undefined, d: number) => (Number.isFinite(v) && (v as number) > 0 ? (v as number) : d);
+function seedInputs(app?: UWApplication): { plaid: PlaidInputs; crs: CrsInputs; dataMerch: DataMerchInputs } {
+  const mr = safe(app?.monthlyRevenue, 30000);
+  const adb = safe(app?.avgDailyBalance, 5000);
+  const pos = safe(app?.existingPositions, 0);
+  return {
+    plaid: {
+      avgDailyBalance: adb,
+      minDailyBalance: Math.max(0, Math.round(adb * 0.3)),
+      nsfCount90d: 0,
+      daysSinceLastNsf: 9999,
+      monthlyRevenue: mr,
+      revenueStdDevPct: 0.15,
+      revenueTrend: 'flat',
+      depositConcentration: 'moderate',
+      revenueChange3moPct: 0,
+    },
+    crs: {
+      fico: safe(app?.creditScore, 650),
+      businessCreditScore: undefined,
+      derogatoryMarks: 0,
+      creditUtilizationPct: 0.35,
+      timeInFileYears: 6,
+      activeBankruptcy: false,
+    },
+    dataMerch: {
+      priorPositions: pos,
+      priorDefaults: 0,
+      earlyPayoffs: 0,
+      currentOpenPositions: pos,
+      positionSeniority: pos > 0 ? 2 : 1,
+    },
+  };
 }
 
 // ══════════════════════════════════════════════════════════════
 // Small field components
 // ══════════════════════════════════════════════════════════════
 function NumField({
-  label, value, onChange, step = 1, min, suffix, impact,
+  label, value, onChange, step = 1, min, suffix,
 }: {
   label: string; value: number; onChange: (n: number) => void;
-  step?: number; min?: number; suffix?: string; impact?: string;
+  step?: number; min?: number; suffix?: string;
 }) {
   return (
     <div>
       <div className="flex items-center justify-between mb-1">
         <label className="text-xs text-gray-600">{label}</label>
-        {impact && <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-600">{impact}</span>}
       </div>
       <div className="relative">
         <input
@@ -170,27 +189,13 @@ function Section({
   );
 }
 
-function ScoreBar({ label, raw, weightPct, color }: { label: string; raw: number; weightPct: number; color: string }) {
-  const weighted = (raw * weightPct) / 100;
-  return (
-    <div>
-      <div className="flex items-center justify-between text-xs mb-1">
-        <span className="text-gray-600">{label} <span className="text-gray-400">({weightPct}%)</span></span>
-        <span className="font-semibold text-gray-900 tabular-nums">{raw}/100 → {weighted.toFixed(1)}</span>
-      </div>
-      <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-        <div className={`h-full rounded-full ${color}`} style={{ width: `${raw}%` }} />
-      </div>
-    </div>
-  );
-}
-
 // ══════════════════════════════════════════════════════════════
 // Main
 // ══════════════════════════════════════════════════════════════
 export function UnderwritingDetail() {
   const { navigate, currentPage } = useAppNavigate();
   const allApps = useUnderwriting();
+  const nodes = usePlaidNodes();
 
   const appIdFromUrl = currentPage.startsWith('/underwriting/') ? currentPage.split('/underwriting/')[1] : '';
   const app: UWApplication | undefined = useMemo(
@@ -198,16 +203,15 @@ export function UnderwritingDetail() {
     [allApps, appIdFromUrl],
   );
 
-  // Seed defaults from the application's headline figures.
-  const seeded = useMemo(
-    () => defaultScoreInputs({
-      monthlyRevenue: app?.monthlyRevenue,
-      avgDailyBalance: app?.avgDailyBalance,
-      fico: app?.creditScore,
-      existingPositions: app?.existingPositions,
-    }),
-    [app?.id], // eslint-disable-line react-hooks/exhaustive-deps
+  // The authoritative verdict: the Delt Cash-Flow Decision Model output,
+  // linked through the lead. No client-side re-scoring anywhere.
+  const rec = useMemo(
+    () => (app?.leadId ? nodes.find(n => n.leadId === app.leadId && n.docKind === 'recommendation')?.data ?? null : null),
+    [nodes, app?.leadId],
   );
+  const offer = rec?.offer ?? null;
+
+  const seeded = useMemo(() => seedInputs(app), [app?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const [plaid, setPlaid] = useState<PlaidInputs>(app?.plaidInputs ?? seeded.plaid);
   const [crs, setCrs] = useState<CrsInputs>(app?.crsInputs ?? seeded.crs);
@@ -224,17 +228,17 @@ export function UnderwritingDetail() {
   const [declineReason, setDeclineReason] = useState('');
   const [approving, setApproving] = useState(false);
 
+  // Manual terms — the only approval path when the model has no offer.
+  const [manualFactor, setManualFactor] = useState<number>(1.4);
+  const [manualHoldback, setManualHoldback] = useState<number>(12);
+  const [manualTier, setManualTier] = useState<UWTier>('Tier 4');
+
   // Reload local editor state when navigating to a different application.
   const loadedId = useRef<string | undefined>(app?.id);
   useEffect(() => {
     if (app && app.id !== loadedId.current) {
       loadedId.current = app.id;
-      const s = defaultScoreInputs({
-        monthlyRevenue: app.monthlyRevenue,
-        avgDailyBalance: app.avgDailyBalance,
-        fico: app.creditScore,
-        existingPositions: app.existingPositions,
-      });
+      const s = seedInputs(app);
       setPlaid(app.plaidInputs ?? s.plaid);
       setCrs(app.crsInputs ?? s.crs);
       setDm(app.dataMerchInputs ?? s.dataMerch);
@@ -243,37 +247,22 @@ export function UnderwritingDetail() {
     }
   }, [app]);
 
-  // ── Live scoring (pure engine) ──
-  const result = useMemo(() => {
-    const inputs = { plaid, crs, dataMerch: dm };
-    const p = scorePlaid(plaid);
-    const c = scoreCrs(crs);
-    const d = scoreDataMerch(dm);
-    const composite = computeComposite(p.total, c.total, d.total);
-    const dq = evaluateDisqualifiers(inputs);
-    const terms = dq.length > 0 ? tierFromComposite(0) : tierFromComposite(composite);
-    return { p, c, d, composite, dq, terms };
-  }, [plaid, crs, dm]);
+  // What-if check for a proposed advance against the model's sized offer.
+  const whatIf = useMemo(
+    () => (offer ? checkProposedAmount(offer, proposedAdvance) : null),
+    [offer, proposedAdvance],
+  );
 
-  const factorMid = result.terms.factorMin > 0 ? (result.terms.factorMin + result.terms.factorMax) / 2 : 1.4;
-  const stress = useMemo(() => stressTest({
-    advanceAmount: proposedAdvance,
-    factorRate: factorMid,
-    termDays: 252,
-    avgDailyRevenue: (plaid.monthlyRevenue || 0) / 21,
-    avgDailyBalance: plaid.avgDailyBalance,
-    tier: result.terms.tier,
-  }), [proposedAdvance, factorMid, plaid.monthlyRevenue, plaid.avgDailyBalance, result.terms.tier]);
+  // Display values: live model verdict first, then whatever the server
+  // write-through last persisted on the row (legacy / between-sync state).
+  const displayScore: number | null = rec?.score?.total ?? app?.compositeScore ?? null;
+  const displayTier: string | null = rec ? tierFromModel(rec.tier ?? null) : (app?.tier ?? null);
+  const displayDisqualifiers: string[] = rec
+    ? [...(rec.gates?.sufficiency ?? []), ...(rec.gates?.knockouts ?? [])].filter((g: any) => !g.passed).map((g: any) => g.label)
+    : (app?.disqualifiers ?? []);
+  const ts = tierStyle[displayTier ?? 'Decline'] ?? tierStyle.Decline;
 
-  const tierLabel = tierLabelFrom(result.terms.tier);
-  const ts = tierStyle[tierLabel] ?? tierStyle.Decline;
-
-  const canApprove =
-    !!app &&
-    result.dq.length === 0 &&
-    result.terms.tier !== 'decline' &&
-    (result.terms.tier as number) <= 3 &&
-    stress.passes;
+  const modelApprovable = Boolean(rec && (rec.decision === 'PRE_APPROVE' || rec.decision === 'REVIEW') && offer);
 
   // ── Persistence ──
   const saveDraft = (silent = false) => {
@@ -303,11 +292,24 @@ export function UnderwritingDetail() {
     toast.success('Moved to Final Review');
   };
 
+  const manualTermsValid =
+    Number.isFinite(manualFactor) && manualFactor > 1 && manualFactor < 2 &&
+    Number.isFinite(manualHoldback) && manualHoldback >= 1 && manualHoldback <= 50;
+
   const confirmApprove = async () => {
     if (!app || approving) return;
+    if (!modelApprovable && !manualTermsValid) {
+      toast.error('Enter valid manual terms (factor 1–2, holdback 1–50%) to approve without a model offer.');
+      return;
+    }
     setApproving(true);
     saveDraft(true);
-    const dealId = await underwritingActions.approve(app.id);
+    const dealId = await underwritingActions.approve(
+      app.id,
+      modelApprovable
+        ? { recommendation: rec }
+        : { factor: manualFactor, holdbackPct: manualHoldback, tier: manualTier, recommendation: rec ?? undefined },
+    );
     setApproving(false);
     setApproveOpen(false);
     if (dealId) {
@@ -338,6 +340,9 @@ export function UnderwritingDetail() {
   }
 
   const stageDone = app.stage === 'Approved' || app.stage === 'Declined';
+  const approveFactor = modelApprovable ? factorFromOffer(offer) : manualFactor;
+  const approveHoldback = modelApprovable ? holdbackFromOffer(offer) : manualHoldback;
+  const approveTier = modelApprovable ? tierFromModel(rec?.tier ?? null) : manualTier;
 
   return (
     <div className="h-full overflow-y-auto bg-canvas">
@@ -379,7 +384,7 @@ export function UnderwritingDetail() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-          {/* ── LEFT: Inputs ── */}
+          {/* ── LEFT: Evidence inputs (not scored — the model is the scorer) ── */}
           <div className="lg:col-span-7 space-y-4">
             {/* Data sources — underwriting runs in-house off these connections */}
             <div>
@@ -391,8 +396,8 @@ export function UnderwritingDetail() {
                 <VendorCard
                   title="Plaid"
                   meta="Bank verification, cash flow, identity"
-                  lastPulled="Apr 9, 2026 at 10:23 AM"
-                  onPull={() => { saveDraft(true); toast.success('Plaid data refreshed', { description: 'Cash flow inputs updated from the linked account.' }); }}
+                  lastPulled="on last sync"
+                  onPull={() => { saveDraft(true); toast.success('Recorded', { description: 'Live Plaid data refreshes on prospect sync in the Plaid Portal.' }); }}
                 >
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-3">
                     <VendorField label="Bank verification" good value={<span className="inline-flex items-center gap-1"><Check className="w-3.5 h-3.5" />Verified</span>} />
@@ -406,9 +411,9 @@ export function UnderwritingDetail() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <VendorCard
                     title="CRS Credit"
-                    meta="Personal + business credit"
-                    lastPulled="Apr 9, 2026"
-                    onPull={() => toast.success('CRS credit data refreshed')}
+                    meta="Personal + business credit (evidence — not model-scored)"
+                    lastPulled="manually"
+                    onPull={() => toast.success('Recorded — vendor integration pending')}
                   >
                     <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                       <VendorField label="Personal FICO" value={crs.fico} />
@@ -417,9 +422,9 @@ export function UnderwritingDetail() {
                   </VendorCard>
                   <VendorCard
                     title="DataMerch"
-                    meta="MCA industry database"
-                    lastPulled="Apr 9, 2026"
-                    onPull={() => toast.success('DataMerch data refreshed')}
+                    meta="MCA industry database (evidence — not model-scored)"
+                    lastPulled="manually"
+                    onPull={() => toast.success('Recorded — vendor integration pending')}
                   >
                     <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                       <VendorField label="Open positions" good={dm.currentOpenPositions === 0} value={dm.currentOpenPositions} />
@@ -434,25 +439,20 @@ export function UnderwritingDetail() {
               title="Plaid Cash Flow Inputs"
               open={openPlaid}
               onToggle={() => setOpenPlaid(o => !o)}
-              score={<span className="text-xs font-semibold text-indigo-600">{result.p.total}/100</span>}
+              score={<span className="text-[10px] font-semibold text-gray-400 uppercase">from bank data</span>}
             >
               <div className="grid grid-cols-2 gap-3 pt-2">
                 <NumField label="Avg Daily Balance" value={plaid.avgDailyBalance} step={500} min={0} suffix="$"
-                  impact={`${result.p.components[0].points}/20`}
                   onChange={n => setPlaid({ ...plaid, avgDailyBalance: n })} />
                 <NumField label="Min Daily Balance" value={plaid.minDailyBalance} step={500} suffix="$"
-                  impact={`${result.p.components[1].points}/10`}
                   onChange={n => setPlaid({ ...plaid, minDailyBalance: n })} />
                 <NumField label="Monthly Revenue (avg 3mo)" value={plaid.monthlyRevenue} step={1000} min={0} suffix="$"
                   onChange={n => setPlaid({ ...plaid, monthlyRevenue: n })} />
                 <NumField label="Revenue σ (stddev/mean)" value={plaid.revenueStdDevPct} step={0.05} min={0} suffix="0–1"
-                  impact={`${result.p.components[3].points}/15`}
                   onChange={n => setPlaid({ ...plaid, revenueStdDevPct: n })} />
                 <NumField label="NSF count (90d)" value={plaid.nsfCount90d} step={1} min={0}
-                  impact={`${result.p.components[2].points}/20`}
                   onChange={n => setPlaid({ ...plaid, nsfCount90d: n })} />
                 <NumField label="Days since last NSF" value={plaid.daysSinceLastNsf} step={1} min={0}
-                  impact={`${result.p.components[6].points}/10`}
                   onChange={n => setPlaid({ ...plaid, daysSinceLastNsf: n })} />
                 <NumField label="Revenue change 3mo" value={plaid.revenueChange3moPct} step={0.05} suffix="±%"
                   onChange={n => setPlaid({ ...plaid, revenueChange3moPct: n })} />
@@ -466,25 +466,21 @@ export function UnderwritingDetail() {
             </Section>
 
             <Section
-              title="CRS Credit Inputs"
+              title="CRS Credit — evidence"
               open={openCrs}
               onToggle={() => setOpenCrs(o => !o)}
-              score={<span className="text-xs font-semibold text-indigo-600">{result.c.total}/100</span>}
+              score={<span className="text-[10px] font-semibold text-gray-400 uppercase">recorded, not scored</span>}
             >
               <div className="grid grid-cols-2 gap-3 pt-2">
                 <NumField label="Personal FICO" value={crs.fico} step={5} min={300}
-                  impact={`${result.c.components[0].points}/40`}
                   onChange={n => setCrs({ ...crs, fico: n })} />
                 <NumField label="Business Credit (optional)" value={crs.businessCreditScore ?? 0} step={5} min={0}
                   onChange={n => setCrs({ ...crs, businessCreditScore: n || undefined })} />
                 <NumField label="Derogatory marks" value={crs.derogatoryMarks} step={1} min={0}
-                  impact={`${result.c.components[2].points}/15`}
                   onChange={n => setCrs({ ...crs, derogatoryMarks: n })} />
                 <NumField label="Credit utilization" value={crs.creditUtilizationPct} step={0.05} min={0} suffix="0–1"
-                  impact={`${result.c.components[3].points}/10`}
                   onChange={n => setCrs({ ...crs, creditUtilizationPct: n })} />
                 <NumField label="Time in file (yrs)" value={crs.timeInFileYears} step={0.5} min={0}
-                  impact={`${result.c.components[4].points}/10`}
                   onChange={n => setCrs({ ...crs, timeInFileYears: n })} />
                 <div className="flex items-end pb-1">
                   <div className="w-full">
@@ -495,23 +491,19 @@ export function UnderwritingDetail() {
             </Section>
 
             <Section
-              title="DataMerch MCA Inputs"
+              title="DataMerch MCA — evidence"
               open={openDm}
               onToggle={() => setOpenDm(o => !o)}
-              score={<span className="text-xs font-semibold text-indigo-600">{result.d.total}/100</span>}
+              score={<span className="text-[10px] font-semibold text-gray-400 uppercase">recorded, not scored</span>}
             >
               <div className="grid grid-cols-2 gap-3 pt-2">
                 <NumField label="Prior MCA positions" value={dm.priorPositions} step={1} min={0}
-                  impact={`${result.d.components[0].points}/25`}
                   onChange={n => setDm({ ...dm, priorPositions: n })} />
                 <NumField label="Prior defaults" value={dm.priorDefaults} step={1} min={0}
-                  impact={`${result.d.components[1].points}/30`}
                   onChange={n => setDm({ ...dm, priorDefaults: n })} />
                 <NumField label="Current open positions" value={dm.currentOpenPositions} step={1} min={0}
-                  impact={`${result.d.components[2].points}/20`}
                   onChange={n => setDm({ ...dm, currentOpenPositions: n })} />
                 <NumField label="Early payoffs" value={dm.earlyPayoffs} step={1} min={0}
-                  impact={`${result.d.components[4].points}/10`}
                   onChange={n => setDm({ ...dm, earlyPayoffs: n })} />
                 <SelectField<string> label="Our position seniority" value={String(dm.positionSeniority)}
                   options={[{ value: '1', label: '1st (senior)' }, { value: '2', label: '2nd' }, { value: '3', label: '3rd' }, { value: '4', label: '4th+' }]}
@@ -525,89 +517,62 @@ export function UnderwritingDetail() {
             </div>
           </div>
 
-          {/* ── RIGHT: Score panel (sticky) ── */}
+          {/* ── RIGHT: Model verdict (sticky) ── */}
           <div className="lg:col-span-5">
             <div className="lg:sticky lg:top-4 space-y-4">
-              {/* Composite + tier */}
-              <div className="bg-white border border-gray-200 rounded-[8px] p-5">
-                <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-gray-500">Composite score</p>
-                <div className="mt-2 flex flex-wrap items-baseline gap-3">
-                  <span className="text-[44px] leading-none font-bold text-gray-900 tabular-nums tracking-[-0.02em]">{result.composite}</span>
-                  <span className="text-sm text-gray-400 tabular-nums">/ 100</span>
-                  <span className={`inline-block px-2.5 py-1 rounded-[8px] text-xs font-bold text-white ${ts.bg}`}>{tierLabel}</span>
-                </div>
-                <p className="text-xs text-gray-500 mt-2">{result.terms.label}</p>
-                <div className="mt-5 space-y-3">
-                  <ScoreBar label="Plaid Cash Flow" raw={result.p.total} weightPct={WEIGHTS.plaid * 100} color="bg-[#2E6BFF]" />
-                  <ScoreBar label="CRS Credit" raw={result.c.total} weightPct={WEIGHTS.crs * 100} color="bg-[#7C5BFF]" />
-                  <ScoreBar label="DataMerch MCA" raw={result.d.total} weightPct={WEIGHTS.dataMerch * 100} color="bg-[#3CC9E3]" />
-                </div>
-              </div>
-
-              {/* Recommended terms */}
-              {result.terms.tier !== 'decline' && (
-                <div className="bg-white border border-gray-200 rounded-[8px] p-4">
-                  <h3 className="text-xs font-semibold text-gray-900 uppercase tracking-wide mb-3">Recommended Terms</h3>
-                  <div className="grid grid-cols-3 gap-3 text-center">
-                    <div>
-                      <p className="text-[10px] text-gray-400 uppercase">Factor</p>
-                      <p className="text-sm font-bold text-gray-900">{result.terms.factorMin.toFixed(2)}–{result.terms.factorMax.toFixed(2)}</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-gray-400 uppercase">Holdback</p>
-                      <p className="text-sm font-bold text-gray-900">{result.terms.holdbackMinPct}–{result.terms.holdbackMaxPct}%</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-gray-400 uppercase">Max Advance</p>
-                      <p className="text-sm font-bold text-gray-900">{fmt$(plaid.monthlyRevenue * result.terms.maxAdvancePctOfMonthlyRevenue)}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Disqualifiers */}
-              {result.dq.length > 0 && (
-                <div className="bg-red-50 border border-red-200 rounded-[8px] p-4">
+              {rec ? (
+                <RecommendationView rec={rec} />
+              ) : (
+                <div className="bg-white border border-gray-200 rounded-[8px] p-5">
                   <div className="flex items-center gap-2 mb-2">
-                    <ShieldAlert className="w-4 h-4 text-red-600" />
-                    <span className="text-xs font-bold text-red-700 uppercase tracking-wide">Hard Disqualifiers</span>
+                    <Landmark className="w-4 h-4 text-gray-400" />
+                    <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-gray-500">Not scored</p>
                   </div>
-                  <ul className="space-y-1.5">
-                    {result.dq.map(d => (
-                      <li key={d.code} className="flex items-start gap-1.5 text-xs text-red-700">
-                        <X className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-                        <span><strong>{d.label}:</strong> {d.reason}</span>
-                      </li>
-                    ))}
-                  </ul>
+                  <p className="text-sm text-gray-600">
+                    No bank data connected — the Delt Cash-Flow Decision Model scores a file from its
+                    Plaid connection. Link this application to a prospect and connect their bank in the
+                    Plaid Portal to get a decision.
+                  </p>
+                  {(app.compositeScore != null || (app.disqualifiers ?? []).length > 0) && (
+                    <div className="mt-4 pt-3 border-t border-gray-100 text-xs text-gray-600 space-y-1.5">
+                      <p className="text-[11px] font-bold uppercase tracking-wide text-gray-400">Last persisted verdict</p>
+                      {app.compositeScore != null && (
+                        <div className="flex justify-between"><span className="text-gray-400">Score</span><span className="font-semibold">{app.compositeScore}/100{app.tier ? ` (${app.tier})` : ''}</span></div>
+                      )}
+                      {(app.disqualifiers ?? []).map((d, i) => (
+                        <div key={i} className="flex items-start gap-1.5 text-red-600"><AlertTriangle className="w-3 h-3 mt-0.5 shrink-0" />{d}</div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
 
-              {/* Stress test */}
-              <div className="bg-white border border-gray-200 rounded-[8px] p-4">
-                <h3 className="text-xs font-semibold text-gray-900 uppercase tracking-wide mb-3">Income-to-Holdback Stress Test</h3>
-                <NumField label="Proposed advance $" value={proposedAdvance} step={5000} min={0} suffix="$"
-                  onChange={n => setProposedAdvance(n)} />
-                <div className={`mt-3 flex items-center gap-2 px-3 py-2 rounded-[6px] ${stress.passes ? 'bg-emerald-50' : 'bg-red-50'}`}>
-                  {stress.passes ? <ShieldCheck className="w-4 h-4 text-emerald-600" /> : <AlertTriangle className="w-4 h-4 text-red-600" />}
-                  <span className={`text-xs font-bold ${stress.passes ? 'text-emerald-700' : 'text-red-700'}`}>
-                    {stress.passes ? 'PASSES' : 'FAILS'}
-                  </span>
-                  <span className="text-[11px] text-gray-500 ml-auto tabular-nums">
-                    Daily debit {fmt$(stress.dailyDebit)} · {(stress.pctOfDailyRevenue * 100).toFixed(1)}% of rev
-                  </span>
+              {/* What-if: proposed advance vs. the model's sized offer */}
+              {offer && (
+                <div className="bg-white border border-gray-200 rounded-[8px] p-4">
+                  <h3 className="text-xs font-semibold text-gray-900 uppercase tracking-wide mb-3">What-if: proposed advance</h3>
+                  <NumField label="Proposed advance $" value={proposedAdvance} step={5000} min={0} suffix="$"
+                    onChange={n => setProposedAdvance(n)} />
+                  {whatIf && (
+                    <>
+                      <div className={`mt-3 flex items-center gap-2 px-3 py-2 rounded-[6px] ${whatIf.passes ? 'bg-emerald-50' : 'bg-red-50'}`}>
+                        {whatIf.passes ? <ShieldCheck className="w-4 h-4 text-emerald-600" /> : <AlertTriangle className="w-4 h-4 text-red-600" />}
+                        <span className={`text-xs font-bold ${whatIf.passes ? 'text-emerald-700' : 'text-red-700'}`}>
+                          {whatIf.passes ? 'WITHIN MODEL OFFER' : 'ABOVE MODEL OFFER'}
+                        </span>
+                        <span className="text-[11px] text-gray-500 ml-auto tabular-nums">
+                          Daily debit {fmt$(whatIf.dailyPayment)} · {(whatIf.pctOfDailyRevenue * 100).toFixed(1)}% of rev
+                        </span>
+                      </div>
+                      {!whatIf.passes && (
+                        <p className="mt-2 text-[11px] text-gray-500">
+                          Model-supported maximum: <strong>{fmt$(whatIf.maxAmount)}</strong> at factor {offer.factor} over {offer.term_months} mo.
+                        </p>
+                      )}
+                    </>
+                  )}
                 </div>
-                {stress.flags.length > 0 && (
-                  <ul className="mt-2 space-y-1">
-                    {stress.flags.map((f, i) => <li key={i} className="text-[11px] text-red-600">• {f}</li>)}
-                  </ul>
-                )}
-                {!stress.passes && stress.suggestedMaxAdvance > 0 && (
-                  <p className="mt-2 text-[11px] text-gray-500">
-                    Suggested max advance: <strong>{fmt$(stress.suggestedMaxAdvance)}</strong> · or extend term to ~{stress.suggestedMinTermDays} days.
-                  </p>
-                )}
-              </div>
+              )}
 
               {/* One-page summary */}
               <div className="bg-white border border-gray-200 rounded-[8px] overflow-hidden">
@@ -622,12 +587,11 @@ export function UnderwritingDetail() {
                   <div className="px-4 pb-4 pt-1 border-t border-gray-100 text-xs text-gray-700 space-y-1.5">
                     <div className="flex justify-between"><span className="text-gray-400">Merchant</span><span className="font-medium">{app.businessName}</span></div>
                     <div className="flex justify-between"><span className="text-gray-400">Application</span><span className="font-mono">{app.applicationId}</span></div>
-                    <div className="flex justify-between"><span className="text-gray-400">Composite</span><span className="font-bold">{result.composite}/100 ({tierLabel})</span></div>
-                    <div className="flex justify-between"><span className="text-gray-400">Plaid / CRS / DM</span><span className="tabular-nums">{result.p.total} / {result.c.total} / {result.d.total}</span></div>
+                    <div className="flex justify-between"><span className="text-gray-400">Model score</span><span className="font-bold">{displayScore != null ? `${displayScore}/100` : 'Not scored'}{displayTier ? ` (${displayTier})` : ''}</span></div>
+                    <div className="flex justify-between"><span className="text-gray-400">Model decision</span><span className="font-medium">{rec?.decision_label ?? '—'}</span></div>
                     <div className="flex justify-between"><span className="text-gray-400">Requested</span><span>{fmt$(requested)}</span></div>
-                    <div className="flex justify-between"><span className="text-gray-400">Factor / Holdback</span><span>{result.terms.factorMin.toFixed(2)}–{result.terms.factorMax.toFixed(2)} / {result.terms.holdbackMinPct}–{result.terms.holdbackMaxPct}%</span></div>
-                    <div className="flex justify-between"><span className="text-gray-400">Stress test</span><span className={stress.passes ? 'text-emerald-600 font-semibold' : 'text-red-600 font-semibold'}>{stress.passes ? 'Pass' : 'Fail'}</span></div>
-                    <div className="flex justify-between"><span className="text-gray-400">Disqualifiers</span><span>{result.dq.length === 0 ? 'None' : result.dq.map(d => d.code).join(', ')}</span></div>
+                    <div className="flex justify-between"><span className="text-gray-400">Sized offer</span><span>{offer ? `${fmt$(offer.amount)} · factor ${offer.factor} · ${holdbackFromOffer(offer)}% holdback` : '—'}</span></div>
+                    <div className="flex justify-between"><span className="text-gray-400">Failed gates</span><span>{displayDisqualifiers.length === 0 ? 'None' : displayDisqualifiers.join(', ')}</span></div>
                     <button onClick={() => window.print()} className="mt-2 inline-flex items-center gap-1.5 text-[11px] text-brand hover:underline">
                       <Printer className="w-3 h-3" /> Print / screenshot
                     </button>
@@ -643,7 +607,9 @@ export function UnderwritingDetail() {
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-6 py-3 z-30">
         <div className="max-w-[1440px] mx-auto flex items-center justify-between gap-3">
           <div className="text-xs text-gray-500">
-            Composite <strong className="text-gray-900">{result.composite}</strong> · <span className={ts.text}>{tierLabel}</span>
+            {displayScore != null
+              ? <>Model <strong className="text-gray-900">{displayScore}</strong> · <span className={ts.text}>{displayTier ?? '—'}</span></>
+              : <>Not scored — no bank data</>}
           </div>
           <div className="flex items-center gap-2">
             <button onClick={() => saveDraft()} className="h-10 px-5 text-sm font-bold text-gray-900 border border-gray-300 rounded-[10px] hover:bg-white/[0.04] transition-colors">
@@ -662,9 +628,8 @@ export function UnderwritingDetail() {
             {!stageDone && (
               <button
                 onClick={() => setApproveOpen(true)}
-                disabled={!canApprove}
-                title={canApprove ? '' : 'Requires Tier ≤ 3, no disqualifiers, passing stress test'}
-                className="h-10 px-5 text-sm font-bold text-white bg-emerald-600 rounded-[10px] hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5 transition-colors"
+                title={modelApprovable ? 'Approve on the model\'s sized offer' : 'No model offer — approving requires manual terms'}
+                className="h-10 px-5 text-sm font-bold text-white bg-emerald-600 rounded-[10px] hover:bg-emerald-500 flex items-center gap-1.5 transition-colors"
               >
                 <Check className="w-4 h-4" /> Approve &amp; Fund
               </button>
@@ -684,19 +649,51 @@ export function UnderwritingDetail() {
           <div className="bg-white rounded-[10px] shadow-xl w-full max-w-md" onClick={e => e.stopPropagation()}>
             <div className="px-5 py-4 border-b border-gray-200">
               <h3 className="text-base font-semibold text-gray-900">Approve &amp; Fund</h3>
-              <p className="text-xs text-gray-500 mt-0.5">A Capital deal will be created from this application.</p>
+              <p className="text-xs text-gray-500 mt-0.5">
+                {modelApprovable
+                  ? 'Terms come from the model\'s sized offer. A Capital deal will be created.'
+                  : 'No model offer on this file — enter manual terms. A Capital deal will be created.'}
+              </p>
             </div>
             <div className="px-5 py-4 space-y-2 text-sm">
               <div className="flex justify-between"><span className="text-gray-500">Merchant</span><span className="font-medium">{app.businessName}</span></div>
               <div className="flex justify-between"><span className="text-gray-500">Funded amount</span><span className="font-medium">{fmt$(requested)}</span></div>
-              <div className="flex justify-between"><span className="text-gray-500">Factor</span><span className="font-medium">{factorMid.toFixed(4)}x</span></div>
-              <div className="flex justify-between"><span className="text-gray-500">Total owed</span><span className="font-medium">{fmt$(Math.round(requested * factorMid))}</span></div>
-              <div className="flex justify-between"><span className="text-gray-500">Holdback</span><span className="font-medium">{Math.round((result.terms.holdbackMinPct + result.terms.holdbackMaxPct) / 2)}%</span></div>
-              <div className="flex justify-between"><span className="text-gray-500">Tier</span><span className="font-medium">{tierLabel}</span></div>
+              {modelApprovable ? (
+                <>
+                  <div className="flex justify-between"><span className="text-gray-500">Factor</span><span className="font-medium">{approveFactor.toFixed(2)}x</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Total owed</span><span className="font-medium">{fmt$(Math.round(requested * approveFactor))}</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Holdback</span><span className="font-medium">{approveHoldback}%</span></div>
+                  <div className="flex justify-between"><span className="text-gray-500">Tier</span><span className="font-medium">{approveTier}</span></div>
+                  {offer && requested > offer.amount && (
+                    <p className="text-[11px] text-amber-600 pt-1">
+                      Requested exceeds the model's sized offer ({fmt$(offer.amount)}).
+                    </p>
+                  )}
+                </>
+              ) : (
+                <div className="pt-1 space-y-3">
+                  <div className="flex items-start gap-1.5 text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-[6px] px-2.5 py-2">
+                    <AlertTriangle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                    Approving without a model offer. Terms below are manual and on your judgment.
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <NumField label="Factor" value={manualFactor} step={0.01} min={1} suffix="x" onChange={setManualFactor} />
+                    <NumField label="Holdback %" value={manualHoldback} step={1} min={1} suffix="%" onChange={setManualHoldback} />
+                  </div>
+                  <SelectField<UWTier> label="Tier" value={manualTier}
+                    options={[
+                      { value: 'Tier 1', label: 'Tier 1' }, { value: 'Tier 2', label: 'Tier 2' },
+                      { value: 'Tier 3', label: 'Tier 3' }, { value: 'Tier 4', label: 'Tier 4' },
+                      { value: 'Decline', label: 'Decline (override)' },
+                    ]}
+                    onChange={setManualTier} />
+                  <div className="flex justify-between text-sm"><span className="text-gray-500">Total owed</span><span className="font-medium">{fmt$(Math.round(requested * (manualTermsValid ? manualFactor : 0)))}</span></div>
+                </div>
+              )}
             </div>
             <div className="px-5 py-4 border-t border-gray-200 flex justify-end gap-2">
               <button onClick={() => setApproveOpen(false)} className="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-[6px]">Cancel</button>
-              <button onClick={confirmApprove} disabled={approving}
+              <button onClick={confirmApprove} disabled={approving || (!modelApprovable && !manualTermsValid)}
                 className="px-4 py-2 text-sm font-semibold text-white bg-emerald-600 rounded-[6px] hover:bg-emerald-700 disabled:opacity-50">
                 {approving ? 'Funding…' : 'Confirm & Create Deal'}
               </button>

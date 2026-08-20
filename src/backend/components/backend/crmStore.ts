@@ -22,14 +22,8 @@
 import { useSyncExternalStore, useCallback } from 'react';
 import { toast } from 'sonner@2.0.3';
 import { supabase, isSupabaseConfigured } from '../../lib/supabase';
-import {
-  evaluateApplication,
-  defaultScoreInputs,
-  stressTest,
-  type PlaidInputs,
-  type CrsInputs,
-  type DataMerchInputs,
-} from './underwritingScore';
+import type { PlaidInputs, CrsInputs, DataMerchInputs } from './uwInputs';
+import { tierFromModel, factorFromOffer, holdbackFromOffer, modelNotes } from './modelMapping';
 import { capitalActions } from './capitalStore';
 
 // ══════════════════════════════════════════════════════════════
@@ -1708,63 +1702,11 @@ export const onboardingActions = {
 };
 
 // ── Underwriting actions ──
-// Map a scoring-engine RiskTier (1-4 | 'decline') to the UWTier label stored in DB.
-function tierLabel(tier: 1 | 2 | 3 | 4 | 'decline'): UWTier {
-  return tier === 'decline' ? 'Decline' : (`Tier ${tier}` as UWTier);
-}
-
-/**
- * Run the pure scoring engine over an application's inputs and return the
- * derived rubric patch (sub-scores, composite, tier, disqualifiers, stress test).
- * Falls back to engine defaults for any missing input block.
- */
-function deriveScores(app: UWApplication): Partial<UWApplication> {
-  const seed = defaultScoreInputs({
-    monthlyRevenue: app.monthlyRevenue || undefined,
-    avgDailyBalance: app.avgDailyBalance || undefined,
-    fico: app.creditScore || undefined,
-    existingPositions: app.existingPositions || undefined,
-  });
-  const inputs = {
-    plaid: app.plaidInputs ?? seed.plaid,
-    crs: app.crsInputs ?? seed.crs,
-    dataMerch: app.dataMerchInputs ?? seed.dataMerch,
-  };
-  const result = evaluateApplication(inputs);
-
-  // Stress test against the requested amount at the tier's mid factor / 252-day term.
-  const factor =
-    result.terms.factorMin > 0
-      ? (result.terms.factorMin + result.terms.factorMax) / 2
-      : 1.4;
-  const termDays = 252;
-  const avgDailyRevenue = (inputs.plaid.monthlyRevenue || 0) / 21;
-  const st =
-    app.requestedAmount > 0
-      ? stressTest({
-          advanceAmount: app.requestedAmount,
-          factorRate: factor,
-          termDays,
-          avgDailyRevenue,
-          avgDailyBalance: inputs.plaid.avgDailyBalance,
-          tier: result.terms.tier,
-        })
-      : null;
-
-  return {
-    plaidInputs: inputs.plaid,
-    crsInputs: inputs.crs,
-    dataMerchInputs: inputs.dataMerch,
-    plaidScore: result.plaidScore.total,
-    crsScore: result.crsScore.total,
-    dataMerchScore: result.dataMerchScore.total,
-    compositeScore: result.composite,
-    riskScore: result.composite,
-    tier: tierLabel(result.terms.tier),
-    disqualifiers: result.disqualifiers.map(d => d.reason),
-    stressTest: st ? { passes: st.passes, notes: st.flags } : undefined,
-  };
-}
+// Scoring is server-side only: the Delt Cash-Flow Decision Model runs in
+// syncItem (supabase/functions/_shared/plaid.ts) and mirrors its verdict
+// onto underwriting_apps (composite_score/risk_score/tier/disqualifiers)
+// for any app linked by lead_id. An app with compositeScore == null is
+// "not scored" — no bank data connected yet.
 
 export const underwritingActions = {
   create(partial: Partial<UWApplication>): UWApplication {
@@ -1801,7 +1743,8 @@ export const underwritingActions = {
       contactEmail: partial.contactEmail,
       contactPhone: partial.contactPhone,
     };
-    const app: UWApplication = { ...base, ...deriveScores(base) };
+    // Not auto-scored: the server model fills in scores once bank data syncs.
+    const app: UWApplication = base;
     const prev = state.underwriting;
     persist(
       'underwriting app',
@@ -1826,8 +1769,8 @@ export const underwritingActions = {
   },
 
   /**
-   * Merge new rubric inputs, recompute all scores via the pure engine, and
-   * persist the inputs + derived scores/tier/disqualifiers/stress test together.
+   * Merge new evidence inputs and persist them together with the mirrored
+   * summary scalars. Inputs are evidence only — scoring stays server-side.
    */
   updateInputs(
     id: string,
@@ -1850,7 +1793,6 @@ export const underwritingActions = {
     if (merged.crsInputs) merged.creditScore = merged.crsInputs.fico;
     if (merged.dataMerchInputs) merged.existingPositions = merged.dataMerchInputs.currentOpenPositions;
 
-    const scored = deriveScores(merged);
     underwritingActions.update(id, {
       plaidInputs: merged.plaidInputs,
       crsInputs: merged.crsInputs,
@@ -1860,7 +1802,6 @@ export const underwritingActions = {
       avgDailyBalance: merged.avgDailyBalance,
       creditScore: merged.creditScore,
       existingPositions: merged.existingPositions,
-      ...scored,
     });
   },
 
@@ -1876,24 +1817,39 @@ export const underwritingActions = {
    * mark_funded once the signed packet is complete.
    * Returns the new Capital deal id, or null on failure.
    */
-  async approve(id: string): Promise<string | null> {
+  async approve(
+    id: string,
+    manual?: { factor?: number; holdbackPct?: number; tier?: UWTier; recommendation?: any },
+  ): Promise<string | null> {
     const app = state.underwriting.find(a => a.id === id);
     if (!app || !supabase) return null;
 
-    const scored = app.compositeScore != null ? app : { ...app, ...deriveScores(app) };
-    const result = evaluateApplication({
-      plaid: scored.plaidInputs ?? defaultScoreInputs().plaid,
-      crs: scored.crsInputs ?? defaultScoreInputs().crs,
-      dataMerch: scored.dataMerchInputs ?? defaultScoreInputs().dataMerch,
-    });
-    const terms = result.terms;
-    const factor = terms.factorMin > 0 ? +((terms.factorMin + terms.factorMax) / 2).toFixed(4) : 1.4;
-    const holdback = terms.holdbackMinPct > 0 ? Math.round((terms.holdbackMinPct + terms.holdbackMaxPct) / 2) : 12;
-    const tier = scored.tier ?? tierLabel(terms.tier);
+    // Terms come from the model's sized offer. UnderwritingDetail passes the
+    // recommendation doc in; fall back to reading it by lead when possible.
+    let rec: any = manual?.recommendation ?? null;
+    if (!rec && app.leadId) {
+      try {
+        const { data } = await supabase
+          .from('plaid_nodes')
+          .select('data')
+          .eq('lead_id', app.leadId)
+          .eq('doc_kind', 'recommendation')
+          .maybeSingle();
+        rec = data?.data ?? null;
+      } catch { /* fall through to manual-terms check */ }
+    }
+
+    const offer = rec?.offer ?? null;
+    if (!offer && manual?.factor == null) {
+      toast.error('No model offer on this file — enter manual terms to approve.');
+      return null;
+    }
+    const factor = manual?.factor ?? factorFromOffer(offer);
+    const holdback = manual?.holdbackPct ?? holdbackFromOffer(offer);
+    const tier = manual?.tier ?? (rec ? tierFromModel(rec.tier ?? null) : (app.tier ?? 'Decline'));
     const notesSnapshot = [
       `Underwriting ${app.applicationId} (${tier})`,
-      `Composite ${scored.compositeScore ?? result.composite}/100`,
-      `Plaid ${scored.plaidScore ?? result.plaidScore.total} · CRS ${scored.crsScore ?? result.crsScore.total} · DataMerch ${scored.dataMerchScore ?? result.dataMerchScore.total}`,
+      rec ? modelNotes(rec) : 'Manual terms — no model recommendation',
     ].join(' | ');
 
     const { data: dealId, error } = await supabase.rpc('approve_underwriting', {
@@ -1932,7 +1888,7 @@ export const underwritingActions = {
           paybackAmount: Math.round((app.requestedAmount || 0) * factor),
           holdbackPct: holdback,
           tier,
-          compositeScore: scored.compositeScore ?? result.composite,
+          compositeScore: rec?.score?.total ?? app.compositeScore,
           stipulations: notesSnapshot,
         },
       }).catch(() => {});

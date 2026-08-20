@@ -644,15 +644,23 @@ export interface ApplyApplicant {
   email: string;
   fullName?: string;
   businessName?: string;
+  phone?: string;
   /** The deltcapital.com lead uuid (delt_capital.leads.id), if known. */
   leadId?: string;
   /** Plaid Link session id from the applicant's Link flow — funnel telemetry. */
   linkSessionId?: string;
 }
 
+interface ApplyLeadOpts {
+  source?: string;
+  products?: string[];
+  type?: string;
+  timelineEvent?: string;
+}
+
 /** Match an applicant to a pipeline lead by email, or create one using the
  * same conventions as the Meta lead import (see meta.ts importMetaLeads). */
-async function resolveApplyLead(applicant: ApplyApplicant): Promise<string> {
+export async function resolveApplyLead(applicant: ApplyApplicant, opts: ApplyLeadOpts = {}): Promise<string> {
   const db = svc();
   const email = applicant.email.trim().toLowerCase();
 
@@ -668,19 +676,23 @@ async function resolveApplyLead(applicant: ApplyApplicant): Promise<string> {
   const id = `lead-app-${crypto.randomUUID().slice(0, 8)}`;
   const now = new Date().toISOString();
   const name = applicant.businessName || applicant.fullName || email;
+  const source = opts.source ?? "deltcapital.com application";
   const { error } = await db.from("pipeline_leads").insert({
     id,
-    products: ["Capital"],
+    products: opts.products ?? ["Capital"],
+    ...(opts.type ? { type: opts.type } : {}),
     business_name: name,
     contact_name: applicant.fullName ?? null,
     contact_email: email,
-    source: "deltcapital.com application",
+    contact_phone: applicant.phone?.trim() || null,
+    source,
     stage: "New",
     status: "New",
     external_id: applicant.leadId ? `apply:${applicant.leadId}` : null,
     timeline: [{
       date: now,
-      event: "Created from the deltcapital.com funding application (bank connected via Plaid).",
+      event: opts.timelineEvent ??
+        "Created from the deltcapital.com funding application (bank connected via Plaid).",
     }],
   });
   if (error) throw new Error(`Failed to create pipeline lead for applicant: ${error.message}`);
@@ -834,6 +846,56 @@ export async function createHostedLink(leadId: string) {
     expiration: out.expiration ?? null,
     emailed,
   };
+}
+
+/**
+ * Public deltpay.com /apply intake: match-or-create the pipeline lead from
+ * the application form, then hand back a Plaid-hosted connect link. The
+ * connection itself completes entirely server-side (LINK webhook /
+ * sweepHostedLinks → completeHostedLink), so the applicant page never
+ * touches the Plaid SDK. Repeat submissions reuse a pending, unexpired
+ * invite instead of minting (and re-emailing) a new one.
+ */
+export async function applyIntake(a: {
+  email: string;
+  fullName?: string;
+  businessName?: string;
+  phone?: string;
+  businessType?: string;
+}) {
+  const leadId = await resolveApplyLead(
+    { email: a.email, fullName: a.fullName, businessName: a.businessName, phone: a.phone },
+    {
+      source: "deltpay.com application",
+      products: ["Processing"],
+      type: "Processing",
+      timelineEvent:
+        `Created from the deltpay.com payments application.` +
+        (a.businessType ? ` Business type: ${a.businessType}.` : ""),
+    },
+  );
+
+  const db = svc();
+  const { data: pending } = await db
+    .from("plaid_link_requests")
+    .select("hosted_link_url, expires_at")
+    .eq("lead_id", leadId)
+    .eq("status", "pending")
+    .gt("expires_at", new Date().toISOString())
+    .order("created_at", { ascending: false })
+    .limit(1);
+  if (pending?.length) {
+    return {
+      lead_id: leadId,
+      hosted_link_url: pending[0].hosted_link_url as string,
+      expiration: pending[0].expires_at as string,
+      emailed: true,
+      reused: true,
+    };
+  }
+
+  const link = await createHostedLink(leadId);
+  return { lead_id: leadId, ...link, reused: false };
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -1880,6 +1942,27 @@ export async function syncItem(itemId: string, opts?: { verification?: boolean }
       },
     ];
     await writeNodes(db, [], analysisDocs);
+
+    // Mirror the model verdict onto any linked underwriting file so the CRM
+    // pipeline (composite/tier/riskScore/disqualifiers) always shows the
+    // model's numbers — the model is the only scorer. Best-effort.
+    try {
+      const failedGates = [
+        ...recommendation.gates.sufficiency,
+        ...recommendation.gates.knockouts,
+      ].filter((g) => !g.passed).map((g) => g.label);
+      await db
+        .from("underwriting_apps")
+        .update({
+          composite_score: recommendation.score.total,
+          risk_score: recommendation.score.total,
+          tier: recommendation.tier == null ? "Decline" : `Tier ${recommendation.tier}`,
+          disqualifiers: failedGates,
+        })
+        .eq("lead_id", leadId);
+    } catch (err) {
+      console.error("[plaid] underwriting_apps score mirror failed:", err);
+    }
 
     const firstSync = txReady && !item.last_synced_at;
     await db

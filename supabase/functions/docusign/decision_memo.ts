@@ -85,7 +85,7 @@ export async function renderDecisionMemoPdf(f: DecisionMemoFields): Promise<Uint
     row("Payment frequency", f.paymentFrequency ?? "Daily");
     row("Holdback / remittance", f.holdbackPct != null ? `${f.holdbackPct}%` : "—");
     row("Tier", f.tier ?? "—");
-    row("Composite score", f.compositeScore != null ? String(f.compositeScore) : "—");
+    row("Cash-flow score", f.compositeScore != null ? String(f.compositeScore) : "—");
   } else {
     row("Decline reason", f.declineReason ?? "—");
   }

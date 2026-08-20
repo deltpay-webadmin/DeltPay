@@ -5,24 +5,23 @@ import {
   Folder, FolderOpen, FileJson, ShieldCheck, ShieldAlert, Banknote, User,
   CreditCard, TrendingUp, TrendingDown, Minus, ArrowLeft, Trash2, Copy,
   AlertTriangle, CheckCircle2, XCircle, Clock, Zap, Send, Wallet, Activity,
-  PieChart, Repeat, Gauge, ScrollText,
+  PieChart, Repeat, Gauge, ScrollText, ClipboardCheck,
 } from 'lucide-react';
 import {
   BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip as RTooltip, Legend, ResponsiveContainer,
 } from 'recharts';
 import { toast } from 'sonner@2.0.3';
-import { useLeads, underwritingActions, type Lead } from '../crmStore';
+import { useLeads, useUnderwriting, underwritingActions, type Lead } from '../crmStore';
 import {
   usePlaidItems, usePlaidNodes, usePlaidStatus, usePlaidSync, usePlaidLinkRequests, usePlaidUsage, plaidActions,
   itemUiStatus,
   PLAID_LINK_SESSION_KEY, PLAID_OAUTH_HREF_KEY,
   type PlaidItem, type PlaidNode,
 } from '../plaidStore';
-import {
-  scorePlaid, evaluateApplication, defaultScoreInputs,
-  type PlaidInputs, type SubScoreBreakdown, type ScoringResult,
-} from '../underwritingScore';
+import type { PlaidInputs } from '../uwInputs';
+import { tierFromModel, failedKnockoutLabels } from '../modelMapping';
+import { RecommendationView, ModelDecisionBadge } from '../RecommendationView';
 import { LeadProgressBar } from '../LeadProgressBar';
 
 // ══════════════════════════════════════════════════════════════
@@ -393,9 +392,7 @@ interface ProspectRollup {
   summary: any | null;
   cashFlow: any | null;
   plaidInputs: PlaidInputs | null;
-  plaidScore: SubScoreBreakdown | null;
-  prelim: ScoringResult | null;
-  /** Server-side Delt Cash-Flow Decision Model output (authoritative). */
+  /** Server-side Delt Cash-Flow Decision Model output (the only scorer). */
   recommendation: any | null;
 }
 
@@ -415,18 +412,7 @@ function useProspects(): ProspectRollup[] {
       const uwDoc = byKind(lead.id, 'underwriting_inputs');
       const recommendation = byKind(lead.id, 'recommendation');
       const plaidInputs: PlaidInputs | null = uwDoc?.plaidInputs ?? null;
-      let plaidScore: SubScoreBreakdown | null = null;
-      let prelim: ScoringResult | null = null;
-      if (plaidInputs) {
-        plaidScore = scorePlaid(plaidInputs);
-        const seeded = defaultScoreInputs({
-          monthlyRevenue: plaidInputs.monthlyRevenue || undefined,
-          avgDailyBalance: plaidInputs.avgDailyBalance || undefined,
-          existingPositions: uwDoc?.detected?.debt_positions || undefined,
-        });
-        prelim = evaluateApplication({ ...seeded, plaid: plaidInputs });
-      }
-      return { lead, items: leadItems, summary, cashFlow, plaidInputs, plaidScore, prelim, recommendation };
+      return { lead, items: leadItems, summary, cashFlow, plaidInputs, recommendation };
     });
   }, [leads, items, nodes]);
 }
@@ -434,29 +420,6 @@ function useProspects(): ProspectRollup[] {
 // ══════════════════════════════════════════════════════════════
 // Badges
 // ══════════════════════════════════════════════════════════════
-
-const MODEL_DECISION_STYLE: Record<string, { cls: string; Icon: React.ElementType; label: string }> = {
-  PRE_APPROVE: { cls: 'bg-emerald-400/10 border-emerald-400/30 text-emerald-300', Icon: CheckCircle2, label: 'Pre-Approved' },
-  REVIEW: { cls: 'bg-amber-400/10 border-amber-400/30 text-amber-300', Icon: AlertTriangle, label: 'Review' },
-  DECLINE: { cls: 'bg-red-400/10 border-red-400/30 text-red-300', Icon: XCircle, label: 'Decline' },
-  INSUFFICIENT_DATA: { cls: 'bg-white/[0.06] border-(--dp-border-strong) text-(--dp-text-secondary)', Icon: Clock, label: 'More data' },
-};
-
-function ModelDecisionBadge({ decision }: { decision: string | null | undefined }) {
-  if (!decision) {
-    return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-white/[0.05] border border-(--dp-border) text-(--dp-text-muted)">
-        <Clock className="w-3 h-3" /> No data
-      </span>
-    );
-  }
-  const cfg = MODEL_DECISION_STYLE[decision] ?? MODEL_DECISION_STYLE.INSUFFICIENT_DATA;
-  return (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs border ${cfg.cls}`}>
-      <cfg.Icon className="w-3 h-3" /> {cfg.label}
-    </span>
-  );
-}
 
 function TrendIcon({ trend }: { trend?: string }) {
   if (trend === 'growing') return <TrendingUp className="w-4 h-4 text-emerald-400" />;
@@ -546,181 +509,6 @@ function MetricTile({ label, value, sub }: { label: string; value: React.ReactNo
 }
 
 // ══════════════════════════════════════════════════════════════
-// Decision Model recommendation panel
-// ══════════════════════════════════════════════════════════════
-
-function GateRow({ g }: { g: any }) {
-  return (
-    <div className="flex items-center gap-2 py-1">
-      {g.passed
-        ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
-        : <XCircle className="w-3.5 h-3.5 text-red-400 flex-shrink-0" />}
-      <span className={`text-xs flex-1 ${g.passed ? 'text-(--dp-text-secondary)' : 'text-red-300'}`}>{g.label}</span>
-      <span className={`text-[11px] ${g.passed ? TXT_FAINT : 'text-red-300'}`}>{g.value}</span>
-      <span className={`text-[10px] ${TXT_FAINT} w-20 text-right`}>{g.threshold}</span>
-    </div>
-  );
-}
-
-function RecommendationView({ rec, onSendToUnderwriting }: { rec: any; onSendToUnderwriting?: () => void }) {
-  const [showTrace, setShowTrace] = useState(false);
-  const cfg = MODEL_DECISION_STYLE[rec.decision] ?? MODEL_DECISION_STYLE.INSUFFICIENT_DATA;
-  const offer = rec.offer;
-  // Non-binding starter offer on declines (model >= 1.1.0); older persisted
-  // recommendations simply lack the field.
-  const fallback = !offer ? (rec.fallback_offer ?? null) : null;
-
-  return (
-    <div className="space-y-4">
-      {/* Decision banner */}
-      <div className={`rounded-2xl border p-4 flex flex-wrap items-center justify-between gap-3 ${cfg.cls}`}>
-        <div className="flex items-center gap-3">
-          <cfg.Icon className="w-6 h-6" />
-          <div>
-            <p className="text-base font-semibold">{rec.decision_label}</p>
-            <p className="text-xs opacity-80">
-              {rec.model_name} v{rec.model_version} · score {rec.score?.total ?? '—'}/100
-              {rec.tier_label ? ` · ${rec.tier_label}` : ''} · {timeAgo(rec.computed_at)}
-            </p>
-          </div>
-        </div>
-        {onSendToUnderwriting && (
-          <button onClick={onSendToUnderwriting} className={BTN_PRIMARY}>
-            <Send className="w-4 h-4" /> Send to Underwriting
-          </button>
-        )}
-      </div>
-
-      <div className="grid lg:grid-cols-3 gap-4">
-        {/* Offer */}
-        <div className={`${GLASS} p-4 relative overflow-hidden`}>
-          <div className="absolute -bottom-12 -left-12 w-40 h-40 rounded-full bg-[#2E6BFF]/20 blur-3xl pointer-events-none" />
-          <h4 className={`text-sm font-semibold ${TXT} mb-2 flex items-center gap-2`}>
-            <Banknote className="w-4 h-4 text-[#8FB0FF]" /> Sized offer
-          </h4>
-          {offer ? (
-            <>
-              <p className={`text-3xl font-semibold tracking-tight ${TXT}`}>{fmtMoney(offer.amount)}</p>
-              <p className={`text-xs ${TXT_MUTED} mt-1`}>
-                factor {offer.factor} · {offer.term_months} mo · payback {fmtMoney(offer.total_payback)}
-              </p>
-              <div className="grid grid-cols-2 gap-2 mt-3">
-                <MetricTile label="Daily payment" value={fmtMoney(offer.daily_payment, 2)} sub={`${fmtPct(offer.payment_pct_daily_revenue)} of daily revenue`} />
-                <MetricTile label="Monthly est." value={fmtMoney(offer.est_monthly_payment)} sub={`${fmtPct(offer.payment_pct_adb)} of ADB`} />
-              </div>
-              <p className={`text-[11px] ${TXT_FAINT} mt-3 mb-1`}>Caps (offer = minimum):</p>
-              <div className="flex flex-wrap gap-1.5">
-                {Object.entries(offer.caps ?? {}).map(([k, v]) =>
-                  v == null ? null : (
-                    <span
-                      key={k}
-                      className={`px-2 py-0.5 rounded-full text-[10px] border ${
-                        offer.binding_cap === k
-                          ? 'bg-[#2E6BFF]/20 border-[#2E6BFF]/50 text-[var(--dp-accent-text)] font-medium'
-                          : 'bg-white/[0.04] border-(--dp-border) text-(--dp-text-muted)'
-                      }`}
-                    >
-                      {k.replace(/_/g, ' ')}: {fmtMoney(Number(v))}
-                    </span>
-                  ),
-                )}
-              </div>
-            </>
-          ) : fallback ? (
-            <>
-              <div className="flex items-center gap-2">
-                <p className="text-3xl font-semibold tracking-tight text-amber-300">{fmtMoney(fallback.amount)}</p>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-400/15 border border-amber-400/40 text-amber-300">
-                  Non-binding
-                </span>
-              </div>
-              <p className="text-xs text-amber-300/90 mt-1">
-                Theoretical starter offer — non-binding, prospect does not qualify
-              </p>
-              <p className={`text-xs ${TXT_MUTED} mt-1`}>
-                factor {fallback.factor} · {fallback.term_months} mo · payback {fmtMoney(fallback.total_payback)}
-              </p>
-              <div className="grid grid-cols-2 gap-2 mt-3">
-                <MetricTile label="Daily payment" value={fmtMoney(fallback.daily_payment, 2)} sub={`${fmtPct(fallback.payment_pct_daily_revenue)} of daily revenue`} />
-                <MetricTile label="Monthly est." value={fmtMoney(fallback.est_monthly_payment)} sub={`${fmtPct(fallback.payment_pct_adb)} of ADB`} />
-              </div>
-              <p className={`text-[11px] ${TXT_FAINT} mt-3`}>
-                Sized for a minimal processing relationship ({fmtMoney(fallback.floor)} floor). The decline stands — see gates.
-              </p>
-            </>
-          ) : (
-            <p className={`text-sm ${TXT_FAINT}`}>No offer — see gates and conditions.</p>
-          )}
-        </div>
-
-        {/* Score breakdown */}
-        <div className={`${GLASS} p-4`}>
-          <h4 className={`text-sm font-semibold ${TXT} mb-2 flex items-center gap-2`}>
-            <Gauge className="w-4 h-4 text-[#8FB0FF]" /> Cash-flow score — {rec.score?.total ?? 0}/100
-          </h4>
-          <div className="space-y-1.5">
-            {(rec.score?.components ?? []).map((cp: any) => (
-              <div key={cp.key} className="flex items-center gap-2">
-                <span className={`text-xs ${TXT_MUTED} w-36 truncate`} title={cp.value}>{cp.label}</span>
-                <div className="flex-1 h-1.5 bg-white/[0.07] rounded-full overflow-hidden">
-                  <div
-                    className="h-full rounded-full bg-gradient-to-r from-[#2E6BFF] to-[#8FB0FF]"
-                    style={{ width: `${Math.max(0, Math.min(100, (cp.points / cp.max) * 100))}%` }}
-                  />
-                </div>
-                <span className={`text-xs ${TXT_MUTED} w-10 text-right`}>{cp.points}/{cp.max}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Gates + conditions */}
-        <div className={`${GLASS} p-4`}>
-          <h4 className={`text-sm font-semibold ${TXT} mb-2 flex items-center gap-2`}>
-            <ShieldCheck className="w-4 h-4 text-[#8FB0FF]" /> Gates & conditions
-          </h4>
-          <div className="max-h-40 overflow-y-auto pr-1">
-            {[...(rec.gates?.sufficiency ?? []), ...(rec.gates?.knockouts ?? [])].map((g: any) => (
-              <GateRow key={g.code} g={g} />
-            ))}
-          </div>
-          {(rec.conditions ?? []).length > 0 && (
-            <>
-              <p className={`text-[11px] ${TXT_FAINT} mt-2 mb-1`}>Conditions before funding:</p>
-              <ul className="space-y-1">
-                {rec.conditions.map((c: string, i: number) => (
-                  <li key={i} className="text-xs text-amber-300/90 flex items-start gap-1.5">
-                    <AlertTriangle className="w-3 h-3 mt-0.5 flex-shrink-0" /> {c}
-                  </li>
-                ))}
-              </ul>
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* Reasoning trace */}
-      <div className={`${GLASS_SOFT} p-3`}>
-        <button
-          onClick={() => setShowTrace(v => !v)}
-          className={`text-xs ${TXT_MUTED} hover:text-(--dp-text-secondary) inline-flex items-center gap-1.5`}
-        >
-          <ScrollText className="w-3.5 h-3.5" />
-          {showTrace ? 'Hide' : 'Show'} model reasoning trace
-        </button>
-        {showTrace && (
-          <ol className="mt-2 space-y-1 list-decimal list-inside">
-            {(rec.explanation ?? []).map((line: string, i: number) => (
-              <li key={i} className={`text-xs ${TXT_MUTED}`}>{line}</li>
-            ))}
-          </ol>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// ══════════════════════════════════════════════════════════════
 // Prospect detail
 // ══════════════════════════════════════════════════════════════
 
@@ -749,12 +537,26 @@ function ProspectDetail({
   const usage = usePlaidUsage().filter(u => u.leadId === lead.id);
   const [idvInput, setIdvInput] = useState('');
   const m = cashFlow?.metrics;
+  const underwriting = useUnderwriting();
+  const existingApp =
+    underwriting.find(a => a.leadId === lead.id) ??
+    underwriting.find(a => a.businessName.trim().toLowerCase() === lead.businessName.trim().toLowerCase());
 
   const sendToUnderwriting = () => {
-    if (!plaidInputs) return;
+    if (!plaidInputs || existingApp) return;
+    if (
+      (recommendation?.decision === 'DECLINE' || recommendation?.decision === 'INSUFFICIENT_DATA') &&
+      !window.confirm(`The model decision is ${recommendation.decision_label}. Create an underwriting file anyway?`)
+    ) {
+      return;
+    }
     const app = underwritingActions.create({
       businessName: lead.businessName,
       industry: lead.industry,
+      leadId: lead.id,
+      contactName: lead.contactName || undefined,
+      contactEmail: lead.contactEmail || undefined,
+      contactPhone: lead.contactPhone || undefined,
       requestedAmount: Number(String(lead.amountRequested).replace(/[^0-9.]/g, '')) || 50000,
       monthlyRevenue: plaidInputs.monthlyRevenue,
       avgDailyBalance: plaidInputs.avgDailyBalance,
@@ -762,6 +564,16 @@ function ProspectDetail({
       source: 'Plaid Vault',
     });
     underwritingActions.updateInputs(app.id, { plaidInputs });
+    // Score the fresh file immediately from the model verdict; the server
+    // write-through in syncItem keeps it current on every future sync.
+    if (recommendation) {
+      underwritingActions.update(app.id, {
+        compositeScore: recommendation.score?.total,
+        riskScore: recommendation.score?.total ?? 0,
+        tier: tierFromModel(recommendation.tier ?? null),
+        disqualifiers: failedKnockoutLabels(recommendation),
+      });
+    }
     toast.success(`${lead.businessName} sent to Underwriting as ${app.applicationId} with live Plaid cash-flow data.`);
   };
 
@@ -856,7 +668,12 @@ function ProspectDetail({
         <>
           {/* Decision model — the authoritative recommendation */}
           {recommendation ? (
-            <RecommendationView rec={recommendation} onSendToUnderwriting={plaidInputs ? sendToUnderwriting : undefined} />
+            <RecommendationView
+              rec={recommendation}
+              onSendToUnderwriting={plaidInputs ? sendToUnderwriting : undefined}
+              existingAppId={existingApp?.applicationId}
+              muted={recommendation.decision === 'DECLINE' || recommendation.decision === 'INSUFFICIENT_DATA'}
+            />
           ) : (
             <div className={`${GLASS_SOFT} p-4 text-sm ${TXT_FAINT}`}>
               Recommendation pending — sync this prospect to run the decision model.
@@ -2400,20 +2217,10 @@ export function BackendPlaid() {
                             }`}>
                               {modelScore}
                             </span>
-                          ) : p.plaidScore ? (
-                            <span className={`font-semibold ${
-                              p.plaidScore.total >= 70 ? 'text-emerald-400' : p.plaidScore.total >= 45 ? 'text-amber-400' : 'text-red-400'
-                            }`}>
-                              {p.plaidScore.total}
-                            </span>
                           ) : '—'}
                         </td>
                         <td className="py-2.5 px-4">
-                          <ModelDecisionBadge decision={p.recommendation?.decision ?? (p.prelim ? (
-                            p.prelim.decision === 'Auto-Approve' ? 'PRE_APPROVE'
-                            : p.prelim.decision === 'Auto-Decline' ? 'DECLINE'
-                            : 'REVIEW'
-                          ) : null)} />
+                          <ModelDecisionBadge decision={p.recommendation?.decision ?? null} />
                         </td>
                       </tr>
                     );
