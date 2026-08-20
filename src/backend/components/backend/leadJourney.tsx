@@ -71,7 +71,7 @@ export interface LeadJourneyEntities {
   meetings: LeadMeeting[];
 }
 
-function timeAgo(iso?: string | null): string {
+export function timeAgo(iso?: string | null): string {
   if (!iso) return '';
   const ms = Date.now() - new Date(iso).getTime();
   if (!Number.isFinite(ms) || ms < 0) return '';
@@ -248,10 +248,9 @@ export interface LeadNextAction {
   run: (navigate: (page: string) => void) => void | Promise<void>;
 }
 
-/** The one page that drives this lead's deal end-to-end.
- * (Becomes the lead workspace in the next iteration; today the Deal Room.) */
-export function leadWorkspacePath(lead: Lead, submissionId?: string | null): string | null {
-  return submissionId ? `/deal-room/${submissionId}` : null;
+/** The one page that drives this lead's deal end-to-end: the lead workspace. */
+export function leadWorkspacePath(lead: Lead, _submissionId?: string | null): string | null {
+  return `/leads/${lead.id}`;
 }
 
 const callPath = (lead: Lead, autostart: boolean) =>
@@ -440,7 +439,7 @@ export function useLeadNextAction(lead: Lead): LeadNextAction {
             products: lead.products,
             assignedAgent: lead.assignedAgent,
           });
-          if (id) navigate(`/deal-room/${id}`);
+          if (id) navigate(`/leads/${lead.id}`);
         },
       };
     }

@@ -7,6 +7,7 @@ import { useOrgTheme } from './useOrgTheme';
 import { SyncIndicator } from './SyncIndicator';
 import { BackendDashboard } from './pages/BackendDashboard';
 import { BackendLeads } from './pages/BackendLeads';
+import { LeadWorkspacePage } from './pages/LeadWorkspacePage';
 import { BackendMerchants } from './pages/BackendMerchants';
 import { BackendUnderwriting } from './pages/BackendUnderwriting';
 import { BackendDeals } from './pages/BackendDeals';
@@ -259,6 +260,7 @@ const PAGE_TITLES: Record<string, string> = {
 
 function titleForPath(path: string): string {
   if (PAGE_TITLES[path]) return PAGE_TITLES[path];
+  if (path.startsWith('/leads/')) return 'Lead';
   if (path.startsWith('/merchants/')) return 'Merchant';
   if (path.startsWith('/underwriting/')) return 'Underwriting';
   if (path.startsWith('/deals/')) return 'Deal';
@@ -272,7 +274,11 @@ function titleForPath(path: string): string {
 function getBreadcrumbs(path: string): { label: string; path: string }[] {
   const crumbs: { label: string; path: string }[] = [{ label: 'Home', path: '/' }];
   if (path === '/') return crumbs;
-  if (path.startsWith('/merchants/')) {
+  if (path.startsWith('/leads/') && path !== '/leads/import') {
+    const id = path.split('/')[2];
+    crumbs.push({ label: 'Pipeline', path: '/leads' });
+    crumbs.push({ label: id ? `Lead ${id}` : 'Detail', path });
+  } else if (path.startsWith('/merchants/')) {
     const id = path.split('/')[2];
     crumbs.push({ label: 'Merchants', path: '/merchants' });
     crumbs.push({ label: id ? `Merchant #${id}` : 'Detail', path });
@@ -289,7 +295,8 @@ function getBreadcrumbs(path: string): { label: string; path: string }[] {
 }
 
 function isDeepPage(path: string): boolean {
-  return path.startsWith('/merchants/') || path.startsWith('/underwriting/') || path.startsWith('/deals/');
+  return (path.startsWith('/leads/') && path !== '/leads/import')
+    || path.startsWith('/merchants/') || path.startsWith('/underwriting/') || path.startsWith('/deals/');
 }
 
 // ── Command Palette Data ──
@@ -754,6 +761,7 @@ export function DeltBackendLayout() {
               <Route path="workspace" element={<BackendWorkspace />} />
               <Route path="leads" element={<Guard perm="leads.view"><BackendLeads /></Guard>} />
               <Route path="leads/import" element={<Guard perm="leads.create"><BackendLeads openImport /></Guard>} />
+              <Route path="leads/:leadId" element={<Guard perm="leads.view"><LeadWorkspacePage /></Guard>} />
               <Route path="onboarding" element={<Guard perm="merchants.view"><BackendOnboarding /></Guard>} />
               <Route path="merchants" element={<Guard perm="merchants.view"><BackendMerchants /></Guard>} />
               <Route path="merchants/:merchantId/*" element={<Guard perm="merchants.view"><MerchantDetail /></Guard>} />

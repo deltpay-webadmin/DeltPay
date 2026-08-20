@@ -589,11 +589,11 @@ function LeadDetailPanel({ lead, onClose, onEdit, onDelete }: { lead: Lead | nul
   const { navigate } = useAppNavigate();
   if (!lead) return null;
 
-  // Start (or reuse) the deal submission for this lead and open the Deal
-  // Room — the single page that drives Plaid, application, underwriting,
-  // MCA, MPA, and countersignature to fully signed.
+  // Start (or reuse) the deal submission for this lead and open its
+  // workspace — the single page that drives call, Plaid, application,
+  // underwriting, MCA, MPA, and countersignature to fully signed.
   const handleOpenDealRoom = async () => {
-    const id = await dealSubmissionActions.createFromLead({
+    await dealSubmissionActions.createFromLead({
       id: lead.id,
       businessName: lead.businessName,
       contactName: lead.contactName,
@@ -605,7 +605,7 @@ function LeadDetailPanel({ lead, onClose, onEdit, onDelete }: { lead: Lead | nul
       products: lead.products,
       assignedAgent: lead.assignedAgent,
     });
-    if (id) navigate(`/deal-room/${id}`);
+    navigate(`/leads/${lead.id}`);
   };
 
   // Stage a prefilled MCA agreement from everything the lead already told us
@@ -1442,6 +1442,7 @@ function EditLeadModal({ lead, onClose }: { lead: Lead; onClose: () => void }) {
 // Main Component
 // ════════════════════════════════
 export function BackendLeads({ openImport = false }: { openImport?: boolean } = {}) {
+  const { navigate } = useAppNavigate();
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [mainTab, setMainTab] = useState<'leads' | 'referrals'>('leads');
@@ -1902,7 +1903,7 @@ export function BackendLeads({ openImport = false }: { openImport?: boolean } = 
                         return (
                           <button
                             key={lead.id}
-                            onClick={() => setSelectedLead(lead)}
+                            onClick={() => navigate(`/leads/${lead.id}`)}
                             className="w-full text-left bg-white rounded-[8px] border border-gray-200 p-3 hover:shadow-md transition-all"
                           >
                             <div className="flex items-start justify-between mb-2">
@@ -1968,7 +1969,7 @@ export function BackendLeads({ openImport = false }: { openImport?: boolean } = 
                     return (
                       <tr
                         key={lead.id}
-                        onClick={() => setSelectedLead(lead)}
+                        onClick={() => navigate(`/leads/${lead.id}`)}
                         className={`transition-colors cursor-pointer ${isSelected ? 'bg-indigo-50/60' : 'hover:bg-gray-50'}`}
                       >
                         <td className="px-4 py-4" onClick={e => e.stopPropagation()}>
@@ -2046,7 +2047,7 @@ export function BackendLeads({ openImport = false }: { openImport?: boolean } = 
                             <button onClick={() => requestDeleteOne(lead)} title="Delete lead" className="p-2 hover:bg-red-50 rounded-md transition-colors">
                               <Trash2 className="w-4 h-4 text-gray-400 hover:text-red-600" />
                             </button>
-                            <button onClick={() => setSelectedLead(lead)} title="Open" className="p-2 hover:bg-gray-100 rounded-md transition-colors">
+                            <button onClick={() => setSelectedLead(lead)} title="Quick peek" className="p-2 hover:bg-gray-100 rounded-md transition-colors">
                               <ChevronRight className="w-5 h-5 text-gray-400" />
                             </button>
                           </div>
