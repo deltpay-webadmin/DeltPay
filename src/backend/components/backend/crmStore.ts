@@ -1384,29 +1384,9 @@ export const leadActions = {
     return true;
   },
 
-  /**
-   * Convert (win) a lead — the CRM's terminal success, handing off to
-   * onboarding elsewhere. Blocked for disqualified/lost leads.
-   * Returns false if the conversion was refused.
-   */
-  convert(id: string): boolean {
-    const lead = state.leads.find(l => l.id === id);
-    if (!lead) return false;
-    if (lead.status === 'Not Qualified' || lead.status === 'Lost') return false;
-    leadActions.update(id, { stage: 'Converted', status: 'Won', lastActivity: 'just now' });
-    leadActions.addTimeline(id, { title: 'Lead converted', description: 'Won — handed off to onboarding', user: 'You', timestamp: 'just now' });
-    // Hand off into the onboarding pipeline (skip if one already exists).
-    const exists = state.onboarding.some(
-      o => o.merchantName.toLowerCase() === lead.businessName.toLowerCase() && o.currentStep !== 'Funded',
-    );
-    if (!exists) {
-      onboardingActions.create({
-        merchantName: lead.businessName,
-        agent: lead.assignedAgent || 'Unassigned',
-      });
-    }
-    return true;
-  },
+  // The old convert() (manual Won + a name-matched onboarding_apps row) is
+  // retired: "Start deal" opens the spine-linked workspace, and markWon
+  // below fires from the funding/boarding write-backs.
 
   /**
    * A deal is won when it's funded (capital) or the merchant account is

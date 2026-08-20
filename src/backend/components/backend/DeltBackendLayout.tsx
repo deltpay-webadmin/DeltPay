@@ -79,7 +79,6 @@ import {
   ChevronRight,
   Home,
   FileText,
-  Package,
   Megaphone,
   PhoneCall,
   Inbox,
@@ -126,11 +125,13 @@ const adminGroups: NavGroup[] = [
     ],
   },
   {
-    label: 'Pipeline',
+    label: 'Sales',
     items: [
-      { label: 'Leads', path: '/leads', icon: Users, perm: 'leads.view' },
+      // The pipeline runs through one guided flow: Leads list → per-lead
+      // workspace (call → qualify → application → sign → fund). The legacy
+      // Onboarding page stays URL-reachable at /onboarding but is unlisted.
+      { label: 'Pipeline', path: '/leads', icon: Users, perm: 'leads.view' },
       { label: 'Call Playbooks', path: '/call-playbooks', icon: PhoneCall, perm: 'leads.view' },
-      { label: 'Onboarding', path: '/onboarding', icon: Package, perm: 'merchants.view' },
       { label: 'Underwriting', path: '/underwriting', icon: ClipboardCheck, perm: 'underwriting.view' },
       { label: 'Analysis', path: '/analysis', icon: FileText, perm: 'analysis.view' },
     ],
@@ -194,7 +195,7 @@ const agentGroups: NavGroup[] = [
     items: [
       { label: 'Dashboard', path: '/', icon: LayoutDashboard },
       { label: 'My Merchants', path: '/merchants', icon: Store, perm: 'merchants.view' },
-      { label: 'My Leads', path: '/leads', icon: Users, perm: 'leads.view' },
+      { label: 'My Pipeline', path: '/leads', icon: Users, perm: 'leads.view' },
       { label: 'Call Playbooks', path: '/call-playbooks', icon: PhoneCall, perm: 'leads.view' },
       { label: 'Sales Tools', path: '/analysis', icon: Sparkles, perm: 'analysis.view' },
       { label: 'Training', path: '/training', icon: GraduationCap },
@@ -217,7 +218,7 @@ const agentGroups: NavGroup[] = [
 const PAGE_TITLES: Record<string, string> = {
   '/': 'Overview',
   '/workspace': 'Workspace',
-  '/leads': 'Sales Leads',
+  '/leads': 'Sales Pipeline',
   '/leads/import': 'Import Leads',
   '/underwriting': 'Underwriting',
   '/analysis': 'Analysis',
@@ -312,12 +313,11 @@ interface CommandItem {
 const allCommands: CommandItem[] = [
   { label: 'Overview', path: '/', group: 'Navigation', icon: Home },
   { label: 'Workspace', path: '/workspace', group: 'Navigation', icon: Inbox, keywords: 'inbox email sms call messages tasks activity timeline' },
-  { label: 'Leads', path: '/leads', group: 'Pipeline', icon: Users, keywords: 'sales pipeline', perm: 'leads.view' },
-  { label: 'Call Playbooks', path: '/call-playbooks', group: 'Pipeline', icon: PhoneCall, keywords: 'cold call script dialer objections talk track appointments meetings ab test glencoco', perm: 'leads.view' },
-  { label: 'Import Leads', path: '/leads/import', group: 'Pipeline', icon: Upload, keywords: 'upload csv xlsx spreadsheet meta facebook instagram bulk import', perm: 'leads.create' },
-  { label: 'Onboarding', path: '/onboarding', group: 'Pipeline', icon: Package, keywords: 'merchant setup sla bank connections activation', perm: 'merchants.view' },
-  { label: 'Underwriting', path: '/underwriting', group: 'Pipeline', icon: ClipboardCheck, keywords: 'plaid portal vault lending prospects bank credit identity verification', perm: 'underwriting.view' },
-  { label: 'Analysis', path: '/analysis', group: 'Pipeline', icon: FileText, keywords: 'deal analysis review cost calculator', perm: 'analysis.view' },
+  { label: 'Sales Pipeline', path: '/leads', group: 'Sales', icon: Users, keywords: 'leads sales pipeline deals next action workspace', perm: 'leads.view' },
+  { label: 'Call Playbooks', path: '/call-playbooks', group: 'Sales', icon: PhoneCall, keywords: 'cold call script dialer objections talk track appointments meetings ab test glencoco', perm: 'leads.view' },
+  { label: 'Import Leads', path: '/leads/import', group: 'Sales', icon: Upload, keywords: 'upload csv xlsx spreadsheet meta facebook instagram bulk import', perm: 'leads.create' },
+  { label: 'Underwriting', path: '/underwriting', group: 'Sales', icon: ClipboardCheck, keywords: 'plaid portal vault lending prospects bank credit identity verification', perm: 'underwriting.view' },
+  { label: 'Analysis', path: '/analysis', group: 'Sales', icon: FileText, keywords: 'deal analysis review cost calculator', perm: 'analysis.view' },
   { label: 'All Merchants', path: '/merchants', group: 'Merchants', icon: Store, perm: 'merchants.view' },
   { label: 'Portfolio', path: '/deals', group: 'Merchants', icon: LayoutDashboard, keywords: 'deals capital deployment book', perm: 'capital.view' },
   { label: 'Residuals', path: '/residuals', group: 'Merchants', icon: Receipt, perm: 'residuals.view' },

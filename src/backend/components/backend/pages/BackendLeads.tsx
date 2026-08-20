@@ -672,20 +672,6 @@ function LeadDetailPanel({ lead, onClose, onEdit, onDelete }: { lead: Lead | nul
     }
   };
 
-  const handleConvert = () => {
-    if (isDeadEnd) {
-      toast.error(`A ${lead.status.toLowerCase()} lead can't be converted — change its status first`);
-      return;
-    }
-    if (lead.stage === 'Converted') {
-      toast.info('Lead is already converted');
-      return;
-    }
-    if (leadActions.convert(lead.id)) {
-      toast.success('Lead converted — handed off to onboarding');
-    }
-  };
-
   const handleMarkLost = () => {
     if (lead.status === 'Lost') { toast.info('Lead already lost'); return; }
     leadActions.markLost(lead.id);
@@ -959,14 +945,6 @@ function LeadDetailPanel({ lead, onClose, onEdit, onDelete }: { lead: Lead | nul
               className="px-4 py-2.5 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-[6px] hover:bg-gray-50 transition-colors whitespace-nowrap disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Next Stage
-            </button>
-            <button
-              onClick={handleConvert}
-              disabled={isDeadEnd || lead.stage === 'Converted'}
-              title={isDeadEnd ? 'Change the status before converting' : undefined}
-              className="px-4 py-2.5 bg-white border border-emerald-300 text-emerald-700 text-sm font-medium rounded-[6px] hover:bg-emerald-50 transition-colors whitespace-nowrap disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              Convert
             </button>
             <button
               onClick={handleOpenDealRoom}
