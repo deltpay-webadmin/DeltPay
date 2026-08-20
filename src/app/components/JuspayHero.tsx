@@ -298,7 +298,7 @@ export function JuspayHero() {
             <strong style={{ color: 'var(--dc-on-dark)', fontWeight: 600 }}>
               same-day funding
             </strong>{' '}
-            when you need it — so the money you earn keeps working, not waiting.
+            when you qualify — so the money you earn keeps working, not waiting.
           </p>
 
           {/* CTAs — primary button + quiet text link. The secondary

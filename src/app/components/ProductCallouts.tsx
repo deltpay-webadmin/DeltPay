@@ -505,7 +505,7 @@ export function CapitalCallout() {
               <div>
                 <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.1em', color: PURPLE, marginBottom: 4 }}>THE FLYWHEEL</div>
                 <p style={{ fontSize: 13, lineHeight: 1.55, color: GRAY, margin: 0 }}>
-                  Payments → Lens insights → pre-qualified capital. The more you sell with Delt, the better your offer gets.
+                  Payments → Lens insights → capital you can pre-qualify for. The more you sell with Delt, the better your offer gets.
                 </p>
               </div>
             </div>
@@ -513,14 +513,14 @@ export function CapitalCallout() {
 
           <Reveal delay={0.20}>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 32 }}>
-              {['Revenue-based', 'No credit check', 'Hours not weeks', '$25K–$500K'].map((t) => (
+              {['Revenue-based', 'Soft pull only', 'Fast decisions', 'Sized to your sales'].map((t) => (
                 <Pill key={t} label={t} />
               ))}
             </div>
           </Reveal>
 
           <Reveal delay={0.24}>
-            <ArrowLink to="/apply" label="Fuel Your Growth" />
+            <ArrowLink to="/get-a-quote" label="Fuel Your Growth" />
           </Reveal>
         </div>
 

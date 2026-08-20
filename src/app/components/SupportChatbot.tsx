@@ -60,17 +60,17 @@ export function SupportChatbot({ isOpen, onClose }: SupportChatbotProps) {
 
     // Funding/Capital questions
     if (lowerMessage.includes('funding') || lowerMessage.includes('capital') || lowerMessage.includes('loan') || lowerMessage.includes('advance')) {
-      return "Delt Capital offers fast business funding with transparent terms:\n\n• Funding from $5,000 to $500,000\n• Simple factor rates (1.05-1.15)\n• Estimated terms: 3-9 months\n• Approval in as little as 24 hours\n• Full fee schedule disclosed before you accept any offer\n\nWould you like to start an application or learn more about our funding options?";
+      return "Delt Capital offers revenue-based financing sized to your card sales:\n\n• Offers sized to your actual processing volume\n• A simple fixed fee, disclosed before you accept any offer\n• Repayment as a small percentage of daily sales\n• Decisions typically within 1 business day of a completed application, subject to underwriting\n\nWould you like to learn more on our Capital page?";
     }
 
     // Payout questions
     if (lowerMessage.includes('payout') || lowerMessage.includes('settlement') || lowerMessage.includes('deposit') || lowerMessage.includes('money')) {
-      return "Payouts are fast and reliable with Delt:\n\n• FREE Starter: Next-day settlement\n• Growth Plan: Instant settlement\n• Scale Plan: Same-day settlement option\n\nYou can track all your payouts in real-time through your dashboard!";
+      return "Payouts are fast and reliable with Delt:\n\n• Next-business-day settlement standard\n• Same-day settlement available for eligible merchants\n\nYou can track all your payouts in real-time through your dashboard!";
     }
 
     // Support/Contact questions
     if (lowerMessage.includes('support') || lowerMessage.includes('help') || lowerMessage.includes('contact') || lowerMessage.includes('phone') || lowerMessage.includes('email')) {
-      return "Our support team is here to help!\n\n📞 Phone: 1-888-555-1234\n✉️ Email: support@deltcapital.com\n💬 Live Chat: Right here!\n\nOur support hours:\n• Mon-Fri: 8:00 AM - 8:00 PM EST\n• Saturday: 9:00 AM - 5:00 PM EST\n• Sunday: Closed\n\nDuring business hours, average response under 2 minutes.";
+      return "Our support team is here to help!\n\n✉️ Email: support@deltpay.com\n💬 Live Chat: Right here!\n\nOur support hours:\n• Mon-Fri: 8:00 AM - 8:00 PM EST\n• Saturday: 9:00 AM - 5:00 PM EST\n• Sunday: Closed\n\nDuring business hours, average response under 2 minutes.";
     }
 
     // Hardware questions

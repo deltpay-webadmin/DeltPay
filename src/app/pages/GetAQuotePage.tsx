@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
 import { trackQuoteRequest } from '@/lib/pixel';
-import { supabase } from '@/app/lib/supabase';
+import { supabase, serverFetch } from '@/app/lib/supabase';
 import { useHoneypot } from '@/app/components/Honeypot';
 import logoWhite from 'figma:asset/419e83442bb1bf5965a966a8870b00dd4288dd57.png';
 
@@ -14,10 +14,12 @@ const JAK    = "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif";
 /* ── Step data ── */
 const TOTAL_STEPS = 4;
 
-/* Step 1 — Features */
+/* Step 1 — Features. comingSoon entries render badged + unselectable:
+   Delt sells Payments and Capital today; the rest launch later. */
 const FEATURES = [
   {
     id: 'website',
+    comingSoon: true,
     label: 'Website & Storefront',
     sub: 'Custom site, online ordering, SEO',
     icon: (
@@ -28,6 +30,7 @@ const FEATURES = [
   },
   {
     id: 'lens',
+    comingSoon: true,
     label: 'Lens AI',
     sub: 'Revenue insights, forecasting, trends',
     icon: (
@@ -58,6 +61,7 @@ const FEATURES = [
   },
   {
     id: 'marketing',
+    comingSoon: true,
     label: 'Marketing Suite',
     sub: 'CRM, loyalty, SMS, email',
     icon: (
@@ -68,6 +72,7 @@ const FEATURES = [
   },
   {
     id: 'payroll',
+    comingSoon: true,
     label: 'Payroll & Team',
     sub: 'Payroll, scheduling, staff management',
     icon: (
@@ -78,6 +83,7 @@ const FEATURES = [
   },
   {
     id: 'inventory',
+    comingSoon: true,
     label: 'Inventory',
     sub: 'Stock management and catalog tools',
     icon: (
@@ -165,13 +171,13 @@ const VOLUMES = [
 ];
 
 /* ── Recommendation engine ── */
+// Lens/payroll checks return here when those features launch (currently
+// comingSoon → unselectable, so only payments/capital/other can appear).
 function getRecommendation(features: string[], volume: string): { plan: string; color: string; why: string } {
-  const hasLens = features.includes('lens');
   const hasCapital = features.includes('capital');
-  const hasPayroll = features.includes('payroll');
   const isHighVol = volume === '150k_plus' || volume === '50k_150k';
 
-  if (hasLens || hasCapital || hasPayroll || (isHighVol && features.length >= 3)) {
+  if (hasCapital || (isHighVol && features.length >= 2)) {
     return {
       plan: 'Custom Pricing',
       color: NAVY,
@@ -232,40 +238,52 @@ function ProgressBar({ step }: { step: number }) {
 
 /* ── Checkbox card ── */
 function FeatureCard({ item, selected, onToggle }: { item: typeof FEATURES[0]; selected: boolean; onToggle: () => void }) {
+  const comingSoon = Boolean((item as { comingSoon?: boolean }).comingSoon);
   return (
     <motion.button
-      whileHover={{ y: -2 }}
-      whileTap={{ scale: 0.98 }}
-      onClick={onToggle}
+      whileHover={comingSoon ? undefined : { y: -2 }}
+      whileTap={comingSoon ? undefined : { scale: 0.98 }}
+      onClick={comingSoon ? undefined : onToggle}
+      aria-disabled={comingSoon}
       style={{
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-        gap: 12, padding: '28px 18px', borderRadius: 14, cursor: 'pointer', textAlign: 'center',
-        border: `2px solid ${selected ? INDIGO : '#C8CDD6'}`,
+        gap: 12, padding: '28px 18px', borderRadius: 14, cursor: comingSoon ? 'default' : 'pointer', textAlign: 'center',
+        border: `2px solid ${selected ? INDIGO : comingSoon ? '#E2E6ED' : '#C8CDD6'}`,
         background: selected ? 'rgba(73,69,255,0.06)' : '#FFFFFF',
         transition: 'border-color 0.2s, background 0.2s',
         position: 'relative', minHeight: 148,
       }}
     >
-      <div style={{ color: selected ? INDIGO : '#4B5563', transition: 'color 0.2s', transform: 'scale(1.15)' }}>{item.icon}</div>
+      <div style={{ color: selected ? INDIGO : comingSoon ? '#B6BCC8' : '#4B5563', transition: 'color 0.2s', transform: 'scale(1.15)' }}>{item.icon}</div>
       <div>
-        <div style={{ fontFamily: JAK, fontSize: 15, fontWeight: 700, color: selected ? NAVY : '#374151', lineHeight: 1.3 }}>{item.label}</div>
-        <div style={{ fontFamily: JAK, fontSize: 13, color: '#94A3B8', marginTop: 4, lineHeight: 1.4 }}>{item.sub}</div>
+        <div style={{ fontFamily: JAK, fontSize: 15, fontWeight: 700, color: selected ? NAVY : comingSoon ? '#B6BCC8' : '#374151', lineHeight: 1.3 }}>{item.label}</div>
+        <div style={{ fontFamily: JAK, fontSize: 13, color: comingSoon ? '#C3C8D2' : '#94A3B8', marginTop: 4, lineHeight: 1.4 }}>{item.sub}</div>
       </div>
-      {/* Checkbox */}
-      <div style={{
-        position: 'absolute', top: 12, right: 12,
-        width: 20, height: 20, borderRadius: 5,
-        border: `2px solid ${selected ? INDIGO : '#D1D5DB'}`,
-        background: selected ? INDIGO : '#fff',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        transition: 'all 0.2s',
-      }}>
-        {selected && (
-          <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
-            <path d="M2 6l3 3 5-5" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        )}
-      </div>
+      {comingSoon ? (
+        <div style={{
+          position: 'absolute', top: 12, right: 12,
+          padding: '3px 8px', borderRadius: 999,
+          background: '#EEF0F4', color: '#64748B',
+          fontFamily: JAK, fontSize: 10, fontWeight: 700, letterSpacing: '0.08em',
+        }}>
+          COMING SOON
+        </div>
+      ) : (
+        <div style={{
+          position: 'absolute', top: 12, right: 12,
+          width: 20, height: 20, borderRadius: 5,
+          border: `2px solid ${selected ? INDIGO : '#D1D5DB'}`,
+          background: selected ? INDIGO : '#fff',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          transition: 'all 0.2s',
+        }}>
+          {selected && (
+            <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
+              <path d="M2 6l3 3 5-5" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          )}
+        </div>
+      )}
     </motion.button>
   );
 }
@@ -335,10 +353,16 @@ export function GetAQuotePage() {
   // immediately instead of waiting for the team to reach out.
   const [selfServeStatus, setSelfServeStatus] = useState<'none' | 'loading' | 'ready' | 'failed'>('none');
   const [selfServePath, setSelfServePath] = useState<string | null>(null);
+  // Capital opt-in: when the Capital card is selected, the CRM intake mints
+  // a Plaid-hosted bank-connect link (also emailed) surfaced on success.
+  const [capitalLink, setCapitalLink] = useState<{ url: string; emailed: boolean } | null>(null);
   const { honeypotField, honeypotValue } = useHoneypot();
 
-  const toggleFeature = (id: string) =>
+  const toggleFeature = (id: string) => {
+    // Belt-and-braces: comingSoon cards don't call this, but never let one in.
+    if (FEATURES.some(f => f.id === id && (f as { comingSoon?: boolean }).comingSoon)) return;
     setFeatures(prev => prev.includes(id) ? prev.filter(f => f !== id) : [...prev, id]);
+  };
 
   const canNext1 = features.length > 0;
   const canNext2 = bizType !== '';
@@ -376,6 +400,28 @@ export function GetAQuotePage() {
         hp_extra_field: honeypotValue(),
       }),
     }).catch(() => { /* non-blocking: success screen already shown */ });
+    // CRM intake: every quiz submission becomes a Processing lead; selecting
+    // the Capital card is the opt-in that adds the Capital tag and mints the
+    // Plaid connect link (Plaid is Capital-only). Non-blocking — the link is
+    // also emailed server-side, so a lost response costs nothing.
+    const capitalInterest = features.includes('capital');
+    serverFetch('/apply/intake', {
+      method: 'POST',
+      body: JSON.stringify({
+        email: form.email,
+        fullName: form.name,
+        businessName: form.business,
+        phone: form.phone,
+        origin: 'quiz',
+        capitalInterest,
+        hp_extra_field: honeypotValue(),
+      }),
+    }).then(async res => {
+      const json = await res.json().catch(() => ({}));
+      if (res.ok && json.ok && json.hosted_link_url) {
+        setCapitalLink({ url: String(json.hosted_link_url), emailed: Boolean(json.emailed) });
+      }
+    }).catch(() => { /* non-blocking */ });
     // Self-serve lane: open a merchant application and surface the secure
     // wizard link right on the success screen.
     if (isSelfServeTier) {
@@ -441,6 +487,23 @@ export function GetAQuotePage() {
             <div style={{ fontSize: 22, fontWeight: 800, color: rec.color }}>{rec.plan}</div>
             <div style={{ fontSize: 13, color: '#6B7280', marginTop: 6, maxWidth: 280 }}>{rec.why}</div>
           </div>
+          {capitalLink && (
+            <>
+              <a
+                href={capitalLink.url}
+                target="_blank"
+                rel="noopener"
+                style={{ display: 'block', width: '100%', padding: '14px', borderRadius: 10, background: 'transparent', color: INDIGO, fontFamily: JAK, fontSize: 15, fontWeight: 700, border: `1.5px solid ${INDIGO}`, cursor: 'pointer', marginTop: 4, marginBottom: 4, textDecoration: 'none', boxSizing: 'border-box' }}
+              >
+                Connect your bank for Capital pre-qualification →
+              </a>
+              <p style={{ fontSize: 12, color: '#94A3B8', lineHeight: 1.6, margin: '2px 0 8px' }}>
+                {capitalLink.emailed
+                  ? <>We also emailed this secure Plaid link to <strong>{form.email}</strong>.</>
+                  : <>Secure Plaid link — connect whenever you're ready.</>}
+              </p>
+            </>
+          )}
           {isSelfServeTier && selfServeStatus !== 'failed' && (
             <button
               onClick={() => selfServePath && navigate(selfServePath)}

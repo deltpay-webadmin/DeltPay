@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
-import { ArrowLeft, Check, Building2, Mail, Phone, User, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, Check, Building2, Mail, Phone, User } from 'lucide-react';
 import { CapitalCrossSell } from '../components/CapitalCrossSell';
 import { useHoneypot } from '../components/Honeypot';
 import { serverFetch } from '../lib/supabase';
-import { trackMerchantLead, trackMerchantOnboarded } from '@/lib/pixel';
+import { trackMerchantLead } from '@/lib/pixel';
 
 export function ApplicationPage() {
   const navigate = useNavigate();
-  const [step, setStep] = useState<'form' | 'connect' | 'success'>('form');
+  const [step, setStep] = useState<'form' | 'success'>('form');
   const [formData, setFormData] = useState({
     businessName: '',
     fullName: '',
@@ -18,13 +18,6 @@ export function ApplicationPage() {
   });
   const { honeypotField, honeypotValue } = useHoneypot();
   const [submitting, setSubmitting] = useState(false);
-  // Plaid-hosted connect link minted by the CRM intake; null when the
-  // intake call failed and we fall back to "we'll email your link".
-  const [connectLink, setConnectLink] = useState<{
-    url: string;
-    expiration: string | null;
-    emailed: boolean;
-  } | null>(null);
 
   // Handle form submission
   const handleFormSubmit = async (e: React.FormEvent) => {
@@ -52,9 +45,10 @@ export function ApplicationPage() {
       }),
     }).catch(() => { /* non-blocking */ });
 
-    // Create/match the CRM lead and mint a Plaid-hosted bank-connect link.
+    // Create/match the CRM lead. This is the payments application —
+    // no Plaid here; bank connect is Capital-only (quiz opt-in).
     try {
-      const res = await serverFetch('/apply/intake', {
+      await serverFetch('/apply/intake', {
         method: 'POST',
         body: JSON.stringify({
           email: formData.email,
@@ -62,24 +56,13 @@ export function ApplicationPage() {
           businessName: formData.businessName,
           phone: formData.phone,
           businessType: formData.businessType,
+          origin: 'application',
           hp_extra_field: honeypotValue(),
         }),
       });
-      const json = await res.json().catch(() => ({}));
-      if (res.ok && json.ok && json.hosted_link_url) {
-        setConnectLink({
-          url: String(json.hosted_link_url),
-          expiration: json.expiration ?? null,
-          emailed: Boolean(json.emailed),
-        });
-      } else {
-        setConnectLink(null);
-      }
-    } catch {
-      setConnectLink(null);
-    }
+    } catch { /* the email safety net above still captured the lead */ }
     setSubmitting(false);
-    setStep('connect');
+    setStep('success');
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -140,66 +123,6 @@ export function ApplicationPage() {
                 Return to Home
               </button>
             </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (step === 'connect') {
-    const expiresText = connectLink?.expiration
-      ? new Date(connectLink.expiration).toLocaleDateString(undefined, { month: 'long', day: 'numeric' })
-      : null;
-    return (
-      <div className="min-h-screen bg-[#F6F7FB] flex items-center justify-center p-4">
-        <div className="max-w-2xl w-full">
-          <div className="bg-white rounded-2xl shadow-xl p-8 md:p-12 text-center">
-            <div className="w-20 h-20 bg-[#4945FF]/10 rounded-full flex items-center justify-center mx-auto mb-6">
-              <ShieldCheck className="w-10 h-10 text-[#4945FF]" />
-            </div>
-            <h1 className="text-2xl font-bold text-[#041E42] mb-4">
-              Application received — one step left
-            </h1>
-            {connectLink ? (
-              <>
-                <p className="text-[#475569] mb-8">
-                  Securely connect your business bank account through Plaid to verify your
-                  business. It takes about two minutes.
-                  {connectLink.emailed && (
-                    <> We also emailed this link to <strong className="text-[#041E42]">{formData.email}</strong> so you can finish later from any device.</>
-                  )}
-                  {expiresText && <> The link is valid until {expiresText}.</>}
-                </p>
-                <a
-                  href={connectLink.url}
-                  target="_blank"
-                  rel="noopener"
-                  onClick={() => trackMerchantOnboarded()}
-                  className="inline-block bg-[#4945FF] text-white px-8 py-3 rounded-md font-semibold hover:bg-[#3933CC] transition-all"
-                >
-                  Connect your bank securely
-                </a>
-                <button
-                  onClick={() => setStep('success')}
-                  className="block mx-auto mt-4 text-[#475569] hover:text-[#041E42] text-sm"
-                >
-                  I'll do this later
-                </button>
-              </>
-            ) : (
-              <>
-                <p className="text-[#475569] mb-8">
-                  We've received your application. Our team will email your secure
-                  bank-connection link to <strong className="text-[#041E42]">{formData.email}</strong> shortly.
-                </p>
-                <button
-                  onClick={() => setStep('success')}
-                  className="bg-[#4945FF] text-white px-8 py-3 rounded-md font-semibold hover:bg-[#3933CC] transition-all"
-                >
-                  Continue
-                </button>
-              </>
-            )}
           </div>
         </div>
       </div>
@@ -345,13 +268,10 @@ export function ApplicationPage() {
               {/* Info Box */}
               <div className="bg-[#F6F7FB] rounded-lg p-4 border-l-4 border-[#4945FF]">
                 <p className="text-sm text-[#475569]">
-                  <strong className="text-[#041E42]">Next step:</strong> After submitting this form, 
-                  you'll securely connect your bank account using Plaid to verify your business.
+                  <strong className="text-[#041E42]">Next step:</strong> Our team reviews your
+                  application within 1 business day and emails you everything needed to start processing.
                 </p>
               </div>
-
-              {/* Plaid Consent */}
-              <div className="bg-[#F6F7FB] border border-[#4945FF]/15 rounded-lg p-4 text-sm text-[#475569] mb-4">By continuing, you authorize Delt and our bank-verification partner Plaid to access your bank account information. See <a href="https://plaid.com/legal/#consumers" target="_blank" rel="noopener" className="underline text-[#4945FF]">Plaid's Privacy Policy</a>.</div>
 
               {/* Privacy consent */}
               <p className="text-xs text-[#475569] mb-2">By submitting, you acknowledge our <a href="#/privacy" target="_blank" rel="noopener noreferrer" className="underline text-[#4945FF]">Privacy Policy</a> and agree to our <a href="#/terms" target="_blank" rel="noopener noreferrer" className="underline text-[#4945FF]">Terms of Service</a>.</p>
@@ -362,7 +282,7 @@ export function ApplicationPage() {
                 disabled={submitting}
                 className="w-full bg-[#4945FF] text-white py-4 rounded-lg font-semibold hover:bg-[#3933CC] transition-all text-lg disabled:opacity-60"
               >
-                {submitting ? 'Submitting…' : 'Continue to Bank Verification'}
+                {submitting ? 'Submitting…' : 'Submit application'}
               </button>
 
               {/* Trust Signals */}

@@ -772,6 +772,23 @@ const HOSTED_LINK_LIFETIME_SECONDS = 7 * 24 * 3600;
 export async function createHostedLink(leadId: string) {
   const cfg = plaidConfig();
   const db = svc();
+
+  // Plaid is a Capital product. Refuse add-mode connect links for leads
+  // that aren't capital files — the single choke point every caller
+  // (CRM route, Deal Room, quiz intake) funnels through. Repair/update
+  // links on existing items are handled elsewhere and stay exempt.
+  const { data: lead } = await db
+    .from("pipeline_leads")
+    .select("business_name, contact_email, timeline, type, products")
+    .eq("id", leadId)
+    .maybeSingle();
+  const capitalFile =
+    lead?.type === "MCA" ||
+    (Array.isArray(lead?.products) && lead.products.includes("Capital"));
+  if (lead && !capitalFile) {
+    throw new Error("Plaid bank connect is Capital-only. Tag the lead with the Capital product first.");
+  }
+
   const req: Record<string, unknown> = {
     user: { client_user_id: leadId || "delt-crm" },
     // Prospect-facing brand: this name shows on the Plaid-hosted page.
@@ -813,11 +830,6 @@ export async function createHostedLink(leadId: string) {
   // silently to copy/text when the lead has no email or Resend is unset.
   let emailed = false;
   try {
-    const { data: lead } = await db
-      .from("pipeline_leads")
-      .select("business_name, contact_email, timeline")
-      .eq("id", leadId)
-      .maybeSingle();
     const to = (lead?.contact_email ?? "").trim();
     if (to && emailConfigured()) {
       const tpl = connectLinkEmail(lead?.business_name || "your business", out.hosted_link_url, expiresAt);
@@ -849,12 +861,15 @@ export async function createHostedLink(leadId: string) {
 }
 
 /**
- * Public deltpay.com /apply intake: match-or-create the pipeline lead from
- * the application form, then hand back a Plaid-hosted connect link. The
- * connection itself completes entirely server-side (LINK webhook /
- * sweepHostedLinks → completeHostedLink), so the applicant page never
- * touches the Plaid SDK. Repeat submissions reuse a pending, unexpired
- * invite instead of minting (and re-emailing) a new one.
+ * Public deltpay.com intake (both the /apply payments application and the
+ * /get-a-quote quiz): match-or-create the pipeline lead, tagged Processing
+ * as the primary product. Plaid is Capital-only, so a hosted bank-connect
+ * link is minted ONLY when the visitor opted into Capital (the quiz's
+ * "Capital" feature card) — the lead is tagged + Capital first, the link is
+ * emailed by createHostedLink, and the connection completes entirely
+ * server-side (LINK webhook / sweepHostedLinks → completeHostedLink).
+ * Repeat Capital submissions reuse a pending, unexpired invite instead of
+ * minting (and re-emailing) a new one.
  */
 export async function applyIntake(a: {
   email: string;
@@ -862,20 +877,52 @@ export async function applyIntake(a: {
   businessName?: string;
   phone?: string;
   businessType?: string;
+  capitalInterest?: boolean;
+  origin?: "application" | "quiz";
 }) {
+  const origin = a.origin === "quiz" ? "quiz" : "application";
   const leadId = await resolveApplyLead(
     { email: a.email, fullName: a.fullName, businessName: a.businessName, phone: a.phone },
     {
-      source: "deltpay.com application",
-      products: ["Processing"],
+      source: origin === "quiz" ? "deltpay.com quiz" : "deltpay.com application",
+      products: a.capitalInterest ? ["Processing", "Capital"] : ["Processing"],
       type: "Processing",
       timelineEvent:
-        `Created from the deltpay.com payments application.` +
-        (a.businessType ? ` Business type: ${a.businessType}.` : ""),
+        (origin === "quiz"
+          ? `Created from the deltpay.com quote quiz.`
+          : `Created from the deltpay.com payments application.`) +
+        (a.businessType ? ` Business type: ${a.businessType}.` : "") +
+        (a.capitalInterest ? ` Indicated interest in Delt Capital.` : ""),
     },
   );
 
+  if (!a.capitalInterest) {
+    // Processing-only: no Plaid. No link, no email, no reminder nudges.
+    return { lead_id: leadId };
+  }
+
   const db = svc();
+
+  // The lead may pre-exist without the Capital tag (email match) — tag it
+  // before minting so the Capital-only guard in createHostedLink passes.
+  const { data: leadRow } = await db
+    .from("pipeline_leads")
+    .select("type, products, timeline")
+    .eq("id", leadId)
+    .maybeSingle();
+  const products: string[] = Array.isArray(leadRow?.products) ? leadRow.products : [];
+  if (leadRow && leadRow.type !== "MCA" && !products.includes("Capital")) {
+    const timeline = Array.isArray(leadRow.timeline) ? leadRow.timeline : [];
+    timeline.push({
+      date: new Date().toISOString(),
+      event: "Capital interest indicated via the deltpay.com quiz.",
+    });
+    await db
+      .from("pipeline_leads")
+      .update({ products: [...products, "Capital"], timeline })
+      .eq("id", leadId);
+  }
+
   const { data: pending } = await db
     .from("plaid_link_requests")
     .select("hosted_link_url, expires_at")

@@ -221,6 +221,15 @@ export function extraProductTags(lead: Pick<Lead, 'type' | 'products'>): Product
   return (lead.products ?? []).filter(p => p !== IMPLIED_PRODUCT[lead.type]);
 }
 
+/**
+ * Capital-relevant leads are the only files Plaid bank-connect applies to —
+ * Plaid is a Capital product, never a Processing one. Mirrors the server-side
+ * guard in createHostedLink (supabase/functions/_shared/plaid.ts).
+ */
+export function leadWantsCapital(lead: { type?: string; products?: readonly string[] | null }): boolean {
+  return lead.type === 'MCA' || (lead.products ?? []).includes('Capital');
+}
+
 export interface Lead {
   id: string;
   businessName: string;

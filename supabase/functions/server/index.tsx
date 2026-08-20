@@ -192,12 +192,14 @@ app.post("/make-server-940653c6/leads/pricing-guide", async (c) => {
 });
 
 // ────────────────────────────────────────────────────────────────
-// Public deltpay.com /apply intake — browser-callable with the anon
-// key only (same posture as the pricing-guide capture above). Creates
-// or matches a pipeline lead and returns a Plaid-hosted connect link;
-// the bank connection completes via webhook with no client Plaid SDK.
-// Guards mirror mpa-application self-start: honeypot → fake success,
-// email validation, and an hourly cap on new leads from this source.
+// Public deltpay.com intake (/apply application + /get-a-quote quiz) —
+// browser-callable with the anon key only (same posture as the
+// pricing-guide capture above). Creates or matches a Processing lead.
+// Plaid is Capital-only: a hosted connect link is returned ONLY when
+// capitalInterest is set (the quiz's Capital feature card); connection
+// then completes via webhook with no client Plaid SDK. Guards mirror
+// mpa-application self-start: honeypot → fake success, email
+// validation, and an hourly cap on new leads per source.
 // ────────────────────────────────────────────────────────────────
 
 app.post("/make-server-940653c6/apply/intake", async (c) => {
@@ -220,15 +222,17 @@ app.post("/make-server-940653c6/apply/intake", async (c) => {
     const businessName = typeof body.businessName === "string" ? body.businessName.trim().slice(0, 200) : "";
     const phone = typeof body.phone === "string" ? body.phone.trim().slice(0, 40) : "";
     const businessType = typeof body.businessType === "string" ? body.businessType.trim().slice(0, 40) : "";
+    const capitalInterest = body.capitalInterest === true;
+    const origin = body.origin === "quiz" ? "quiz" as const : "application" as const;
 
-    // Throttle: cap brand-new leads from this public source at 20/hour.
-    // (Resubmits that match an existing lead don't insert and reuse the
-    // pending connect link, so they stay cheap either way.)
+    // Throttle: cap brand-new leads at 20/hour per public source, so a
+    // quiz burst can't starve /apply and vice versa. (Resubmits that
+    // match an existing lead don't insert a row and stay cheap.)
     const hourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
     const { count } = await svc()
       .from("pipeline_leads")
       .select("id", { count: "exact", head: true })
-      .eq("source", "deltpay.com application")
+      .eq("source", origin === "quiz" ? "deltpay.com quiz" : "deltpay.com application")
       .gte("created_at", hourAgo);
     if ((count ?? 0) >= 20) {
       return c.json({ ok: false, error: "We're receiving a lot of applications right now — please try again in a bit." }, 429);
@@ -240,6 +244,8 @@ app.post("/make-server-940653c6/apply/intake", async (c) => {
       businessName: businessName || undefined,
       phone: phone || undefined,
       businessType: businessType || undefined,
+      capitalInterest,
+      origin,
     });
     return c.json({ ok: true, ...out });
   } catch (err: any) {

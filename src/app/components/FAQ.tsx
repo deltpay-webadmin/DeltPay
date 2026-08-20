@@ -35,7 +35,7 @@ const faqData: FAQItem[] = [
   },
   {
     question: "What type of funding options does Delt offer?",
-    answer: "Delt offers business loans, lines of credit, and revenue-based financing options. Get approved quickly and access funds to invest in inventory, equipment, or growth initiatives."
+    answer: "Delt Capital offers revenue-based financing sized to your card sales. Offers are subject to underwriting — once approved, use funds for inventory, equipment, or growth initiatives."
   },
   {
     question: "How much are the processing rates?",

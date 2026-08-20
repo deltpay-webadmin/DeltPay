@@ -509,7 +509,7 @@ export function DeltHeroHub() {
                   'Payments': '/payments',
                   'Websites': '/website-examples',
                   'Lens AI': '/delt-ai',
-                  'Capital': '/apply',
+                  'Capital': '/capital',
                 };
                 
                 return (

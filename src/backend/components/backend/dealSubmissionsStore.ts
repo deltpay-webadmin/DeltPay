@@ -12,6 +12,7 @@ import { useSyncExternalStore } from 'react';
 import { toast } from 'sonner@2.0.3';
 import { supabase } from '../../lib/supabase';
 import { activationBonus } from './agentComp';
+import { leadWantsCapital } from './crmStore';
 
 export type SubmissionStatus =
   | 'Submitted'
@@ -209,7 +210,7 @@ export const dealSubmissionActions = {
     if (existing?.id) return existing.id as string;
 
     const monthlyVolume = parseFloat((lead.monthlySales || '').replace(/[^0-9.]/g, '')) || 0;
-    const wantsCapital = lead.type === 'MCA' || (lead.products ?? []).includes('Capital');
+    const wantsCapital = leadWantsCapital(lead);
     const { data, error } = await supabase
       .from('deal_submissions')
       .insert({

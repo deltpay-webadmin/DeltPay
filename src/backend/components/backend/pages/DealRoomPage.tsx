@@ -25,7 +25,7 @@ import {
 import { toast } from 'sonner@2.0.3';
 import { useSession } from '../SessionContext';
 import { useDealSubmissions, dealSubmissionActions, BOARDING_CHANNELS, type BoardingChannel, type DealSubmission } from '../dealSubmissionsStore';
-import { useLeads, useUnderwriting, underwritingActions, type UWApplication } from '../crmStore';
+import { useLeads, useUnderwriting, underwritingActions, leadActions, leadWantsCapital, type UWApplication } from '../crmStore';
 import { usePlaidItems, usePlaidLinkRequests, plaidActions } from '../plaidStore';
 import { useContracts, contractActions, type Contract } from '../contractsStore';
 import { useApplicationForSubmission } from '../merchantApplicationsStore';
@@ -213,7 +213,21 @@ export function DealRoomPage() {
           state={plaidConnected ? 'Connected' : pendingInvite ? 'Link sent — waiting' : 'Not connected'} />
         {sub.leadId ? (
           <div className="flex flex-wrap items-center gap-2">
-            {!plaidConnected && (
+            {/* Plaid is Capital-only: an untagged lead gets a one-click tag
+                first (the server guard refuses connect links otherwise). */}
+            {!plaidConnected && lead && !leadWantsCapital(lead) && (
+              <>
+                <span className="text-[11px] text-gray-500">
+                  {sub.wantsCapital
+                    ? 'This deal wants Capital but the lead is untagged — tag it to enable the bank connect link.'
+                    : 'Bank connect is for Capital files only. Tag the lead + Capital to enable.'}
+                </span>
+                <button className={btnGhost} onClick={() => leadActions.toggleProduct(lead.id, 'Capital')}>
+                  + Capital
+                </button>
+              </>
+            )}
+            {!plaidConnected && (!lead || leadWantsCapital(lead)) && (
               <button className={btnPrimary} disabled={busy !== null}
                 onClick={async () => { setBusy('plaid'); try { await plaidActions.createHostedLink(sub.leadId!); } finally { setBusy(null); } }}>
                 {busy === 'plaid' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Landmark className="w-3.5 h-3.5" />}

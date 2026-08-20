@@ -12,7 +12,7 @@ import {
   Tooltip as RTooltip, Legend, ResponsiveContainer,
 } from 'recharts';
 import { toast } from 'sonner@2.0.3';
-import { useLeads, useUnderwriting, underwritingActions, type Lead } from '../crmStore';
+import { useLeads, useUnderwriting, underwritingActions, leadWantsCapital, type Lead } from '../crmStore';
 import {
   usePlaidItems, usePlaidNodes, usePlaidStatus, usePlaidSync, usePlaidLinkRequests, usePlaidUsage, plaidActions,
   itemUiStatus,
@@ -396,7 +396,7 @@ interface ProspectRollup {
   recommendation: any | null;
 }
 
-function useProspects(): ProspectRollup[] {
+function useProspects(showAll = false): ProspectRollup[] {
   const leads = useLeads();
   const items = usePlaidItems();
   const nodes = usePlaidNodes();
@@ -405,7 +405,13 @@ function useProspects(): ProspectRollup[] {
     const byKind = (leadId: string, kind: string) =>
       nodes.find(n => n.leadId === leadId && n.docKind === kind)?.data ?? null;
 
-    return leads.map(lead => {
+    // Plaid is Capital-only: default to capital-relevant leads, plus any
+    // lead that already has a connection (visible/repairable regardless).
+    const visible = showAll
+      ? leads
+      : leads.filter(l => leadWantsCapital(l) || items.some(i => i.leadId === l.id));
+
+    return visible.map(lead => {
       const leadItems = items.filter(i => i.leadId === lead.id);
       const summary = byKind(lead.id, 'summary');
       const cashFlow = byKind(lead.id, 'cash_flow');
@@ -414,7 +420,7 @@ function useProspects(): ProspectRollup[] {
       const plaidInputs: PlaidInputs | null = uwDoc?.plaidInputs ?? null;
       return { lead, items: leadItems, summary, cashFlow, plaidInputs, recommendation };
     });
-  }, [leads, items, nodes]);
+  }, [leads, items, nodes, showAll]);
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -1954,7 +1960,8 @@ function ProductsSpendTab() {
 type TabKey = 'prospects' | 'explorer' | 'connections' | 'products';
 
 export function BackendPlaid() {
-  const prospects = useProspects();
+  const [showAllLeads, setShowAllLeads] = useState(false);
+  const prospects = useProspects(showAllLeads);
   const items = usePlaidItems();
   const nodes = usePlaidNodes();
   const status = usePlaidStatus();
@@ -2117,14 +2124,28 @@ export function BackendPlaid() {
           />
         ) : (
           <div className="space-y-3">
-            <div className="relative max-w-sm">
-              <Search className="w-4 h-4 text-(--dp-text-faint) absolute left-3 top-2.5" />
-              <input
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                placeholder="Search prospects…"
-                className={`w-full pl-9 pr-3 py-2 ${INPUT_GLASS}`}
-              />
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="relative max-w-sm flex-1 min-w-[220px]">
+                <Search className="w-4 h-4 text-(--dp-text-faint) absolute left-3 top-2.5" />
+                <input
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  placeholder="Search prospects…"
+                  className={`w-full pl-9 pr-3 py-2 ${INPUT_GLASS}`}
+                />
+              </div>
+              <label
+                className={`inline-flex items-center gap-2 text-xs ${TXT_MUTED} cursor-pointer select-none`}
+                title="Plaid is Capital-only, so this list shows Capital-relevant leads (plus anything already connected) by default."
+              >
+                <input
+                  type="checkbox"
+                  checked={showAllLeads}
+                  onChange={e => setShowAllLeads(e.target.checked)}
+                  className="accent-[#2E6BFF]"
+                />
+                Show all leads
+              </label>
             </div>
             <div className={`${GLASS} overflow-x-auto`}>
               <table className="w-full text-sm min-w-[900px]">

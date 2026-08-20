@@ -827,7 +827,7 @@ function DoneStep({ email }: { email: string }) {
           'Underwriting decision within 1 business day',
           'Free Delt Reader ships once approved',
           'Start processing the same day hardware lands',
-          'Capital pre-qualification runs automatically — no extra form',
+          'Capital pre-qualification available once you’re processing — opt in anytime',
         ].map((t) => (
           <li
             key={t}

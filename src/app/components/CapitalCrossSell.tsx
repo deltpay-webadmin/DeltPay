@@ -2,10 +2,12 @@
  * CapitalCrossSell — Merchant Services → Delt Capital cross-sell
  *
  * Surfaces the value loop for merchants who process payments with Delt:
- *   • Pre-approval based on processing history (no separate app)
+ *   • Pre-qualification based on processing history (no separate app)
  *   • Best rates available
  *   • Flexible repayment that flexes with daily sales
- *   • Funds in your account in 24–48 hours
+ *   • Funding typically 24–48 hours after approval
+ * All offers are subject to underwriting — copy says "pre-qualify",
+ * never "pre-approved", and every variant carries a disclaimer.
  *
  * Three layout variants so it lives naturally across the funnel:
  *   • full   — full-width section (Payments, Pricing, Homepage)
@@ -43,8 +45,8 @@ interface CapitalCrossSellProps {
 const PILLARS = [
   {
     icon: BadgeCheck,
-    title: 'Pre-approved automatically',
-    body: 'Process with Delt and we underwrite from your real sales — no separate application, no credit pull surprises.',
+    title: 'Pre-qualify from your sales',
+    body: 'Process with Delt and we underwrite from your real sales — no separate application to fill out.',
   },
   {
     icon: Percent,
@@ -58,8 +60,8 @@ const PILLARS = [
   },
   {
     icon: Zap,
-    title: 'Funded in 24–48 hours',
-    body: 'Accept an offer in your dashboard and the cash hits the bank account you already process into.',
+    title: 'Fast funding after approval',
+    body: 'Accept an offer in your dashboard and funds typically arrive within 24–48 hours of approval.',
   },
 ];
 
@@ -70,7 +72,7 @@ function FullSection({
   headline,
   subhead,
   ctaHref = '/capital',
-  ctaLabel = 'See your pre-approved offer',
+  ctaLabel = 'See if you pre-qualify',
 }: CapitalCrossSellProps) {
   const isDark = theme === 'dark';
   const bg = isDark ? NAVY : '#FFFFFF';
@@ -121,7 +123,7 @@ function FullSection({
             >
               {headline ?? (
                 <>
-                  Your sales already qualify you for{' '}
+                  Your sales can pre-qualify you for{' '}
                   <em
                     style={{
                       fontFamily: "'Source Serif Pro', Georgia, serif",
@@ -137,7 +139,7 @@ function FullSection({
             </h2>
             <p className="text-lg max-w-xl" style={{ color: bodyColor }}>
               {subhead ??
-                'Every Delt merchant gets pre-approved offers from Delt Capital — same company, different product. The longer you process with us, the better the rate and the bigger the offer.'}
+                'Delt merchants can receive pre-qualified offers from Delt Capital — same company, different product. The longer you process with us, the better the rate and the bigger the offer.'}
             </p>
           </div>
 
@@ -160,7 +162,7 @@ function FullSection({
                 textTransform: 'uppercase',
               }}
             >
-              — Sample pre-approved offer
+              — Illustrative example offer
             </div>
             <div className="flex items-baseline gap-2 mb-1">
               <span
@@ -174,7 +176,7 @@ function FullSection({
               </span>
             </div>
             <div className="text-sm mb-5" style={{ color: bodyColor }}>
-              Based on 6 months of card volume.
+              Example only — offers are based on your actual card volume.
             </div>
             <div
               className="grid grid-cols-3 gap-3 pt-4"
@@ -201,7 +203,7 @@ function FullSection({
                   Funded
                 </div>
                 <div className="text-sm font-bold" style={{ color: titleColor }}>
-                  24–48 hrs
+                  24–48 hrs after approval
                 </div>
               </div>
             </div>
@@ -275,9 +277,9 @@ function FullSection({
           className="mt-6 text-xs"
           style={{ color: isDark ? 'rgba(255,255,255,0.45)' : '#94A3B8', maxWidth: 720 }}
         >
-          Delt Capital and Delt Merchant Services are products of the same company. Capital offers are
-          subject to underwriting; rates and limits depend on processing volume and history. Loans
-          issued by Delt Banking Partners, member FDIC.
+          Delt Capital and Delt Merchant Services are products of the same company. Delt Capital
+          offers are revenue-based financing, subject to underwriting; rates and limits depend on
+          processing volume and history.
         </p>
       </div>
     </section>
@@ -290,7 +292,7 @@ function BannerSection({
   headline,
   subhead,
   ctaHref = '/capital',
-  ctaLabel = 'See pre-approved offers',
+  ctaLabel = 'See if you pre-qualify',
 }: CapitalCrossSellProps) {
   return (
     <section className="px-6 py-10" style={{ background: '#FFFFFF' }}>
@@ -319,11 +321,14 @@ function BannerSection({
             className="text-white font-bold leading-tight mb-2"
             style={{ fontSize: 'clamp(22px, 2.4vw, 30px)', letterSpacing: '-0.015em' }}
           >
-            {headline ?? 'Process with Delt, get pre-approved for capital.'}
+            {headline ?? 'Process with Delt — see if you pre-qualify for capital.'}
           </h3>
           <p className="text-white/70 max-w-2xl" style={{ fontSize: 15 }}>
             {subhead ??
-              'Best rates, repayment that flexes with daily sales, deposited in 24–48 hours — all from the same dashboard you already use.'}
+              'Best rates, repayment that flexes with daily sales, funding typically 24–48 hours after approval — all from the same dashboard you already use.'}
+          </p>
+          <p className="text-white/50 mt-2" style={{ fontSize: 11 }}>
+            Subject to underwriting. Revenue-based financing.
           </p>
         </div>
 
@@ -373,21 +378,21 @@ function CardSection({
             {eyebrow ?? 'Bonus when you process with Delt'}
           </div>
           <h3 className="text-lg font-bold leading-snug" style={{ color: NAVY }}>
-            {headline ?? 'You’re also pre-approved for Delt Capital.'}
+            {headline ?? 'You may also pre-qualify for Delt Capital.'}
           </h3>
         </div>
       </div>
 
       <p className="text-sm leading-relaxed mb-5" style={{ color: MUTED }}>
         {subhead ??
-          'Active merchants get our best rates, flexible daily repayment, and funds in 24–48 hours — no separate application required.'}
+          'Active merchants get our best rates, flexible daily repayment, and funding typically 24–48 hours after approval — no separate application required.'}
       </p>
 
       <div className="grid grid-cols-3 gap-3 mb-5">
         {[
           { k: 'Rate', v: 'Best available' },
           { k: 'Repay', v: 'Flexes with sales' },
-          { k: 'Funded', v: '24–48 hrs' },
+          { k: 'After approval', v: '24–48 hrs' },
         ].map((s) => (
           <div key={s.k}>
             <div
@@ -411,6 +416,10 @@ function CardSection({
         {ctaLabel}
         <ArrowRight size={14} />
       </Link>
+
+      <p className="text-[11px] mt-3" style={{ color: '#94A3B8' }}>
+        Subject to underwriting. Revenue-based financing.
+      </p>
     </div>
   );
 }

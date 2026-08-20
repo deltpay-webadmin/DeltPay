@@ -679,8 +679,8 @@ export function PricingPage() {
       <CapitalCrossSell
         variant="banner"
         eyebrow="Bonus for Delt merchants"
-        headline="Process with Delt — pre-approve for capital."
-        subhead="Best rates, daily-flex repayment, deposited in 24–48 hours. Same company, no separate application."
+        headline="Process with Delt — pre-qualify for capital."
+        subhead="Best rates, daily-flex repayment, funding typically 24–48 hours after approval. Same company, no separate application."
       />
 
       {/* ═══ 3. HARDWARE IVORY BAND ═══════════════════════════════ */}

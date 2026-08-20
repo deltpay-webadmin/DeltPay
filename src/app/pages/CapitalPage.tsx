@@ -44,11 +44,11 @@ const FAQS = [
   },
   {
     q: "What are the fees?",
-    a: 'Delt Capital loans have a fixed fee that will not change regardless of how long it takes to repay. No compounding interest, no application fees, no prepayment fees, no late fees.',
+    a: 'Delt Capital financing has a fixed fee that will not change regardless of how long it takes to repay. No compounding interest, no application fees, no prepayment fees, no late fees.',
   },
   {
-    q: "What can I use the loan for?",
-    a: 'Anything your business needs — short-term cash flow, hiring, inventory, equipment, refinancing debt, renovation, or opening a new location.',
+    q: "What can I use the funds for?",
+    a: 'Working capital for your business — cash flow, hiring, inventory, equipment, or expansion.',
   },
   {
     q: "How fast will I get funded?",
@@ -332,13 +332,13 @@ function SpeedVisual() {
         className="text-[11px] font-bold uppercase mb-6"
         style={{ color: PURPLE, letterSpacing: '0.16em' }}
       >
-        Pre-qualified offer
+        Illustrative example offer
       </div>
       <div className="flex flex-col gap-2.5">
         {[
           ['Apply', 'under 2 min', true],
-          ['Approval', 'same day', true],
-          ['Funds arrive', 'next business day', true],
+          ['Decision', 'typically 1 business day', true],
+          ['Funds arrive', 'next business day after approval', true],
         ].map(([label, value, done]) => (
           <div
             key={label as string}
@@ -837,8 +837,8 @@ export function CapitalPage() {
                   className="mt-6 grid grid-cols-3 gap-3"
                 >
                   {[
-                    ['Approval', 'Same day'],
-                    ['Funding', 'Next day'],
+                    ['Decision', 'Typically 1 business day'],
+                    ['Funding', 'Next day after approval'],
                     ['Fees', '$0 upfront'],
                   ].map(([k, v]) => (
                     <div
@@ -899,7 +899,7 @@ export function CapitalPage() {
             reverse
             eyebrow="Fast & flexible"
             title="From $1K to $300K — funded as soon as tomorrow."
-            body="Apply in minutes from your Delt dashboard. Most approvals land same-day and funds arrive in your account the next business day, subject to eligibility."
+            body="Apply in minutes from your Delt dashboard. Decisions typically land within 1 business day and funds arrive in your account the next business day after approval, subject to eligibility."
             bullets={[
               'Loan amounts from $1,000 to $300,000',
               'Fixed fee — no compounding interest or hidden charges',

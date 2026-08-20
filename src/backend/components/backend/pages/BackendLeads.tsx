@@ -56,6 +56,7 @@ import {
   isDummyLead,
   scoreLead,
   extraProductTags,
+  leadWantsCapital,
   type Lead as StoreLead,
   type ProductTag,
 } from '../crmStore';
@@ -554,6 +555,27 @@ function ConnectBankCard({ lead }: { lead: Lead }) {
             {sending ? 'Sending…' : 'Resend'}
           </button>
         </div>
+      </div>
+    );
+  }
+
+  // Plaid is Capital-only: a Processing-only lead gets a tag-to-enable hint
+  // instead of a bank-connect CTA (the server guard would refuse anyway).
+  if (!leadWantsCapital(lead)) {
+    return (
+      <div className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-gray-200 bg-gray-50/70 px-4 py-3">
+        <div>
+          <p className="text-xs font-semibold text-gray-800">Plaid bank connect is for Capital files</p>
+          <p className="text-[11px] text-gray-500 mt-0.5">
+            This is a Processing lead. Tag it with the Capital product to enable the secure bank-connect link.
+          </p>
+        </div>
+        <button
+          onClick={() => leadActions.toggleProduct(lead.id, 'Capital')}
+          className="shrink-0 px-3.5 py-2 text-xs font-semibold rounded-md border border-emerald-300 text-emerald-700 bg-white hover:bg-emerald-50"
+        >
+          + Capital
+        </button>
       </div>
     );
   }
