@@ -15,6 +15,7 @@ import {
   syncAllItems,
   removeItem,
   attachIdentityVerification,
+  createIdentityVerification,
   createAssetReport,
   refreshAssetReport,
   applyPlaidExchange,
@@ -309,6 +310,7 @@ app.get(`${PLAID_BASE}/status`, needPerm("underwriting.view"), async (c) => {
     products: cfg.products,
     optional_products: cfg.optionalProducts,
     monitor_configured: Boolean(cfg.monitorProgramId),
+    idv_configured: Boolean(cfg.idvTemplateId),
     recurring_enabled: cfg.recurringEnabled,
     retire_after_days: cfg.retireAfterDays,
     webhook_url: webhookUrl(),
@@ -399,6 +401,21 @@ app.post(`${PLAID_BASE}/hosted-link`, needPerm("underwriting.review"), async (c)
     return c.json({ ok: true, ...out });
   } catch (err: any) {
     console.error("plaid hosted-link error", err);
+    return c.json({ ok: false, error: String(err?.message ?? err) }, 500);
+  }
+});
+
+// Start a Plaid IDV session for a prospect. Requires PLAID_IDV_TEMPLATE_ID;
+// the returned shareable_url is a hosted flow staff send to the applicant.
+app.post(`${PLAID_BASE}/idv/create`, needPerm("underwriting.review"), async (c) => {
+  try {
+    const body = await c.req.json().catch(() => ({}));
+    const leadId = String(body.leadId ?? "");
+    if (!leadId) return c.json({ ok: false, error: "leadId is required" }, 400);
+    const out = await createIdentityVerification(leadId);
+    return c.json(out);
+  } catch (err: any) {
+    console.error("plaid idv create error", err);
     return c.json({ ok: false, error: String(err?.message ?? err) }, 500);
   }
 });

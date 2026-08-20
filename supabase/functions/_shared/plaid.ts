@@ -78,6 +78,8 @@ export function plaidConfig() {
   const recurringEnabled = (Deno.env.get("PLAID_RECURRING_ENABLED") ?? "").toLowerCase() === "true";
   // Monitor (ongoing watchlist screening) — required for screenLead().
   const monitorProgramId = (Deno.env.get("PLAID_MONITOR_PROGRAM_ID") ?? "").trim();
+  // Identity Verification template — required for createIdentityVerification().
+  const idvTemplateId = (Deno.env.get("PLAID_IDV_TEMPLATE_ID") ?? "").trim();
   // Auto-retire Plaid items on dead leads after this many days of lead
   // inactivity (ends the monthly Transactions subscription). 0 disables.
   const retireAfterDays = Number(Deno.env.get("PLAID_RETIRE_AFTER_DAYS") ?? "30") || 0;
@@ -95,6 +97,7 @@ export function plaidConfig() {
     eagerVerification,
     recurringEnabled,
     monitorProgramId,
+    idvTemplateId,
     retireAfterDays,
     host: PLAID_HOSTS[env] ?? "",
     redirectUri: Deno.env.get("PLAID_REDIRECT_URI") ?? "",
@@ -141,6 +144,7 @@ const BILLABLE: Record<string, { product: string; pricing: string }> = {
   "/transactions/recurring/get": { product: "recurring_transactions", pricing: "subscription" },
   "/accounts/balance/get": { product: "balance", pricing: "per_request" },
   "/asset_report/create": { product: "assets", pricing: "per_report" },
+  "/identity_verification/create": { product: "identity_verification", pricing: "per_event" },
   "/identity_verification/get": { product: "identity_verification", pricing: "per_event" },
   "/identity_verification/retry": { product: "identity_verification", pricing: "per_event" },
   "/liabilities/get": { product: "liabilities", pricing: "subscription" },
@@ -2262,7 +2266,7 @@ export async function retireStaleItems() {
  */
 export async function attachIdentityVerification(leadId: string, idvId: string) {
   const db = svc();
-  const idv = await plaid("/identity_verification/get", { identity_verification_id: idvId });
+  const idv = await plaid("/identity_verification/get", { identity_verification_id: idvId }, { leadId });
 
   const { data: leadRow } = await db
     .from("pipeline_leads")
@@ -2346,6 +2350,79 @@ export async function retryIdentityVerification(leadId: string, idvId: string, s
   }, { leadId });
   const attached = await attachIdentityVerification(leadId, retried.id);
   return { ...attached, retried_from: idvId, shareable_url: retried.shareable_url ?? null };
+}
+
+/**
+ * Start a Plaid IDV session for a prospect from inside the CRM. Requires
+ * PLAID_IDV_TEMPLATE_ID. is_shareable makes Plaid mint a hosted URL staff
+ * can send to the applicant; is_idempotent returns the existing active
+ * session for the same client_user_id + template instead of billing a new
+ * one. Billed per verification.
+ */
+export async function createIdentityVerification(leadId: string) {
+  const cfg = plaidConfig();
+  if (!cfg.idvTemplateId) {
+    throw new Error(
+      "Identity Verification is not configured: set the PLAID_IDV_TEMPLATE_ID Edge Function secret " +
+      "(Plaid dashboard → Identity Verification → Templates).",
+    );
+  }
+  const db = svc();
+  const { data: leadRow } = await db
+    .from("pipeline_leads")
+    .select("business_name, contact_email")
+    .eq("id", leadId)
+    .maybeSingle();
+  if (!leadRow) throw new Error("Unknown lead");
+
+  const email = String(leadRow.contact_email ?? "").trim();
+  const out = await plaid("/identity_verification/create", {
+    template_id: cfg.idvTemplateId,
+    client_user_id: leadId,
+    // Consent is collected inside the Plaid IDV flow itself.
+    gave_consent: false,
+    is_shareable: true,
+    is_idempotent: true,
+    ...(email ? { user: { email_address: email } } : {}),
+  }, { leadId });
+
+  const attached = await attachIdentityVerification(leadId, out.id);
+  return { ...attached, shareable_url: out.shareable_url ?? null };
+}
+
+/**
+ * Webhook-driven refresh: re-file an IDV session on its lead. The lead is
+ * resolved from the vault doc the session was attached under; RETRIED
+ * webhooks carry a brand-new session id, so fall back to the session's
+ * client_user_id (which createIdentityVerification sets to the lead id).
+ */
+export async function refreshIdentityVerification(idvId: string) {
+  const db = svc();
+  const { data: node } = await db
+    .from("plaid_nodes")
+    .select("lead_id")
+    .eq("doc_kind", "identity_verification")
+    .eq("data->>id", idvId)
+    .maybeSingle();
+  let leadId: string | null = node?.lead_id ?? null;
+
+  if (!leadId) {
+    const idv = await plaid("/identity_verification/get", { identity_verification_id: idvId });
+    const candidate = String(idv?.client_user_id ?? "").trim();
+    if (candidate) {
+      const { data: leadRow } = await db
+        .from("pipeline_leads")
+        .select("id")
+        .eq("id", candidate)
+        .maybeSingle();
+      if (leadRow) leadId = leadRow.id;
+    }
+  }
+  if (!leadId) {
+    console.warn(`[plaid] IDV ${idvId} has no matching lead — skipping refresh`);
+    return { ok: false, reason: "no-lead" };
+  }
+  return await attachIdentityVerification(leadId, idvId);
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -2548,6 +2625,24 @@ export async function handlePlaidWebhook(body: any): Promise<{ handled: string }
       }
     }
     return { handled: `screening:${code}` };
+  }
+
+  // IDV sessions progress outside the CRM (the applicant works through the
+  // hosted flow) — status changes arrive here; re-file the session on its
+  // lead. IDV webhooks carry no item_id, so this must run before the
+  // no-item guard below.
+  if (type === "IDENTITY_VERIFICATION") {
+    const idvId: string = body?.identity_verification_id ?? "";
+    if (["STATUS_UPDATED", "STEP_UPDATED", "RETRIED"].includes(code) && idvId) {
+      try {
+        const out = await refreshIdentityVerification(idvId);
+        return { handled: out.ok ? `idv-updated:${idvId}` : `idv-orphan:${idvId}` };
+      } catch (err: any) {
+        console.error("[plaid-webhook] IDV refresh failed:", err?.message ?? err);
+        return { handled: `idv-error:${idvId}` };
+      }
+    }
+    return { handled: `idv:${code}` };
   }
 
   // Hosted-link sessions (CRM "send connect link") finish with a LINK

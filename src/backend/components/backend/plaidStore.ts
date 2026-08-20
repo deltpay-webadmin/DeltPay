@@ -124,6 +124,8 @@ export interface PlaidStatus {
   optionalProducts: string[];
   /** Whether PLAID_MONITOR_PROGRAM_ID is set (AML screening available). */
   monitorConfigured: boolean;
+  /** Whether PLAID_IDV_TEMPLATE_ID is set (Identity Verification sessions can be started). */
+  idvConfigured: boolean;
   /** Whether the recurring-transactions add-on is opted in. */
   recurringEnabled: boolean;
   /** Days of dead-lead inactivity before nightly auto-retire (0 = off). */
@@ -433,6 +435,7 @@ export const plaidActions = {
         products: json.products ?? [],
         optionalProducts: json.optional_products ?? [],
         monitorConfigured: Boolean(json.monitor_configured),
+        idvConfigured: Boolean(json.idv_configured),
         recurringEnabled: Boolean(json.recurring_enabled),
         retireAfterDays: Number(json.retire_after_days ?? 0),
         webhookUrl: json.webhook_url ?? '',
@@ -678,7 +681,8 @@ export const plaidActions = {
 
   /** Re-pull every connected item (optionally scoped to one lead). */
   async syncAll(leadId?: string) {
-    markBusy('sync:all', true);
+    const key = leadId ? `sync:lead:${leadId}` : 'sync:all';
+    markBusy(key, true);
     try {
       const json = await authFetch('/sync-all', {
         method: 'POST',
@@ -697,7 +701,7 @@ export const plaidActions = {
       toast.error(`Sync failed: ${err.message}`);
       throw err;
     } finally {
-      markBusy('sync:all', false);
+      markBusy(key, false);
     }
   },
 
@@ -803,6 +807,40 @@ export const plaidActions = {
       throw err;
     } finally {
       markBusy(`retire:${itemId}`, false);
+    }
+  },
+
+  /** Start a new Plaid IDV session for a lead (billable per verification).
+   * Copies the hosted shareable link for sending to the applicant. */
+  async startIdv(leadId: string) {
+    markBusy(`idv:${leadId}`, true);
+    try {
+      const json = await authFetch('/idv/create', {
+        method: 'POST',
+        body: JSON.stringify({ leadId }),
+      });
+      const url = String(json.shareable_url ?? '');
+      if (url) {
+        let copied = false;
+        try {
+          await navigator.clipboard.writeText(url);
+          copied = true;
+        } catch { /* clipboard blocked — fall through to prompt */ }
+        if (copied) {
+          toast.success('IDV session started — verification link copied to send to the applicant.');
+        } else {
+          window.prompt('Copy this identity verification link and send it to the applicant:', url);
+        }
+      } else {
+        toast.success(`IDV session started (status: ${json.status ?? 'unknown'}).`);
+      }
+      await plaidActions.refresh();
+      return json;
+    } catch (err: any) {
+      toast.error(`Couldn't start identity verification: ${err.message}`);
+      throw err;
+    } finally {
+      markBusy(`idv:${leadId}`, false);
     }
   },
 

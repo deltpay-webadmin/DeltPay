@@ -1,6 +1,6 @@
 /**
  * ════════════════════════════════════════════════════════════════
- * Delt Cash-Flow Decision Model — v1.0.0
+ * Delt Cash-Flow Decision Model — v1.1.0
  * ════════════════════════════════════════════════════════════════
  * Standardized, deterministic lending recommendation from Plaid data.
  *
@@ -30,7 +30,7 @@
  */
 
 export const MODEL_NAME = "Delt Cash-Flow Decision Model";
-export const MODEL_VERSION = "1.0.0";
+export const MODEL_VERSION = "1.1.0";
 
 // ════════════════════════════════════════════════════════════════
 // Policy constants — the ONLY place thresholds live.
@@ -53,6 +53,8 @@ export const POLICY = {
   // 5. Offer sizing
   OFFER_FLOOR: 5_000,                  // $ — smallest advance we'll write
   OFFER_ROUNDING: 1_000,               // $ — round offers down to this step
+  FALLBACK_OFFER_FLOOR: 500,           // $ — smallest theoretical starter offer on declines
+  FALLBACK_OFFER_ROUNDING: 500,        // $ — starter offers step in finer increments to reach the floor
   ADB_BUFFER_MULTIPLE: 10,             // advance ≤ 10 × avg daily balance
   BUSINESS_DAYS_PER_MONTH: 21,
   STRESS_MAX_PAYMENT_PCT_ADB: 0.15,    // daily payment ≤ 15% of ADB
@@ -140,6 +142,20 @@ export interface OfferTerms {
   stress_iterations: number;
 }
 
+/**
+ * Theoretical starter offer attached to DECLINE outputs. NON-BINDING:
+ * the decision stands — this exists so the desk can still see what a
+ * minimal processing-relationship offer would look like. It must never
+ * be surfaced as an approvable offer.
+ */
+export interface FallbackOffer extends OfferTerms {
+  non_binding: true;
+  /** Which tier's parameters sized it: the assigned tier (affordability
+   *  declines) or Tier 4's as a stand-in (hard-rule/score declines). */
+  basis: "assigned_tier" | "tier4_params";
+  floor: number;
+}
+
 export type Decision = "PRE_APPROVE" | "REVIEW" | "DECLINE" | "INSUFFICIENT_DATA";
 
 export interface ModelOutput {
@@ -152,6 +168,8 @@ export interface ModelOutput {
   score: { total: number; components: ScoreComponent[] };
   gates: { sufficiency: GateResult[]; knockouts: GateResult[] };
   offer: OfferTerms | null;
+  /** Non-binding starter offer on declines; null everywhere else. */
+  fallback_offer: FallbackOffer | null;
   conditions: string[];
   explanation: string[];
   input: ModelInput;
@@ -243,7 +261,14 @@ export function scoreCashFlow(i: ModelInput): { total: number; components: Score
 // Stage 5 — offer sizing (min of caps, stress-tested)
 // ════════════════════════════════════════════════════════════════
 
-function sizeOffer(i: ModelInput, tier: TierParams, explanation: string[]): OfferTerms | null {
+function sizeOffer(
+  i: ModelInput,
+  tier: TierParams,
+  explanation: string[],
+  opts?: { floor?: number; rounding?: number },
+): OfferTerms | null {
+  const floor = opts?.floor ?? POLICY.OFFER_FLOOR;
+  const rounding = opts?.rounding ?? POLICY.OFFER_ROUNDING;
   const termDays = tier.termMonths * POLICY.BUSINESS_DAYS_PER_MONTH;
   const factor = Math.round(((tier.factorMin + tier.factorMax) / 2) * 100) / 100;
   const dailyRevenue = (i.monthlyRevenue * 12) / 252;
@@ -270,7 +295,7 @@ function sizeOffer(i: ModelInput, tier: TierParams, explanation: string[]): Offe
     : rawCap === capBalance ? "balance_buffer"
     : "requested";
 
-  let amount = Math.floor(rawCap / POLICY.OFFER_ROUNDING) * POLICY.OFFER_ROUNDING;
+  let amount = Math.floor(rawCap / rounding) * rounding;
   explanation.push(
     `Offer caps — revenue multiple ${usd(capRevenue)}, affordability ${usd(capAffordability)}, ` +
     `balance buffer ${usd(capBalance)}${capRequested ? `, requested ${usd(capRequested)}` : ""}; ` +
@@ -280,7 +305,7 @@ function sizeOffer(i: ModelInput, tier: TierParams, explanation: string[]): Offe
   // Stress loop — shrink deterministically until the payment passes both
   // the daily-revenue share and the ADB share, or the offer floors out.
   let iterations = 0;
-  while (amount >= POLICY.OFFER_FLOOR) {
+  while (amount >= floor) {
     const dailyPayment = (amount * factor) / termDays;
     const pctDaily = dailyRevenue > 0 ? dailyPayment / dailyRevenue : 1;
     const pctAdb = i.avgDailyBalance > 0 ? dailyPayment / i.avgDailyBalance : 1;
@@ -308,11 +333,38 @@ function sizeOffer(i: ModelInput, tier: TierParams, explanation: string[]): Offe
         stress_iterations: iterations,
       };
     }
-    amount -= POLICY.OFFER_ROUNDING;
+    amount -= rounding;
     iterations++;
   }
-  explanation.push(`No offer ≥ ${usd(POLICY.OFFER_FLOOR)} passes the payment stress test.`);
+  explanation.push(`No offer ≥ ${usd(floor)} passes the payment stress test.`);
   return null;
+}
+
+/**
+ * Theoretical starter offer for DECLINE outputs. Sized with the same
+ * caps and stress test as a real offer, but floored at
+ * FALLBACK_OFFER_FLOOR and using Tier 4's parameters when no tier was
+ * assigned. Purely informational — the decline stands.
+ */
+function sizeFallbackOffer(
+  i: ModelInput,
+  tier: TierParams | null,
+  explanation: string[],
+): FallbackOffer | null {
+  const params = tier ?? TIERS[TIERS.length - 1];
+  const basis: FallbackOffer["basis"] = tier ? "assigned_tier" : "tier4_params";
+  const trace: string[] = [];
+  const offer = sizeOffer(i, params, trace, {
+    floor: POLICY.FALLBACK_OFFER_FLOOR,
+    rounding: POLICY.FALLBACK_OFFER_ROUNDING,
+  });
+  explanation.push(...trace.map(line => `Fallback sizing: ${line}`));
+  if (!offer) return null;
+  explanation.push(
+    `Theoretical starter offer (NON-BINDING): ${usd(offer.amount)} using ${params.label} parameters, ` +
+    `${usd(POLICY.FALLBACK_OFFER_FLOOR)} floor — informational only; decision remains unchanged.`,
+  );
+  return { ...offer, non_binding: true, basis, floor: POLICY.FALLBACK_OFFER_FLOOR };
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -363,7 +415,9 @@ export function runDecisionModel(i: ModelInput): ModelOutput {
       ...base,
       decision: "INSUFFICIENT_DATA",
       decision_label: "Insufficient Data — keep collecting",
-      tier: null, tier_label: null, offer: null,
+      // No fallback offer here: with a file this thin the sizing inputs
+      // are noise, and the honest message is "keep collecting".
+      tier: null, tier_label: null, offer: null, fallback_offer: null,
       conditions: insufficient.map(g => `Resolve: ${g.label} (${g.value}, needs ${g.threshold})`),
       explanation,
     };
@@ -378,6 +432,7 @@ export function runDecisionModel(i: ModelInput): ModelOutput {
       decision: "DECLINE",
       decision_label: "Decline — hard rule failure",
       tier: null, tier_label: null, offer: null,
+      fallback_offer: sizeFallbackOffer(i, null, explanation),
       conditions: [],
       explanation,
     };
@@ -392,6 +447,7 @@ export function runDecisionModel(i: ModelInput): ModelOutput {
       decision: "DECLINE",
       decision_label: "Decline — cash-flow score below tier floor",
       tier: null, tier_label: null, offer: null,
+      fallback_offer: sizeFallbackOffer(i, null, explanation),
       conditions: [],
       explanation,
     };
@@ -406,6 +462,7 @@ export function runDecisionModel(i: ModelInput): ModelOutput {
       decision: "DECLINE",
       decision_label: "Decline — no affordable offer",
       tier: tier.tier, tier_label: tier.label, offer: null,
+      fallback_offer: sizeFallbackOffer(i, tier, explanation),
       conditions: [],
       explanation,
     };
@@ -440,6 +497,7 @@ export function runDecisionModel(i: ModelInput): ModelOutput {
     tier: tier.tier,
     tier_label: tier.label,
     offer,
+    fallback_offer: null,
     conditions,
     explanation,
   };

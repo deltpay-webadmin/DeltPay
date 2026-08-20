@@ -566,6 +566,9 @@ function RecommendationView({ rec, onSendToUnderwriting }: { rec: any; onSendToU
   const [showTrace, setShowTrace] = useState(false);
   const cfg = MODEL_DECISION_STYLE[rec.decision] ?? MODEL_DECISION_STYLE.INSUFFICIENT_DATA;
   const offer = rec.offer;
+  // Non-binding starter offer on declines (model >= 1.1.0); older persisted
+  // recommendations simply lack the field.
+  const fallback = !offer ? (rec.fallback_offer ?? null) : null;
 
   return (
     <div className="space-y-4">
@@ -622,6 +625,28 @@ function RecommendationView({ rec, onSendToUnderwriting }: { rec: any; onSendToU
                   ),
                 )}
               </div>
+            </>
+          ) : fallback ? (
+            <>
+              <div className="flex items-center gap-2">
+                <p className="text-3xl font-semibold tracking-tight text-amber-300">{fmtMoney(fallback.amount)}</p>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-400/15 border border-amber-400/40 text-amber-300">
+                  Non-binding
+                </span>
+              </div>
+              <p className="text-xs text-amber-300/90 mt-1">
+                Theoretical starter offer — non-binding, prospect does not qualify
+              </p>
+              <p className={`text-xs ${TXT_MUTED} mt-1`}>
+                factor {fallback.factor} · {fallback.term_months} mo · payback {fmtMoney(fallback.total_payback)}
+              </p>
+              <div className="grid grid-cols-2 gap-2 mt-3">
+                <MetricTile label="Daily payment" value={fmtMoney(fallback.daily_payment, 2)} sub={`${fmtPct(fallback.payment_pct_daily_revenue)} of daily revenue`} />
+                <MetricTile label="Monthly est." value={fmtMoney(fallback.est_monthly_payment)} sub={`${fmtPct(fallback.payment_pct_adb)} of ADB`} />
+              </div>
+              <p className={`text-[11px] ${TXT_FAINT} mt-3`}>
+                Sized for a minimal processing relationship ({fmtMoney(fallback.floor)} floor). The decline stands — see gates.
+              </p>
             </>
           ) : (
             <p className={`text-sm ${TXT_FAINT}`}>No offer — see gates and conditions.</p>
@@ -708,6 +733,7 @@ function ProspectDetail({
 }) {
   const nodes = usePlaidNodes();
   const { busy } = usePlaidSync();
+  const status = usePlaidStatus();
   const { lead, items, summary, cashFlow, plaidInputs, recommendation } = prospect;
   const base = `/prospects/${lead.id}`;
 
@@ -759,10 +785,11 @@ function ProspectDetail({
           </button>
           <button
             onClick={() => plaidActions.syncAll(lead.id)}
-            disabled={busy.includes('sync:all') || items.length === 0}
+            disabled={busy.includes(`sync:lead:${lead.id}`) || items.length === 0}
             className={BTN_GLASS}
+            title="Re-pulls cached Plaid data for this prospect's connections — no extra fee."
           >
-            <RefreshCw className="w-4 h-4" /> Sync
+            <RefreshCw className="w-4 h-4" /> Sync this prospect
           </button>
           {items.length > 0 && !items.some(i => i.verifiedAt) && (
             <button
@@ -779,33 +806,18 @@ function ProspectDetail({
               onClick={() => plaidActions.refreshTransactions(lead.id)}
               disabled={busy.includes(`refresh:${lead.id}`)}
               className={BTN_GLASS}
-              title="Asks the bank for brand-new transactions right now (small per-call fee) — run before an underwriting decision."
+              title="Asks the bank for brand-new transactions right now (billable per call) — run before an underwriting decision."
             >
-              <Zap className="w-4 h-4" /> {busy.includes(`refresh:${lead.id}`) ? 'Requesting…' : 'Fresh pull'}
+              <Zap className="w-4 h-4" /> {busy.includes(`refresh:${lead.id}`) ? 'Requesting…' : 'Refresh transactions'}
             </button>
           )}
+          {/* Live balance + AML screening live in their cards below, next to their results. */}
           {items.length > 0 && (
-            <button
-              onClick={() => plaidActions.checkBalances(lead.id)}
-              disabled={busy.includes(`balance:${lead.id}`)}
-              className={BTN_GLASS}
-              title="Live (non-cached) balances from the bank (small per-call fee) — run right before an ACH pull."
-            >
-              <Wallet className="w-4 h-4" /> {busy.includes(`balance:${lead.id}`) ? 'Checking…' : 'Live balance'}
-            </button>
+            <>
+              <SendLinkButton leadId={lead.id} />
+              <PlaidLinkButton leadId={lead.id} />
+            </>
           )}
-          {items.length > 0 && (
-            <button
-              onClick={() => plaidActions.screenLead(lead.id)}
-              disabled={busy.includes(`screen:${lead.id}`)}
-              className={BTN_GLASS}
-              title="Ongoing AML watchlist screening via Plaid Monitor — reserve for funded merchants (base fee + monthly rescans)."
-            >
-              <ShieldAlert className="w-4 h-4" /> {busy.includes(`screen:${lead.id}`) ? 'Screening…' : 'AML screen'}
-            </button>
-          )}
-          <SendLinkButton leadId={lead.id} />
-          <PlaidLinkButton leadId={lead.id} />
         </div>
       </div>
 
@@ -1125,9 +1137,21 @@ function ProspectDetail({
           {/* Identity + accounts + credit */}
           <div className="grid lg:grid-cols-3 gap-4">
             <div className={`${GLASS} p-4`}>
-              <h3 className={`text-sm font-semibold ${TXT} mb-3 flex items-center gap-2`}>
-                <User className="w-4 h-4 text-[#8FB0FF]" /> Identity verification
-              </h3>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className={`text-sm font-semibold ${TXT} flex items-center gap-2`}>
+                  <User className="w-4 h-4 text-[#8FB0FF]" /> Identity verification
+                </h3>
+                <button
+                  onClick={() => plaidActions.startIdv(lead.id)}
+                  disabled={busy.includes(`idv:${lead.id}`) || status?.idvConfigured === false}
+                  className="px-2.5 py-1 rounded-lg border border-(--dp-border) bg-white/[0.06] text-[11px] font-medium text-(--dp-text-secondary) hover:bg-(--dp-bg-raised) disabled:opacity-50"
+                  title={status?.idvConfigured === false
+                    ? 'Set the PLAID_IDV_TEMPLATE_ID Edge Function secret (Plaid dashboard → Identity Verification → Templates) to enable this.'
+                    : 'Creates a Plaid IDV session (billable per verification) and copies a link to send to the applicant.'}
+                >
+                  {busy.includes(`idv:${lead.id}`) ? 'Starting…' : 'Start verification'}
+                </button>
+              </div>
               {identityDocs.length === 0 && idvDocs.length === 0 && (
                 <p className={`text-sm ${TXT_FAINT}`}>No identity data yet.</p>
               )}
@@ -1972,11 +1996,11 @@ const PRODUCT_BOARD: ProductDef[] = [
   { key: 'transactions', name: 'Transactions', pricing: 'Monthly per connection', trigger: 'Starts at bank connect; nightly + webhook syncs are included', Icon: Activity },
   { key: 'auth', name: 'Auth', pricing: 'One-time per connection', trigger: '“Verify ownership” — account & routing numbers for ACH', Icon: Banknote },
   { key: 'identity', name: 'Identity', pricing: 'One-time per connection', trigger: '“Verify ownership” — account owners on file at the bank', Icon: User },
-  { key: 'transactions_refresh', name: 'Transactions Refresh', pricing: 'Per call', trigger: '“Fresh pull” — decision-time data freshness', Icon: Zap },
-  { key: 'balance', name: 'Balance', pricing: 'Per call', trigger: '“Live balance” — real-time check before an ACH pull', Icon: Wallet },
+  { key: 'transactions_refresh', name: 'Transactions Refresh', pricing: 'Per call', trigger: '“Refresh transactions” — decision-time data freshness', Icon: Zap },
+  { key: 'balance', name: 'Balance', pricing: 'Per call', trigger: '“Check now” on Live balances — real-time check before an ACH pull', Icon: Wallet },
   { key: 'assets', name: 'Assets', pricing: 'Per report', trigger: '“Asset report” — Plaid-certified 90-day evidence', Icon: FileJson },
-  { key: 'identity_verification', name: 'Identity Verification', pricing: 'Per verification', trigger: 'IDV Link session on the application, or attach an idv_ id', Icon: ShieldCheck },
-  { key: 'monitor', name: 'Monitor', pricing: 'Base + monthly rescans', trigger: '“AML screen” — ongoing watchlist screening for funded deals', Icon: ShieldAlert },
+  { key: 'identity_verification', name: 'Identity Verification', pricing: 'Per verification', trigger: '“Start verification” on a prospect, or attach an existing idv_ id', Icon: ShieldCheck },
+  { key: 'monitor', name: 'Monitor', pricing: 'Base + monthly rescans', trigger: '“Screen now” on AML screening — ongoing watchlist checks for funded deals', Icon: ShieldAlert },
 ];
 
 function ProductsSpendTab() {
@@ -2167,9 +2191,6 @@ export function BackendPlaid() {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={() => plaidActions.refresh()} className={BTN_GLASS}>
-              <RefreshCw className="w-4 h-4" /> Refresh
-            </button>
             <button
               onClick={() => plaidActions.syncAll()}
               disabled={busy.includes('sync:all') || items.length === 0}
@@ -2241,7 +2262,7 @@ export function BackendPlaid() {
           ] as [TabKey, string, React.ElementType][]).map(([key, label, Icon]) => (
             <button
               key={key}
-              onClick={() => { setTab(key); if (key !== 'prospects') setSelectedLead(null); }}
+              onClick={() => { setTab(key); if (key !== 'prospects' && key !== 'explorer') setSelectedLead(null); }}
               className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl border transition-colors ${
                 tab === key
                   ? 'bg-[#2E6BFF]/20 border-[#2E6BFF]/50 text-[var(--dp-accent-text)]'
@@ -2259,7 +2280,14 @@ export function BackendPlaid() {
         {isLoading ? (
           <div className={`py-20 text-center text-sm ${TXT_FAINT}`}>Loading Plaid vault…</div>
         ) : tab === 'explorer' ? (
-          <DataExplorer initialPath={explorerPath} onClearInitial={() => setExplorerPath(null)} />
+          <div className="space-y-3">
+            {detail && (
+              <button onClick={() => setTab('prospects')} className={BTN_GLASS}>
+                <ArrowLeft className="w-4 h-4" /> Back to {detail.lead.businessName}
+              </button>
+            )}
+            <DataExplorer initialPath={explorerPath} onClearInitial={() => setExplorerPath(null)} />
+          </div>
         ) : tab === 'connections' ? (
           <ConnectionsTab />
         ) : tab === 'products' ? (
