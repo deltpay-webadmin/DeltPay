@@ -14,7 +14,15 @@ import { toast } from 'sonner@2.0.3';
 import { supabase } from '../../lib/supabase';
 import { fileToExtractionPayload } from './docImaging';
 
-export type DocKind = 'voided_check' | 'drivers_license' | 'statement' | 'signed_application' | 'other';
+export type DocKind =
+  | 'voided_check'
+  | 'drivers_license'
+  | 'statement'
+  | 'signed_application'
+  | 'signed_mca'
+  | 'signed_mpa'
+  | 'decision_memo'
+  | 'other';
 export type ExtractStatus = 'none' | 'pending' | 'done' | 'failed';
 
 export const DOC_KINDS: { kind: DocKind; label: string; extractable: boolean }[] = [

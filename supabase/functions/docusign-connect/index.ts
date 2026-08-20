@@ -26,13 +26,26 @@ const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
 
 /**
- * Deal-application envelopes: on completion, pull the signed PDF from
- * DocuSign and file it on the deal — storage upload into deal-docs plus a
- * deal_documents row (kind signed_application), so it appears in the deal's
- * Documents panel via realtime. Failures log and never block the status
+ * On envelope completion, pull the signed PDF from DocuSign and file it —
+ * storage upload into deal-docs plus (when the contract is linked to a deal
+ * submission) a deal_documents row with a kind-specific doc_kind, so it
+ * appears in the deal's Documents panel via realtime. Every kind is
+ * captured, MCA agreements included — the flagship document must never be
+ * the one that goes unfiled. Failures log and never block the status
  * update; the nightly sweep re-fires status and this re-runs on the next
  * completed event or manual status refresh via applyEnvelopeStatus callers.
  */
+const SIGNED_DOC_KIND: Record<string, string> = {
+  deal_application: "signed_application",
+  mca: "signed_mca",
+  mpa: "signed_mpa",
+};
+const SIGNED_DOC_LABEL: Record<string, string> = {
+  deal_application: "Signed Application",
+  mca: "Signed MCA Agreement",
+  mpa: "Signed MPA",
+};
+
 async function captureSignedApplication(contractId: string): Promise<void> {
   try {
     const db = createClient(
@@ -44,7 +57,7 @@ async function captureSignedApplication(contractId: string): Promise<void> {
       .select("id, kind, submission_id, envelope_id, org_id, merchant_name, signed_storage_path, status")
       .eq("id", contractId)
       .single();
-    if (!row || !["deal_application", "mpa"].includes(row.kind) || !row.submission_id) return;
+    if (!row || !SIGNED_DOC_KIND[row.kind]) return;
     if (row.signed_storage_path || row.status !== "completed" || !row.envelope_id) return;
 
     const tok = await getAccessToken();
@@ -59,32 +72,35 @@ async function captureSignedApplication(contractId: string): Promise<void> {
     if (!res.ok) throw new Error(`Signed document download failed: HTTP ${res.status}`);
     const bytes = new Uint8Array(await res.arrayBuffer());
 
-    const path = `org/${row.org_id}/${row.submission_id}/signed-application-${row.envelope_id}.pdf`;
+    // Path keyed by envelope so multiple kinds completing on one submission
+    // never collide; contracts without a submission file under the contract id.
+    const scope = row.submission_id ?? `contracts/${row.id}`;
+    const path = `org/${row.org_id}/${scope}/signed-${row.kind}-${row.envelope_id}.pdf`;
     const { error: upErr } = await db.storage.from("deal-docs").upload(path, bytes, {
       contentType: "application/pdf",
       upsert: true,
     });
     if (upErr) throw new Error(`Storage upload failed: ${upErr.message}`);
 
-    const { error: docErr } = await db.from("deal_documents").insert({
-      org_id: row.org_id,
-      submission_id: row.submission_id,
-      doc_kind: "signed_application",
-      filename: row.kind === "mpa"
-        ? `Signed MPA - ${row.merchant_name}.pdf`
-        : `Signed Application - ${row.merchant_name}.pdf`,
-      storage_path: path,
-      extract_status: "none",
-      uploaded_by: "DocuSign",
-    });
-    if (docErr && !String(docErr.message).includes("duplicate")) {
-      throw new Error(`deal_documents insert failed: ${docErr.message}`);
+    if (row.submission_id) {
+      const { error: docErr } = await db.from("deal_documents").insert({
+        org_id: row.org_id,
+        submission_id: row.submission_id,
+        doc_kind: SIGNED_DOC_KIND[row.kind],
+        filename: `${SIGNED_DOC_LABEL[row.kind]} - ${row.merchant_name}.pdf`,
+        storage_path: path,
+        extract_status: "none",
+        uploaded_by: "DocuSign",
+      });
+      if (docErr && !String(docErr.message).includes("duplicate")) {
+        throw new Error(`deal_documents insert failed: ${docErr.message}`);
+      }
     }
 
     await db.from("contracts").update({ signed_storage_path: path }).eq("id", row.id);
-    console.log(`docusign-connect: captured signed application for contract ${row.id} → ${path}`);
+    console.log(`docusign-connect: captured ${SIGNED_DOC_LABEL[row.kind]} for contract ${row.id} → ${path}`);
   } catch (err) {
-    console.error("docusign-connect: signed-application capture failed:", err);
+    console.error("docusign-connect: signed-document capture failed:", err);
   }
 }
 

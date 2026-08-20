@@ -149,6 +149,19 @@ export const merchantApplicationActions = {
     }
   },
 
+  /** Staff-side patch of the application's plain data (e.g. the Paysafe
+   * Section V site survey captured in the boarding panel). */
+  async saveData(applicationId: string, data: unknown): Promise<boolean> {
+    try {
+      await callMpa({ action: 'save', applicationId, data });
+      await refresh();
+      return true;
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Could not save the application');
+      return false;
+    }
+  },
+
   async savePricing(applicationId: string, channel: 'Luqra' | 'Paysafe', pricing: LuqraPricing | PaysafePricing): Promise<boolean> {
     try {
       await callMpa({ action: 'save-pricing', applicationId, channel, pricing });

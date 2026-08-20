@@ -48,12 +48,26 @@ const PERIODS_PER_MONTH: Record<'Daily' | 'Weekly' | 'Monthly', number> = {
 const fmtDate = (d?: string | null) =>
   d ? new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
 
+/** Human label for a contract row by its kind. */
+const kindLabel = (c: Contract): string =>
+  c.kind === 'deal_application' ? `Funding Application — ${c.merchantName}`
+  : c.kind === 'mpa' ? `${(c.terms as any)?.channel ?? 'Processor'} MPA — ${c.merchantName}`
+  : `MCA Agreement — ${c.merchantName}`;
+
+const KIND_FILTERS = [
+  { key: 'all', label: 'All kinds' },
+  { key: 'mca', label: 'MCA' },
+  { key: 'deal_application', label: 'Application' },
+  { key: 'mpa', label: 'MPA' },
+] as const;
+
 // ── E-Sign composer modal ──
 
 interface ComposerForm {
   merchantId: string;
   merchantName: string;
   dealId: string;
+  leadId: string;
   signerName: string;
   signerEmail: string;
   signerTitle: string;
@@ -77,7 +91,7 @@ interface ComposerForm {
 }
 
 const emptyForm = (): ComposerForm => ({
-  merchantId: '', merchantName: '', dealId: '',
+  merchantId: '', merchantName: '', dealId: '', leadId: '',
   signerName: '', signerEmail: '', signerTitle: '',
   hasGuarantor: false, guarantorName: '', guarantorEmail: '',
   merchantLegalName: '', dbaName: '', stateOfFormation: '', ein: '', businessAddress: '',
@@ -91,6 +105,7 @@ function draftToForm(d: Partial<SendContractRequest>): ComposerForm {
   f.merchantId = d.merchantId ?? '';
   f.merchantName = d.merchantName ?? '';
   f.dealId = d.dealId ?? '';
+  f.leadId = d.leadId ?? '';
   f.signerName = d.signerName ?? '';
   f.signerEmail = d.signerEmail ?? '';
   f.signerTitle = d.signerTitle ?? '';
@@ -172,6 +187,7 @@ function ComposerModal({ initial, onClose }: { initial: ComposerForm; onClose: (
         merchantId: form.merchantId || undefined,
         merchantName: form.merchantName.trim(),
         dealId: form.dealId || undefined,
+        leadId: form.leadId || undefined,
         signerName: form.signerName.trim(),
         signerEmail: form.signerEmail.trim(),
         signerTitle: form.signerTitle.trim() || undefined,
@@ -454,6 +470,7 @@ export function BackendDocuments() {
   const { isLoading, busy } = useContractsSync();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<ContractStatus | 'all'>('all');
+  const [kindFilter, setKindFilter] = useState<'all' | 'mca' | 'deal_application' | 'mpa'>('all');
   const [composer, setComposer] = useState<ComposerForm | null>(null);
 
   // A Deal/Merchant page may have staged a prefilled request before navigating here.
@@ -471,6 +488,7 @@ export function BackendDocuments() {
   const filtered = useMemo(() => {
     return contracts.filter(c => {
       if (statusFilter !== 'all' && c.status !== statusFilter) return false;
+      if (kindFilter !== 'all' && c.kind !== kindFilter) return false;
       if (search) {
         const q = search.toLowerCase();
         return (
@@ -483,7 +501,7 @@ export function BackendDocuments() {
       }
       return true;
     });
-  }, [contracts, search, statusFilter]);
+  }, [contracts, search, statusFilter, kindFilter]);
 
   const counts = useMemo(() => {
     const c: Record<string, number> = {};
@@ -554,6 +572,15 @@ export function BackendDocuments() {
                   : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'
               }`}>{s === 'all' ? `All (${contracts.length})` : STATUS_CONFIG[s].label}</button>
           ))}
+          <span className="w-px h-5 bg-gray-200 mx-1" />
+          {KIND_FILTERS.map(k => (
+            <button key={k.key} onClick={() => setKindFilter(k.key)}
+              className={`px-2.5 py-1.5 rounded-[6px] text-[10px] font-semibold border whitespace-nowrap transition-colors ${
+                kindFilter === k.key
+                  ? 'bg-brand/5 text-brand border-brand/20'
+                  : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'
+              }`}>{k.label}</button>
+          ))}
         </div>
       </div>
 
@@ -595,13 +622,19 @@ export function BackendDocuments() {
                     </button>
                   )}
                 </div>
-                <h4 className="text-xs font-semibold text-gray-900 truncate">MCA Agreement — {c.merchantName}</h4>
+                <h4 className="text-xs font-semibold text-gray-900 truncate">{kindLabel(c)}</h4>
                 <span className="text-[10px] text-gray-400">
-                  Factor {c.terms?.factorRate ?? '—'} &middot; Payback {usd(c.terms?.purchasedAmount)}
+                  {c.kind === 'mca'
+                    ? <>Factor {c.terms?.factorRate ?? '—'} &middot; Payback {usd(c.terms?.purchasedAmount)}</>
+                    : c.kind === 'mpa'
+                      ? <>Processor boarding packet{(c.terms as any)?.mode === 'embedded' ? ' · in-person' : ''}</>
+                      : <>Delt funding application</>}
                   {c.guarantorName ? ' · + guarantor' : ''}
                 </span>
               </div>
-              <span className="w-28 shrink-0 text-[11px] font-semibold text-gray-700">{usd(c.terms?.purchasePrice)}</span>
+              <span className="w-28 shrink-0 text-[11px] font-semibold text-gray-700">
+                {c.kind === 'mca' ? usd(c.terms?.purchasePrice) : '—'}
+              </span>
               <div className="w-32 shrink-0 min-w-0">
                 <p className="text-[10px] text-gray-600 truncate">{c.signerName}</p>
                 <p className="text-[9px] text-gray-400 truncate">{c.signerEmail}</p>

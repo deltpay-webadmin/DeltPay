@@ -352,6 +352,12 @@ export interface UWApplication {
   approvedDealId?: string;
   declineReason?: string;
   assignedTo?: string;
+  // ── Deal-spine linkage (replaces name-string matching for new files) ──
+  submissionId?: string;
+  leadId?: string;
+  contactName?: string;
+  contactEmail?: string;
+  contactPhone?: string;
 }
 
 // ── Merchants ──
@@ -706,6 +712,11 @@ function fromDbUw(r: any): UWApplication {
     approvedDealId: r.approved_deal_id ?? undefined,
     declineReason: r.decline_reason ?? undefined,
     assignedTo: r.assigned_to ?? undefined,
+    submissionId: r.submission_id ?? undefined,
+    leadId: r.lead_id ?? undefined,
+    contactName: r.contact_name ?? undefined,
+    contactEmail: r.contact_email ?? undefined,
+    contactPhone: r.contact_phone ?? undefined,
   };
 }
 
@@ -731,6 +742,11 @@ function toDbUw(a: Partial<UWApplication>): Record<string, any> {
   if (a.approvedDealId !== undefined) out.approved_deal_id = a.approvedDealId ?? null;
   if (a.declineReason !== undefined) out.decline_reason = a.declineReason ?? null;
   if (a.assignedTo !== undefined) out.assigned_to = a.assignedTo ?? null;
+  if (a.submissionId !== undefined) out.submission_id = a.submissionId ?? null;
+  if (a.leadId !== undefined) out.lead_id = a.leadId ?? null;
+  if (a.contactName !== undefined) out.contact_name = a.contactName ?? null;
+  if (a.contactEmail !== undefined) out.contact_email = a.contactEmail ?? null;
+  if (a.contactPhone !== undefined) out.contact_phone = a.contactPhone ?? null;
   return out;
 }
 
@@ -1779,6 +1795,11 @@ export const underwritingActions = {
       slaThreshold: 2,
       source: partial.source || 'Manual',
       assignedTo: partial.assignedTo || partial.reviewer || undefined,
+      submissionId: partial.submissionId,
+      leadId: partial.leadId,
+      contactName: partial.contactName,
+      contactEmail: partial.contactEmail,
+      contactPhone: partial.contactPhone,
     };
     const app: UWApplication = { ...base, ...deriveScores(base) };
     const prev = state.underwriting;
@@ -1848,16 +1869,16 @@ export const underwritingActions = {
   },
 
   /**
-   * Atomic Approve → Capital handoff:
-   *   1. mark app approved
-   *   2. INSERT a new capital_deals row from the rubric snapshot
-   *   3. link approved_deal_id back on the app + mark funded
-   *   4. reload both stores so the new deal shows in Capital immediately
+   * Approve → Capital handoff via the approve_underwriting RPC: the server
+   * generates the deal id, inserts the capital_deals row (status 'approved',
+   * NOT funded), and links approved_deal_id — one transaction, no
+   * client-generated ids, no partial states. Funding happens later through
+   * mark_funded once the signed packet is complete.
    * Returns the new Capital deal id, or null on failure.
    */
   async approve(id: string): Promise<string | null> {
     const app = state.underwriting.find(a => a.id === id);
-    if (!app) return null;
+    if (!app || !supabase) return null;
 
     const scored = app.compositeScore != null ? app : { ...app, ...deriveScores(app) };
     const result = evaluateApplication({
@@ -1868,57 +1889,55 @@ export const underwritingActions = {
     const terms = result.terms;
     const factor = terms.factorMin > 0 ? +((terms.factorMin + terms.factorMax) / 2).toFixed(4) : 1.4;
     const holdback = terms.holdbackMinPct > 0 ? Math.round((terms.holdbackMinPct + terms.holdbackMaxPct) / 2) : 12;
-    const fundedAmt = app.requestedAmount || 0;
-    const totalOwed = Math.round(fundedAmt * factor);
-    const dealId = nextCapitalDealId();
-    const today = new Date().toISOString().slice(0, 10);
+    const tier = scored.tier ?? tierLabel(terms.tier);
     const notesSnapshot = [
-      `Underwriting ${app.applicationId} (${scored.tier ?? tierLabel(terms.tier)})`,
+      `Underwriting ${app.applicationId} (${tier})`,
       `Composite ${scored.compositeScore ?? result.composite}/100`,
       `Plaid ${scored.plaidScore ?? result.plaidScore.total} · CRS ${scored.crsScore ?? result.crsScore.total} · DataMerch ${scored.dataMerchScore ?? result.dataMerchScore.total}`,
     ].join(' | ');
 
-    // 1. mark approved
-    underwritingActions.update(id, { stage: 'Approved', tier: scored.tier ?? tierLabel(terms.tier) });
-
-    // 2. insert capital deal (capitalActions handles its own Supabase write)
-    capitalActions.create({
-      id: dealId,
-      merchant: app.businessName,
-      type: 'Capital',
-      channel: 'self',
-      funded: today,
-      fundedAmt,
-      factor,
-      totalOwed,
-      collected: 0,
-      holdback,
-      status: 'active',
-      notes: notesSnapshot,
+    const { data: dealId, error } = await supabase.rpc('approve_underwriting', {
+      p_app_id: id,
+      p_funded_amt: app.requestedAmount || 0,
+      p_factor: factor,
+      p_holdback: holdback,
+      p_tier: tier,
+      p_notes: notesSnapshot,
     });
+    if (error || !dealId) {
+      toast.error(`Approve failed: ${error?.message ?? 'no deal id returned'}`);
+      return null;
+    }
 
-    // 3. link the deal back + mark funded
-    const prev = state.underwriting;
-    await persist(
-      'underwriting app',
-      () =>
-        set({
-          underwriting: state.underwriting.map(a =>
-            a.id === id ? { ...a, approvedDealId: dealId, stage: 'Approved' } : a,
-          ),
-        }),
-      () => set({ underwriting: prev }),
-      () =>
-        supabase!
-          .from('underwriting_apps')
-          .update({ approved_deal_id: dealId, stage: 'funded' })
-          .eq('id', id)
-          .then(r => ({ error: r.error })),
-    );
-
-    // 4. refresh capital store so the new deal renders immediately
+    // Reflect locally + reload both stores so the new deal renders immediately.
+    set({
+      underwriting: state.underwriting.map(a =>
+        a.id === id ? { ...a, approvedDealId: dealId as string, stage: 'Approved', tier } : a,
+      ),
+    });
     void capitalActions.refresh();
-    return dealId;
+
+    // File the internal decision memo on the deal (best-effort; the CRM stays
+    // the source of truth if it fails).
+    if (app.submissionId) {
+      void supabase.functions.invoke('docusign', {
+        body: {
+          action: 'decision-memo',
+          submissionId: app.submissionId,
+          applicationId: app.applicationId,
+          underwriter: app.assignedTo || app.reviewer || undefined,
+          decision: 'Approved',
+          approvedAmount: app.requestedAmount || 0,
+          factorRate: factor,
+          paybackAmount: Math.round((app.requestedAmount || 0) * factor),
+          holdbackPct: holdback,
+          tier,
+          compositeScore: scored.compositeScore ?? result.composite,
+          stipulations: notesSnapshot,
+        },
+      }).catch(() => {});
+    }
+    return dealId as string;
   },
 
   decline(id: string, reason?: string) {
@@ -1929,23 +1948,6 @@ export const underwritingActions = {
     });
   },
 };
-
-/**
- * Compute the next `DELT-YYYY-NNN` capital deal id from the live capital store,
- * falling back to a year-prefixed counter. Kept here (not capitalStore) because
- * the underwriting approve flow owns the DELT- naming convention.
- */
-function nextCapitalDealId(): string {
-  const year = new Date().getFullYear();
-  const prefix = `DELT-${year}-`;
-  const existing = capitalActions.allIds().filter(id => id.startsWith(prefix));
-  let max = 0;
-  for (const id of existing) {
-    const n = parseInt(id.slice(prefix.length), 10);
-    if (Number.isFinite(n) && n > max) max = n;
-  }
-  return `${prefix}${String(max + 1).padStart(3, '0')}`;
-}
 
 // ── Referral actions ──
 export const referralActions = {

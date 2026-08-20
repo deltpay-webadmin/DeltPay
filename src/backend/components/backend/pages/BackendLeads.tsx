@@ -118,6 +118,7 @@ function UnifiedTagBadges({ lead, size = 'xs' }: { lead: Lead; size?: 'xs' | 'xx
   );
 }
 import { stageEsignDraft } from '../contractsStore';
+import { dealSubmissionActions } from '../dealSubmissionsStore';
 import { LeadProgressBar } from '../LeadProgressBar';
 import { plaidActions, usePlaidItems, usePlaidLinkRequests, usePlaidSync, itemUiStatus } from '../plaidStore';
 import { useAppNavigate } from '../NavigationContext';
@@ -587,6 +588,25 @@ function LeadDetailPanel({ lead, onClose, onEdit, onDelete }: { lead: Lead | nul
   const { navigate } = useAppNavigate();
   if (!lead) return null;
 
+  // Start (or reuse) the deal submission for this lead and open the Deal
+  // Room — the single page that drives Plaid, application, underwriting,
+  // MCA, MPA, and countersignature to fully signed.
+  const handleOpenDealRoom = async () => {
+    const id = await dealSubmissionActions.createFromLead({
+      id: lead.id,
+      businessName: lead.businessName,
+      contactName: lead.contactName,
+      contactPhone: lead.contactPhone,
+      contactEmail: lead.contactEmail,
+      industry: lead.industry,
+      monthlySales: lead.monthlySales,
+      type: lead.type,
+      products: lead.products,
+      assignedAgent: lead.assignedAgent,
+    });
+    if (id) navigate(`/deal-room/${id}`);
+  };
+
   // Stage a prefilled MCA agreement from everything the lead already told us
   // (KYB intake, contact, requested amount) and jump to the e-sign composer.
   const handleSendEsign = () => {
@@ -599,6 +619,7 @@ function LeadDetailPanel({ lead, onClose, onEdit, onDelete }: { lead: Lead | nul
     const requested = parseFloat((lead.amountRequested || '').replace(/[^0-9.]/g, '')) || 0;
     stageEsignDraft({
       merchantName: lead.businessName,
+      leadId: lead.id,
       signerName: lead.contactName || [rep?.firstName, rep?.lastName].filter(Boolean).join(' '),
       signerEmail: lead.contactEmail || rep?.email || '',
       signerTitle: rep?.title || undefined,
@@ -931,12 +952,20 @@ function LeadDetailPanel({ lead, onClose, onEdit, onDelete }: { lead: Lead | nul
               Convert
             </button>
             <button
+              onClick={handleOpenDealRoom}
+              disabled={isDeadEnd}
+              title={isDeadEnd ? 'Change the status before starting a deal' : 'Start (or open) the deal and drive it to fully signed from one page'}
+              className="px-4 py-2.5 bg-white border border-indigo-300 text-indigo-700 text-sm font-medium rounded-[6px] hover:bg-indigo-50 transition-colors whitespace-nowrap inline-flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <PenTool className="w-4 h-4" /> Deal Room
+            </button>
+            <button
               onClick={handleSendEsign}
               disabled={isDeadEnd}
               title={isDeadEnd ? 'Change the status before sending an agreement' : 'Send the MCA agreement for e-signature, prefilled from this lead'}
-              className="px-4 py-2.5 bg-white border border-indigo-300 text-indigo-700 text-sm font-medium rounded-[6px] hover:bg-indigo-50 transition-colors whitespace-nowrap inline-flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="px-4 py-2.5 bg-white border border-gray-300 text-gray-600 text-sm font-medium rounded-[6px] hover:bg-gray-50 transition-colors whitespace-nowrap inline-flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              <PenTool className="w-4 h-4" /> E-Sign
+              E-Sign
             </button>
             <button
               onClick={handleMarkNotQualified}

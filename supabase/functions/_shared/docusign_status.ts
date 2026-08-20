@@ -129,6 +129,47 @@ export const STATUS_MAP: Record<string, string> = {
 };
 
 /**
+ * Stamp countersigned_at/countersigner_email on a contract when the Delt
+ * countersigner (routing order 2, role Purchaser / "Delt Pay") has completed.
+ * Reads the envelope's live recipients; a no-op when the countersigner is
+ * still pending or the row is already stamped.
+ */
+export async function syncCountersign(contractId: string): Promise<{ countersigned: boolean }> {
+  const db = svc();
+  const { data: row } = await db
+    .from("contracts")
+    .select("id, kind, envelope_id, countersigned_at")
+    .eq("id", contractId)
+    .maybeSingle();
+  if (!row || row.countersigned_at || !row.envelope_id) return { countersigned: Boolean(row?.countersigned_at) };
+  if (!["mca", "deal_application"].includes(row.kind)) return { countersigned: false };
+
+  const tok = await getAccessToken();
+  if ("error" in tok) return { countersigned: false };
+  const acct = await getAccount(tok.token);
+  if ("error" in acct) return { countersigned: false };
+
+  const res = await fetch(
+    `${acct.baseUri}/v2.1/accounts/${acct.accountId}/envelopes/${row.envelope_id}/recipients`,
+    { headers: { Authorization: `Bearer ${tok.token}` } },
+  );
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) return { countersigned: false };
+  const purchaser = (body?.signers ?? []).find((s: any) => String(s.routingOrder) === "2");
+  if (!purchaser || String(purchaser.status).toLowerCase() !== "completed") {
+    return { countersigned: false };
+  }
+  await db
+    .from("contracts")
+    .update({
+      countersigned_at: purchaser.signedDateTime || new Date().toISOString(),
+      countersigner_email: purchaser.email ?? null,
+    })
+    .eq("id", row.id);
+  return { countersigned: true };
+}
+
+/**
  * Update a contracts row from a DocuSign envelope status. Shared by the
  * status action, the Connect webhook, and the nightly sweep.
  * Unknown envelope ids are a silent no-op ({ updated: false }).
@@ -141,7 +182,7 @@ export async function applyEnvelopeStatus(
   const db = svc();
   const { data: row } = await db
     .from("contracts")
-    .select("id, status, completed_at")
+    .select("id, kind, status, completed_at, countersigned_at")
     .eq("envelope_id", envelopeId)
     .maybeSingle();
   if (!row) return { updated: false };
@@ -158,6 +199,18 @@ export async function applyEnvelopeStatus(
   }
   const { error } = await db.from("contracts").update(patch).eq("id", row.id);
   if (error) throw new Error(`contracts update failed for ${row.id}: ${error.message}`);
+
+  // A completed MCA/application envelope means every recipient — including
+  // the routing-order-2 Delt countersigner — has signed; stamp the executed
+  // state so the funding gate can rely on it. Best-effort: the status action
+  // and the sweep re-run this until it lands.
+  if (mapped === "completed" && !row.countersigned_at && ["mca", "deal_application"].includes(row.kind)) {
+    try {
+      await syncCountersign(row.id as string);
+    } catch (err) {
+      console.error(`syncCountersign failed for contract ${row.id}:`, err);
+    }
+  }
   return { updated: true, contractId: row.id as string };
 }
 

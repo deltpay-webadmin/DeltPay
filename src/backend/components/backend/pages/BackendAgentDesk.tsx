@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
-import { Inbox, ChevronRight, ChevronDown, XCircle, ClipboardCopy, Paperclip, FileSpreadsheet } from 'lucide-react';
+import { useNavigate } from 'react-router';
+import { Inbox, ChevronRight, ChevronDown, XCircle, ClipboardCopy, Paperclip, FileSpreadsheet, DoorOpen } from 'lucide-react';
 import {
   useDealSubmissions,
   dealSubmissionActions,
@@ -108,6 +109,7 @@ function PacketRow({ label, value }: { label: string; value: string }) {
 }
 
 export function BackendAgentDesk() {
+  const navigate = useNavigate();
   const [view, setView] = useState<'submissions' | 'desk'>('submissions');
   const { submissions, isLoading } = useDealSubmissions();
   const { threads } = useDealDesk();
@@ -264,6 +266,14 @@ export function BackendAgentDesk() {
                                       <option value="">Channel…</option>
                                       {BOARDING_CHANNELS.map(c => <option key={c} value={c}>{c}</option>)}
                                     </select>
+                                    <button
+                                      onClick={e => { e.stopPropagation(); navigate(`/dashboard/deal-room/${s.id}`); }}
+                                      title="Open the Deal Room — the single page that drives this deal to fully signed"
+                                      className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-md border border-brand/30 text-brand bg-brand/5 hover:bg-brand/10 transition-colors"
+                                    >
+                                      <DoorOpen className="w-3.5 h-3.5" />
+                                      Deal Room
+                                    </button>
                                     <button
                                       onClick={() => {
                                         void navigator.clipboard.writeText(packetText(s));

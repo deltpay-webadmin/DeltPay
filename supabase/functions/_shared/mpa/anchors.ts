@@ -29,6 +29,10 @@ export interface AnchorPoint {
 
 export const SIG1_ANCHOR = "/mpa_sig1/";
 export const DATE1_ANCHOR = "/mpa_date1/";
+// Rep/agent signature stops (recipient 2): the Luqra final-execution agent
+// line and the Paysafe Section V site-survey certification.
+export const SIG2_ANCHOR = "/mpa_sig2/";
+export const DATE2_ANCHOR = "/mpa_date2/";
 
 // Luqra: merchant/owner 1 signs Section 4 (disclosures), Section 9
 // (personal guaranty), and Section 13 (acknowledgements). Each row is
@@ -40,6 +44,10 @@ export const LUQRA_ANCHOR_SPEC: AnchorSpecEntry[] = [
   { sourceField: "guarantorSignatureDate1", anchor: DATE1_ANCHOR, dx: 4, dy: 2 },
   { sourceField: "ownerSignatureDate1", anchor: SIG1_ANCHOR, dx: -250, dy: 2 },
   { sourceField: "ownerSignatureDate1", anchor: DATE1_ANCHOR, dx: 4, dy: 2 },
+  // Agent/rep signature on the final execution page ([agent name | signature
+  // | date] row; the date field's rect is the reference).
+  { sourceField: "agentSignatureDate", anchor: SIG2_ANCHOR, dx: -250, dy: 2 },
+  { sourceField: "agentSignatureDate", anchor: DATE2_ANCHOR, dx: 4, dy: 2 },
 ];
 
 // Paysafe: owner 1 signs the Section I certification ("Print Name / Title /
@@ -54,6 +62,10 @@ export const PAYSAFE_ANCHOR_SPEC: AnchorSpecEntry[] = [
   { sourceField: "Date_1", anchor: SIG1_ANCHOR, dx: -170, dy: 2 },
   { sourceField: "Date_3", anchor: DATE1_ANCHOR, dx: 4, dy: 2 },
   { sourceField: "Date_3", anchor: SIG1_ANCHOR, dx: -170, dy: 2 },
+  // Section V site-survey certification — the sales rep signs it (the survey
+  // date field's rect is the reference).
+  { sourceField: "nm_xxxMerchantSiteSurveyDate", anchor: DATE2_ANCHOR, dx: 4, dy: 2 },
+  { sourceField: "nm_xxxMerchantSiteSurveyDate", anchor: SIG2_ANCHOR, dx: -170, dy: 2 },
 ];
 
 export function anchorSpecFor(channel: "Luqra" | "Paysafe"): AnchorSpecEntry[] {

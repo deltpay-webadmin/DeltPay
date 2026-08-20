@@ -67,6 +67,45 @@ describe("mapPaysafe", () => {
     expect(values["Date"]).toBeUndefined(); // dates left for DocuSign tabs
   });
 
+  it("gates the FCRA consent checkboxes on the captured attestation", () => {
+    const app = sampleApplication();
+    app.data.attestation = { agreedAt: null, typedName: "" };
+    const v = mapPaysafe(app, samplePaysafePricing());
+    // No attestation → consent boxes stay unchecked; never silently defaulted.
+    expect(v["Guarantor1"]).toBeUndefined();
+    expect(v["MPASigner#1"]).toBeUndefined();
+    // The name fields still fill — only the consent checks are gated.
+    expect(v["Guarantor 1 Name"]).toBe("Maria Gomez");
+  });
+
+  it("maps the Section V site survey when the rep has completed it", () => {
+    const app = sampleApplication();
+    app.data.siteSurvey = {
+      locationType: "storefront",
+      areaZoned: "commercial",
+      businessLocation: "leased",
+      permanentSignage: true,
+      businessLegitimate: true,
+      inventoryConsistent: false,
+      surveyedBy: "Carlos",
+      surveyedAt: "2026-08-19",
+      notes: "",
+    };
+    const v = mapPaysafe(app, samplePaysafePricing());
+    expect(v["MerchantLocation:Storefront"]).toEqual({ check: true });
+    expect(v["MerchantLocation:Office"]).toBeUndefined();
+    expect(v["AreaZones:Commercial"]).toEqual({ check: true });
+    expect(v["Business Information / Site Survey / Business Location:Leased"]).toEqual({ check: true });
+    expect(v["PermanentSignage:True"]).toEqual({ check: true });
+    expect(v["PermanentSignage:False"]).toBeUndefined();
+    expect(v["InventoryConsistentWithbusiness:False"]).toEqual({ check: true });
+    expect(v["nm_xxxMerchantSiteSurveyDate"]).toBe("2026-08-19");
+    // No survey → none of the Section V boxes are touched.
+    const bare = mapPaysafe(sampleApplication(), samplePaysafePricing());
+    expect(bare["MerchantLocation:Storefront"]).toBeUndefined();
+    expect(bare["IsBusinessLegitimate:True"]).toBeUndefined();
+  });
+
   it("fills pricing, emitting dropdown fees as selects", () => {
     expect(values["FlatRateFeeOption"]).toEqual({ check: true });
     expect(values["CreditCardDiscountQualifiedRate"]).toBe("2.75");

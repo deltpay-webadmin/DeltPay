@@ -110,6 +110,32 @@ export interface ApplicationData {
   bank: { bankName: string; accountType: "checking" | "savings" | "" };
   bank2: { bankName: string } | null;
   attestation: { agreedAt: string | null; typedName: string };
+  /**
+   * Paysafe Section V — Merchant Site Survey. This is the SALES REP's
+   * certification of the location, completed from the staff boarding panel
+   * (never shown on merchant self-complete links). Null until surveyed.
+   */
+  siteSurvey: SiteSurvey | null;
+}
+
+export interface SiteSurvey {
+  locationType: "storefront" | "office" | "warehouse" | "home" | "website" | "other" | "";
+  areaZoned: "commercial" | "industrial" | "residential" | "";
+  businessLocation: "owned" | "leased" | "";
+  permanentSignage: boolean;
+  businessLegitimate: boolean;
+  inventoryConsistent: boolean;
+  surveyedBy: string; // rep name
+  surveyedAt: string; // YYYY-MM-DD
+  notes: string;
+}
+
+export function emptySiteSurvey(): SiteSurvey {
+  return {
+    locationType: "", areaZoned: "", businessLocation: "",
+    permanentSignage: true, businessLegitimate: true, inventoryConsistent: true,
+    surveyedBy: "", surveyedAt: "", notes: "",
+  };
 }
 
 export interface SecureOwner {
@@ -365,6 +391,7 @@ export function emptyApplicationData(): ApplicationData {
     bank: { bankName: "", accountType: "checking" },
     bank2: null,
     attestation: { agreedAt: null, typedName: "" },
+    siteSurvey: null,
   };
 }
 

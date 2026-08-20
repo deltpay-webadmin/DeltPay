@@ -6,7 +6,7 @@ import {
   ArrowUpRight, ArrowDownRight, Ban, RefreshCw, PenTool,
 } from 'lucide-react';
 import { useAppNavigate } from '../NavigationContext';
-import { useCapital, type CapitalDeal, type LoanPayment } from '../capitalStore';
+import { useCapital, capitalActions, type CapitalDeal, type LoanPayment } from '../capitalStore';
 import { useDeals, useMerchants, type Deal as CrmDeal } from '../crmStore';
 import { stageEsignDraft } from '../contractsStore';
 
@@ -152,6 +152,7 @@ export function DealDetail() {
   const payments = buildPaymentRows(deal);
 
   const statusConfig: Record<DealStatus, { label: string; bg: string; text: string; dot: string }> = {
+    approved: { label: 'Awaiting Funding', bg: 'bg-violet-50', text: 'text-violet-700', dot: 'bg-violet-500' },
     active: { label: 'Active', bg: 'bg-emerald-50', text: 'text-emerald-700', dot: 'bg-emerald-500' },
     paid: { label: 'Paid Off', bg: 'bg-blue-50', text: 'text-blue-700', dot: 'bg-blue-500' },
     slow: { label: 'Slow Pay', bg: 'bg-amber-50', text: 'text-amber-700', dot: 'bg-amber-500' },
@@ -228,10 +229,29 @@ export function DealDetail() {
                   {deal.channel === 'self' ? 'Self-Funded' : 'Fundomate'}
                 </span>
                 <span>-</span>
-                <span>Funded {fmtDate(deal.funded)}</span>
+                <span>{deal.status === 'approved' ? `Approved ${deal.approvedAt ? fmtDate(deal.approvedAt.slice(0, 10)) : ''}` : `Funded ${fmtDate(deal.funded)}`}</span>
               </div>
             </div>
             <div className="flex items-center gap-2">
+              {deal.status === 'approved' && (
+                <>
+                  {deal.submissionId && (
+                    <button
+                      onClick={() => navigate(`/deal-room/${deal.submissionId}`)}
+                      className="px-3.5 py-2 border border-indigo-300 text-indigo-700 rounded-[6px] text-sm bg-white hover:bg-indigo-50 inline-flex items-center gap-2 transition-colors"
+                    >
+                      Open Deal Room
+                    </button>
+                  )}
+                  <button
+                    onClick={() => void capitalActions.markFunded(deal.id)}
+                    title="The server verifies the signed packet (application, MCA signed & countersigned, MPA, Plaid, ID, voided check) before funding"
+                    className="px-3.5 py-2 bg-emerald-600 text-white rounded-[6px] text-sm font-medium hover:bg-emerald-700 inline-flex items-center gap-2 transition-colors"
+                  >
+                    Mark funded
+                  </button>
+                </>
+              )}
               <button
                 onClick={() => {
                   const m = merchants.find(x => x.name === deal.merchant);
@@ -239,6 +259,7 @@ export function DealDetail() {
                     merchantId: m?.id,
                     merchantName: deal.merchant,
                     dealId: deal.id,
+                    submissionId: deal.submissionId,
                     signerName: m?.contactName || '',
                     signerEmail: m?.contactEmail || '',
                     terms: {

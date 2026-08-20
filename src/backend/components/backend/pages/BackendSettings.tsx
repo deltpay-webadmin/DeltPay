@@ -5,6 +5,11 @@ import {
 } from 'lucide-react';
 import { useAppNavigate } from '../NavigationContext';
 import { useLang } from '../i18n';
+import { useEffect } from 'react';
+import { toast } from 'sonner@2.0.3';
+import { supabase } from '../../../lib/supabase';
+import { useSession } from '../SessionContext';
+import { contractActions } from '../contractsStore';
 
 // ─── ROLE DEFINITIONS ───────────────────────────────────────────
 const ROLES = [
@@ -242,6 +247,7 @@ export function BackendSettings() {
         {/* ═══ GENERAL ═══ */}
         {tab === 'general' && (
           <div className="space-y-2">
+            <EsignSettingsCard />
             {GENERAL_SECTIONS.map(section => {
               const open = expandedSection === section.key;
               return (
@@ -562,6 +568,104 @@ function DRow({ l, v, c, bold }: { l: string; v: string; c?: string; bold?: bool
     <div className="flex justify-between py-1.5 text-sm">
       <span className="text-gray-500">{l}</span>
       <span className={`font-mono text-xs ${bold ? 'font-bold' : 'font-medium'} ${c || 'text-gray-900'}`}>{v}</span>
+    </div>
+  );
+}
+
+// ── E-Sign settings: the Delt countersigner identity ──
+// Stored in org_esign_settings (RLS: read all staff, write general.edit).
+// Without a countersigner the docusign function refuses to send MCA
+// agreements — the contract is not executed until Delt countersigns.
+function EsignSettingsCard() {
+  const { can, org } = useSession();
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [loaded, setLoaded] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const canEdit = can('general.edit');
+
+  useEffect(() => {
+    if (!supabase || !org?.id) { setLoaded(true); return; }
+    void supabase
+      .from('org_esign_settings')
+      .select('countersigner_name, countersigner_email')
+      .eq('org_id', org.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) {
+          setName(data.countersigner_name ?? '');
+          setEmail(data.countersigner_email ?? '');
+        }
+        setLoaded(true);
+      });
+  }, [org?.id]);
+
+  const save = async () => {
+    if (!supabase || !org?.id) return;
+    if (!name.trim() || !/.+@.+\..+/.test(email)) {
+      toast.error('Countersigner name and a valid email are required.');
+      return;
+    }
+    setSaving(true);
+    const { error } = await supabase
+      .from('org_esign_settings')
+      .upsert({
+        org_id: org.id,
+        countersigner_name: name.trim(),
+        countersigner_email: email.trim(),
+        updated_at: new Date().toISOString(),
+      });
+    setSaving(false);
+    if (error) {
+      toast.error(`Could not save: ${error.message}`);
+    } else {
+      toast.success('Countersigner saved — MCA envelopes now route to them for execution.');
+      void contractActions.checkConfig();
+    }
+  };
+
+  return (
+    <div className="border border-gray-200 rounded-[8px] bg-white px-5 py-4">
+      <div className="flex items-center gap-3 mb-1">
+        <span className="text-lg">✍️</span>
+        <span className="text-sm font-semibold text-gray-900">E-Sign — Delt countersigner</span>
+      </div>
+      <p className="text-[11px] text-gray-400 mb-3">
+        Who executes agreements for Delt Pay LLC (the Purchaser signature block). MCA envelopes
+        cannot be sent until this is set; the countersignature happens in the CRM via
+        “Countersign now”.
+      </p>
+      {loaded && (
+        <div className="flex flex-wrap items-end gap-3">
+          <div>
+            <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide block mb-1">Name</label>
+            <input
+              value={name}
+              onChange={e => setName(e.target.value)}
+              readOnly={!canEdit}
+              className="w-56 px-3 py-2 border border-gray-200 rounded-[6px] text-sm text-gray-900 bg-white focus:outline-none focus:border-brand read-only:bg-gray-50"
+            />
+          </div>
+          <div>
+            <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide block mb-1">Email</label>
+            <input
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              readOnly={!canEdit}
+              className="w-64 px-3 py-2 border border-gray-200 rounded-[6px] text-sm text-gray-900 bg-white focus:outline-none focus:border-brand read-only:bg-gray-50"
+            />
+          </div>
+          {canEdit && (
+            <button
+              onClick={() => void save()}
+              disabled={saving}
+              className="px-4 py-2 bg-brand text-white text-sm font-semibold rounded-[6px] hover:bg-brand/90 disabled:opacity-50"
+            >
+              {saving ? 'Saving…' : 'Save'}
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

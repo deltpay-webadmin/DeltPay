@@ -209,6 +209,30 @@ export function mapPaysafe(app: FullApplication, pricing?: PaysafePricing): PdfF
   }
   check("DepositTimeFrame:Standard", true);
 
+  // ── Section V: merchant site survey (the sales rep's certification,
+  // captured in the staff boarding panel — never merchant-entered).
+  const survey = data.siteSurvey;
+  if (survey) {
+    check("MerchantLocation:Storefront", survey.locationType === "storefront");
+    check("MerchantLocation:Office", survey.locationType === "office");
+    check("MerchantLocation:Warehouse", survey.locationType === "warehouse");
+    check("MerchantLocation:Home", survey.locationType === "home");
+    check("MerchantLocation:Website", survey.locationType === "website");
+    check("MerchantLocation:Other", survey.locationType === "other");
+    check("AreaZones:Commercial", survey.areaZoned === "commercial");
+    check("AreaZones:Industrial", survey.areaZoned === "industrial");
+    check("AreaZones:Residential", survey.areaZoned === "residential");
+    check("Business Information / Site Survey / Business Location:Owned", survey.businessLocation === "owned");
+    check("Business Information / Site Survey / Business Location:Leased", survey.businessLocation === "leased");
+    check("PermanentSignage:True", survey.permanentSignage);
+    check("PermanentSignage:False", !survey.permanentSignage);
+    check("IsBusinessLegitimate:True", survey.businessLegitimate);
+    check("IsBusinessLegitimate:False", !survey.businessLegitimate);
+    check("InventoryConsistentWithbusiness:True", survey.inventoryConsistent);
+    check("InventoryConsistentWithbusiness:False", !survey.inventoryConsistent);
+    set("nm_xxxMerchantSiteSurveyDate", survey.surveyedAt);
+  }
+
   // ── Signature blocks: owner 1 signs everywhere (v1 single-signer).
   // Dates are left blank for DocuSign date tabs.
   const owner1 = data.owners[0];
@@ -219,8 +243,14 @@ export function mapPaysafe(app: FullApplication, pricing?: PaysafePricing): PdfF
     set("Print Authorized Signer 1 Name", name1); // Section XII resolution
     set("Title_8", owner1.title);
     set("Guarantor 1 Name", name1); // Section XIII personal guaranty
-    check("Guarantor1", true);
-    check("MPASigner#1", true);
+    // FCRA "I Agree" consent boxes (credit-pull authorization): only checked
+    // when the applicant actually attested in the wizard — never silently
+    // defaulted. Unchecked boxes are a processor kickback, so the wizard's
+    // attestation step is the gate.
+    if (data.attestation?.agreedAt) {
+      check("Guarantor1", true);
+      check("MPASigner#1", true);
+    }
   }
 
   // ── Section X: rates & fees (admin pricing) ──
