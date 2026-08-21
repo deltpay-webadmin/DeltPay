@@ -28,7 +28,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { renderAgreementHtml, type AgreementTerms } from "./mca_agreement.ts";
 import { renderDltAppHtml, type DltAppFields } from "./deal_application.ts";
-import { renderAgentAgreementHtml } from "./agent_agreement.ts";
 import { requirePerm, hasPerm, type AuthContext } from "../_shared/auth.ts";
 import { getAccessToken, getAccount, oauthHost, STATUS_MAP, syncCountersign } from "../_shared/docusign_status.ts";
 import { base64FromBytes, generateMpaPdf, type MpaApplicationRow } from "../_shared/mpa/generate.ts";
@@ -363,7 +362,6 @@ Deno.serve(async (req) => {
     action === "send" || action === "void" || action === "send-mpa" || action === "signing-url" || action === "resend"
       ? "merchants.edit"
     : action === "send-application" ? "leads.create"
-    : action === "send-agent-agreement" ? "agents.edit"
     : action === "countersign-url" ? "contracts.countersign"
     : action === "decision-memo" ? "underwriting.approve"
     : "merchants.view";
@@ -510,120 +508,6 @@ Deno.serve(async (req) => {
       return json({ error: `Envelope ${env.envelopeId} was sent, but recording it failed: ${insErr.message}`, envelopeId: env.envelopeId }, 500);
     }
     return json({ ok: true, contract: row, mode });
-  }
-
-  // ── send-agent-agreement: agent onboarding paper, one envelope ──
-  // Agreement + Schedule A (buy rates) + Schedule B (comp) + ACH authorization.
-  // Agent signs by email (routing 1) with required ACH text tabs; Delt
-  // countersigns embedded (routing 2) via the existing countersign-url flow.
-  // Banking details stay inside the DocuSign envelope — never synced to the DB.
-  if (action === "send-agent-agreement") {
-    const agentName = (body?.agentName as string)?.trim();
-    const agentEmail = (body?.agentEmail as string)?.trim();
-    if (!agentName || !agentEmail) return json({ error: "agentName and agentEmail are required." }, 400);
-
-    const countersigner = await resolveCountersigner(admin, auth.ctx.orgId);
-    if (!countersigner) {
-      return json({
-        error: "Set the Delt countersigner (Settings → E-Sign, or the DOCUSIGN_COUNTERSIGNER_* secrets) before sending an agent agreement.",
-      }, 400);
-    }
-
-    const tok = await getAccessToken();
-    if ("error" in tok) return json({ error: tok.error }, 400);
-    const acct = await getAccount(tok.token);
-    if ("error" in acct) return json({ error: acct.error }, 400);
-
-    const embedKey = crypto.randomUUID();
-    const a = (anchorString: string, extra: Record<string, string> = {}) => ({
-      anchorString,
-      anchorUnits: "pixels",
-      anchorXOffset: "60",
-      anchorYOffset: "-6",
-      ...extra,
-    });
-    const achTab = (anchorString: string, tabLabel: string, width: number, required: string) => ({
-      anchorString,
-      anchorUnits: "pixels",
-      anchorXOffset: "4",
-      anchorYOffset: "-6",
-      tabLabel,
-      width,
-      required,
-    });
-    const agentSigner: any = {
-      recipientId: "1",
-      routingOrder: "1",
-      name: agentName,
-      email: agentEmail,
-      roleName: "Agent",
-      tabs: {
-        // Two sign-heres: the agreement's signature page and the W-9
-        // certification (the IRS requires its own penalties-of-perjury
-        // signature). W-9 + ACH values live in the envelope only.
-        signHereTabs: [a("/agt_sig/"), a("/w9_sig/")],
-        dateSignedTabs: [a("/agt_date/"), a("/w9_date/")],
-        fullNameTabs: [a("/agt_name/")],
-        textTabs: [
-          { ...achTab("/agt_addr/", "agent_address", 320, "true") },
-          achTab("/agt_bank/", "ach_bank_name", 220, "true"),
-          achTab("/agt_accttype/", "ach_account_type", 140, "true"),
-          achTab("/agt_routing/", "ach_routing", 140, "true"),
-          achTab("/agt_acct/", "ach_account", 160, "true"),
-          achTab("/agt_acctname/", "ach_name_on_account", 260, "true"),
-          achTab("/w9_name/", "w9_name", 300, "true"),
-          achTab("/w9_biz/", "w9_business_name", 280, "false"),
-          achTab("/w9_class/", "w9_tax_classification", 220, "true"),
-          achTab("/w9_addr/", "w9_address", 340, "true"),
-          achTab("/w9_tin/", "w9_tin", 180, "true"),
-        ],
-      },
-    };
-    const csSigner: any = {
-      recipientId: "2",
-      routingOrder: "2",
-      name: countersigner.name,
-      email: countersigner.email,
-      roleName: "Delt Pay LLC",
-      clientUserId: embedClientId(embedKey, "cs"),
-      tabs: {
-        signHereTabs: [a("/del_sig/")],
-        dateSignedTabs: [a("/del_date/")],
-        fullNameTabs: [a("/del_name/")],
-        textTabs: [{ ...a("/del_title/"), tabLabel: "del_title", width: 160, required: "false" }],
-      },
-    };
-
-    const env = await createEnvelopeFromHtml(acct.baseUri, acct.accountId, tok.token, {
-      html: renderAgentAgreementHtml({ agentName, agentEmail }),
-      docName: `Delt Pay Agent Agreement - ${agentName}.html`,
-      emailSubject: (body?.emailSubject as string) || `Delt Pay Agent Agreement — ${agentName}`,
-      signers: [agentSigner, csSigner],
-    });
-    if ("error" in env) return json({ error: env.error }, 400);
-
-    const { data: row, error: insErr } = await admin
-      .from("contracts")
-      .insert({
-        kind: "agent_agreement",
-        mode: "email",
-        merchant_name: agentName,
-        signer_name: agentName,
-        signer_email: agentEmail,
-        terms: { embedKey, countersigner, agentId: (body?.agentId as string) ?? null },
-        envelope_id: env.envelopeId,
-        status: "sent",
-        docusign_status: "sent",
-        sent_at: new Date().toISOString(),
-        created_by: auth.ctx.userId,
-        org_id: auth.ctx.orgId,
-      })
-      .select("*")
-      .single();
-    if (insErr) {
-      return json({ error: `Envelope ${env.envelopeId} was sent, but recording it failed: ${insErr.message}`, envelopeId: env.envelopeId }, 500);
-    }
-    return json({ ok: true, contract: row, mode: "email" });
   }
 
   // ── send-application: Delt merchant application from a deal submission ──
@@ -1020,8 +904,8 @@ Deno.serve(async (req) => {
     if (!contractId) return json({ error: "contractId required" }, 400);
     const { data: row } = await admin.from("contracts").select("*").eq("id", contractId).maybeSingle();
     if (!row || row.org_id !== auth.ctx.orgId) return json({ error: "Contract not found" }, 404);
-    if (!["mca", "deal_application", "agent_agreement"].includes(row.kind)) {
-      return json({ error: "Only MCA agreements, funding applications, and agent agreements carry a Delt countersignature" }, 400);
+    if (!["mca", "deal_application"].includes(row.kind)) {
+      return json({ error: "Only MCA agreements and funding applications carry a Delt countersignature" }, 400);
     }
     if (!row.envelope_id) return json({ error: "Contract has no envelope" }, 400);
     if (row.countersigned_at) return json({ error: "Already countersigned" }, 409);

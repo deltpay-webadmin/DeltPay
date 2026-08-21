@@ -252,11 +252,11 @@ function subscribeRealtime() {
 // Edge function API
 // ══════════════════════════════════════════════════════════════
 
-async function callDocusign(body: Record<string, unknown>): Promise<any> {
+async function callDocusign(body: Record<string, unknown>, fn: 'docusign' | 'agent-esign' = 'docusign'): Promise<any> {
   if (!supabase) throw new Error('Supabase is not configured');
   const { data: sess } = await supabase.auth.getSession();
   if (!sess.session) throw new Error('You must be signed in to use e-sign');
-  const { data, error } = await supabase.functions.invoke('docusign', { body });
+  const { data, error } = await supabase.functions.invoke(fn, { body });
   if (error) {
     // FunctionsHttpError carries the response; surface the server's message.
     let msg = error.message || 'Request failed';
@@ -348,7 +348,7 @@ export const contractActions = {
   async sendAgentAgreement(req: { agentName: string; agentEmail: string; agentId?: string }): Promise<Contract> {
     markBusy('send', true);
     try {
-      const json = await callDocusign({ action: 'send-agent-agreement', ...req });
+      const json = await callDocusign({ action: 'send', ...req }, 'agent-esign');
       const contract = fromDb(json.contract);
       const exists = state.contracts.some(c => c.id === contract.id);
       set({
@@ -363,6 +363,41 @@ export const contractActions = {
       throw err;
     } finally {
       markBusy('send', false);
+    }
+  },
+
+  /** agent-esign variants of status / resend / countersign for contracts of
+   * kind 'agent_agreement' (the docusign function only serves merchant paper). */
+  async agentRefreshStatus(contractId: string): Promise<Contract | null> {
+    const json = await callDocusign({ action: 'status', contractId }, 'agent-esign');
+    if (!json?.contract) return null;
+    const contract = fromDb(json.contract);
+    set({ contracts: state.contracts.map(c => (c.id === contract.id ? contract : c)) });
+    return contract;
+  },
+
+  async agentResend(contractId: string): Promise<boolean> {
+    try {
+      await callDocusign({ action: 'resend', contractId }, 'agent-esign');
+      toast.success('DocuSign reminder re-sent to the agent.');
+      return true;
+    } catch (err: any) {
+      toast.error(`Resend failed: ${err.message}`);
+      return false;
+    }
+  },
+
+  async agentCountersignUrl(contractId: string): Promise<string | null> {
+    try {
+      const json = await callDocusign({
+        action: 'countersign-url',
+        contractId,
+        returnUrl: `${window.location.origin}/#/signing-complete`,
+      }, 'agent-esign');
+      return (json.url as string) ?? null;
+    } catch (err: any) {
+      toast.error(err.message);
+      return null;
     }
   },
 

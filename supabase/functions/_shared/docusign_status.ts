@@ -142,7 +142,7 @@ export async function syncCountersign(contractId: string): Promise<{ countersign
     .eq("id", contractId)
     .maybeSingle();
   if (!row || row.countersigned_at || !row.envelope_id) return { countersigned: Boolean(row?.countersigned_at) };
-  if (!["mca", "deal_application"].includes(row.kind)) return { countersigned: false };
+  if (!["mca", "deal_application", "agent_agreement"].includes(row.kind)) return { countersigned: false };
 
   const tok = await getAccessToken();
   if ("error" in tok) return { countersigned: false };
@@ -204,7 +204,7 @@ export async function applyEnvelopeStatus(
   // the routing-order-2 Delt countersigner — has signed; stamp the executed
   // state so the funding gate can rely on it. Best-effort: the status action
   // and the sweep re-run this until it lands.
-  if (mapped === "completed" && !row.countersigned_at && ["mca", "deal_application"].includes(row.kind)) {
+  if (mapped === "completed" && !row.countersigned_at && ["mca", "deal_application", "agent_agreement"].includes(row.kind)) {
     try {
       await syncCountersign(row.id as string);
     } catch (err) {

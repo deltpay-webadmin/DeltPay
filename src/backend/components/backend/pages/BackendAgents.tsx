@@ -221,7 +221,7 @@ function AgentOnboardingTracker() {
                   <td className="px-4 py-2.5 text-right space-x-2 whitespace-nowrap">
                     <button
                       disabled={busy}
-                      onClick={() => void act(c.id, () => contractActions.refreshStatus(c.id))}
+                      onClick={() => void act(c.id, () => contractActions.agentRefreshStatus(c.id))}
                       className="text-xs font-medium text-gray-500 hover:text-gray-800 disabled:opacity-50"
                     >
                       Refresh
@@ -229,7 +229,7 @@ function AgentOnboardingTracker() {
                     {inFlight && (
                       <button
                         disabled={busy}
-                        onClick={() => void act(c.id, () => contractActions.resend(c.id))}
+                        onClick={() => void act(c.id, () => contractActions.agentResend(c.id))}
                         className="text-xs font-medium text-indigo-600 hover:text-indigo-800 disabled:opacity-50"
                       >
                         Resend
@@ -239,7 +239,7 @@ function AgentOnboardingTracker() {
                       <button
                         disabled={busy}
                         onClick={() => void act(c.id, async () => {
-                          const url = await contractActions.countersignUrl(c.id);
+                          const url = await contractActions.agentCountersignUrl(c.id);
                           if (url) window.open(url, '_blank', 'noopener');
                         })}
                         className="text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-2.5 py-1 rounded-[6px] disabled:opacity-50"
