@@ -19,9 +19,9 @@
 
 ### Compounding residual income
 
-Delt is a merchant services platform for small and medium businesses. In one platform, a merchant takes payments (most run 0% processing through our cash-discount program), gets same-day deposits, taps working capital when they need it, and gets a website and AI analytics on top. That's what you're selling: the business owner keeps more of every sale and gets funded faster — a pitch that wins against Stripe, Square, and legacy processors every week. We're building a national team of independent agents to sign the next thousand merchants.
+Delt is a merchant services platform for small and medium businesses. In one platform, a merchant takes payments (most run 0% processing through our cash-discount program), gets same-day deposits, taps working capital when they need it, and gets a website and AI analytics on top. That's what you're selling: the business owner keeps more of every sale and gets funded faster — a pitch built to win against Stripe, Square, and the legacy processors.
 
-We'll be straight with you, because that's how we do business with merchants too: this is a **1099, commission-only role with no base salary.** The first 90 days are hard. If you need a paycheck next Friday, this is not your job. If you want to build a residual book you own, the math below is real.
+We'll be straight with you, because that's how we do business with merchants too: this is a **1099, commission-only role with no base salary.** And we're early — you'd be one of Delt's first agents. That's not a catch, it's the deal: it's why the split starts at 50% instead of the 30–40% the big ISOs pay, why the founders are personally on your calls, and why the accounts you sign now are the book you'll be collecting on for years. The first 90 days are hard. If you need a paycheck next Friday, this is not your job. If you want to build a residual book you own from the ground floor, the math below is real.
 
 ### What you earn
 
@@ -44,7 +44,7 @@ The model is simple: every account you sign pays you a bonus now and a residual 
 
 - **A live residual dashboard.** Every merchant, every month, every commission — no "trust me" statements.
 - **An AI closing tool.** Upload a prospect's Stripe or Square statement; our analyzer builds the savings comparison and quote in minutes.
-- **A closer in your corner.** For your first 90 days, bring a live merchant to the table and a senior closer joins the call with you. You keep the full commission.
+- **A founder in your corner.** For your first 90 days, bring a live merchant to the table and David from our founding team joins the call with you. You keep the full commission.
 - **Weekly live training.** Products, sales skills, prospecting, and a deal lab with the founding team — real deals on the table, pricing, objections, and what's closing right now.
 - **Leads to close.** Inbound merchants from our referral program and website are distributed to producing agents. Prospecting is still the job — but production earns you lead flow on top of it.
 - **Account Manager title, @delt email, business cards, and a Delt gear kit.** You represent a platform, not a rate sheet.
@@ -75,10 +75,10 @@ Know business owners but don't want to run a pipeline? Send us the introduction 
 
 ### What happens after you apply
 
-1. **A 20-minute call within the week.** No panel interviews, no personality tests — a straight conversation about your network and your plan.
+1. **A 20-minute call within the week — with David, our founder, not a recruiter.** No panel interviews, no personality tests — a straight conversation about your network and your plan.
 2. **We send you the full comp plan.** Per-account math, tier criteria, and every assumption. Take it to anyone in the industry and have them check it.
 3. **Sign the agent agreement and you're live** — portal access, @delt email, Account Manager title, and your training week scheduled.
-4. **Your first 90 days, you're not alone.** Weekly live training and a senior closer on your live merchant calls.
+4. **Your first 90 days, you're not alone.** Weekly live training with David and Patrick, and a founder on your live merchant calls.
 
 ### The terms, in plain English
 

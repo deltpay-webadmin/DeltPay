@@ -84,6 +84,7 @@ Our stated company value is: *"We tell merchants the truth about fees, terms, an
 - ❌ Exclusive territories
 - ❌ Anything about a future sale of the company or residual buyouts `[FOUNDER TO CONFIRM if a buyout program is ever offered]`
 - ❌ Any earnings figure labeled "typical" or "average" until we have real agent production data to back it
+- ❌ Traction we don't have — merchant counts, processing volume, "we win deals every week," testimonials. Until the numbers are real, the pitch is **ground-floor honesty**: first agents, 50% day-one split, founders personally on your calls. Early-stage is the story, not something to hide
 
 ## 7. Compliance checklist
 
