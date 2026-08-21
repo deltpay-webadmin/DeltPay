@@ -25,11 +25,10 @@ We'll be straight with you, because that's how we do business with merchants too
 
 ### What you earn
 
-- **$150–$1,000 activation bonus per account**, based on merchant size. Every account that activates and processes its first batch pays. Big deals pay like big deals.
-- **Lifetime residuals: 50% split on day one, up to 70% as you produce.** You keep a share of the monthly revenue on every account you sign, for as long as that merchant processes with Delt. Most ISOs start agents at 30–40%. We start you at 50.
+- **$150–$1,000 activation bonus per account**, based on merchant size. Every account that activates and processes its first batch pays — plus **$100 more** on any account that also takes our POS or Delt Capital funding. Big deals pay like big deals.
+- **Lifetime residuals: 50% split on day one, up to 70% as you produce.** You keep a share of the monthly revenue on every account you sign, for as long as that merchant processes with Delt. 15 active accounts moves you to 60%; 35 moves you to 70%. Most ISOs start agents at 30–40%. We start you at 50.
 - **3% of every Delt Capital funding.** Get a merchant a $50,000 working-capital deal and that's $1,500 — renewals pay too. Your book funds itself twice.
 - **Fast Start: up to $1,500 in your first 90 days.** 3 activations in 30 days → +$500. 10 in 90 → +$1,000.
-- **Momentum kicker:** 8+ activations in a calendar month and every one retroactively pays +$50.
 - **Residuals are never clawed back.** The only clawback in the program is the activation bonus, and only if the merchant cancels within 90 days.
 - **Paid on the 15th, every month**, with a per-merchant statement in your agent portal — every account, every month, down to the penny.
 

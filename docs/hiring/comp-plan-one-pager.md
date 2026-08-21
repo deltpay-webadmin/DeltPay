@@ -17,6 +17,7 @@
    | $25K–$50K | **$400** |
    | $50K–$100K | **$600** |
    | $100K+ | **$1,000** |
+   | POS or Delt Capital attached | **+$100** on any band |
 
    Bands for $400+ bonuses are confirmed by the merchant's first full month of actual processing.
 
@@ -25,15 +26,14 @@
 4. **Fast Start milestones** (first 90 days, one-time, $1,500 lifetime cap):
    - 3 activations in your first 30 days → **+$500**
    - 10 activations in your first 90 days → **+$1,000**
-5. **Momentum kicker:** 8+ activations in a calendar month → every activation that month retroactively earns **+$50**.
 
 ## The tier ladder
 
 | Tier | Residual split | How you get there |
 |---|---|---|
 | Tier 1 | **50%** | Day one — where every agent starts |
-| Tier 2 | **60%** | ~15 active merchant accounts `[FOUNDER TO CONFIRM criteria]` |
-| Tier 3 | **70%** | ~35 active merchant accounts `[FOUNDER TO CONFIRM criteria]` |
+| Tier 2 | **60%** | 15+ active merchant accounts |
+| Tier 3 | **70%** | 35+ active merchant accounts |
 
 For context: most ISOs start agents at a 30–40% split. Delt starts you where others top out.
 
@@ -56,7 +56,7 @@ For people who know business owners but don't want to run a pipeline: refer the 
 
 ## Earnings scenarios — 3 / 6 / 12 months
 
-All residual lines below are modeled at the **Tier 1 (50%)** split with $45/account/month — the conservative floor. Tier 2/3 promotion raises the residual lines by 20% / 40%. Average bonus per activation is modeled by deal mix: ~$200 (conservative — mostly small merchants), ~$225 (target), ~$300 (top producer — better mix plus the 8-deal monthly kicker). Fast Start milestones are included in the year-1 totals where the pace earns them. **Delt Capital commissions are not included in these lines** — they stack on top (one $50K funding adds $1,500).
+All residual lines below are modeled at the **Tier 1 (50%)** split with $45/account/month — the conservative floor. Tier 2/3 promotion raises the residual lines by 20% / 40%. Average bonus per activation is modeled by deal mix: ~$200 (conservative — mostly small merchants), ~$225 (target), ~$300 (top producer — bigger merchants and more POS/Capital attach bonuses). Fast Start milestones are included in the year-1 totals where the pace earns them. **Delt Capital commissions are not included in these lines** — they stack on top (one $50K funding adds $1,500).
 
 | Scenario | New accounts/mo | Month 3 income | Month 6 income | Month 12 income | Year-1 total (approx.) |
 |---|---|---|---|---|---|
@@ -88,7 +88,7 @@ All residual lines below are modeled at the **Tier 1 (50%)** split with $45/acco
 ## Fine print
 
 - **Lifetime residuals** and **life of the account** mean: for as long as the merchant continues processing with Delt, under the terms of the Delt agent (or referral partner) agreement.
-- **Residuals are never clawed back.** Activation bonuses (all bands) are reversed only if the merchant cancels within 90 days of activation. Fast Start and kicker bonuses are never clawed back once earned.
+- **Residuals are never clawed back.** Activation bonuses (all bands, including the attach kicker) are reversed only if the merchant cancels within 90 days of activation. Fast Start bonuses are never clawed back once earned.
 - Volume bands for $400+ bonuses are set by the merchant's first full month of actual processing volume, not the application estimate.
 - Attrition is real: merchants close, sell, or leave. The ~15% annual assumption is built into the scenarios above.
 - This is a **1099 independent contractor** engagement: no base salary, no employee benefits; you are responsible for self-employment taxes. Wellness perks and programs are production-based contractor rewards under the agent agreement, not employment benefits, and are reviewed annually.
