@@ -10,7 +10,7 @@
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { Navigate, useNavigate, useParams } from 'react-router';
 import { useAppNavigate } from '../NavigationContext';
-import { useDealSubmissions, dealSubmissionActions, BOARDING_CHANNELS, type BoardingChannel } from '../dealSubmissionsStore';
+import { useDealSubmissions } from '../dealSubmissionsStore';
 import { DealRoomStages } from '../DealRoomStages';
 
 export function DealRoomPage() {
@@ -48,17 +48,6 @@ export function DealRoomPage() {
           <p className="text-xs text-gray-500">
             {sub.contactName || 'No contact'} · {sub.email || 'no email'} · {sub.phone || 'no phone'}
           </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <label className="text-[11px] text-gray-500 font-medium">Channel</label>
-          <select
-            value={sub.channel ?? ''}
-            onChange={(e) => void dealSubmissionActions.setChannel(sub.id, (e.target.value || null) as BoardingChannel | null)}
-            className="px-2 py-1.5 bg-white border border-gray-300 rounded-[6px] text-xs text-gray-700 focus:outline-none"
-          >
-            <option value="">—</option>
-            {BOARDING_CHANNELS.map(c => <option key={c} value={c}>{c}</option>)}
-          </select>
         </div>
       </div>
 

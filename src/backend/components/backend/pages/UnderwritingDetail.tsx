@@ -27,17 +27,30 @@ import {
   stressTest,
   defaultScoreInputs,
   WEIGHTS,
-  type PlaidInputs,
   type CrsInputs,
   type DataMerchInputs,
   type RevenueTrend,
   type DepositConcentration,
 } from '../underwritingScore';
+import { usePlaidNodes } from '../plaidStore';
+import {
+  describePlaidProvenance,
+  stampManualEdit,
+  fromVaultNode,
+  type PlaidInputsWithProv,
+} from '../underwritingProvenance';
 
 // ══════════════════════════════════════════════════════════════
 // Helpers
 // ══════════════════════════════════════════════════════════════
 const fmt$ = (n: number) => n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+
+const fmtWhen = (iso?: string) => {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '—';
+  return d.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+};
 
 const tierStyle: Record<string, { bg: string; text: string; ring: string }> = {
   'Tier 1': { bg: 'bg-emerald-500', text: 'text-emerald-700', ring: 'ring-emerald-500' },
@@ -122,31 +135,40 @@ function VendorField({ label, value, good }: { label: string; value: React.React
   );
 }
 
+function SourcePill({ kind, label }: { kind: 'live' | 'edited' | 'manual'; label: string }) {
+  const styles = {
+    live: 'bg-emerald-50 text-emerald-700',
+    edited: 'bg-amber-50 text-amber-700',
+    manual: 'bg-gray-100 text-gray-600',
+  } as const;
+  const dot = { live: 'bg-emerald-500', edited: 'bg-amber-500', manual: 'bg-gray-400' } as const;
+  return (
+    <span className={`inline-flex items-center gap-1.5 rounded-[8px] px-2 py-0.5 text-[10px] font-bold ${styles[kind]}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${dot[kind]}`} />
+      {label}
+    </span>
+  );
+}
+
 function VendorCard({
-  title, meta, lastPulled, onPull, children,
-}: { title: string; meta: string; lastPulled: string; onPull: () => void; children?: React.ReactNode }) {
+  title, meta, pill, action, footer, children,
+}: {
+  title: string; meta: string; pill: React.ReactNode;
+  action?: React.ReactNode; footer?: string; children?: React.ReactNode;
+}) {
   return (
     <div className="bg-white border border-gray-200 rounded-[8px]">
       <div className="px-4 py-3 flex items-center justify-between border-b border-gray-100">
         <div className="flex items-center gap-2.5">
           <span className="text-sm font-bold text-gray-900">{title}</span>
-          <span className="inline-flex items-center gap-1.5 rounded-[8px] px-2 py-0.5 text-[10px] font-bold bg-emerald-50 text-emerald-700">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-            Connected
-          </span>
+          {pill}
         </div>
-        <button
-          onClick={onPull}
-          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-[8px] text-[11px] font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 transition-colors"
-        >
-          <RefreshCw className="w-3 h-3" />
-          Pull data
-        </button>
+        {action}
       </div>
       <div className="px-4 py-3">
         {children}
         <p className={`text-[11px] text-gray-400 ${children ? 'mt-3 pt-3 border-t border-gray-100' : ''}`}>
-          {meta} · Last pulled {lastPulled}
+          {meta}{footer ? ` · ${footer}` : ''}
         </p>
       </div>
     </div>
@@ -209,7 +231,7 @@ export function UnderwritingDetail() {
     [app?.id], // eslint-disable-line react-hooks/exhaustive-deps
   );
 
-  const [plaid, setPlaid] = useState<PlaidInputs>(app?.plaidInputs ?? seeded.plaid);
+  const [plaid, setPlaid] = useState<PlaidInputsWithProv>(app?.plaidInputs ?? seeded.plaid);
   const [crs, setCrs] = useState<CrsInputs>(app?.crsInputs ?? seeded.crs);
   const [dm, setDm] = useState<DataMerchInputs>(app?.dataMerchInputs ?? seeded.dataMerch);
   const [requested, setRequested] = useState<number>(app?.requestedAmount ?? 50000);
@@ -242,6 +264,26 @@ export function UnderwritingDetail() {
       setProposedAdvance(app.requestedAmount ?? 50000);
     }
   }, [app]);
+
+  // ── Live Plaid vault state (only resolves when the case is linked to a lead) ──
+  const plaidNodes = usePlaidNodes();
+  const vaultUwNode = useMemo(
+    () => (app?.leadId ? plaidNodes.find(n => n.leadId === app.leadId && n.docKind === 'underwriting_inputs') ?? null : null),
+    [plaidNodes, app?.leadId],
+  );
+  const vaultSummary = useMemo(
+    () => (app?.leadId ? plaidNodes.find(n => n.leadId === app.leadId && n.docKind === 'summary')?.data ?? null : null),
+    [plaidNodes, app?.leadId],
+  );
+  const screeningDocs = useMemo(
+    () => (app?.leadId ? plaidNodes.filter(n => n.leadId === app.leadId && n.docKind === 'watchlist_screening') : []),
+    [plaidNodes, app?.leadId],
+  );
+  const plaidProv = describePlaidProvenance(plaid);
+
+  // Manual edits invalidate the "pulled from vault" claim.
+  const editPlaid = (patch: Partial<PlaidInputsWithProv>) =>
+    setPlaid(p => stampManualEdit({ ...p, ...patch }));
 
   // ── Live scoring (pure engine) ──
   const result = useMemo(() => {
@@ -391,13 +433,53 @@ export function UnderwritingDetail() {
                 <VendorCard
                   title="Plaid"
                   meta="Bank verification, cash flow, identity"
-                  lastPulled="Apr 9, 2026 at 10:23 AM"
-                  onPull={() => { saveDraft(true); toast.success('Plaid data refreshed', { description: 'Cash flow inputs updated from the linked account.' }); }}
+                  pill={
+                    plaidProv.kind === 'plaid' ? <SourcePill kind="live" label="Live — Plaid vault" />
+                    : plaidProv.kind === 'plaid-edited' ? <SourcePill kind="edited" label="Plaid data · edited" />
+                    : <SourcePill kind="manual" label="Manual entry" />
+                  }
+                  footer={
+                    plaidProv.pulledAt
+                      ? `Pulled from Plaid vault ${fmtWhen(plaidProv.pulledAt)}${plaidProv.editedAt ? ` · adjusted by hand ${fmtWhen(plaidProv.editedAt)}` : ''}`
+                      : 'Manual entry — no pull recorded'
+                  }
+                  action={vaultUwNode ? (
+                    <button
+                      onClick={() => {
+                        const fresh = fromVaultNode(vaultUwNode.data, app.leadId!);
+                        if (!fresh) { toast.error('Vault snapshot is missing cash-flow inputs.'); return; }
+                        setPlaid(fresh);
+                        toast.success('Plaid inputs refreshed from the vault', {
+                          description: `Snapshot pulled ${fmtWhen(fresh._prov?.pulledAt)}.`,
+                        });
+                      }}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-[8px] text-[11px] font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 transition-colors"
+                    >
+                      <RefreshCw className="w-3 h-3" />
+                      Pull from vault
+                    </button>
+                  ) : undefined}
                 >
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-3">
-                    <VendorField label="Bank verification" good value={<span className="inline-flex items-center gap-1"><Check className="w-3.5 h-3.5" />Verified</span>} />
-                    <VendorField label="IDV status" good value={<span className="inline-flex items-center gap-1"><Check className="w-3.5 h-3.5" />Verified</span>} />
-                    <VendorField label="OFAC screening" good value={<span className="inline-flex items-center gap-1"><Check className="w-3.5 h-3.5" />Clear</span>} />
+                    {vaultSummary && (
+                      <>
+                        <VendorField label="Bank verification" good={Boolean(vaultSummary.bank_verified)}
+                          value={vaultSummary.bank_verified
+                            ? <span className="inline-flex items-center gap-1"><Check className="w-3.5 h-3.5" />Verified</span>
+                            : 'Not verified'} />
+                        <VendorField label="IDV status" good={Boolean(vaultSummary.identity_verified)}
+                          value={vaultSummary.identity_verified
+                            ? <span className="inline-flex items-center gap-1"><Check className="w-3.5 h-3.5" />Verified</span>
+                            : 'Not verified'} />
+                        <VendorField label="OFAC screening"
+                          good={screeningDocs.length > 0 && screeningDocs.every(d => !d.data?.hit_count)}
+                          value={screeningDocs.length === 0
+                            ? 'Not screened'
+                            : screeningDocs.some(d => d.data?.hit_count)
+                              ? `${screeningDocs.reduce((n, d) => n + (Number(d.data?.hit_count) || 0), 0)} hit(s)`
+                              : <span className="inline-flex items-center gap-1"><Check className="w-3.5 h-3.5" />Clear</span>} />
+                      </>
+                    )}
                     <VendorField label="3-mo avg revenue" value={fmt$(plaid.monthlyRevenue || 0)} />
                     <VendorField label="NSF count (90d)" good={plaid.nsfCount90d === 0} value={plaid.nsfCount90d} />
                     <VendorField label="Avg daily balance" value={fmt$(plaid.avgDailyBalance || 0)} />
@@ -407,8 +489,8 @@ export function UnderwritingDetail() {
                   <VendorCard
                     title="CRS Credit"
                     meta="Personal + business credit"
-                    lastPulled="Apr 9, 2026"
-                    onPull={() => toast.success('CRS credit data refreshed')}
+                    pill={<SourcePill kind="manual" label="Manual entry — no integration" />}
+                    footer="Bureau pull is a manual step (SOP: Credit Check) — key the report in below"
                   >
                     <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                       <VendorField label="Personal FICO" value={crs.fico} />
@@ -418,8 +500,8 @@ export function UnderwritingDetail() {
                   <VendorCard
                     title="DataMerch"
                     meta="MCA industry database"
-                    lastPulled="Apr 9, 2026"
-                    onPull={() => toast.success('DataMerch data refreshed')}
+                    pill={<SourcePill kind="manual" label="Manual entry — no integration" />}
+                    footer="datamerch.com lookup is a manual step (SOP: MCA History) — key the result in below"
                   >
                     <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                       <VendorField label="Open positions" good={dm.currentOpenPositions === 0} value={dm.currentOpenPositions} />
@@ -439,29 +521,29 @@ export function UnderwritingDetail() {
               <div className="grid grid-cols-2 gap-3 pt-2">
                 <NumField label="Avg Daily Balance" value={plaid.avgDailyBalance} step={500} min={0} suffix="$"
                   impact={`${result.p.components[0].points}/20`}
-                  onChange={n => setPlaid({ ...plaid, avgDailyBalance: n })} />
+                  onChange={n => editPlaid({ avgDailyBalance: n })} />
                 <NumField label="Min Daily Balance" value={plaid.minDailyBalance} step={500} suffix="$"
                   impact={`${result.p.components[1].points}/10`}
-                  onChange={n => setPlaid({ ...plaid, minDailyBalance: n })} />
+                  onChange={n => editPlaid({ minDailyBalance: n })} />
                 <NumField label="Monthly Revenue (avg 3mo)" value={plaid.monthlyRevenue} step={1000} min={0} suffix="$"
-                  onChange={n => setPlaid({ ...plaid, monthlyRevenue: n })} />
+                  onChange={n => editPlaid({ monthlyRevenue: n })} />
                 <NumField label="Revenue σ (stddev/mean)" value={plaid.revenueStdDevPct} step={0.05} min={0} suffix="0–1"
                   impact={`${result.p.components[3].points}/15`}
-                  onChange={n => setPlaid({ ...plaid, revenueStdDevPct: n })} />
+                  onChange={n => editPlaid({ revenueStdDevPct: n })} />
                 <NumField label="NSF count (90d)" value={plaid.nsfCount90d} step={1} min={0}
                   impact={`${result.p.components[2].points}/20`}
-                  onChange={n => setPlaid({ ...plaid, nsfCount90d: n })} />
+                  onChange={n => editPlaid({ nsfCount90d: n })} />
                 <NumField label="Days since last NSF" value={plaid.daysSinceLastNsf} step={1} min={0}
                   impact={`${result.p.components[6].points}/10`}
-                  onChange={n => setPlaid({ ...plaid, daysSinceLastNsf: n })} />
+                  onChange={n => editPlaid({ daysSinceLastNsf: n })} />
                 <NumField label="Revenue change 3mo" value={plaid.revenueChange3moPct} step={0.05} suffix="±%"
-                  onChange={n => setPlaid({ ...plaid, revenueChange3moPct: n })} />
+                  onChange={n => editPlaid({ revenueChange3moPct: n })} />
                 <SelectField<RevenueTrend> label="Revenue trend" value={plaid.revenueTrend}
                   options={[{ value: 'growing', label: 'Growing' }, { value: 'flat', label: 'Flat' }, { value: 'declining', label: 'Declining' }]}
-                  onChange={v => setPlaid({ ...plaid, revenueTrend: v })} />
+                  onChange={v => editPlaid({ revenueTrend: v })} />
                 <SelectField<DepositConcentration> label="Deposit concentration" value={plaid.depositConcentration}
                   options={[{ value: 'diversified', label: 'Diversified' }, { value: 'moderate', label: 'Moderate' }, { value: 'concentrated', label: 'Concentrated' }]}
-                  onChange={v => setPlaid({ ...plaid, depositConcentration: v })} />
+                  onChange={v => editPlaid({ depositConcentration: v })} />
               </div>
             </Section>
 

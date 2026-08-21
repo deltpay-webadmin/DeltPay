@@ -33,6 +33,21 @@ export type BoardingChannel = 'Square' | 'Luqra' | 'Paysafe';
 
 export const BOARDING_CHANNELS: BoardingChannel[] = ['Square', 'Luqra', 'Paysafe'];
 
+/**
+ * Every deal includes payment processing; capital (MCA funding) is the
+ * optional add-on. `wants_pos` is KORONA POS hardware interest and is
+ * orthogonal — the path is entirely `wants_capital`.
+ */
+export type ProductPath = 'payments-only' | 'payments+capital';
+
+export function productPath(s: Pick<DealSubmission, 'wantsCapital'>): ProductPath {
+  return s.wantsCapital ? 'payments+capital' : 'payments-only';
+}
+
+export function productPathLabel(p: ProductPath): string {
+  return p === 'payments+capital' ? 'Payments + Capital' : 'Payments only';
+}
+
 export interface DealSubmission {
   id: string;
   agentId: string | null;
@@ -246,6 +261,31 @@ export const dealSubmissionActions = {
       .eq('id', id);
     if (error) {
       toast.error(`Couldn't set the channel: ${error.message}`);
+      return false;
+    }
+    await refresh();
+    return true;
+  },
+
+  /**
+   * Flip the capital add-on (the product path). Recomputes the expected
+   * activation bonus the same way submit/reband do — toggling capital can
+   * change agent comp, deliberately.
+   */
+  async setWantsCapital(id: string, wantsCapital: boolean): Promise<boolean> {
+    if (!supabase) return false;
+    const existing = state.submissions.find(s => s.id === id);
+    if (!existing) return false;
+    const { error } = await supabase
+      .from('deal_submissions')
+      .update({
+        wants_capital: wantsCapital,
+        expected_bonus: activationBonus(existing.monthlyVolume, existing.wantsPos || wantsCapital),
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', id);
+    if (error) {
+      toast.error(`Couldn't update the product path: ${error.message}`);
       return false;
     }
     await refresh();

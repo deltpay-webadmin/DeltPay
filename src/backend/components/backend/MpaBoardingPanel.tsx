@@ -10,10 +10,10 @@
  *      signature. Square deals get the OrderOut portal link + copy packet.
  */
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router';
 import {
-  BookmarkPlus, ClipboardCopy, ExternalLink, FileSignature, FileText, Link2, Loader2, PenLine, RefreshCw, Send, Trash2,
+  BookmarkPlus, CheckCircle2, ClipboardCopy, ExternalLink, FileSignature, FileText, Link2, Loader2, PenLine, RefreshCw, Send, Trash2,
 } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
 import type { DealSubmission } from './dealSubmissionsStore';
@@ -290,20 +290,6 @@ export function MpaBoardingPanel({ submission }: { submission: DealSubmission })
     }
   };
 
-  const copyPacket = async (includeSensitive: boolean) => {
-    if (!app) return;
-    if (includeSensitive && !window.confirm('Copy the FULL packet including SSNs and bank numbers? Paste it straight into the OrderOut portal, then clear your clipboard.')) {
-      return;
-    }
-    setBusy('packet');
-    const text = await mpaActions.packet(app.id, includeSensitive);
-    setBusy(null);
-    if (text) {
-      await navigator.clipboard.writeText(text);
-      toast.success(includeSensitive ? 'Full boarding packet copied' : 'Boarding packet copied (masked)');
-    }
-  };
-
   return (
     <div className="mt-4 rounded-[8px] border border-gray-200 bg-white p-4" onClick={(e) => e.stopPropagation()}>
       <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
@@ -441,30 +427,7 @@ export function MpaBoardingPanel({ submission }: { submission: DealSubmission })
           )}
 
           {/* Square: OrderOut handoff */}
-          {channel === 'Square' && (
-            <div className="flex flex-wrap items-center gap-2 mt-2">
-              <a href={ORDEROUT_URL} target="_blank" rel="noreferrer" className={btnPrimary}>
-                <ExternalLink className="w-3.5 h-3.5" /> Open OrderOut portal
-              </a>
-              <button className={btnSecondary} disabled={busy !== null} onClick={() => void copyPacket(true)}>
-                <ClipboardCopy className="w-3.5 h-3.5" /> Copy full packet
-              </button>
-              <button className={btnGhost} disabled={busy !== null} onClick={() => void copyPacket(false)}>
-                <ClipboardCopy className="w-3.5 h-3.5" /> Copy masked packet
-              </button>
-              {app.status !== 'boarded' && (
-                <button className={btnGhost} disabled={busy !== null}
-                  onClick={async () => {
-                    const ok = await mpaActions.markBoarded(app.id);
-                    // Boarded = merchant account approved & installed — one of
-                    // the two ways a deal is won; the lead follows.
-                    if (ok) await fundingWriteback(app.submissionId, 'boarded');
-                  }}>
-                  Mark boarded
-                </button>
-              )}
-            </div>
-          )}
+          {channel === 'Square' && <SquareBoardingChecklist app={app} />}
         </>
       )}
 
@@ -642,5 +605,88 @@ function SiteSurveyCard({ app }: { app: MerchantApplication }) {
         </div>
       )}
     </div>
+  );
+}
+
+// ── Square boarding checklist ──
+// The OrderOut reseller portal has no API, so Square boarding is a guided
+// manual handoff: open the portal, paste the packet, come back and mark the
+// deal boarded. Steps 1–2 are session-local; boarded state persists on the
+// application row.
+
+export function SquareBoardingChecklist({ app }: { app: MerchantApplication }) {
+  const [busy, setBusy] = useState<string | null>(null);
+  const [openedPortal, setOpenedPortal] = useState(false);
+  const [copiedPacket, setCopiedPacket] = useState(false);
+  const boarded = app.status === 'boarded';
+
+  const copyPacket = async (includeSensitive: boolean) => {
+    if (includeSensitive && !window.confirm('Copy the FULL packet including SSNs and bank numbers? Paste it straight into the OrderOut portal, then clear your clipboard.')) {
+      return;
+    }
+    setBusy('packet');
+    const text = await mpaActions.packet(app.id, includeSensitive);
+    setBusy(null);
+    if (text) {
+      await navigator.clipboard.writeText(text);
+      setCopiedPacket(true);
+      toast.success(includeSensitive ? 'Full boarding packet copied' : 'Boarding packet copied (masked)');
+    }
+  };
+
+  const step = (n: number, done: boolean, label: string, body: ReactNode) => (
+    <li className="flex items-start gap-3">
+      {done ? (
+        <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
+      ) : (
+        <span className="w-5 h-5 rounded-full bg-indigo-50 text-indigo-600 text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5">{n}</span>
+      )}
+      <div className="min-w-0">
+        <p className={`text-xs font-semibold ${done ? 'text-emerald-700' : 'text-gray-700'}`}>{label}</p>
+        <div className="mt-1.5 flex flex-wrap items-center gap-2">{body}</div>
+      </div>
+    </li>
+  );
+
+  return (
+    <ol className="mt-2 space-y-3">
+      {step(1, openedPortal || boarded, 'Open the OrderOut portal', (
+        <a href={ORDEROUT_URL} target="_blank" rel="noreferrer" className={btnPrimary}
+          onClick={() => setOpenedPortal(true)}>
+          <ExternalLink className="w-3.5 h-3.5" /> Open OrderOut portal
+        </a>
+      ))}
+      {step(2, copiedPacket || boarded, 'Copy the boarding packet and paste it into the portal', (
+        <>
+          <button className={btnSecondary} disabled={busy !== null} onClick={() => void copyPacket(true)}>
+            <ClipboardCopy className="w-3.5 h-3.5" /> Copy full packet
+          </button>
+          <button className={btnGhost} disabled={busy !== null} onClick={() => void copyPacket(false)}>
+            <ClipboardCopy className="w-3.5 h-3.5" /> Copy masked packet
+          </button>
+        </>
+      ))}
+      {step(3, boarded, 'Mark the deal boarded once OrderOut approves the account', (
+        boarded ? (
+          <span className="text-[11px] text-emerald-600 font-medium">
+            Boarded{app.boardedAt ? ` ${new Date(app.boardedAt).toLocaleDateString()}` : ''} — the lead follows automatically.
+          </span>
+        ) : (
+          <button className={btnGhost} disabled={busy !== null}
+            onClick={async () => {
+              setBusy('board');
+              try {
+                const ok = await mpaActions.markBoarded(app.id);
+                // Boarded = merchant account approved & installed — one of
+                // the two ways a deal is won; the lead follows.
+                if (ok) await fundingWriteback(app.submissionId, 'boarded');
+              } finally { setBusy(null); }
+            }}>
+            {busy === 'board' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
+            Mark boarded
+          </button>
+        )
+      ))}
+    </ol>
   );
 }

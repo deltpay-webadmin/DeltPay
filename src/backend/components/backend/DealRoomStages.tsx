@@ -1,14 +1,21 @@
 /**
- * Deal Room stages — the packet chip strip + numbered stage cards that
- * take a verbal yes to a fully signed, funded merchant:
+ * Deal Room stages — the setup bar, packet chip strip, and numbered stage
+ * cards that take a verbal yes to a fully signed merchant.
  *
- *   1. Plaid bank connection        (lead-scoped hosted link)
- *   2. Funding application (DLT-APP) — owner + rep sign
- *   3. Underwriting                  (linked UW app, tier/terms)
- *   4. MCA agreement                 — in-person (iPad) or email; bank on file
- *   5. Delt countersignature         (contracts.countersign)
- *   6. Processor MPA + boarding      (existing boarding panel)
- *   7. Documents                     (uploads + auto-filed signed PDFs)
+ * The setup bar picks the product path and boarding channel up front; the
+ * stage list follows the path (see dealStagePlan.ts):
+ *
+ *   Payments + Capital (full flow)      Payments only
+ *   1. Plaid bank connection            1. Processor MPA + boarding
+ *   2. Funding application (DLT-APP)    2. Documents
+ *   3. Underwriting
+ *   4. MCA agreement
+ *   5. Delt countersignature
+ *   6. Processor MPA + boarding
+ *   7. Documents
+ *
+ * A payments-only deal that already carries capital artifacts keeps the
+ * full flow visible so live envelopes never disappear.
  *
  * Extracted from DealRoomPage so the lead workspace can embed the same
  * stages; DealRoomPage stays as the host for lead-less submissions.
@@ -24,7 +31,9 @@ import {
 import { toast } from 'sonner@2.0.3';
 import { useSession } from './SessionContext';
 import { useAppNavigate } from './NavigationContext';
-import { useDealSubmissions, dealSubmissionActions, BOARDING_CHANNELS, type BoardingChannel, type DealSubmission } from './dealSubmissionsStore';
+import { useDealSubmissions, dealSubmissionActions, productPath, type DealSubmission } from './dealSubmissionsStore';
+import { dealStagePlan } from './dealStagePlan';
+import { DealSetupBar } from './DealSetupBar';
 import { useUnderwriting, underwritingActions, type UWApplication } from './crmStore';
 import { usePlaidItems, usePlaidLinkRequests, plaidActions } from './plaidStore';
 import { useContracts, contractActions, type Contract } from './contractsStore';
@@ -72,11 +81,8 @@ function activeContract(contracts: Contract[], submissionId: string, kind: Contr
     && !['voided', 'declined'].includes(c.status)) ?? null;
 }
 
-export function DealRoomStages({ submissionId, showChannelPicker }: {
+export function DealRoomStages({ submissionId }: {
   submissionId: string;
-  /** Render the boarding-channel select above the chips (the standalone
-   * Deal Room shows it in its header instead). */
-  showChannelPicker?: boolean;
 }) {
   const { navigate } = useAppNavigate();
   const { can, org, displayName } = useSession();
@@ -100,6 +106,12 @@ export function DealRoomStages({ submissionId, showChannelPicker }: {
   const appContract = sub ? activeContract(contracts, sub.id, 'deal_application') : null;
   const mcaContract = sub ? activeContract(contracts, sub.id, 'mca') : null;
   const mpaContract = sub ? activeContract(contracts, sub.id, 'mpa') : null;
+  const capDeal = sub ? capitalDeals.find(d => d.submissionId === sub.id) ?? null : null;
+
+  const hasCapitalArtifacts = Boolean(uw || appContract || mcaContract || capDeal);
+  const plan = sub
+    ? dealStagePlan({ path: productPath(sub), hasCapitalArtifacts, canCountersign: can('contracts.countersign') })
+    : null;
 
   const plaidConnected = Boolean(sub?.leadId && items.some(i => i.leadId === sub.leadId && i.status === 'active'));
   const pendingInvite = sub?.leadId ? requests.find(r => r.leadId === sub.leadId && r.status === 'pending') ?? null : null;
@@ -111,7 +123,8 @@ export function DealRoomStages({ submissionId, showChannelPicker }: {
   const [busy, setBusy] = useState<string | null>(null);
   const [mcaComposer, setMcaComposer] = useState<'embedded' | 'email' | null>(null);
 
-  if (!sub) return null;
+  if (!sub || !plan) return null;
+  const paymentsOnly = productPath(sub) === 'payments-only' && !plan.capitalForcedOpen;
 
   const openSession = async (contractId: string, recipient: 'signer' | 'guarantor' | 'rep', key: string) => {
     setBusy(key);
@@ -162,35 +175,40 @@ export function DealRoomStages({ submissionId, showChannelPicker }: {
 
   return (
     <div className="space-y-4">
-      {showChannelPicker && (
-        <div className="flex items-center justify-end gap-2">
-          <label className="text-[11px] text-gray-500 font-medium">Channel</label>
-          <select
-            value={sub.channel ?? ''}
-            onChange={(e) => void dealSubmissionActions.setChannel(sub.id, (e.target.value || null) as BoardingChannel | null)}
-            className="px-2 py-1.5 bg-white border border-gray-300 rounded-[6px] text-xs text-gray-700 focus:outline-none"
-          >
-            <option value="">—</option>
-            {BOARDING_CHANNELS.map(c => <option key={c} value={c}>{c}</option>)}
-          </select>
-        </div>
-      )}
+      {/* ── Setup: product path + boarding channel ── */}
+      <DealSetupBar
+        sub={sub}
+        hasCapitalArtifacts={hasCapitalArtifacts}
+        hasActiveMpaEnvelope={Boolean(mpaContract)}
+      />
 
       {/* ── Packet summary ── */}
       <div className={`${card} flex flex-wrap items-center gap-2`}>
-        <StepChip done={plaidConnected} label="Bank connected" />
-        <StepChip done={appContract?.status === 'completed'} label="Application signed" />
-        <StepChip done={Boolean(uw && (uw.stage === 'Approved'))} label="Underwriting approved" />
-        <StepChip done={mcaContract?.status === 'completed'} label="MCA signed" />
-        <StepChip done={Boolean(mcaContract?.countersignedAt)} label="Countersigned" />
+        {!paymentsOnly && (
+          <>
+            <StepChip done={plaidConnected} label="Bank connected" />
+            <StepChip done={appContract?.status === 'completed'} label="Application signed" />
+            <StepChip done={Boolean(uw && (uw.stage === 'Approved'))} label="Underwriting approved" />
+            <StepChip done={mcaContract?.status === 'completed'} label="MCA signed" />
+            <StepChip done={Boolean(mcaContract?.countersignedAt)} label="Countersigned" />
+          </>
+        )}
         <StepChip done={Boolean(mpaDone)} label="MPA signed/boarded" />
         <StepChip done={hasId} label="Photo ID" />
         <StepChip done={hasCheck} label="Voided check" />
       </div>
 
-      {/* ── 1. Plaid ── */}
+      {plan.capitalForcedOpen && (
+        <div className="bg-amber-50 border border-amber-200 rounded-[8px] px-4 py-3 text-xs text-amber-800">
+          Capital paperwork exists on this deal even though it's set to Payments only — the capital stages stay
+          visible. Switch the product path back, or void the envelopes to retire them.
+        </div>
+      )}
+
+      {/* ── Plaid ── */}
+      {plan.visible.includes('plaid') && (
       <div className={card}>
-        <StageHeader n={1} title="Bank connection (Plaid)" icon={Landmark}
+        <StageHeader n={plan.numbers.plaid!} title="Bank connection (Plaid)" icon={Landmark}
           state={plaidConnected ? 'Connected' : pendingInvite ? 'Link sent — waiting' : 'Not connected'} />
         {sub.leadId ? (
           <div className="flex flex-wrap items-center gap-2">
@@ -218,10 +236,12 @@ export function DealRoomStages({ submissionId, showChannelPicker }: {
           </p>
         )}
       </div>
+      )}
 
-      {/* ── 2. Funding application ── */}
+      {/* ── Funding application ── */}
+      {plan.visible.includes('application') && (
       <div className={card}>
-        <StageHeader n={2} title="Funding application (Form DLT-APP)" icon={FileSignature}
+        <StageHeader n={plan.numbers.application!} title="Funding application (Form DLT-APP)" icon={FileSignature}
           state={envelopeChip(appContract)} />
         <div className="flex flex-wrap items-center gap-2">
           {!appContract && (
@@ -269,10 +289,12 @@ export function DealRoomStages({ submissionId, showChannelPicker }: {
           )}
         </div>
       </div>
+      )}
 
-      {/* ── 3. Underwriting ── */}
+      {/* ── Underwriting ── */}
+      {plan.visible.includes('underwriting') && (
       <div className={card}>
-        <StageHeader n={3} title="Underwriting" icon={Scale}
+        <StageHeader n={plan.numbers.underwriting!} title="Underwriting" icon={Scale}
           state={uw ? `${uw.stage}${uw.tier ? ` · ${uw.tier}` : ''}` : 'No file'} />
         <div className="flex flex-wrap items-center gap-2">
           {!uw && (
@@ -307,10 +329,12 @@ export function DealRoomStages({ submissionId, showChannelPicker }: {
           )}
         </div>
       </div>
+      )}
 
-      {/* ── 4. MCA agreement ── */}
+      {/* ── MCA agreement ── */}
+      {plan.visible.includes('mca') && (
       <div className={card}>
-        <StageHeader n={4} title="MCA agreement (Purchase & Sale of Future Receivables)" icon={Banknote}
+        <StageHeader n={plan.numbers.mca!} title="MCA agreement (Purchase & Sale of Future Receivables)" icon={Banknote}
           state={envelopeChip(mcaContract)} />
         <div className="flex flex-wrap items-center gap-2">
           {!mcaContract && (
@@ -350,11 +374,12 @@ export function DealRoomStages({ submissionId, showChannelPicker }: {
           )}
         </div>
       </div>
+      )}
 
-      {/* ── 5. Countersign ── */}
-      {can('contracts.countersign') && (
+      {/* ── Countersign ── */}
+      {plan.visible.includes('countersign') && (
         <div className={card}>
-          <StageHeader n={5} title="Delt countersignature" icon={ShieldCheck}
+          <StageHeader n={plan.numbers.countersign!} title="Delt countersignature" icon={ShieldCheck}
             state={mcaContract?.countersignedAt ? 'Executed' : mcaContract ? 'Pending' : '—'} />
           <div className="flex flex-wrap items-center gap-2">
             {mcaContract && !mcaContract.countersignedAt && (
@@ -376,10 +401,7 @@ export function DealRoomStages({ submissionId, showChannelPicker }: {
       )}
 
       {/* ── Funding gate ── */}
-      {(() => {
-        const capDeal = capitalDeals.find(d => d.submissionId === sub.id) ?? null;
-        if (!capDeal) return null;
-        return (
+      {capDeal && (
           <div className={card}>
             <StageHeader n={0} title={`Capital deal ${capDeal.id}`} icon={Banknote}
               state={capDeal.status === 'approved' ? 'Awaiting funding' : capDeal.status} />
@@ -410,19 +432,39 @@ export function DealRoomStages({ submissionId, showChannelPicker }: {
               <button className={btnGhost} onClick={() => navigate(`/deals/${capDeal.id}`)}>Open deal →</button>
             </div>
           </div>
-        );
-      })()}
+      )}
 
-      {/* ── 6. Processor MPA + boarding ── */}
+      {/* ── Processor MPA + boarding ── */}
       <div className={card}>
-        <StageHeader n={6} title="Processor MPA & boarding" icon={FileSignature}
+        <StageHeader n={plan.numbers.mpa!}
+          title={sub.channel === 'Square' ? 'Square boarding (OrderOut)' : 'Processor MPA & boarding'}
+          icon={FileSignature}
           state={mpaApp ? mpaApp.status : 'not started'} />
         <MpaBoardingPanel submission={sub as DealSubmission} />
       </div>
 
-      {/* ── 7. Documents ── */}
+      {/* ── Add capital upgrade ── */}
+      {paymentsOnly && (
+        <div className={`${card} flex flex-wrap items-center justify-between gap-2`}>
+          <div>
+            <p className="text-xs font-semibold text-gray-700">Payments-only deal</p>
+            <p className="text-[11px] text-gray-400">
+              Want working capital too? Adding Delt Capital opens the funding application, underwriting, MCA and countersign stages.
+            </p>
+          </div>
+          <button className={btnSecondary}
+            onClick={() => {
+              if (!window.confirm('Add Delt Capital to this deal? This adds the funding application, underwriting, MCA and countersign stages, and updates the expected activation bonus.')) return;
+              void dealSubmissionActions.setWantsCapital(sub.id, true);
+            }}>
+            <Banknote className="w-3.5 h-3.5" /> Add Delt Capital
+          </button>
+        </div>
+      )}
+
+      {/* ── Documents ── */}
       <div className={card}>
-        <StageHeader n={7} title="Documents (ID, voided check, signed PDFs)" icon={ExternalLink} />
+        <StageHeader n={plan.numbers.documents!} title="Documents (ID, voided check, signed PDFs)" icon={ExternalLink} />
         <DealDocumentsPanel
           submissionId={sub.id}
           orgId={org?.id ?? ''}

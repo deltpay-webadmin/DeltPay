@@ -24,6 +24,7 @@ import {
   type PlaidInputs, type SubScoreBreakdown, type ScoringResult,
 } from '../underwritingScore';
 import { LeadProgressBar } from '../LeadProgressBar';
+import { stampVaultPull } from '../underwritingProvenance';
 
 // ══════════════════════════════════════════════════════════════
 // Delt liquid-glass design tokens (dark navy var(--dp-bg-card) / indigo #2E6BFF)
@@ -726,6 +727,7 @@ function ProspectDetail({
 
   const sendToUnderwriting = () => {
     if (!plaidInputs) return;
+    const uwNode = nodes.find(n => n.leadId === lead.id && n.docKind === 'underwriting_inputs') ?? null;
     const app = underwritingActions.create({
       businessName: lead.businessName,
       industry: lead.industry,
@@ -734,8 +736,14 @@ function ProspectDetail({
       avgDailyBalance: plaidInputs.avgDailyBalance,
       existingPositions: m?.detectedDebtPositions || 0,
       source: 'Plaid Vault',
+      leadId: lead.id,
     });
-    underwritingActions.updateInputs(app.id, { plaidInputs });
+    underwritingActions.updateInputs(app.id, {
+      plaidInputs: stampVaultPull(plaidInputs, {
+        pulledAt: uwNode?.data?.provenance?.generated_at,
+        leadId: lead.id,
+      }),
+    });
     toast.success(`${lead.businessName} sent to Underwriting as ${app.applicationId} with live Plaid cash-flow data.`);
   };
 

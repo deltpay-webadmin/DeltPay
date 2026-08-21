@@ -184,7 +184,7 @@ function LeadWorkspace({ lead }: { lead: Lead }) {
 
           {/* ── Deal ── */}
           {submission ? (
-            <DealRoomStages submissionId={submission.id} showChannelPicker />
+            <DealRoomStages submissionId={submission.id} />
           ) : (
             <div className={`${card} p-5 text-center`}>
               <p className="text-sm font-semibold text-gray-900">No deal started yet</p>

@@ -6,6 +6,8 @@ import {
   dealSubmissionActions,
   SUBMISSION_PIPELINE,
   BOARDING_CHANNELS,
+  productPath,
+  productPathLabel,
   type SubmissionStatus,
   type BoardingChannel,
   type DealSubmission,
@@ -212,6 +214,9 @@ export function BackendAgentDesk() {
                             {s.channel && (
                               <span className="px-1.5 py-0.5 text-[10px] font-semibold rounded bg-gray-100 text-gray-600 border border-gray-200">{s.channel}</span>
                             )}
+                            <span className={`px-1.5 py-0.5 text-[10px] font-semibold rounded border ${
+                              s.wantsCapital ? 'bg-indigo-50 text-indigo-600 border-indigo-200' : 'bg-gray-100 text-gray-600 border-gray-200'
+                            }`}>{productPathLabel(productPath(s))}</span>
                           </p>
                           <p className="text-[11px] text-gray-400 pl-5">
                             {s.vertical}{s.wantsPos ? ' · POS' : ''}{s.wantsCapital ? ' · Capital' : ''}
