@@ -73,7 +73,8 @@ All residual lines below are modeled at the **Tier 1 (50%)** split with $45/acco
 **Active Producer** = 3 or more activations in the trailing 90 days. Perks pause when status lapses and resume when you're back in production.
 
 - **Closer support (first 90 days):** bring a live merchant to the table and a senior closer joins the call with you. You keep the full commission.
-- **Weekly live deal lab** with the founding team — real deals, pricing, objections.
+- **Weekly live training** — products, sales skills, prospecting, and a deal lab with the founding team.
+- **Lead flow for producers:** inbound merchants from Delt's referral program and website are distributed to producing agents. `[FOUNDER TO CONFIRM distribution policy]`
 - **Delt for your own business, free** while active — including a website on our platform.
 - **Delt gear kit** at your first activation; Account Manager title, @delt email, and business cards at signup.
 - **Wellness package:** gym membership reimbursed up to $15/mo (Planet Fitness/Youfit tier), telehealth membership, and healthcare enrollment support for finding your own coverage.
