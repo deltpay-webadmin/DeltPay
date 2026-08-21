@@ -96,7 +96,7 @@ Our stated company value is: *"We tell merchants the truth about fees, terms, an
 ## 8. Open decisions for the founder
 
 1. ~~Tier promotion criteria~~ **Resolved:** 15+ active accounts → Tier 2, 35+ → Tier 3 (live in the agent portal)
-2. Delt Capital commission: confirm the 3%-of-funded-amount rate and renewal terms, and whether the portal's +$100 Capital attach kicker stacks with it or is absorbed
+2. ~~Delt Capital commission~~ **Resolved:** 3% of funded amount, renewals included, now live in the portal comp module; it stacks with the +$100 attach kicker (the kicker rides on the activation bonus, the 3% on the funding — different events)
 3. Referral Partner track: confirm the 15% lifetime rate and re-sign behavior
 4. Closer-on-call and weekly deal lab: confirm founder/senior capacity to staff both
 5. Lead-distribution policy for inbound referrals (who qualifies as "producing")

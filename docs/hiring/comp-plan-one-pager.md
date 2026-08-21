@@ -22,7 +22,7 @@
    Bands for $400+ bonuses are confirmed by the merchant's first full month of actual processing.
 
 2. **Lifetime residual split** — your percentage of Delt's net monthly program revenue on every account you sign, for as long as the merchant processes with Delt.
-3. **Delt Capital commission: 3% of every funded amount.** `[FOUNDER TO CONFIRM rate and renewal terms]` A $50,000 funding pays you $1,500; renewals pay at the same rate. Paid on the next 15th after the deal funds.
+3. **Delt Capital commission: 3% of every funded amount.** A $50,000 funding pays you $1,500; renewals pay at the same rate. Paid on the next 15th after the deal funds, on top of the attach kicker.
 4. **Fast Start milestones** (first 90 days, one-time, $1,500 lifetime cap):
    - 3 activations in your first 30 days → **+$500**
    - 10 activations in your first 90 days → **+$1,000**
