@@ -7,9 +7,12 @@ import {
   estMonthlyNetRevenue,
   estFirstYearResidual,
   quarterOf,
+  capitalCommission,
   BONUS_BANDS,
   MULTI_PRODUCT_KICKER,
   TIERS,
+  RECRUITING_OVERRIDE,
+  REFERRAL_PARTNER_SPLIT,
 } from '../agentComp';
 
 describe('activation bonus bands', () => {
@@ -72,6 +75,21 @@ describe('residual estimates', () => {
 
   it('first-year residual is 12 months at the Tier 1 split', () => {
     expect(estFirstYearResidual(12_500)).toBe(Math.round(100 * 0.5 * 12));
+  });
+});
+
+describe('capital commission and partner programs', () => {
+  it('pays 3% of the funded amount, as the posting promises', () => {
+    expect(capitalCommission(50_000)).toBe(1_500);
+    expect(capitalCommission(10_000)).toBe(300);
+    expect(capitalCommission(0)).toBe(0);
+  });
+
+  it('override and referral terms match the posting', () => {
+    expect(RECRUITING_OVERRIDE.rate).toBe(0.1);
+    expect(RECRUITING_OVERRIDE.recruitBonus).toBe(250);
+    expect(RECRUITING_OVERRIDE.recruitBonusAtActivations).toBe(5);
+    expect(REFERRAL_PARTNER_SPLIT).toBe(0.15);
   });
 });
 

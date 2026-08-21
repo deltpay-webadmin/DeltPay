@@ -15,7 +15,7 @@ export const BONUS_BANDS: { maxVolume: number; bonus: number; label: string }[] 
   { maxVolume: Infinity, bonus: 1_000, label: '$100K+' },
 ];
 
-/** Extra bonus when the account also takes KORONA POS or Delt Capital. */
+/** Extra bonus when the account also takes POS or Delt Capital. */
 export const MULTI_PRODUCT_KICKER = 100;
 
 export function activationBonus(monthlyVolume: number, multiProduct: boolean): number {
@@ -65,8 +65,26 @@ export const FAST_START = {
   cap: 1_500,
 };
 
-/** Momentum kicker: 8+ activations in a calendar month → +$50 retro per activation. */
-export const MOMENTUM_KICKER = { activations: 8, perDeal: 50 };
+/**
+ * Delt Capital commission: agents earn a % of every funded amount, renewals
+ * included, paid on the next 15th after funding. Stacks with the $100
+ * multi-product attach kicker on the activation bonus.
+ */
+export const CAPITAL_COMMISSION_RATE = 0.03;
+
+export function capitalCommission(fundedAmount: number): number {
+  return Math.round(fundedAmount * CAPITAL_COMMISSION_RATE);
+}
+
+/**
+ * Recruiting override (Sub-ISO track): 10% of a personally-recruited agent's
+ * net residual production, paid from Delt's share — single level only —
+ * plus a one-time bonus when the recruit reaches their 5th activation.
+ */
+export const RECRUITING_OVERRIDE = { rate: 0.1, recruitBonus: 250, recruitBonusAtActivations: 5 };
+
+/** Referral Partner track: non-selling referrers earn this share of net program revenue for the life of the account. */
+export const REFERRAL_PARTNER_SPLIT = 0.15;
 
 /** Active Producer status gates the wellness perks. */
 export const ACTIVE_PRODUCER = { activations: 3, windowDays: 90 };

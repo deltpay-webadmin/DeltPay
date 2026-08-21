@@ -13,7 +13,15 @@ import {
 } from 'lucide-react';
 import { useAppNavigate } from '../NavigationContext';
 import { OBJECTIONS } from './BackendCostCalculator';
-import { BONUS_BANDS, MULTI_PRODUCT_KICKER, TIERS, FAST_START, fmtUsd } from '../agentComp';
+import {
+  BONUS_BANDS,
+  MULTI_PRODUCT_KICKER,
+  TIERS,
+  FAST_START,
+  CAPITAL_COMMISSION_RATE,
+  RECRUITING_OVERRIDE,
+  fmtUsd,
+} from '../agentComp';
 
 const CHECKLIST_KEY = 'delt-agent-certification';
 
@@ -208,7 +216,7 @@ export function AgentResources() {
         <div className="px-5 py-4 border-b border-gray-200">
           <h2 className="text-lg font-semibold text-gray-900">Your Program at a Glance</h2>
         </div>
-        <div className="p-5 grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <div className="p-5 grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-5">
           <div>
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Activation bonuses</p>
             <table className="w-full text-sm">
@@ -255,6 +263,26 @@ export function AgentResources() {
               </tbody>
             </table>
             <p className="text-[11px] text-gray-400 mt-2">Full terms are in your agent agreement and comp plan.</p>
+          </div>
+          <div>
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Capital &amp; team building</p>
+            <table className="w-full text-sm">
+              <tbody className="divide-y divide-gray-100">
+                <tr>
+                  <td className="py-1.5 text-gray-600">Delt Capital fundings</td>
+                  <td className="py-1.5 text-right font-semibold text-gray-900">{Math.round(CAPITAL_COMMISSION_RATE * 100)}% of funded amount</td>
+                </tr>
+                <tr>
+                  <td className="py-1.5 text-gray-600">Recruited agent's residuals</td>
+                  <td className="py-1.5 text-right font-semibold text-gray-900">{Math.round(RECRUITING_OVERRIDE.rate * 100)}% override</td>
+                </tr>
+                <tr>
+                  <td className="py-1.5 text-gray-600">Recruit's {RECRUITING_OVERRIDE.recruitBonusAtActivations}th activation</td>
+                  <td className="py-1.5 text-right font-semibold text-indigo-600">+{fmtUsd(RECRUITING_OVERRIDE.recruitBonus)}</td>
+                </tr>
+              </tbody>
+            </table>
+            <p className="text-[11px] text-gray-400 mt-2">Capital renewals pay too. Overrides come from Delt's share — never your recruit's.</p>
           </div>
         </div>
       </div>
