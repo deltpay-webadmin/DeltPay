@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { toast } from 'sonner@2.0.3';
+import { contractActions } from '../contractsStore';
 import {
   Users,
   DollarSign,
@@ -227,7 +228,7 @@ export function BackendAgents() {
     ? Math.round(activeWithDeals.reduce((s, a) => s + (a.dealsFunded / Math.max(a.merchants, 1)) * 100, 0) / activeWithDeals.length)
     : 0;
 
-  const handleOnboard = (a: { name: string; email: string; phone: string; type: 'W-2' | 'Sub-ISO'; tier: string }) => {
+  const handleOnboard = (a: { name: string; email: string; phone: string; type: 'W-2' | 'Sub-ISO'; tier: string; sendAgreement: boolean }) => {
     const created: Agent = {
       id: `AGT-${String(agentList.length + 1).padStart(3, '0')}`,
       name: a.name,
@@ -248,6 +249,12 @@ export function BackendAgents() {
     setAgentList(prev => [created, ...prev]);
     setOnboardOpen(false);
     toast.success(`${created.name} onboarded`, { description: `${created.id} · ${created.commissionTier}` });
+    if (a.sendAgreement) {
+      // Envelope: Agreement + Schedule A/B + ACH tabs; countersign lands in
+      // Documents → the contract row is kind 'agent_agreement'.
+      void contractActions.sendAgentAgreement({ agentName: created.name, agentEmail: created.email, agentId: created.id })
+        .catch(() => {/* toast already raised by the store */});
+    }
   };
 
   const filtered = agentList.filter(a => {
@@ -1056,13 +1063,14 @@ function OnboardAgentModal({
   onCreate,
 }: {
   onClose: () => void;
-  onCreate: (a: { name: string; email: string; phone: string; type: 'W-2' | 'Sub-ISO'; tier: string }) => void;
+  onCreate: (a: { name: string; email: string; phone: string; type: 'W-2' | 'Sub-ISO'; tier: string; sendAgreement: boolean }) => void;
 }) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [type, setType] = useState<'W-2' | 'Sub-ISO'>('W-2');
   const [tier, setTier] = useState('Tier 1 — 50% Split');
+  const [sendAgreement, setSendAgreement] = useState(true);
 
   const inputCls =
     'w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-[8px] text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500';
@@ -1070,7 +1078,7 @@ function OnboardAgentModal({
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !email.trim()) return;
-    onCreate({ name: name.trim(), email: email.trim(), phone: phone.trim() || '—', type, tier });
+    onCreate({ name: name.trim(), email: email.trim(), phone: phone.trim() || '—', type, tier, sendAgreement });
   };
 
   return (
@@ -1112,6 +1120,13 @@ function OnboardAgentModal({
               </select>
             </div>
           </div>
+          <label className="flex items-start gap-2 pt-1 cursor-pointer">
+            <input type="checkbox" checked={sendAgreement} onChange={e => setSendAgreement(e.target.checked)} className="mt-0.5 accent-indigo-600" />
+            <span className="text-[12px] text-gray-600">
+              <span className="font-medium text-gray-800">Send the agent agreement for e-signature now</span><br />
+              One DocuSign envelope: Agreement + fee schedule + comp plan + direct-deposit (ACH) authorization. Banking details are collected inside DocuSign and never stored in the CRM.
+            </span>
+          </label>
           <p className="text-[11px] text-gray-400">New agents start Active on the selected tier with an empty book. Agreement date is set to today.</p>
         </div>
         <div className="px-5 py-3 border-t border-gray-200 bg-gray-50 flex items-center justify-end gap-2">

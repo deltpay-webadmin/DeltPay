@@ -40,7 +40,7 @@ This Independent Sales Agent Agreement (the "Agreement") is entered into as of t
 
 3.4 **Residuals; survival.** Agent's residual entitlement on an account continues **for as long as that merchant continues processing with Delt**, including after this Agreement ends, provided this Agreement was not terminated for cause under Section 8.3 and Agent remains in compliance with Sections 5 (Confidentiality) and 6 (Non-Solicitation). Residuals are calculated on Delt's net program revenue as defined in Schedule A.
 
-3.5 **Prospective changes only.** Delt may amend Schedule B on thirty (30) days' written notice. Amendments apply prospectively only: they do not reduce Agent's residual split percentage or residual entitlement on accounts activated before the amendment's effective date. Schedule A reflects third-party costs: its items adjust automatically to the actual costs imposed by card networks, processors, and bank sponsors, and are passed through at cost with no Delt markup.
+3.5 **Prospective changes only.** Delt may amend Schedule B on thirty (30) days' written notice. Amendments apply prospectively only: they do not reduce Agent's residual split percentage or residual entitlement on accounts activated before the amendment's effective date. Delt may adjust Schedule A on thirty (30) days' written notice, including to reflect changes in card-network, processor, or bank-sponsor costs; interchange, dues, and assessments always remain pass-through.
 
 3.6 **Taxes.** Agent is responsible for all federal, state, and local taxes on amounts paid under this Agreement, including self-employment taxes. Agent will provide a completed IRS Form W-9 before first payment; Delt will issue Form 1099-NEC as required.
 
@@ -102,37 +102,37 @@ Except for indemnification obligations and breaches of Sections 5 and 6, neither
 
 "Gross Program Revenue" on an account means all discount, transaction, monthly, service, and program revenue Delt collects from that merchant.
 
-### A-2. Net Program Revenue — the 100% basis
+### A-2. Net Program Revenue
 
-"Net Program Revenue" means Gross Program Revenue minus only: (i) interchange, dues, assessments, and card-network pass-through charges; (ii) the processor / bank-sponsor cost-basis fees in A-3; (iii) any bank-sponsor revenue share applicable to the account's program; and (iv) direct third-party costs on the account (gateway, wireless vendor, PCI program). **Agent's residual split under Schedule B applies to one hundred percent (100%) of Net Program Revenue. Delt retains no additional margin, markup, or reserve ahead of the split.**
+"Net Program Revenue" means Gross Program Revenue minus only: (i) interchange, dues, assessments, and card-network pass-through charges; (ii) the processor / bank-sponsor cost-basis fees in A-3; (iii) any bank-sponsor revenue share applicable to the account's program; and (iv) direct third-party costs on the account (gateway, wireless vendor, PCI program). Agent's residual split under Schedule B applies to the full amount of Net Program Revenue so calculated.
 
-### A-3. Cost-basis fee schedule (as of the Effective Date)
+### A-3. Fee schedule — Agent buy rates (as of the Effective Date) `[FOUNDER TO CONFIRM markup levels]`
 
 | Item | Standard portfolio | High-risk portfolio |
 |---|---|---|
 | Bank-sponsor revenue share | 10% of program revenue | 30%–50% of program revenue |
-| BIN sponsorship | 0.02% of volume | 0.10%–0.25% of volume |
+| BIN sponsorship | 0.05% of volume | 0.15%–0.30% of volume |
 | Interchange, dues & assessments (all cards) | Pass-through | Pass-through |
-| Card transaction (auth & capture) | $0.02 | $0.05–$0.10 |
-| PIN debit / EBT transaction | $0.02 | $0.05–$0.10 |
-| Batch | $0.02 | $0.05–$0.10 |
-| AVS (electronic) | $0.05 | $0.10 |
-| Chargeback | $10.00 | $15.00–$30.00 |
-| Retrieval | $7.00 | $10.00–$15.00 |
-| Account on file (monthly) | $5.00 | $8.00–$10.00 |
-| IRS regulatory (monthly) | $2.00 | $4.00–$5.00 |
-| Risk monitoring (monthly) | — | 0.10%–0.15% of volume |
+| Card transaction (auth & capture) | $0.05 | $0.08–$0.15 |
+| PIN debit / EBT transaction | $0.05 | $0.08–$0.15 |
+| Batch | $0.05 | $0.10 |
+| AVS (electronic) | $0.10 | $0.15 |
+| Chargeback | $25.00 | $35.00 |
+| Retrieval | $15.00 | $20.00 |
+| Account on file (monthly) | $7.50 | $10.00–$12.50 |
+| IRS regulatory (monthly) | $3.95 | $5.95 |
+| Risk monitoring (monthly) | — | 0.15%–0.20% of volume |
 | Monthly minimum (cost) | — | $50.00 |
-| Annual PCI (with breach insurance) | $36.00 ($79.00) | $36.00 ($79.00) |
-| Gateway (monthly / per transaction) | $10.00 / $0.10 | $10.00 / $0.10 |
+| Annual PCI (with breach insurance) | $59.00 ($99.00) | $59.00 ($99.00) |
+| Gateway (monthly / per transaction) | $12.50 / $0.15 | $12.50 / $0.15 |
 
 ### A-4. Petroleum portfolio
 
 Accounts boarded on the petroleum program carry a bank-sponsor revenue share of 15% and that sponsor's published buy rates in lieu of the A-3 table.
 
-### A-5. Adjustments at cost
+### A-5. Adjustments
 
-A-3 items track actual third-party costs. Changes imposed by card networks, processors, or bank sponsors flow through at cost, with no Delt markup, effective when imposed.
+Delt may adjust A-3 items on thirty (30) days' written notice, including to reflect changes imposed by card networks, processors, or bank sponsors. Interchange, dues, and assessments always remain pass-through at actual cost.
 
 ### A-6. Risk pass-throughs
 

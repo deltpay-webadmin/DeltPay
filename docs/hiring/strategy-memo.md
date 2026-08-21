@@ -70,6 +70,25 @@ Everything in the posting maps to something that exists. That's the point — bu
 
 A second door for people who will never run a pipeline but know merchants: they make the introduction, we close, they earn **15% of net program revenue for the life of the account.** Why it works economically: 15% is paid only on revenue that would not exist without the referral, and it costs less than half of an agent's Tier 1 split while our team does work it already knows how to do. Why it works for recruiting: it monetizes the large pool of Indeed applicants who like the residual story but fail the "can you prospect" filter — instead of rejecting them, we convert them into a channel. It also gives active agents a clean answer for friends who "know a guy" but won't sell, keeping every referral inside our fence. Keep the two tracks visibly distinct: an agent *sells* at 50–70%; a referral partner *introduces* at 15%. A referral partner can upgrade to agent at any time; nobody holds both rates on the same account. `[FOUNDER TO CONFIRM 15% rate and whether it survives merchant re-signs]`
 
+### Schedule A markup — internal economics (never share)
+
+The agent agreement's Schedule A buy rates are marked up above our true sponsor costs; the spread is house margin earned before the residual split. Interchange/dues/assessments stay true pass-through (marking up "pass-through" items would make that word a lie). True cost vs. agent buy rate (standard portfolio):
+
+| Item | Our cost (Luqra) | Agent buy rate | Spread |
+|---|---|---|---|
+| BIN sponsorship | 0.02% | 0.05% | 0.03% of volume |
+| Card / PIN debit / EBT transaction | $0.02 | $0.05 | $0.03/txn |
+| Batch | $0.02 | $0.05 | $0.03 |
+| AVS electronic | $0.05 | $0.10 | $0.05 |
+| Chargeback | $10.00 | $25.00 | $15.00 |
+| Retrieval | $7.00 | $15.00 | $8.00 |
+| Account on file (mo) | $5.00 | $7.50 | $2.50/mo |
+| IRS regulatory (mo) | $2.00 | $3.95 | $1.95/mo |
+| Annual PCI (w/ breach) | $36 ($79) | $59 ($99) | $23 ($20)/yr |
+| Gateway (mo / txn) | $10.00 / $0.10 | $12.50 / $0.15 | $2.50/mo + $0.05/txn |
+
+`[FOUNDER TO CONFIRM markup levels]` Rough spread on a typical SMB (1,000 txns/mo): ~$30/txn-side + ~$5 monthly ≈ **$35–40/mo house margin per account before the split** — on top of Delt's residual share. Discipline: because of the markup, no agent-facing document may claim "at cost," "no markup," or "100% of what Delt makes" — the honest claim is "every deduction is listed in Schedule A and itemized on your statement." The sponsor revenue-share lines (10% standard / 15% petroleum / 30–50% high-risk) are stated at actual.
+
 ## 6. Honesty as strategy — and what we will NOT promise
 
 Our stated company value is: *"We tell merchants the truth about fees, terms, and eligibility — even when it costs us the deal."* The posting weaponizes this: the "we'll be straight with you" paragraph converts a legal obligation (comp disclosure) into a differentiator against the hype-saturated ISO postings ours will sit next to. Experienced reps have been burned; the honest posting is the pattern-break.

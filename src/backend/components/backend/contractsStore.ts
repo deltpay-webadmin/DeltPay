@@ -341,6 +341,31 @@ export const contractActions = {
     }
   },
 
+  /** Send the agent onboarding paper for e-signature: Agreement + Schedule A
+   * (buy rates) + Schedule B (comp plan) + ACH authorization, one envelope.
+   * The agent's banking details are DocuSign-required tabs and stay in the
+   * envelope — they never reach this store or the database. */
+  async sendAgentAgreement(req: { agentName: string; agentEmail: string; agentId?: string }): Promise<Contract> {
+    markBusy('send', true);
+    try {
+      const json = await callDocusign({ action: 'send-agent-agreement', ...req });
+      const contract = fromDb(json.contract);
+      const exists = state.contracts.some(c => c.id === contract.id);
+      set({
+        contracts: exists
+          ? state.contracts.map(c => (c.id === contract.id ? contract : c))
+          : [contract, ...state.contracts],
+      });
+      toast.success(`Agent agreement sent to ${req.agentEmail} for signature.`);
+      return contract;
+    } catch (err: any) {
+      toast.error(`Send failed: ${err.message}`);
+      throw err;
+    } finally {
+      markBusy('send', false);
+    }
+  },
+
   /** Send the Delt Capital funding application (Form DLT-APP) from a deal
    * submission for e-signature — owner + submitting rep both sign. */
   async sendApplication(req: {

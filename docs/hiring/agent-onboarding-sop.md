@@ -16,12 +16,13 @@ The pipeline: **Applied → Screened → Interviewed → Offer sent → Signed �
 2. Strong candidate → send `Delt-Agent-Compensation-Plan.docx` the same day, with a note to run the math and bring questions.
 3. Second short call only if they had real questions. Decide within 48 hours — good commission reps get scooped.
 
-## Stage 3 — Offer and signature (owner: David)
+## Stage 3 — Offer and signature (owner: David; runs in the CRM)
 
-1. Send `Delt-Sales-Agent-Agreement.docx` **via the e-sign flow, never as an email attachment they print** — the signature page collects banking details (see Stage 4 handling rules).
-2. One signature executes everything: Agreement + Schedule A (fee schedule) + Schedule B (comp plan) + ACH authorization.
-3. With the agreement, request the **W-9**. Rule with no exceptions: **no W-9 on file = no payout**, ever. Chase it at signing, not at the first payment run.
-4. Countersign (David) and file the executed copy.
+1. CRM → **Agents → Onboard Agent**: enter name/email, leave "Send the agent agreement for e-signature now" checked. This creates the DocuSign envelope automatically — Agreement + Schedule A (fee schedule) + Schedule B (comp plan) + ACH authorization, one signature. Never send the Word file as an email attachment.
+2. The ACH fields (bank, routing, account) are **required DocuSign tabs** — the agent cannot finish signing without them, and the details stay inside the DocuSign envelope (never stored in the CRM database).
+3. After the agent signs, countersign from the CRM (Documents → the agent_agreement contract → Countersign now). The executed PDF in DocuSign is the system of record; pull banking details from it into the payout system only.
+4. With the agreement, request the **W-9**. Rule with no exceptions: **no W-9 on file = no payout**, ever. Chase it at signing, not at the first payment run.
+5. Envelope reminders run automatically (every 2 days, expires at 14). Unsigned after a week → David calls.
 
 ## Stage 4 — Banking + tax data handling (owner: whoever touches payouts)
 
