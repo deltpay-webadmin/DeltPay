@@ -33,7 +33,8 @@ Advertised framing: **"Start at a 50% split. Earn your way to 70."**
 
 A flat bonus has two motivational failures: it is *certain* (no anticipation, no chase) and *flat across deal sizes* (no reason to hunt large merchants). The structure fixes both while holding one discipline constant: **every bonus ≈ ~2 months of that account's expected net program revenue**, so bigger bonuses are funded by the bigger deals that earn them.
 
-- **Volume-banded bonus** ($150 / $250 / $400 / $600 / $1,000 by the same volume bands used in our pricing programs, +$100 POS/Capital kicker): transforms the advertised headline from "$150 per account" to "**$150 to $1,000+ per account**" at no change to payback economics, and aims agents at the high-revenue, low-attrition merchants we want most. Anchor check: the merchant referral program pays ordinary referrers $100 — the agent floor at $150 stays internally consistent. Anti-gaming: bands ≥$400 confirmed by first full month of actual processing.
+- **Volume-banded bonus** ($150 / $250 / $400 / $600 / $1,000 by the same volume bands used in our pricing programs): transforms the advertised headline from "$150 per account" to "**$150 to $1,000+ per account**" at no change to payback economics, and aims agents at the high-revenue, low-attrition merchants we want most. Anchor check: the merchant referral program pays ordinary referrers $100 — the agent floor at $150 stays internally consistent. Anti-gaming: bands ≥$400 confirmed by first full month of actual processing.
+- **Delt Capital commission: 3% of funded amount** `[FOUNDER TO CONFIRM rate + renewals]` — replaces the old flat +$100 kicker, which was insultingly low next to industry norms: MCA brokers earn 5–12 points on deals they price and paper themselves. Our agents refer into our own capital product and we do the underwriting, so 3 points is competitive for the work asked while staying far inside product margin. It also converts the residual book into a second earnings engine — renewals mean an agent's existing merchants keep paying capital commissions without new selling, which is the "compounding" story made literal. KORONA POS is dropped from the comp structure entirely: one more SKU in the pitch diluted the story, and the $100 kicker moved no behavior.
 - **Fast Start milestones** ($500 for 3 activations in 30 days; $1,000 for 10 in 90; $1,500 lifetime cap): targets the day-30-to-90 valley where commission agents quit. Worst case is known ($1,500) and is only ever paid to an agent who activated 10 real accounts. This is also the answer to the fatal objection — *"I can't wait six months to eat"* — a target-pace agent's month one is now ~$2,000, not ~$900.
 - **Momentum kicker** (8+ activations in a month → +$50 retroactive on every activation that month): retroactive unlocks exploit the goal-gradient effect and loss aversion — an agent at 6 deals on the 25th is chasing +$400 across the whole month, not the next $150. It's self-managing urgency.
 - **Never pay on deal submission** — that buys junk applications and dead accounts. The excitement-at-submission problem is solved in the portal instead: a pipeline tracker (Submitted → Approved → Activated → Paid) showing "pending earnings" (expected bonus + estimated first-year residual) the moment a deal is submitted. Anticipation at submission, cash only at activation.
@@ -50,15 +51,24 @@ Everything in the posting maps to something that exists. That's the point — bu
 | 4 | Paid on the 15th, every month | $0 — it's just paying on time | High — *reliability* framing, not amount | Commission statements run on a 15th-of-month payout cycle |
 | 5 | Lifetime residuals, never clawed back | $0 cash today | **Highest** — ownership of the book is the whole game | Confirmed policy: residuals never clawed back; bonus clawback ≤90 days only |
 | 6 | Tier ladder + Sub-ISO team-building path | $0 | High — status + a future | 50/60/70 tiers and the Sub-ISO agent type exist in our systems today |
-| 7 | Multi-product commissions (processing, POS, Capital, websites) | $0 — revenue-share on revenue we want anyway | High | Agents are credited on funded Capital deals; POS and SaaS lines exist |
+| 7 | Delt Capital commissions (3% of funded amount, renewals included) | Points on margin we only earn when a deal funds | High — stacks a second income stream on the same book | Agents are credited on funded Capital deals today |
 | 8 | Inbound referral leads shared with producing agents | Low — leads we already generate | Medium — **must never be framed as guaranteed** | Merchant referral program generates inbound; distribution policy is ours to set |
-| 9 | Account Manager title, @delt email, business cards | ~$50/agent | Disproportionately high — legitimacy for a 1099 rep walking into a merchant | Trivial to provision |
+| 9 | Account Manager title, @delt email, business cards, gear kit | ~$50–$80/agent | Disproportionately high — legitimacy for a 1099 rep walking into a merchant | Trivial to provision |
 | 10 | President's Club: quarterly Miami dinner + leaderboard recognition with the founders for top producers | Low hundreds/quarter, budget-capped | **Very high** — status-per-dollar is unmatched in sales culture | Founder is in Miami; leaderboard is a small portal feature |
 | 11 | "Your schedule, your market, no quotas to keep your book" | $0 — and it's 1099-compliance-*required* anyway | Medium-high | Contractor autonomy is legally necessary (see §7) |
 | 12 | Wellness package: gym reimbursement (≤$15/mo, Planet Fitness/Youfit tier) + telehealth + healthcare enrollment support | ~$30/mo per Active Producer only | High — near-unique among 1099 sales roles; humanizes the package | Gated on production, so cost scales with the margin funding it |
 | 13 | Recruiting override: 10% of recruit's net residuals from house share + $250 at recruit's 5th activation | ~10 pts of house share on production that wouldn't otherwise exist | High — makes the Sub-ISO "build a team" promise concrete | Sub-ISO agent type exists in our systems; single-level only (see §6) |
+| 14 | Closer-on-call (first 90 days): senior closer joins the agent's live merchant calls | Founder/senior time only — and each joined call is a deal we want closed anyway | **Very high** — de-risks the scariest part of ramping; near-unique among ISOs | Small team can staff it while agent count is low `[FOUNDER TO CONFIRM capacity]` |
+| 15 | Weekly live deal lab with the founding team | ~1 hr/week of founder time, scales one-to-many | High — "training" that is actually deal support; builds community and retention | A recurring video call `[FOUNDER TO CONFIRM]` |
+| 16 | Delt free for the agent's own business (incl. website) while active | ~$0 marginal — our own platform | Medium-high — agents become users of what they sell (better demos, real conviction) | Software is ours; gate on Active Producer status |
+
+**Rows 14–16 are the "cheap benefits" engine:** each costs time or software we already own, and rows 14–15 pay for themselves — every supported call is a merchant we wanted closed regardless of who sourced it.
 
 **The unifying mechanic — Active Producer status (3+ activations in the trailing 90 days):** every recurring-cost perk hangs off this one definition. Perks pause when production lapses and resume on return, so cost scales automatically with the margin that funds it (~$30–35/mo perk cost vs. ~$270+/mo margin from a target-pace agent's book) — and *losing* a $15 gym perk nudges behavior harder than its dollar value suggests (loss aversion).
+
+### The Referral Partner track (15% for life, non-selling)
+
+A second door for people who will never run a pipeline but know merchants: they make the introduction, we close, they earn **15% of net program revenue for the life of the account.** Why it works economically: 15% is paid only on revenue that would not exist without the referral, and it costs less than half of an agent's Tier 1 split while our team does work it already knows how to do. Why it works for recruiting: it monetizes the large pool of Indeed applicants who like the residual story but fail the "can you prospect" filter — instead of rejecting them, we convert them into a channel. It also gives active agents a clean answer for friends who "know a guy" but won't sell, keeping every referral inside our fence. Keep the two tracks visibly distinct: an agent *sells* at 50–70%; a referral partner *introduces* at 15%. A referral partner can upgrade to agent at any time; nobody holds both rates on the same account. `[FOUNDER TO CONFIRM 15% rate and whether it survives merchant re-signs]`
 
 ## 6. Honesty as strategy — and what we will NOT promise
 
@@ -85,7 +95,9 @@ Our stated company value is: *"We tell merchants the truth about fees, terms, an
 ## 8. Open decisions for the founder
 
 1. Tier promotion criteria (placeholder: ~15 active accounts → Tier 2, ~35 → Tier 3)
-2. Add-on commission amounts for POS placements, Delt Capital fundings, and website/SaaS subs
-3. Lead-distribution policy for inbound referrals (who qualifies as "producing")
-4. Whether agents may carry non-competing product lines (see §7)
-5. Residual buyout / portability policy — say nothing until decided
+2. Delt Capital commission: confirm the 3%-of-funded-amount rate and renewal terms
+3. Referral Partner track: confirm the 15% lifetime rate and re-sign behavior
+4. Closer-on-call and weekly deal lab: confirm founder/senior capacity to staff both
+5. Lead-distribution policy for inbound referrals (who qualifies as "producing")
+6. Whether agents may carry non-competing product lines (see §7)
+7. Residual buyout / portability policy — say nothing until decided
