@@ -558,8 +558,11 @@ Deno.serve(async (req) => {
       email: agentEmail,
       roleName: "Agent",
       tabs: {
-        signHereTabs: [a("/agt_sig/")],
-        dateSignedTabs: [a("/agt_date/")],
+        // Two sign-heres: the agreement's signature page and the W-9
+        // certification (the IRS requires its own penalties-of-perjury
+        // signature). W-9 + ACH values live in the envelope only.
+        signHereTabs: [a("/agt_sig/"), a("/w9_sig/")],
+        dateSignedTabs: [a("/agt_date/"), a("/w9_date/")],
         fullNameTabs: [a("/agt_name/")],
         textTabs: [
           { ...achTab("/agt_addr/", "agent_address", 320, "true") },
@@ -568,6 +571,11 @@ Deno.serve(async (req) => {
           achTab("/agt_routing/", "ach_routing", 140, "true"),
           achTab("/agt_acct/", "ach_account", 160, "true"),
           achTab("/agt_acctname/", "ach_name_on_account", 260, "true"),
+          achTab("/w9_name/", "w9_name", 300, "true"),
+          achTab("/w9_biz/", "w9_business_name", 280, "false"),
+          achTab("/w9_class/", "w9_tax_classification", 220, "true"),
+          achTab("/w9_addr/", "w9_address", 340, "true"),
+          achTab("/w9_tin/", "w9_tin", 180, "true"),
         ],
       },
     };

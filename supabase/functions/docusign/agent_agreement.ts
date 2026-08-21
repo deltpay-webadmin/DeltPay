@@ -69,7 +69,7 @@ export function renderAgentAgreementHtml(f: AgentAgreementFields): string {
   <div style="font-size:19px;font-weight:bold;letter-spacing:2px;color:#121E3E;">DELT <span style="color:#4945FF;">PAY</span> LLC</div>
   <div style="font-size:10px;color:#4945FF;letter-spacing:1px;">deltpay.com &nbsp;·&nbsp; Miami, Florida</div>
   <div style="font-size:14px;font-weight:bold;margin-top:14px;color:#121E3E;">INDEPENDENT SALES AGENT AGREEMENT</div>
-  <div style="font-size:10px;color:#666;">Agreement &nbsp;·&nbsp; Schedule A (Fee Schedule) &nbsp;·&nbsp; Schedule B (Compensation Plan) &nbsp;·&nbsp; ACH Authorization</div>
+  <div style="font-size:10px;color:#666;">Agreement &nbsp;·&nbsp; Schedule A (Fee Schedule) &nbsp;·&nbsp; Schedule B (Compensation Plan) &nbsp;·&nbsp; Substitute W-9 &nbsp;·&nbsp; ACH Authorization</div>
 </div>
 
 ${p(`This Independent Sales Agent Agreement (the "Agreement") is entered into as of the date of last signature below (the "Effective Date") between <b>Delt Pay LLC</b>, a Florida limited liability company ("Delt"), and <b>${agent}</b> ("Agent").`)}
@@ -196,8 +196,37 @@ ${h3("B-7. Payment mechanics")}
 ${p(`Payments are made monthly on or about the 15th. Per-merchant statements are available in the agent portal. Clawbacks are limited to Section 3.3 of the Agreement.`)}
 
 <div style="page-break-before:always;"></div>
+${h2("EXHIBIT 1 — SUBSTITUTE FORM W-9 (Request for Taxpayer Identification Number and Certification)")}
+${p(`Agent is engaged as a 1099 independent contractor. Complete this substitute Form W-9 so Delt Pay LLC can report payments on Form 1099-NEC. Delt does not withhold taxes from contractor compensation. This information is used for tax reporting only.`)}
+<table style="width:100%;border-collapse:collapse;font-size:11px;margin:10px 0;">
+  <tr>
+    <td colspan="2" style="padding:7px 0;">1. Name (as shown on your income tax return): ${anchor("/w9_name/")}_______________________________________</td>
+  </tr>
+  <tr>
+    <td colspan="2" style="padding:7px 0;">2. Business name / disregarded entity name, if different: ${anchor("/w9_biz/")}_______________________________</td>
+  </tr>
+  <tr>
+    <td colspan="2" style="padding:7px 0;">3. Federal tax classification (Individual/sole proprietor, C corp, S corp, Partnership, LLC): ${anchor("/w9_class/")}__________________</td>
+  </tr>
+  <tr>
+    <td colspan="2" style="padding:7px 0;">4. Address (number, street, city, state, ZIP): ${anchor("/w9_addr/")}_______________________________________________</td>
+  </tr>
+  <tr>
+    <td colspan="2" style="padding:7px 0;">5. Taxpayer Identification Number (SSN or EIN): ${anchor("/w9_tin/")}______________________________</td>
+  </tr>
+</table>
+${h3("Certification")}
+${p(`Under penalties of perjury, I certify that: (1) the number shown on this form is my correct taxpayer identification number (or I am waiting for a number to be issued to me); (2) I am not subject to backup withholding because (a) I am exempt from backup withholding, or (b) I have not been notified by the Internal Revenue Service (IRS) that I am subject to backup withholding as a result of a failure to report all interest or dividends, or (c) the IRS has notified me that I am no longer subject to backup withholding; (3) I am a U.S. citizen or other U.S. person; and (4) the FATCA code(s) entered on this form (if any) indicating that I am exempt from FATCA reporting is correct.`)}
+<table style="width:100%;border-collapse:collapse;font-size:11px;">
+  <tr>
+    <td style="width:55%;padding:8px 0;">Signature of U.S. person: ${anchor("/w9_sig/")}________________________</td>
+    <td style="padding:8px 0;">Date: ${anchor("/w9_date/")}______________</td>
+  </tr>
+</table>
+
+<div style="page-break-before:always;"></div>
 ${h2("SIGNATURE PAGE — AGREEMENT AND SCHEDULES A &amp; B")}
-${p(`One signature below executes this Agreement together with Schedule A (Fee Schedule &amp; Net Program Revenue) and Schedule B (Compensation Plan).`)}
+${p(`One signature below executes this Agreement together with Schedule A (Fee Schedule &amp; Net Program Revenue), Schedule B (Compensation Plan), and Exhibit 1 (Substitute Form W-9).`)}
 
 ${h3("Direct Deposit (ACH) Authorization")}
 ${p(`Agent authorizes Delt Pay LLC to initiate ACH credits for all compensation to the account below, and to initiate correcting debits solely for credits made in error. Agent may change the deposit account through the agent portal or by written notice; changes take effect the next payment cycle. Banking details are collected and stored for payout purposes only.`)}

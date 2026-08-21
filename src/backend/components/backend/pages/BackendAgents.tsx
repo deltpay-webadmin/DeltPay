@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { toast } from 'sonner@2.0.3';
-import { contractActions } from '../contractsStore';
+import { contractActions, useContracts, type Contract } from '../contractsStore';
 import {
   Users,
   DollarSign,
@@ -55,7 +55,7 @@ interface Agent {
   agreementDate: string;
   commissionTier: string;
   initials: string;
-  type: 'W-2' | 'Sub-ISO';
+  type: '1099' | 'Sub-ISO' | 'W-2';
 }
 
 interface MerchantRow {
@@ -81,83 +81,21 @@ interface PipelineRow {
 }
 
 // ── Data ──
-const agents: Agent[] = [
-  { id: 'AGT-001', name: 'Marcus Johnson', email: 'marcus.j@deltpay.com', phone: '(555) 234-5678', status: 'Active', merchants: 14, monthlyVolume: 218500, dealsFunded: 6, commissionEarned: 6555, defaultRate: 4.2, lastActivity: '2 hours ago', agreementDate: 'Jan 15, 2024', commissionTier: 'Tier 3 — 70% Split', initials: 'MJ', type: 'W-2' },
-  { id: 'AGT-002', name: 'Sarah Kim', email: 'sarah.k@deltpay.com', phone: '(555) 345-6789', status: 'Active', merchants: 11, monthlyVolume: 174200, dealsFunded: 4, commissionEarned: 5226, defaultRate: 12.5, lastActivity: '5 hours ago', agreementDate: 'Mar 1, 2024', commissionTier: 'Tier 2 — 60% Split', initials: 'SK', type: 'W-2' },
-  { id: 'AGT-003', name: 'Devon Richards', email: 'devon.r@deltpay.com', phone: '(555) 456-7890', status: 'Active', merchants: 8, monthlyVolume: 132800, dealsFunded: 3, commissionEarned: 3984, defaultRate: 8.3, lastActivity: 'Yesterday', agreementDate: 'Jun 10, 2024', commissionTier: 'Tier 2 — 60% Split', initials: 'DR', type: 'Sub-ISO' },
-  { id: 'AGT-004', name: 'Priya Patel', email: 'priya.p@deltpay.com', phone: '(555) 567-8901', status: 'Probation', merchants: 5, monthlyVolume: 68400, dealsFunded: 1, commissionEarned: 1368, defaultRate: 22.0, lastActivity: '3 days ago', agreementDate: 'Sep 22, 2024', commissionTier: 'Tier 1 — 50% Split', initials: 'PP', type: 'W-2' },
-  { id: 'AGT-005', name: 'Jamal Foster', email: 'jamal.f@deltpay.com', phone: '(555) 678-9012', status: 'Active', merchants: 19, monthlyVolume: 295000, dealsFunded: 8, commissionEarned: 8850, defaultRate: 3.1, lastActivity: '1 hour ago', agreementDate: 'Nov 5, 2023', commissionTier: 'Tier 3 — 70% Split', initials: 'JF', type: 'Sub-ISO' },
-  { id: 'AGT-006', name: 'Lisa Tran', email: 'lisa.t@deltpay.com', phone: '(555) 789-0123', status: 'Inactive', merchants: 0, monthlyVolume: 0, dealsFunded: 0, commissionEarned: 0, defaultRate: 0, lastActivity: '45 days ago', agreementDate: 'Feb 14, 2025', commissionTier: 'Tier 1 — 50% Split', initials: 'LT', type: 'W-2' },
-];
+// Real agents only. No demo seeds — the roster starts empty and fills from onboarding.
+const agents: Agent[] = [];
 
-const merchantPortfolios: Record<string, MerchantRow[]> = {
-  'AGT-001': [
-    { name: 'Metro Diner Group', volume: 42000, mcaStatus: 'Current', type: 'MCA' },
-    { name: 'Bright Auto Sales', volume: 38000, mcaStatus: 'Current', type: 'Residual' },
-    { name: 'Sunset Logistics LLC', volume: 31500, mcaStatus: 'Delinquent', type: 'MCA' },
-    { name: 'Peak Construction Co', volume: 52000, mcaStatus: 'Current', type: 'Lease' },
-    { name: 'Apex Fitness Studio', volume: 28000, mcaStatus: 'Current', type: 'MCA' },
-    { name: 'Riverdale Dental Care', volume: 27000, mcaStatus: 'Pending', type: 'MCA' },
-  ],
-  'AGT-005': [
-    { name: 'Bay Area Plumbing', volume: 55000, mcaStatus: 'Current', type: 'MCA' },
-    { name: 'Greenfield Markets', volume: 48000, mcaStatus: 'Current', type: 'Residual' },
-    { name: 'Coastal Seafood Inc', volume: 62000, mcaStatus: 'Current', type: 'MCA' },
-    { name: 'Summit HVAC Services', volume: 45000, mcaStatus: 'Current', type: 'Lease' },
-    { name: 'Downtown Auto Body', volume: 38000, mcaStatus: 'Delinquent', type: 'MCA' },
-    { name: 'Lakeside Catering', volume: 47000, mcaStatus: 'Current', type: 'Residual' },
-  ],
-};
+const merchantPortfolios: Record<string, MerchantRow[]> = {};
 
-const commissionHistories: Record<string, CommissionHistoryRow[]> = {
-  'AGT-001': [
-    { month: 'April 2026', earned: 6555, deals: 5, status: 'Pending', paidDate: 'Apr 15, 2026' },
-    { month: 'March 2026', earned: 5820, deals: 4, status: 'Paid', paidDate: 'Mar 15, 2026' },
-    { month: 'February 2026', earned: 4290, deals: 3, status: 'Paid', paidDate: 'Feb 15, 2026' },
-    { month: 'January 2026', earned: 7110, deals: 6, status: 'Paid', paidDate: 'Jan 15, 2026' },
-    { month: 'December 2025', earned: 3680, deals: 3, status: 'Paid', paidDate: 'Dec 15, 2025' },
-  ],
-  'AGT-005': [
-    { month: 'April 2026', earned: 8850, deals: 8, status: 'Pending', paidDate: 'Apr 15, 2026' },
-    { month: 'March 2026', earned: 7420, deals: 7, status: 'Paid', paidDate: 'Mar 15, 2026' },
-    { month: 'February 2026', earned: 6105, deals: 5, status: 'Paid', paidDate: 'Feb 15, 2026' },
-    { month: 'January 2026', earned: 8310, deals: 8, status: 'Paid', paidDate: 'Jan 15, 2026' },
-    { month: 'December 2025', earned: 5900, deals: 5, status: 'Paid', paidDate: 'Dec 15, 2025' },
-  ],
-};
+const commissionHistories: Record<string, CommissionHistoryRow[]> = {};
 
-const pipelineData: Record<string, PipelineRow[]> = {
-  'AGT-001': [
-    { leadName: 'Sunrise Cafe LLC', status: 'In Review', amount: 60000, submitted: 'Apr 5, 2026' },
-    { leadName: 'Harbor Marine Supply', status: 'New', amount: 85000, submitted: 'Apr 7, 2026' },
-    { leadName: 'Greenfield Markets', status: 'Declined', amount: 40000, submitted: 'Mar 28, 2026' },
-    { leadName: 'Atlas Transport Co', status: 'Approved', amount: 120000, submitted: 'Apr 1, 2026' },
-    { leadName: 'Metro Diner Group', status: 'Funded', amount: 75000, submitted: 'Mar 15, 2026' },
-  ],
-  'AGT-005': [
-    { leadName: 'Pacific Coast Roofing', status: 'In Review', amount: 95000, submitted: 'Apr 6, 2026' },
-    { leadName: 'Redwood Landscaping', status: 'New', amount: 45000, submitted: 'Apr 8, 2026' },
-    { leadName: 'Coastal Seafood Inc', status: 'Funded', amount: 62000, submitted: 'Mar 20, 2026' },
-    { leadName: 'Summit HVAC Services', status: 'Funded', amount: 45000, submitted: 'Mar 10, 2026' },
-    { leadName: 'Pine Valley Farms', status: 'Approved', amount: 70000, submitted: 'Apr 3, 2026' },
-  ],
-};
+const pipelineData: Record<string, PipelineRow[]> = {};
 
-// Default data for agents without specific entries
-const defaultMerchants: MerchantRow[] = [
-  { name: 'Sample Merchant A', volume: 35000, mcaStatus: 'Current', type: 'MCA' },
-  { name: 'Sample Merchant B', volume: 28000, mcaStatus: 'Current', type: 'Residual' },
-];
+// Agents without recorded data show empty tables — never sample rows.
+const defaultMerchants: MerchantRow[] = [];
 
-const defaultCommHistory: CommissionHistoryRow[] = [
-  { month: 'April 2026', earned: 2100, deals: 2, status: 'Pending', paidDate: 'Apr 15, 2026' },
-  { month: 'March 2026', earned: 1850, deals: 2, status: 'Paid', paidDate: 'Mar 15, 2026' },
-];
+const defaultCommHistory: CommissionHistoryRow[] = [];
 
-const defaultPipeline: PipelineRow[] = [
-  { leadName: 'New Lead A', status: 'New', amount: 50000, submitted: 'Apr 5, 2026' },
-  { leadName: 'Lead In Review', status: 'In Review', amount: 35000, submitted: 'Apr 2, 2026' },
-];
+const defaultPipeline: PipelineRow[] = [];
 
 const fmt = (n: number) => n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
 const fmtFull = (n: number) => n.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 });
@@ -208,6 +146,118 @@ const avgConversion = activeWithDeals.length > 0
   ? Math.round(activeWithDeals.reduce((s, a) => s + (a.dealsFunded / Math.max(a.merchants, 1)) * 100, 0) / activeWithDeals.length)
   : 0;
 
+
+// ── Agent-agreement envelope tracking (contracts, kind 'agent_agreement') ──
+// The contract row is the durable record: it survives reloads and updates
+// live via the contracts realtime subscription. This is where "did they
+// sign yet?" gets answered.
+
+function agreementChip(c: Contract | null | undefined): { label: string; cls: string } {
+  if (!c) return { label: 'No agreement sent', cls: 'bg-gray-100 text-gray-500 border-gray-200' };
+  if (c.countersignedAt) return { label: 'Executed', cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
+  if (c.status === 'completed') return { label: 'Signed — countersign now', cls: 'bg-indigo-50 text-indigo-700 border-indigo-200' };
+  if (c.status === 'declined') return { label: 'Declined', cls: 'bg-red-50 text-red-700 border-red-200' };
+  if (c.status === 'voided') return { label: 'Voided', cls: 'bg-gray-100 text-gray-500 border-gray-200' };
+  if (c.lastError) return { label: 'Send error', cls: 'bg-red-50 text-red-700 border-red-200' };
+  if (c.status === 'delivered') return { label: 'Opened — awaiting signature', cls: 'bg-amber-50 text-amber-700 border-amber-200' };
+  return { label: 'Sent — awaiting signature', cls: 'bg-amber-50 text-amber-700 border-amber-200' };
+}
+
+/** Latest agent-agreement envelope for an email, or null. */
+function agreementForEmail(contracts: Contract[], email: string): Contract | null {
+  const m = contracts
+    .filter(c => c.kind === 'agent_agreement' && c.signerEmail.toLowerCase() === email.toLowerCase())
+    .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+  return m[0] ?? null;
+}
+
+function AgentOnboardingTracker() {
+  const contracts = useContracts();
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const rows = contracts
+    .filter(c => c.kind === 'agent_agreement')
+    .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+  if (rows.length === 0) return null;
+
+  const act = async (id: string, fn: () => Promise<unknown>) => {
+    setBusyId(id);
+    try { await fn(); } catch { /* store raises the toast */ } finally { setBusyId(null); }
+  };
+
+  return (
+    <div className="bg-white rounded-[8px] border border-gray-200">
+      <div className="px-5 py-4 border-b border-gray-200 flex items-center justify-between">
+        <div>
+          <h2 className="text-base font-semibold text-gray-900">Agent Onboarding</h2>
+          <p className="text-xs text-gray-500 mt-0.5">Agreement + fee schedule + comp plan + W-9 + ACH — one DocuSign envelope per agent. Statuses update live.</p>
+        </div>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="bg-gray-50 border-b border-gray-200">
+              <th className="text-left px-4 py-2.5 text-xs text-gray-500 font-medium">Agent</th>
+              <th className="text-left px-4 py-2.5 text-xs text-gray-500 font-medium">Sent</th>
+              <th className="text-left px-4 py-2.5 text-xs text-gray-500 font-medium">Status</th>
+              <th className="text-right px-4 py-2.5 text-xs text-gray-500 font-medium">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100">
+            {rows.map(c => {
+              const chip = agreementChip(c);
+              const inFlight = !c.countersignedAt && !['completed', 'declined', 'voided'].includes(c.status);
+              const busy = busyId === c.id;
+              return (
+                <tr key={c.id} className="hover:bg-gray-50/50">
+                  <td className="px-4 py-2.5">
+                    <span className="font-medium text-gray-900">{c.signerName}</span>
+                    <span className="block text-xs text-gray-500">{c.signerEmail}</span>
+                  </td>
+                  <td className="px-4 py-2.5 text-xs text-gray-500">{c.sentAt ? new Date(c.sentAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—'}</td>
+                  <td className="px-4 py-2.5">
+                    <span className={`inline-flex px-2 py-0.5 text-xs font-medium border rounded-md ${chip.cls}`}>{chip.label}</span>
+                    {c.lastError && <span className="block text-[11px] text-red-500 mt-0.5 max-w-[280px] truncate" title={c.lastError}>{c.lastError}</span>}
+                  </td>
+                  <td className="px-4 py-2.5 text-right space-x-2 whitespace-nowrap">
+                    <button
+                      disabled={busy}
+                      onClick={() => void act(c.id, () => contractActions.refreshStatus(c.id))}
+                      className="text-xs font-medium text-gray-500 hover:text-gray-800 disabled:opacity-50"
+                    >
+                      Refresh
+                    </button>
+                    {inFlight && (
+                      <button
+                        disabled={busy}
+                        onClick={() => void act(c.id, () => contractActions.resend(c.id))}
+                        className="text-xs font-medium text-indigo-600 hover:text-indigo-800 disabled:opacity-50"
+                      >
+                        Resend
+                      </button>
+                    )}
+                    {c.status === 'completed' && !c.countersignedAt && (
+                      <button
+                        disabled={busy}
+                        onClick={() => void act(c.id, async () => {
+                          const url = await contractActions.countersignUrl(c.id);
+                          if (url) window.open(url, '_blank', 'noopener');
+                        })}
+                        className="text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-2.5 py-1 rounded-[6px] disabled:opacity-50"
+                      >
+                        Countersign now
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 // ════════════════════════════════════════
 // Main Component
 // ════════════════════════════════════════
@@ -228,7 +278,7 @@ export function BackendAgents() {
     ? Math.round(activeWithDeals.reduce((s, a) => s + (a.dealsFunded / Math.max(a.merchants, 1)) * 100, 0) / activeWithDeals.length)
     : 0;
 
-  const handleOnboard = (a: { name: string; email: string; phone: string; type: 'W-2' | 'Sub-ISO'; tier: string; sendAgreement: boolean }) => {
+  const handleOnboard = (a: { name: string; email: string; phone: string; type: '1099' | 'Sub-ISO' | 'W-2'; tier: string; sendAgreement: boolean }) => {
     const created: Agent = {
       id: `AGT-${String(agentList.length + 1).padStart(3, '0')}`,
       name: a.name,
@@ -249,7 +299,7 @@ export function BackendAgents() {
     setAgentList(prev => [created, ...prev]);
     setOnboardOpen(false);
     toast.success(`${created.name} onboarded`, { description: `${created.id} · ${created.commissionTier}` });
-    if (a.sendAgreement) {
+    if (a.sendAgreement && a.type !== 'W-2') {
       // Envelope: Agreement + Schedule A/B + ACH tabs; countersign lands in
       // Documents → the contract row is kind 'agent_agreement'.
       void contractActions.sendAgentAgreement({ agentName: created.name, agentEmail: created.email, agentId: created.id })
@@ -297,6 +347,8 @@ export function BackendAgents() {
         <SummaryCard icon={TrendingUp} label="Commissions Paid This Month" value={fmt(totalCommPaid)} sub={`Across ${agents.filter(a => a.commissionEarned > 0).length} agents`} variant="purple" />
         <SummaryCard icon={Percent} label="Avg Agent Conversion Rate" value={`${avgConversion}%`} sub="Active agents with deals" variant="blue" />
       </div>
+
+      <AgentOnboardingTracker />
 
       {/* Filters */}
       <div className="bg-white rounded-[8px] border border-gray-200">
@@ -1063,12 +1115,12 @@ function OnboardAgentModal({
   onCreate,
 }: {
   onClose: () => void;
-  onCreate: (a: { name: string; email: string; phone: string; type: 'W-2' | 'Sub-ISO'; tier: string; sendAgreement: boolean }) => void;
+  onCreate: (a: { name: string; email: string; phone: string; type: '1099' | 'Sub-ISO' | 'W-2'; tier: string; sendAgreement: boolean }) => void;
 }) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
-  const [type, setType] = useState<'W-2' | 'Sub-ISO'>('W-2');
+  const [type, setType] = useState<'1099' | 'Sub-ISO' | 'W-2'>('1099');
   const [tier, setTier] = useState('Tier 1 — 50% Split');
   const [sendAgreement, setSendAgreement] = useState(true);
 
@@ -1106,9 +1158,10 @@ function OnboardAgentModal({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-[12px] font-medium text-gray-600 mb-1">Agent type</label>
-              <select value={type} onChange={e => setType(e.target.value as 'W-2' | 'Sub-ISO')} className={inputCls}>
-                <option>W-2</option>
-                <option>Sub-ISO</option>
+              <select value={type} onChange={e => setType(e.target.value as '1099' | 'Sub-ISO' | 'W-2')} className={inputCls}>
+                <option value="1099">1099 (independent contractor)</option>
+                <option value="Sub-ISO">Sub-ISO (1099, builds a team)</option>
+                <option value="W-2">W-2 employee (rare)</option>
               </select>
             </div>
             <div>
@@ -1120,13 +1173,16 @@ function OnboardAgentModal({
               </select>
             </div>
           </div>
-          <label className="flex items-start gap-2 pt-1 cursor-pointer">
-            <input type="checkbox" checked={sendAgreement} onChange={e => setSendAgreement(e.target.checked)} className="mt-0.5 accent-indigo-600" />
+          <label className={`flex items-start gap-2 pt-1 ${type === 'W-2' ? 'opacity-50' : 'cursor-pointer'}`}>
+            <input type="checkbox" checked={sendAgreement && type !== 'W-2'} disabled={type === 'W-2'} onChange={e => setSendAgreement(e.target.checked)} className="mt-0.5 accent-indigo-600" />
             <span className="text-[12px] text-gray-600">
-              <span className="font-medium text-gray-800">Send the agent agreement for e-signature now</span><br />
-              One DocuSign envelope: Agreement + fee schedule + comp plan + direct-deposit (ACH) authorization. Banking details are collected inside DocuSign and never stored in the CRM.
+              <span className="font-medium text-gray-800">Send the 1099 onboarding packet for e-signature now</span><br />
+              One DocuSign envelope: Agreement + fee schedule + comp plan + <span className="font-medium">Substitute W-9</span> + direct-deposit (ACH) authorization. W-9 and banking details are collected inside DocuSign and never stored in the CRM.
             </span>
           </label>
+          {type === 'W-2' && (
+            <p className="text-[11px] text-amber-600">W-2 hires don't sign the 1099 agent packet — run them through payroll/HR paperwork instead.</p>
+          )}
           <p className="text-[11px] text-gray-400">New agents start Active on the selected tier with an empty book. Agreement date is set to today.</p>
         </div>
         <div className="px-5 py-3 border-t border-gray-200 bg-gray-50 flex items-center justify-end gap-2">

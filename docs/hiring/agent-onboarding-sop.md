@@ -18,11 +18,12 @@ The pipeline: **Applied → Screened → Interviewed → Offer sent → Signed �
 
 ## Stage 3 — Offer and signature (owner: David; runs in the CRM)
 
-1. CRM → **Agents → Onboard Agent**: enter name/email, leave "Send the agent agreement for e-signature now" checked. This creates the DocuSign envelope automatically — Agreement + Schedule A (fee schedule) + Schedule B (comp plan) + ACH authorization, one signature. Never send the Word file as an email attachment.
-2. The ACH fields (bank, routing, account) are **required DocuSign tabs** — the agent cannot finish signing without them, and the details stay inside the DocuSign envelope (never stored in the CRM database).
+1. CRM → **Agents → Onboard Agent**: pick the agent type (**1099 is the default** — W-2 is the rare exception and never gets this packet) and leave "Send the 1099 onboarding packet for e-signature now" checked. This creates the DocuSign envelope automatically — Agreement + Schedule A (fee schedule) + Schedule B (comp plan) + **Substitute W-9** + ACH authorization, one signing session. Never send the Word file as an email attachment.
+2. The W-9 fields (name, tax classification, address, TIN) and ACH fields (bank, routing, account) are **required DocuSign tabs** — the agent cannot finish signing without them, and the details stay inside the DocuSign envelope (never stored in the CRM database).
 3. After the agent signs, countersign from the CRM (Documents → the agent_agreement contract → Countersign now). The executed PDF in DocuSign is the system of record; pull banking details from it into the payout system only.
-4. With the agreement, request the **W-9**. Rule with no exceptions: **no W-9 on file = no payout**, ever. Chase it at signing, not at the first payment run.
-5. Envelope reminders run automatically (every 2 days, expires at 14). Unsigned after a week → David calls.
+4. The **W-9 is inside the packet** (Exhibit 1, substitute Form W-9 with its own certification signature) — nothing to chase separately. The rule still stands: **no completed W-9 = no payout**, ever; an executed packet satisfies it.
+5. Track it in **Agents → Agent Onboarding**: every envelope shows live status (Sent → Opened → Signed → Executed), with Resend and Countersign-now buttons right there. Envelope reminders run automatically (every 2 days, expires at 14). Unsigned after a week → David calls.
+6. **Test sends:** never use a made-up email (it bounces and fails the envelope) and never create fake agents in the CRM. To test, use your own real inbox and void the envelope afterward (Documents → Void).
 
 ## Stage 4 — Banking + tax data handling (owner: whoever touches payouts)
 

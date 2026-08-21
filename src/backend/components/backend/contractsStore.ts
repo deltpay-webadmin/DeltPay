@@ -74,7 +74,7 @@ export interface Contract {
   sentAt: string | null;
   completedAt: string | null;
   createdAt: string;
-  kind: 'mca' | 'deal_application' | 'mpa';
+  kind: 'mca' | 'deal_application' | 'mpa' | 'agent_agreement';
   submissionId: string | null;
   signedStoragePath: string | null;
   /** 'embedded' = in-person (iPad) signing; 'email' = remote. */
@@ -179,7 +179,7 @@ function fromDb(r: any): Contract {
     sentAt: r.sent_at ?? null,
     completedAt: r.completed_at ?? null,
     createdAt: r.created_at ?? '',
-    kind: (r.kind ?? 'mca') as 'mca' | 'deal_application' | 'mpa',
+    kind: (r.kind ?? 'mca') as 'mca' | 'deal_application' | 'mpa' | 'agent_agreement',
     submissionId: r.submission_id ?? null,
     signedStoragePath: r.signed_storage_path ?? null,
     mode: (r.mode ?? (r.terms?.mode === 'embedded' ? 'embedded' : 'email')) as 'email' | 'embedded',
