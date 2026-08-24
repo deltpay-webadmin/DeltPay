@@ -180,7 +180,6 @@ const PAGE_TITLES: Record<string, string> = {
   '/settings': 'Settings',
   '/settings/integrations': 'Integrations',
   '/settings/roles': 'Roles & Permissions',
-  '/settings/bundles': 'Bundles',
   '/deals': 'Portfolio',
   '/commissions': 'Commissions',
   '/my-residuals': 'My Residuals',
@@ -711,7 +710,6 @@ export function DeltBackendLayout() {
               <Route path="settings" element={<Guard perm="general.view"><BackendSettings /></Guard>} />
               <Route path="settings/integrations" element={<Guard perm="integrations.view"><BackendSettings /></Guard>} />
               <Route path="settings/roles" element={<Guard perm="roles.view"><BackendSettings /></Guard>} />
-              <Route path="settings/bundles" element={<Guard perm="general.view"><BackendSettings /></Guard>} />
               <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </Routes>
           </main>

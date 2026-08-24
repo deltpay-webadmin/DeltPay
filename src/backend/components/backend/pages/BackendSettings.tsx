@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-  Settings, ChevronDown, Link2, Shield, Users, ClipboardList,
+  Settings, ChevronDown, Link2, Shield, Users,
   Plus, Check, X, Eye, EyeOff, Lock, Unlock, UserCircle, Languages,
 } from 'lucide-react';
 import { useAppNavigate } from '../NavigationContext';
@@ -13,10 +13,10 @@ import { contractActions } from '../contractsStore';
 
 // ─── ROLE DEFINITIONS ───────────────────────────────────────────
 const ROLES = [
-  { id: 'super_admin', name: 'Super Admin', description: 'Full platform access. Company settings, financials, RBAC, all modules.', color: '#2E6BFF', userCount: 2, isSystem: true },
-  { id: 'admin', name: 'Admin', description: 'Operational access across all modules. Cannot modify roles, billing, or company settings.', color: '#2BB56D', userCount: 1, isSystem: true },
-  { id: 'agent', name: 'Agent', description: 'Portfolio-scoped access. Sees only assigned merchants, leads, and own compensation.', color: '#F0B429', userCount: 4, isSystem: true },
-  { id: 'viewer', name: 'Viewer', description: 'Read-only access to assigned modules. Cannot create, edit, or delete records.', color: '#6b7280', userCount: 1, isSystem: false },
+  { id: 'super_admin', name: 'Super Admin', description: 'Full platform access. Company settings, financials, RBAC, all modules.', color: '#2E6BFF', isSystem: true },
+  { id: 'admin', name: 'Admin', description: 'Operational access across all modules. Cannot modify roles, billing, or company settings.', color: '#2BB56D', isSystem: true },
+  { id: 'agent', name: 'Agent', description: 'Portfolio-scoped access. Sees only assigned merchants, leads, and own compensation.', color: '#F0B429', isSystem: true },
+  { id: 'viewer', name: 'Viewer', description: 'Read-only access to assigned modules. Cannot create, edit, or delete records.', color: '#6b7280', isSystem: false },
 ];
 
 const PERMISSION_MODULES = [
@@ -58,31 +58,22 @@ const DEFAULT_PERMS: Record<string, any> = {
   viewer: { allowed: ['leads.view', 'merchants.view', 'residuals.view', 'capital.view', 'health.view', 'financials.view', 'lens_ai.view'] },
 };
 
-// ─── USERS ──────────────────────────────────────────────────────
-const USERS = [
-  { id: 1, name: 'David Hazday', email: 'david@deltpay.com', role: 'super_admin', avatar: 'DH', status: 'active', lastActive: 'Just now', territories: ['Miami-Dade', 'Broward'], portfolioCount: 8, split: undefined as number | undefined, portfolioCap: undefined as number | undefined, monthlyVolume: undefined as number | undefined },
-  { id: 2, name: 'Anshu', email: 'anshu@deltpay.com', role: 'super_admin', avatar: 'AN', status: 'active', lastActive: '2 hours ago', territories: [] as string[], portfolioCount: 0, split: undefined as number | undefined, portfolioCap: undefined as number | undefined, monthlyVolume: undefined as number | undefined },
-  { id: 3, name: 'Patrick', email: 'patrick@deltpay.com', role: 'admin', avatar: 'PK', status: 'active', lastActive: '1 hour ago', territories: [] as string[], portfolioCount: 0, split: undefined as number | undefined, portfolioCap: undefined as number | undefined, monthlyVolume: undefined as number | undefined },
-  { id: 4, name: 'Sarah Johnson', email: 'sarah@deltpay.com', role: 'agent', avatar: 'SJ', status: 'active', lastActive: '3 hours ago', split: 50, territories: ['Miami-Dade'], portfolioCount: 3, portfolioCap: 25, monthlyVolume: 131900 },
-  { id: 5, name: 'Michael Chen', email: 'michael@deltpay.com', role: 'agent', avatar: 'MC', status: 'active', lastActive: '1 day ago', split: 50, territories: ['Broward', 'Palm Beach'], portfolioCount: 3, portfolioCap: 25, monthlyVolume: 187200 },
-  { id: 6, name: 'James Miller', email: 'james@deltpay.com', role: 'agent', avatar: 'JM', status: 'active', lastActive: '5 hours ago', split: 50, territories: ['Miami-Dade'], portfolioCount: 2, portfolioCap: 25, monthlyVolume: 165700 },
-  { id: 7, name: 'Lyndon', email: 'lyndon@deltpay.com', role: 'agent', avatar: 'LY', status: 'active', lastActive: '1 week ago', split: 40, territories: ['Outbound'], portfolioCount: 0, portfolioCap: 15, monthlyVolume: 0 },
-  { id: 8, name: 'Jason', email: 'jason@deltpay.com', role: 'viewer', avatar: 'JS', status: 'active', lastActive: '3 days ago', territories: [] as string[], portfolioCount: 0, split: undefined as number | undefined, portfolioCap: undefined as number | undefined, monthlyVolume: undefined as number | undefined },
-];
-
 // ─── INTEGRATIONS ───────────────────────────────────────────────
+// Static catalog only. "Connected" is reserved for integrations that are
+// actually wired into this codebase; everything else is available-to-connect.
+// No fabricated sync times or health scores.
 const INTEGRATIONS = [
-  { id: 'north', name: 'North (NAB)', category: 'Processor', status: 'connected', lastSync: 'Apr 14, 2026', health: 98, description: 'ISO payment processing, residual reports' },
-  { id: 'ach', name: 'ACH.com', category: 'Payments', status: 'connected', lastSync: 'Apr 14, 2026', health: 100, description: 'Recurring ACH debits for MCA collections' },
-  { id: 'plaid', name: 'Plaid', category: 'Underwriting', status: 'connected', lastSync: 'Apr 15, 2026', health: 95, description: 'Bank verification, transaction data, identity' },
-  { id: 'sentilink', name: 'SentiLink', category: 'Underwriting', status: 'connected', lastSync: 'Apr 12, 2026', health: 100, description: 'Synthetic identity fraud detection' },
-  { id: 'crs', name: 'CRS Credit', category: 'Underwriting', status: 'connected', lastSync: 'Apr 10, 2026', health: 92, description: 'Commercial credit reporting' },
-  { id: 'ficoso', name: 'FiCoSo', category: 'Legal', status: 'connected', lastSync: 'Apr 14, 2026', health: 100, description: 'UCC filing and lien management' },
-  { id: 'datamerch', name: 'DataMerch', category: 'Risk', status: 'connected', lastSync: 'Apr 14, 2026', health: 100, description: 'MCA industry default database' },
-  { id: '10web', name: '10Web', category: 'Websites', status: 'connected', lastSync: 'Apr 13, 2026', health: 88, description: 'AI website builder — white-label merchant sites' },
-  { id: 'qbo', name: 'QuickBooks Online', category: 'Accounting', status: 'connected', lastSync: 'Apr 15, 2026', health: 97, description: 'Chart of accounts, MCA journal entries' },
-  { id: 'ollama', name: 'Ollama / Qwen', category: 'AI', status: 'connected', lastSync: 'Apr 15, 2026', health: 100, description: 'Local LLM for Lens AI intelligence layer' },
-  { id: 'stripe', name: 'Stripe', category: 'Billing', status: 'disconnected', lastSync: '—', health: 0, description: 'Platform billing and subscription management' },
+  { id: 'plaid', name: 'Plaid', category: 'Underwriting', status: 'connected', description: 'Bank verification, transaction data, identity' },
+  { id: 'docusign', name: 'DocuSign', category: 'E-Sign', status: 'connected', description: 'MCA agreements, MPA packets, countersigning' },
+  { id: 'resend', name: 'Resend', category: 'Email', status: 'connected', description: 'Transactional and lifecycle email delivery' },
+  { id: 'meta', name: 'Meta Ads', category: 'Marketing', status: 'connected', description: 'Lead ads sync and campaign insights' },
+  { id: 'north', name: 'North (NAB)', category: 'Processor', status: 'disconnected', description: 'ISO payment processing, residual reports' },
+  { id: 'ach', name: 'ACH.com', category: 'Payments', status: 'disconnected', description: 'Recurring ACH debits for MCA collections' },
+  { id: 'sentilink', name: 'SentiLink', category: 'Underwriting', status: 'disconnected', description: 'Synthetic identity fraud detection' },
+  { id: 'crs', name: 'CRS Credit', category: 'Underwriting', status: 'disconnected', description: 'Commercial credit reporting' },
+  { id: 'datamerch', name: 'DataMerch', category: 'Risk', status: 'disconnected', description: 'MCA industry default database' },
+  { id: 'qbo', name: 'QuickBooks Online', category: 'Accounting', status: 'disconnected', description: 'Chart of accounts, MCA journal entries' },
+  { id: 'stripe', name: 'Stripe', category: 'Billing', status: 'disconnected', description: 'Platform billing and subscription management' },
 ];
 
 // ─── GENERAL SETTINGS ───────────────────────────────────────────
@@ -147,19 +138,17 @@ const GENERAL_SECTIONS: SettingsSection[] = [
   ]},
 ];
 
-// ─── AUDIT LOG ──────────────────────────────────────────────────
-const AUDIT_LOG = [
-  { time: 'Apr 15, 2:34 PM', user: 'David Hazday', action: 'Updated processing defaults — margin floor set to 0.50%', module: 'Settings' },
-  { time: 'Apr 15, 1:12 PM', user: 'David Hazday', action: 'Verified interchange for Sunrise Cafe — flagged Visa Qual +14bps', module: 'Residuals' },
-  { time: 'Apr 14, 4:45 PM', user: 'Patrick', action: 'Uploaded March 2026 residual report — 8 merchants processed', module: 'Residuals' },
-  { time: 'Apr 14, 11:20 AM', user: 'Michael Chen', action: 'Created new lead: TechForward Solutions', module: 'Pipeline' },
-  { time: 'Apr 13, 3:15 PM', user: 'David Hazday', action: 'Approved MCA UW-2026-0145: Urban Wellness Spa — $150K at 1.36x', module: 'Capital' },
-  { time: 'Apr 12, 9:00 AM', user: 'Sarah Johnson', action: 'Moved Coastal Construction to Bank Verification stage', module: 'Pipeline' },
-  { time: 'Apr 11, 2:30 PM', user: 'David Hazday', action: 'Changed James Miller commission split from 45% → 50%', module: 'Team' },
-  { time: 'Apr 10, 10:45 AM', user: 'David Hazday', action: 'Connected CRS Credit integration — health check passed 92%', module: 'Settings' },
-];
+type SettingsTab = 'general' | 'integrations' | 'roles' | 'users';
 
-type SettingsTab = 'general' | 'integrations' | 'roles' | 'users' | 'audit';
+interface MemberRow {
+  userId: string;
+  role: string;
+  agentId: string | null;
+  name: string;
+  email: string;
+  status: string;
+  createdAt: string;
+}
 
 // ─── COMPONENT ──────────────────────────────────────────────────
 export function BackendSettings() {
@@ -168,23 +157,69 @@ export function BackendSettings() {
   // The tabs map below uses `t` as its loop variable — alias the translator.
   const tabLabel = t;
 
-  // Derive initial tab from current route
+  // Tab state follows the route so /settings/integrations and /settings/roles
+  // deep-link correctly and refresh/back keep their place.
+  const TAB_PATHS: Record<SettingsTab, string> = {
+    general: '/settings',
+    integrations: '/settings/integrations',
+    roles: '/settings/roles',
+    users: '/settings',
+  };
   const initialTab: SettingsTab = currentPage === '/settings/integrations' ? 'integrations'
     : currentPage === '/settings/roles' ? 'roles'
-    : currentPage === '/settings/bundles' ? 'general'
     : 'general';
 
-  const [tab, setTab] = useState<SettingsTab>(initialTab);
+  const [tab, setTabState] = useState<SettingsTab>(initialTab);
+  const setTab = (next: SettingsTab) => {
+    setTabState(next);
+    const path = TAB_PATHS[next];
+    if (path !== currentPage && (next === 'integrations' || next === 'roles' || currentPage.startsWith('/settings/'))) {
+      navigate(path);
+    }
+  };
   const [expandedSection, setExpandedSection] = useState<string | null>('company');
   const [expandedRole, setExpandedRole] = useState<string | null>(null);
-  const [selectedUser, setSelectedUser] = useState<number | null>(null);
+
+  // ── Live org members (replaces the old hardcoded USERS list) ──
+  const [members, setMembers] = useState<MemberRow[]>([]);
+  const [membersLoading, setMembersLoading] = useState(true);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      if (!supabase) { setMembersLoading(false); return; }
+      const { data, error } = await supabase
+        .from('org_members')
+        .select('user_id, role, agent_id, display_name, email, status, created_at')
+        .order('created_at', { ascending: true });
+      if (!active) return;
+      if (error) {
+        console.error('[Settings] org_members load failed:', error.message);
+      } else {
+        setMembers((data || []).map((r: any) => ({
+          userId: r.user_id,
+          role: r.role,
+          agentId: r.agent_id ?? null,
+          name: r.display_name || r.email || 'Member',
+          email: r.email || '',
+          status: r.status || 'active',
+          createdAt: r.created_at || '',
+        })));
+      }
+      setMembersLoading(false);
+    })();
+    return () => { active = false; };
+  }, []);
+
+  const roleCounts = members.reduce<Record<string, number>>((acc, m) => {
+    acc[m.role] = (acc[m.role] || 0) + 1;
+    return acc;
+  }, {});
 
   const tabs: { key: SettingsTab; label: string; icon: React.ElementType }[] = [
     { key: 'general', label: 'General', icon: Settings },
     { key: 'integrations', label: 'Integrations', icon: Link2 },
     { key: 'roles', label: 'Roles & Permissions', icon: Shield },
     { key: 'users', label: 'User Management', icon: Users },
-    { key: 'audit', label: 'Audit Log', icon: ClipboardList },
   ];
 
   return (
@@ -319,30 +354,6 @@ export function BackendSettings() {
                   </span>
                 </div>
                 <p className="text-xs text-gray-500 leading-relaxed">{int.description}</p>
-                {int.status === 'connected' && (
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 flex-1">
-                      <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                        <div
-                          className={`h-full rounded-full ${int.health >= 95 ? 'bg-emerald-500' : int.health >= 80 ? 'bg-amber-500' : 'bg-red-500'}`}
-                          style={{ width: `${int.health}%` }}
-                        />
-                      </div>
-                      <span className="text-[11px] font-mono font-semibold text-gray-600">{int.health}%</span>
-                    </div>
-                    <span className="text-[11px] text-gray-400 ml-3">Synced: {int.lastSync}</span>
-                  </div>
-                )}
-                <div className="flex gap-2 mt-1">
-                  {int.status === 'connected' ? (
-                    <>
-                      <button className="px-3 py-1.5 text-[11px] font-medium text-brand bg-brand/5 border border-brand/15 rounded-[6px] hover:bg-brand/10 transition-colors">Configure</button>
-                      <button className="px-3 py-1.5 text-[11px] font-medium text-red-500 bg-red-50/50 border border-red-200/40 rounded-[6px] hover:bg-red-50 transition-colors">Disconnect</button>
-                    </>
-                  ) : (
-                    <button className="px-4 py-1.5 text-[11px] font-semibold text-white bg-brand rounded-[6px] hover:bg-brand-hover transition-colors">Connect</button>
-                  )}
-                </div>
               </div>
             ))}
           </div>
@@ -379,7 +390,7 @@ export function BackendSettings() {
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
-                        <span className="text-xs font-mono text-gray-500">{role.userCount} user{role.userCount !== 1 ? 's' : ''}</span>
+                        <span className="text-xs font-mono text-gray-500">{roleCounts[role.id] || 0} user{(roleCounts[role.id] || 0) !== 1 ? 's' : ''}</span>
                         {role.isSystem && <span className="text-[10px] font-semibold text-brand bg-brand/8 px-2 py-0.5 rounded">System</span>}
                         <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${open ? 'rotate-180' : ''}`} />
                       </div>
@@ -435,7 +446,7 @@ export function BackendSettings() {
             <div className="flex items-start justify-between mb-5">
               <div>
                 <h2 className="text-lg font-bold text-gray-900">Users & Access</h2>
-                <p className="text-sm text-gray-400 mt-0.5">{USERS.length} users across {ROLES.length} roles</p>
+                <p className="text-sm text-gray-400 mt-0.5">{members.length} member{members.length !== 1 ? 's' : ''} in your organization</p>
               </div>
               <button className="px-4 py-2 bg-brand text-white rounded-[6px] text-sm font-semibold hover:bg-brand-hover inline-flex items-center gap-1.5 transition-colors">
                 <Plus className="w-4 h-4" /> Invite User
@@ -445,103 +456,53 @@ export function BackendSettings() {
               <table className="w-full">
                 <thead>
                   <tr className="bg-gray-50 border-b border-gray-200">
-                    {['User', 'Role', 'Status', 'Territories', 'Portfolio', 'Last Active', ''].map(h => (
+                    {['User', 'Role', 'Status', 'Joined'].map(h => (
                       <th key={h} className="px-4 py-2.5 text-[10px] font-semibold text-gray-500 uppercase tracking-wider text-left">{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {USERS.map(user => {
-                    const role = ROLES.find(r => r.id === user.role)!;
-                    const sel = selectedUser === user.id;
+                  {members.map(user => {
+                    const role = ROLES.find(r => r.id === user.role) ?? ROLES[ROLES.length - 1];
+                    const avatar = user.name.split(' ').map(w => w[0]).filter(Boolean).join('').slice(0, 2).toUpperCase();
                     return (
-                      <React.Fragment key={user.id}>
-                        <tr
-                          onClick={() => setSelectedUser(sel ? null : user.id)}
-                          className={`border-b border-gray-50 cursor-pointer transition-colors ${sel ? 'bg-gray-50' : 'hover:bg-gray-50/50'}`}
-                        >
-                          <td className="px-4 py-3">
-                            <div className="flex items-center gap-2.5">
-                              <div className="w-8 h-8 rounded-[8px] flex items-center justify-center text-xs font-bold font-mono" style={{ background: `${role.color}12`, color: role.color }}>
-                                {user.avatar}
-                              </div>
-                              <div>
-                                <p className="text-sm font-semibold text-gray-900">{user.name}</p>
-                                <p className="text-[11px] text-gray-400">{user.email}</p>
-                              </div>
+                      <tr key={user.userId} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-8 h-8 rounded-[8px] flex items-center justify-center text-xs font-bold font-mono" style={{ background: `${role.color}12`, color: role.color }}>
+                              {avatar}
                             </div>
-                          </td>
-                          <td className="px-4 py-3">
-                            <span className="text-[11px] font-semibold px-2.5 py-1 rounded-[6px] border" style={{ background: `${role.color}10`, color: role.color, borderColor: `${role.color}25` }}>
-                              {role.name}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3">
-                            <div className="flex items-center gap-1.5">
-                              <span className={`w-[7px] h-[7px] rounded-full ${user.status === 'active' ? 'bg-emerald-500' : 'bg-red-500'}`} />
-                              <span className="text-sm text-gray-600">{user.status}</span>
+                            <div>
+                              <p className="text-sm font-semibold text-gray-900">{user.name}</p>
+                              <p className="text-[11px] text-gray-400">{user.email}</p>
                             </div>
-                          </td>
-                          <td className="px-4 py-3 text-xs font-mono text-gray-600">{user.territories?.join(', ') || '—'}</td>
-                          <td className="px-4 py-3 text-sm font-mono text-gray-600">{user.portfolioCount || '—'}</td>
-                          <td className="px-4 py-3 text-xs text-gray-500">{user.lastActive}</td>
-                          <td className="px-4 py-3 text-xs text-gray-400">{sel ? '▴' : '▾'}</td>
-                        </tr>
-                        {sel && (
-                          <tr>
-                            <td colSpan={7} className="px-0 py-0 bg-gray-50">
-                              <div className="px-6 py-5 grid grid-cols-1 md:grid-cols-3 gap-6">
-                                <div>
-                                  <h4 className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-3 pb-2 border-b border-gray-200">Access & Role</h4>
-                                  <DRow l="Role" v={role.name} />
-                                  <DRow l="Two-Factor" v="Enabled" c="text-emerald-600" />
-                                  <DRow l="API Access" v={user.role === 'super_admin' ? 'Full' : 'None'} />
-                                </div>
-                                {user.role === 'agent' && (
-                                  <div>
-                                    <h4 className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-3 pb-2 border-b border-gray-200">Agent Configuration</h4>
-                                    <DRow l="Commission Split" v={`${user.split}%`} c="text-brand" bold />
-                                    <DRow l="Portfolio Cap" v={`${user.portfolioCap} merchants`} />
-                                    <DRow l="Monthly Volume" v={user.monthlyVolume ? `$${user.monthlyVolume.toLocaleString()}` : '—'} />
-                                    <DRow l="Territories" v={user.territories.join(', ')} />
-                                    <DRow l="Can Override Pricing" v="No" c="text-red-500" />
-                                  </div>
-                                )}
-                                <div>
-                                  <h4 className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-3 pb-2 border-b border-gray-200">Actions</h4>
-                                  <div className="flex flex-col gap-1.5">
-                                    {['Edit Profile', 'Change Role', ...(user.role === 'agent' ? ['Edit Split', 'Reassign Portfolio'] : []), 'Reset Password'].map(a => (
-                                      <button key={a} className="text-left px-3 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded-[6px] hover:bg-gray-50 transition-colors">{a}</button>
-                                    ))}
-                                    <button className="text-left px-3 py-2 text-xs font-medium text-red-500 bg-white border border-red-200/40 rounded-[6px] hover:bg-red-50 transition-colors">Deactivate</button>
-                                  </div>
-                                </div>
-                              </div>
-                            </td>
-                          </tr>
-                        )}
-                      </React.Fragment>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className="text-[11px] font-semibold px-2.5 py-1 rounded-[6px] border" style={{ background: `${role.color}10`, color: role.color, borderColor: `${role.color}25` }}>
+                            {role.name}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-1.5">
+                            <span className={`w-[7px] h-[7px] rounded-full ${user.status === 'active' ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                            <span className="text-sm text-gray-600">{user.status}</span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-xs text-gray-500">
+                          {user.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
+                        </td>
+                      </tr>
                     );
                   })}
                 </tbody>
               </table>
-            </div>
-          </div>
-        )}
-
-        {/* ═══ AUDIT LOG ═══ */}
-        {tab === 'audit' && (
-          <div>
-            <h2 className="text-lg font-bold text-gray-900 mb-1">Audit Log</h2>
-            <p className="text-sm text-gray-400 mb-4">All administrative actions logged with user, timestamp, and IP.</p>
-            <div className="border border-gray-200 rounded-[8px] overflow-hidden">
-              {AUDIT_LOG.map((log, i) => (
-                <div key={i} className="flex items-center gap-4 px-5 py-3.5 border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors">
-                  <span className="text-xs font-mono text-gray-400 min-w-[140px] shrink-0">{log.time}</span>
-                  <p className="flex-1 text-sm text-gray-700"><span className="font-semibold">{log.user}</span> {log.action}</p>
-                  <span className="text-[11px] font-medium text-brand bg-brand/5 px-2.5 py-0.5 rounded shrink-0">{log.module}</span>
-                </div>
-              ))}
+              {membersLoading && (
+                <div className="px-5 py-8 text-center text-sm text-gray-400">Loading members…</div>
+              )}
+              {!membersLoading && members.length === 0 && (
+                <div className="px-5 py-8 text-center text-sm text-gray-500">No members found.</div>
+              )}
             </div>
           </div>
         )}
@@ -563,14 +524,6 @@ function Toggle({ value }: { value: boolean }) {
   );
 }
 
-function DRow({ l, v, c, bold }: { l: string; v: string; c?: string; bold?: boolean }) {
-  return (
-    <div className="flex justify-between py-1.5 text-sm">
-      <span className="text-gray-500">{l}</span>
-      <span className={`font-mono text-xs ${bold ? 'font-bold' : 'font-medium'} ${c || 'text-gray-900'}`}>{v}</span>
-    </div>
-  );
-}
 
 // ── E-Sign settings: the Delt countersigner identity ──
 // Stored in org_esign_settings (RLS: read all staff, write general.edit).
