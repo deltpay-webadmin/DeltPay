@@ -361,6 +361,8 @@ export interface Merchant {
   ein?: string;
   website?: string;
   notes?: string;
+  /** Deal submission that boarded this merchant (spine link). */
+  submissionId?: string;
 }
 
 // ── Deals ──
@@ -698,6 +700,7 @@ function fromDbMerchant(r: any): Merchant {
     ein: r.ein ?? undefined,
     website: r.website ?? undefined,
     notes: r.notes ?? undefined,
+    submissionId: r.submission_id ?? undefined,
   };
 }
 
@@ -722,6 +725,7 @@ function toDbMerchant(m: Partial<Merchant>): Record<string, any> {
   if (m.ein !== undefined) out.ein = m.ein ?? null;
   if (m.website !== undefined) out.website = m.website ?? null;
   if (m.notes !== undefined) out.notes = m.notes ?? null;
+  if (m.submissionId !== undefined) out.submission_id = m.submissionId ?? null;
   return out;
 }
 
@@ -859,6 +863,11 @@ export async function ensureCrmHydrated(): Promise<void> {
 /** Snapshot read of a single lead (for non-hook callers like write-backs). */
 export function getLeadById(id: string): Lead | undefined {
   return state.leads.find(l => l.id === id);
+}
+
+/** Snapshot read of the merchant born from a deal submission, if any. */
+export function getMerchantBySubmission(submissionId: string): Merchant | undefined {
+  return state.merchants.find(m => m.submissionId === submissionId);
 }
 
 function subscribeRealtime() {
@@ -1874,6 +1883,7 @@ export const merchantActions = {
       ein: partial.ein,
       website: partial.website,
       notes: partial.notes,
+      submissionId: partial.submissionId,
     };
     const prev = state.merchants;
     persist(
