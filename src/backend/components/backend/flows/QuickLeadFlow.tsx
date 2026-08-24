@@ -14,6 +14,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { X, Plus, ArrowRight, CreditCard, HandCoins, Store } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
 import { leadActions, type Lead } from '../crmStore';
+import { useAgents } from '../agentsStore';
 
 const SOURCES = [
   'Website Inquiry',
@@ -26,7 +27,6 @@ const SOURCES = [
   'Other',
 ];
 
-const AGENTS = ['Sarah Johnson', 'Michael Chen', 'James Miller', 'Unassigned'];
 
 const PRODUCT_TYPES: { value: Lead['type']; label: string; icon: React.ElementType }[] = [
   { value: 'Processing', label: 'Processing', icon: CreditCard },
@@ -38,8 +38,17 @@ export interface QuickLeadFlowProps {
   open: boolean;
   onClose: () => void;
   onCreated?: (lead: Lead) => void;
-  /** Open the full KYB application instead. */
-  onOpenFullApplication?: () => void;
+  /** Open the full KYB application instead, seeded with whatever was
+   * already typed so nothing has to be re-entered. */
+  onOpenFullApplication?: (seed: {
+    businessName: string;
+    contactName: string;
+    contactEmail: string;
+    contactPhone: string;
+    source: string;
+    assignedAgent: string;
+    notes: string;
+  }) => void;
 }
 
 interface QuickForm {
@@ -139,7 +148,8 @@ export function QuickLeadFlow({ open, onClose, onCreated, onOpenFullApplication 
     }
   };
 
-  const agentOptions = AGENTS;
+  const { agents: agentRoster } = useAgents();
+  const agentOptions = [...agentRoster.filter(a => a.status === 'active').map(a => a.name), 'Unassigned'];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -339,7 +349,15 @@ export function QuickLeadFlow({ open, onClose, onCreated, onOpenFullApplication 
           {onOpenFullApplication && (
             <button
               type="button"
-              onClick={onOpenFullApplication}
+              onClick={() => onOpenFullApplication({
+                businessName: form.businessName.trim(),
+                contactName: form.contactName.trim(),
+                contactEmail: form.contactEmail.trim(),
+                contactPhone: form.contactPhone.trim(),
+                source: form.source,
+                assignedAgent: form.assignedAgent,
+                notes: form.notes,
+              })}
               className="w-full flex items-center justify-center gap-1.5 text-[12px] text-gray-500 hover:text-gray-700 transition-colors"
             >
               Taking a full application? Open the complete KYB intake

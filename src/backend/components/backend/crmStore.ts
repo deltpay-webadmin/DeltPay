@@ -181,6 +181,8 @@ export interface UploadedDoc {
   filename: string;
   size: number;
   uploadedAt: string;
+  /** Path in the deal-docs storage bucket once the bytes are uploaded. */
+  storagePath?: string;
 }
 
 export interface FundingRequest {
@@ -1183,6 +1185,14 @@ export const leadActions = {
       notes: lead.notes || '',
       extraNotes: [],
       tasks: [],
+      // Carry through everything the intake wizard collected — the KYB
+      // payload, product tags, referral, and bundle all have DB columns
+      // and are what prefills e-sign envelopes and the MPA application.
+      ...(lead.kyb !== undefined ? { kyb: lead.kyb } : {}),
+      ...(lead.products !== undefined ? { products: lead.products } : {}),
+      ...(lead.referredBy !== undefined ? { referredBy: lead.referredBy } : {}),
+      ...(lead.bundle !== undefined ? { bundle: lead.bundle } : {}),
+      ...(lead.stepDetails !== undefined ? { stepDetails: lead.stepDetails } : {}),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };

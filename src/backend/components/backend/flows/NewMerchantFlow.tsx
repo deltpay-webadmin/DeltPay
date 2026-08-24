@@ -23,6 +23,7 @@ import {
   type Merchant,
   type PlanTier,
 } from '../crmStore';
+import { useAgents } from '../agentsStore';
 
 const INDUSTRIES = [
   'Food & Beverage',
@@ -43,7 +44,6 @@ const STATES = [
   'NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY',
 ];
 
-const AGENTS = ['Sarah Johnson', 'Michael Chen', 'James Miller', 'Unassigned'];
 
 export interface NewMerchantFlowProps {
   open: boolean;
@@ -52,6 +52,8 @@ export interface NewMerchantFlowProps {
 }
 
 export function NewMerchantFlow({ open, onClose, onCreated }: NewMerchantFlowProps) {
+  const { agents: agentRoster } = useAgents();
+  const AGENTS = [...agentRoster.filter(a => a.status === 'active').map(a => a.name), 'Unassigned'];
   const [form, setForm] = useState({
     name: '',
     industry: 'Food & Beverage',

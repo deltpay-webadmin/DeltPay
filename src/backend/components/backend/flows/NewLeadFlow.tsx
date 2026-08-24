@@ -39,6 +39,10 @@ import {
   type BeneficialOwner,
   type BusinessStructure,
 } from '../crmStore';
+import { supabase } from '../../../lib/supabase';
+import { useSession } from '../SessionContext';
+import { useAgents } from '../agentsStore';
+import { toast } from 'sonner@2.0.3';
 
 // ─── Reference data ────────────────────────────────────────────
 
@@ -83,7 +87,6 @@ const SOURCES = [
   'Other',
 ];
 
-const AGENTS = ['Sarah Johnson', 'Michael Chen', 'James Miller', 'Unassigned'];
 
 const US_STATES = [
   'AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA',
@@ -153,13 +156,28 @@ export interface NewLeadFlowProps {
   open: boolean;
   onClose: () => void;
   onCreated?: (lead: Lead) => void;
+  /** Seed values (e.g. escalating from the quick-lead form) so nothing
+   * already typed has to be re-entered. */
+  initialValues?: {
+    businessName?: string;
+    contactName?: string;
+    contactEmail?: string;
+    contactPhone?: string;
+    source?: string;
+    assignedAgent?: string;
+    notes?: string;
+  };
 }
 
-export function NewLeadFlow({ open, onClose, onCreated }: NewLeadFlowProps) {
+export function NewLeadFlow({ open, onClose, onCreated, initialValues }: NewLeadFlowProps) {
+  const session = useSession();
+  const { agents: agentRoster } = useAgents();
+  const AGENTS = [...agentRoster.filter(a => a.status === 'active').map(a => a.name), 'Unassigned'];
+  const seedContact = (initialValues?.contactName || '').trim().split(/\s+/);
   // Single form object — one source of truth across all steps.
   const [form, setForm] = useState(() => ({
     // Step 1 — Business
-    legalName: '',
+    legalName: initialValues?.businessName || '',
     dba: '',
     structure: 'LLC' as BusinessStructure,
     taxIdType: 'EIN' as 'EIN' | 'SSN',
@@ -178,11 +196,11 @@ export function NewLeadFlow({ open, onClose, onCreated }: NewLeadFlowProps) {
     productDescription: '',
 
     // Step 2 — Representative (controller)
-    repFirstName: '',
-    repLastName: '',
+    repFirstName: seedContact[0] || '',
+    repLastName: seedContact.slice(1).join(' ') || '',
     repTitle: 'Owner',
-    repEmail: '',
-    repPhone: '',
+    repEmail: initialValues?.contactEmail || '',
+    repPhone: initialValues?.contactPhone || '',
     repDob: '',
     repSsnLast4: '',
     repOwnershipPct: 100,
@@ -231,10 +249,10 @@ export function NewLeadFlow({ open, onClose, onCreated }: NewLeadFlowProps) {
     docsOther: [] as UploadedFile[],
 
     // Step 8 — Assignment + attestation
-    source: 'Website Inquiry',
-    assignedAgent: 'Sarah Johnson',
+    source: initialValues?.source || 'Website Inquiry',
+    assignedAgent: initialValues?.assignedAgent || 'Unassigned',
     priority: 'Medium' as Lead['priority'],
-    notes: '',
+    notes: initialValues?.notes || '',
     attestCertified: false,
     attestAuthorized: false,
     attestSignedByName: '',
@@ -251,19 +269,48 @@ export function NewLeadFlow({ open, onClose, onCreated }: NewLeadFlowProps) {
 
   // ─── Submit handler (assembles KybIntake) ─────────────────────
   const handleSubmit = async () => {
-    const documents = [
+    const picked = [
       ...form.docsProcessing.map(f => ({ ...f, kind: 'Processing Statement' as const })),
       ...form.docsBank.map(f => ({ ...f, kind: 'Bank Statement' as const })),
       ...form.docsVoidedCheck.map(f => ({ ...f, kind: 'Voided Check' as const })),
       ...form.docsId.map(f => ({ ...f, kind: 'Drivers License' as const })),
       ...form.docsOther.map(f => ({ ...f, kind: 'Other' as const })),
-    ].map(d => ({
-      id: d.id,
-      kind: d.kind,
-      filename: d.name,
-      size: d.size,
-      uploadedAt: new Date().toISOString(),
-    }));
+    ];
+
+    // Upload the actual bytes to the deal-docs bucket under this org's
+    // lead-intake folder; the storage path travels with the lead's KYB
+    // record so underwriting and the deal room can pull the files later.
+    const orgId = session.org?.id ?? null;
+    let failedUploads = 0;
+    const documents: KybIntake['documents'] = [];
+    for (const d of picked) {
+      let storagePath: string | undefined;
+      if (d.file && supabase && orgId) {
+        const safeName = d.name.replace(/[^\w.-]+/g, '_');
+        const path = `org/${orgId}/lead-intake/${crypto.randomUUID()}-${safeName}`;
+        const { error } = await supabase.storage
+          .from('deal-docs')
+          .upload(path, d.file, { contentType: d.file.type || undefined });
+        if (error) {
+          failedUploads += 1;
+          // eslint-disable-next-line no-console
+          console.error('[NewLeadFlow] Document upload failed:', d.name, error.message);
+        } else {
+          storagePath = path;
+        }
+      }
+      documents.push({
+        id: d.id,
+        kind: d.kind,
+        filename: d.name,
+        size: d.size,
+        uploadedAt: new Date().toISOString(),
+        ...(storagePath ? { storagePath } : {}),
+      });
+    }
+    if (failedUploads > 0) {
+      toast.error(`${failedUploads} document${failedUploads === 1 ? '' : 's'} failed to upload — the lead was still created; re-attach them from the lead workspace.`);
+    }
 
     const kyb: KybIntake = {
       business: {

@@ -652,6 +652,9 @@ export interface UploadedFile {
   id: string;
   name: string;
   size: number;
+  /** The actual browser File, so submit handlers can upload the bytes.
+   * Not serializable — strip before persisting metadata. */
+  file?: File;
 }
 
 export function FileDrop({
@@ -679,6 +682,7 @@ export function FileDrop({
         id: `file-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
         name: f.name,
         size: f.size,
+        file: f,
       });
     });
     if (inputRef.current) inputRef.current.value = '';

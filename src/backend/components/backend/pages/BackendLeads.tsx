@@ -1432,6 +1432,10 @@ export function BackendLeads({ openImport = false }: { openImport?: boolean } = 
   const [agentFilter, setAgentFilter] = useState<string>('All');
   const [newLeadOpen, setNewLeadOpen] = useState(false);
   const [fullApplicationOpen, setFullApplicationOpen] = useState(false);
+  const [fullAppSeed, setFullAppSeed] = useState<{
+    businessName: string; contactName: string; contactEmail: string;
+    contactPhone: string; source: string; assignedAgent: string; notes: string;
+  } | null>(null);
   const [importOpen, setImportOpen] = useState(openImport);
   const [sortKey, setSortKey] = useState<SortKey>('created');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
@@ -2071,7 +2075,8 @@ export function BackendLeads({ openImport = false }: { openImport?: boolean } = 
         onCreated={created => {
           setSelectedLeadId(created.id);
         }}
-        onOpenFullApplication={() => {
+        onOpenFullApplication={seed => {
+          setFullAppSeed(seed);
           setNewLeadOpen(false);
           setFullApplicationOpen(true);
         }}
@@ -2079,8 +2084,10 @@ export function BackendLeads({ openImport = false }: { openImport?: boolean } = 
 
       {/* Full KYB intake (Stripe-style slide-over) */}
       <NewLeadFlow
+        key={fullAppSeed ? `seeded-${fullAppSeed.businessName}-${fullAppSeed.contactEmail}` : 'blank'}
+        initialValues={fullAppSeed ?? undefined}
         open={fullApplicationOpen}
-        onClose={() => setFullApplicationOpen(false)}
+        onClose={() => { setFullApplicationOpen(false); setFullAppSeed(null); }}
         onCreated={created => {
           setSelectedLeadId(created.id);
           toast.success(`Lead "${created.businessName}" created`);

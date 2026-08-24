@@ -275,25 +275,99 @@ Deno.serve(async (req) => {
       .maybeSingle();
     if (existing) return json({ ok: true, application: toClientShape(existing, ctx, sub) });
 
-    // Seed the draft with what the deal already knows.
+    // Seed the draft with what the deal already knows, and — when the
+    // submission came from a lead whose full KYB intake was captured —
+    // everything the lead wizard already collected, so nothing is retyped.
+    const kyb = sub.lead_id
+      ? (await admin.from("pipeline_leads").select("kyb").eq("id", sub.lead_id).maybeSingle()).data?.kyb ?? null
+      : null;
+    const kb = kyb?.business ?? null;
+    const kp = kyb?.processing ?? null;
+    const kbank = kyb?.bank ?? null;
+    const STRUCTURE_TO_OWNERSHIP: Record<string, ApplicationData["business"]["ownershipType"]> = {
+      "Sole Proprietorship": "sole_prop",
+      "LLC": "llc",
+      "Partnership": "partnership",
+      "C Corporation": "corporation",
+      "S Corporation": "corporation",
+      "Non-Profit": "non_profit",
+    };
+    const num = (v: unknown): string => {
+      const n = String(v ?? "").replace(/[^0-9.]/g, "");
+      return n || "";
+    };
+    const kybOwners: ApplicationData["owners"] = [];
+    if (kyb?.representative?.firstName || kyb?.representative?.lastName) {
+      const r = kyb.representative;
+      kybOwners.push({
+        firstName: r.firstName ?? "", lastName: r.lastName ?? "", title: r.title ?? "",
+        equityPct: Number(r.ownershipPct) || 0, isController: Boolean(r.isController ?? true),
+        email: r.email ?? "", cellPhone: r.phone ?? "",
+        homeAddress: r.addressLine1 ?? "", city: r.city ?? "", state: r.state ?? "", zip: r.postalCode ?? "",
+        driversLicenseState: "",
+      });
+    }
+    for (const o of (kyb?.owners ?? []).slice(0, 3)) {
+      kybOwners.push({
+        firstName: o.firstName ?? "", lastName: o.lastName ?? "", title: o.title ?? "",
+        equityPct: Number(o.ownershipPct) || 0, isController: false,
+        email: o.email ?? "", cellPhone: "",
+        homeAddress: "", city: "", state: "", zip: "",
+        driversLicenseState: "",
+      });
+    }
+    const cardPresent = kp?.cardPresentPct !== undefined ? Math.max(0, Math.min(100, Number(kp.cardPresentPct) || 0)) : null;
     const seed: Partial<ApplicationData> = {
       business: {
-        legalName: sub.merchant_name ?? "",
-        dba: sub.merchant_name ?? "",
-        ein: "",
-        ownershipType: "",
+        legalName: kb?.legalName || sub.merchant_name || "",
+        dba: kb?.dba || sub.merchant_name || "",
+        ein: "", // lead intake stores tax-ID last-4 only; full EIN is entered here
+        ownershipType: (kb?.structure && STRUCTURE_TO_OWNERSHIP[kb.structure]) || "",
         taxExempt: false,
-        establishedDate: "",
-        stateIncorporated: "",
+        establishedDate: /^\d{4}$/.test(kb?.yearFounded ?? "") ? `${kb.yearFounded}-01` : "",
+        stateIncorporated: kb?.stateOfIncorporation ?? "",
         numberOfLocations: "1",
-        phone: sub.phone ?? "",
-        email: sub.email ?? "",
-        website: "",
+        phone: kb?.phone || sub.phone || "",
+        email: kyb?.representative?.email || sub.email || "",
+        website: kb?.website ?? "",
         customerServicePhone: "",
         customerServiceEmail: "",
-        contactFirstName: (sub.contact_name ?? "").split(/\s+/)[0] ?? "",
-        contactLastName: (sub.contact_name ?? "").split(/\s+/).slice(1).join(" "),
+        contactFirstName: kyb?.representative?.firstName || ((sub.contact_name ?? "").split(/\s+/)[0] ?? ""),
+        contactLastName: kyb?.representative?.lastName || (sub.contact_name ?? "").split(/\s+/).slice(1).join(" "),
       } as ApplicationData["business"],
+      ...(kb?.addressLine1 ? {
+        locationAddress: {
+          line1: kb.addressLine1, city: kb.city ?? "", state: kb.state ?? "", zip: kb.postalCode ?? "",
+        },
+      } : {}),
+      ...(kp ? {
+        profile: {
+          productsDescription: kb?.productDescription ?? "",
+          mcc: kb?.mcc && kb.mcc !== "other" ? kb.mcc : "",
+          monthlyVolume: num(kp.monthlyVolume),
+          monthlyAmexVolume: "",
+          averageTicket: num(kp.avgTicket),
+          highestTicket: num(kp.highTicket),
+          pctCardPresent: cardPresent ?? 0,
+          pctKeyedCardPresent: 0,
+          pctMoto: 0,
+          pctInternet: cardPresent !== null ? 100 - cardPresent : 0,
+          pctB2b: 0,
+          pctInternational: 0,
+          acceptedCardsBefore: Boolean(kp.currentProcessor && kp.currentProcessor !== "None / New Business"),
+          refundPolicy: "",
+          refundPolicyOther: "",
+          seasonal: Boolean(kp.seasonalBusiness),
+          closedMonths: [],
+        } as ApplicationData["profile"],
+      } : {}),
+      ...(kybOwners.length ? { owners: kybOwners } : {}),
+      ...(kbank?.bankName ? {
+        bank: {
+          bankName: kbank.bankName,
+          accountType: kbank.accountType === "Savings" ? "savings" : "checking",
+        } as ApplicationData["bank"],
+      } : {}),
     };
     const { data: created, error: insErr } = await admin
       .from("merchant_applications")
