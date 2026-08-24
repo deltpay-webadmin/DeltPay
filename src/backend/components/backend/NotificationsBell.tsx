@@ -189,12 +189,6 @@ export function NotificationsBell({ onNavigate }: { onNavigate: (path: string) =
               </div>
             )}
 
-            <button
-              onClick={() => go('/workspace')}
-              className="w-full px-4 py-2.5 border-t border-white/[0.06] text-[12px] font-semibold text-(--dp-accent-text) hover:bg-white/[0.05] transition-colors flex items-center justify-center gap-1.5"
-            >
-              {t('View all activity')} <ArrowRight className="w-3.5 h-3.5" />
-            </button>
           </div>
         </>
       )}

@@ -214,9 +214,6 @@ export function BackendDashboard() {
                 {capital.activeDeals} active capital deal{capital.activeDeals !== 1 ? 's' : ''}
               </p>
               <div className="mt-6 flex items-center gap-2">
-                <Btn variant="primary" size="sm" onClick={() => navigate('/financials')}>
-                  View financials
-                </Btn>
                 <button
                   onClick={() => navigate('/capital')}
                   className="inline-flex items-center gap-1.5 h-8 px-4 rounded-[10px] text-[12px] font-bold text-white/80 border border-white/20 hover:bg-white/10 transition-colors"
