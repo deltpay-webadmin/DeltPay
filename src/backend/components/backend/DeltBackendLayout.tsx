@@ -20,7 +20,6 @@ import { UnderwritingDetail } from './pages/UnderwritingDetail';
 import { DealDetail } from './pages/DealDetail';
 import { AgentDashboard } from './pages/AgentDashboard';
 import { AgentCommissions } from './pages/AgentCommissions';
-import { BackendOnboarding } from './pages/BackendOnboarding';
 import { BackendRetention } from './pages/BackendRetention';
 import { BackendEmployees } from './pages/BackendEmployees';
 import { BackendPayroll } from './pages/BackendPayroll';
@@ -128,8 +127,7 @@ const adminGroups: NavGroup[] = [
     label: 'Sales',
     items: [
       // The pipeline runs through one guided flow: Leads list → per-lead
-      // workspace (call → qualify → application → sign → fund). The legacy
-      // Onboarding page stays URL-reachable at /onboarding but is unlisted.
+      // workspace (call → qualify → application → sign → fund).
       { label: 'Pipeline', path: '/leads', icon: Users, perm: 'leads.view' },
       { label: 'Call Playbooks', path: '/call-playbooks', icon: PhoneCall, perm: 'leads.view' },
       { label: 'Underwriting', path: '/underwriting', icon: ClipboardCheck, perm: 'underwriting.view' },
@@ -242,7 +240,6 @@ const PAGE_TITLES: Record<string, string> = {
   '/settings/integrations': 'Integrations',
   '/settings/roles': 'Roles & Permissions',
   '/settings/bundles': 'Bundles',
-  '/onboarding': 'Onboarding',
   '/deals': 'Portfolio',
   '/commissions': 'Commissions',
   '/my-residuals': 'My Residuals',
@@ -762,7 +759,6 @@ export function DeltBackendLayout() {
               <Route path="leads" element={<Guard perm="leads.view"><BackendLeads /></Guard>} />
               <Route path="leads/import" element={<Guard perm="leads.create"><BackendLeads openImport /></Guard>} />
               <Route path="leads/:leadId" element={<Guard perm="leads.view"><LeadWorkspacePage /></Guard>} />
-              <Route path="onboarding" element={<Guard perm="merchants.view"><BackendOnboarding /></Guard>} />
               <Route path="merchants" element={<Guard perm="merchants.view"><BackendMerchants /></Guard>} />
               <Route path="merchants/:merchantId/*" element={<Guard perm="merchants.view"><MerchantDetail /></Guard>} />
               <Route path="underwriting" element={<Guard perm="underwriting.view"><UnderwritingHub /></Guard>} />

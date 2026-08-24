@@ -262,40 +262,6 @@ export interface Lead {
   kyb?: KybIntake;
 }
 
-// ── Onboarding ──
-export type OnbStep =
-  | 'Application Submitted'
-  | 'Bank Verification'
-  | 'Identity Verification'
-  | 'Underwriting'
-  | 'Docs & E-Sign'
-  | 'Funded';
-
-export type SLAStatus = 'On Track' | 'At Risk' | 'Breached';
-
-export interface OnboardingStepProgress {
-  step: OnbStep;
-  completedAt: string | null;
-  slaTarget: string;
-}
-
-export interface OnboardingApp {
-  id: string;
-  merchantName: string;
-  agent: string;
-  currentStep: OnbStep;
-  currentStepIndex: number;
-  timeInStep: string;
-  timeInStepHours: number;
-  slaTarget: string;
-  slaStatus: SLAStatus;
-  submittedDate: string;
-  blocker: string;
-  steps: OnboardingStepProgress[];
-  nudges?: number;
-  lastNudge?: string;
-}
-
 // ── Underwriting ──
 export type UWStage =
   | 'Intake'
@@ -437,7 +403,6 @@ export interface ReferralProgram {
 
 export interface CrmState {
   leads: Lead[];
-  onboarding: OnboardingApp[];
   underwriting: UWApplication[];
   referrals: Referral[];
   program: ReferralProgram;
@@ -451,35 +416,7 @@ export interface CrmState {
 // ══════════════════════════════════════════════════════════════
 
 const fallbackSeed: CrmState = {
-  leads: [
-    {
-      id: 'lead-001',
-      businessName: 'Green Valley Auto Repair',
-      industry: 'Automotive',
-      contactName: 'Robert Martinez',
-      contactEmail: 'robert@greenvalleyauto.com',
-      contactPhone: '(555) 123-4567',
-      type: 'MCA',
-      source: 'Website Inquiry',
-      monthlySales: '$45,000',
-      amountRequested: '$75,000',
-      score: 82,
-      status: 'In Progress',
-      priority: 'High',
-      lastActivity: '2 hours ago',
-      assignedAgent: 'Sarah Johnson',
-      stage: 'Qualified',
-      timeline: [
-        { title: 'Follow-up call completed', description: 'Discussed terms and pricing structure', user: 'Sarah Johnson', timestamp: '2 hours ago' },
-      ],
-      notes: 'Strong financials. Owner is motivated and ready to move forward.',
-      referredBy: 'Metro Diner Group',
-      tasks: [
-        { id: 't1', title: 'Follow up call scheduled', due: 'Tomorrow at 2:00 PM', done: false },
-      ],
-    },
-  ],
-  onboarding: [],
+  leads: [],
   underwriting: [],
   referrals: [],
   program: { rewardAmount: '100', freeMonths: '1', planTier: 'Growth' },
@@ -499,7 +436,6 @@ interface SyncState {
 
 let state: CrmState = {
   leads: [],
-  onboarding: [],
   underwriting: [],
   referrals: [],
   program: { rewardAmount: '100', freeMonths: '1', planTier: 'Growth' },
@@ -604,44 +540,6 @@ export function toDbLead(l: Partial<Lead>): Record<string, any> {
   if (l.referredBy !== undefined) out.referred_by = l.referredBy;
   if (l.bundle !== undefined) out.bundle = l.bundle;
   if (l.kyb !== undefined) out.kyb = l.kyb;
-  return out;
-}
-
-function fromDbOnb(r: any): OnboardingApp {
-  return {
-    id: r.id,
-    merchantName: r.merchant_name,
-    agent: r.agent,
-    currentStep: r.current_step,
-    currentStepIndex: r.current_step_index ?? 0,
-    timeInStep: r.time_in_step ?? '',
-    timeInStepHours: Number(r.time_in_step_hours ?? 0),
-    slaTarget: r.sla_target ?? '',
-    slaStatus: r.sla_status ?? 'On Track',
-    submittedDate: r.submitted_date ?? '',
-    blocker: r.blocker ?? '',
-    steps: r.steps ?? [],
-    nudges: r.nudges ?? 0,
-    lastNudge: r.last_nudge ?? undefined,
-  };
-}
-
-function toDbOnb(o: Partial<OnboardingApp>): Record<string, any> {
-  const out: Record<string, any> = {};
-  if (o.id !== undefined) out.id = o.id;
-  if (o.merchantName !== undefined) out.merchant_name = o.merchantName;
-  if (o.agent !== undefined) out.agent = o.agent;
-  if (o.currentStep !== undefined) out.current_step = o.currentStep;
-  if (o.currentStepIndex !== undefined) out.current_step_index = o.currentStepIndex;
-  if (o.timeInStep !== undefined) out.time_in_step = o.timeInStep;
-  if (o.timeInStepHours !== undefined) out.time_in_step_hours = o.timeInStepHours;
-  if (o.slaTarget !== undefined) out.sla_target = o.slaTarget;
-  if (o.slaStatus !== undefined) out.sla_status = o.slaStatus;
-  if (o.submittedDate !== undefined) out.submitted_date = o.submittedDate;
-  if (o.blocker !== undefined) out.blocker = o.blocker;
-  if (o.steps !== undefined) out.steps = o.steps;
-  if (o.nudges !== undefined) out.nudges = o.nudges;
-  if (o.lastNudge !== undefined) out.last_nudge = o.lastNudge;
   return out;
 }
 
@@ -903,9 +801,8 @@ async function maybeHydrate() {
   setSync({ isLoading: true, lastError: null });
 
   try {
-    const [leadsRes, onbRes, uwRes, refRes, progRes, merchRes, dealsRes] = await Promise.all([
+    const [leadsRes, uwRes, refRes, progRes, merchRes, dealsRes] = await Promise.all([
       supabase.from('pipeline_leads').select('*').order('created_at', { ascending: false }),
-      supabase.from('onboarding_apps').select('*').order('id', { ascending: true }),
       supabase.from('underwriting_apps').select('*').order('id', { ascending: true }),
       supabase.from('referrals').select('*').order('id', { ascending: true }),
       supabase.from('referral_program').select('*').eq('id', 1).maybeSingle(),
@@ -916,14 +813,13 @@ async function maybeHydrate() {
     // Per-table results: an RLS denial on one table must not blank the whole
     // CRM — apply what loaded, surface the first error, and only go offline
     // when every query failed.
-    const results = [leadsRes, onbRes, uwRes, refRes, progRes, merchRes, dealsRes];
+    const results = [leadsRes, uwRes, refRes, progRes, merchRes, dealsRes];
     const firstErr = results.find(r => r.error)?.error ?? null;
     const allFailed = results.every(r => r.error);
     if (allFailed) throw firstErr;
 
     set({
       leads: leadsRes.error ? [] : (leadsRes.data || []).map(fromDbLead),
-      onboarding: onbRes.error ? [] : (onbRes.data || []).map(fromDbOnb),
       underwriting: uwRes.error ? [] : (uwRes.data || []).map(fromDbUw),
       referrals: refRes.error ? [] : (refRes.data || []).map(fromDbReferral),
       program: !progRes.error && progRes.data
@@ -974,11 +870,6 @@ function subscribeRealtime() {
     )
     .on(
       'postgres_changes',
-      { event: '*', schema: 'public', table: 'onboarding_apps' },
-      payload => applyRealtime('onboarding_apps', payload),
-    )
-    .on(
-      'postgres_changes',
       { event: '*', schema: 'public', table: 'underwriting_apps' },
       payload => applyRealtime('underwriting_apps', payload),
     )
@@ -1019,18 +910,6 @@ function applyRealtime(table: string, payload: any) {
         leads: exists
           ? state.leads.map(l => (l.id === mapped.id ? mapped : l))
           : [mapped, ...state.leads],
-      });
-    }
-  } else if (table === 'onboarding_apps') {
-    if (eventType === 'DELETE') {
-      set({ onboarding: state.onboarding.filter(o => o.id !== oldRow?.id) });
-    } else {
-      const mapped = fromDbOnb(newRow);
-      const exists = state.onboarding.some(o => o.id === mapped.id);
-      set({
-        onboarding: exists
-          ? state.onboarding.map(o => (o.id === mapped.id ? mapped : o))
-          : [...state.onboarding, mapped],
       });
     }
   } else if (table === 'underwriting_apps') {
@@ -1203,11 +1082,6 @@ export function useCrm() {
 
 export function useLeads() {
   const selector = useCallback(() => state.leads, []);
-  return useSyncExternalStore(subscribe, selector, selector);
-}
-
-export function useOnboarding() {
-  const selector = useCallback(() => state.onboarding, []);
   return useSyncExternalStore(subscribe, selector, selector);
 }
 
@@ -1587,135 +1461,6 @@ export function scoreLead(l: Partial<Lead>): number {
 
   return Math.max(0, Math.min(100, Math.round(score)));
 }
-
-// ── Onboarding actions ──
-const ONB_STEPS: OnbStep[] = ['Application Submitted', 'Bank Verification', 'Identity Verification', 'Underwriting', 'Docs & E-Sign', 'Funded'];
-const ONB_SLA_TARGETS: Record<OnbStep, string> = {
-  'Application Submitted': '—',
-  'Bank Verification': '24 hrs',
-  'Identity Verification': '24 hrs',
-  Underwriting: '48 hrs',
-  'Docs & E-Sign': '72 hrs',
-  Funded: '24 hrs',
-};
-
-export const onboardingActions = {
-  create(partial: Partial<OnboardingApp>): OnboardingApp {
-    const used = new Set(state.onboarding.map(o => o.id));
-    let n = state.onboarding.length + 1;
-    let id = `ONB-${String(n).padStart(3, '0')}`;
-    while (used.has(id)) id = `ONB-${String(++n).padStart(3, '0')}`;
-    const app: OnboardingApp = {
-      id,
-      merchantName: partial.merchantName || 'New Merchant',
-      agent: partial.agent || 'Unassigned',
-      currentStep: 'Application Submitted',
-      currentStepIndex: 0,
-      timeInStep: '0 hrs',
-      timeInStepHours: 0,
-      slaTarget: ONB_SLA_TARGETS['Bank Verification'],
-      slaStatus: 'On Track',
-      submittedDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-      blocker: '',
-      steps: ONB_STEPS.map((step, i) => ({
-        step,
-        completedAt: i === 0 ? nowStamp() : null,
-        slaTarget: ONB_SLA_TARGETS[step],
-      })),
-      nudges: 0,
-    };
-    const prev = state.onboarding;
-    persist(
-      'onboarding app',
-      () => set({ onboarding: [...state.onboarding, app] }),
-      () => set({ onboarding: prev }),
-      () => supabase!.from('onboarding_apps').insert(toDbOnb(app)).then(r => ({ error: r.error })),
-    );
-    return app;
-  },
-
-  nudge(id: string) {
-    const prev = state.onboarding;
-    const target = state.onboarding.find(o => o.id === id);
-    if (!target) return;
-    const patch = { nudges: (target.nudges || 0) + 1, lastNudge: nowStamp() };
-    persist(
-      'onboarding nudge',
-      () =>
-        set({
-          onboarding: state.onboarding.map(o => (o.id === id ? { ...o, ...patch } : o)),
-        }),
-      () => set({ onboarding: prev }),
-      () => supabase!.from('onboarding_apps').update(toDbOnb(patch)).eq('id', id).then(r => ({ error: r.error })),
-    );
-  },
-
-  reassign(id: string, newAgent: string) {
-    const prev = state.onboarding;
-    persist(
-      'reassign',
-      () =>
-        set({
-          onboarding: state.onboarding.map(o => (o.id === id ? { ...o, agent: newAgent } : o)),
-        }),
-      () => set({ onboarding: prev }),
-      () => supabase!.from('onboarding_apps').update({ agent: newAgent }).eq('id', id).then(r => ({ error: r.error })),
-    );
-  },
-
-  advance(id: string) {
-    const target = state.onboarding.find(o => o.id === id);
-    if (!target) return;
-    const wasFunded = target.currentStep === 'Funded';
-    const nextIdx = Math.min(target.currentStepIndex + 1, ONB_STEPS.length - 1);
-    const nextStep = ONB_STEPS[nextIdx];
-    const steps = target.steps.map((s, i) => (i === target.currentStepIndex ? { ...s, completedAt: nowStamp() } : s));
-    const patch: Partial<OnboardingApp> = {
-      currentStep: nextStep,
-      currentStepIndex: nextIdx,
-      steps,
-      timeInStep: '0 hrs',
-      timeInStepHours: 0,
-      slaStatus: 'On Track',
-    };
-    const prev = state.onboarding;
-    persist(
-      'advance step',
-      () =>
-        set({
-          onboarding: state.onboarding.map(o => (o.id === id ? { ...o, ...patch } : o)),
-        }),
-      () => set({ onboarding: prev }),
-      () => supabase!.from('onboarding_apps').update(toDbOnb(patch)).eq('id', id).then(r => ({ error: r.error })),
-    );
-
-    // Reaching Funded completes onboarding — promote to an active merchant,
-    // carrying over contact/business data from the source lead when we have it.
-    if (!wasFunded && nextStep === 'Funded') {
-      const already = state.merchants.some(
-        m => m.name.toLowerCase() === target.merchantName.toLowerCase(),
-      );
-      if (!already) {
-        const lead = state.leads.find(
-          l => l.businessName.toLowerCase() === target.merchantName.toLowerCase(),
-        );
-        merchantActions.create({
-          name: target.merchantName,
-          industry: lead?.industry || 'General',
-          status: 'Active',
-          agent: target.agent,
-          monthlyVolume: lead ? parseMoney(lead.monthlySales) : 0,
-          contactName: lead?.contactName || undefined,
-          contactEmail: lead?.contactEmail || undefined,
-          contactPhone: lead?.contactPhone || undefined,
-          state: lead?.kyb?.business.state || undefined,
-          website: lead?.kyb?.business.website || undefined,
-          notes: lead ? `Funded via onboarding ${id} (lead ${lead.id})` : `Funded via onboarding ${id}`,
-        });
-      }
-    }
-  },
-};
 
 // ── Underwriting actions ──
 // Map a scoring-engine RiskTier (1-4 | 'decline') to the UWTier label stored in DB.

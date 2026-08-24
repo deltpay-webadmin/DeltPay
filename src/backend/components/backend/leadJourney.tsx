@@ -24,8 +24,8 @@ import {
   PenLine, Phone, RotateCcw, Scale, ShieldCheck,
 } from 'lucide-react';
 import {
-  leadActions, underwritingActions, useDeals, useOnboarding, useUnderwriting,
-  type Lead, type OnboardingApp, type UWApplication,
+  leadActions, underwritingActions, useDeals, useUnderwriting,
+  type Lead, type UWApplication,
 } from './crmStore';
 import { itemUiStatus, plaidActions, usePlaidItems, usePlaidLinkRequests } from './plaidStore';
 import { dealSubmissionActions, useDealSubmissions, type DealSubmission } from './dealSubmissionsStore';
@@ -52,7 +52,6 @@ export interface Step {
 export interface LeadJourneyEntities {
   submission: DealSubmission | null;
   uwApp: UWApplication | undefined;
-  onbApp: OnboardingApp | undefined;
   capitalDeal: CapitalDeal | null;
   appContract: Contract | null;
   mcaContract: Contract | null;
@@ -84,13 +83,10 @@ export function timeAgo(iso?: string | null): string {
   return `${days}d ago`;
 }
 
-const ONB_ORDER = ['Application Submitted', 'Bank Verification', 'Identity Verification', 'Underwriting', 'Docs & E-Sign', 'Funded'];
-
 export function useLeadMilestones(lead: Lead): { steps: Step[]; dead: string | null; entities: LeadJourneyEntities } {
   const items = usePlaidItems();
   const requests = usePlaidLinkRequests();
   const underwriting = useUnderwriting();
-  const onboarding = useOnboarding();
   const deals = useDeals();
   const { submissions } = useDealSubmissions();
   const contracts = useContracts();
@@ -107,7 +103,6 @@ export function useLeadMilestones(lead: Lead): { steps: Step[]; dead: string | n
   const uwApp = underwriting.find(a => a.leadId === lead.id)
     ?? (submission ? underwriting.find(a => a.submissionId === submission.id) : undefined)
     ?? underwriting.find(a => a.businessName.trim().toLowerCase() === biz);
-  const onbApp = onboarding.find(o => o.merchantName.trim().toLowerCase() === biz);
   const legacyDeal = deals.find(d => d.borrower.trim().toLowerCase() === biz);
   const capitalDeal = (submission ? capitalDeals.find(d => d.submissionId === submission.id) : undefined)
     ?? (uwApp?.approvedDealId ? capitalDeals.find(d => d.id === uwApp.approvedDealId) : undefined)
@@ -126,9 +121,6 @@ export function useLeadMilestones(lead: Lead): { steps: Step[]; dead: string | n
   const signedDone = Boolean(mcaContract && mcaContract.status === 'completed' && mcaContract.countersignedAt);
   const signedActive = !signedDone && dealContracts.length > 0;
 
-  const onbIdx = onbApp ? ONB_ORDER.indexOf(onbApp.currentStep) : -1;
-  const uwIdx = ONB_ORDER.indexOf('Underwriting');
-
   // ── Terminal dead states ──
   const dead =
     lead.status === 'Not Qualified' ? 'Not Qualified'
@@ -138,13 +130,13 @@ export function useLeadMilestones(lead: Lead): { steps: Step[]; dead: string | n
 
   // ── Won: funded (capital) or boarded (processing) ──
   const funded = Boolean(capitalDeal && (capitalDeal.fundedAt || capitalDeal.status !== 'approved'))
-    || Boolean(legacyDeal) || onbApp?.currentStep === 'Funded';
+    || Boolean(legacyDeal);
   const boarded = Boolean(mpaApp?.status === 'boarded')
     || Boolean(submission && (submission.status === 'Activated' || submission.status === 'Paid'));
 
   // ── Underwriting ──
-  const uwDone = funded || uwApp?.stage === 'Approved' || (onbIdx > uwIdx && onbIdx !== -1);
-  const uwActive = !uwDone && (Boolean(uwApp) || (onbApp ? onbIdx <= uwIdx : false));
+  const uwDone = funded || uwApp?.stage === 'Approved';
+  const uwActive = !uwDone && Boolean(uwApp);
 
   // ── Bank connected ──
   // "Connected" (done) only once transaction data has actually landed;
@@ -182,7 +174,7 @@ export function useLeadMilestones(lead: Lead): { steps: Step[]; dead: string | n
       caption: uwDone
         ? (uwApp?.stage === 'Approved' ? 'Approved' : 'cleared')
         : uwActive
-          ? (uwApp?.stage || onbApp?.currentStep || 'in review')
+          ? (uwApp?.stage || 'in review')
           : connected ? 'ready to start' : 'awaiting bank data',
     },
     {
@@ -210,7 +202,6 @@ export function useLeadMilestones(lead: Lead): { steps: Step[]; dead: string | n
   const entities: LeadJourneyEntities = {
     submission,
     uwApp,
-    onbApp,
     capitalDeal,
     appContract,
     mcaContract,
