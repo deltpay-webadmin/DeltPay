@@ -16,10 +16,13 @@
  * lead pipeline PCI/PII-light. Full collection happens during underwriting.
  */
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Briefcase, CreditCard, HandCoins, Store } from 'lucide-react';
 import {
   OnboardingFlow,
+  loadFlowDraft,
+  clearFlowDraft,
+  useFlowDraftAutosave,
   TextField,
   SelectField,
   TextArea,
@@ -175,7 +178,7 @@ export function NewLeadFlow({ open, onClose, onCreated, initialValues }: NewLead
   const AGENTS = [...agentRoster.filter(a => a.status === 'active').map(a => a.name), 'Unassigned'];
   const seedContact = (initialValues?.contactName || '').trim().split(/\s+/);
   // Single form object — one source of truth across all steps.
-  const [form, setForm] = useState(() => ({
+  const defaultForm = () => ({
     // Step 1 — Business
     legalName: initialValues?.businessName || '',
     dba: '',
@@ -256,7 +259,24 @@ export function NewLeadFlow({ open, onClose, onCreated, initialValues }: NewLead
     attestCertified: false,
     attestAuthorized: false,
     attestSignedByName: '',
+  });
+
+  const DRAFT_KEY = 'new-lead';
+  const [form, setForm] = useState(() => ({
+    ...defaultForm(),
+    ...(initialValues ? {} : loadFlowDraft<ReturnType<typeof defaultForm>>(DRAFT_KEY) ?? {}),
   }));
+
+  // Reopening restores the saved draft (unless seeded from the quick form);
+  // typing autosaves it, and a successful submit clears it.
+  useEffect(() => {
+    if (open) {
+      const draft = initialValues ? null : loadFlowDraft<ReturnType<typeof defaultForm>>(DRAFT_KEY);
+      setForm({ ...defaultForm(), ...(draft ?? {}) });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+  useFlowDraftAutosave(DRAFT_KEY, form, open && !initialValues);
 
   const update = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) =>
     setForm(f => ({ ...f, [k]: v }));
@@ -285,7 +305,7 @@ export function NewLeadFlow({ open, onClose, onCreated, initialValues }: NewLead
     const documents: KybIntake['documents'] = [];
     for (const d of picked) {
       let storagePath: string | undefined;
-      if (d.file && supabase && orgId) {
+      if (d.file instanceof File && supabase && orgId) {
         const safeName = d.name.replace(/[^\w.-]+/g, '_');
         const path = `org/${orgId}/lead-intake/${crypto.randomUUID()}-${safeName}`;
         const { error } = await supabase.storage
@@ -403,6 +423,7 @@ export function NewLeadFlow({ open, onClose, onCreated, initialValues }: NewLead
       kyb,
     });
 
+    clearFlowDraft(DRAFT_KEY);
     onCreated?.(created);
     return {
       title: `${created.businessName} added`,
@@ -417,6 +438,7 @@ export function NewLeadFlow({ open, onClose, onCreated, initialValues }: NewLead
     <OnboardingFlow
       open={open}
       onClose={onClose}
+      draftSaved={!initialValues}
       title="New lead"
       subtitle="Capture a new merchant-services opportunity."
       submitLabel="Create lead"

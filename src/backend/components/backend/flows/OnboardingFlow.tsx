@@ -22,8 +22,9 @@ import { Check, ChevronLeft, Loader2, Upload, X, Plus, Trash2, FileText } from '
 export interface OnboardingStep {
   title: string;
   description?: string;
-  /** Return false/string to block advancing; true to allow. */
-  validate?: () => true | string;
+  /** Return true to allow advancing; a message (or list of messages, all
+   * shown at once) to block. */
+  validate?: () => true | string | string[];
   render: () => React.ReactNode;
 }
 
@@ -45,6 +46,51 @@ export interface OnboardingFlowProps {
   /** Called on final submit — do async work, then resolve. */
   onSubmit: () => Promise<OnboardingSuccess> | OnboardingSuccess;
   submitLabel?: string;
+  /** When the owning flow autosaves a draft, the close-confirm copy says
+   * progress is kept instead of warning about data loss. */
+  draftSaved?: boolean;
+}
+
+// ─── Draft persistence helpers ──────────────────────────────
+// Flows own their form state; these helpers let each flow keep a
+// per-flow localStorage draft so an accidental Esc, backdrop click,
+// or page reload never destroys typed work. File objects are not
+// serializable — restored document stubs lose their bytes.
+
+const DRAFT_PREFIX = 'delt-flow-draft:';
+
+export function loadFlowDraft<T>(key: string): Partial<T> | null {
+  try {
+    const raw = localStorage.getItem(DRAFT_PREFIX + key);
+    return raw ? (JSON.parse(raw) as Partial<T>) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function saveFlowDraft(key: string, state: unknown) {
+  try {
+    localStorage.setItem(DRAFT_PREFIX + key, JSON.stringify(state));
+  } catch {
+    // Quota/serialization failures just mean no draft — never block typing.
+  }
+}
+
+export function clearFlowDraft(key: string) {
+  try {
+    localStorage.removeItem(DRAFT_PREFIX + key);
+  } catch {
+    // ignore
+  }
+}
+
+/** Debounced autosave of a flow's form state while the wizard is open. */
+export function useFlowDraftAutosave(key: string, state: unknown, enabled: boolean) {
+  useEffect(() => {
+    if (!enabled) return;
+    const t = setTimeout(() => saveFlowDraft(key, state), 400);
+    return () => clearTimeout(t);
+  }, [key, state, enabled]);
 }
 
 // ─── Component ──────────────────────────────────────────────
@@ -57,43 +103,64 @@ export function OnboardingFlow({
   steps,
   onSubmit,
   submitLabel = 'Create',
+  draftSaved,
 }: OnboardingFlowProps) {
   const [idx, setIdx] = useState(0);
+  const [maxVisited, setMaxVisited] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState<OnboardingSuccess | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [errors, setErrors] = useState<string[] | null>(null);
+  const [dirty, setDirty] = useState(false);
+  const [confirmClose, setConfirmClose] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
+  const errorRef = useRef<HTMLDivElement>(null);
 
   // Reset when opening
   useEffect(() => {
     if (open) {
       setIdx(0);
+      setMaxVisited(0);
       setSubmitting(false);
       setSuccess(null);
-      setError(null);
+      setErrors(null);
+      setDirty(false);
+      setConfirmClose(false);
     }
   }, [open]);
 
-  // Esc to close, Enter to advance
+  useEffect(() => {
+    setMaxVisited(m => Math.max(m, idx));
+  }, [idx]);
+
+  // Closing with typed work needs a confirm — an accidental Esc or
+  // backdrop click must never silently destroy an application in progress.
+  const requestClose = () => {
+    if (success || submitting) {
+      if (!submitting) onClose();
+      return;
+    }
+    if (!dirty && idx === 0) {
+      onClose();
+      return;
+    }
+    setConfirmClose(true);
+  };
+
+  // Esc asks to close (or dismisses the confirm). Enter is deliberately NOT
+  // globally bound: a stray Enter used to advance steps and even submit.
   useEffect(() => {
     if (!open) return;
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.preventDefault();
-        onClose();
-      }
-      if (e.key === 'Enter' && !success && !submitting) {
-        // Don't hijack when user is typing in textarea
-        const tgt = e.target as HTMLElement;
-        if (tgt?.tagName === 'TEXTAREA') return;
-        e.preventDefault();
-        handleNext();
+        if (confirmClose) setConfirmClose(false);
+        else requestClose();
       }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, idx, success, submitting]);
+  }, [open, idx, success, submitting, dirty, confirmClose]);
 
   // Focus panel when opening
   useEffect(() => {
@@ -106,11 +173,16 @@ export function OnboardingFlow({
   const isLast = idx === steps.length - 1;
   const current = steps[idx];
 
+  const showErrors = (v: string | string[]) => {
+    setErrors(Array.isArray(v) ? v : [v]);
+    setTimeout(() => errorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
+  };
+
   const handleNext = async () => {
-    setError(null);
+    setErrors(null);
     const v = current?.validate?.();
     if (v !== undefined && v !== true) {
-      setError(typeof v === 'string' ? v : 'Please complete this step.');
+      showErrors(typeof v === 'string' || Array.isArray(v) ? v : 'Please complete this step.');
       return;
     }
     if (!isLast) {
@@ -123,15 +195,22 @@ export function OnboardingFlow({
       const result = await onSubmit();
       setSuccess(result);
     } catch (err: any) {
-      setError(err?.message || 'Something went wrong. Try again.');
+      showErrors(err?.message || 'Something went wrong. Try again.');
     } finally {
       setSubmitting(false);
     }
   };
 
   const handlePrev = () => {
-    setError(null);
+    setErrors(null);
     setIdx(i => Math.max(i - 1, 0));
+  };
+
+  // Jump straight to any step already visited (validated on the way forward).
+  const jumpTo = (i: number) => {
+    if (i === idx || i > maxVisited || submitting || success) return;
+    setErrors(null);
+    setIdx(i);
   };
 
   const progress = success ? 100 : ((idx + 1) / steps.length) * 100;
@@ -147,13 +226,15 @@ export function OnboardingFlow({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.18 }}
-            onClick={onClose}
+            onClick={requestClose}
           />
 
           {/* Panel */}
           <motion.div
             ref={panelRef}
             tabIndex={-1}
+            onInputCapture={() => setDirty(true)}
+            onChangeCapture={() => setDirty(true)}
             className="absolute right-0 top-0 h-full w-full sm:max-w-[560px] bg-white shadow-2xl flex flex-col outline-none"
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
@@ -179,7 +260,7 @@ export function OnboardingFlow({
                 )}
               </div>
               <button
-                onClick={onClose}
+                onClick={requestClose}
                 aria-label="Close"
                 className="p-2 -mr-2 -mt-1 text-gray-400 hover:text-gray-700 hover:bg-gray-50 rounded-md transition-colors"
               >
@@ -193,9 +274,16 @@ export function OnboardingFlow({
                 {steps.map((s, i) => {
                   const done = i < idx;
                   const active = i === idx;
+                  const reachable = i <= maxVisited && !active;
                   return (
                     <React.Fragment key={s.title}>
-                      <div className="flex items-center gap-2 min-w-0">
+                      <button
+                        type="button"
+                        onClick={() => jumpTo(i)}
+                        disabled={i > maxVisited}
+                        title={reachable ? `Go to ${s.title}` : undefined}
+                        className={`flex items-center gap-2 min-w-0 rounded-md ${reachable ? 'cursor-pointer hover:bg-gray-50 -mx-1 px-1' : 'cursor-default'}`}
+                      >
                         <div
                           className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-semibold shrink-0 transition-colors ${
                             done
@@ -214,7 +302,7 @@ export function OnboardingFlow({
                         >
                           {s.title}
                         </span>
-                      </div>
+                      </button>
                       {i < steps.length - 1 && (
                         <div className={`flex-1 h-px ${done ? 'bg-brand/40' : 'bg-gray-200'}`} />
                       )}
@@ -244,9 +332,15 @@ export function OnboardingFlow({
                       )}
                     </div>
                     {current.render()}
-                    {error && (
-                      <div className="mt-4 text-[13px] text-red-600 bg-red-50 border border-red-100 rounded-[8px] px-3 py-2">
-                        {error}
+                    {errors && errors.length > 0 && (
+                      <div ref={errorRef} className="mt-4 text-[13px] text-red-600 bg-red-50 border border-red-100 rounded-[8px] px-3 py-2">
+                        {errors.length === 1 ? (
+                          errors[0]
+                        ) : (
+                          <ul className="list-disc pl-4 space-y-0.5">
+                            {errors.map((e, i) => <li key={i}>{e}</li>)}
+                          </ul>
+                        )}
                       </div>
                     )}
                   </motion.div>
@@ -272,7 +366,7 @@ export function OnboardingFlow({
 
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={onClose}
+                    onClick={requestClose}
                     disabled={submitting}
                     className="px-3.5 py-2 text-[13px] font-medium text-gray-600 hover:bg-gray-50 rounded-[6px] transition-colors disabled:opacity-50"
                   >
@@ -294,6 +388,36 @@ export function OnboardingFlow({
                       'Continue'
                     )}
                   </button>
+                </div>
+              </div>
+            )}
+
+            {/* Close confirmation — never destroy typed work silently */}
+            {confirmClose && (
+              <div className="absolute inset-0 z-10 bg-black/25 flex items-center justify-center px-6">
+                <div className="bg-white rounded-[10px] border border-gray-200 shadow-2xl w-full max-w-[360px] p-5">
+                  <p className="text-[15px] font-semibold text-gray-900">
+                    {draftSaved ? 'Close this form?' : 'Discard this form?'}
+                  </p>
+                  <p className="text-[13px] text-gray-500 mt-1.5">
+                    {draftSaved
+                      ? 'Your progress is saved as a draft and will be restored when you reopen it.'
+                      : 'Anything you typed here will be lost.'}
+                  </p>
+                  <div className="mt-4 flex justify-end gap-2">
+                    <button
+                      onClick={() => setConfirmClose(false)}
+                      className="px-3.5 py-2 text-[13px] font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-[6px] transition-colors"
+                    >
+                      Keep editing
+                    </button>
+                    <button
+                      onClick={() => { setConfirmClose(false); onClose(); }}
+                      className={`px-3.5 py-2 text-[13px] font-semibold text-white rounded-[6px] transition-colors ${draftSaved ? 'bg-brand hover:bg-brand-hover' : 'bg-red-600 hover:bg-red-700'}`}
+                    >
+                      {draftSaved ? 'Close' : 'Discard'}
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
