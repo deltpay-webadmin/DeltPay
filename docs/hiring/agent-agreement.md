@@ -200,9 +200,27 @@ Payments monthly on or about the 15th; per-merchant statements in the agent port
 
 ---
 
+## Exhibit 1 — Substitute Form W-9 (Request for Taxpayer Identification Number and Certification)
+
+Agent is engaged as a 1099 independent contractor. Complete this substitute Form W-9 so Delt Pay LLC can report payments on Form 1099-NEC. Delt does not withhold taxes from contractor compensation. This information is used for tax reporting only.
+
+| Field | |
+|---|---|
+| 1. Name (as shown on your income tax return) | ____________________ |
+| 2. Business name / disregarded entity name, if different | ____________________ |
+| 3. Federal tax classification (Individual/sole proprietor, C corp, S corp, Partnership, LLC) | ____________________ |
+| 4. Address (number, street, city, state, ZIP) | ____________________ |
+| 5. Taxpayer Identification Number (SSN or EIN) | ____________________ |
+
+**Certification.** Under penalties of perjury, I certify that: (1) the number shown on this form is my correct taxpayer identification number (or I am waiting for a number to be issued to me); (2) I am not subject to backup withholding because (a) I am exempt from backup withholding, or (b) I have not been notified by the Internal Revenue Service (IRS) that I am subject to backup withholding as a result of a failure to report all interest or dividends, or (c) the IRS has notified me that I am no longer subject to backup withholding; (3) I am a U.S. citizen or other U.S. person; and (4) the FATCA code(s) entered on this form (if any) indicating that I am exempt from FATCA reporting is correct.
+
+Signature of U.S. person: ______________________  Date: ________
+
+---
+
 ## Signature Page — executes the Agreement and Schedules A and B
 
-One signature below executes this Agreement together with Schedule A (Fee Schedule & Net Program Revenue) and Schedule B (Compensation Plan).
+One signature below executes this Agreement together with Schedule A (Fee Schedule & Net Program Revenue), Schedule B (Compensation Plan), and Exhibit 1 (Substitute Form W-9).
 
 **DELT PAY LLC**
 
