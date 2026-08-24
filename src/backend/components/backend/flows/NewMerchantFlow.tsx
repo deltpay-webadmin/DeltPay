@@ -63,7 +63,7 @@ export function NewMerchantFlow({ open, onClose, onCreated }: NewMerchantFlowPro
     contactName: '',
     contactEmail: '',
     contactPhone: '',
-    agent: 'Sarah Johnson',
+    agent: 'Unassigned',
     plan: 'Growth' as PlanTier,
     products: {
       processing: true,
