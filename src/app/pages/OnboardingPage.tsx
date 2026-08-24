@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
+import { selfStartApplication, tierForVolumeLabel } from '@/app/lib/selfStart';
 import {
   X,
   ArrowRight,
@@ -8,8 +9,6 @@ import {
   Lock,
   Building2,
   CreditCard,
-  Banknote,
-  ShieldCheck,
   PartyPopper,
   ChevronDown,
 } from 'lucide-react';
@@ -21,12 +20,13 @@ import {
    centered white card, numbered left rail + trust panel,
    right pane form, footer with status + Skip / Continue.
 
-   Five steps:
+   Three steps:
      1. Business      — entity / location / contact
      2. Processing    — what you sell, volume, ticket size
-     3. Bank          — Plaid (placeholder; UI-only for now)
-     4. Identity      — owner KYC details
-     5. Done          — success state with next-step list
+     3. Done          — hands off into the real MPA application
+        (self-start lane for lower volumes; assisted follow-up above)
+   Bank connection and owner identity are collected inside the real
+   application wizard, not mocked here.
    ═══════════════════════════════════════════════════════════ */
 
 // ── Tokens ────────────────────────────────────────────────
@@ -45,14 +45,12 @@ const FIELD_BG = '#FFFFFF';
 const FONT_SANS = "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif";
 const FONT_MONO = "'JetBrains Mono', ui-monospace, monospace";
 
-type StepKey = 'business' | 'processing' | 'bank' | 'identity' | 'done';
+type StepKey = 'business' | 'processing' | 'done';
 
 const STEPS: { key: StepKey; label: string; eyebrow: string; icon: any }[] = [
   { key: 'business',   label: 'Business',   eyebrow: 'STEP 01', icon: Building2 },
   { key: 'processing', label: 'Processing', eyebrow: 'STEP 02', icon: CreditCard },
-  { key: 'bank',       label: 'Bank',       eyebrow: 'STEP 03', icon: Banknote },
-  { key: 'identity',   label: 'Identity',   eyebrow: 'STEP 04', icon: ShieldCheck },
-  { key: 'done',       label: 'Done',       eyebrow: 'STEP 05', icon: PartyPopper },
+  { key: 'done',       label: 'Done',       eyebrow: 'STEP 03', icon: PartyPopper },
 ];
 
 export function OnboardingPage() {
@@ -78,16 +76,12 @@ export function OnboardingPage() {
     monthlyVolume: '$10k – $50k',
     averageTicket: '',
     acceptsCardToday: 'Yes',
-    // bank
-    bankConnected: false,
-    // identity
-    ownershipPct: '',
-    dob: '',
-    ssnLast4: '',
-    addressLine1: '',
-    city: '',
-    zip: '',
   });
+
+  // Self-serve hand-off into the real MPA wizard (lower volume tiers).
+  const [selfServeStatus, setSelfServeStatus] = useState<'none' | 'loading' | 'ready' | 'failed'>('none');
+  const [selfServePath, setSelfServePath] = useState<string | null>(null);
+  const selfServeTier = tierForVolumeLabel(form.monthlyVolume);
 
   const update = (k: keyof typeof form, v: string | boolean) =>
     setForm((f) => ({ ...f, [k]: v }));
@@ -98,34 +92,43 @@ export function OnboardingPage() {
         return !!(form.legalName && form.ein && form.firstName && form.lastName && form.email);
       case 'processing':
         return !!(form.businessCategory && form.monthlyVolume && form.averageTicket);
-      case 'bank':
-        return form.bankConnected;
-      case 'identity':
-        return !!(form.dob && form.ssnLast4 && form.addressLine1 && form.zip);
       default:
         return true;
     }
   }, [current.key, form]);
 
   const next = () => {
-    // "Submit application" (identity step -> done): email the application to
-    // the team. Fire-and-forget; DOB and SSN are intentionally NOT sent.
-    if (current.key === 'identity') {
-      const { dob: _dob, ssnLast4: _ssn, ...safe } = form;
+    // "Submit" (processing step -> done): notify the team, then open the
+    // real merchant application. Lower-volume merchants get a tokenized
+    // self-serve wizard link immediately; larger ones get the assisted lane.
+    if (current.key === 'processing') {
       fetch('/api/leads/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: 'onboarding', ...safe }),
+        body: JSON.stringify({ type: 'onboarding', ...form }),
       }).catch(() => {});
+      if (selfServeTier) {
+        setSelfServeStatus('loading');
+        selfStartApplication({
+          name: `${form.firstName} ${form.lastName}`.trim(),
+          email: form.email,
+          phone: form.phone,
+          business: form.dba || form.legalName,
+          volume: selfServeTier,
+        }).then(res => {
+          if (res.ok && res.path) {
+            setSelfServePath(res.path);
+            setSelfServeStatus('ready');
+          } else {
+            setSelfServeStatus('failed');
+          }
+        });
+      }
     }
     if (stepIdx < totalSteps - 1) setStepIdx((i) => i + 1);
   };
   const back = () => {
     if (stepIdx > 0) setStepIdx((i) => i - 1);
-  };
-  const skipToIdentity = () => {
-    const idx = STEPS.findIndex((s) => s.key === 'identity');
-    if (idx >= 0) setStepIdx(idx);
   };
   const close = () => navigate('/');
 
@@ -368,16 +371,13 @@ export function OnboardingPage() {
             {current.key === 'processing' && (
               <ProcessingStep form={form} update={update} />
             )}
-            {current.key === 'bank' && (
-              <BankStep
-                connected={form.bankConnected}
-                onConnect={() => update('bankConnected', true)}
+            {current.key === 'done' && (
+              <DoneStep
+                email={form.email}
+                selfServeStatus={selfServeTier ? selfServeStatus : 'none'}
+                onStartApplication={selfServePath ? () => navigate(selfServePath) : undefined}
               />
             )}
-            {current.key === 'identity' && (
-              <IdentityStep form={form} update={update} />
-            )}
-            {current.key === 'done' && <DoneStep email={form.email} />}
           </div>
 
           {/* Footer */}
@@ -406,7 +406,7 @@ export function OnboardingPage() {
               }}
             >
               <Lock size={12} />
-              SECURED &nbsp;·&nbsp; PLAID &nbsp;·&nbsp; SOFT-PULL ONLY
+              SECURED &nbsp;·&nbsp; 256-BIT ENCRYPTION
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -431,28 +431,7 @@ export function OnboardingPage() {
                   <ArrowLeft size={13} /> BACK
                 </button>
               )}
-              {current.key === 'business' && (
-                <button
-                  onClick={skipToIdentity}
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    padding: '10px 14px',
-                    border: `1px dashed ${FIELD_BORDER}`,
-                    borderRadius: 10,
-                    background: 'transparent',
-                    color: TEXT_MUTED,
-                    fontFamily: FONT_MONO,
-                    fontSize: 11,
-                    letterSpacing: '0.18em',
-                    textTransform: 'uppercase',
-                    cursor: 'pointer',
-                  }}
-                >
-                  SKIP &rarr; IDENTITY
-                </button>
-              )}
-
+              
               {current.key === 'done' ? (
                 <button
                   onClick={() => navigate('/')}
@@ -466,7 +445,7 @@ export function OnboardingPage() {
                   disabled={!canContinue}
                   style={primaryBtn(canContinue)}
                 >
-                  {current.key === 'identity' ? 'Submit application' : 'Continue'}{' '}
+                  {current.key === 'processing' ? 'Submit' : 'Continue'}{' '}
                   <ArrowRight size={15} />
                 </button>
               )}
@@ -486,8 +465,7 @@ export function OnboardingPage() {
         }}
       >
         By continuing you authorize Delt and our verification partners to perform a soft-pull KYB
-        check and to read transaction history through Plaid. We never sell your data, and we don't
-        surface this application to credit bureaus.
+        check. We never sell your data, and we don't surface this application to credit bureaus.
       </p>
     </div>
   );
@@ -646,137 +624,16 @@ function ProcessingStep({
   );
 }
 
-function BankStep({
-  connected,
-  onConnect,
+function DoneStep({
+  email,
+  selfServeStatus,
+  onStartApplication,
 }: {
-  connected: boolean;
-  onConnect: () => void;
+  email: string;
+  selfServeStatus: 'none' | 'loading' | 'ready' | 'failed';
+  onStartApplication?: () => void;
 }) {
-  return (
-    <>
-      <StepHeader
-        title="Connect your business bank."
-        subtitle="We use Plaid in read-only mode to verify deposits and forecast your cash flow. We can't move money — that requires a separate ACH consent later."
-      />
-
-      <div
-        style={{
-          marginTop: 8,
-          padding: '28px',
-          borderRadius: 16,
-          border: `1px solid ${HAIRLINE}`,
-          background: '#FAFBFE',
-          display: 'flex',
-          gap: 18,
-          alignItems: 'center',
-        }}
-      >
-        <div
-          style={{
-            width: 56,
-            height: 56,
-            borderRadius: 14,
-            background: connected ? '#DCFCE7' : '#EEF1FB',
-            color: connected ? '#16A34A' : ACCENT,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          {connected ? <Check size={26} strokeWidth={3} /> : <Banknote size={26} />}
-        </div>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 16, fontWeight: 700, color: TEXT_DARK }}>
-            {connected ? 'Bank connected via Plaid' : 'Connect via Plaid'}
-          </div>
-          <div style={{ fontSize: 13, color: TEXT_MUTED, marginTop: 2, lineHeight: 1.6 }}>
-            {connected
-              ? 'We pulled the last 90 days of deposits to underwrite your account. You can revoke access any time from settings.'
-              : 'Choose your bank, sign in once, and Plaid sends us a read-only token. Takes about 60 seconds.'}
-          </div>
-        </div>
-        {!connected && (
-          <button onClick={onConnect} style={primaryBtn(true)}>
-            Connect bank <ArrowRight size={15} />
-          </button>
-        )}
-      </div>
-
-      <ul
-        style={{
-          marginTop: 22,
-          padding: 0,
-          listStyle: 'none',
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-          gap: 12,
-        }}
-      >
-        {[
-          ['Read-only access', 'No ACH, no debits, ever — without a second consent.'],
-          ['Bank-grade security', '256-bit encryption + Plaid OAuth at every major bank.'],
-          ['Faster underwriting', '90 days of deposits → an answer in under a business day.'],
-        ].map(([t, d]) => (
-          <li
-            key={t}
-            style={{
-              padding: '14px 16px',
-              borderRadius: 12,
-              background: '#fff',
-              border: `1px solid ${HAIRLINE}`,
-              fontSize: 12,
-              color: TEXT_MUTED,
-              lineHeight: 1.6,
-            }}
-          >
-            <div style={{ fontWeight: 700, color: TEXT_DARK, marginBottom: 4, fontSize: 13 }}>{t}</div>
-            {d}
-          </li>
-        ))}
-      </ul>
-    </>
-  );
-}
-
-function IdentityStep({
-  form,
-  update,
-}: {
-  form: any;
-  update: (k: any, v: string | boolean) => void;
-}) {
-  return (
-    <>
-      <StepHeader
-        title="Verify your identity."
-        subtitle="A federal requirement (Patriot Act / KYC). We do a soft-pull only — your personal credit score is unaffected."
-      />
-      <Grid>
-        <Field label="Ownership %" hint="If you own 25% or more">
-          <Input value={form.ownershipPct} onChange={(v) => update('ownershipPct', v)} placeholder="100" />
-        </Field>
-        <Field label="Date of birth">
-          <Input type="date" value={form.dob} onChange={(v) => update('dob', v)} />
-        </Field>
-        <Field label="SSN" hint="Last 4 digits">
-          <Input value={form.ssnLast4} onChange={(v) => update('ssnLast4', v)} placeholder="• • • •" />
-        </Field>
-        <Field label="Home address">
-          <Input value={form.addressLine1} onChange={(v) => update('addressLine1', v)} placeholder="123 Mission St" />
-        </Field>
-        <Field label="City">
-          <Input value={form.city} onChange={(v) => update('city', v)} placeholder="San Francisco" />
-        </Field>
-        <Field label="ZIP">
-          <Input value={form.zip} onChange={(v) => update('zip', v)} placeholder="94103" />
-        </Field>
-      </Grid>
-    </>
-  );
-}
-
-function DoneStep({ email }: { email: string }) {
+  const selfServe = selfServeStatus !== 'none';
   return (
     <div style={{ textAlign: 'center', padding: '36px 16px 16px' }}>
       <div
@@ -804,12 +661,34 @@ function DoneStep({ email }: { email: string }) {
           letterSpacing: '-0.025em',
         }}
       >
-        You're in. Welcome to Delt.
+        {selfServe ? 'One step left — your application.' : 'Thanks — your details are in.'}
       </h2>
       <p style={{ color: TEXT_MUTED, maxWidth: 480, margin: '0 auto 28px', lineHeight: 1.65 }}>
-        We're underwriting your account now. Most merchants are approved within one business day —
-        we'll email <strong style={{ color: TEXT_DARK }}>{email || 'you'}</strong> the moment you're cleared.
+        {selfServe ? (
+          <>Finish your merchant application now — it takes about 10 minutes, saves as you go,
+          and we also emailed the secure link to <strong style={{ color: TEXT_DARK }}>{email || 'you'}</strong>.</>
+        ) : (
+          <>Our team will review your details and reach out to <strong style={{ color: TEXT_DARK }}>{email || 'you'}</strong> within
+          one business day to finish setting up your account.</>
+        )}
       </p>
+      {selfServe && selfServeStatus !== 'failed' && (
+        <div style={{ marginBottom: 24 }}>
+          <button
+            onClick={onStartApplication}
+            disabled={selfServeStatus !== 'ready' || !onStartApplication}
+            style={primaryBtn(selfServeStatus === 'ready')}
+          >
+            {selfServeStatus === 'ready' ? 'Start my application' : 'Preparing your secure application…'}{' '}
+            <ArrowRight size={15} />
+          </button>
+        </div>
+      )}
+      {selfServeStatus === 'failed' && (
+        <p style={{ fontSize: 13, color: TEXT_FAINT, maxWidth: 420, margin: '0 auto 24px', lineHeight: 1.6 }}>
+          We couldn't open the application here, so we'll email you a secure link shortly.
+        </p>
+      )}
       <ul
         style={{
           maxWidth: 480,
@@ -823,9 +702,11 @@ function DoneStep({ email }: { email: string }) {
         }}
       >
         {[
-          'Underwriting decision within 1 business day',
+          selfServe
+            ? 'Complete the application — identity and banking are collected securely there'
+            : 'A payments specialist reviews your volume and pricing fit',
+          'Underwriting decision within 1 business day of a complete application',
           'Free Delt Reader ships once approved',
-          'Start processing the same day hardware lands',
           'Capital pre-qualification runs automatically — no extra form',
         ].map((t) => (
           <li

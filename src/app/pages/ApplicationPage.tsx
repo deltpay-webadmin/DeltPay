@@ -1,34 +1,42 @@
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router';
-import { ArrowLeft, Check, Building2, Mail, Phone, User } from 'lucide-react';
-import { usePlaidLink } from 'react-plaid-link';
+import { ArrowLeft, ArrowRight, Check, Building2, Mail, Phone, User } from 'lucide-react';
 import { CapitalCrossSell } from '../components/CapitalCrossSell';
-import { trackMerchantLead, trackMerchantOnboarded } from '@/lib/pixel';
+import { trackMerchantLead } from '@/lib/pixel';
+import { selfStartApplication, tierForVolumeLabel } from '@/app/lib/selfStart';
+
+const VOLUME_OPTIONS = [
+  { value: 'Under $10k', label: 'Under $10k / month' },
+  { value: '$10k – $50k', label: '$10k – $50k / month' },
+  { value: '$50k – $250k', label: '$50k – $250k / month' },
+  { value: '$250k – $1M', label: '$250k – $1M / month' },
+  { value: '$1M+', label: '$1M+ / month' },
+];
 
 export function ApplicationPage() {
   const navigate = useNavigate();
-  const [step, setStep] = useState<'form' | 'plaid' | 'success'>('form');
+  const [step, setStep] = useState<'form' | 'success'>('form');
   const [formData, setFormData] = useState({
     businessName: '',
     fullName: '',
     email: '',
     phone: '',
     businessType: 'llc',
+    monthlyVolume: 'Under $10k',
   });
-  const [linkToken, setLinkToken] = useState<string | null>(null);
-  const [publicToken, setPublicToken] = useState<string | null>(null);
+  const [selfServeStatus, setSelfServeStatus] = useState<'none' | 'loading' | 'ready' | 'failed'>('none');
+  const [selfServePath, setSelfServePath] = useState<string | null>(null);
 
-  // Handle form submission
+  const selfServeTier = tierForVolumeLabel(formData.monthlyVolume);
+
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // Meta Pixel: application form submitted — merchant lead captured.
-    // Fires before Plaid opens so ad-blockers on the Plaid modal can't
-    // suppress it. content_name carries the business type for reporting.
     trackMerchantLead({ content_name: formData.businessType });
 
     // Email the application to the team via the Vercel /api function.
-    // Fire-and-forget so the Plaid step opens without waiting on delivery.
+    // Fire-and-forget so the success screen shows without waiting on delivery.
     fetch('/api/leads/application', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -38,53 +46,31 @@ export function ApplicationPage() {
         phone: formData.phone,
         businessName: formData.businessName,
         businessType: formData.businessType,
+        monthlyVolume: formData.monthlyVolume,
       }),
     }).catch(() => { /* non-blocking */ });
 
-    // In production, you would call your backend to create a link_token
-    // For demo purposes, we'll use a placeholder token
-    const mockLinkToken = 'link-sandbox-' + Math.random().toString(36).substring(7);
-    setLinkToken(mockLinkToken);
-    setStep('plaid');
-  };
-
-  // Plaid Link callbacks
-  const onSuccess = useCallback((public_token: string) => {
-    setPublicToken(public_token);
-
-    // Meta Pixel: bank verified via Plaid. Standing in for
-    // CompleteRegistration until we wire real server-side approval
-    // via the Conversions API. Ad-blocker resilient: fires client-side
-    // immediately after Plaid returns success.
-    trackMerchantOnboarded();
-
-    // In production, you would send this public_token to your backend
-    // to exchange it for an access_token
-    setTimeout(() => {
-      setStep('success');
-    }, 500);
-  }, []);
-
-  const onExit = useCallback(() => {
-    // User exited Plaid Link flow
-    setStep('form');
-  }, []);
-
-  // Plaid Link configuration
-  const config = {
-    token: linkToken || '',
-    onSuccess,
-    onExit,
-  };
-
-  const { open, ready } = usePlaidLink(config);
-
-  // Auto-open Plaid when token is ready
-  useState(() => {
-    if (linkToken && ready && step === 'plaid') {
-      open();
+    // Lower-volume merchants open the real MPA application immediately;
+    // identity and banking are collected securely inside that wizard.
+    if (selfServeTier) {
+      setSelfServeStatus('loading');
+      selfStartApplication({
+        name: formData.fullName,
+        email: formData.email,
+        phone: formData.phone,
+        business: formData.businessName,
+        volume: selfServeTier,
+      }).then(res => {
+        if (res.ok && res.path) {
+          setSelfServePath(res.path);
+          setSelfServeStatus('ready');
+        } else {
+          setSelfServeStatus('failed');
+        }
+      });
     }
-  });
+    setStep('success');
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({
@@ -94,6 +80,7 @@ export function ApplicationPage() {
   };
 
   if (step === 'success') {
+    const selfServe = selfServeTier !== null;
     return (
       <div className="min-h-screen bg-[#F6F7FB] flex items-center justify-center p-4">
         <div className="max-w-2xl w-full">
@@ -102,41 +89,58 @@ export function ApplicationPage() {
               <Check className="w-10 h-10 text-[#4945FF]" />
             </div>
             <h1 className="text-3xl font-bold text-[#041E42] mb-4">
-              Application Submitted Successfully!
+              {selfServe ? 'One step left — your application' : 'Thanks — we received your details'}
             </h1>
             <p className="text-lg text-[#475569] mb-8">
-              Welcome to Delt, {formData.fullName}! We've received your application and verified your bank account.
+              {selfServe ? (
+                <>Finish your merchant application now, {formData.fullName.split(' ')[0]} — it takes about 10 minutes
+                and saves as you go. We also emailed the secure link to {formData.email}.</>
+              ) : (
+                <>Our team will review your volume and reach out to {formData.email} within 1 business day
+                with a tailored setup.</>
+              )}
             </p>
+            {selfServe && selfServeStatus !== 'failed' && (
+              <button
+                onClick={() => selfServePath && navigate(selfServePath)}
+                disabled={selfServeStatus !== 'ready'}
+                className="w-full bg-[#4945FF] text-white px-8 py-4 rounded-lg font-semibold hover:bg-[#3933CC] transition-all text-lg disabled:opacity-60 mb-6 inline-flex items-center justify-center gap-2"
+              >
+                {selfServeStatus === 'ready' ? 'Start my application' : 'Preparing your secure application…'}
+                <ArrowRight className="w-5 h-5" />
+              </button>
+            )}
+            {selfServeStatus === 'failed' && (
+              <p className="text-sm text-[#475569] mb-6">
+                We couldn't open the application here, so we'll email you a secure link shortly.
+              </p>
+            )}
             <div className="bg-[#F6F7FB] rounded-lg p-6 mb-8 text-left">
               <h3 className="font-semibold text-[#041E42] mb-4">What's Next?</h3>
               <ul className="space-y-3">
                 <li className="flex items-start gap-3">
                   <Check className="w-5 h-5 text-[#4945FF] flex-shrink-0 mt-0.5" />
                   <span className="text-[#475569]">
-                    Our team will review your application within 1 business day (Mon–Fri, excluding holidays)
+                    {selfServe
+                      ? 'Complete the application — identity and banking are collected securely there'
+                      : 'A payments specialist reviews your volume and pricing fit'}
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
                   <Check className="w-5 h-5 text-[#4945FF] flex-shrink-0 mt-0.5" />
                   <span className="text-[#475569]">
-                    You'll receive your Delt Reader at {formData.email}
+                    Underwriting decision within 1 business day of a complete application
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
                   <Check className="w-5 h-5 text-[#4945FF] flex-shrink-0 mt-0.5" />
                   <span className="text-[#475569]">
-                    Start processing payments immediately with $0 monthly fees
+                    Your Delt Reader ships once approved — start processing the day it lands
                   </span>
                 </li>
               </ul>
             </div>
             <div className="flex flex-col sm:flex-row gap-4">
-              <button
-                onClick={() => navigate('/dashboard')}
-                className="flex-1 bg-[#4945FF] text-white px-8 py-3 rounded-md font-semibold hover:bg-[#3933CC] transition-all"
-              >
-                Go to Dashboard
-              </button>
               <button
                 onClick={() => navigate('/')}
                 className="flex-1 border-2 border-[#041E42] text-[#041E42] px-8 py-3 rounded-md font-semibold hover:bg-[#080A28] hover:text-white transition-all"
@@ -150,45 +154,12 @@ export function ApplicationPage() {
     );
   }
 
-  if (step === 'plaid') {
-    return (
-      <div className="min-h-screen bg-[#F6F7FB] flex items-center justify-center p-4">
-        <div className="max-w-2xl w-full">
-          <div className="bg-white rounded-2xl shadow-xl p-8 md:p-12 text-center">
-            <div className="w-20 h-20 bg-[#4945FF]/10 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse">
-              <Building2 className="w-10 h-10 text-[#4945FF]" />
-            </div>
-            <h1 className="text-2xl font-bold text-[#041E42] mb-4">
-              Connecting to Your Bank...
-            </h1>
-            <p className="text-[#475569] mb-8">
-              Please complete the bank verification process in the popup window.
-            </p>
-            <button
-              onClick={() => open()}
-              disabled={!ready}
-              className="bg-[#4945FF] text-white px-8 py-3 rounded-md font-semibold hover:bg-[#3933CC] transition-all disabled:opacity-50"
-            >
-              {ready ? 'Open Bank Connection' : 'Loading...'}
-            </button>
-            <button
-              onClick={() => setStep('form')}
-              className="block mx-auto mt-4 text-[#475569] hover:text-[#041E42] text-sm"
-            >
-              Go Back
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-[#F6F7FB]">
       <section className="py-12 lg:py-16">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Back Button */}
-          <button 
+          <button
             onClick={() => navigate(-1)}
             className="mb-6 flex items-center gap-2 text-[#041E42] hover:text-[#4945FF] transition-colors group"
           >
@@ -318,16 +289,33 @@ export function ApplicationPage() {
                 </select>
               </div>
 
+              {/* Monthly Volume */}
+              <div>
+                <label htmlFor="monthlyVolume" className="block text-sm font-semibold text-[#041E42] mb-2">
+                  Monthly Card Volume *
+                </label>
+                <select
+                  id="monthlyVolume"
+                  name="monthlyVolume"
+                  required
+                  value={formData.monthlyVolume}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 border-2 border-[#E5E7EB] rounded-lg focus:border-[#4945FF] focus:outline-none transition-colors"
+                >
+                  {VOLUME_OPTIONS.map(o => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </select>
+              </div>
+
               {/* Info Box */}
               <div className="bg-[#F6F7FB] rounded-lg p-4 border-l-4 border-[#4945FF]">
                 <p className="text-sm text-[#475569]">
-                  <strong className="text-[#041E42]">Next step:</strong> After submitting this form, 
-                  you'll securely connect your bank account using Plaid to verify your business.
+                  <strong className="text-[#041E42]">Next step:</strong> After submitting this form,
+                  you'll open your secure merchant application — identity and banking details are
+                  collected there, and your progress saves as you go.
                 </p>
               </div>
-
-              {/* Plaid Consent */}
-              <div className="bg-[#F6F7FB] border border-[#4945FF]/15 rounded-lg p-4 text-sm text-[#475569] mb-4">By continuing, you authorize Delt and our bank-verification partner Plaid to access your bank account information. See <a href="https://plaid.com/legal/#consumers" target="_blank" rel="noopener" className="underline text-[#4945FF]">Plaid's Privacy Policy</a>.</div>
 
               {/* Privacy consent */}
               <p className="text-xs text-[#475569] mb-2">By submitting, you acknowledge our <a href="#/privacy" target="_blank" rel="noopener noreferrer" className="underline text-[#4945FF]">Privacy Policy</a> and agree to our <a href="#/terms" target="_blank" rel="noopener noreferrer" className="underline text-[#4945FF]">Terms of Service</a>.</p>
@@ -337,7 +325,7 @@ export function ApplicationPage() {
                 type="submit"
                 className="w-full bg-[#4945FF] text-white py-4 rounded-lg font-semibold hover:bg-[#3933CC] transition-all text-lg"
               >
-                Continue to Bank Verification
+                Continue
               </button>
 
               {/* Trust Signals */}

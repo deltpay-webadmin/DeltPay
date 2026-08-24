@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
 import { trackQuoteRequest } from '@/lib/pixel';
-import { supabase } from '@/app/lib/supabase';
+import { selfStartApplication } from '@/app/lib/selfStart';
 import { useHoneypot } from '@/app/components/Honeypot';
 import logoWhite from 'figma:asset/419e83442bb1bf5965a966a8870b00dd4288dd57.png';
 
@@ -380,27 +380,21 @@ export function GetAQuotePage() {
     // wizard link right on the success screen.
     if (isSelfServeTier) {
       setSelfServeStatus('loading');
-      supabase.functions
-        .invoke('mpa-application', {
-          body: {
-            action: 'self-start',
-            name: form.name,
-            email: form.email,
-            phone: form.phone,
-            business: form.business,
-            volume,
-            hp_extra_field: honeypotValue(),
-          },
-        })
-        .then(({ data, error }) => {
-          if (!error && data?.ok && typeof data.path === 'string') {
-            setSelfServePath(data.path);
-            setSelfServeStatus('ready');
-          } else {
-            setSelfServeStatus('failed');
-          }
-        })
-        .catch(() => setSelfServeStatus('failed'));
+      selfStartApplication({
+        name: form.name,
+        email: form.email,
+        phone: form.phone,
+        business: form.business,
+        volume: volume as 'under10k' | '10k_50k',
+        honeypotValue: honeypotValue(),
+      }).then(res => {
+        if (res.ok && res.path) {
+          setSelfServePath(res.path);
+          setSelfServeStatus('ready');
+        } else {
+          setSelfServeStatus('failed');
+        }
+      });
     }
     setSubmitted(true);
   }
