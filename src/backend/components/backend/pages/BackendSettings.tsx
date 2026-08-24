@@ -10,6 +10,7 @@ import { toast } from 'sonner@2.0.3';
 import { supabase } from '../../../lib/supabase';
 import { useSession } from '../SessionContext';
 import { contractActions } from '../contractsStore';
+import { agentActions } from '../agentsStore';
 
 // ─── ROLE DEFINITIONS ───────────────────────────────────────────
 const ROLES = [
@@ -183,6 +184,7 @@ export function BackendSettings() {
   // ── Live org members (replaces the old hardcoded USERS list) ──
   const [members, setMembers] = useState<MemberRow[]>([]);
   const [membersLoading, setMembersLoading] = useState(true);
+  const [inviteOpen, setInviteOpen] = useState(false);
   useEffect(() => {
     let active = true;
     (async () => {
@@ -448,7 +450,10 @@ export function BackendSettings() {
                 <h2 className="text-lg font-bold text-gray-900">Users & Access</h2>
                 <p className="text-sm text-gray-400 mt-0.5">{members.length} member{members.length !== 1 ? 's' : ''} in your organization</p>
               </div>
-              <button className="px-4 py-2 bg-brand text-white rounded-[6px] text-sm font-semibold hover:bg-brand-hover inline-flex items-center gap-1.5 transition-colors">
+              <button
+                onClick={() => setInviteOpen(true)}
+                className="px-4 py-2 bg-brand text-white rounded-[6px] text-sm font-semibold hover:bg-brand-hover inline-flex items-center gap-1.5 transition-colors"
+              >
                 <Plus className="w-4 h-4" /> Invite User
               </button>
             </div>
@@ -502,6 +507,15 @@ export function BackendSettings() {
               )}
               {!membersLoading && members.length === 0 && (
                 <div className="px-5 py-8 text-center text-sm text-gray-500">No members found.</div>
+              )}
+              {inviteOpen && (
+                <InviteUserModal
+                  onClose={() => setInviteOpen(false)}
+                  onInvited={member => {
+                    setMembers(prev => [...prev, member]);
+                    setInviteOpen(false);
+                  }}
+                />
               )}
             </div>
           </div>
@@ -619,6 +633,107 @@ function EsignSettingsCard() {
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+
+// ─── Invite User modal — real auth invite via the admin-users function ───
+function InviteUserModal({ onClose, onInvited }: { onClose: () => void; onInvited: (m: MemberRow) => void }) {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [role, setRole] = useState<'agent' | 'admin' | 'viewer'>('agent');
+  const [saving, setSaving] = useState(false);
+
+  const submit = async () => {
+    if (!name.trim() || !email.trim()) {
+      toast.error('Name and email are required.');
+      return;
+    }
+    setSaving(true);
+    const res = await agentActions.invite({ name: name.trim(), email: email.trim(), role });
+    setSaving(false);
+    if (!res.ok) {
+      toast.error(res.error || 'Invite failed.');
+      return;
+    }
+    if (res.emailSent) {
+      toast.success(`Invite sent to ${email.trim()}`);
+    } else if (res.inviteLink) {
+      try { await navigator.clipboard.writeText(res.inviteLink); } catch { /* clipboard optional */ }
+      toast.success('User created — email delivery failed, invite link copied to your clipboard.');
+    } else {
+      toast.success('User created.');
+    }
+    onInvited({
+      userId: `pending-${Date.now()}`,
+      role,
+      agentId: null,
+      name: name.trim(),
+      email: email.trim(),
+      status: 'active',
+      createdAt: new Date().toISOString(),
+    });
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      <div className="relative bg-white rounded-[10px] border border-gray-200 shadow-2xl w-full max-w-md mx-4">
+        <div className="px-5 py-4 border-b border-gray-200 flex items-center justify-between">
+          <h2 className="text-base font-semibold text-gray-900">Invite User</h2>
+          <button onClick={onClose} className="p-1 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+        <div className="px-5 py-4 space-y-4">
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Full name *</label>
+            <input
+              value={name}
+              onChange={e => setName(e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-[6px] focus:outline-none focus:ring-2 focus:ring-brand/40"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Email *</label>
+            <input
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-[6px] focus:outline-none focus:ring-2 focus:ring-brand/40"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Role</label>
+            <select
+              value={role}
+              onChange={e => setRole(e.target.value as 'agent' | 'admin' | 'viewer')}
+              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-[6px] bg-white focus:outline-none focus:ring-2 focus:ring-brand/40"
+            >
+              <option value="agent">Agent</option>
+              <option value="admin">Admin</option>
+              <option value="viewer">Viewer</option>
+            </select>
+          </div>
+          <p className="text-xs text-gray-400">
+            They'll receive an email link to set a password. Agent invites also create the
+            agent record so their name is assignable on leads and deals.
+          </p>
+        </div>
+        <div className="px-5 py-4 border-t border-gray-200 flex justify-end gap-2">
+          <button onClick={onClose} className="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-[6px] hover:bg-gray-50 transition-colors">
+            Cancel
+          </button>
+          <button
+            onClick={() => void submit()}
+            disabled={saving}
+            className="px-4 py-2 text-sm font-semibold text-white bg-brand rounded-[6px] hover:bg-brand-hover transition-colors disabled:opacity-60"
+          >
+            {saving ? 'Sending…' : 'Send invite'}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

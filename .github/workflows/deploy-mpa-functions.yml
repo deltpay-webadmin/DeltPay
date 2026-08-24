@@ -19,6 +19,7 @@ on:
       - "supabase/functions/mpa-application/**"
       - "supabase/functions/docusign/**"
       - "supabase/functions/docusign-connect/**"
+      - "supabase/functions/admin-users/**"
       - "supabase/functions/_shared/**"
       - "docs/mpa-templates/**"
 
@@ -57,6 +58,7 @@ jobs:
           supabase functions deploy mpa-application --project-ref "$SUPABASE_PROJECT_ID"
           supabase functions deploy docusign --project-ref "$SUPABASE_PROJECT_ID"
           supabase functions deploy docusign-connect --project-ref "$SUPABASE_PROJECT_ID"
+          supabase functions deploy admin-users --project-ref "$SUPABASE_PROJECT_ID"
 
       - name: Upload blank MPA templates to storage
         continue-on-error: true

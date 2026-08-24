@@ -600,6 +600,7 @@ function OnboardAgentModal({ orgId, onClose }: { orgId: string | null; onClose: 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [split, setSplit] = useState<number>(TIERS[0].split);
+  const [sendInvite, setSendInvite] = useState(true);
   const [saving, setSaving] = useState(false);
 
   const submit = async () => {
@@ -607,16 +608,38 @@ function OnboardAgentModal({ orgId, onClose }: { orgId: string | null; onClose: 
       toast.error('Agent name is required.');
       return;
     }
+    if (sendInvite && !email.trim()) {
+      toast.error('An email is required to send a portal invite.');
+      return;
+    }
     if (!orgId) {
       toast.error('No organization loaded — sign in again and retry.');
       return;
     }
     setSaving(true);
-    const created = await agentActions.create({ orgId, name: name.trim(), email: email.trim(), split });
-    setSaving(false);
-    if (created) {
-      toast.success(`${created.name} onboarded`, { description: splitLabel(created.split) });
+    if (sendInvite) {
+      const res = await agentActions.invite({ name: name.trim(), email: email.trim(), role: 'agent', split });
+      setSaving(false);
+      if (!res.ok) {
+        toast.error(res.error || 'Invite failed.');
+        return;
+      }
+      if (res.emailSent) {
+        toast.success(`${name.trim()} onboarded`, { description: 'Invite email sent — they can sign in once they set a password.' });
+      } else if (res.inviteLink) {
+        try { await navigator.clipboard.writeText(res.inviteLink); } catch { /* clipboard optional */ }
+        toast.success(`${name.trim()} onboarded`, { description: 'Email delivery failed — their invite link was copied to your clipboard.' });
+      } else {
+        toast.success(`${name.trim()} onboarded`);
+      }
       onClose();
+    } else {
+      const created = await agentActions.create({ orgId, name: name.trim(), email: email.trim(), split });
+      setSaving(false);
+      if (created) {
+        toast.success(`${created.name} onboarded`, { description: splitLabel(created.split) });
+        onClose();
+      }
     }
   };
 
@@ -662,6 +685,18 @@ function OnboardAgentModal({ orgId, onClose }: { orgId: string | null; onClose: 
               ))}
             </select>
           </div>
+          <label className="flex items-start gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={sendInvite}
+              onChange={e => setSendInvite(e.target.checked)}
+              className="mt-0.5 accent-indigo-600"
+            />
+            <span className="text-xs text-gray-600">
+              Send a portal invite so they can sign in to the agent workspace
+              (submit deals, track commissions, training).
+            </span>
+          </label>
           <p className="text-xs text-gray-400">
             New agents start Active with an empty book. Their name becomes assignable on leads,
             merchants, and deal submissions immediately.

@@ -122,7 +122,47 @@ async function refresh(): Promise<void> {
   if (!error) set({ agents: (data || []).map(fromDbAgent), isOnline: true });
 }
 
+export interface InviteResult {
+  ok: boolean;
+  emailSent?: boolean;
+  /** Hand-off link when the invite email could not be delivered. */
+  inviteLink?: string;
+  error?: string;
+}
+
 export const agentActions = {
+  /**
+   * Full onboarding: auth invite email + agents row + org membership,
+   * via the admin-users edge function (service-role work never runs in
+   * the browser). Works for agents and for admin/viewer staff invites.
+   */
+  async invite(input: { name: string; email: string; role?: 'agent' | 'admin' | 'viewer'; split?: number | null }): Promise<InviteResult> {
+    if (!supabase) return { ok: false, error: 'Supabase is not configured.' };
+    const { data, error } = await supabase.functions.invoke('admin-users', {
+      body: {
+        action: 'invite',
+        name: input.name,
+        email: input.email,
+        role: input.role ?? 'agent',
+        split: input.split ?? null,
+      },
+    });
+    if (error) {
+      // supabase-js wraps non-2xx responses; surface the function's message.
+      let message = error.message;
+      try {
+        const ctx = (error as any).context;
+        if (ctx && typeof ctx.json === 'function') {
+          const payload = await ctx.json();
+          if (payload?.error) message = payload.error;
+        }
+      } catch { /* keep the generic message */ }
+      return { ok: false, error: message };
+    }
+    await refresh();
+    return { ok: true, emailSent: Boolean(data?.emailSent), inviteLink: data?.inviteLink };
+  },
+
   /** Insert an agent row directly (no portal login). Returns the record or null. */
   async create(input: { orgId: string; name: string; email: string; split?: number | null }): Promise<AgentRecord | null> {
     if (!supabase) {
