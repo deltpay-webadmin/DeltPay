@@ -1,11 +1,29 @@
+# DeltPay
 
-  # Merchant Services Site (Dashboard Locked)
+The Delt platform in one repository: the public **deltpay.com** marketing site
+and the internal **Delt CRM / back-office** for a merchant-services ISO + MCA
+funding operation (Delt Pay LLC). One Vite + React SPA, Supabase backend,
+Vercel hosting.
 
-  This is a code bundle for Merchant Services Site (Dashboard Locked). The original project is available at https://www.figma.com/design/htvGDVPIa9VGz5gzswOSCk/Merchant-Services-Site--Dashboard-Locked-.
+- **Start here:** [`CLAUDE.md`](./CLAUDE.md) — architecture, commands,
+  conventions, and the honest map of what's real vs. demo data.
+- **What's real vs. mock:** [`docs/real-vs-mock.md`](./docs/real-vs-mock.md) —
+  read this before trusting (or "fixing") any CRM page.
+- **Operating docs:** [`docs/sop-deal-flow.md`](./docs/sop-deal-flow.md)
+  (call-to-wire SOP), [`docs/state-of-the-union.md`](./docs/state-of-the-union.md),
+  [`docs/30-day-operating-plan.md`](./docs/30-day-operating-plan.md), plus
+  runbooks for the Deal Room, MPA boarding, and Plaid under `docs/`.
 
-  ## Running the code
+## Running the code
 
-  Run `npm i` to install the dependencies.
+```sh
+npm i            # install dependencies
+npm run dev      # dev server
+npm run build    # production build
+npx vitest run   # unit tests
+npm run check:functions   # edge-function import check
+```
 
-  Run `npm run dev` to start the development server.
-  
+Environment variables and their fail-closed semantics are documented in
+[`.env.example`](./.env.example). Database migrations live in
+`supabase/migrations/` and apply with `supabase db push`.
