@@ -3,7 +3,18 @@ import {
   ArrowLeft, Edit, Plus, FileText, CreditCard, Banknote, Globe,
   ChevronDown, Send, CheckCircle, ExternalLink, Brain, Package, Gift, Copy,
   Users, Truck, Link2, X, ShieldAlert, StickyNote, Calendar, Megaphone, Trash2,
+  HardDrive,
 } from 'lucide-react';
+import {
+  useMerchantHardware,
+  merchantHardwareActions,
+  devicesForMerchant,
+  nextHardwareStatus,
+  HARDWARE_CHANNELS,
+  type HardwareChannel,
+  type HardwareStatus,
+  type MerchantHardware,
+} from '../merchantHardwareStore';
 import { useAppNavigate } from '../NavigationContext';
 import {
   useMerchants,
@@ -98,6 +109,135 @@ function BundlesAndReferralsCard({ merchantName, merchantId }: { merchantName: s
         <div className="flex items-center justify-end pt-1"><button onClick={() => setCardModalOpen(true)} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-brand hover:bg-indigo-50 border border-brand/20 rounded-[6px] transition-colors"><CreditCard className="w-3.5 h-3.5" />Order Referral Cards</button></div>
       </div>
       {cardModalOpen && (<div className="fixed inset-0 z-50 flex items-center justify-center"><div className="absolute inset-0 bg-black/30" onClick={() => setCardModalOpen(false)} /><div className="relative bg-white rounded-[8px] shadow-2xl border border-gray-200 p-6 max-w-md w-full mx-4"><div className="flex items-center justify-between mb-5"><div><h3 className="text-lg font-bold text-gray-900">Order Referral Cards</h3><p className="text-xs text-gray-500 mt-0.5">Physical referral cards for {merchantName}</p></div><button onClick={() => setCardModalOpen(false)} className="p-2 hover:bg-gray-100 rounded-[6px]"><X className="w-4 h-4 text-gray-500" /></button></div><div className="space-y-4"><div><label className="text-sm font-medium text-gray-700 block mb-2">Quantity</label><div className="grid grid-cols-4 gap-2">{CARD_QTY_OPTIONS.map(q => (<button key={q} onClick={() => setCardQty(q)} className={`py-2.5 rounded-[6px] text-sm font-medium border transition-colors ${cardQty === q ? 'bg-brand text-white border-brand' : 'bg-white text-gray-700 border-gray-200 hover:border-brand/30'}`}>{q}</button>))}</div></div><div><label className="text-sm font-medium text-gray-700 block mb-2">Ship To</label><div className="grid grid-cols-2 gap-2"><button onClick={() => setShipTo('merchant')} className={`flex items-center justify-center gap-2 py-2.5 rounded-[6px] text-sm font-medium border transition-colors ${shipTo === 'merchant' ? 'bg-brand text-white border-brand' : 'bg-white text-gray-700 border-gray-200'}`}><Truck className="w-4 h-4" />Merchant</button><button onClick={() => setShipTo('agent')} className={`flex items-center justify-center gap-2 py-2.5 rounded-[6px] text-sm font-medium border transition-colors ${shipTo === 'agent' ? 'bg-brand text-white border-brand' : 'bg-white text-gray-700 border-gray-200'}`}><Users className="w-4 h-4" />Agent</button></div></div></div><div className="flex items-center gap-3 mt-5"><button onClick={() => setCardModalOpen(false)} className="flex-1 px-4 py-2.5 bg-brand text-white text-sm font-semibold rounded-[6px] hover:bg-brand-hover transition-colors">Submit Order</button><button onClick={() => setCardModalOpen(false)} className="px-4 py-2.5 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-[6px] hover:bg-gray-50 transition-colors">Cancel</button></div></div></div>)}
+    </div>
+  );
+}
+
+/* ─── Hardware & installs (real records — merchant_hardware table) ─── */
+
+function hardwareStatusCls(s: HardwareStatus) {
+  return s === 'active' ? 'bg-emerald-50 text-emerald-700'
+    : s === 'installed' ? 'bg-sky-50 text-sky-700'
+    : s === 'shipped' ? 'bg-amber-50 text-amber-700'
+    : s === 'returned' ? 'bg-red-50 text-red-600'
+    : 'bg-gray-100 text-gray-500';
+}
+
+function HardwareRow({ device }: { device: MerchantHardware }) {
+  const [notesOpen, setNotesOpen] = useState(false);
+  const [notesDraft, setNotesDraft] = useState(device.installNotes);
+  const next = device.status === 'returned' ? null : nextHardwareStatus(device.status);
+  return (
+    <div className="py-3 group">
+      <div className="flex items-center gap-3">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <p className="text-sm font-medium text-gray-900">{device.model}</p>
+            {device.serial && <span className="text-xs font-mono text-gray-500">{device.serial}</span>}
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-indigo-50 text-indigo-700">{device.channel}</span>
+            <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium capitalize ${hardwareStatusCls(device.status)}`}>{device.status}</span>
+          </div>
+          {device.installedAt && (
+            <p className="text-xs text-gray-400 mt-0.5">Installed {new Date(device.installedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+          )}
+        </div>
+        {next && (
+          <button
+            onClick={() => void merchantHardwareActions.setStatus(device.id, next)}
+            className="px-2.5 py-1.5 text-xs font-medium text-gray-600 hover:text-brand hover:bg-indigo-50 border border-gray-200 rounded-[6px] transition-colors shrink-0 capitalize"
+          >
+            Mark {next}
+          </button>
+        )}
+        <button
+          onClick={() => { setNotesDraft(device.installNotes); setNotesOpen(o => !o); }}
+          className="px-2.5 py-1.5 text-xs font-medium text-gray-600 hover:text-brand hover:bg-indigo-50 border border-gray-200 rounded-[6px] transition-colors shrink-0"
+        >
+          Notes
+        </button>
+        {device.status !== 'returned' && (
+          <button
+            onClick={() => void merchantHardwareActions.setStatus(device.id, 'returned')}
+            className="opacity-0 group-hover:opacity-100 px-2 py-1.5 text-xs font-medium text-gray-400 hover:text-red-600 transition-all shrink-0"
+            title="Mark returned"
+          >
+            Return
+          </button>
+        )}
+        <button
+          onClick={() => void merchantHardwareActions.remove(device.id)}
+          className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-100 rounded transition-all shrink-0"
+          title="Delete device record"
+        >
+          <Trash2 className="w-3 h-3 text-gray-400" />
+        </button>
+      </div>
+      {notesOpen && (
+        <div className="mt-2 flex items-start gap-2">
+          <textarea
+            value={notesDraft}
+            onChange={e => setNotesDraft(e.target.value)}
+            placeholder="Install notes — installer, location quirks, network details..."
+            rows={2}
+            className="flex-1 text-sm border border-gray-200 rounded-[6px] px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand placeholder:text-gray-400 resize-none"
+          />
+          <button
+            onClick={() => { void merchantHardwareActions.setInstallNotes(device.id, notesDraft.trim()); setNotesOpen(false); }}
+            className="px-3 py-1.5 bg-brand text-white text-xs font-medium rounded-[6px] hover:bg-indigo-700 transition-colors"
+          >
+            Save
+          </button>
+        </div>
+      )}
+      {!notesOpen && device.installNotes && (
+        <p className="mt-1.5 text-xs text-gray-500 bg-gray-50 rounded-[6px] px-3 py-1.5">{device.installNotes}</p>
+      )}
+    </div>
+  );
+}
+
+function HardwareCard({ merchantId }: { merchantId: string }) {
+  const { devices, isOnline, isLoading } = useMerchantHardware();
+  const mine = devicesForMerchant(devices, merchantId);
+  const [adding, setAdding] = useState(false);
+  const [model, setModel] = useState('');
+  const [serial, setSerial] = useState('');
+  const [channel, setChannel] = useState<HardwareChannel>('Square');
+  const save = async () => {
+    if (!model.trim()) return;
+    const ok = await merchantHardwareActions.add({ merchantId, model: model.trim(), serial: serial.trim(), channel });
+    if (ok) { setModel(''); setSerial(''); setChannel('Square'); setAdding(false); }
+  };
+  return (
+    <div className="bg-white rounded-lg border border-gray-200">
+      <div className="px-5 py-3 border-b border-gray-200 flex items-center justify-between">
+        <div className="flex items-center gap-2"><HardDrive className="w-3.5 h-3.5 text-gray-400" /><h3 className="text-sm font-semibold text-gray-700">Hardware &amp; Installs</h3></div>
+        <button onClick={() => setAdding(a => !a)} className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-gray-600 hover:text-brand hover:bg-indigo-50 border border-gray-200 rounded-[6px] transition-colors"><Plus className="w-3.5 h-3.5" />Add Device</button>
+      </div>
+      <div className="px-5 py-2">
+        {adding && (
+          <div className="py-3 border-b border-gray-100 space-y-2">
+            <div className="grid grid-cols-2 gap-2">
+              <input value={model} onChange={e => setModel(e.target.value)} placeholder="Model (e.g. Square Terminal)" className="text-sm border border-gray-200 rounded-[6px] px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand placeholder:text-gray-400" />
+              <input value={serial} onChange={e => setSerial(e.target.value)} placeholder="Serial (optional)" className="text-sm border border-gray-200 rounded-[6px] px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand placeholder:text-gray-400" />
+            </div>
+            <div className="flex items-center gap-2">
+              <select value={channel} onChange={e => setChannel(e.target.value as HardwareChannel)} className="text-sm border border-gray-200 rounded-[6px] px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand">
+                {HARDWARE_CHANNELS.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+              <button onClick={() => void save()} disabled={!model.trim()} className="px-3 py-1.5 bg-brand text-white text-xs font-medium rounded-[6px] hover:bg-indigo-700 transition-colors disabled:opacity-40">Save Device</button>
+              <button onClick={() => setAdding(false)} className="px-3 py-1.5 text-xs font-medium text-gray-500 hover:bg-gray-50 border border-gray-200 rounded-[6px] transition-colors">Cancel</button>
+            </div>
+          </div>
+        )}
+        {mine.length === 0 ? (
+          <p className="text-sm text-gray-400 py-3 text-center">
+            {isLoading ? 'Loading devices…' : isOnline ? 'No hardware on record for this merchant.' : 'Offline — device records are unavailable right now.'}
+          </p>
+        ) : (
+          <div className="divide-y divide-gray-100">{mine.map(d => <HardwareRow key={d.id} device={d} />)}</div>
+        )}
+      </div>
     </div>
   );
 }
@@ -386,6 +526,8 @@ export function MerchantDetail() {
                   </div>
                 </div>
               </div>
+
+              <HardwareCard merchantId={merchant.id} />
 
               <BundlesAndReferralsCard merchantName={merchant.name} merchantId={merchant.id} />
             </div>
